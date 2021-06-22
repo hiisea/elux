@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["es2018"],
+    "types": [],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "experimentalDecorators": true
+  },
+  "include": ["./", "./**/*.vue", ".eslintrc.js"],
+  "exclude": ["**/dist", "**/types", "**/docs", "./storage"]
+}

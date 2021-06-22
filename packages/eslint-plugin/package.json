@@ -1,0 +1,38 @@
+{
+  "name": "@elux/eslint-plugin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "description": "Common development tools",
+  "repository": "https://github.com/hiisea/elux/tree/master/packages/eslint-plugin",
+  "author": "hiisea <hiisea@qq.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=9.0.0"
+  },
+  "files": [
+    "index.js",
+    "config/",
+    "rules/"
+  ],
+  "dependencies": {
+    "eslint-config-airbnb": "~18.2.1",
+    "eslint-config-airbnb-typescript": "~12.3.0",
+    "eslint-plugin-import": "~2.22.0",
+    "eslint-plugin-jsx-a11y": "~6.4.0",
+    "eslint-plugin-react": "~7.23.0",
+    "eslint-plugin-react-hooks": "~4.2.0",
+    "eslint-plugin-vue": "~7.9.0",
+    "@typescript-eslint/eslint-plugin": "~4.22.0",
+    "eslint-config-prettier": "~8.3.0",
+    "eslint-plugin-prettier": "~3.4.0"
+  },
+  "peerDependencies": {
+    "typescript": "^4.0.0",
+    "eslint": "^7.25.0",
+    "prettier": "^2.2.0"
+  },
+  "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
+}

@@ -1,0 +1,95 @@
+{
+  "name": "elux",
+  "version": "1.0.0",
+  "description": "Stateful and Modular for Front-End Engineering, Suitable for various javascript runtime",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiisea/elux.git"
+  },
+  "author": "hiisea <hiisea@qq.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hiisea/elux/issues"
+  },
+  "homepage": "https://github.com/hiisea/elux#readme",
+  "main": "index.js",
+  "private": true,
+  "engines": {
+    "node": ">=9.0.0"
+  },
+  "workspaces": [
+    "packages/core",
+    "packages/core-redux",
+    "packages/core-vuex",
+    "packages/route",
+    "packages/route-browser",
+    "packages/route-mp",
+    "packages/react-web-redux",
+    "packages/react-web",
+    "packages/vue-web"
+  ],
+  "scripts": {
+    "commit": "git-cz",
+    "pnpm": "verdaccio",
+    "eslint": "cross-env NODE_ENV=production eslint --cache **/*.{js,jsx,ts,tsx,vue}",
+    "stylelint": "cross-env NODE_ENV=production stylelint --cache **/*.{css,less,vue}",
+    "jsonlint": "prettier --write **/*.json",
+    "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
+    "pre-lerna": "lerna publish --no-git-tag-version --no-push",
+    "lerna": "lerna publish",
+    "build:core": "lerna run build --scope @elux/core",
+    "debug": "node --inspect=19248 --debug-brk"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,vue}": "cross-env NODE_ENV=production eslint --fix --quiet --cache",
+    "*.{css,less,vue}": "cross-env NODE_ENV=production stylelint --fix --quiet --cache",
+    "*.json": "prettier --write"
+  },
+  "resolutions": {
+    "@types/node": "~14.14.7",
+    "@types/jest": "~26.0.15",
+    "@types/express": "~4.17.9",
+    "@types/react": "~17.0.0",
+    "@types/react-dom": "~17.0.0",
+    "@types/react-redux": "~7.1.16",
+    "@babel/runtime": "~7.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "~14.14.7",
+    "@types/jest": "~26.0.15",
+    "@types/express": "~4.17.9",
+    "@types/react": "~17.0.0",
+    "@types/react-dom": "~17.0.0",
+    "@types/react-redux": "~7.1.16",
+    "@commitlint/cli": "~12.1.1",
+    "@commitlint/config-conventional": "~12.1.1",
+    "commitizen": "~4.2.3",
+    "cz-lerna-changelog": "~2.0.3",
+    "husky": "~4.3.8",
+    "lint-staged": "~10.5.4",
+    "jest": "~26.6.3",
+    "lerna": "~4.0.0",
+    "rollup": "~2.45.0",
+    "rollup-plugin-terser": "~7.0.0",
+    "@rollup/plugin-alias": "~3.1.0",
+    "@rollup/plugin-babel": "~5.3.0",
+    "@rollup/plugin-commonjs": "~18.1.0",
+    "@rollup/plugin-node-resolve": "~11.2.0",
+    "@rollup/plugin-replace": "~2.4.0",
+    "@babel/runtime": "~7.12.0",
+    "@elux/dev-pkg": "~0.0.3",
+    "replace-in-file": "~6.2.0",
+    "typescript": "~4.2.0"
+  }
+}

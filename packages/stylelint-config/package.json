@@ -1,0 +1,29 @@
+{
+  "name": "@elux/stylelint-config",
+  "version": "1.0.0",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "description": "Common development tools",
+  "repository": "https://github.com/hiisea/elux/tree/master/packages/stylelint-config",
+  "author": "hiisea <hiisea@qq.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=9.0.0"
+  },
+  "dependencies": {
+    "stylelint-config-prettier": "~8.0.2",
+    "stylelint-config-standard": "~22.0.0",
+    "stylelint-declaration-block-no-ignored-properties": "~2.3.0",
+    "stylelint-prettier": "~1.2.0"
+  },
+  "peerDependencies": {
+    "stylelint": "^13.13.0",
+    "prettier": "^2.2.0"
+  },
+  "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
+}

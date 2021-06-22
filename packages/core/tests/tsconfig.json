@@ -1,0 +1,15 @@
+{
+  "extends": "../src/tsconfig.json",
+  "compilerOptions": {
+    "declarationDir": null,
+    "noEmit": true,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "types": ["jest", "node"],
+    "paths": {
+      "src/*": ["../src/*"]
+    }
+  },
+  "include": ["./"],
+  "exclude": []
+}

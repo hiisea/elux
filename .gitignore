@@ -1,0 +1,7 @@
+node_modules/
+storage/
+*.log
+.eslintcache
+.DS_Store
+tsconfig.tsbuildinfo
+packages/core1/

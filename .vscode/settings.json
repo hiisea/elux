@@ -1,0 +1,20 @@
+{
+  "search.exclude": {
+    "**/yarn.lock": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/docs": true,
+    "**/types": true
+  },
+  "files.eol": "\n",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.formatOnSave": true,
+  "typescript.updateImportsOnFileMove.enabled": "never",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": false,
+    "source.fixAll": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig-src.json",
+  "compilerOptions": {
+    "declarationDir": "../types",
+    "jsx": "preserve"
+  },
+  "include": ["./"],
+  "exclude": []
+}

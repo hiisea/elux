@@ -1,0 +1,37 @@
+{
+  "name": "@elux/babel-preset",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "description": "Common development tools",
+  "repository": "https://github.com/hiisea/elux/tree/master/packages/babel-preset",
+  "author": "hiisea <hiisea@qq.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=9.0.0"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "prebuild": "../../node_modules/.bin/rimraf ./dist",
+    "build": "../../node_modules/.bin/tsc --build ./src"
+  },
+  "dependencies": {
+    "@babel/plugin-transform-typescript": "~7.12.0",
+    "@babel/plugin-proposal-class-properties": "~7.12.0",
+    "@babel/plugin-proposal-decorators": "~7.12.0",
+    "@babel/plugin-transform-runtime": "~7.12.0",
+    "@babel/preset-env": "~7.12.0",
+    "@babel/runtime": "~7.12.0",
+    "@babel/preset-react": "~7.12.0",
+    "@babel/core": "~7.12.0",
+    "@babel/cli": "~7.12.0",
+    "babel-plugin-module-resolver": "~4.1.0",
+    "babel-plugin-root-import": "~6.6.0",
+    "core-js": "*"
+  },
+  "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
+}
