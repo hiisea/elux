@@ -1,4 +1,3 @@
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import _decorate from "@babel/runtime/helpers/esm/decorate";
 import { CoreModuleHandlers, config, reducer, deepMerge, mergeState, deepMergeState, exportModule } from '@elux/core';
 import { createLocationTransform } from './transform';
@@ -79,26 +78,48 @@ export const routeMiddleware = ({
   return next(action);
 };
 
-class RouteModuleHandlers {
-  constructor() {
-    _defineProperty(this, "initState", void 0);
+let RouteModuleHandlers = _decorate(null, function (_initialize2) {
+  class RouteModuleHandlers {
+    constructor() {
+      _initialize2(this);
+    }
 
-    _defineProperty(this, "moduleName", void 0);
-
-    _defineProperty(this, "store", void 0);
-
-    _defineProperty(this, "actions", void 0);
   }
 
-  get state() {
-    return this.store.getState(this.moduleName);
-  }
-
-  RouteChange(routeState) {
-    return mergeState(this.state, routeState);
-  }
-
-}
+  return {
+    F: RouteModuleHandlers,
+    d: [{
+      kind: "field",
+      key: "initState",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "moduleName",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "store",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "actions",
+      value: void 0
+    }, {
+      kind: "get",
+      key: "state",
+      value: function state() {
+        return this.store.getState(this.moduleName);
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: "RouteChange",
+      value: function RouteChange(routeState) {
+        return mergeState(this.state, routeState);
+      }
+    }]
+  };
+});
 
 const defaultNativeLocationMap = {
   in(nativeLocation) {

@@ -96,7 +96,7 @@ export interface SSROptions {
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const {locationTransform} = getModule('route') as RouteModule;
+  const {locationTransform, default: routeModule} = getModule('route') as RouteModule;
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return {
@@ -110,6 +110,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
             const initState = {...storeOptions.initState, route: routeState, ...state};
             const baseStore = storeCreator({...storeOptions, initState});
             return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(({store, AppView}) => {
+              routeModule.model(store);
               router.setStore(store);
               renderFun(<AppView store={store} />, panel);
               return store;

@@ -32,7 +32,8 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
 
   var _ref = getModule('route'),
-      locationTransform = _ref.locationTransform;
+      locationTransform = _ref.locationTransform,
+      routeModule = _ref.default;
 
   return {
     useStore: function useStore(_ref2) {
@@ -68,6 +69,7 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
             return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(function (_ref5) {
               var store = _ref5.store,
                   AppView = _ref5.AppView;
+              routeModule.model(store);
               router.setStore(store);
               renderFun(React.createElement(AppView, {
                 store: store

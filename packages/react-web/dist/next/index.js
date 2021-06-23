@@ -26,7 +26,8 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
   const {
-    locationTransform
+    locationTransform,
+    default: routeModule
   } = getModule('route');
   return {
     useStore({
@@ -59,6 +60,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               store,
               AppView
             }) => {
+              routeModule.model(store);
               router.setStore(store);
               renderFun(React.createElement(AppView, {
                 store: store

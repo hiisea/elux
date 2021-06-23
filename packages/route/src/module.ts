@@ -87,6 +87,7 @@ class RouteModuleHandlers implements IRouteModuleHandlers {
     return this.store.getState(this.moduleName) as RouteState;
   }
 
+  @reducer
   RouteChange(routeState: RouteState) {
     return mergeState(this.state, routeState);
   }

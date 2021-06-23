@@ -9,10 +9,6 @@ exports.routeChangeAction = routeChangeAction;
 exports.createRouteModule = createRouteModule;
 exports.routeMiddleware = exports.RouteActionTypes = exports.ModuleWithRouteHandlers = void 0;
 
-var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
 var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/assertThisInitialized"));
 
 var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/inheritsLoose"));
@@ -121,30 +117,45 @@ var routeMiddleware = function routeMiddleware(_ref) {
 };
 
 exports.routeMiddleware = routeMiddleware;
-
-var RouteModuleHandlers = function () {
-  function RouteModuleHandlers() {
-    (0, _defineProperty2.default)(this, "initState", void 0);
-    (0, _defineProperty2.default)(this, "moduleName", void 0);
-    (0, _defineProperty2.default)(this, "store", void 0);
-    (0, _defineProperty2.default)(this, "actions", void 0);
-  }
-
-  var _proto = RouteModuleHandlers.prototype;
-
-  _proto.RouteChange = function RouteChange(routeState) {
-    return (0, _core.mergeState)(this.state, routeState);
+var RouteModuleHandlers = (0, _decorate2.default)(null, function (_initialize2) {
+  var RouteModuleHandlers = function RouteModuleHandlers() {
+    _initialize2(this);
   };
 
-  (0, _createClass2.default)(RouteModuleHandlers, [{
-    key: "state",
-    get: function get() {
-      return this.store.getState(this.moduleName);
-    }
-  }]);
-  return RouteModuleHandlers;
-}();
-
+  return {
+    F: RouteModuleHandlers,
+    d: [{
+      kind: "field",
+      key: "initState",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "moduleName",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "store",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "actions",
+      value: void 0
+    }, {
+      kind: "get",
+      key: "state",
+      value: function state() {
+        return this.store.getState(this.moduleName);
+      }
+    }, {
+      kind: "method",
+      decorators: [_core.reducer],
+      key: "RouteChange",
+      value: function RouteChange(routeState) {
+        return (0, _core.mergeState)(this.state, routeState);
+      }
+    }]
+  };
+});
 var defaultNativeLocationMap = {
   in: function _in(nativeLocation) {
     return nativeLocation;

@@ -1,5 +1,3 @@
-import _createClass from "@babel/runtime/helpers/esm/createClass";
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _decorate from "@babel/runtime/helpers/esm/decorate";
@@ -96,32 +94,45 @@ export var routeMiddleware = function routeMiddleware(_ref) {
   };
 };
 
-var RouteModuleHandlers = function () {
-  function RouteModuleHandlers() {
-    _defineProperty(this, "initState", void 0);
-
-    _defineProperty(this, "moduleName", void 0);
-
-    _defineProperty(this, "store", void 0);
-
-    _defineProperty(this, "actions", void 0);
-  }
-
-  var _proto = RouteModuleHandlers.prototype;
-
-  _proto.RouteChange = function RouteChange(routeState) {
-    return mergeState(this.state, routeState);
+var RouteModuleHandlers = _decorate(null, function (_initialize2) {
+  var RouteModuleHandlers = function RouteModuleHandlers() {
+    _initialize2(this);
   };
 
-  _createClass(RouteModuleHandlers, [{
-    key: "state",
-    get: function get() {
-      return this.store.getState(this.moduleName);
-    }
-  }]);
-
-  return RouteModuleHandlers;
-}();
+  return {
+    F: RouteModuleHandlers,
+    d: [{
+      kind: "field",
+      key: "initState",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "moduleName",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "store",
+      value: void 0
+    }, {
+      kind: "field",
+      key: "actions",
+      value: void 0
+    }, {
+      kind: "get",
+      key: "state",
+      value: function state() {
+        return this.store.getState(this.moduleName);
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: "RouteChange",
+      value: function RouteChange(routeState) {
+        return mergeState(this.state, routeState);
+      }
+    }]
+  };
+});
 
 var defaultNativeLocationMap = {
   in: function _in(nativeLocation) {
