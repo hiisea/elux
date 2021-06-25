@@ -294,7 +294,7 @@ export var BaseRouter = function () {
 
               _context.next = 15;
               return this.nativeRouter.execute('relaunch', function () {
-                return _this3.locationToNative(_this3.routeState);
+                return _this3.locationToNative(routeState);
               }, key);
 
             case 15:
@@ -386,7 +386,7 @@ export var BaseRouter = function () {
 
               _context2.next = 15;
               return this.nativeRouter.execute('push', function () {
-                return _this4.locationToNative(_this4.routeState);
+                return _this4.locationToNative(routeState);
               }, key);
 
             case 15:
@@ -479,7 +479,7 @@ export var BaseRouter = function () {
 
               _context3.next = 15;
               return this.nativeRouter.execute('replace', function () {
-                return _this5.locationToNative(_this5.routeState);
+                return _this5.locationToNative(routeState);
               }, key);
 
             case 15:
@@ -592,7 +592,7 @@ export var BaseRouter = function () {
 
               _context4.next = 16;
               return this.nativeRouter.execute('back', function () {
-                return _this6.locationToNative(_this6.routeState);
+                return _this6.locationToNative(routeState);
               }, n, key);
 
             case 16:

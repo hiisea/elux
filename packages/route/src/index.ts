@@ -259,7 +259,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | undefined;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNative(this.routeState), key);
+      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNative(routeState), key);
     }
     this._nativeData = nativeData;
     this.routeState = routeState;
@@ -288,7 +288,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | void;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('push', () => this.locationToNative(this.routeState), key);
+      nativeData = await this.nativeRouter.execute('push', () => this.locationToNative(routeState), key);
     }
     this._nativeData = nativeData || undefined;
     this.routeState = routeState;
@@ -317,7 +317,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | void;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNative(this.routeState), key);
+      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNative(routeState), key);
     }
     this._nativeData = nativeData || undefined;
     this.routeState = routeState;
@@ -349,7 +349,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | void;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('back', () => this.locationToNative(this.routeState), n, key);
+      nativeData = await this.nativeRouter.execute('back', () => this.locationToNative(routeState), n, key);
     }
     this._nativeData = nativeData || undefined;
     this.routeState = routeState;

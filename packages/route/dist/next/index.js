@@ -242,7 +242,7 @@ export class BaseRouter {
     let nativeData;
 
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNative(this.routeState), key);
+      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNative(routeState), key);
     }
 
     this._nativeData = nativeData;
@@ -284,7 +284,7 @@ export class BaseRouter {
     let nativeData;
 
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('push', () => this.locationToNative(this.routeState), key);
+      nativeData = await this.nativeRouter.execute('push', () => this.locationToNative(routeState), key);
     }
 
     this._nativeData = nativeData || undefined;
@@ -327,7 +327,7 @@ export class BaseRouter {
     let nativeData;
 
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNative(this.routeState), key);
+      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNative(routeState), key);
     }
 
     this._nativeData = nativeData || undefined;
@@ -378,7 +378,7 @@ export class BaseRouter {
     let nativeData;
 
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('back', () => this.locationToNative(this.routeState), n, key);
+      nativeData = await this.nativeRouter.execute('back', () => this.locationToNative(routeState), n, key);
     }
 
     this._nativeData = nativeData || undefined;
