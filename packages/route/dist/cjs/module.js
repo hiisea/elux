@@ -9,6 +9,8 @@ exports.routeChangeAction = routeChangeAction;
 exports.createRouteModule = createRouteModule;
 exports.routeMiddleware = exports.RouteActionTypes = exports.ModuleWithRouteHandlers = void 0;
 
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
+
 var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/assertThisInitialized"));
 
 var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/inheritsLoose"));
@@ -180,9 +182,8 @@ function createRouteModule(pagenameMap, nativeLocationMap, notfoundPagename, par
 
   var handlers = RouteModuleHandlers;
   var locationTransform = (0, _transform.createLocationTransform)(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  var result = (0, _core.exportModule)('route', handlers, {}, {});
-  return {
-    default: result,
+  var routeModule = (0, _core.exportModule)('route', handlers, {}, {});
+  return (0, _extends2.default)({}, routeModule, {
     locationTransform: locationTransform
-  };
+  });
 }

@@ -1,3 +1,4 @@
+import _extends from "@babel/runtime/helpers/esm/extends";
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _decorate from "@babel/runtime/helpers/esm/decorate";
@@ -157,9 +158,8 @@ export function createRouteModule(pagenameMap, nativeLocationMap, notfoundPagena
 
   var handlers = RouteModuleHandlers;
   var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  var result = exportModule('route', handlers, {}, {});
-  return {
-    default: result,
+  var routeModule = exportModule('route', handlers, {}, {});
+  return _extends({}, routeModule, {
     locationTransform: locationTransform
-  };
+  });
 }

@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.defineView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.getComponentList = exports.getComponet = exports.exportModule = exports.loadModel = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
+exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.defineComponent = exports.defineView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.getComponentList = exports.getComponet = exports.exportModule = exports.loadModel = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
 
 var _basic = require("./basic");
 
@@ -36,6 +36,7 @@ exports.getModule = _inject.getModule;
 exports.getModuleList = _inject.getModuleList;
 exports.getCachedModules = _inject.getCachedModules;
 exports.defineView = _inject.defineView;
+exports.defineComponent = _inject.defineComponent;
 
 var _sprite = require("./sprite");
 

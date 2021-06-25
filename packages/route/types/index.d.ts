@@ -1,4 +1,3 @@
-import { EluxLocation } from './basic';
 import { History } from './history';
 import type { LocationTransform, NativeLocation } from './transform';
 import type { RootParams, Location, RouteState, PayloadLocation } from './basic';
@@ -67,17 +66,18 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     setStore(_store: Store): void;
     getCurKey(): string;
     findHistoryIndexByKey(key: string): number;
-    eluxLocationToNativeUrl(location: EluxLocation): string;
-    urlToEluxLocation(url: string): EluxLocation;
+    locationToNative(location: Location<any>): {
+        nativeUrl: string;
+        nativeLocation: NativeLocation;
+    };
     urlToLocation(url: string): Location<P> | Promise<Location<P>>;
     private _createKey;
-    private eluxLocationToLocation;
     private preAdditions;
-    relaunch(data: PayloadLocation<P, N> | NativeLocation | string, internal?: boolean, disableNative?: boolean): void;
+    relaunch(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
     private _relaunch;
-    push(data: PayloadLocation<P, N> | NativeLocation | string, internal?: boolean, disableNative?: boolean): void;
+    push(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
     private _push;
-    replace(data: PayloadLocation<P, N> | NativeLocation | string, internal?: boolean, disableNative?: boolean): void;
+    replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
     private _replace;
     back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
     private _back;
@@ -99,11 +99,14 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
     setStore(_store: Store): void;
     getCurKey(): string;
     findHistoryIndexByKey(key: string): number;
-    relaunch(data: PayloadLocation<P, N> | NativeLocation | string, internal?: boolean, disableNative?: boolean): void;
-    push(data: PayloadLocation<P, N> | NativeLocation | string, internal?: boolean, disableNative?: boolean): void;
-    replace(data: PayloadLocation<P, N> | NativeLocation | string, internal?: boolean, disableNative?: boolean): void;
+    relaunch(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
+    push(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
+    replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
     back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
     destroy(): void;
-    eluxLocationToNativeUrl(location: EluxLocation): string;
-    urlToEluxLocation(url: string): EluxLocation;
+    locationToNative(location: Location<any>): {
+        nativeUrl: string;
+        nativeLocation: NativeLocation;
+    };
+    urlToLocation(url: string): Location<P> | Promise<Location<P>>;
 }

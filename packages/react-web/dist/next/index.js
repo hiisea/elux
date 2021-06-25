@@ -4,9 +4,9 @@ import { hydrate, render } from 'react-dom';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
-import { loadView, setLoadViewOptions, DepsContext } from './loadView';
+import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, defineView } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, defineView, defineComponent } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
 export { DocumentHead } from './components/DocumentHead';
@@ -20,15 +20,12 @@ export function setSsrHtmlTpl(tpl) {
 export function setConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
-  setLoadViewOptions(conf);
+  setLoadComponentOptions(conf);
 }
 export function createApp(moduleGetter, middlewares = [], appModuleName) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const {
-    locationTransform,
-    default: routeModule
-  } = getModule('route');
+  const routeModule = getModule('route');
   return {
     useStore({
       storeOptions,
@@ -40,7 +37,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
           ssrKey = 'eluxInitStore',
           viewName
         } = {}) {
-          const router = createRouter('Browser', locationTransform);
+          const router = createRouter('Browser', routeModule.locationTransform);
           MetaData.router = router;
           const renderFun = env[ssrKey] ? hydrate : render;
           const {
@@ -60,9 +57,10 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               store,
               AppView
             }) => {
+              const RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(React.createElement(AppView, {
+              renderFun(React.createElement(RootView, {
                 store: store
               }), panel);
               return store;
@@ -80,7 +78,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }
 
-          const router = createRouter(url, locationTransform);
+          const router = createRouter(url, routeModule.locationTransform);
           MetaData.router = router;
           return router.initedPromise.then(routeState => {
             const initState = { ...storeOptions.initState,
@@ -93,12 +91,13 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               store,
               AppView
             }) => {
+              const RootView = AppView;
               const state = store.getState();
               const deps = {};
 
               let html = require('react-dom/server').renderToString(React.createElement(DepsContext.Provider, {
                 value: deps
-              }, React.createElement(AppView, {
+              }, React.createElement(RootView, {
                 store: store
               })));
 
@@ -138,7 +137,7 @@ export function getApp() {
       }, {});
     },
     GetRouter: () => MetaData.router,
-    LoadView: loadView,
+    LoadComponent: loadComponent,
     Modules: modules,
     Pagenames: routeConfig.pagenames
   };

@@ -1,4 +1,4 @@
-import { deepMerge, getCachedModules, env, isPromise } from '@elux/core';
+import { deepMerge, getCachedModules, env, isPromise, getModuleList } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
 import { routeConfig } from './basic';
 export function getDefaultParams() {
@@ -11,7 +11,7 @@ export function getDefaultParams() {
     const result = modules[moduleName];
 
     if (result && !isPromise(result)) {
-      data[moduleName] = result.default.params;
+      data[moduleName] = result.params;
     }
 
     return data;
@@ -26,115 +26,6 @@ export function assignDefaultData(data) {
 
     return params;
   }, {});
-}
-export function dataIsNativeLocation(data) {
-  return data['pathname'];
-}
-export function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename = '/404', paramsKey = '_') {
-  let pagenames = Object.keys(pagenameMap);
-  pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
-    const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
-    return map;
-  }, {});
-  routeConfig.pagenames = pagenames.reduce((obj, key) => {
-    obj[key] = key;
-    return obj;
-  }, {});
-  pagenames = Object.keys(pagenameMap);
-
-  function toStringArgs(arr) {
-    return arr.map(item => {
-      if (item === null || item === undefined) {
-        return undefined;
-      }
-
-      return item.toString();
-    });
-  }
-
-  return {
-    in(data) {
-      let path;
-
-      if (dataIsNativeLocation(data)) {
-        data = nativeLocationMap.in(data);
-        path = data.pathname;
-      } else {
-        path = data.pagename;
-      }
-
-      path = `/${path}/`.replace(/^\/+|\/+$/g, '/');
-      let pagename = pagenames.find(name => path.startsWith(name));
-      let params;
-
-      if (pagename) {
-        if (dataIsNativeLocation(data)) {
-          const searchParams = data.searchData && data.searchData[paramsKey] ? JSON.parse(data.searchData[paramsKey]) : undefined;
-          const hashParams = data.hashData && data.hashData[paramsKey] ? JSON.parse(data.hashData[paramsKey]) : undefined;
-          const pathArgs = path.replace(pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
-          const pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-          params = deepMerge(pathParams, searchParams, hashParams);
-        } else {
-          const pathParams = pagenameMap[pagename].argsToParams([]);
-          params = deepMerge(pathParams, data.params);
-        }
-      } else {
-        pagename = `${notfoundPagename}/`;
-        params = pagenameMap[pagename] ? pagenameMap[pagename].argsToParams([path.replace(/\/$/, '')]) : {};
-      }
-
-      return {
-        pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`,
-        params
-      };
-    },
-
-    out(eluxLocation) {
-      let params = excludeDefault(eluxLocation.params, getDefaultParams(), true);
-      const pagename = `/${eluxLocation.pagename}/`.replace(/^\/+|\/+$/g, '/');
-      let pathParams;
-      let pathname;
-
-      if (pagenameMap[pagename]) {
-        const pathArgs = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-        pathname = pagename + pathArgs.map(item => item && encodeURIComponent(item)).join('/').replace(/\/*$/, '');
-      } else {
-        pathParams = {};
-        pathname = pagename;
-      }
-
-      params = excludeDefault(params, pathParams, false);
-      const result = splitPrivate(params, pathParams);
-      const nativeLocation = {
-        pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`,
-        searchData: result[0] ? {
-          [paramsKey]: JSON.stringify(result[0])
-        } : undefined,
-        hashData: result[1] ? {
-          [paramsKey]: JSON.stringify(result[1])
-        } : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
-    }
-
-  };
-}
-export function nativeLocationToEluxLocation(nativeLocation, locationTransform) {
-  let eluxLocation;
-
-  try {
-    eluxLocation = locationTransform.in(nativeLocation);
-  } catch (error) {
-    env.console.warn(error);
-    eluxLocation = {
-      pagename: '/',
-      params: {}
-    };
-  }
-
-  return eluxLocation;
 }
 
 function splitQuery(query) {
@@ -177,8 +68,30 @@ export function nativeUrlToNativeLocation(url) {
     hashData: splitQuery(hash)
   };
 }
-export function nativeUrlToEluxLocation(nativeUrl, locationTransform) {
-  return nativeLocationToEluxLocation(nativeUrlToNativeLocation(nativeUrl), locationTransform);
+export function eluxUrlToEluxLocation(url) {
+  if (!url) {
+    return {
+      pathname: '/',
+      params: undefined
+    };
+  }
+
+  const [pathname, ...others] = url.split('?');
+  const query = others.join('?');
+  let params;
+
+  if (query && query.charAt(0) === '{' && query.charAt(query.length - 1) === '}') {
+    try {
+      params = JSON.parse(query);
+    } catch (e) {
+      env.console.error(e);
+    }
+  }
+
+  return {
+    pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`,
+    params
+  };
 }
 
 function joinQuery(params) {
@@ -194,38 +107,8 @@ export function nativeLocationToNativeUrl({
   const hash = joinQuery(hashData);
   return [`/${pathname.replace(/^\/+|\/+$/g, '')}`, search && `?${search}`, hash && `#${hash}`].join('');
 }
-export function eluxLocationToNativeUrl(location, locationTransform) {
-  const nativeLocation = locationTransform.out(location);
-  return nativeLocationToNativeUrl(nativeLocation);
-}
 export function eluxLocationToEluxUrl(location) {
-  return [location.pagename, JSON.stringify(location.params || {})].join('?');
-}
-export function urlToEluxLocation(url, locationTransform) {
-  const [pathname, ...others] = url.split('?');
-  const query = others.join('?');
-  let location;
-
-  try {
-    if (query.startsWith('{')) {
-      const data = JSON.parse(query);
-      location = locationTransform.in({
-        pagename: pathname,
-        params: data
-      });
-    } else {
-      const nativeLocation = nativeUrlToNativeLocation(url);
-      location = locationTransform.in(nativeLocation);
-    }
-  } catch (error) {
-    env.console.warn(error);
-    location = {
-      pagename: '/',
-      params: {}
-    };
-  }
-
-  return location;
+  return [location.pathname, JSON.stringify(location.params || {})].join('?');
 }
 export function payloadToEluxLocation(payload, curRouteState) {
   let params = payload.params;
@@ -238,7 +121,152 @@ export function payloadToEluxLocation(payload, curRouteState) {
   }
 
   return {
-    pagename: payload.pagename || curRouteState.pagename,
-    params: params || {}
+    pathname: payload.pathname || curRouteState.pagename,
+    params
+  };
+}
+export function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename = '/404', paramsKey = '_') {
+  let pagenames = Object.keys(pagenameMap);
+  pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
+    const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
+    map[fullPagename] = pagenameMap[pagename];
+    return map;
+  }, {});
+  routeConfig.pagenames = pagenames.reduce((obj, key) => {
+    obj[key] = key;
+    return obj;
+  }, {});
+  pagenames = Object.keys(pagenameMap);
+
+  function toStringArgs(arr) {
+    return arr.map(item => {
+      if (item === null || item === undefined) {
+        return undefined;
+      }
+
+      return item.toString();
+    });
+  }
+
+  return {
+    urlToEluxLocation(url) {
+      const [, query] = url.split('?', 2);
+
+      if (query && query.charAt(0) === '{') {
+        return eluxUrlToEluxLocation(url);
+      }
+
+      return this.nativeUrlToEluxLocation(url);
+    },
+
+    nativeUrlToEluxLocation(nativeUrl) {
+      return this.nativeLocationToEluxLocation(nativeUrlToNativeLocation(nativeUrl));
+    },
+
+    nativeLocationToEluxLocation(nativeLocation) {
+      nativeLocation = nativeLocationMap.in(nativeLocation);
+      let searchParams;
+      let hashParams;
+
+      try {
+        searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
+        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
+      } catch (e) {
+        env.console.error(e);
+      }
+
+      return {
+        pathname: nativeLocation.pathname,
+        params: deepMerge(searchParams, hashParams)
+      };
+    },
+
+    eluxLocationtoPartialLocation(eluxLocation) {
+      const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
+      let pagename = pagenames.find(name => pathname.startsWith(name));
+      let params;
+
+      if (pagename) {
+        const pathArgs = pathname.replace(pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
+        const pathParams = pagenameMap[pagename].argsToParams(pathArgs);
+        params = deepMerge({}, pathParams, eluxLocation.params);
+      } else {
+        pagename = `${notfoundPagename}/`;
+        params = {};
+      }
+
+      return {
+        pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`,
+        params
+      };
+    },
+
+    partialLocationToLocation(partialLocation) {
+      const {
+        pagename,
+        params
+      } = partialLocation;
+
+      if (routeConfig.defaultParams) {
+        return {
+          pagename,
+          params: assignDefaultData(params)
+        };
+      }
+
+      return getModuleList(Object.keys(params)).then(() => {
+        return {
+          pagename,
+          params: assignDefaultData(params)
+        };
+      });
+    },
+
+    eluxLocationtoLocation(eluxLocation) {
+      return this.partialLocationToLocation(this.eluxLocationtoPartialLocation(eluxLocation));
+    },
+
+    locationToMinData(location) {
+      let params = excludeDefault(location.params, getDefaultParams(), true);
+      let pathParams;
+      let pathname;
+      const pagename = `/${location.pagename}/`.replace(/^\/+|\/+$/g, '/');
+
+      if (pagenameMap[pagename]) {
+        const pathArgs = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
+        pathname = pagename + pathArgs.map(item => item ? encodeURIComponent(item) : '').join('/').replace(/\/*$/, '');
+        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
+      } else {
+        pathname = pagename;
+        pathParams = {};
+      }
+
+      params = excludeDefault(params, pathParams, false);
+      return {
+        pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`,
+        params,
+        pathParams
+      };
+    },
+
+    locationtoNativeLocation(location) {
+      const {
+        pathname,
+        params,
+        pathParams
+      } = this.locationToMinData(location);
+      const result = splitPrivate(params, pathParams);
+      const nativeLocation = {
+        pathname,
+        searchData: result[0] ? {
+          [paramsKey]: JSON.stringify(result[0])
+        } : undefined,
+        hashData: result[1] ? {
+          [paramsKey]: JSON.stringify(result[1])
+        } : undefined
+      };
+      return nativeLocationMap.out(nativeLocation);
+    }
+
   };
 }

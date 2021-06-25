@@ -2,11 +2,11 @@ import _regeneratorRuntime from "@babel/runtime/regenerator";
 import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, getModuleList } from '@elux/core';
+import { isPromise } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
 import { History, uriToLocation } from './history';
 import { testRouteChangeAction, routeChangeAction } from './module';
-import { assignDefaultData, dataIsNativeLocation, eluxLocationToEluxUrl, eluxLocationToNativeUrl as _eluxLocationToNativeUrl, nativeUrlToEluxLocation, nativeLocationToEluxLocation, nativeLocationToNativeUrl, urlToEluxLocation as _urlToEluxLocation, payloadToEluxLocation } from './transform';
+import { eluxLocationToEluxUrl, nativeLocationToNativeUrl, payloadToEluxLocation } from './transform';
 export { setRouteConfig, routeConfig } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation } from './transform';
 export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
@@ -99,7 +99,7 @@ export var BaseRouter = function () {
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
-    var eluxLocation = typeof nativeLocationOrNativeUrl === 'string' ? nativeUrlToEluxLocation(nativeLocationOrNativeUrl, locationTransform) : nativeLocationToEluxLocation(nativeLocationOrNativeUrl, locationTransform);
+    var eluxLocation = typeof nativeLocationOrNativeUrl === 'string' ? locationTransform.nativeUrlToEluxLocation(nativeLocationOrNativeUrl) : locationTransform.nativeLocationToEluxLocation(nativeLocationOrNativeUrl);
 
     var callback = function callback(location) {
       var key = _this2._createKey();
@@ -110,7 +110,10 @@ export var BaseRouter = function () {
       });
 
       _this2.routeState = routeState;
-      _this2.eluxUrl = eluxLocationToEluxUrl(routeState);
+      _this2.eluxUrl = eluxLocationToEluxUrl({
+        pathname: routeState.pagename,
+        params: routeState.params
+      });
 
       if (!routeConfig.indexUrl) {
         setRouteConfig({
@@ -125,7 +128,7 @@ export var BaseRouter = function () {
       return routeState;
     };
 
-    var locationOrPromise = this.eluxLocationToLocation(eluxLocation);
+    var locationOrPromise = locationTransform.eluxLocationtoLocation(eluxLocation);
 
     if (isPromise(locationOrPromise)) {
       this.initedPromise = locationOrPromise.then(callback);
@@ -173,12 +176,7 @@ export var BaseRouter = function () {
 
   _proto2.getNativeLocation = function getNativeLocation() {
     if (!this._nativeData) {
-      var nativeLocation = this.locationTransform.out(this.routeState);
-      var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
-      this._nativeData = {
-        nativeLocation: nativeLocation,
-        nativeUrl: nativeUrl
-      };
+      this._nativeData = this.locationToNative(this.routeState);
     }
 
     return this._nativeData.nativeLocation;
@@ -186,12 +184,7 @@ export var BaseRouter = function () {
 
   _proto2.getNativeUrl = function getNativeUrl() {
     if (!this._nativeData) {
-      var nativeLocation = this.locationTransform.out(this.routeState);
-      var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
-      this._nativeData = {
-        nativeLocation: nativeLocation,
-        nativeUrl: nativeUrl
-      };
+      this._nativeData = this.locationToNative(this.routeState);
     }
 
     return this._nativeData.nativeUrl;
@@ -209,42 +202,23 @@ export var BaseRouter = function () {
     return this.history.findIndex(key);
   };
 
-  _proto2.eluxLocationToNativeUrl = function eluxLocationToNativeUrl(location) {
-    return _eluxLocationToNativeUrl(location, this.locationTransform);
-  };
-
-  _proto2.urlToEluxLocation = function urlToEluxLocation(url) {
-    return _urlToEluxLocation(url, this.locationTransform);
+  _proto2.locationToNative = function locationToNative(location) {
+    var nativeLocation = this.locationTransform.locationtoNativeLocation(location);
+    var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
+    return {
+      nativeUrl: nativeUrl,
+      nativeLocation: nativeLocation
+    };
   };
 
   _proto2.urlToLocation = function urlToLocation(url) {
-    var eluxLocation = _urlToEluxLocation(url, this.locationTransform);
-
-    return this.eluxLocationToLocation(eluxLocation);
+    var eluxLocation = this.locationTransform.urlToEluxLocation(url);
+    return this.locationTransform.eluxLocationtoLocation(eluxLocation);
   };
 
   _proto2._createKey = function _createKey() {
     this._tid++;
     return "" + this._tid;
-  };
-
-  _proto2.eluxLocationToLocation = function eluxLocationToLocation(eluxLocation) {
-    var pagename = eluxLocation.pagename;
-    var params = eluxLocation.params || {};
-
-    if (routeConfig.defaultParams) {
-      return {
-        pagename: pagename,
-        params: assignDefaultData(params)
-      };
-    }
-
-    return getModuleList(Object.keys(params)).then(function () {
-      return {
-        pagename: pagename,
-        params: assignDefaultData(params)
-      };
-    });
   };
 
   _proto2.preAdditions = function preAdditions(data) {
@@ -256,14 +230,12 @@ export var BaseRouter = function () {
         return null;
       }
 
-      eluxLocation = _urlToEluxLocation(data, this.locationTransform);
-    } else if (dataIsNativeLocation(data)) {
-      eluxLocation = nativeLocationToEluxLocation(data, this.locationTransform);
+      eluxLocation = this.locationTransform.urlToEluxLocation(data);
     } else {
-      eluxLocation = this.locationTransform.in(payloadToEluxLocation(data, this.routeState));
+      eluxLocation = payloadToEluxLocation(data, this.routeState);
     }
 
-    return this.eluxLocationToLocation(eluxLocation);
+    return this.locationTransform.eluxLocationtoLocation(eluxLocation);
   };
 
   _proto2.relaunch = function relaunch(data, internal, disableNative) {
@@ -322,13 +294,7 @@ export var BaseRouter = function () {
 
               _context.next = 15;
               return this.nativeRouter.execute('relaunch', function () {
-                var nativeLocation = _this3.locationTransform.out(routeState);
-
-                var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
-                return {
-                  nativeLocation: nativeLocation,
-                  nativeUrl: nativeUrl
-                };
+                return _this3.locationToNative(_this3.routeState);
               }, key);
 
             case 15:
@@ -337,7 +303,10 @@ export var BaseRouter = function () {
             case 16:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.eluxUrl = eluxLocationToEluxUrl(routeState);
+              this.eluxUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
               this.store.dispatch(routeChangeAction(routeState));
 
               if (internal) {
@@ -417,13 +386,7 @@ export var BaseRouter = function () {
 
               _context2.next = 15;
               return this.nativeRouter.execute('push', function () {
-                var nativeLocation = _this4.locationTransform.out(routeState);
-
-                var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
-                return {
-                  nativeLocation: nativeLocation,
-                  nativeUrl: nativeUrl
-                };
+                return _this4.locationToNative(_this4.routeState);
               }, key);
 
             case 15:
@@ -432,7 +395,10 @@ export var BaseRouter = function () {
             case 16:
               this._nativeData = nativeData || undefined;
               this.routeState = routeState;
-              this.eluxUrl = eluxLocationToEluxUrl(routeState);
+              this.eluxUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
 
               if (internal) {
                 this.history.getCurrentInternalHistory().push(location, key);
@@ -513,13 +479,7 @@ export var BaseRouter = function () {
 
               _context3.next = 15;
               return this.nativeRouter.execute('replace', function () {
-                var nativeLocation = _this5.locationTransform.out(routeState);
-
-                var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
-                return {
-                  nativeLocation: nativeLocation,
-                  nativeUrl: nativeUrl
-                };
+                return _this5.locationToNative(_this5.routeState);
               }, key);
 
             case 15:
@@ -528,7 +488,10 @@ export var BaseRouter = function () {
             case 16:
               this._nativeData = nativeData || undefined;
               this.routeState = routeState;
-              this.eluxUrl = eluxLocationToEluxUrl(routeState);
+              this.eluxUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
 
               if (internal) {
                 this.history.getCurrentInternalHistory().replace(location, key);
@@ -629,13 +592,7 @@ export var BaseRouter = function () {
 
               _context4.next = 16;
               return this.nativeRouter.execute('back', function () {
-                var nativeLocation = _this6.locationTransform.out(routeState);
-
-                var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
-                return {
-                  nativeLocation: nativeLocation,
-                  nativeUrl: nativeUrl
-                };
+                return _this6.locationToNative(_this6.routeState);
               }, n, key);
 
             case 16:
@@ -644,7 +601,10 @@ export var BaseRouter = function () {
             case 17:
               this._nativeData = nativeData || undefined;
               this.routeState = routeState;
-              this.eluxUrl = eluxLocationToEluxUrl(routeState);
+              this.eluxUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
 
               if (internal) {
                 this.history.getCurrentInternalHistory().back(n);

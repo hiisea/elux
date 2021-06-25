@@ -30,3 +30,8 @@ server.on('error', (error) => {
 server.on('listening', () => {
     console.info(`\n.....${chalk_1.default.magenta('MockServer')} running at ${chalk_1.default.magenta(`http://localhost:${port}/`)}\n`);
 });
+['SIGINT', 'SIGTERM'].forEach((signal) => {
+    process.on(signal, () => {
+        process.exit(1);
+    });
+});

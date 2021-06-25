@@ -29,7 +29,7 @@ function defineModuleGetter(moduleGetter, appModuleName) {
   _basic.MetaData.appModuleName = appModuleName;
   _basic.MetaData.moduleGetter = moduleGetter;
 
-  if (typeof moduleGetter[appModuleName] !== 'function') {
+  if (!moduleGetter[appModuleName]) {
     throw appModuleName + " could not be found in moduleGetter";
   }
 }
@@ -65,7 +65,7 @@ function _renderApp() {
             return (0, _inject.getComponentList)(preloadComponents);
 
           case 11:
-            appModule = modules[0].default;
+            appModule = modules[0];
             _context.next = 14;
             return appModule.model(store);
 
@@ -113,7 +113,7 @@ function _ssrApp() {
 
           case 7:
             _yield$getModuleList = _context2.sent;
-            appModule = _yield$getModuleList[0].default;
+            appModule = _yield$getModuleList[0];
             otherModules = _yield$getModuleList.slice(1);
             _context2.next = 12;
             return appModule.model(store);
@@ -121,7 +121,7 @@ function _ssrApp() {
           case 12:
             _context2.next = 14;
             return Promise.all(otherModules.map(function (module) {
-              return module.default.model(store);
+              return module.model(store);
             }));
 
           case 14:

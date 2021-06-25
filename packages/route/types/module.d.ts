@@ -28,13 +28,11 @@ export declare type RouteModule = CommonModule & {
     locationTransform: LocationTransform;
 };
 export declare function createRouteModule<G extends PagenameMap<any>>(pagenameMap: G, nativeLocationMap?: NativeLocationMap, notfoundPagename?: string, paramsKey?: string): {
-    default: {
-        moduleName: "route";
-        model: (store: IStore<{}>) => void | Promise<void>;
-        state: RouteState<any>;
-        params: {};
-        actions: {};
-        components: { [k in keyof G]: any; };
-    };
     locationTransform: LocationTransform;
+    moduleName: "route";
+    model: (store: IStore<{}>) => void | Promise<void>;
+    state: RouteState<any>;
+    params: {};
+    actions: {};
+    components: { [k in keyof G]: any; };
 };

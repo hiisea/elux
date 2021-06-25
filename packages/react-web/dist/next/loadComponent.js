@@ -4,24 +4,24 @@ import React, { Component } from 'react';
 import { getComponet, isPromise, env, config } from '@elux/core';
 export const DepsContext = React.createContext({});
 DepsContext.displayName = 'EluxComponentLoader';
-const loadViewDefaultOptions = {
-  LoadViewOnError: ({
+const loadComponentDefaultOptions = {
+  LoadComponentOnError: ({
     message
   }) => React.createElement("div", {
-    className: "g-view-error"
+    className: "g-component-error"
   }, message),
-  LoadViewOnLoading: () => React.createElement("div", {
-    className: "g-view-loading"
+  LoadComponentOnLoading: () => React.createElement("div", {
+    className: "g-component-loading"
   }, "loading...")
 };
-export function setLoadViewOptions({
-  LoadViewOnError,
-  LoadViewOnLoading
+export function setLoadComponentOptions({
+  LoadComponentOnError,
+  LoadComponentOnLoading
 }) {
-  LoadViewOnError && (loadViewDefaultOptions.LoadViewOnError = LoadViewOnError);
-  LoadViewOnLoading && (loadViewDefaultOptions.LoadViewOnLoading = LoadViewOnLoading);
+  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
+  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
-export const loadView = (moduleName, viewName, options) => {
+export const loadComponent = (moduleName, viewName, options) => {
   const {
     OnLoading,
     OnError
@@ -111,11 +111,11 @@ export const loadView = (moduleName, viewName, options) => {
       }
 
       if (this.loading) {
-        const Comp = OnLoading || loadViewDefaultOptions.LoadViewOnLoading;
+        const Comp = OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
         return React.createElement(Comp, null);
       }
 
-      const Comp = OnError || loadViewDefaultOptions.LoadViewOnError;
+      const Comp = OnError || loadComponentDefaultOptions.LoadComponentOnError;
       return React.createElement(Comp, {
         message: this.error
       });

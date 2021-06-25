@@ -5,7 +5,7 @@ import {hydrate, render} from 'react-dom';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
 import {env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
 import {createRouter} from '@elux/route-browser';
-import {loadView, setLoadViewOptions, DepsContext} from './loadView';
+import {loadComponent, setLoadComponentOptions, DepsContext} from './loadComponent';
 import {MetaData} from './sington';
 import type {ComponentType} from 'react';
 import type {
@@ -20,12 +20,12 @@ import type {
 } from '@elux/core';
 import type {RouteModule} from '@elux/route';
 import type {IRouter} from '@elux/route-browser';
-import type {LoadView} from './loadView';
+import type {LoadComponent} from './loadComponent';
 
-export type {RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState} from '@elux/core';
+export type {RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState, EluxComponent} from '@elux/core';
 
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
-export type {LoadView} from './loadView';
+export type {LoadComponent} from './loadComponent';
 export type {ConnectRedux} from '@elux/react-web-redux';
 export type {ReduxStore, ReduxOptions} from '@elux/core-redux';
 
@@ -48,6 +48,7 @@ export {
   setProcessedError,
   delayPromise,
   defineView,
+  defineComponent,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
 export {connectRedux, createRedux, Provider} from '@elux/react-web-redux';
@@ -72,13 +73,13 @@ export function setConfig(conf: {
   MSP?: string;
   MutableData?: boolean;
   DepthTimeOnLoading?: number;
-  LoadViewOnError?: ComponentType<{message: string}>;
-  LoadViewOnLoading?: ComponentType<{}>;
+  LoadComponentOnError?: ComponentType<{message: string}>;
+  LoadComponentOnLoading?: ComponentType<{}>;
   disableNativeRoute?: boolean;
 }) {
   setCoreConfig(conf);
   setRouteConfig(conf);
-  setLoadViewOptions(conf);
+  setLoadComponentOptions(conf);
 }
 
 export interface RenderOptions {
@@ -96,12 +97,12 @@ export interface SSROptions {
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const {locationTransform, default: routeModule} = getModule('route') as RouteModule;
+  const routeModule = getModule('route') as RouteModule;
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return {
         render({id = 'root', ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
-          const router = createRouter('Browser', locationTransform);
+          const router = createRouter('Browser', routeModule.locationTransform);
           MetaData.router = router;
           const renderFun = env[ssrKey] ? hydrate : render;
           const {state, deps = []}: {state: any; deps: string[]} = env[ssrKey] || {};
@@ -110,9 +111,10 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
             const initState = {...storeOptions.initState, route: routeState, ...state};
             const baseStore = storeCreator({...storeOptions, initState});
             return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(({store, AppView}) => {
+              const RootView: ComponentType<any> = AppView as any;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(<AppView store={store} />, panel);
+              renderFun(<RootView store={store} />, panel);
               return store;
             });
           });
@@ -121,17 +123,18 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }
-          const router = createRouter(url, locationTransform);
+          const router = createRouter(url, routeModule.locationTransform);
           MetaData.router = router;
           return router.initedPromise.then((routeState) => {
             const initState = {...storeOptions.initState, route: routeState};
             const baseStore = storeCreator({...storeOptions, initState});
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
+              const RootView: ComponentType<any> = AppView as any;
               const state = store.getState();
               const deps = {};
               let html: string = require('react-dom/server').renderToString(
                 <DepsContext.Provider value={deps}>
-                  <AppView store={store} />
+                  <RootView store={store} />
                 </DepsContext.Provider>
               );
               const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
@@ -163,15 +166,15 @@ export type GetAPP<A extends RootModuleFacade> = {
   RouteParams: {[M in keyof A]?: A[M]['params']};
   GetRouter: () => IRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A['route']['components'], string>>;
   GetActions<N extends keyof A>(...args: N[]): {[K in N]: A[K]['actions']};
-  LoadView: LoadView<A>;
+  LoadComponent: LoadComponent<A>;
   Modules: RootModuleAPI<A>;
   Actions: RootModuleActions<A>;
   Pagenames: {[K in keyof A['route']['components']]: K};
 };
 
-export function getApp<T extends {GetActions: any; GetRouter: any; LoadView: any; Modules: any; Pagenames: any}>(): Pick<
+export function getApp<T extends {GetActions: any; GetRouter: any; LoadComponent: any; Modules: any; Pagenames: any}>(): Pick<
   T,
-  'GetActions' | 'GetRouter' | 'LoadView' | 'Modules' | 'Pagenames'
+  'GetActions' | 'GetRouter' | 'LoadComponent' | 'Modules' | 'Pagenames'
 > {
   const modules = getRootModuleAPI();
   return {
@@ -182,7 +185,7 @@ export function getApp<T extends {GetActions: any; GetRouter: any; LoadView: any
       }, {});
     },
     GetRouter: () => MetaData.router,
-    LoadView: loadView,
+    LoadComponent: loadComponent,
     Modules: modules,
     Pagenames: routeConfig.pagenames,
   };

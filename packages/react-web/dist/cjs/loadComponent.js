@@ -3,8 +3,8 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.setLoadViewOptions = setLoadViewOptions;
-exports.loadView = exports.DepsContext = void 0;
+exports.setLoadComponentOptions = setLoadComponentOptions;
+exports.loadComponent = exports.DepsContext = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -28,28 +28,28 @@ var DepsContext = _react.default.createContext({});
 
 exports.DepsContext = DepsContext;
 DepsContext.displayName = 'EluxComponentLoader';
-var loadViewDefaultOptions = {
-  LoadViewOnError: function LoadViewOnError(_ref) {
+var loadComponentDefaultOptions = {
+  LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return _react.default.createElement("div", {
-      className: "g-view-error"
+      className: "g-component-error"
     }, message);
   },
-  LoadViewOnLoading: function LoadViewOnLoading() {
+  LoadComponentOnLoading: function LoadComponentOnLoading() {
     return _react.default.createElement("div", {
-      className: "g-view-loading"
+      className: "g-component-loading"
     }, "loading...");
   }
 };
 
-function setLoadViewOptions(_ref2) {
-  var LoadViewOnError = _ref2.LoadViewOnError,
-      LoadViewOnLoading = _ref2.LoadViewOnLoading;
-  LoadViewOnError && (loadViewDefaultOptions.LoadViewOnError = LoadViewOnError);
-  LoadViewOnLoading && (loadViewDefaultOptions.LoadViewOnLoading = LoadViewOnLoading);
+function setLoadComponentOptions(_ref2) {
+  var LoadComponentOnError = _ref2.LoadComponentOnError,
+      LoadComponentOnLoading = _ref2.LoadComponentOnLoading;
+  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
+  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
 
-var loadView = function loadView(moduleName, viewName, options) {
+var loadComponent = function loadComponent(moduleName, viewName, options) {
   var _ref3 = options || {},
       OnLoading = _ref3.OnLoading,
       OnError = _ref3.OnError;
@@ -143,12 +143,12 @@ var loadView = function loadView(moduleName, viewName, options) {
       }
 
       if (this.loading) {
-        var _Comp = OnLoading || loadViewDefaultOptions.LoadViewOnLoading;
+        var _Comp = OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
 
         return _react.default.createElement(_Comp, null);
       }
 
-      var Comp = OnError || loadViewDefaultOptions.LoadViewOnError;
+      var Comp = OnError || loadComponentDefaultOptions.LoadComponentOnError;
       return _react.default.createElement(Comp, {
         message: this.error
       });
@@ -165,4 +165,4 @@ var loadView = function loadView(moduleName, viewName, options) {
   });
 };
 
-exports.loadView = loadView;
+exports.loadComponent = loadComponent;

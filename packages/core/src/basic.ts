@@ -7,14 +7,12 @@ export const config: {
   CSP: string;
   MutableData: boolean;
   DepthTimeOnLoading: number;
-  ViewFlag: string;
 } = {
   NSP: '.',
   MSP: ',',
   CSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  ViewFlag: '__elux_is_view__',
 };
 /**
  * 可供设置的全局参数
@@ -102,17 +100,15 @@ export interface CoreModuleState {
 }
 
 export interface CommonModule<ModuleName extends string = string> {
-  default: {
-    moduleName: ModuleName;
-    model: (store: IStore) => void | Promise<void>;
-    state: Record<string, any>;
-    params: Record<string, any>;
-    actions: Record<string, (...args: any[]) => Action>;
-    components: Record<string, () => any>;
-  };
+  moduleName: ModuleName;
+  model: (store: IStore) => void | Promise<void>;
+  state: Record<string, any>;
+  params: Record<string, any>;
+  actions: Record<string, (...args: any[]) => Action>;
+  components: Record<string, EluxComponent | (() => Promise<{default: EluxComponent}>)>;
 }
 
-export type ModuleGetter = Record<string, () => CommonModule | Promise<CommonModule>>;
+export type ModuleGetter = Record<string, () => CommonModule | Promise<{default: CommonModule}>>;
 
 export type FacadeMap = Record<string, {name: string; actions: ActionCreatorList; actionNames: Record<string, string>}>;
 
@@ -161,6 +157,12 @@ export function moduleLoadingAction(moduleName: string, loadingState: {[group: s
     payload: [loadingState],
   };
 }
+export interface EluxComponent {
+  __elux_component__: 'view' | 'component';
+}
+export function isEluxComponent(data: any): data is EluxComponent {
+  return data['__elux_component__'];
+}
 export const MetaData: {
   facadeMap: FacadeMap;
   clientStore: IStore;
@@ -171,7 +173,7 @@ export const MetaData: {
   reducersMap: ActionHandlerMap;
   effectsMap: ActionHandlerMap;
   moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
-  componentCaches: Record<string, undefined | {} | Promise<{}>>;
+  componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
 } = {
   appModuleName: 'stage',
   injectedModules: {},

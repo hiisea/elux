@@ -7,26 +7,26 @@ import React, { Component } from 'react';
 import { getComponet, isPromise, env, config } from '@elux/core';
 export var DepsContext = React.createContext({});
 DepsContext.displayName = 'EluxComponentLoader';
-var loadViewDefaultOptions = {
-  LoadViewOnError: function LoadViewOnError(_ref) {
+var loadComponentDefaultOptions = {
+  LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return React.createElement("div", {
-      className: "g-view-error"
+      className: "g-component-error"
     }, message);
   },
-  LoadViewOnLoading: function LoadViewOnLoading() {
+  LoadComponentOnLoading: function LoadComponentOnLoading() {
     return React.createElement("div", {
-      className: "g-view-loading"
+      className: "g-component-loading"
     }, "loading...");
   }
 };
-export function setLoadViewOptions(_ref2) {
-  var LoadViewOnError = _ref2.LoadViewOnError,
-      LoadViewOnLoading = _ref2.LoadViewOnLoading;
-  LoadViewOnError && (loadViewDefaultOptions.LoadViewOnError = LoadViewOnError);
-  LoadViewOnLoading && (loadViewDefaultOptions.LoadViewOnLoading = LoadViewOnLoading);
+export function setLoadComponentOptions(_ref2) {
+  var LoadComponentOnError = _ref2.LoadComponentOnError,
+      LoadComponentOnLoading = _ref2.LoadComponentOnLoading;
+  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
+  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
-export var loadView = function loadView(moduleName, viewName, options) {
+export var loadComponent = function loadComponent(moduleName, viewName, options) {
   var _ref3 = options || {},
       OnLoading = _ref3.OnLoading,
       OnError = _ref3.OnError;
@@ -125,12 +125,12 @@ export var loadView = function loadView(moduleName, viewName, options) {
       }
 
       if (this.loading) {
-        var _Comp = OnLoading || loadViewDefaultOptions.LoadViewOnLoading;
+        var _Comp = OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
 
         return React.createElement(_Comp, null);
       }
 
-      var Comp = OnError || loadViewDefaultOptions.LoadViewOnError;
+      var Comp = OnError || loadComponentDefaultOptions.LoadComponentOnError;
       return React.createElement(Comp, {
         message: this.error
       });

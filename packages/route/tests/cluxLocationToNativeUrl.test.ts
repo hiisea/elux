@@ -1,9 +1,9 @@
 import {router} from './tools';
 
 describe('/admin/member', () => {
-  test('eluxLocationToNativeUrl', () => {
+  test('locationToNativeUrl', () => {
     expect(
-      router.eluxLocationToNativeUrl({
+      router.locationToNative({
         pagename: '/admin/member',
         params: {
           admin: {},
@@ -20,10 +20,10 @@ describe('/admin/member', () => {
             _itemVerPre: 0,
           },
         },
-      })
+      }).nativeUrl
     ).toBe('/admin/member2');
     expect(
-      router.eluxLocationToNativeUrl({
+      router.locationToNative({
         pagename: '/admin/member',
         params: {
           member: {
@@ -33,10 +33,10 @@ describe('/admin/member', () => {
             _itemVerPre: 0,
           },
         },
-      })
+      }).nativeUrl
     ).toBe('/admin/member2');
     expect(
-      router.eluxLocationToNativeUrl({
+      router.locationToNative({
         pagename: '/admin/member',
         params: {
           member: {
@@ -46,12 +46,12 @@ describe('/admin/member', () => {
             _itemVerPre: 1,
           },
         },
-      })
+      }).nativeUrl
     ).toBe(
       '/admin/member2?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22pageSize%22%3A11%7D%7D%7D#_=%7B%22member%22%3A%7B%22_itemVerPre%22%3A1%7D%7D'
     );
     expect(
-      router.eluxLocationToNativeUrl({
+      router.locationToNative({
         pagename: '/admin/member333',
         params: {
           member: {
@@ -61,7 +61,7 @@ describe('/admin/member', () => {
             _itemVerPre: 1,
           },
         },
-      })
+      }).nativeUrl
     ).toBe(
       '/admin/member2333?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22pageSize%22%3A11%7D%7D%7D#_=%7B%22member%22%3A%7B%22_itemVerPre%22%3A1%7D%7D'
     );

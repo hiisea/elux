@@ -1,6 +1,6 @@
-import {loadModel} from '@elux/core';
+import {loadModel, defineComponent} from '@elux/core';
 
-export default function () {
+export default defineComponent(function () {
   loadModel('moduleB');
   return 'moduleB_views_Main';
-}
+}, 'view');

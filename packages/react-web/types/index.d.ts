@@ -2,13 +2,13 @@ import './env';
 import type { ComponentType } from 'react';
 import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
 import type { IRouter } from '@elux/route-browser';
-import type { LoadView } from './loadView';
-export type { RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState } from '@elux/core';
+import type { LoadComponent } from './loadComponent';
+export type { RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState, EluxComponent } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
-export type { LoadView } from './loadView';
+export type { LoadComponent } from './loadComponent';
 export type { ConnectRedux } from '@elux/react-web-redux';
 export type { ReduxStore, ReduxOptions } from '@elux/core-redux';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, defineView, } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, defineView, defineComponent, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
 export { DocumentHead } from './components/DocumentHead';
@@ -24,10 +24,10 @@ export declare function setConfig(conf: {
     MSP?: string;
     MutableData?: boolean;
     DepthTimeOnLoading?: number;
-    LoadViewOnError?: ComponentType<{
+    LoadComponentOnError?: ComponentType<{
         message: string;
     }>;
-    LoadViewOnLoading?: ComponentType<{}>;
+    LoadComponentOnLoading?: ComponentType<{}>;
     disableNativeRoute?: boolean;
 }): void;
 export interface RenderOptions {
@@ -61,7 +61,7 @@ export declare type GetAPP<A extends RootModuleFacade> = {
     GetActions<N extends keyof A>(...args: N[]): {
         [K in N]: A[K]['actions'];
     };
-    LoadView: LoadView<A>;
+    LoadComponent: LoadComponent<A>;
     Modules: RootModuleAPI<A>;
     Actions: RootModuleActions<A>;
     Pagenames: {
@@ -71,7 +71,7 @@ export declare type GetAPP<A extends RootModuleFacade> = {
 export declare function getApp<T extends {
     GetActions: any;
     GetRouter: any;
-    LoadView: any;
+    LoadComponent: any;
     Modules: any;
     Pagenames: any;
-}>(): Pick<T, 'GetActions' | 'GetRouter' | 'LoadView' | 'Modules' | 'Pagenames'>;
+}>(): Pick<T, 'GetActions' | 'GetRouter' | 'LoadComponent' | 'Modules' | 'Pagenames'>;

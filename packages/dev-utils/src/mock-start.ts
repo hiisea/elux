@@ -28,3 +28,8 @@ server.on('error', (error: any) => {
 server.on('listening', () => {
   console.info(`\n.....${chalk.magenta('MockServer')} running at ${chalk.magenta(`http://localhost:${port}/`)}\n`);
 });
+['SIGINT', 'SIGTERM'].forEach((signal) => {
+  process.on(signal, () => {
+    process.exit(1);
+  });
+});

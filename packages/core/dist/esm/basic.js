@@ -5,8 +5,7 @@ export var config = {
   MSP: ',',
   CSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2,
-  ViewFlag: '__elux_is_view__'
+  DepthTimeOnLoading: 2
 };
 export function setConfig(_config) {
   _config.NSP !== undefined && (config.NSP = _config.NSP);
@@ -43,6 +42,9 @@ export function moduleLoadingAction(moduleName, loadingState) {
     type: "" + moduleName + config.NSP + ActionTypes.MLoading,
     payload: [loadingState]
   };
+}
+export function isEluxComponent(data) {
+  return data['__elux_component__'];
 }
 export var MetaData = {
   appModuleName: 'stage',

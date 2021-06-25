@@ -5,9 +5,9 @@ import { hydrate, render as _render } from 'react-dom';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
-import { loadView, setLoadViewOptions, DepsContext } from './loadView';
+import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, defineView } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, defineView, defineComponent } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
 export { DocumentHead } from './components/DocumentHead';
@@ -21,7 +21,7 @@ export function setSsrHtmlTpl(tpl) {
 export function setConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
-  setLoadViewOptions(conf);
+  setLoadComponentOptions(conf);
 }
 export function createApp(moduleGetter, middlewares, appModuleName) {
   if (middlewares === void 0) {
@@ -30,32 +30,28 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
 
   defineModuleGetter(moduleGetter, appModuleName);
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
-
-  var _ref = getModule('route'),
-      locationTransform = _ref.locationTransform,
-      routeModule = _ref.default;
-
+  var routeModule = getModule('route');
   return {
-    useStore: function useStore(_ref2) {
-      var storeOptions = _ref2.storeOptions,
-          storeCreator = _ref2.storeCreator;
+    useStore: function useStore(_ref) {
+      var storeOptions = _ref.storeOptions,
+          storeCreator = _ref.storeCreator;
       return {
         render: function render(_temp) {
-          var _ref3 = _temp === void 0 ? {} : _temp,
-              _ref3$id = _ref3.id,
-              id = _ref3$id === void 0 ? 'root' : _ref3$id,
-              _ref3$ssrKey = _ref3.ssrKey,
-              ssrKey = _ref3$ssrKey === void 0 ? 'eluxInitStore' : _ref3$ssrKey,
-              viewName = _ref3.viewName;
+          var _ref2 = _temp === void 0 ? {} : _temp,
+              _ref2$id = _ref2.id,
+              id = _ref2$id === void 0 ? 'root' : _ref2$id,
+              _ref2$ssrKey = _ref2.ssrKey,
+              ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
+              viewName = _ref2.viewName;
 
-          var router = createRouter('Browser', locationTransform);
+          var router = createRouter('Browser', routeModule.locationTransform);
           MetaData.router = router;
           var renderFun = env[ssrKey] ? hydrate : _render;
 
-          var _ref4 = env[ssrKey] || {},
-              state = _ref4.state,
-              _ref4$deps = _ref4.deps,
-              deps = _ref4$deps === void 0 ? [] : _ref4$deps;
+          var _ref3 = env[ssrKey] || {},
+              state = _ref3.state,
+              _ref3$deps = _ref3.deps,
+              deps = _ref3$deps === void 0 ? [] : _ref3$deps;
 
           var panel = env.document.getElementById(id);
           return router.initedPromise.then(function (routeState) {
@@ -66,31 +62,32 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(function (_ref5) {
-              var store = _ref5.store,
-                  AppView = _ref5.AppView;
+            return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(function (_ref4) {
+              var store = _ref4.store,
+                  AppView = _ref4.AppView;
+              var RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(React.createElement(AppView, {
+              renderFun(React.createElement(RootView, {
                 store: store
               }), panel);
               return store;
             });
           });
         },
-        ssr: function ssr(_ref6) {
-          var _ref6$id = _ref6.id,
-              id = _ref6$id === void 0 ? 'root' : _ref6$id,
-              _ref6$ssrKey = _ref6.ssrKey,
-              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
-              url = _ref6.url,
-              viewName = _ref6.viewName;
+        ssr: function ssr(_ref5) {
+          var _ref5$id = _ref5.id,
+              id = _ref5$id === void 0 ? 'root' : _ref5$id,
+              _ref5$ssrKey = _ref5.ssrKey,
+              ssrKey = _ref5$ssrKey === void 0 ? 'eluxInitStore' : _ref5$ssrKey,
+              url = _ref5.url,
+              viewName = _ref5.viewName;
 
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }
 
-          var router = createRouter(url, locationTransform);
+          var router = createRouter(url, routeModule.locationTransform);
           MetaData.router = router;
           return router.initedPromise.then(function (routeState) {
             var initState = _extends({}, storeOptions.initState, {
@@ -100,15 +97,16 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref7) {
-              var store = _ref7.store,
-                  AppView = _ref7.AppView;
+            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref6) {
+              var store = _ref6.store,
+                  AppView = _ref6.AppView;
+              var RootView = AppView;
               var state = store.getState();
               var deps = {};
 
               var html = require('react-dom/server').renderToString(React.createElement(DepsContext.Provider, {
                 value: deps
-              }, React.createElement(AppView, {
+              }, React.createElement(RootView, {
                 store: store
               })));
 
@@ -152,7 +150,7 @@ export function getApp() {
     GetRouter: function GetRouter() {
       return MetaData.router;
     },
-    LoadView: loadView,
+    LoadComponent: loadComponent,
     Modules: modules,
     Pagenames: routeConfig.pagenames
   };

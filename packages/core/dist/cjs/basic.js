@@ -6,6 +6,7 @@ exports.errorAction = errorAction;
 exports.moduleInitAction = moduleInitAction;
 exports.moduleReInitAction = moduleReInitAction;
 exports.moduleLoadingAction = moduleLoadingAction;
+exports.isEluxComponent = isEluxComponent;
 exports.injectActions = injectActions;
 exports.setLoading = setLoading;
 exports.reducer = reducer;
@@ -24,8 +25,7 @@ var config = {
   MSP: ',',
   CSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2,
-  ViewFlag: '__elux_is_view__'
+  DepthTimeOnLoading: 2
 };
 exports.config = config;
 
@@ -70,6 +70,10 @@ function moduleLoadingAction(moduleName, loadingState) {
     type: "" + moduleName + config.NSP + ActionTypes.MLoading,
     payload: [loadingState]
   };
+}
+
+function isEluxComponent(data) {
+  return data['__elux_component__'];
 }
 
 var MetaData = {

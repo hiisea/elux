@@ -1,31 +1,31 @@
 import React, {ComponentType, Component} from 'react';
-import {getComponet, isPromise, env, config} from '@elux/core';
+import {getComponet, isPromise, env, config, EluxComponent} from '@elux/core';
 import type {LoadComponent as BaseLoadComponent, RootModuleFacade} from '@elux/core';
 
 export const DepsContext = React.createContext({});
 DepsContext.displayName = 'EluxComponentLoader';
 
-export type LoadView<A extends RootModuleFacade = {}> = BaseLoadComponent<
+export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<
   A,
   {OnError?: ComponentType<{message: string}>; OnLoading?: ComponentType<{}>}
 >;
 
-const loadViewDefaultOptions: {LoadViewOnError: ComponentType<{message: string}>; LoadViewOnLoading: ComponentType<{}>} = {
-  LoadViewOnError: ({message}) => <div className="g-view-error">{message}</div>,
-  LoadViewOnLoading: () => <div className="g-view-loading">loading...</div>,
+const loadComponentDefaultOptions: {LoadComponentOnError: ComponentType<{message: string}>; LoadComponentOnLoading: ComponentType<{}>} = {
+  LoadComponentOnError: ({message}) => <div className="g-component-error">{message}</div>,
+  LoadComponentOnLoading: () => <div className="g-component-loading">loading...</div>,
 };
-export function setLoadViewOptions({
-  LoadViewOnError,
-  LoadViewOnLoading,
+export function setLoadComponentOptions({
+  LoadComponentOnError,
+  LoadComponentOnLoading,
 }: {
-  LoadViewOnError?: ComponentType<{message: string}>;
-  LoadViewOnLoading?: ComponentType<{}>;
+  LoadComponentOnError?: ComponentType<{message: string}>;
+  LoadComponentOnLoading?: ComponentType<{}>;
 }) {
-  LoadViewOnError && (loadViewDefaultOptions.LoadViewOnError = LoadViewOnError);
-  LoadViewOnLoading && (loadViewDefaultOptions.LoadViewOnLoading = LoadViewOnLoading);
+  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
+  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
 
-export const loadView: LoadView<Record<string, any>> = (moduleName, viewName, options) => {
+export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, viewName, options) => {
   const {OnLoading, OnError} = options || {};
   class Loader extends Component<{forwardedRef: any}> {
     static contextType = DepsContext;
@@ -65,9 +65,9 @@ export const loadView: LoadView<Record<string, any>> = (moduleName, viewName, op
         const deps = this.context || {};
         deps[moduleName + config.CSP + viewName] = true;
         this.loading = true;
-        let result: ComponentType<any> | Promise<ComponentType<any>> | undefined;
+        let result: EluxComponent | Promise<EluxComponent> | undefined;
         try {
-          result = getComponet<ComponentType<any>>(moduleName, viewName as string, true);
+          result = getComponet(moduleName, viewName as string, true);
         } catch (e: any) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -77,7 +77,7 @@ export const loadView: LoadView<Record<string, any>> = (moduleName, viewName, op
             result.then(
               (view) => {
                 this.loading = false;
-                this.view = view;
+                this.view = view as any;
                 // eslint-disable-next-line react/no-access-state-in-setstate
                 this.active && this.setState({ver: this.state.ver + 1});
               },
@@ -91,7 +91,7 @@ export const loadView: LoadView<Record<string, any>> = (moduleName, viewName, op
             );
           } else {
             this.loading = false;
-            this.view = result;
+            this.view = result as any;
           }
         }
       }
@@ -104,10 +104,10 @@ export const loadView: LoadView<Record<string, any>> = (moduleName, viewName, op
         return <this.view ref={forwardedRef} {...rest} />;
       }
       if (this.loading) {
-        const Comp = OnLoading || loadViewDefaultOptions.LoadViewOnLoading;
+        const Comp = OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
         return <Comp />;
       }
-      const Comp = OnError || loadViewDefaultOptions.LoadViewOnError;
+      const Comp = OnError || loadComponentDefaultOptions.LoadComponentOnError;
       return <Comp message={this.error} />;
     }
   }

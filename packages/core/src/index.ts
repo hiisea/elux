@@ -24,6 +24,7 @@ export {
   getModuleList,
   getCachedModules,
   defineView,
+  defineComponent,
 } from './inject';
 export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
 export {defineModuleGetter, renderApp, ssrApp} from './render';
@@ -31,6 +32,7 @@ export {env} from './env';
 export type {IStoreMiddleware, StoreBuilder} from './store';
 export type {
   Action,
+  EluxComponent,
   CoreModuleState,
   CommonModule,
   ModuleGetter,
@@ -43,4 +45,4 @@ export type {
   State,
 } from './basic';
 
-export type {RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, ReturnData, LoadComponent} from './inject';
+export type {RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, LoadComponent} from './inject';

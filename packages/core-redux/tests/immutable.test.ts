@@ -43,7 +43,7 @@ describe('init', () => {
       .render()
       .then(({store, AppView}) => {
         mockStore = store;
-        AppView();
+        (AppView as any)();
       });
   });
   beforeEach(() => {
@@ -57,8 +57,8 @@ describe('init', () => {
     });
   });
   test('加载moduleB.Main,moduleC.Main', async () => {
-    const viewB = await getComponet<Function>('moduleB', 'Main');
-    const viewC = await getComponet<Function>('moduleC', 'Main');
+    const viewB: any = await getComponet('moduleB', 'Main');
+    const viewC: any = await getComponet('moduleC', 'Main');
     expect(viewB()).toBe('moduleB_views_Main');
     expect(viewC()).toBe('moduleC_views_Main');
     expect(actionLogs).toEqual(['moduleB.Init', 'moduleC.Init']);

@@ -8,7 +8,6 @@ export var connectRedux = function connectRedux() {
   }
 
   return function (component) {
-    defineView(component);
-    return connect.apply(void 0, args)(component);
+    return defineView(connect.apply(void 0, args)(component));
   };
 };

@@ -111,9 +111,6 @@ export function createRouteModule<G extends PagenameMap<any>>(
 ) {
   const handlers: {new (): IRouteModuleHandlers} = RouteModuleHandlers;
   const locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  const result = exportModule('route', handlers, {}, {} as {[k in keyof G]: any});
-  return {
-    default: result,
-    locationTransform,
-  };
+  const routeModule = exportModule('route', handlers, {}, {} as {[k in keyof G]: any});
+  return {...routeModule, locationTransform};
 }

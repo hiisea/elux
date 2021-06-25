@@ -1,8 +1,16 @@
 import _decorate from "@babel/runtime/helpers/esm/decorate";
 import { isPromise } from './sprite';
-import { injectActions, MetaData, config, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
+import { isEluxComponent, injectActions, MetaData, config, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
 import { env } from './env';
 export function exportModule(moduleName, ModuleHandles, params, components) {
+  Object.keys(components).forEach(function (key) {
+    var component = components[key];
+
+    if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
+      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
+    }
+  });
+
   var model = function model(store) {
     if (!store.injectedModules[moduleName]) {
       var moduleHandles = new ModuleHandles(moduleName);
@@ -37,18 +45,21 @@ export function getModule(moduleName) {
   }
 
   var moduleOrPromise = MetaData.moduleGetter[moduleName]();
-  MetaData.moduleCaches[moduleName] = moduleOrPromise;
 
   if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(function (module) {
+    var promiseModule = moduleOrPromise.then(function (_ref) {
+      var module = _ref.default;
       MetaData.moduleCaches[moduleName] = module;
       return module;
     }, function (reason) {
       MetaData.moduleCaches[moduleName] = undefined;
       throw reason;
     });
+    MetaData.moduleCaches[moduleName] = promiseModule;
+    return promiseModule;
   }
 
+  MetaData.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
 }
 export function getModuleList(moduleNames) {
@@ -74,11 +85,11 @@ function _loadModel(moduleName, store) {
 
   if (isPromise(moduleOrPromise)) {
     return moduleOrPromise.then(function (module) {
-      return module.default.model(store);
+      return module.model(store);
     });
   }
 
-  return moduleOrPromise.default.model(store);
+  return moduleOrPromise.model(store);
 }
 
 export { _loadModel as loadModel };
@@ -90,29 +101,34 @@ export function getComponet(moduleName, componentName, initView) {
   }
 
   var moduleCallback = function moduleCallback(module) {
-    var componentOrPromise = module.default.components[componentName]();
-    MetaData.componentCaches[key] = componentOrPromise;
+    var componentOrFun = module.components[componentName];
 
-    if (isPromise(componentOrPromise)) {
-      return componentOrPromise.then(function (view) {
-        MetaData.componentCaches[key] = view;
+    if (isEluxComponent(componentOrFun)) {
+      var component = componentOrFun;
+      MetaData.componentCaches[key] = component;
 
-        if (view[config.ViewFlag] && initView && !env.isServer) {
-          module.default.model(MetaData.clientStore);
-        }
+      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
+        module.model(MetaData.clientStore);
+      }
 
-        return view;
-      }, function (reason) {
-        MetaData.componentCaches[key] = undefined;
-        throw reason;
-      });
+      return component;
     }
 
-    if (componentOrPromise[config.ViewFlag] && initView && !env.isServer) {
-      module.default.model(MetaData.clientStore);
-    }
+    var promiseComponent = componentOrFun().then(function (_ref2) {
+      var component = _ref2.default;
+      MetaData.componentCaches[key] = component;
 
-    return componentOrPromise;
+      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
+        module.model(MetaData.clientStore);
+      }
+
+      return component;
+    }, function (reason) {
+      MetaData.componentCaches[key] = undefined;
+      throw reason;
+    });
+    MetaData.componentCaches[key] = promiseComponent;
+    return promiseComponent;
   };
 
   var moduleOrPromise = getModule(moduleName);
@@ -313,7 +329,13 @@ export function getRootModuleAPI(data) {
 
   return MetaData.facadeMap;
 }
+export function defineComponent(component) {
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'component';
+  return eluxComponent;
+}
 export function defineView(component) {
-  component[config.ViewFlag] = true;
-  return component;
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'view';
+  return eluxComponent;
 }

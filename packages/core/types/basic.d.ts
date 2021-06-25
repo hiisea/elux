@@ -5,7 +5,6 @@ export declare const config: {
     CSP: string;
     MutableData: boolean;
     DepthTimeOnLoading: number;
-    ViewFlag: string;
 };
 export declare function setConfig(_config: {
     NSP?: string;
@@ -64,16 +63,18 @@ export interface CoreModuleState {
     loading?: Record<string, LoadingState>;
 }
 export interface CommonModule<ModuleName extends string = string> {
-    default: {
-        moduleName: ModuleName;
-        model: (store: IStore) => void | Promise<void>;
-        state: Record<string, any>;
-        params: Record<string, any>;
-        actions: Record<string, (...args: any[]) => Action>;
-        components: Record<string, () => any>;
-    };
+    moduleName: ModuleName;
+    model: (store: IStore) => void | Promise<void>;
+    state: Record<string, any>;
+    params: Record<string, any>;
+    actions: Record<string, (...args: any[]) => Action>;
+    components: Record<string, EluxComponent | (() => Promise<{
+        default: EluxComponent;
+    }>)>;
 }
-export declare type ModuleGetter = Record<string, () => CommonModule | Promise<CommonModule>>;
+export declare type ModuleGetter = Record<string, () => CommonModule | Promise<{
+    default: CommonModule;
+}>>;
 export declare type FacadeMap = Record<string, {
     name: string;
     actions: ActionCreatorList;
@@ -105,6 +106,10 @@ export declare function moduleLoadingAction(moduleName: string, loadingState: {
         [group: string]: LoadingState;
     }[];
 };
+export interface EluxComponent {
+    __elux_component__: 'view' | 'component';
+}
+export declare function isEluxComponent(data: any): data is EluxComponent;
 export declare const MetaData: {
     facadeMap: FacadeMap;
     clientStore: IStore;
@@ -114,7 +119,7 @@ export declare const MetaData: {
     reducersMap: ActionHandlerMap;
     effectsMap: ActionHandlerMap;
     moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
-    componentCaches: Record<string, undefined | {} | Promise<{}>>;
+    componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
 };
 export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
 export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName?: string): T;

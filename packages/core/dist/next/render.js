@@ -8,7 +8,7 @@ export function defineModuleGetter(moduleGetter, appModuleName = 'stage') {
   MetaData.appModuleName = appModuleName;
   MetaData.moduleGetter = moduleGetter;
 
-  if (typeof moduleGetter[appModuleName] !== 'function') {
+  if (!moduleGetter[appModuleName]) {
     throw `${appModuleName} could not be found in moduleGetter`;
   }
 }
@@ -23,7 +23,7 @@ export async function renderApp(baseStore, preloadModules, preloadComponents, mi
   MetaData.clientStore = store;
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
-  const appModule = modules[0].default;
+  const appModule = modules[0];
   await appModule.model(store);
   const AppView = getComponet(appModuleName, appViewName);
   return {
@@ -39,11 +39,9 @@ export async function ssrApp(baseStore, preloadModules, middlewares, appViewName
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
-  const [{
-    default: appModule
-  }, ...otherModules] = await getModuleList(preloadModules);
+  const [appModule, ...otherModules] = await getModuleList(preloadModules);
   await appModule.model(store);
-  await Promise.all(otherModules.map(module => module.default.model(store)));
+  await Promise.all(otherModules.map(module => module.model(store)));
   store.dispatch = defFun;
   const AppView = getComponet(appModuleName, appViewName);
   return {

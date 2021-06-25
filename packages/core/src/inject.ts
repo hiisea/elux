@@ -1,6 +1,8 @@
 import {isPromise} from './sprite';
 import {
   Action,
+  EluxComponent,
+  isEluxComponent,
   IModuleHandlers,
   injectActions,
   CoreModuleState,
@@ -41,7 +43,12 @@ type HandlerThis<T> = T extends (...args: infer P) => any
 
 type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
 
-export function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, () => any>>(
+export function exportModule<
+  N extends string,
+  H extends IModuleHandlers,
+  P extends Record<string, any>,
+  CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>
+>(
   moduleName: N,
   ModuleHandles: {
     new (moduleName: string): H;
@@ -56,6 +63,15 @@ export function exportModule<N extends string, H extends IModuleHandlers, P exte
   actions: Actions<H>;
   components: CS;
 } {
+  Object.keys(components).forEach((key) => {
+    const component = components[key];
+    if (
+      !isEluxComponent(component) &&
+      (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))
+    ) {
+      env.console.warn(`The exported component must implement interface EluxComponent: ${moduleName}.${key}`);
+    }
+  });
   const model = (store: IStore) => {
     if (!store.injectedModules[moduleName]) {
       const moduleHandles = new ModuleHandles(moduleName);
@@ -86,10 +102,9 @@ export function getModule(moduleName: string): Promise<CommonModule> | CommonMod
     return MetaData.moduleCaches[moduleName]!;
   }
   const moduleOrPromise = MetaData.moduleGetter[moduleName]();
-  MetaData.moduleCaches[moduleName] = moduleOrPromise;
   if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(
-      (module) => {
+    const promiseModule = moduleOrPromise.then(
+      ({default: module}) => {
         MetaData.moduleCaches[moduleName] = module;
         return module;
       },
@@ -98,7 +113,10 @@ export function getModule(moduleName: string): Promise<CommonModule> | CommonMod
         throw reason;
       }
     );
+    MetaData.moduleCaches[moduleName] = promiseModule;
+    return promiseModule;
   }
+  MetaData.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
 }
 export function getModuleList(moduleNames: string[]): Promise<CommonModule[]> {
@@ -117,37 +135,40 @@ export function getModuleList(moduleNames: string[]): Promise<CommonModule[]> {
 export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore = MetaData.clientStore): void | Promise<void> {
   const moduleOrPromise = getModule(moduleName as string);
   if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then((module) => module.default.model(store));
+    return moduleOrPromise.then((module) => module.model(store));
   }
-  return moduleOrPromise.default.model(store);
+  return moduleOrPromise.model(store);
 }
-export function getComponet<T = any>(moduleName: string, componentName: string, initView?: boolean): T | Promise<T> {
+export function getComponet(moduleName: string, componentName: string, initView?: boolean): EluxComponent | Promise<EluxComponent> {
   const key = [moduleName, componentName].join(config.CSP);
   if (MetaData.componentCaches[key]) {
-    return MetaData.componentCaches[key]! as T;
+    return MetaData.componentCaches[key]!;
   }
   const moduleCallback = (module: CommonModule) => {
-    const componentOrPromise = module.default.components[componentName]();
-    MetaData.componentCaches[key] = componentOrPromise;
-    if (isPromise(componentOrPromise)) {
-      return componentOrPromise.then(
-        (view) => {
-          MetaData.componentCaches[key] = view;
-          if (view[config.ViewFlag] && initView && !env.isServer) {
-            module.default.model(MetaData.clientStore);
-          }
-          return view;
-        },
-        (reason) => {
-          MetaData.componentCaches[key] = undefined;
-          throw reason;
+    const componentOrFun = module.components[componentName];
+    if (isEluxComponent(componentOrFun)) {
+      const component = componentOrFun;
+      MetaData.componentCaches[key] = component;
+      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
+        module.model(MetaData.clientStore);
+      }
+      return component;
+    }
+    const promiseComponent = componentOrFun().then(
+      ({default: component}) => {
+        MetaData.componentCaches[key] = component;
+        if (component.__elux_component__ === 'view' && initView && !env.isServer) {
+          module.model(MetaData.clientStore);
         }
-      );
-    }
-    if (componentOrPromise[config.ViewFlag] && initView && !env.isServer) {
-      module.default.model(MetaData.clientStore);
-    }
-    return componentOrPromise;
+        return component;
+      },
+      (reason) => {
+        MetaData.componentCaches[key] = undefined;
+        throw reason;
+      }
+    );
+    MetaData.componentCaches[key] = promiseComponent;
+    return promiseComponent;
   };
   const moduleOrPromise = getModule(moduleName);
   if (isPromise(moduleOrPromise)) {
@@ -237,26 +258,28 @@ export abstract class CoreModuleHandlers<S extends CoreModuleState = CoreModuleS
   }
 }
 
-export type ReturnData<T> = T extends Promise<infer R> ? R : T;
+type GetPromiseComponent<T> = T extends () => Promise<{default: infer R}> ? R : T;
 
-type ReturnComponents<CS extends Record<string, () => any>> = {
-  [K in keyof CS]: CS[K] extends () => Promise<{default: infer P}> ? P : ReturnType<CS[K]>;
+type ReturnComponents<CS extends Record<string, EluxComponent | (() => Promise<{default: EluxComponent}>)>> = {
+  [K in keyof CS]: GetPromiseComponent<CS[K]>;
 };
+
+type GetPromiseModule<T> = T extends Promise<{default: infer R}> ? R : T;
 
 type ModuleFacade<M extends CommonModule> = {
   name: string;
-  components: ReturnComponents<M['default']['components']>;
-  state: M['default']['state'];
-  params: M['default']['params'];
-  actions: M['default']['actions'];
-  actionNames: {[K in keyof M['default']['actions']]: string};
+  components: ReturnComponents<M['components']>;
+  state: M['state'];
+  params: M['params'];
+  actions: M['actions'];
+  actionNames: {[K in keyof M['actions']]: string};
 };
 
 export type RootModuleFacade<
   G extends {
-    [N in Extract<keyof G, string>]: () => CommonModule<N> | Promise<CommonModule<N>>;
+    [N in Extract<keyof G, string>]: () => CommonModule<N> | Promise<{default: CommonModule<N>}>;
   } = any
-> = {[K in Extract<keyof G, string>]: ModuleFacade<ReturnData<ReturnType<G[K]>>>};
+> = {[K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>};
 
 export type RootModuleActions<A extends RootModuleFacade> = {[K in keyof A]: keyof A[K]['actions']};
 
@@ -322,13 +345,18 @@ export function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record
   return MetaData.facadeMap as any;
 }
 
-export function defineView<T>(component: T) {
-  component[config.ViewFlag] = true;
-  return component;
+export function defineComponent<T>(component: T): T & EluxComponent {
+  const eluxComponent: EluxComponent & T = component as any;
+  eluxComponent.__elux_component__ = 'component';
+  return eluxComponent;
 }
-
+export function defineView<T>(component: T): T & EluxComponent {
+  const eluxComponent: EluxComponent & T = component as any;
+  eluxComponent.__elux_component__ = 'view';
+  return eluxComponent;
+}
 export type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(
   moduleName: M,
-  viewName: V,
+  componentName: V,
   options?: O
 ) => A[M]['components'][V];

@@ -1,4 +1,4 @@
-import { Action, IModuleHandlers, CoreModuleState, CommonModule, ModuleGetter, IStore } from './basic';
+import { Action, EluxComponent, IModuleHandlers, CoreModuleState, CommonModule, ModuleGetter, IStore } from './basic';
 declare type Handler<F> = F extends (...args: infer P) => any ? (...args: P) => {
     type: string;
 } : never;
@@ -13,7 +13,7 @@ declare type HandlerThis<T> = T extends (...args: infer P) => any ? (...args: P)
 declare type ActionsThis<T> = {
     [K in keyof T]: HandlerThis<T[K]>;
 };
-export declare function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, () => any>>(moduleName: N, ModuleHandles: {
+export declare function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>>(moduleName: N, ModuleHandles: {
     new (moduleName: string): H;
 }, params: P, components: CS): {
     moduleName: N;
@@ -26,7 +26,7 @@ export declare function exportModule<N extends string, H extends IModuleHandlers
 export declare function getModule(moduleName: string): Promise<CommonModule> | CommonModule;
 export declare function getModuleList(moduleNames: string[]): Promise<CommonModule[]>;
 export declare function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store?: IStore): void | Promise<void>;
-export declare function getComponet<T = any>(moduleName: string, componentName: string, initView?: boolean): T | Promise<T>;
+export declare function getComponet(moduleName: string, componentName: string, initView?: boolean): EluxComponent | Promise<EluxComponent>;
 export declare function getComponentList(keys: string[]): Promise<any[]>;
 export declare function getCachedModules(): Record<string, CommonModule<string> | Promise<CommonModule<string>> | undefined>;
 export declare abstract class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
@@ -49,26 +49,33 @@ export declare abstract class CoreModuleHandlers<S extends CoreModuleState = Cor
     Update(payload: Partial<S>, key: string): S;
     Loading(payload: Record<string, string>): S;
 }
-export declare type ReturnData<T> = T extends Promise<infer R> ? R : T;
-declare type ReturnComponents<CS extends Record<string, () => any>> = {
-    [K in keyof CS]: CS[K] extends () => Promise<{
-        default: infer P;
-    }> ? P : ReturnType<CS[K]>;
+declare type GetPromiseComponent<T> = T extends () => Promise<{
+    default: infer R;
+}> ? R : T;
+declare type ReturnComponents<CS extends Record<string, EluxComponent | (() => Promise<{
+    default: EluxComponent;
+}>)>> = {
+    [K in keyof CS]: GetPromiseComponent<CS[K]>;
 };
+declare type GetPromiseModule<T> = T extends Promise<{
+    default: infer R;
+}> ? R : T;
 declare type ModuleFacade<M extends CommonModule> = {
     name: string;
-    components: ReturnComponents<M['default']['components']>;
-    state: M['default']['state'];
-    params: M['default']['params'];
-    actions: M['default']['actions'];
+    components: ReturnComponents<M['components']>;
+    state: M['state'];
+    params: M['params'];
+    actions: M['actions'];
     actionNames: {
-        [K in keyof M['default']['actions']]: string;
+        [K in keyof M['actions']]: string;
     };
 };
 export declare type RootModuleFacade<G extends {
-    [N in Extract<keyof G, string>]: () => CommonModule<N> | Promise<CommonModule<N>>;
+    [N in Extract<keyof G, string>]: () => CommonModule<N> | Promise<{
+        default: CommonModule<N>;
+    }>;
 } = any> = {
-    [K in Extract<keyof G, string>]: ModuleFacade<ReturnData<ReturnType<G[K]>>>;
+    [K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>;
 };
 export declare type RootModuleActions<A extends RootModuleFacade> = {
     [K in keyof A]: keyof A[K]['actions'];
@@ -80,6 +87,7 @@ export declare type RootModuleParams<A extends RootModuleFacade = RootModuleFaca
     [K in keyof A]: A[K]['params'];
 };
 export declare function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record<string, string[]>): RootModuleAPI<T>;
-export declare function defineView<T>(component: T): T;
-export declare type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(moduleName: M, viewName: V, options?: O) => A[M]['components'][V];
+export declare function defineComponent<T>(component: T): T & EluxComponent;
+export declare function defineView<T>(component: T): T & EluxComponent;
+export declare type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(moduleName: M, componentName: V, options?: O) => A[M]['components'][V];
 export {};
