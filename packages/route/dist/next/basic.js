@@ -4,7 +4,7 @@ export const routeConfig = {
   pagenames: {},
   disableNativeRoute: false,
   indexUrl: '',
-  defaultParams: null
+  defaultParams: {}
 };
 export function setRouteConfig(conf) {
   conf.actionMaxHistory && (routeConfig.actionMaxHistory = conf.actionMaxHistory);

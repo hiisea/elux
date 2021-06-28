@@ -4,7 +4,7 @@ export interface RouteConfig {
   pagenames: Record<string, string>;
   disableNativeRoute: boolean;
   indexUrl: string;
-  defaultParams: null | Record<string, any>;
+  defaultParams: Record<string, any>;
 }
 export const routeConfig: RouteConfig = {
   actionMaxHistory: 10,
@@ -12,7 +12,7 @@ export const routeConfig: RouteConfig = {
   pagenames: {},
   disableNativeRoute: false,
   indexUrl: '',
-  defaultParams: null,
+  defaultParams: {},
 };
 
 export function setRouteConfig(conf: {

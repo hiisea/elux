@@ -9,7 +9,7 @@ var routeConfig = {
   pagenames: {},
   disableNativeRoute: false,
   indexUrl: '',
-  defaultParams: null
+  defaultParams: {}
 };
 exports.routeConfig = routeConfig;
 

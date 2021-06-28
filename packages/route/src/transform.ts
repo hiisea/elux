@@ -2,15 +2,18 @@ import {deepMerge, getCachedModules, env, isPromise, getModuleList} from '@elux/
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
 import {routeConfig, EluxLocation, DeepPartial, PartialLocation, RouteState, Location, RootParams} from './basic';
 
-export function getDefaultParams(): Record<string, any> {
-  if (routeConfig.defaultParams) {
-    return routeConfig.defaultParams;
-  }
+function getDefaultParams(moduleNames: string[]): Record<string, any> {
+  const defaultParams = routeConfig.defaultParams;
   const modules = getCachedModules();
-  return Object.keys(modules).reduce((data, moduleName) => {
-    const result = modules[moduleName];
-    if (result && !isPromise(result)) {
-      data[moduleName] = result.params;
+  return moduleNames.reduce((data, moduleName) => {
+    if (defaultParams[moduleName] !== undefined) {
+      data[moduleName] = defaultParams[moduleName];
+    } else {
+      const result = modules[moduleName];
+      if (result && !isPromise(result)) {
+        defaultParams[moduleName] = result.params;
+        data[moduleName] = result.params;
+      }
     }
     return data;
   }, {});
@@ -44,10 +47,10 @@ export type NativeLocationMap = {
   out(nativeLocation: NativeLocation): NativeLocation;
 };
 export function assignDefaultData(data: {[moduleName: string]: any}): {[moduleName: string]: any} {
-  const def = getDefaultParams();
-  return Object.keys(data).reduce((params, moduleName) => {
-    // eslint-disable-next-line no-prototype-builtins
-    if (def.hasOwnProperty(moduleName)) {
+  const moduleNames = Object.keys(data);
+  const def = getDefaultParams(moduleNames);
+  return moduleNames.reduce((params, moduleName) => {
+    if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
     }
     return params;
@@ -245,7 +248,7 @@ export function createLocationTransform(
       return this.partialLocationToLocation(this.eluxLocationtoPartialLocation(eluxLocation));
     },
     locationToMinData(location) {
-      let params = excludeDefault(location.params, getDefaultParams(), true);
+      let params = excludeDefault(location.params, getDefaultParams(Object.keys(location.params)), true);
       let pathParams: Record<string, any>;
       let pathname: string;
       const pagename = `/${location.pagename}/`.replace(/^\/+|\/+$/g, '/');

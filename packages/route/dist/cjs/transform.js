@@ -1,7 +1,6 @@
 "use strict";
 
 exports.__esModule = true;
-exports.getDefaultParams = getDefaultParams;
 exports.assignDefaultData = assignDefaultData;
 exports.nativeUrlToNativeLocation = nativeUrlToNativeLocation;
 exports.eluxUrlToEluxLocation = eluxUrlToEluxLocation;
@@ -16,17 +15,19 @@ var _deepExtend = require("./deep-extend");
 
 var _basic = require("./basic");
 
-function getDefaultParams() {
-  if (_basic.routeConfig.defaultParams) {
-    return _basic.routeConfig.defaultParams;
-  }
-
+function getDefaultParams(moduleNames) {
+  var defaultParams = _basic.routeConfig.defaultParams;
   var modules = (0, _core.getCachedModules)();
-  return Object.keys(modules).reduce(function (data, moduleName) {
-    var result = modules[moduleName];
+  return moduleNames.reduce(function (data, moduleName) {
+    if (defaultParams[moduleName] !== undefined) {
+      data[moduleName] = defaultParams[moduleName];
+    } else {
+      var result = modules[moduleName];
 
-    if (result && !(0, _core.isPromise)(result)) {
-      data[moduleName] = result.params;
+      if (result && !(0, _core.isPromise)(result)) {
+        defaultParams[moduleName] = result.params;
+        data[moduleName] = result.params;
+      }
     }
 
     return data;
@@ -34,9 +35,10 @@ function getDefaultParams() {
 }
 
 function assignDefaultData(data) {
-  var def = getDefaultParams();
-  return Object.keys(data).reduce(function (params, moduleName) {
-    if (def.hasOwnProperty(moduleName)) {
+  var moduleNames = Object.keys(data);
+  var def = getDefaultParams(moduleNames);
+  return moduleNames.reduce(function (params, moduleName) {
+    if (def[moduleName]) {
       params[moduleName] = (0, _deepExtend.extendDefault)(data[moduleName], def[moduleName]);
     }
 
@@ -262,7 +264,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       return this.partialLocationToLocation(this.eluxLocationtoPartialLocation(eluxLocation));
     },
     locationToMinData: function locationToMinData(location) {
-      var params = (0, _deepExtend.excludeDefault)(location.params, getDefaultParams(), true);
+      var params = (0, _deepExtend.excludeDefault)(location.params, getDefaultParams(Object.keys(location.params)), true);
       var pathParams;
       var pathname;
       var pagename = ("/" + location.pagename + "/").replace(/^\/+|\/+$/g, '/');

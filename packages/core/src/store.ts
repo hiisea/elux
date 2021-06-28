@@ -21,7 +21,7 @@ import {loadModel} from './inject';
 
 const errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error: any): boolean {
-  return error && !!error['errorProcessed'];
+  return error && !!error[errorProcessed];
 }
 
 export function setProcessedError(error: any, processed: boolean): {[errorProcessed]: boolean; [key: string]: any} {

@@ -1,26 +1,31 @@
 import { deepMerge, getCachedModules, env, isPromise, getModuleList } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
 import { routeConfig } from './basic';
-export function getDefaultParams() {
-  if (routeConfig.defaultParams) {
-    return routeConfig.defaultParams;
-  }
 
+function getDefaultParams(moduleNames) {
+  var defaultParams = routeConfig.defaultParams;
   var modules = getCachedModules();
-  return Object.keys(modules).reduce(function (data, moduleName) {
-    var result = modules[moduleName];
+  return moduleNames.reduce(function (data, moduleName) {
+    if (defaultParams[moduleName] !== undefined) {
+      data[moduleName] = defaultParams[moduleName];
+    } else {
+      var result = modules[moduleName];
 
-    if (result && !isPromise(result)) {
-      data[moduleName] = result.params;
+      if (result && !isPromise(result)) {
+        defaultParams[moduleName] = result.params;
+        data[moduleName] = result.params;
+      }
     }
 
     return data;
   }, {});
 }
+
 export function assignDefaultData(data) {
-  var def = getDefaultParams();
-  return Object.keys(data).reduce(function (params, moduleName) {
-    if (def.hasOwnProperty(moduleName)) {
+  var moduleNames = Object.keys(data);
+  var def = getDefaultParams(moduleNames);
+  return moduleNames.reduce(function (params, moduleName) {
+    if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
     }
 
@@ -242,7 +247,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
       return this.partialLocationToLocation(this.eluxLocationtoPartialLocation(eluxLocation));
     },
     locationToMinData: function locationToMinData(location) {
-      var params = excludeDefault(location.params, getDefaultParams(), true);
+      var params = excludeDefault(location.params, getDefaultParams(Object.keys(location.params)), true);
       var pathParams;
       var pathname;
       var pagename = ("/" + location.pagename + "/").replace(/^\/+|\/+$/g, '/');

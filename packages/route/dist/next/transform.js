@@ -1,26 +1,31 @@
 import { deepMerge, getCachedModules, env, isPromise, getModuleList } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
 import { routeConfig } from './basic';
-export function getDefaultParams() {
-  if (routeConfig.defaultParams) {
-    return routeConfig.defaultParams;
-  }
 
+function getDefaultParams(moduleNames) {
+  const defaultParams = routeConfig.defaultParams;
   const modules = getCachedModules();
-  return Object.keys(modules).reduce((data, moduleName) => {
-    const result = modules[moduleName];
+  return moduleNames.reduce((data, moduleName) => {
+    if (defaultParams[moduleName] !== undefined) {
+      data[moduleName] = defaultParams[moduleName];
+    } else {
+      const result = modules[moduleName];
 
-    if (result && !isPromise(result)) {
-      data[moduleName] = result.params;
+      if (result && !isPromise(result)) {
+        defaultParams[moduleName] = result.params;
+        data[moduleName] = result.params;
+      }
     }
 
     return data;
   }, {});
 }
+
 export function assignDefaultData(data) {
-  const def = getDefaultParams();
-  return Object.keys(data).reduce((params, moduleName) => {
-    if (def.hasOwnProperty(moduleName)) {
+  const moduleNames = Object.keys(data);
+  const def = getDefaultParams(moduleNames);
+  return moduleNames.reduce((params, moduleName) => {
+    if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
     }
 
@@ -227,7 +232,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
     },
 
     locationToMinData(location) {
-      let params = excludeDefault(location.params, getDefaultParams(), true);
+      let params = excludeDefault(location.params, getDefaultParams(Object.keys(location.params)), true);
       let pathParams;
       let pathname;
       const pagename = `/${location.pagename}/`.replace(/^\/+|\/+$/g, '/');

@@ -21,7 +21,7 @@ var _inject = require("./inject");
 var errorProcessed = '__eluxProcessed__';
 
 function isProcessedError(error) {
-  return error && !!error['errorProcessed'];
+  return error && !!error[errorProcessed];
 }
 
 function setProcessedError(error, processed) {

@@ -1,5 +1,4 @@
 import { EluxLocation, DeepPartial, PartialLocation, RouteState, Location, RootParams } from './basic';
-export declare function getDefaultParams(): Record<string, any>;
 export interface NativeLocation {
     pathname: string;
     searchData?: Record<string, string>;

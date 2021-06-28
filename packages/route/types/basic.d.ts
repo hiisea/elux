@@ -4,7 +4,7 @@ export interface RouteConfig {
     pagenames: Record<string, string>;
     disableNativeRoute: boolean;
     indexUrl: string;
-    defaultParams: null | Record<string, any>;
+    defaultParams: Record<string, any>;
 }
 export declare const routeConfig: RouteConfig;
 export declare function setRouteConfig(conf: {

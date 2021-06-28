@@ -5,7 +5,7 @@ import { ActionTypes, config, errorAction, MetaData } from './basic';
 import { loadModel } from './inject';
 var errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error) {
-  return error && !!error['errorProcessed'];
+  return error && !!error[errorProcessed];
 }
 export function setProcessedError(error, processed) {
   if (typeof error !== 'object') {
