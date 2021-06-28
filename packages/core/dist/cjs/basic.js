@@ -23,7 +23,6 @@ var _sprite = require("./sprite");
 var config = {
   NSP: '.',
   MSP: ',',
-  CSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2
 };

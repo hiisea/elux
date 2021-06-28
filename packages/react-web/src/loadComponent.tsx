@@ -63,7 +63,7 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, vi
     execute() {
       if (!this.view && !this.loading && !this.error) {
         const deps = this.context || {};
-        deps[moduleName + config.CSP + viewName] = true;
+        deps[moduleName + config.NSP + viewName] = true;
         this.loading = true;
         let result: EluxComponent | Promise<EluxComponent> | undefined;
         try {

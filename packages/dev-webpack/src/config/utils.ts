@@ -516,11 +516,11 @@ function moduleExports({
               })
               .catch((e: Error) => {
                 console.error(e);
-                res.status(500).end(e.toString());
+                res.status(500).end(`error: ${e.message}`);
               });
           } catch (e) {
             console.error(e);
-            res.status(500).end(e.toString());
+            res.status(500).end(`error: ${e.message}`);
           }
         }
       });

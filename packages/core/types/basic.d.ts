@@ -2,7 +2,6 @@ import { LoadingState } from './sprite';
 export declare const config: {
     NSP: string;
     MSP: string;
-    CSP: string;
     MutableData: boolean;
     DepthTimeOnLoading: number;
 };

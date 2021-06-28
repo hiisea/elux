@@ -4,20 +4,18 @@ import {LoadingState, TaskCounter, deepMerge, warn} from './sprite';
 export const config: {
   NSP: string;
   MSP: string;
-  CSP: string;
   MutableData: boolean;
   DepthTimeOnLoading: number;
 } = {
   NSP: '.',
   MSP: ',',
-  CSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
 };
 /**
  * 可供设置的全局参数
  * @param _config 设置参数
- * - NSP 默认为. ModuleName${NSP}ActionName 用于ActionName的连接
+ * - NSP 默认为. ModuleName${NSP}ActionName 用于ActionName的连接、ModuleName${NSP}ComponentName 用于ComponentName的连接
  * - MSP 默认为, 用于一个ActionHandler同时监听多个Action的连接
  */
 export function setConfig(_config: {NSP?: string; MSP?: string; SSRKey?: string; MutableData?: boolean; DepthTimeOnLoading?: number}) {

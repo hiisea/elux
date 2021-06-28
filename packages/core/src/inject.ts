@@ -140,7 +140,7 @@ export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: 
   return moduleOrPromise.model(store);
 }
 export function getComponet(moduleName: string, componentName: string, initView?: boolean): EluxComponent | Promise<EluxComponent> {
-  const key = [moduleName, componentName].join(config.CSP);
+  const key = [moduleName, componentName].join(config.NSP);
   if (MetaData.componentCaches[key]) {
     return MetaData.componentCaches[key]!;
   }
@@ -185,7 +185,7 @@ export function getComponentList(keys: string[]): Promise<any[]> {
       if (MetaData.componentCaches[key]) {
         return MetaData.componentCaches[key];
       }
-      const [moduleName, componentName] = key.split(config.CSP);
+      const [moduleName, componentName] = key.split(config.NSP);
       return getComponet(moduleName, componentName);
     })
   );

@@ -63,7 +63,7 @@ export const loadComponent = (moduleName, viewName, options) => {
     execute() {
       if (!this.view && !this.loading && !this.error) {
         const deps = this.context || {};
-        deps[moduleName + config.CSP + viewName] = true;
+        deps[moduleName + config.NSP + viewName] = true;
         this.loading = true;
         let result;
 

@@ -89,7 +89,7 @@ function _loadModel(moduleName, store = MetaData.clientStore) {
 
 export { _loadModel as loadModel };
 export function getComponet(moduleName, componentName, initView) {
-  const key = [moduleName, componentName].join(config.CSP);
+  const key = [moduleName, componentName].join(config.NSP);
 
   if (MetaData.componentCaches[key]) {
     return MetaData.componentCaches[key];
@@ -145,7 +145,7 @@ export function getComponentList(keys) {
       return MetaData.componentCaches[key];
     }
 
-    const [moduleName, componentName] = key.split(config.CSP);
+    const [moduleName, componentName] = key.split(config.NSP);
     return getComponet(moduleName, componentName);
   }));
 }

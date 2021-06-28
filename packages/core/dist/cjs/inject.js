@@ -116,7 +116,7 @@ function _loadModel(moduleName, store) {
 }
 
 function getComponet(moduleName, componentName, initView) {
-  var key = [moduleName, componentName].join(_basic.config.CSP);
+  var key = [moduleName, componentName].join(_basic.config.NSP);
 
   if (_basic.MetaData.componentCaches[key]) {
     return _basic.MetaData.componentCaches[key];
@@ -172,7 +172,7 @@ function getComponentList(keys) {
       return _basic.MetaData.componentCaches[key];
     }
 
-    var _key$split = key.split(_basic.config.CSP),
+    var _key$split = key.split(_basic.config.NSP),
         moduleName = _key$split[0],
         componentName = _key$split[1];
 

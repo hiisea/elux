@@ -78,7 +78,7 @@ export var loadComponent = function loadComponent(moduleName, viewName, options)
 
       if (!this.view && !this.loading && !this.error) {
         var deps = this.context || {};
-        deps[moduleName + config.CSP + viewName] = true;
+        deps[moduleName + config.NSP + viewName] = true;
         this.loading = true;
         var result;
 

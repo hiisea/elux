@@ -3,7 +3,6 @@ import { TaskCounter, deepMerge, warn } from './sprite';
 export const config = {
   NSP: '.',
   MSP: ',',
-  CSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2
 };
