@@ -1,30 +1,9 @@
-import { deepMerge, getCachedModules, env, isPromise, getModuleList } from '@elux/core';
+import { deepMerge, env, getModuleList } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
 import { routeConfig } from './basic';
-
-function getDefaultParams(moduleNames) {
-  const defaultParams = routeConfig.defaultParams;
-  const modules = getCachedModules();
-  return moduleNames.reduce((data, moduleName) => {
-    if (defaultParams[moduleName] !== undefined) {
-      data[moduleName] = defaultParams[moduleName];
-    } else {
-      const result = modules[moduleName];
-
-      if (result && !isPromise(result)) {
-        defaultParams[moduleName] = result.params;
-        data[moduleName] = result.params;
-      }
-    }
-
-    return data;
-  }, {});
-}
-
 export function assignDefaultData(data) {
-  const moduleNames = Object.keys(data);
-  const def = getDefaultParams(moduleNames);
-  return moduleNames.reduce((params, moduleName) => {
+  const def = routeConfig.defaultParams;
+  return Object.keys(data).reduce((params, moduleName) => {
     if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
     }
@@ -211,15 +190,12 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
         pagename,
         params
       } = partialLocation;
-
-      if (routeConfig.defaultParams) {
-        return {
-          pagename,
-          params: assignDefaultData(params)
-        };
-      }
-
-      return getModuleList(Object.keys(params)).then(() => {
+      const def = routeConfig.defaultParams;
+      const asyncLoadModules = Object.keys(params).filter(moduleName => def[moduleName] === undefined);
+      return getModuleList(asyncLoadModules).then(modules => {
+        modules.forEach(module => {
+          def[module.moduleName] = module.params;
+        });
         return {
           pagename,
           params: assignDefaultData(params)
@@ -232,7 +208,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
     },
 
     locationToMinData(location) {
-      let params = excludeDefault(location.params, getDefaultParams(Object.keys(location.params)), true);
+      let params = excludeDefault(location.params, routeConfig.defaultParams, true);
       let pathParams;
       let pathname;
       const pagename = `/${location.pagename}/`.replace(/^\/+|\/+$/g, '/');

@@ -120,7 +120,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
       typeof nativeLocationOrNativeUrl === 'string'
         ? locationTransform.nativeUrlToEluxLocation(nativeLocationOrNativeUrl)
         : locationTransform.nativeLocationToEluxLocation(nativeLocationOrNativeUrl);
-    const callback = (location: Location<P>) => {
+    this.initedPromise = locationTransform.eluxLocationtoLocation<P>(eluxLocation).then((location) => {
       const key = this._createKey();
       const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key};
       this.routeState = routeState;
@@ -130,14 +130,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
       }
       this.history = new History({location, key});
       return routeState;
-    };
-    const locationOrPromise = locationTransform.eluxLocationtoLocation<P>(eluxLocation);
-    if (isPromise(locationOrPromise)) {
-      this.initedPromise = locationOrPromise.then(callback);
-    } else {
-      const routeState = callback(locationOrPromise);
-      this.initedPromise = Promise.resolve(routeState);
-    }
+    });
   }
 
   addListener(callback: (data: RouteState<P>) => void | Promise<void>) {
@@ -208,7 +201,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
   //   return urlToEluxLocation(url, this.locationTransform);
   // }
 
-  urlToLocation(url: string): Location<P> | Promise<Location<P>> {
+  urlToLocation(url: string): Promise<Location<P>> {
     const eluxLocation = this.locationTransform.urlToEluxLocation(url);
     return this.locationTransform.eluxLocationtoLocation(eluxLocation);
   }
@@ -229,7 +222,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
   //   });
   // }
 
-  private preAdditions(data: PayloadLocation<P, N> | string): Location<P> | Promise<Location<P>> | null {
+  private preAdditions(data: PayloadLocation<P, N> | string): Promise<Location<P>> | null {
     let eluxLocation: EluxLocation;
     if (typeof data === 'string') {
       if (/^[\w:]*\/\//.test(data)) {
@@ -409,7 +402,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
   destroy(): void;
   locationToNative(location: Location<any>): {nativeUrl: string; nativeLocation: NativeLocation};
-  urlToLocation(url: string): Location<P> | Promise<Location<P>>;
+  urlToLocation(url: string): Promise<Location<P>>;
   // urlToEluxLocation(url: string): EluxLocation;
   // nativeUrlToNativeLocation(url: string): NativeLocation;
   // nativeLocationToEluxLocation(nativeLocation: NativeLocation): EluxLocation;

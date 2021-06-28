@@ -70,7 +70,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
         nativeUrl: string;
         nativeLocation: NativeLocation;
     };
-    urlToLocation(url: string): Location<P> | Promise<Location<P>>;
+    urlToLocation(url: string): Promise<Location<P>>;
     private _createKey;
     private preAdditions;
     relaunch(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
@@ -108,5 +108,5 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
         nativeUrl: string;
         nativeLocation: NativeLocation;
     };
-    urlToLocation(url: string): Location<P> | Promise<Location<P>>;
+    urlToLocation(url: string): Promise<Location<P>>;
 }

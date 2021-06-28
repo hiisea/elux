@@ -30,22 +30,25 @@ describe('init', () => {
   });
 });
 describe('/404', () => {
-  test('nativeUrlToLocation', () => {
-    expect(router.urlToLocation('admin3/member')).toEqual({
+  test('nativeUrlToLocation', async () => {
+    const location = await router.urlToLocation('admin3/member');
+    expect(location).toEqual({
       pagename: '/404',
       params: {},
     });
   });
-  test('urlToLocation', () => {
-    expect(router.urlToLocation('/admin3/member?{"aaa":1}')).toEqual({
+  test('urlToLocation', async () => {
+    const location = await router.urlToLocation('/admin3/member?{"aaa":1}');
+    expect(location).toEqual({
       pagename: '/404',
       params: {},
     });
   });
 });
 describe('/admin/member', () => {
-  test('nativeUrlToLocation', () => {
-    expect(router.urlToLocation('admin/member')).toEqual({
+  test('nativeUrlToLocation', async () => {
+    let location = await router.urlToLocation('admin/member');
+    expect(location).toEqual({
       pagename: '/admin/member',
       params: {
         admin: {},
@@ -63,7 +66,8 @@ describe('/admin/member', () => {
         },
       },
     });
-    expect(router.urlToLocation('admin/member2//?')).toEqual({
+    location = await router.urlToLocation('admin/member2//?');
+    expect(location).toEqual({
       pagename: '/admin/member',
       params: {
         admin: {},
@@ -81,11 +85,10 @@ describe('/admin/member', () => {
         },
       },
     });
-    expect(
-      router.urlToLocation(
-        '/admin/member2?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22pageSize%22%3A11%7D%7D%7D#_=%7B%22member%22%3A%7B%22_itemVerPre%22%3A1%7D%7D'
-      )
-    ).toEqual({
+    location = await router.urlToLocation(
+      '/admin/member2?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22pageSize%22%3A11%7D%7D%7D#_=%7B%22member%22%3A%7B%22_itemVerPre%22%3A1%7D%7D'
+    );
+    expect(location).toEqual({
       pagename: '/admin/member',
       params: {
         admin: {},
@@ -103,11 +106,10 @@ describe('/admin/member', () => {
         },
       },
     });
-    expect(
-      router.urlToLocation(
-        '/admin/member2/list/2/aaa//?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22pageSize%22%3A11%7D%7D%7D#_=%7B%22member%22%3A%7B%22_itemVerPre%22%3A1%7D%7D'
-      )
-    ).toEqual({
+    location = await router.urlToLocation(
+      '/admin/member2/list/2/aaa//?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22pageSize%22%3A11%7D%7D%7D#_=%7B%22member%22%3A%7B%22_itemVerPre%22%3A1%7D%7D'
+    );
+    expect(location).toEqual({
       pagename: '/admin/member/list',
       params: {
         admin: {},
@@ -126,8 +128,9 @@ describe('/admin/member', () => {
       },
     });
   });
-  test('urlToLocation', () => {
-    expect(router.urlToLocation('/admin/member?{}')).toEqual({
+  test('urlToLocation', async () => {
+    let location = await router.urlToLocation('/admin/member?{}');
+    expect(location).toEqual({
       pagename: '/admin/member',
       params: {
         admin: {},
@@ -145,7 +148,8 @@ describe('/admin/member', () => {
         },
       },
     });
-    expect(router.urlToLocation('/admin/member?{"member":{"aaa":1}}')).toEqual({
+    location = await router.urlToLocation('/admin/member?{"member":{"aaa":1}}');
+    expect(location).toEqual({
       pagename: '/admin/member',
       params: {
         admin: {},
@@ -166,8 +170,9 @@ describe('/admin/member', () => {
   });
 });
 describe('/admin/member/list', () => {
-  test('nativeUrlToLocation', () => {
-    expect(router.urlToLocation('/admin/member2/list')).toEqual({
+  test('nativeUrlToLocation', async () => {
+    let location = await router.urlToLocation('/admin/member2/list');
+    expect(location).toEqual({
       pagename: '/admin/member/list',
       params: {
         admin: {},
@@ -185,7 +190,8 @@ describe('/admin/member/list', () => {
         },
       },
     });
-    expect(router.urlToLocation('/admin/member2/list/6')).toEqual({
+    location = await router.urlToLocation('/admin/member2/list/6');
+    expect(location).toEqual({
       pagename: '/admin/member/list',
       params: {
         admin: {},
@@ -203,7 +209,8 @@ describe('/admin/member/list', () => {
         },
       },
     });
-    expect(router.urlToLocation('/admin/member2/list/6/http%3A%2F%2Fwww.baidu.com%2Faa%3Fbb%3D1%26cc%3D2%23dd%3D3/')).toEqual({
+    location = await router.urlToLocation('/admin/member2/list/6/http%3A%2F%2Fwww.baidu.com%2Faa%3Fbb%3D1%26cc%3D2%23dd%3D3/');
+    expect(location).toEqual({
       pagename: '/admin/member/list',
       params: {
         admin: {},
@@ -221,11 +228,10 @@ describe('/admin/member/list', () => {
         },
       },
     });
-    expect(
-      router.urlToLocation(
-        '/admin/member2/list/6/http%3A%2F%2Fwww.baidu.com%2Faa%3Fbb%3D1%26cc%3D2%23dd%3D3?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22term%22%3A%22%E5%A4%A7%E5%A4%A7%22%7D%7D%7D'
-      )
-    ).toEqual({
+    location = await router.urlToLocation(
+      '/admin/member2/list/6/http%3A%2F%2Fwww.baidu.com%2Faa%3Fbb%3D1%26cc%3D2%23dd%3D3?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22term%22%3A%22%E5%A4%A7%E5%A4%A7%22%7D%7D%7D'
+    );
+    expect(location).toEqual({
       pagename: '/admin/member/list',
       params: {
         admin: {},
@@ -244,8 +250,9 @@ describe('/admin/member/list', () => {
       },
     });
   });
-  test('urlToLocation', () => {
-    expect(router.urlToLocation('/admin/member/list?{"member":{"listSearchPre":{"term":"大大","term2":"小小"}}}')).toEqual({
+  test('urlToLocation', async () => {
+    const location = await router.urlToLocation('/admin/member/list?{"member":{"listSearchPre":{"term":"大大","term2":"小小"}}}');
+    expect(location).toEqual({
       pagename: '/admin/member/list',
       params: {
         admin: {},
@@ -266,8 +273,9 @@ describe('/admin/member/list', () => {
   });
 });
 describe('/admin/member/detail', () => {
-  test('nativeUrlToLocation', () => {
-    expect(router.urlToLocation('/admin/member2/detail/3/')).toEqual({
+  test('nativeUrlToLocation', async () => {
+    const location = await router.urlToLocation('/admin/member2/detail/3/');
+    expect(location).toEqual({
       pagename: '/admin/member/detail',
       params: {
         admin: {},
@@ -286,8 +294,9 @@ describe('/admin/member/detail', () => {
       },
     });
   });
-  test('urlToLocation', () => {
-    expect(router.urlToLocation('/admin/member/detail?{"member":{"itemIdPre":"4"}}')).toEqual({
+  test('urlToLocation', async () => {
+    const location = await router.urlToLocation('/admin/member/detail?{"member":{"itemIdPre":"4"}}');
+    expect(location).toEqual({
       pagename: '/admin/member/detail',
       params: {
         admin: {},

@@ -85,8 +85,7 @@ export class BaseRouter {
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
     const eluxLocation = typeof nativeLocationOrNativeUrl === 'string' ? locationTransform.nativeUrlToEluxLocation(nativeLocationOrNativeUrl) : locationTransform.nativeLocationToEluxLocation(nativeLocationOrNativeUrl);
-
-    const callback = location => {
+    this.initedPromise = locationTransform.eluxLocationtoLocation(eluxLocation).then(location => {
       const key = this._createKey();
 
       const routeState = { ...location,
@@ -110,16 +109,7 @@ export class BaseRouter {
         key
       });
       return routeState;
-    };
-
-    const locationOrPromise = locationTransform.eluxLocationtoLocation(eluxLocation);
-
-    if (isPromise(locationOrPromise)) {
-      this.initedPromise = locationOrPromise.then(callback);
-    } else {
-      const routeState = callback(locationOrPromise);
-      this.initedPromise = Promise.resolve(routeState);
-    }
+    });
   }
 
   addListener(callback) {

@@ -1,23 +1,7 @@
-import {deepMerge, getCachedModules, env, isPromise, getModuleList} from '@elux/core';
+import {deepMerge, env, getModuleList} from '@elux/core';
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
 import {routeConfig, EluxLocation, DeepPartial, PartialLocation, RouteState, Location, RootParams} from './basic';
 
-function getDefaultParams(moduleNames: string[]): Record<string, any> {
-  const defaultParams = routeConfig.defaultParams;
-  const modules = getCachedModules();
-  return moduleNames.reduce((data, moduleName) => {
-    if (defaultParams[moduleName] !== undefined) {
-      data[moduleName] = defaultParams[moduleName];
-    } else {
-      const result = modules[moduleName];
-      if (result && !isPromise(result)) {
-        defaultParams[moduleName] = result.params;
-        data[moduleName] = result.params;
-      }
-    }
-    return data;
-  }, {});
-}
 export interface NativeLocation {
   pathname: string;
   searchData?: Record<string, string>;
@@ -29,8 +13,8 @@ export type LocationTransform = {
   nativeUrlToEluxLocation: (nativeUrl: string) => EluxLocation;
   nativeLocationToEluxLocation: (nativeLocation: NativeLocation) => EluxLocation;
   eluxLocationtoPartialLocation: (eluxLocation: EluxLocation) => PartialLocation;
-  partialLocationToLocation: <P extends RootParams>(partialLocation: PartialLocation) => Location<P> | Promise<Location<P>>;
-  eluxLocationtoLocation: <P extends RootParams>(eluxLocation: EluxLocation) => Location<P> | Promise<Location<P>>;
+  partialLocationToLocation: <P extends RootParams>(partialLocation: PartialLocation) => Promise<Location<P>>;
+  eluxLocationtoLocation: <P extends RootParams>(eluxLocation: EluxLocation) => Promise<Location<P>>;
   locationToMinData: (location: Location) => {pathname: string; params: Record<string, any>; pathParams: Record<string, any>};
   locationtoNativeLocation: (location: Location) => NativeLocation;
 };
@@ -47,9 +31,8 @@ export type NativeLocationMap = {
   out(nativeLocation: NativeLocation): NativeLocation;
 };
 export function assignDefaultData(data: {[moduleName: string]: any}): {[moduleName: string]: any} {
-  const moduleNames = Object.keys(data);
-  const def = getDefaultParams(moduleNames);
-  return moduleNames.reduce((params, moduleName) => {
+  const def = routeConfig.defaultParams;
+  return Object.keys(data).reduce((params, moduleName) => {
     if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
     }
@@ -235,20 +218,22 @@ export function createLocationTransform(
       }
       return {pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`, params};
     },
-    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>> {
+    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Promise<Location<P>> {
       const {pagename, params} = partialLocation;
-      if (routeConfig.defaultParams) {
-        return {pagename, params: assignDefaultData(params) as P};
-      }
-      return getModuleList(Object.keys(params)).then(() => {
+      const def = routeConfig.defaultParams;
+      const asyncLoadModules = Object.keys(params).filter((moduleName) => def[moduleName] === undefined);
+      return getModuleList(asyncLoadModules).then((modules) => {
+        modules.forEach((module) => {
+          def[module.moduleName] = module.params;
+        });
         return {pagename, params: assignDefaultData(params) as P};
       });
     },
-    eluxLocationtoLocation<P extends RootParams>(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>> {
+    eluxLocationtoLocation<P extends RootParams>(eluxLocation: EluxLocation): Promise<Location<P>> {
       return this.partialLocationToLocation(this.eluxLocationtoPartialLocation(eluxLocation));
     },
     locationToMinData(location) {
-      let params = excludeDefault(location.params, getDefaultParams(Object.keys(location.params)), true);
+      let params = excludeDefault(location.params, routeConfig.defaultParams, true);
       let pathParams: Record<string, any>;
       let pathname: string;
       const pagename = `/${location.pagename}/`.replace(/^\/+|\/+$/g, '/');

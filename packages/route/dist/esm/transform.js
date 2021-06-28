@@ -1,30 +1,9 @@
-import { deepMerge, getCachedModules, env, isPromise, getModuleList } from '@elux/core';
+import { deepMerge, env, getModuleList } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
 import { routeConfig } from './basic';
-
-function getDefaultParams(moduleNames) {
-  var defaultParams = routeConfig.defaultParams;
-  var modules = getCachedModules();
-  return moduleNames.reduce(function (data, moduleName) {
-    if (defaultParams[moduleName] !== undefined) {
-      data[moduleName] = defaultParams[moduleName];
-    } else {
-      var result = modules[moduleName];
-
-      if (result && !isPromise(result)) {
-        defaultParams[moduleName] = result.params;
-        data[moduleName] = result.params;
-      }
-    }
-
-    return data;
-  }, {});
-}
-
 export function assignDefaultData(data) {
-  var moduleNames = Object.keys(data);
-  var def = getDefaultParams(moduleNames);
-  return moduleNames.reduce(function (params, moduleName) {
+  var def = routeConfig.defaultParams;
+  return Object.keys(data).reduce(function (params, moduleName) {
     if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
     }
@@ -228,15 +207,14 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
     partialLocationToLocation: function partialLocationToLocation(partialLocation) {
       var pagename = partialLocation.pagename,
           params = partialLocation.params;
-
-      if (routeConfig.defaultParams) {
-        return {
-          pagename: pagename,
-          params: assignDefaultData(params)
-        };
-      }
-
-      return getModuleList(Object.keys(params)).then(function () {
+      var def = routeConfig.defaultParams;
+      var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
+        return def[moduleName] === undefined;
+      });
+      return getModuleList(asyncLoadModules).then(function (modules) {
+        modules.forEach(function (module) {
+          def[module.moduleName] = module.params;
+        });
         return {
           pagename: pagename,
           params: assignDefaultData(params)
@@ -247,7 +225,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
       return this.partialLocationToLocation(this.eluxLocationtoPartialLocation(eluxLocation));
     },
     locationToMinData: function locationToMinData(location) {
-      var params = excludeDefault(location.params, getDefaultParams(Object.keys(location.params)), true);
+      var params = excludeDefault(location.params, routeConfig.defaultParams, true);
       var pathParams;
       var pathname;
       var pagename = ("/" + location.pagename + "/").replace(/^\/+|\/+$/g, '/');

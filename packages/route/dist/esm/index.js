@@ -100,8 +100,7 @@ export var BaseRouter = function () {
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
     var eluxLocation = typeof nativeLocationOrNativeUrl === 'string' ? locationTransform.nativeUrlToEluxLocation(nativeLocationOrNativeUrl) : locationTransform.nativeLocationToEluxLocation(nativeLocationOrNativeUrl);
-
-    var callback = function callback(location) {
+    this.initedPromise = locationTransform.eluxLocationtoLocation(eluxLocation).then(function (location) {
       var key = _this2._createKey();
 
       var routeState = _extends({}, location, {
@@ -126,16 +125,7 @@ export var BaseRouter = function () {
         key: key
       });
       return routeState;
-    };
-
-    var locationOrPromise = locationTransform.eluxLocationtoLocation(eluxLocation);
-
-    if (isPromise(locationOrPromise)) {
-      this.initedPromise = locationOrPromise.then(callback);
-    } else {
-      var routeState = callback(locationOrPromise);
-      this.initedPromise = Promise.resolve(routeState);
-    }
+    });
   }
 
   var _proto2 = BaseRouter.prototype;

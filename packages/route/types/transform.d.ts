@@ -9,8 +9,8 @@ export declare type LocationTransform = {
     nativeUrlToEluxLocation: (nativeUrl: string) => EluxLocation;
     nativeLocationToEluxLocation: (nativeLocation: NativeLocation) => EluxLocation;
     eluxLocationtoPartialLocation: (eluxLocation: EluxLocation) => PartialLocation;
-    partialLocationToLocation: <P extends RootParams>(partialLocation: PartialLocation) => Location<P> | Promise<Location<P>>;
-    eluxLocationtoLocation: <P extends RootParams>(eluxLocation: EluxLocation) => Location<P> | Promise<Location<P>>;
+    partialLocationToLocation: <P extends RootParams>(partialLocation: PartialLocation) => Promise<Location<P>>;
+    eluxLocationtoLocation: <P extends RootParams>(eluxLocation: EluxLocation) => Promise<Location<P>>;
     locationToMinData: (location: Location) => {
         pathname: string;
         params: Record<string, any>;
