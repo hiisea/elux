@@ -346,12 +346,12 @@ export function getRootModuleAPI(data) {
 
   return MetaData.facadeMap;
 }
-export function defineComponent(component) {
+export function exportComponent(component) {
   var eluxComponent = component;
   eluxComponent.__elux_component__ = 'component';
   return eluxComponent;
 }
-export function defineView(component) {
+export function exportView(component) {
   var eluxComponent = component;
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;

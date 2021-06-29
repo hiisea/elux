@@ -1,7 +1,7 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
-import { loadComponet, isPromise, env, defineComponent } from '@elux/core';
+import { loadComponet, isPromise, env } from '@elux/core';
 export const DepsContext = React.createContext({
   deps: {}
 });
@@ -24,7 +24,7 @@ export function setLoadComponentOptions({
   LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
 export const loadComponent = (moduleName, componentName, options = {}) => {
-  const OnLoading = defineComponent(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  const OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   class Loader extends Component {

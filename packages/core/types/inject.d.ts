@@ -88,7 +88,7 @@ export declare type RootModuleParams<A extends RootModuleFacade = RootModuleFaca
     [K in keyof A]: A[K]['params'];
 };
 export declare function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record<string, string[]>): RootModuleAPI<T>;
-export declare function defineComponent<T>(component: T): T & EluxComponent;
-export declare function defineView<T>(component: T): T & EluxComponent;
+export declare function exportComponent<T>(component: T): T & EluxComponent;
+export declare function exportView<T>(component: T): T & EluxComponent;
 export declare type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(moduleName: M, componentName: V, options?: O) => A[M]['components'][V];
 export {};

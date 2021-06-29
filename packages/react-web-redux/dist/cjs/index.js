@@ -19,7 +19,7 @@ var connectRedux = function connectRedux() {
   }
 
   return function (component) {
-    return (0, _core.defineView)(_reactRedux.connect.apply(void 0, args)(component));
+    return (0, _core.exportView)(_reactRedux.connect.apply(void 0, args)(component));
   };
 };
 

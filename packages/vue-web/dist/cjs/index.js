@@ -8,7 +8,7 @@ exports.setConfig = setConfig;
 exports.createApp = createApp;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.defineView = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.action = exports.reducer = exports.errorAction = exports.mutation = exports.effect = exports.LoadingState = exports.ActionTypes = exports.createVuex = void 0;
+exports.defineComponent = exports.defineView = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.action = exports.reducer = exports.errorAction = exports.mutation = exports.effect = exports.LoadingState = exports.ActionTypes = exports.createVuex = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -23,6 +23,8 @@ exports.createRouteModule = _route.createRouteModule;
 var _core = require("@elux/core");
 
 exports.env = _core.env;
+exports.exportView = _core.exportView;
+exports.exportComponent = _core.exportComponent;
 exports.ActionTypes = _core.ActionTypes;
 exports.LoadingState = _core.LoadingState;
 exports.effect = _core.effect;
@@ -46,8 +48,6 @@ var _routeBrowser = require("@elux/route-browser");
 
 var _vue = require("vue");
 
-exports.defineComponent = _vue.defineComponent;
-
 var _loadComponent = require("./loadComponent");
 
 var _sington = require("./sington");
@@ -59,10 +59,18 @@ exports.createVuex = _coreVuex.createVuex;
 var defineView = function defineView() {
   var view = _vue.defineComponent.apply(void 0, arguments);
 
-  return (0, _core.defineView)(view);
+  return (0, _core.exportView)(view);
 };
 
 exports.defineView = defineView;
+
+var defineComponent = function defineComponent() {
+  var view = _vue.defineComponent.apply(void 0, arguments);
+
+  return (0, _core.exportComponent)(view);
+};
+
+exports.defineComponent = defineComponent;
 var SSRTPL;
 
 function setSsrHtmlTpl(tpl) {

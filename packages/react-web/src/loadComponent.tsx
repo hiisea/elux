@@ -1,5 +1,5 @@
 import React, {ComponentType, Component} from 'react';
-import {loadComponet, isPromise, env, defineComponent} from '@elux/core';
+import {loadComponet, isPromise, env} from '@elux/core';
 import type {LoadComponent as BaseLoadComponent, RootModuleFacade, IStore, EluxComponent} from '@elux/core';
 
 export const DepsContext = React.createContext<{deps: Record<string, boolean>; store?: IStore}>({deps: {}});
@@ -26,7 +26,7 @@ export function setLoadComponentOptions({
 }
 
 export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, componentName, options = {}) => {
-  const OnLoading: EluxComponent = defineComponent(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  const OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
   class Loader extends Component<{forwardedRef: any}> {
     static contextType = DepsContext;

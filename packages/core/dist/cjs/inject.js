@@ -12,8 +12,8 @@ exports.getComponentList = getComponentList;
 exports.loadComponet = loadComponet;
 exports.getCachedModules = getCachedModules;
 exports.getRootModuleAPI = getRootModuleAPI;
-exports.defineComponent = defineComponent;
-exports.defineView = defineView;
+exports.exportComponent = exportComponent;
+exports.exportView = exportView;
 exports.CoreModuleHandlers = void 0;
 
 var _decorate2 = _interopRequireDefault(require("@babel/runtime/helpers/decorate"));
@@ -376,13 +376,13 @@ function getRootModuleAPI(data) {
   return _basic.MetaData.facadeMap;
 }
 
-function defineComponent(component) {
+function exportComponent(component) {
   var eluxComponent = component;
   eluxComponent.__elux_component__ = 'component';
   return eluxComponent;
 }
 
-function defineView(component) {
+function exportView(component) {
   var eluxComponent = component;
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;

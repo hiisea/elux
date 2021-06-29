@@ -1,4 +1,4 @@
-import {loadComponet, isPromise, env, defineComponent} from '@elux/core';
+import {loadComponet, isPromise, env} from '@elux/core';
 import type {LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent, IStore} from '@elux/core';
 import {defineAsyncComponent, Component, h, inject} from 'vue';
 
@@ -22,7 +22,7 @@ export function setLoadComponentOptions({
 }
 
 export const loadComponent: LoadComponent = (moduleName, componentName, options = {}) => {
-  const loadingComponent: EluxComponent = defineComponent(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  const loadingComponent = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   const errorComponent = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
   const component: any = (props: any, context: any) => {
     const {deps, store} = inject<{deps: Record<string, boolean>; store?: IStore}>(DepsContext, {deps: {}});

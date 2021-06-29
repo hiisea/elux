@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { defineView } from '@elux/core';
+import { exportView } from '@elux/core';
 export { Provider } from 'react-redux';
 export { createRedux } from '@elux/core-redux';
 export var connectRedux = function connectRedux() {
@@ -8,6 +8,6 @@ export var connectRedux = function connectRedux() {
   }
 
   return function (component) {
-    return defineView(connect.apply(void 0, args)(component));
+    return exportView(connect.apply(void 0, args)(component));
   };
 };

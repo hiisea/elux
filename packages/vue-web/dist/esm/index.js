@@ -1,18 +1,21 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import './env';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
-import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, defineView as baseDefineView } from '@elux/core';
+import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
-import { createApp as createVue, defineComponent } from 'vue';
+import { createApp as createVue, defineComponent as defineVueComponent } from 'vue';
 import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
 export { createVuex } from '@elux/core-vuex';
-export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
-export { defineComponent } from 'vue';
 export var defineView = function defineView() {
-  var view = defineComponent.apply(void 0, arguments);
-  return baseDefineView(view);
+  var view = defineVueComponent.apply(void 0, arguments);
+  return exportView(view);
+};
+export var defineComponent = function defineComponent() {
+  var view = defineVueComponent.apply(void 0, arguments);
+  return exportComponent(view);
 };
 var SSRTPL;
 export function setSsrHtmlTpl(tpl) {

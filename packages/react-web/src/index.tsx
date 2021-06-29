@@ -47,8 +47,8 @@ export {
   isProcessedError,
   setProcessedError,
   delayPromise,
-  defineView,
-  defineComponent,
+  exportView,
+  exportComponent,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
 export {connectRedux, createRedux, Provider} from '@elux/react-web-redux';

@@ -35,7 +35,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     options = {};
   }
 
-  var loadingComponent = (0, _core.defineComponent)(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  var loadingComponent = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   var errorComponent = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   var component = function component(props, context) {

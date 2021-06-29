@@ -9,13 +9,27 @@ import {
   defineModuleGetter,
   setConfig as setCoreConfig,
   getModule,
-  defineView as baseDefineView,
+  exportView,
+  exportComponent,
 } from '@elux/core';
 import {createRouter} from '@elux/route-browser';
-import {createApp as createVue, defineComponent} from 'vue';
+import {createApp as createVue, defineComponent as defineVueComponent} from 'vue';
 import {loadComponent, setLoadComponentOptions, DepsContext} from './loadComponent';
 import {MetaData} from './sington';
-import type {Component} from 'vue';
+import type {
+  Component,
+  SetupContext,
+  RenderFunction,
+  DefineComponent,
+  ComputedOptions,
+  MethodOptions,
+  ComponentOptionsMixin,
+  EmitsOptions,
+  ComponentOptionsWithoutProps,
+  ComponentOptionsWithArrayProps,
+  ComponentPropsOptions,
+  ComponentOptionsWithObjectProps,
+} from 'vue';
 import type {
   ModuleGetter,
   IStoreMiddleware,
@@ -25,6 +39,7 @@ import type {
   RootModuleFacade,
   RootModuleAPI,
   RootModuleActions,
+  EluxComponent,
 } from '@elux/core';
 import type {RouteModule} from '@elux/route';
 import type {IRouter} from '@elux/route-browser';
@@ -51,20 +66,86 @@ export {
   isProcessedError,
   setProcessedError,
   delayPromise,
+  exportView,
+  exportComponent,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
-export {defineComponent} from 'vue';
 
 export type {RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState} from '@elux/core';
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
 export type {VuexStore, VuexOptions} from '@elux/core-vuex';
 export type {LoadComponent} from './loadComponent';
 
-export const defineView: typeof defineComponent = function (...args: [any]) {
-  const view = defineComponent(...args);
-  return baseDefineView(view);
-};
+interface ExportDefineComponent {
+  <Props, RawBindings = object>(setup: (props: Readonly<Props>, ctx: SetupContext) => RawBindings | RenderFunction): DefineComponent<
+    Props,
+    RawBindings
+  > &
+    EluxComponent;
+  <
+    Props = {},
+    RawBindings = {},
+    D = {},
+    C extends ComputedOptions = {},
+    M extends MethodOptions = {},
+    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+    E extends EmitsOptions = EmitsOptions,
+    EE extends string = string
+  >(
+    options: ComponentOptionsWithoutProps<Props, RawBindings, D, C, M, Mixin, Extends, E, EE>
+  ): DefineComponent<Props, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+  <
+    PropNames extends string,
+    RawBindings,
+    D,
+    C extends ComputedOptions = {},
+    M extends MethodOptions = {},
+    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+    E extends EmitsOptions = Record<string, any>,
+    EE extends string = string
+  >(
+    options: ComponentOptionsWithArrayProps<PropNames, RawBindings, D, C, M, Mixin, Extends, E, EE>
+  ): DefineComponent<
+    Readonly<
+      {
+        [key in PropNames]?: any;
+      }
+    >,
+    RawBindings,
+    D,
+    C,
+    M,
+    Mixin,
+    Extends,
+    E,
+    EE
+  > &
+    EluxComponent;
+  <
+    PropsOptions extends Readonly<ComponentPropsOptions>,
+    RawBindings,
+    D,
+    C extends ComputedOptions = {},
+    M extends MethodOptions = {},
+    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+    E extends EmitsOptions = Record<string, any>,
+    EE extends string = string
+  >(
+    options: ComponentOptionsWithObjectProps<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE>
+  ): DefineComponent<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+}
 
+export const defineView: ExportDefineComponent = function (...args: [any]) {
+  const view = defineVueComponent(...args);
+  return exportView(view);
+};
+export const defineComponent: ExportDefineComponent = function (...args: [any]) {
+  const view = defineVueComponent(...args);
+  return exportComponent(view);
+};
 let SSRTPL: string;
 
 export function setSsrHtmlTpl(tpl: string) {

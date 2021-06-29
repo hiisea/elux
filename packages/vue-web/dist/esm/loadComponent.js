@@ -1,4 +1,4 @@
-import { loadComponet, isPromise, env, defineComponent } from '@elux/core';
+import { loadComponet, isPromise, env } from '@elux/core';
 import { defineAsyncComponent, h, inject } from 'vue';
 export var DepsContext = '__EluxDepsContext__';
 var loadComponentDefaultOptions = {
@@ -24,7 +24,7 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
     options = {};
   }
 
-  var loadingComponent = defineComponent(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  var loadingComponent = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   var errorComponent = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   var component = function component(props, context) {

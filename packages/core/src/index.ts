@@ -22,8 +22,9 @@ export {
   getModule,
   getModuleList,
   getCachedModules,
-  defineView,
-  defineComponent,
+  exportView,
+  exportComponent,
+  getComponet,
 } from './inject';
 export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
 export {defineModuleGetter, renderApp, ssrApp} from './render';

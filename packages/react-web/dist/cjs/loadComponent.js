@@ -56,7 +56,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     options = {};
   }
 
-  var OnLoading = (0, _core.defineComponent)(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  var OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   var OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   var Loader = function (_Component) {

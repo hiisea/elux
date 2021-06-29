@@ -367,12 +367,12 @@ export function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record
   return MetaData.facadeMap as any;
 }
 
-export function defineComponent<T>(component: T): T & EluxComponent {
+export function exportComponent<T>(component: T): T & EluxComponent {
   const eluxComponent: EluxComponent & T = component as any;
   eluxComponent.__elux_component__ = 'component';
   return eluxComponent;
 }
-export function defineView<T>(component: T): T & EluxComponent {
+export function exportView<T>(component: T): T & EluxComponent {
   const eluxComponent: EluxComponent & T = component as any;
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;

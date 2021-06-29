@@ -4,7 +4,7 @@ import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitial
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
-import { loadComponet, isPromise, env, defineComponent } from '@elux/core';
+import { loadComponet, isPromise, env } from '@elux/core';
 export var DepsContext = React.createContext({
   deps: {}
 });
@@ -33,7 +33,7 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
     options = {};
   }
 
-  var OnLoading = defineComponent(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  var OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   var OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   var Loader = function (_Component) {

@@ -1,5 +1,5 @@
 import {connect} from 'react-redux';
-import {defineView} from '@elux/core';
+import {exportView} from '@elux/core';
 import type {Options} from 'react-redux';
 import type {ComponentType, FunctionComponent, ComponentClass} from 'react';
 import type {Dispatch, EluxComponent} from '@elux/core';
@@ -22,6 +22,6 @@ export interface ConnectRedux {
 
 export const connectRedux: ConnectRedux = function (...args) {
   return function (component: any) {
-    return defineView(connect(...args)(component)) as any;
+    return exportView(connect(...args)(component)) as any;
   };
 };
