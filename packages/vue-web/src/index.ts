@@ -70,8 +70,9 @@ export {
   exportComponent,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
+export {default as Link} from './components/Link';
 
-export type {RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState} from '@elux/core';
+export type {RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState, EluxComponent} from '@elux/core';
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
 export type {VuexStore, VuexOptions} from '@elux/core-vuex';
 export type {LoadComponent} from './loadComponent';

@@ -2,5 +2,5 @@ import React, { ReactNode } from 'react';
 interface Props {
     children?: ReactNode;
 }
-export declare const DocumentHead: React.NamedExoticComponent<Props>;
-export {};
+declare const _default: React.NamedExoticComponent<Props>;
+export default _default;

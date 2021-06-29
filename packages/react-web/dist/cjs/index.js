@@ -58,21 +58,21 @@ exports.connectRedux = _reactWebRedux.connectRedux;
 exports.createRedux = _reactWebRedux.createRedux;
 exports.Provider = _reactWebRedux.Provider;
 
-var _DocumentHead = require("./components/DocumentHead");
+var _DocumentHead = _interopRequireDefault(require("./components/DocumentHead"));
 
-exports.DocumentHead = _DocumentHead.DocumentHead;
+exports.DocumentHead = _DocumentHead.default;
 
-var _Else = require("./components/Else");
+var _Else = _interopRequireDefault(require("./components/Else"));
 
-exports.Else = _Else.Else;
+exports.Else = _Else.default;
 
-var _Switch = require("./components/Switch");
+var _Switch = _interopRequireDefault(require("./components/Switch"));
 
-exports.Switch = _Switch.Switch;
+exports.Switch = _Switch.default;
 
-var _Link = require("./components/Link");
+var _Link = _interopRequireDefault(require("./components/Link"));
 
-exports.Link = _Link.Link;
+exports.Link = _Link.default;
 var SSRTPL;
 
 function setSsrHtmlTpl(tpl) {

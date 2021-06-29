@@ -3,13 +3,13 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.default = void 0;
+exports.default = _default;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
 var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/objectWithoutPropertiesLoose"));
 
-var _react = _interopRequireDefault(require("react"));
+var _vue = require("vue");
 
 var _sington = require("../sington");
 
@@ -17,12 +17,12 @@ function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-var _default = _react.default.forwardRef(function (_ref, ref) {
-  var _onClick = _ref.onClick,
-      replace = _ref.replace,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(_ref, ["onClick", "replace"]);
+function _default(props, context) {
+  var _onClick = props.onClick,
+      replace = props.replace,
+      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "replace"]);
   var target = rest.target;
-  var props = (0, _extends2.default)({}, rest, {
+  var newProps = (0, _extends2.default)({}, rest, {
     onClick: function onClick(event) {
       try {
         _onClick && _onClick(event);
@@ -37,9 +37,5 @@ var _default = _react.default.forwardRef(function (_ref, ref) {
         }
     }
   });
-  return _react.default.createElement("a", (0, _extends2.default)({}, props, {
-    ref: ref
-  }));
-});
-
-exports.default = _default;
+  return (0, _vue.h)('a', newProps, context.slots);
+}

@@ -1,23 +1,23 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import React from 'react';
+import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
+import { h } from 'vue';
 import { MetaData } from '../sington';
 
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-export default React.forwardRef(({
-  onClick,
-  replace,
-  ...rest
-}, ref) => {
-  const {
-    target
-  } = rest;
-  const props = { ...rest,
-    onClick: event => {
+export default function (props, context) {
+  var _onClick = props.onClick,
+      replace = props.replace,
+      rest = _objectWithoutPropertiesLoose(props, ["onClick", "replace"]);
+
+  var target = rest.target;
+
+  var newProps = _extends({}, rest, {
+    onClick: function onClick(event) {
       try {
-        onClick && onClick(event);
+        _onClick && _onClick(event);
       } catch (ex) {
         event.preventDefault();
         throw ex;
@@ -28,8 +28,7 @@ export default React.forwardRef(({
           replace ? MetaData.router.replace(rest.href) : MetaData.router.push(rest.href);
         }
     }
-  };
-  return React.createElement("a", _extends({}, props, {
-    ref: ref
-  }));
-});
+  });
+
+  return h('a', newProps, context.slots);
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import {h} from 'vue';
 import {MetaData} from '../sington';
 
 export interface Props extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
@@ -9,9 +10,10 @@ function isModifiedEvent(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>)
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, replace, ...rest}, ref) => {
+export default function (props: Props, context: {slots: any}) {
+  const {onClick, replace, ...rest} = props;
   const {target} = rest;
-  const props = {
+  const newProps = {
     ...rest,
     onClick: (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
       try {
@@ -20,7 +22,6 @@ export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, replace, ..
         event.preventDefault();
         throw ex;
       }
-
       if (
         !event.defaultPrevented && // onClick prevented default
         event.button === 0 && // ignore everything but left clicks
@@ -32,6 +33,5 @@ export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, replace, ..
       }
     },
   };
-  // eslint-disable-next-line jsx-a11y/anchor-has-content
-  return <a {...props} ref={ref} />;
-});
+  return h('a', newProps, context.slots);
+}

@@ -1,20 +1,20 @@
-import _extends from "@babel/runtime/helpers/esm/extends";
-import React from 'react';
+import { h } from 'vue';
 import { MetaData } from '../sington';
 
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-export default React.forwardRef(({
-  onClick,
-  replace,
-  ...rest
-}, ref) => {
+export default function (props, context) {
+  const {
+    onClick,
+    replace,
+    ...rest
+  } = props;
   const {
     target
   } = rest;
-  const props = { ...rest,
+  const newProps = { ...rest,
     onClick: event => {
       try {
         onClick && onClick(event);
@@ -29,7 +29,5 @@ export default React.forwardRef(({
         }
     }
   };
-  return React.createElement("a", _extends({}, props, {
-    ref: ref
-  }));
-});
+  return h('a', newProps, context.slots);
+}

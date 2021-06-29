@@ -7,7 +7,7 @@ function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-export var Link = React.forwardRef(function (_ref, ref) {
+export default React.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       replace = _ref.replace,
       rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "replace"]);

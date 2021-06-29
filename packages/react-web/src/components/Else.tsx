@@ -15,4 +15,4 @@ const Component: React.FC<Props> = ({children, elseView}) => {
   return <>{elseView}</>;
 };
 
-export const Else = React.memo(Component);
+export default React.memo(Component);

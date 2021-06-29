@@ -23,4 +23,4 @@ const Component = ({
   return React.createElement("head", null, children);
 };
 
-export const DocumentHead = React.memo(Component);
+export default React.memo(Component);

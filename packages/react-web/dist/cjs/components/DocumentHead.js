@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.DocumentHead = void 0;
+exports.default = void 0;
 
 var _react = _interopRequireWildcard(require("react"));
 
@@ -33,6 +33,6 @@ var Component = function Component(_ref) {
   return _react.default.createElement("head", null, children);
 };
 
-var DocumentHead = _react.default.memo(Component);
+var _default = _react.default.memo(Component);
 
-exports.DocumentHead = DocumentHead;
+exports.default = _default;

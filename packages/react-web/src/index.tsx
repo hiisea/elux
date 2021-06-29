@@ -52,10 +52,10 @@ export {
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
 export {connectRedux, createRedux, Provider} from '@elux/react-web-redux';
-export {DocumentHead} from './components/DocumentHead';
-export {Else} from './components/Else';
-export {Switch} from './components/Switch';
-export {Link} from './components/Link';
+export {default as DocumentHead} from './components/DocumentHead';
+export {default as Else} from './components/Else';
+export {default as Switch} from './components/Switch';
+export {default as Link} from './components/Link';
 
 declare const require: any;
 

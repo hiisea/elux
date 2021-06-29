@@ -6,7 +6,8 @@ import type { LoadComponent } from './loadComponent';
 export { createVuex } from '@elux/core-vuex';
 export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
-export type { RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState } from '@elux/core';
+export { default as Link } from './components/Link';
+export type { RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState, EluxComponent } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export type { VuexStore, VuexOptions } from '@elux/core-vuex';
 export type { LoadComponent } from './loadComponent';
@@ -47,7 +48,7 @@ export declare function createApp(moduleGetter: ModuleGetter, middlewares?: ISto
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
         render({ ssrKey, viewName }?: RenderOptions): Promise<{
             store: import("@elux/core").IStore<any> & B;
-            app: import("vue").App<any>;
+            app: import("vue").App<Element>;
         }>;
         ssr({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
     };

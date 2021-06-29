@@ -24,4 +24,4 @@ const Component: React.FC<Props> = ({children}) => {
   return <head>{children}</head>;
 };
 
-export const DocumentHead = React.memo(Component);
+export default React.memo(Component);

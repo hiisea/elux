@@ -8,7 +8,7 @@ exports.setConfig = setConfig;
 exports.createApp = createApp;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.defineComponent = exports.defineView = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.action = exports.reducer = exports.errorAction = exports.mutation = exports.effect = exports.LoadingState = exports.ActionTypes = exports.createVuex = void 0;
+exports.defineComponent = exports.defineView = exports.Link = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.action = exports.reducer = exports.errorAction = exports.mutation = exports.effect = exports.LoadingState = exports.ActionTypes = exports.createVuex = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -55,6 +55,10 @@ var _sington = require("./sington");
 var _coreVuex = require("@elux/core-vuex");
 
 exports.createVuex = _coreVuex.createVuex;
+
+var _Link = _interopRequireDefault(require("./components/Link"));
+
+exports.Link = _Link.default;
 
 var defineView = function defineView() {
   var view = _vue.defineComponent.apply(void 0, arguments);
