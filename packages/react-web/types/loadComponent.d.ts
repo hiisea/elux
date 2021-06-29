@@ -1,6 +1,9 @@
 import React, { ComponentType } from 'react';
-import type { LoadComponent as BaseLoadComponent, RootModuleFacade } from '@elux/core';
-export declare const DepsContext: React.Context<{}>;
+import type { LoadComponent as BaseLoadComponent, RootModuleFacade, IStore } from '@elux/core';
+export declare const DepsContext: React.Context<{
+    deps: Record<string, boolean>;
+    store?: IStore<{}> | undefined;
+}>;
 export declare type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<A, {
     OnError?: ComponentType<{
         message: string;

@@ -88,7 +88,7 @@ function _loadModel(moduleName, store = MetaData.clientStore) {
 }
 
 export { _loadModel as loadModel };
-export function getComponet(moduleName, componentName, initView) {
+export function getComponet(moduleName, componentName) {
   const key = [moduleName, componentName].join(config.NSP);
 
   if (MetaData.componentCaches[key]) {
@@ -101,11 +101,6 @@ export function getComponet(moduleName, componentName, initView) {
     if (isEluxComponent(componentOrFun)) {
       const component = componentOrFun;
       MetaData.componentCaches[key] = component;
-
-      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
-        module.model(MetaData.clientStore);
-      }
-
       return component;
     }
 
@@ -113,11 +108,6 @@ export function getComponet(moduleName, componentName, initView) {
       default: component
     }) => {
       MetaData.componentCaches[key] = component;
-
-      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
-        module.model(MetaData.clientStore);
-      }
-
       return component;
     }, reason => {
       MetaData.componentCaches[key] = undefined;
@@ -148,6 +138,33 @@ export function getComponentList(keys) {
     const [moduleName, componentName] = key.split(config.NSP);
     return getComponet(moduleName, componentName);
   }));
+}
+export function loadComponet(moduleName, componentName, store, deps) {
+  const promiseOrComponent = getComponet(moduleName, componentName);
+
+  const callback = component => {
+    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+      if (env.isServer) {
+        return null;
+      }
+
+      const module = getModule(moduleName);
+      module.model(store);
+    }
+
+    deps[moduleName + config.NSP + componentName] = true;
+    return component;
+  };
+
+  if (isPromise(promiseOrComponent)) {
+    if (env.isServer) {
+      return null;
+    }
+
+    return promiseOrComponent.then(callback);
+  }
+
+  return callback(promiseOrComponent);
 }
 export function getCachedModules() {
   return MetaData.moduleCaches;

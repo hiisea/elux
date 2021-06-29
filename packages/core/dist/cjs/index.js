@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.defineComponent = exports.defineView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.getComponentList = exports.getComponet = exports.exportModule = exports.loadModel = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
+exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.defineComponent = exports.defineView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
 
 var _basic = require("./basic");
 
@@ -29,8 +29,7 @@ var _inject = require("./inject");
 exports.CoreModuleHandlers = _inject.CoreModuleHandlers;
 exports.loadModel = _inject.loadModel;
 exports.exportModule = _inject.exportModule;
-exports.getComponet = _inject.getComponet;
-exports.getComponentList = _inject.getComponentList;
+exports.loadComponet = _inject.loadComponet;
 exports.getRootModuleAPI = _inject.getRootModuleAPI;
 exports.getModule = _inject.getModule;
 exports.getModuleList = _inject.getModuleList;

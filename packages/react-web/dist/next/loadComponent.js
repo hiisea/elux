@@ -1,8 +1,10 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
-import { getComponet, isPromise, env, config } from '@elux/core';
-export const DepsContext = React.createContext({});
+import { loadComponet, isPromise, env, defineComponent } from '@elux/core';
+export const DepsContext = React.createContext({
+  deps: {}
+});
 DepsContext.displayName = 'EluxComponentLoader';
 const loadComponentDefaultOptions = {
   LoadComponentOnError: ({
@@ -21,11 +23,9 @@ export function setLoadComponentOptions({
   LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
   LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
-export const loadComponent = (moduleName, viewName, options) => {
-  const {
-    OnLoading,
-    OnError
-  } = options || {};
+export const loadComponent = (moduleName, componentName, options = {}) => {
+  const OnLoading = defineComponent(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   class Loader extends Component {
     constructor(props, context) {
@@ -62,13 +62,15 @@ export const loadComponent = (moduleName, viewName, options) => {
 
     execute() {
       if (!this.view && !this.loading && !this.error) {
-        const deps = this.context || {};
-        deps[moduleName + config.NSP + viewName] = true;
+        const {
+          deps,
+          store
+        } = this.context || {};
         this.loading = true;
         let result;
 
         try {
-          result = getComponet(moduleName, viewName, true);
+          result = loadComponet(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -77,11 +79,13 @@ export const loadComponent = (moduleName, viewName, options) => {
         if (result) {
           if (isPromise(result)) {
             result.then(view => {
-              this.loading = false;
-              this.view = view;
-              this.active && this.setState({
-                ver: this.state.ver + 1
-              });
+              if (view) {
+                this.loading = false;
+                this.view = view;
+                this.active && this.setState({
+                  ver: this.state.ver + 1
+                });
+              }
             }, e => {
               env.console.error(e);
               this.loading = false;
@@ -105,18 +109,18 @@ export const loadComponent = (moduleName, viewName, options) => {
       } = this.props;
 
       if (this.view) {
-        return React.createElement(this.view, _extends({
+        const View = this.view;
+        return React.createElement(View, _extends({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
-        const Comp = OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
-        return React.createElement(Comp, null);
+        const Loading = OnLoading;
+        return React.createElement(Loading, null);
       }
 
-      const Comp = OnError || loadComponentDefaultOptions.LoadComponentOnError;
-      return React.createElement(Comp, {
+      return React.createElement(OnError, {
         message: this.error
       });
     }

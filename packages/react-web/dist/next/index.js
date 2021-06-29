@@ -60,9 +60,14 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               const RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(React.createElement(RootView, {
+              renderFun(React.createElement(DepsContext.Provider, {
+                value: {
+                  deps: {},
+                  store
+                }
+              }, React.createElement(RootView, {
                 store: store
-              }), panel);
+              })), panel);
               return store;
             });
           });
@@ -96,7 +101,10 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               const deps = {};
 
               let html = require('react-dom/server').renderToString(React.createElement(DepsContext.Provider, {
-                value: deps
+                value: {
+                  deps,
+                  store
+                }
               }, React.createElement(RootView, {
                 store: store
               })));

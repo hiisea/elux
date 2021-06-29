@@ -93,7 +93,7 @@ function _loadModel(moduleName, store) {
 }
 
 export { _loadModel as loadModel };
-export function getComponet(moduleName, componentName, initView) {
+export function getComponet(moduleName, componentName) {
   var key = [moduleName, componentName].join(config.NSP);
 
   if (MetaData.componentCaches[key]) {
@@ -106,22 +106,12 @@ export function getComponet(moduleName, componentName, initView) {
     if (isEluxComponent(componentOrFun)) {
       var component = componentOrFun;
       MetaData.componentCaches[key] = component;
-
-      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
-        module.model(MetaData.clientStore);
-      }
-
       return component;
     }
 
     var promiseComponent = componentOrFun().then(function (_ref2) {
       var component = _ref2.default;
       MetaData.componentCaches[key] = component;
-
-      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
-        module.model(MetaData.clientStore);
-      }
-
       return component;
     }, function (reason) {
       MetaData.componentCaches[key] = undefined;
@@ -155,6 +145,33 @@ export function getComponentList(keys) {
 
     return getComponet(moduleName, componentName);
   }));
+}
+export function loadComponet(moduleName, componentName, store, deps) {
+  var promiseOrComponent = getComponet(moduleName, componentName);
+
+  var callback = function callback(component) {
+    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+      if (env.isServer) {
+        return null;
+      }
+
+      var module = getModule(moduleName);
+      module.model(store);
+    }
+
+    deps[moduleName + config.NSP + componentName] = true;
+    return component;
+  };
+
+  if (isPromise(promiseOrComponent)) {
+    if (env.isServer) {
+      return null;
+    }
+
+    return promiseOrComponent.then(callback);
+  }
+
+  return callback(promiseOrComponent);
 }
 export function getCachedModules() {
   return MetaData.moduleCaches;

@@ -130,9 +130,14 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               var RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(_react.default.createElement(RootView, {
+              renderFun(_react.default.createElement(_loadComponent.DepsContext.Provider, {
+                value: {
+                  deps: {},
+                  store: store
+                }
+              }, _react.default.createElement(RootView, {
                 store: store
-              }), panel);
+              })), panel);
               return store;
             });
           });
@@ -166,7 +171,10 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               var deps = {};
 
               var html = require('react-dom/server').renderToString(_react.default.createElement(_loadComponent.DepsContext.Provider, {
-                value: deps
+                value: {
+                  deps: deps,
+                  store: store
+                }
               }, _react.default.createElement(RootView, {
                 store: store
               })));

@@ -114,7 +114,12 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
               const RootView: ComponentType<any> = AppView as any;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(<RootView store={store} />, panel);
+              renderFun(
+                <DepsContext.Provider value={{deps: {}, store}}>
+                  <RootView store={store} />
+                </DepsContext.Provider>,
+                panel
+              );
               return store;
             });
           });
@@ -133,7 +138,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
               const state = store.getState();
               const deps = {};
               let html: string = require('react-dom/server').renderToString(
-                <DepsContext.Provider value={deps}>
+                <DepsContext.Provider value={{deps, store}}>
                   <RootView store={store} />
                 </DepsContext.Provider>
               );

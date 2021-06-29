@@ -139,7 +139,8 @@ export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: 
   }
   return moduleOrPromise.model(store);
 }
-export function getComponet(moduleName: string, componentName: string, initView?: boolean): EluxComponent | Promise<EluxComponent> {
+
+export function getComponet(moduleName: string, componentName: string): EluxComponent | Promise<EluxComponent> {
   const key = [moduleName, componentName].join(config.NSP);
   if (MetaData.componentCaches[key]) {
     return MetaData.componentCaches[key]!;
@@ -149,17 +150,11 @@ export function getComponet(moduleName: string, componentName: string, initView?
     if (isEluxComponent(componentOrFun)) {
       const component = componentOrFun;
       MetaData.componentCaches[key] = component;
-      if (component.__elux_component__ === 'view' && initView && !env.isServer) {
-        module.model(MetaData.clientStore);
-      }
       return component;
     }
     const promiseComponent = componentOrFun().then(
       ({default: component}) => {
         MetaData.componentCaches[key] = component;
-        if (component.__elux_component__ === 'view' && initView && !env.isServer) {
-          module.model(MetaData.clientStore);
-        }
         return component;
       },
       (reason) => {
@@ -176,7 +171,7 @@ export function getComponet(moduleName: string, componentName: string, initView?
   }
   return moduleCallback(moduleOrPromise);
 }
-export function getComponentList(keys: string[]): Promise<any[]> {
+export function getComponentList(keys: string[]): Promise<(EluxComponent | undefined)[]> {
   if (keys.length < 1) {
     return Promise.resolve([]);
   }
@@ -190,6 +185,33 @@ export function getComponentList(keys: string[]): Promise<any[]> {
     })
   );
 }
+export function loadComponet(
+  moduleName: string,
+  componentName: string,
+  store: IStore,
+  deps: Record<string, boolean>
+): EluxComponent | null | Promise<EluxComponent | null> {
+  const promiseOrComponent = getComponet(moduleName, componentName);
+  const callback = (component: EluxComponent) => {
+    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+      if (env.isServer) {
+        return null;
+      }
+      const module = getModule(moduleName) as CommonModule;
+      module.model(store);
+    }
+    deps[moduleName + config.NSP + componentName] = true;
+    return component;
+  };
+  if (isPromise(promiseOrComponent)) {
+    if (env.isServer) {
+      return null;
+    }
+    return promiseOrComponent.then(callback);
+  }
+  return callback(promiseOrComponent);
+}
+
 export function getCachedModules() {
   return MetaData.moduleCaches;
 }

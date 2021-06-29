@@ -26,8 +26,9 @@ export declare function exportModule<N extends string, H extends IModuleHandlers
 export declare function getModule(moduleName: string): Promise<CommonModule> | CommonModule;
 export declare function getModuleList(moduleNames: string[]): Promise<CommonModule[]>;
 export declare function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store?: IStore): void | Promise<void>;
-export declare function getComponet(moduleName: string, componentName: string, initView?: boolean): EluxComponent | Promise<EluxComponent>;
-export declare function getComponentList(keys: string[]): Promise<any[]>;
+export declare function getComponet(moduleName: string, componentName: string): EluxComponent | Promise<EluxComponent>;
+export declare function getComponentList(keys: string[]): Promise<(EluxComponent | undefined)[]>;
+export declare function loadComponet(moduleName: string, componentName: string, store: IStore, deps: Record<string, boolean>): EluxComponent | null | Promise<EluxComponent | null>;
 export declare function getCachedModules(): Record<string, CommonModule<string> | Promise<CommonModule<string>> | undefined>;
 export declare abstract class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
     readonly moduleName: string;

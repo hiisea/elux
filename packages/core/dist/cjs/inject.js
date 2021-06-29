@@ -9,6 +9,7 @@ exports.getModuleList = getModuleList;
 exports.loadModel = _loadModel;
 exports.getComponet = getComponet;
 exports.getComponentList = getComponentList;
+exports.loadComponet = loadComponet;
 exports.getCachedModules = getCachedModules;
 exports.getRootModuleAPI = getRootModuleAPI;
 exports.defineComponent = defineComponent;
@@ -115,7 +116,7 @@ function _loadModel(moduleName, store) {
   return moduleOrPromise.model(store);
 }
 
-function getComponet(moduleName, componentName, initView) {
+function getComponet(moduleName, componentName) {
   var key = [moduleName, componentName].join(_basic.config.NSP);
 
   if (_basic.MetaData.componentCaches[key]) {
@@ -128,22 +129,12 @@ function getComponet(moduleName, componentName, initView) {
     if ((0, _basic.isEluxComponent)(componentOrFun)) {
       var component = componentOrFun;
       _basic.MetaData.componentCaches[key] = component;
-
-      if (component.__elux_component__ === 'view' && initView && !_env.env.isServer) {
-        module.model(_basic.MetaData.clientStore);
-      }
-
       return component;
     }
 
     var promiseComponent = componentOrFun().then(function (_ref2) {
       var component = _ref2.default;
       _basic.MetaData.componentCaches[key] = component;
-
-      if (component.__elux_component__ === 'view' && initView && !_env.env.isServer) {
-        module.model(_basic.MetaData.clientStore);
-      }
-
       return component;
     }, function (reason) {
       _basic.MetaData.componentCaches[key] = undefined;
@@ -178,6 +169,34 @@ function getComponentList(keys) {
 
     return getComponet(moduleName, componentName);
   }));
+}
+
+function loadComponet(moduleName, componentName, store, deps) {
+  var promiseOrComponent = getComponet(moduleName, componentName);
+
+  var callback = function callback(component) {
+    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+      if (_env.env.isServer) {
+        return null;
+      }
+
+      var module = getModule(moduleName);
+      module.model(store);
+    }
+
+    deps[moduleName + _basic.config.NSP + componentName] = true;
+    return component;
+  };
+
+  if ((0, _sprite.isPromise)(promiseOrComponent)) {
+    if (_env.env.isServer) {
+      return null;
+    }
+
+    return promiseOrComponent.then(callback);
+  }
+
+  return callback(promiseOrComponent);
 }
 
 function getCachedModules() {

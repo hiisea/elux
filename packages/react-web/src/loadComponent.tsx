@@ -1,8 +1,8 @@
 import React, {ComponentType, Component} from 'react';
-import {getComponet, isPromise, env, config, EluxComponent} from '@elux/core';
-import type {LoadComponent as BaseLoadComponent, RootModuleFacade} from '@elux/core';
+import {loadComponet, isPromise, env, defineComponent} from '@elux/core';
+import type {LoadComponent as BaseLoadComponent, RootModuleFacade, IStore, EluxComponent} from '@elux/core';
 
-export const DepsContext = React.createContext({});
+export const DepsContext = React.createContext<{deps: Record<string, boolean>; store?: IStore}>({deps: {}});
 DepsContext.displayName = 'EluxComponentLoader';
 
 export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<
@@ -25,8 +25,9 @@ export function setLoadComponentOptions({
   LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
 
-export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, viewName, options) => {
-  const {OnLoading, OnError} = options || {};
+export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, componentName, options = {}) => {
+  const OnLoading: EluxComponent = defineComponent(options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading);
+  const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
   class Loader extends Component<{forwardedRef: any}> {
     static contextType = DepsContext;
 
@@ -36,7 +37,7 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, vi
 
     private error: string = '';
 
-    private view?: ComponentType<any>;
+    private view?: EluxComponent;
 
     state = {
       ver: 0,
@@ -62,12 +63,11 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, vi
 
     execute() {
       if (!this.view && !this.loading && !this.error) {
-        const deps = this.context || {};
-        deps[moduleName + config.NSP + viewName] = true;
+        const {deps, store} = this.context || {};
         this.loading = true;
-        let result: EluxComponent | Promise<EluxComponent> | undefined;
+        let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
         try {
-          result = getComponet(moduleName, viewName as string, true);
+          result = loadComponet(moduleName, componentName as string, store!, deps);
         } catch (e: any) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -76,10 +76,12 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, vi
           if (isPromise(result)) {
             result.then(
               (view) => {
-                this.loading = false;
-                this.view = view as any;
-                // eslint-disable-next-line react/no-access-state-in-setstate
-                this.active && this.setState({ver: this.state.ver + 1});
+                if (view) {
+                  this.loading = false;
+                  this.view = view;
+                  // eslint-disable-next-line react/no-access-state-in-setstate
+                  this.active && this.setState({ver: this.state.ver + 1});
+                }
               },
               (e) => {
                 env.console.error(e);
@@ -91,7 +93,7 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, vi
             );
           } else {
             this.loading = false;
-            this.view = result as any;
+            this.view = result;
           }
         }
       }
@@ -101,14 +103,14 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, vi
       const {forwardedRef, ...rest} = this.props;
 
       if (this.view) {
-        return <this.view ref={forwardedRef} {...rest} />;
+        const View: ComponentType<any> = this.view as any;
+        return <View ref={forwardedRef} {...rest} />;
       }
       if (this.loading) {
-        const Comp = OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
-        return <Comp />;
+        const Loading: ComponentType<any> = OnLoading as any;
+        return <Loading />;
       }
-      const Comp = OnError || loadComponentDefaultOptions.LoadComponentOnError;
-      return <Comp message={this.error} />;
+      return <OnError message={this.error} />;
     }
   }
   return React.forwardRef((props, ref) => {
