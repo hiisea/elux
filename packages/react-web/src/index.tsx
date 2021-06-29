@@ -105,12 +105,12 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
           const router = createRouter('Browser', routeModule.locationTransform);
           MetaData.router = router;
           const renderFun = env[ssrKey] ? hydrate : render;
-          const {state, deps = []}: {state: any; deps: string[]} = env[ssrKey] || {};
+          const {state, components = []}: {state: any; components: string[]} = env[ssrKey] || {};
           const panel = env.document.getElementById(id);
           return router.initedPromise.then((routeState) => {
             const initState = {...storeOptions.initState, route: routeState, ...state};
             const baseStore = storeCreator({...storeOptions, initState});
-            return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(({store, AppView}) => {
+            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
               const RootView: ComponentType<any> = AppView as any;
               routeModule.model(store);
               router.setStore(store);
@@ -148,7 +148,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
                 html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
                 return SSRTPL.replace(
                   '</head>',
-                  `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({state, deps: Object.keys(deps)})};</script>\r\n</head>`
+                  `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({state, components: Object.keys(deps)})};</script>\r\n</head>`
                 ).replace(match[0], match[0] + html);
               }
               return html;

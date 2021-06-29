@@ -3,7 +3,7 @@ import { defineComponent } from 'vue';
 import type { Component } from 'vue';
 import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
 import type { IRouter } from '@elux/route-browser';
-import type { LoadView } from './loadView';
+import type { LoadComponent } from './loadComponent';
 export { createVuex } from '@elux/core-vuex';
 export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
@@ -11,7 +11,7 @@ export { defineComponent } from 'vue';
 export type { RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export type { VuexStore, VuexOptions } from '@elux/core-vuex';
-export type { LoadView } from './loadView';
+export type { LoadComponent } from './loadComponent';
 export declare const defineView: typeof defineComponent;
 export declare function setSsrHtmlTpl(tpl: string): void;
 export declare function setConfig(conf: {
@@ -20,14 +20,14 @@ export declare function setConfig(conf: {
     pagenames?: Record<string, string>;
     NSP?: string;
     MSP?: string;
+    MutableData?: boolean;
     DepthTimeOnLoading?: number;
-    LoadViewOnError?: Component;
-    LoadViewOnLoading?: Component;
+    LoadComponentOnError?: Component;
+    LoadComponentOnLoading?: Component;
     disableNativeRoute?: boolean;
 }): void;
 export interface RenderOptions {
     viewName?: string;
-    id?: string;
     ssrKey?: string;
 }
 export interface SSROptions {
@@ -38,7 +38,10 @@ export interface SSROptions {
 }
 export declare function createApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        render({ id, ssrKey, viewName }?: RenderOptions): Promise<import("@elux/core").IStore<any> & B>;
+        render({ ssrKey, viewName }?: RenderOptions): Promise<{
+            store: import("@elux/core").IStore<any> & B;
+            app: import("vue").App<any>;
+        }>;
         ssr({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
     };
 };
@@ -56,7 +59,7 @@ export declare type GetAPP<A extends RootModuleFacade> = {
     GetActions<N extends keyof A>(...args: N[]): {
         [K in N]: A[K]['actions'];
     };
-    LoadView: LoadView<A>;
+    LoadComponent: LoadComponent<A>;
     Modules: RootModuleAPI<A>;
     Actions: RootModuleActions<A>;
     Pagenames: {
@@ -66,7 +69,7 @@ export declare type GetAPP<A extends RootModuleFacade> = {
 export declare function getApp<T extends {
     GetActions: any;
     GetRouter: any;
-    LoadView: any;
+    LoadComponent: any;
     Modules: any;
     Pagenames: any;
-}>(): Pick<T, 'GetActions' | 'GetRouter' | 'LoadView' | 'Modules' | 'Pagenames'>;
+}>(): Pick<T, 'GetActions' | 'GetRouter' | 'LoadComponent' | 'Modules' | 'Pagenames'>;

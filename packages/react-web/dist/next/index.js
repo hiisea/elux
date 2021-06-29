@@ -42,7 +42,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
           const renderFun = env[ssrKey] ? hydrate : render;
           const {
             state,
-            deps = []
+            components = []
           } = env[ssrKey] || {};
           const panel = env.document.getElementById(id);
           return router.initedPromise.then(routeState => {
@@ -53,7 +53,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
             const baseStore = storeCreator({ ...storeOptions,
               initState
             });
-            return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(({
+            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({
               store,
               AppView
             }) => {
@@ -116,7 +116,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
                 html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
                 return SSRTPL.replace('</head>', `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                   state,
-                  deps: Object.keys(deps)
+                  components: Object.keys(deps)
                 })};</script>\r\n</head>`).replace(match[0], match[0] + html);
               }
 

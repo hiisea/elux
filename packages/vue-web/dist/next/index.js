@@ -3,7 +3,7 @@ import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, defineView as baseDefineView } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { createApp as createVue, defineComponent } from 'vue';
-import { loadView, setLoadViewOptions } from './loadView';
+import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
 export { createVuex } from '@elux/core-vuex';
 export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise } from '@elux/core';
@@ -20,7 +20,7 @@ export function setSsrHtmlTpl(tpl) {
 export function setConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
-  setLoadViewOptions(conf);
+  setLoadComponentOptions(conf);
 }
 setCoreConfig({
   MutableData: true
@@ -28,9 +28,7 @@ setCoreConfig({
 export function createApp(moduleGetter, middlewares = [], appModuleName) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const {
-    locationTransform
-  } = getModule('route');
+  const routeModule = getModule('route');
   return {
     useStore({
       storeOptions,
@@ -38,15 +36,14 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
     }) {
       return {
         render({
-          id = 'root',
           ssrKey = 'eluxInitStore',
           viewName
         } = {}) {
-          const router = createRouter('Browser', locationTransform);
+          const router = createRouter('Browser', routeModule.locationTransform);
           MetaData.router = router;
           const {
             state,
-            deps = []
+            components = []
           } = env[ssrKey] || {};
           return router.initedPromise.then(routeState => {
             const initState = { ...storeOptions.initState,
@@ -56,18 +53,26 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
             const baseStore = storeCreator({ ...storeOptions,
               initState
             });
-            return renderApp(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(({
+            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({
               store,
               AppView
             }) => {
+              routeModule.model(store);
               router.setStore(store);
-              const app = createVue(AppView).use(store).mount(`#${id}`);
+              const app = createVue(AppView).use(store);
+              app.provide(DepsContext, {
+                deps: {},
+                store
+              });
 
               if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
                 env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
               }
 
-              return store;
+              return {
+                store,
+                app
+              };
             });
           });
         },
@@ -82,7 +87,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }
 
-          const router = createRouter(url, locationTransform);
+          const router = createRouter(url, routeModule.locationTransform);
           MetaData.router = router;
           return router.initedPromise.then(routeState => {
             const initState = { ...storeOptions.initState,
@@ -105,7 +110,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
                 html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
                 return SSRTPL.replace('</head>', `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                   state,
-                  deps: Object.keys(deps)
+                  components: Object.keys(deps)
                 })};</script>\r\n</head>`).replace(match[0], match[0] + html);
               }
 
@@ -134,7 +139,7 @@ export function getApp() {
       }, {});
     },
     GetRouter: () => MetaData.router,
-    LoadView: loadView,
+    LoadComponent: loadComponent,
     Modules: modules,
     Pagenames: routeConfig.pagenames
   };

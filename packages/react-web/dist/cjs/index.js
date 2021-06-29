@@ -112,8 +112,8 @@ function createApp(moduleGetter, middlewares, appModuleName) {
 
           var _ref3 = _core.env[ssrKey] || {},
               state = _ref3.state,
-              _ref3$deps = _ref3.deps,
-              deps = _ref3$deps === void 0 ? [] : _ref3$deps;
+              _ref3$components = _ref3.components,
+              components = _ref3$components === void 0 ? [] : _ref3$components;
 
           var panel = _core.env.document.getElementById(id);
 
@@ -124,7 +124,7 @@ function createApp(moduleGetter, middlewares, appModuleName) {
             var baseStore = storeCreator((0, _extends2.default)({}, storeOptions, {
               initState: initState
             }));
-            return (0, _core.renderApp)(baseStore, Object.keys(initState), deps, istoreMiddleware, viewName).then(function (_ref4) {
+            return (0, _core.renderApp)(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref4) {
               var store = _ref4.store,
                   AppView = _ref4.AppView;
               var RootView = AppView;
@@ -186,7 +186,7 @@ function createApp(moduleGetter, middlewares, appModuleName) {
                 html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
                 return SSRTPL.replace('</head>', (pageHead[1] || '') + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
                   state: state,
-                  deps: Object.keys(deps)
+                  components: Object.keys(deps)
                 }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
               }
 
