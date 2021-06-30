@@ -43,10 +43,6 @@ export interface PayloadLocation<P extends RootParams = {}, N extends string = s
   params?: DeepPartial<P>;
   extendParams?: DeepPartial<P> | 'current';
 }
-export interface PartialLocation<P extends RootParams = {}> {
-  pagename: string;
-  params: DeepPartial<P>;
-}
 
 export type RouteState<P extends RootParams = {}> = Location<P> & {
   action: HistoryAction;
@@ -55,7 +51,16 @@ export type RouteState<P extends RootParams = {}> = Location<P> & {
 
 export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
 
+export interface PartialLocation {
+  pagename: string;
+  params: Record<string, any>;
+}
 export interface EluxLocation {
   pathname: string;
-  params: unknown;
+  params: Record<string, any>;
+}
+export interface NativeLocation {
+  pathname: string;
+  searchData?: Record<string, string>;
+  hashData?: Record<string, string>;
 }

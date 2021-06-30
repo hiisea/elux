@@ -1,12 +1,13 @@
+import { PartialLocation, NativeLocation } from './basic';
 import { History } from './history';
-import type { LocationTransform, NativeLocation } from './transform';
+import type { LocationTransform } from './transform';
 import type { RootParams, Location, RouteState, PayloadLocation } from './basic';
 export { setRouteConfig, routeConfig } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation } from './transform';
 export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
 export type { RouteModule } from './module';
-export type { PagenameMap, LocationTransform, NativeLocation } from './transform';
-export type { RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation } from './basic';
+export type { PagenameMap, LocationTransform } from './transform';
+export type { RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation, NativeLocation } from './basic';
 interface Store {
     dispatch(action: {
         type: string;
@@ -46,7 +47,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     private taskList;
     private _nativeData;
     private routeState;
-    private eluxUrl;
+    private internalUrl;
     protected store: Store;
     history: History;
     private _lid;
@@ -54,24 +55,27 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
         [id: string]: (data: RouteState<P>) => void | Promise<void>;
     };
     initedPromise: Promise<RouteState<P>>;
-    constructor(nativeLocationOrNativeUrl: NativeLocation | string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
+    constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
     addListener(callback: (data: RouteState<P>) => void | Promise<void>): () => void;
     protected dispatch(data: RouteState<P>): Promise<void[]>;
     getRouteState(): RouteState<P>;
     getPagename(): string;
     getParams(): Partial<P>;
-    getEluxUrl(): string;
+    getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;
     setStore(_store: Store): void;
     getCurKey(): string;
     findHistoryIndexByKey(key: string): number;
-    locationToNative(location: Location<any>): {
+    locationToNativeData(location: PartialLocation): {
         nativeUrl: string;
         nativeLocation: NativeLocation;
     };
     urlToLocation(url: string): Promise<Location<P>>;
+    payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
+    payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
     private _createKey;
+    private payloadToEluxLocation;
     private preAdditions;
     relaunch(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
     private _relaunch;
@@ -93,9 +97,13 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
     getRouteState(): RouteState<P>;
     getPagename(): string;
     getParams(): Partial<P>;
-    getEluxUrl(): string;
+    getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;
+    locationToNativeData(location: PartialLocation): {
+        nativeUrl: string;
+        nativeLocation: NativeLocation;
+    };
     setStore(_store: Store): void;
     getCurKey(): string;
     findHistoryIndexByKey(key: string): number;
@@ -104,9 +112,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
     replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
     back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
     destroy(): void;
-    locationToNative(location: Location<any>): {
-        nativeUrl: string;
-        nativeLocation: NativeLocation;
-    };
     urlToLocation(url: string): Promise<Location<P>>;
+    payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
+    payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
 }

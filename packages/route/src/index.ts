@@ -1,18 +1,18 @@
-import {isPromise} from '@elux/core';
+import {isPromise, deepMerge} from '@elux/core';
 
-import {routeConfig, setRouteConfig, EluxLocation} from './basic';
+import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation} from './basic';
 import {History, uriToLocation} from './history';
 import {testRouteChangeAction, routeChangeAction} from './module';
-import {eluxLocationToEluxUrl, nativeLocationToNativeUrl, payloadToEluxLocation} from './transform';
-import type {LocationTransform, NativeLocation} from './transform';
+import {eluxLocationToEluxUrl, nativeLocationToNativeUrl} from './transform';
+import type {LocationTransform} from './transform';
 import type {RootParams, Location, RouteState, PayloadLocation} from './basic';
 
 export {setRouteConfig, routeConfig} from './basic';
 export {createLocationTransform, nativeUrlToNativeLocation} from './transform';
 export {routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers} from './module';
 export type {RouteModule} from './module';
-export type {PagenameMap, LocationTransform, NativeLocation} from './transform';
-export type {RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation} from './basic';
+export type {PagenameMap, LocationTransform} from './transform';
+export type {RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation, NativeLocation} from './basic';
 
 interface Store {
   dispatch(action: {type: string}): any;
@@ -97,7 +97,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 
   private routeState!: RouteState<P>;
 
-  private eluxUrl!: string;
+  private internalUrl!: string;
 
   protected store!: Store;
 
@@ -110,23 +110,15 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
   public initedPromise: Promise<RouteState<P>>;
 
   // input
-  constructor(
-    nativeLocationOrNativeUrl: NativeLocation | string,
-    public nativeRouter: BaseNativeRouter,
-    protected locationTransform: LocationTransform
-  ) {
+  constructor(url: string, public nativeRouter: BaseNativeRouter, protected locationTransform: LocationTransform) {
     nativeRouter.setRouter(this);
-    const eluxLocation =
-      typeof nativeLocationOrNativeUrl === 'string'
-        ? locationTransform.nativeUrlToEluxLocation(nativeLocationOrNativeUrl)
-        : locationTransform.nativeLocationToEluxLocation(nativeLocationOrNativeUrl);
-    this.initedPromise = locationTransform.eluxLocationtoLocation<P>(eluxLocation).then((location) => {
+    this.initedPromise = locationTransform.urlToLocation<P>(url).then((location) => {
       const key = this._createKey();
       const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key};
       this.routeState = routeState;
-      this.eluxUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+      this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
       if (!routeConfig.indexUrl) {
-        setRouteConfig({indexUrl: this.eluxUrl});
+        setRouteConfig({indexUrl: this.internalUrl});
       }
       this.history = new History({location, key});
       return routeState;
@@ -161,20 +153,20 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return this.routeState.params;
   }
 
-  getEluxUrl() {
-    return this.eluxUrl;
+  getInternalUrl() {
+    return this.internalUrl;
   }
 
   getNativeLocation() {
     if (!this._nativeData) {
-      this._nativeData = this.locationToNative(this.routeState);
+      this._nativeData = this.locationToNativeData(this.routeState);
     }
     return this._nativeData.nativeLocation;
   }
 
   getNativeUrl() {
     if (!this._nativeData) {
-      this._nativeData = this.locationToNative(this.routeState);
+      this._nativeData = this.locationToNativeData(this.routeState);
     }
     return this._nativeData.nativeUrl;
   }
@@ -191,19 +183,25 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return this.history.findIndex(key);
   }
 
-  locationToNative(location: Location<any>): {nativeUrl: string; nativeLocation: NativeLocation} {
-    const nativeLocation = this.locationTransform.locationtoNativeLocation(location);
+  locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation} {
+    const nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
     const nativeUrl = nativeLocationToNativeUrl(nativeLocation);
     return {nativeUrl, nativeLocation};
   }
 
-  // urlToEluxLocation(url: string): EluxLocation {
-  //   return urlToEluxLocation(url, this.locationTransform);
-  // }
-
   urlToLocation(url: string): Promise<Location<P>> {
-    const eluxLocation = this.locationTransform.urlToEluxLocation(url);
-    return this.locationTransform.eluxLocationtoLocation(eluxLocation);
+    return this.locationTransform.urlToLocation(url);
+  }
+
+  payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string {
+    const eluxLocation = this.payloadToEluxLocation(data);
+    return eluxLocationToEluxUrl(eluxLocation);
+  }
+
+  payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string {
+    const eluxLocation = this.payloadToEluxLocation(data);
+    const nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
+    return nativeLocationToNativeUrl(nativeLocation);
   }
 
   private _createKey() {
@@ -211,29 +209,31 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return `${this._tid}`;
   }
 
-  // private eluxLocationToLocation(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>> {
-  //   const {pagename} = eluxLocation;
-  //   const params: any = eluxLocation.params || {};
-  //   if (routeConfig.defaultParams) {
-  //     return {pagename, params: assignDefaultData(params) as P};
-  //   }
-  //   return getModuleList(Object.keys(params)).then(() => {
-  //     return {pagename, params: assignDefaultData(params) as P};
-  //   });
-  // }
+  private payloadToEluxLocation(payload: {
+    pathname?: string;
+    params?: Record<string, any>;
+    extendParams?: Record<string, any> | 'current';
+  }): EluxLocation {
+    let params = payload.params || {};
+    const extendParams = payload.extendParams === 'current' ? this.routeState.params : payload.extendParams;
+    if (extendParams && params) {
+      params = deepMerge({}, extendParams, params);
+    } else if (extendParams) {
+      params = extendParams;
+    }
+    return {pathname: payload.pathname || this.routeState.pagename, params};
+  }
 
   private preAdditions(data: PayloadLocation<P, N> | string): Promise<Location<P>> | null {
-    let eluxLocation: EluxLocation;
     if (typeof data === 'string') {
       if (/^[\w:]*\/\//.test(data)) {
         this.nativeRouter.toOutside(data);
         return null;
       }
-      eluxLocation = this.locationTransform.urlToEluxLocation(data);
-    } else {
-      eluxLocation = payloadToEluxLocation(data, this.routeState);
+      return this.locationTransform.urlToLocation(data);
     }
-    return this.locationTransform.eluxLocationtoLocation(eluxLocation);
+    const eluxLocation = this.payloadToEluxLocation(data);
+    return this.locationTransform.eluxLocationToLocation(eluxLocation);
   }
 
   relaunch(data: PayloadLocation<P, N> | string, internal: boolean = false, disableNative: boolean = routeConfig.disableNativeRoute) {
@@ -252,11 +252,11 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | undefined;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNative(routeState), key);
+      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNativeData(routeState), key);
     }
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.eluxUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     this.store.dispatch(routeChangeAction(routeState));
     if (internal) {
       this.history.getCurrentInternalHistory()!.relaunch(location, key);
@@ -281,11 +281,11 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | void;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('push', () => this.locationToNative(routeState), key);
+      nativeData = await this.nativeRouter.execute('push', () => this.locationToNativeData(routeState), key);
     }
     this._nativeData = nativeData || undefined;
     this.routeState = routeState;
-    this.eluxUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     if (internal) {
       this.history.getCurrentInternalHistory()!.push(location, key);
     } else {
@@ -310,11 +310,11 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | void;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNative(routeState), key);
+      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNativeData(routeState), key);
     }
     this._nativeData = nativeData || undefined;
     this.routeState = routeState;
-    this.eluxUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     if (internal) {
       this.history.getCurrentInternalHistory()!.replace(location, key);
     } else {
@@ -342,11 +342,11 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     await this.dispatch(routeState);
     let nativeData: NativeData | void;
     if (!disableNative && !internal) {
-      nativeData = await this.nativeRouter.execute('back', () => this.locationToNative(routeState), n, key);
+      nativeData = await this.nativeRouter.execute('back', () => this.locationToNativeData(routeState), n, key);
     }
     this._nativeData = nativeData || undefined;
     this.routeState = routeState;
-    this.eluxUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     if (internal) {
       this.history.getCurrentInternalHistory()!.back(n);
     } else {
@@ -390,9 +390,10 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   getRouteState(): RouteState<P>;
   getPagename(): string;
   getParams(): Partial<P>;
-  getEluxUrl(): string;
+  getInternalUrl(): string;
   getNativeLocation(): NativeLocation;
   getNativeUrl(): string;
+  locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation};
   setStore(_store: Store): void;
   getCurKey(): string;
   findHistoryIndexByKey(key: string): number;
@@ -401,15 +402,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
   back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
   destroy(): void;
-  locationToNative(location: Location<any>): {nativeUrl: string; nativeLocation: NativeLocation};
   urlToLocation(url: string): Promise<Location<P>>;
-  // urlToEluxLocation(url: string): EluxLocation;
-  // nativeUrlToNativeLocation(url: string): NativeLocation;
-  // nativeLocationToEluxLocation(nativeLocation: NativeLocation): EluxLocation;
-  // nativeUrlToPartialLocation(nativeUrl: string): PartialLocation<P>;
-  // nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
-  // urlToPartialLocation(url: string): PartialLocation<P>;
-
-  // partialLocationToEluxUrl(location: PartialLocation<P>): string;
-  // payloadToPartial(payload: PayloadLocation<P, N>): PartialLocation<P>;
+  payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
+  payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
 }

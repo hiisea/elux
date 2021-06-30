@@ -1,9 +1,9 @@
 import {router} from './tools';
 
 describe('/admin/member', () => {
-  test('locationToNativeUrl', () => {
+  test('locationToNativeDataUrl', () => {
     expect(
-      router.locationToNative({
+      router.locationToNativeData({
         pagename: '/admin/member',
         params: {
           admin: {},
@@ -23,7 +23,7 @@ describe('/admin/member', () => {
       }).nativeUrl
     ).toBe('/admin/member2');
     expect(
-      router.locationToNative({
+      router.locationToNativeData({
         pagename: '/admin/member',
         params: {
           member: {
@@ -36,7 +36,7 @@ describe('/admin/member', () => {
       }).nativeUrl
     ).toBe('/admin/member2');
     expect(
-      router.locationToNative({
+      router.locationToNativeData({
         pagename: '/admin/member',
         params: {
           member: {
@@ -51,7 +51,7 @@ describe('/admin/member', () => {
       '/admin/member2?_=%7B%22member%22%3A%7B%22listSearchPre%22%3A%7B%22pageSize%22%3A11%7D%7D%7D#_=%7B%22member%22%3A%7B%22_itemVerPre%22%3A1%7D%7D'
     );
     expect(
-      router.locationToNative({
+      router.locationToNativeData({
         pagename: '/admin/member333',
         params: {
           member: {
