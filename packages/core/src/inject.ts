@@ -43,6 +43,9 @@ type HandlerThis<T> = T extends (...args: infer P) => any
 
 type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
 
+export function getModuleGetter() {
+  return MetaData.moduleGetter;
+}
 export function exportModule<
   N extends string,
   H extends IModuleHandlers,
@@ -171,14 +174,15 @@ export function getComponet(moduleName: string, componentName: string): EluxComp
   }
   return moduleCallback(moduleOrPromise);
 }
-export function getComponentList(keys: string[]): Promise<(EluxComponent | undefined)[]> {
+
+export function getComponentList(keys: string[]): Promise<EluxComponent[]> {
   if (keys.length < 1) {
     return Promise.resolve([]);
   }
   return Promise.all(
     keys.map((key) => {
       if (MetaData.componentCaches[key]) {
-        return MetaData.componentCaches[key];
+        return MetaData.componentCaches[key]!;
       }
       const [moduleName, componentName] = key.split(config.NSP);
       return getComponet(moduleName, componentName);
@@ -219,7 +223,7 @@ export function getCachedModules() {
  * ModuleHandlers基类
  * 所有ModuleHandlers必须继承此基类
  */
-export abstract class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
+export class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
   store!: IStore<R>;
 
   constructor(public readonly moduleName: string, public readonly initState: S) {}

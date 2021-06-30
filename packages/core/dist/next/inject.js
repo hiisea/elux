@@ -2,6 +2,9 @@ import _decorate from "@babel/runtime/helpers/esm/decorate";
 import { isPromise } from './sprite';
 import { isEluxComponent, injectActions, MetaData, config, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
 import { env } from './env';
+export function getModuleGetter() {
+  return MetaData.moduleGetter;
+}
 export function exportModule(moduleName, ModuleHandles, params, components) {
   Object.keys(components).forEach(key => {
     const component = components[key];

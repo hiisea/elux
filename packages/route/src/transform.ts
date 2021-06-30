@@ -1,4 +1,4 @@
-import {deepMerge, env, getModuleList} from '@elux/core';
+import {deepMerge, env, getModuleList, getModuleGetter} from '@elux/core';
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
 import {routeConfig, EluxLocation, DeepPartial, PartialLocation, Location, RootParams, NativeLocation} from './basic';
 
@@ -184,8 +184,8 @@ export function createLocationTransform(
     },
     eluxLocationToNativeLocation(eluxLocation) {
       const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
-      const pagename = pagenames.find((name) => pathname.startsWith(name));
-      let pathParams: Record<string, any>;
+      let pagename = pagenames.find((name) => pathname.startsWith(name));
+      let pathParams: Record<string, any> = {};
       if (pagename) {
         const pathArgs: Array<string | undefined> = pathname
           .replace(pagename, '')
@@ -193,7 +193,10 @@ export function createLocationTransform(
           .map((item) => (item ? decodeURIComponent(item) : undefined));
         pathParams = pagenameMap[pagename].argsToParams(pathArgs);
       } else {
-        pathParams = {};
+        pagename = `${notfoundPagename}/`;
+        if (pagenameMap[pagename]) {
+          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
+        }
       }
       const result = splitPrivate(eluxLocation.params, pathParams);
       const nativeLocation = {
@@ -206,18 +209,26 @@ export function createLocationTransform(
     eluxLocationToPartialLocation(eluxLocation) {
       const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
       let pagename = pagenames.find((name) => pathname.startsWith(name));
-      let params: Record<string, any>;
+      let pathParams: Record<string, any> = {};
       if (pagename) {
         const pathArgs: Array<string | undefined> = pathname
           .replace(pagename, '')
           .split('/')
           .map((item) => (item ? decodeURIComponent(item) : undefined));
-        const pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-        params = deepMerge({}, pathParams, eluxLocation.params);
+        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
       } else {
         pagename = `${notfoundPagename}/`;
-        params = {};
+        if (pagenameMap[pagename]) {
+          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
+        }
       }
+      const params = deepMerge({}, pathParams, eluxLocation.params);
+      const moduleGetter = getModuleGetter();
+      Object.keys(params).forEach((moduleName) => {
+        if (!moduleGetter[moduleName]) {
+          delete params[moduleName];
+        }
+      });
       return {pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`, params};
     },
     partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Promise<Location<P>> {

@@ -13,6 +13,7 @@ declare type HandlerThis<T> = T extends (...args: infer P) => any ? (...args: P)
 declare type ActionsThis<T> = {
     [K in keyof T]: HandlerThis<T[K]>;
 };
+export declare function getModuleGetter(): ModuleGetter;
 export declare function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>>(moduleName: N, ModuleHandles: {
     new (moduleName: string): H;
 }, params: P, components: CS): {
@@ -27,10 +28,10 @@ export declare function getModule(moduleName: string): Promise<CommonModule> | C
 export declare function getModuleList(moduleNames: string[]): Promise<CommonModule[]>;
 export declare function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store?: IStore): void | Promise<void>;
 export declare function getComponet(moduleName: string, componentName: string): EluxComponent | Promise<EluxComponent>;
-export declare function getComponentList(keys: string[]): Promise<(EluxComponent | undefined)[]>;
+export declare function getComponentList(keys: string[]): Promise<EluxComponent[]>;
 export declare function loadComponet(moduleName: string, componentName: string, store: IStore, deps: Record<string, boolean>): EluxComponent | null | Promise<EluxComponent | null>;
 export declare function getCachedModules(): Record<string, CommonModule<string> | Promise<CommonModule<string>> | undefined>;
-export declare abstract class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
+export declare class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
     readonly moduleName: string;
     readonly initState: S;
     store: IStore<R>;

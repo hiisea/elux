@@ -25,6 +25,7 @@ export {
   exportView,
   exportComponent,
   getComponet,
+  getModuleGetter,
 } from './inject';
 export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
 export {defineModuleGetter, renderApp, ssrApp} from './render';

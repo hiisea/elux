@@ -1,4 +1,5 @@
-import {BaseRouter, BaseNativeRouter, createLocationTransform, DeepPartial, RootParams, NativeData, PagenameMap, setRouteConfig} from 'src/index';
+import {defineModuleGetter, exportModule, CoreModuleHandlers} from '@elux/core';
+import {BaseRouter, BaseNativeRouter, createLocationTransform, DeepPartial, RootParams, NativeData, PagenameMap} from 'src/index';
 
 import nativeRouterMock from './nativeRouter';
 
@@ -45,15 +46,23 @@ const defaultArticleRouteParams: ArticleRouteParams = {
   itemView: '',
   _itemVerPre: 0,
 };
-export const defaultParams = {
-  admin: {},
-  member: defaultMemberRouteParams,
-  article: defaultArticleRouteParams,
-};
 
-setRouteConfig({defaultParams});
+class ModuleHandlers extends CoreModuleHandlers {
+  constructor(moduleName: string) {
+    super(moduleName, {});
+  }
+}
 
-type RouteParams = typeof defaultParams;
+defineModuleGetter(
+  {
+    admin: () => exportModule('admin', ModuleHandlers, {}, {}),
+    member: () => exportModule('member', ModuleHandlers, defaultMemberRouteParams, {}),
+    article: () => exportModule('article', ModuleHandlers, defaultArticleRouteParams, {}),
+  },
+  'admin'
+);
+
+type RouteParams = {admin: {}; member: MemberRouteParams; article: ArticleRouteParams};
 type PartialRouteParams = DeepPartial<RouteParams>;
 
 const pagenameMap: PagenameMap<RouteParams> = {

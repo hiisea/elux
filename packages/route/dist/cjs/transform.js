@@ -217,7 +217,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       var pagename = pagenames.find(function (name) {
         return pathname.startsWith(name);
       });
-      var pathParams;
+      var pathParams = {};
 
       if (pagename) {
         var _pathArgs = pathname.replace(pagename, '').split('/').map(function (item) {
@@ -226,7 +226,11 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
 
         pathParams = pagenameMap[pagename].argsToParams(_pathArgs);
       } else {
-        pathParams = {};
+        pagename = notfoundPagename + "/";
+
+        if (pagenameMap[pagename]) {
+          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
+        }
       }
 
       var result = (0, _deepExtend.splitPrivate)(eluxLocation.params, pathParams);
@@ -242,20 +246,29 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       var pagename = pagenames.find(function (name) {
         return pathname.startsWith(name);
       });
-      var params;
+      var pathParams = {};
 
       if (pagename) {
         var _pathArgs2 = pathname.replace(pagename, '').split('/').map(function (item) {
           return item ? decodeURIComponent(item) : undefined;
         });
 
-        var pathParams = pagenameMap[pagename].argsToParams(_pathArgs2);
-        params = (0, _core.deepMerge)({}, pathParams, eluxLocation.params);
+        pathParams = pagenameMap[pagename].argsToParams(_pathArgs2);
       } else {
         pagename = notfoundPagename + "/";
-        params = {};
+
+        if (pagenameMap[pagename]) {
+          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
+        }
       }
 
+      var params = (0, _core.deepMerge)({}, pathParams, eluxLocation.params);
+      var moduleGetter = (0, _core.getModuleGetter)();
+      Object.keys(params).forEach(function (moduleName) {
+        if (!moduleGetter[moduleName]) {
+          delete params[moduleName];
+        }
+      });
       return {
         pagename: "/" + pagename.replace(/^\/+|\/+$/g, ''),
         params: params

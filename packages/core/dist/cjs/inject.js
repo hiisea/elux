@@ -3,6 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
+exports.getModuleGetter = getModuleGetter;
 exports.exportModule = exportModule;
 exports.getModule = getModule;
 exports.getModuleList = getModuleList;
@@ -23,6 +24,10 @@ var _sprite = require("./sprite");
 var _basic = require("./basic");
 
 var _env = require("./env");
+
+function getModuleGetter() {
+  return _basic.MetaData.moduleGetter;
+}
 
 function exportModule(moduleName, ModuleHandles, params, components) {
   Object.keys(components).forEach(function (key) {
