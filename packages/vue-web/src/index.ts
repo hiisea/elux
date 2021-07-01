@@ -225,7 +225,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
               const state = store.getState();
               const deps = {};
               const app = createSSRApp(AppView).use(store as any);
-              app.provide(DepsContext, {deps: {}, store});
+              app.provide(DepsContext, {deps, store});
               const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
               return htmlPromise.then((html) => {
                 const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));

@@ -175,7 +175,7 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               var deps = {};
               var app = (0, _vue.createSSRApp)(AppView).use(store);
               app.provide(_loadComponent.DepsContext, {
-                deps: {},
+                deps: deps,
                 store: store
               });
 

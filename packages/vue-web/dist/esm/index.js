@@ -116,7 +116,7 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
               var deps = {};
               var app = createSSRApp(AppView).use(store);
               app.provide(DepsContext, {
-                deps: {},
+                deps: deps,
                 store: store
               });
 

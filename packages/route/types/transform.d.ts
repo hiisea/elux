@@ -19,10 +19,12 @@ export interface LocationTransform {
         pathParams: Record<string, any>;
     };
 }
-export declare type PagenameMap = Record<string, {
-    argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
-    paramsToArgs(params: Record<string, any>): Array<any>;
-}>;
+export interface PagenameMap {
+    [pageName: string]: {
+        argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
+        paramsToArgs: Function;
+    };
+}
 export declare type NativeLocationMap = {
     in(nativeLocation: NativeLocation): NativeLocation;
     out(nativeLocation: NativeLocation): NativeLocation;

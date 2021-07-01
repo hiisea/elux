@@ -258,6 +258,8 @@ function moduleExports({
   cssProcessors.less && cssExtensions.push('less');
   cssProcessors.sass && cssExtensions.push('sass');
   cssProcessors.scss && cssExtensions.push('scss');
+  const clientAlias = {};
+  const serverAlias = {};
   const resolve = {
     extensions: [...scriptExtensions, '.json'],
     alias: Object.keys(resolveAlias).reduce((obj, key) => {
@@ -267,12 +269,19 @@ function moduleExports({
       } else {
         obj[key] = target;
       }
+      if (key.startsWith('server:')) {
+        serverAlias[key.replace('server:', '')] = obj[key];
+        delete obj[key];
+      } else if (key.startsWith('client:')) {
+        clientAlias[key.replace('server:', '')] = obj[key];
+        delete obj[key];
+      }
       return obj;
     }, {}),
   };
-  if (isVue) {
-    resolve.alias['vue$'] = 'vue/dist/vue.runtime.esm-bundler.js';
-  }
+  // if (isVue) {
+  //   resolve.alias['vue$'] = 'vue/dist/vue.runtime.esm-bundler.js';
+  // }
   const SsrPlugin = getSsrInjectPlugin();
   const clientWebpackConfig: WebpackConfig = {
     context: rootPath,
