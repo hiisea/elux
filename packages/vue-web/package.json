@@ -40,7 +40,8 @@
     "@babel/runtime": "~7.12.18",
     "@elux/core-vuex": "^0.0.4",
     "@elux/route-browser": "^0.0.4",
-    "@vue/server-renderer": "^3.0.0"
+    "@vue/server-renderer": "^3.0.0",
+    "stream": "^0.0.2"
   },
   "devDependencies": {
     "vue": "^3.0.0"
