@@ -1,7 +1,6 @@
 import env from './env';
 import React from 'react';
 import { hydrate, render } from 'react-dom';
-import { renderToString } from 'react-dom/server';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
@@ -118,7 +117,8 @@ export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
               const RootView = AppView;
               const state = store.getState();
               const deps = {};
-              let html = renderToString(React.createElement(DepsContext.Provider, {
+
+              let html = require('react-dom/server').renderToString(React.createElement(DepsContext.Provider, {
                 value: {
                   deps,
                   store
@@ -126,6 +126,7 @@ export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
               }, React.createElement(RootView, {
                 store: store
               })));
+
               const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
               if (match) {

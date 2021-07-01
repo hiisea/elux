@@ -21,8 +21,6 @@ var _react = _interopRequireDefault(require("react"));
 
 var _reactDom = require("react-dom");
 
-var _server = require("react-dom/server");
-
 var _route = require("@elux/route");
 
 exports.BaseModuleHandlers = _route.ModuleWithRouteHandlers;
@@ -195,7 +193,8 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
               var RootView = AppView;
               var state = store.getState();
               var deps = {};
-              var html = (0, _server.renderToString)(_react.default.createElement(_loadComponent.DepsContext.Provider, {
+
+              var html = require('react-dom/server').renderToString(_react.default.createElement(_loadComponent.DepsContext.Provider, {
                 value: {
                   deps: deps,
                   store: store
@@ -203,6 +202,7 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
               }, _react.default.createElement(RootView, {
                 store: store
               })));
+
               var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
               if (match) {

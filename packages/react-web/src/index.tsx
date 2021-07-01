@@ -2,7 +2,6 @@
 import env from './env';
 import React from 'react';
 import {hydrate, render} from 'react-dom';
-import {renderToString} from 'react-dom/server';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
 import {getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
 import {createRouter} from '@elux/route-browser';
@@ -57,6 +56,8 @@ export {default as DocumentHead} from './components/DocumentHead';
 export {default as Else} from './components/Else';
 export {default as Switch} from './components/Switch';
 export {default as Link} from './components/Link';
+
+declare const require: any;
 
 let SSRTPL: string;
 
@@ -151,7 +152,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
               const RootView: ComponentType<any> = AppView as any;
               const state = store.getState();
               const deps = {};
-              let html: string = renderToString(
+              let html: string = require('react-dom/server').renderToString(
                 <DepsContext.Provider value={{deps, store}}>
                   <RootView store={store} />
                 </DepsContext.Provider>

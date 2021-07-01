@@ -51,8 +51,6 @@ var _routeBrowser = require("@elux/route-browser");
 
 var _vue = require("vue");
 
-var _serverRenderer = require("@vue/server-renderer");
-
 var _loadComponent = require("./loadComponent");
 
 var _sington = require("./sington");
@@ -204,7 +202,9 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
                 deps: deps,
                 store: store
               });
-              var htmlPromise = (0, _serverRenderer.renderToString)(app);
+
+              var htmlPromise = require('@vue/server-renderer').renderToString(app);
+
               return htmlPromise.then(function (html) {
                 var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 

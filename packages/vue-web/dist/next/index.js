@@ -3,7 +3,6 @@ import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { createApp as createVue, createSSRApp, defineComponent as defineVueComponent } from 'vue';
-import { renderToString } from '@vue/server-renderer';
 import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
 export { createVuex } from '@elux/core-vuex';
@@ -130,7 +129,9 @@ export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
                 deps,
                 store
               });
-              const htmlPromise = renderToString(app);
+
+              const htmlPromise = require('@vue/server-renderer').renderToString(app);
+
               return htmlPromise.then(html => {
                 const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 

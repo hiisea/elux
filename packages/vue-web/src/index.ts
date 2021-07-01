@@ -13,7 +13,6 @@ import {
 } from '@elux/core';
 import {createRouter} from '@elux/route-browser';
 import {createApp as createVue, createSSRApp, defineComponent as defineVueComponent} from 'vue';
-import {renderToString} from '@vue/server-renderer';
 import {loadComponent, setLoadComponentOptions, DepsContext} from './loadComponent';
 import {MetaData} from './sington';
 import type {
@@ -184,7 +183,7 @@ export interface SSROptions {
 }
 
 declare const process: any;
-
+declare const require: any;
 setCoreConfig({MutableData: true});
 
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
@@ -218,6 +217,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
     },
   };
 }
+
 export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   setSsrHtmlTpl('');
   defineModuleGetter(moduleGetter, appModuleName);
@@ -240,7 +240,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
               const deps = {};
               const app = createSSRApp(AppView).use(store as any);
               app.provide(DepsContext, {deps, store});
-              const htmlPromise: Promise<string> = renderToString(app);
+              const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
               return htmlPromise.then((html) => {
                 const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
                 if (match) {
