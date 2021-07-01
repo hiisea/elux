@@ -2,7 +2,7 @@ import './env';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
-import { createApp as createVue, defineComponent as defineVueComponent } from 'vue';
+import { createApp as createVue, createSSRApp, defineComponent as defineVueComponent } from 'vue';
 import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
 export { createVuex } from '@elux/core-vuex';
@@ -106,19 +106,28 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
             }) => {
               const state = store.getState();
               const deps = {};
-              let html = '';
-              const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+              const app = createSSRApp(AppView).use(store);
+              app.provide(DepsContext, {
+                deps: {},
+                store
+              });
 
-              if (match) {
-                const pageHead = html.split(/<head>|<\/head>/, 3);
-                html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
-                return SSRTPL.replace('</head>', `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                  state,
-                  components: Object.keys(deps)
-                })};</script>\r\n</head>`).replace(match[0], match[0] + html);
-              }
+              const htmlPromise = require('@vue/server-renderer').renderToString(app);
 
-              return html;
+              return htmlPromise.then(html => {
+                const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+
+                if (match) {
+                  const pageHead = html.split(/<head>|<\/head>/, 3);
+                  html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
+                  return SSRTPL.replace('</head>', `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                    state,
+                    components: Object.keys(deps)
+                  })};</script>\r\n</head>`).replace(match[0], match[0] + html);
+                }
+
+                return html;
+              });
             });
           });
         }

@@ -103,7 +103,7 @@ const defaultNativeLocationMap: NativeLocationMap = {
     return nativeLocation;
   },
 };
-export function createRouteModule<G extends PagenameMap<any>>(
+export function createRouteModule<G extends PagenameMap>(
   pagenameMap: G,
   nativeLocationMap: NativeLocationMap = defaultNativeLocationMap,
   notfoundPagename: string = '/404',

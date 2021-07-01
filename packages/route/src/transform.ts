@@ -1,6 +1,6 @@
 import {deepMerge, env, getModuleList, getModuleGetter} from '@elux/core';
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
-import {routeConfig, EluxLocation, DeepPartial, PartialLocation, Location, RootParams, NativeLocation} from './basic';
+import {routeConfig, EluxLocation, PartialLocation, Location, RootParams, NativeLocation} from './basic';
 
 export interface LocationTransform {
   eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation; // E->L
@@ -19,13 +19,13 @@ export interface LocationTransform {
   partialLocationToMinData(partialLocation: PartialLocation): {pathname: string; params: Record<string, any>; pathParams: Record<string, any>};
 }
 
-export type PagenameMap<P> = Record<
-  string,
-  {
-    argsToParams(pathArgs: Array<string | undefined>): DeepPartial<P>;
-    paramsToArgs(params: DeepPartial<P>): Array<any>;
-  }
->;
+export interface PagenameMap {
+  [pageName: string]: {
+    argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
+    paramsToArgs: Function; // TODO vue下类型推导出错？paramsToArgs(params: Record<string, any>): Array<any>;
+  };
+}
+
 export type NativeLocationMap = {
   in(nativeLocation: NativeLocation): NativeLocation;
   out(nativeLocation: NativeLocation): NativeLocation;
@@ -110,7 +110,7 @@ export function eluxLocationToEluxUrl(location: EluxLocation): string {
   return [location.pathname, JSON.stringify(location.params || {})].join('?');
 }
 export function createLocationTransform(
-  pagenameMap: PagenameMap<any>,
+  pagenameMap: PagenameMap,
   nativeLocationMap: NativeLocationMap,
   notfoundPagename: string = '/404',
   paramsKey: string = '_'

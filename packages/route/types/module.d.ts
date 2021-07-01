@@ -27,7 +27,7 @@ export declare const routeMiddleware: IStoreMiddleware;
 export declare type RouteModule = CommonModule & {
     locationTransform: LocationTransform;
 };
-export declare function createRouteModule<G extends PagenameMap<any>>(pagenameMap: G, nativeLocationMap?: NativeLocationMap, notfoundPagename?: string, paramsKey?: string): {
+export declare function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeLocationMap?: NativeLocationMap, notfoundPagename?: string, paramsKey?: string): {
     locationTransform: LocationTransform;
     moduleName: "route";
     model: (store: IStore<{}>) => void | Promise<void>;

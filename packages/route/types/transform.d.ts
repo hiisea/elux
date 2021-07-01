@@ -1,4 +1,4 @@
-import { EluxLocation, DeepPartial, PartialLocation, Location, RootParams, NativeLocation } from './basic';
+import { EluxLocation, PartialLocation, Location, RootParams, NativeLocation } from './basic';
 export interface LocationTransform {
     eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation;
     eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Promise<Location<P>>;
@@ -19,9 +19,9 @@ export interface LocationTransform {
         pathParams: Record<string, any>;
     };
 }
-export declare type PagenameMap<P> = Record<string, {
-    argsToParams(pathArgs: Array<string | undefined>): DeepPartial<P>;
-    paramsToArgs(params: DeepPartial<P>): Array<any>;
+export declare type PagenameMap = Record<string, {
+    argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
+    paramsToArgs(params: Record<string, any>): Array<any>;
 }>;
 export declare type NativeLocationMap = {
     in(nativeLocation: NativeLocation): NativeLocation;
@@ -36,4 +36,4 @@ export declare function nativeUrlToNativeLocation(url: string): NativeLocation;
 export declare function eluxUrlToEluxLocation(url: string): EluxLocation;
 export declare function nativeLocationToNativeUrl({ pathname, searchData, hashData }: NativeLocation): string;
 export declare function eluxLocationToEluxUrl(location: EluxLocation): string;
-export declare function createLocationTransform(pagenameMap: PagenameMap<any>, nativeLocationMap: NativeLocationMap, notfoundPagename?: string, paramsKey?: string): LocationTransform;
+export declare function createLocationTransform(pagenameMap: PagenameMap, nativeLocationMap: NativeLocationMap, notfoundPagename?: string, paramsKey?: string): LocationTransform;
