@@ -2786,7 +2786,7 @@
     "@vue/shared" "3.1.1"
     csstype "^2.6.8"
 
-"@vue/server-renderer@^3.1.2":
+"@vue/server-renderer@^3.0.0":
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/@vue/server-renderer/-/server-renderer-3.1.2.tgz#fd5c4ac433cbcea4f44b9ef971ff612786e1d04f"
   integrity sha512-XDw8KTrz/siiU5p6Zlicvf2KIjSZrqaxATBPM/9FYNnyv4LTS14JC5daTL13rk50d3UPBurRR/3wJupVvtQJ4w==

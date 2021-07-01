@@ -39,11 +39,11 @@
   "dependencies": {
     "@babel/runtime": "~7.12.18",
     "@elux/core-vuex": "^0.0.4",
-    "@elux/route-browser": "^0.0.4"
+    "@elux/route-browser": "^0.0.4",
+    "@vue/server-renderer": "^3.0.0"
   },
   "devDependencies": {
-    "vue": "^3.0.0",
-    "@vue/server-renderer": "^3.1.2"
+    "vue": "^3.0.0"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }
