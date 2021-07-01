@@ -1,8 +1,7 @@
 /* eslint-disable import/order */
-import './env';
+import env from './env';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
 import {
-  env,
   getRootModuleAPI,
   renderApp,
   ssrApp,
@@ -227,7 +226,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return {
-        ssr({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
+        render({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }

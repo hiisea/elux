@@ -1,2 +1,3 @@
 /// <reference path="../env/global.d.ts" />
-export {};
+import { env } from '@elux/core';
+export default env;

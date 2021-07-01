@@ -1,4 +1,3 @@
-import './env';
 import type { Component, SetupContext, RenderFunction, DefineComponent, ComputedOptions, MethodOptions, ComponentOptionsMixin, EmitsOptions, ComponentOptionsWithoutProps, ComponentOptionsWithArrayProps, ComponentPropsOptions, ComponentOptionsWithObjectProps } from 'vue';
 import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions, EluxComponent } from '@elux/core';
 import type { IRouter } from '@elux/route-browser';
@@ -54,7 +53,7 @@ export declare function createApp(moduleGetter: ModuleGetter, middlewares?: ISto
 };
 export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        ssr({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
+        render({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
     };
 };
 export declare function patchActions(typeName: string, json?: string): void;

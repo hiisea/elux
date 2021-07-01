@@ -1,6 +1,6 @@
-import './env';
+import env from './env';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
-import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
+import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { createApp as createVue, createSSRApp, defineComponent as defineVueComponent } from 'vue';
 import { renderToString } from '@vue/server-renderer';
@@ -100,7 +100,7 @@ export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
       storeCreator
     }) {
       return {
-        ssr({
+        render({
           id = 'root',
           ssrKey = 'eluxInitStore',
           url,

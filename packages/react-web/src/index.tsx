@@ -1,10 +1,10 @@
 /* eslint-disable import/order */
-import './env';
+import env from './env';
 import React from 'react';
 import {hydrate, render} from 'react-dom';
 import {renderToString} from 'react-dom/server';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
-import {env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
+import {getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
 import {createRouter} from '@elux/route-browser';
 import {loadComponent, setLoadComponentOptions, DepsContext} from './loadComponent';
 import {MetaData} from './sington';
@@ -138,7 +138,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return {
-        ssr({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
+        render({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }

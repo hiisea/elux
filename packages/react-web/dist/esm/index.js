@@ -1,10 +1,10 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import './env';
+import env from './env';
 import React from 'react';
 import { hydrate, render as _render } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
-import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
+import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
@@ -101,7 +101,7 @@ export function createSsrApp(moduleGetter, middlewares, appModuleName) {
       var storeOptions = _ref5.storeOptions,
           storeCreator = _ref5.storeCreator;
       return {
-        ssr: function ssr(_ref6) {
+        render: function render(_ref6) {
           var _ref6$id = _ref6.id,
               id = _ref6$id === void 0 ? 'root' : _ref6$id,
               _ref6$ssrKey = _ref6.ssrKey,

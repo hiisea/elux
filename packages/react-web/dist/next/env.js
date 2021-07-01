@@ -15,3 +15,5 @@ env.decodeBas64 = function (str) {
 
   return typeof atob === 'function' ? atob(str) : typeof Buffer !== 'undefined' ? Buffer.from(str, 'base64').toString() : str;
 };
+
+export default env;

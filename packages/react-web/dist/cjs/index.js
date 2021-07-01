@@ -13,7 +13,9 @@ exports.Link = exports.Switch = exports.Else = exports.DocumentHead = exports.Pr
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
-require("./env");
+var _env = _interopRequireDefault(require("./env"));
+
+exports.env = _env.default;
 
 var _react = _interopRequireDefault(require("react"));
 
@@ -29,9 +31,9 @@ exports.createRouteModule = _route.createRouteModule;
 
 var _core = require("@elux/core");
 
-exports.env = _core.env;
 exports.ActionTypes = _core.ActionTypes;
 exports.LoadingState = _core.LoadingState;
+exports.env = _core.env;
 exports.effect = _core.effect;
 exports.errorAction = _core.errorAction;
 exports.reducer = _core.reducer;
@@ -113,14 +115,14 @@ function createApp(moduleGetter, middlewares, appModuleName) {
 
           var router = (0, _routeBrowser.createRouter)('Browser', routeModule.locationTransform);
           _sington.MetaData.router = router;
-          var renderFun = _core.env[ssrKey] ? _reactDom.hydrate : _reactDom.render;
+          var renderFun = _env.default[ssrKey] ? _reactDom.hydrate : _reactDom.render;
 
-          var _ref3 = _core.env[ssrKey] || {},
+          var _ref3 = _env.default[ssrKey] || {},
               state = _ref3.state,
               _ref3$components = _ref3.components,
               components = _ref3$components === void 0 ? [] : _ref3$components;
 
-          var panel = _core.env.document.getElementById(id);
+          var panel = _env.default.document.getElementById(id);
 
           return router.initedPromise.then(function (routeState) {
             var initState = (0, _extends2.default)({}, storeOptions.initState, {
@@ -166,7 +168,7 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
       var storeOptions = _ref5.storeOptions,
           storeCreator = _ref5.storeCreator;
       return {
-        ssr: function ssr(_ref6) {
+        render: function render(_ref6) {
           var _ref6$id = _ref6.id,
               id = _ref6$id === void 0 ? 'root' : _ref6$id,
               _ref6$ssrKey = _ref6.ssrKey,
@@ -175,7 +177,7 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
               viewName = _ref6.viewName;
 
           if (!SSRTPL) {
-            SSRTPL = _core.env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
+            SSRTPL = _env.default.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }
 
           var router = (0, _routeBrowser.createRouter)(url, routeModule.locationTransform);

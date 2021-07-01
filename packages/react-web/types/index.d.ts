@@ -1,4 +1,3 @@
-import './env';
 import type { ComponentType } from 'react';
 import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
 import type { IRouter } from '@elux/route-browser';
@@ -48,7 +47,7 @@ export declare function createApp(moduleGetter: ModuleGetter, middlewares?: ISto
 };
 export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        ssr({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
+        render({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
     };
 };
 export declare function patchActions(typeName: string, json?: string): void;

@@ -1,9 +1,9 @@
-import './env';
+import env from './env';
 import React from 'react';
 import { hydrate, render } from 'react-dom';
 import { renderToString } from 'react-dom/server';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
-import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
+import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
@@ -92,7 +92,7 @@ export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
       storeCreator
     }) {
       return {
-        ssr({
+        render({
           id = 'root',
           ssrKey = 'eluxInitStore',
           url,
