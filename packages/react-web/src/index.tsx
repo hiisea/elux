@@ -2,6 +2,7 @@
 import './env';
 import React from 'react';
 import {hydrate, render} from 'react-dom';
+import {renderToString} from 'react-dom/server';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
 import {env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
 import {createRouter} from '@elux/route-browser';
@@ -57,12 +58,12 @@ export {default as Else} from './components/Else';
 export {default as Switch} from './components/Switch';
 export {default as Link} from './components/Link';
 
-declare const require: any;
-
 let SSRTPL: string;
 
 export function setSsrHtmlTpl(tpl: string) {
-  SSRTPL = tpl;
+  if (tpl) {
+    SSRTPL = tpl;
+  }
 }
 
 export function setConfig(conf: {
@@ -124,6 +125,19 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
             });
           });
         },
+      };
+    },
+  };
+}
+
+export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
+  setSsrHtmlTpl('');
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route') as RouteModule;
+  return {
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
+      return {
         ssr({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
@@ -137,7 +151,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
               const RootView: ComponentType<any> = AppView as any;
               const state = store.getState();
               const deps = {};
-              let html: string = require('react-dom/server').renderToString(
+              let html: string = renderToString(
                 <DepsContext.Provider value={{deps, store}}>
                   <RootView store={store} />
                 </DepsContext.Provider>

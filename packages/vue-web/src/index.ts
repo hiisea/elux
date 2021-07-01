@@ -14,6 +14,7 @@ import {
 } from '@elux/core';
 import {createRouter} from '@elux/route-browser';
 import {createApp as createVue, createSSRApp, defineComponent as defineVueComponent} from 'vue';
+import {renderToString} from '@vue/server-renderer';
 import {loadComponent, setLoadComponentOptions, DepsContext} from './loadComponent';
 import {MetaData} from './sington';
 import type {
@@ -148,9 +149,11 @@ export const defineComponent: ExportDefineComponent = function (...args: [any]) 
   return exportComponent(view);
 };
 let SSRTPL: string;
-declare const require: any;
+
 export function setSsrHtmlTpl(tpl: string) {
-  SSRTPL = tpl;
+  if (tpl) {
+    SSRTPL = tpl;
+  }
 }
 
 export function setConfig(conf: {
@@ -212,6 +215,18 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
             });
           });
         },
+      };
+    },
+  };
+}
+export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
+  setSsrHtmlTpl('');
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route') as RouteModule;
+  return {
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
+      return {
         ssr({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
@@ -226,7 +241,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
               const deps = {};
               const app = createSSRApp(AppView).use(store as any);
               app.provide(DepsContext, {deps, store});
-              const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
+              const htmlPromise: Promise<string> = renderToString(app);
               return htmlPromise.then((html) => {
                 const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
                 if (match) {
@@ -249,7 +264,6 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
     },
   };
 }
-
 export function patchActions(typeName: string, json?: string): void {
   if (json) {
     getRootModuleAPI(JSON.parse(json));

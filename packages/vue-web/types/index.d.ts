@@ -50,6 +50,10 @@ export declare function createApp(moduleGetter: ModuleGetter, middlewares?: ISto
             store: import("@elux/core").IStore<any> & B;
             app: import("vue").App<Element>;
         }>;
+    };
+};
+export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
         ssr({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
     };
 };

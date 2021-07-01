@@ -44,6 +44,10 @@ export interface SSROptions {
 export declare function createApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<import("@elux/core").IStore<any> & B>;
+    };
+};
+export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
         ssr({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
     };
 };

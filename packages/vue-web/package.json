@@ -20,6 +20,11 @@
     "types/",
     "dist/"
   ],
+  "sideEffects": [
+    "dist/esm/index.js",
+    "dist/next/index.js",
+    "dist/cjs/index.js"
+  ],
   "scripts": {
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",

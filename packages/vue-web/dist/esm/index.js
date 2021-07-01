@@ -4,6 +4,7 @@ import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { createApp as createVue, createSSRApp, defineComponent as defineVueComponent } from 'vue';
+import { renderToString } from '@vue/server-renderer';
 import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
 export { createVuex } from '@elux/core-vuex';
@@ -20,7 +21,9 @@ export var defineComponent = function defineComponent() {
 };
 var SSRTPL;
 export function setSsrHtmlTpl(tpl) {
-  SSRTPL = tpl;
+  if (tpl) {
+    SSRTPL = tpl;
+  }
 }
 export function setConfig(conf) {
   setCoreConfig(conf);
@@ -86,14 +89,32 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
               };
             });
           });
-        },
-        ssr: function ssr(_ref5) {
-          var _ref5$id = _ref5.id,
-              id = _ref5$id === void 0 ? 'root' : _ref5$id,
-              _ref5$ssrKey = _ref5.ssrKey,
-              ssrKey = _ref5$ssrKey === void 0 ? 'eluxInitStore' : _ref5$ssrKey,
-              url = _ref5.url,
-              viewName = _ref5.viewName;
+        }
+      };
+    }
+  };
+}
+export function createSsrApp(moduleGetter, middlewares, appModuleName) {
+  if (middlewares === void 0) {
+    middlewares = [];
+  }
+
+  setSsrHtmlTpl('');
+  defineModuleGetter(moduleGetter, appModuleName);
+  var istoreMiddleware = [routeMiddleware].concat(middlewares);
+  var routeModule = getModule('route');
+  return {
+    useStore: function useStore(_ref5) {
+      var storeOptions = _ref5.storeOptions,
+          storeCreator = _ref5.storeCreator;
+      return {
+        ssr: function ssr(_ref6) {
+          var _ref6$id = _ref6.id,
+              id = _ref6$id === void 0 ? 'root' : _ref6$id,
+              _ref6$ssrKey = _ref6.ssrKey,
+              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
+              url = _ref6.url,
+              viewName = _ref6.viewName;
 
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
@@ -109,9 +130,9 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref6) {
-              var store = _ref6.store,
-                  AppView = _ref6.AppView;
+            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref7) {
+              var store = _ref7.store,
+                  AppView = _ref7.AppView;
               var state = store.getState();
               var deps = {};
               var app = createSSRApp(AppView).use(store);
@@ -119,9 +140,7 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
                 deps: deps,
                 store: store
               });
-
-              var htmlPromise = require('@vue/server-renderer').renderToString(app);
-
+              var htmlPromise = renderToString(app);
               return htmlPromise.then(function (html) {
                 var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 

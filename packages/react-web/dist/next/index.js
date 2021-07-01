@@ -1,6 +1,7 @@
 import './env';
 import React from 'react';
 import { hydrate, render } from 'react-dom';
+import { renderToString } from 'react-dom/server';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
@@ -15,7 +16,9 @@ export { default as Switch } from './components/Switch';
 export { default as Link } from './components/Link';
 let SSRTPL;
 export function setSsrHtmlTpl(tpl) {
-  SSRTPL = tpl;
+  if (tpl) {
+    SSRTPL = tpl;
+  }
 }
 export function setConfig(conf) {
   setCoreConfig(conf);
@@ -71,8 +74,24 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               return store;
             });
           });
-        },
+        }
 
+      };
+    }
+
+  };
+}
+export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
+  setSsrHtmlTpl('');
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route');
+  return {
+    useStore({
+      storeOptions,
+      storeCreator
+    }) {
+      return {
         ssr({
           id = 'root',
           ssrKey = 'eluxInitStore',
@@ -99,8 +118,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               const RootView = AppView;
               const state = store.getState();
               const deps = {};
-
-              let html = require('react-dom/server').renderToString(React.createElement(DepsContext.Provider, {
+              let html = renderToString(React.createElement(DepsContext.Provider, {
                 value: {
                   deps,
                   store
@@ -108,7 +126,6 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               }, React.createElement(RootView, {
                 store: store
               })));
-
               const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
               if (match) {

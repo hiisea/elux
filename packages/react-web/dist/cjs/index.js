@@ -6,6 +6,7 @@ exports.__esModule = true;
 exports.setSsrHtmlTpl = setSsrHtmlTpl;
 exports.setConfig = setConfig;
 exports.createApp = createApp;
+exports.createSsrApp = createSsrApp;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
 exports.Link = exports.Switch = exports.Else = exports.DocumentHead = exports.Provider = exports.createRedux = exports.connectRedux = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
@@ -17,6 +18,8 @@ require("./env");
 var _react = _interopRequireDefault(require("react"));
 
 var _reactDom = require("react-dom");
+
+var _server = require("react-dom/server");
 
 var _route = require("@elux/route");
 
@@ -76,7 +79,9 @@ exports.Link = _Link.default;
 var SSRTPL;
 
 function setSsrHtmlTpl(tpl) {
-  SSRTPL = tpl;
+  if (tpl) {
+    SSRTPL = tpl;
+  }
 }
 
 function setConfig(conf) {
@@ -141,14 +146,33 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               return store;
             });
           });
-        },
-        ssr: function ssr(_ref5) {
-          var _ref5$id = _ref5.id,
-              id = _ref5$id === void 0 ? 'root' : _ref5$id,
-              _ref5$ssrKey = _ref5.ssrKey,
-              ssrKey = _ref5$ssrKey === void 0 ? 'eluxInitStore' : _ref5$ssrKey,
-              url = _ref5.url,
-              viewName = _ref5.viewName;
+        }
+      };
+    }
+  };
+}
+
+function createSsrApp(moduleGetter, middlewares, appModuleName) {
+  if (middlewares === void 0) {
+    middlewares = [];
+  }
+
+  setSsrHtmlTpl('');
+  (0, _core.defineModuleGetter)(moduleGetter, appModuleName);
+  var istoreMiddleware = [_route.routeMiddleware].concat(middlewares);
+  var routeModule = (0, _core.getModule)('route');
+  return {
+    useStore: function useStore(_ref5) {
+      var storeOptions = _ref5.storeOptions,
+          storeCreator = _ref5.storeCreator;
+      return {
+        ssr: function ssr(_ref6) {
+          var _ref6$id = _ref6.id,
+              id = _ref6$id === void 0 ? 'root' : _ref6$id,
+              _ref6$ssrKey = _ref6.ssrKey,
+              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
+              url = _ref6.url,
+              viewName = _ref6.viewName;
 
           if (!SSRTPL) {
             SSRTPL = _core.env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
@@ -163,14 +187,13 @@ function createApp(moduleGetter, middlewares, appModuleName) {
             var baseStore = storeCreator((0, _extends2.default)({}, storeOptions, {
               initState: initState
             }));
-            return (0, _core.ssrApp)(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref6) {
-              var store = _ref6.store,
-                  AppView = _ref6.AppView;
+            return (0, _core.ssrApp)(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref7) {
+              var store = _ref7.store,
+                  AppView = _ref7.AppView;
               var RootView = AppView;
               var state = store.getState();
               var deps = {};
-
-              var html = require('react-dom/server').renderToString(_react.default.createElement(_loadComponent.DepsContext.Provider, {
+              var html = (0, _server.renderToString)(_react.default.createElement(_loadComponent.DepsContext.Provider, {
                 value: {
                   deps: deps,
                   store: store
@@ -178,7 +201,6 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               }, _react.default.createElement(RootView, {
                 store: store
               })));
-
               var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
               if (match) {

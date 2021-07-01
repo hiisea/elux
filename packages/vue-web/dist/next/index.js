@@ -3,6 +3,7 @@ import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { createApp as createVue, createSSRApp, defineComponent as defineVueComponent } from 'vue';
+import { renderToString } from '@vue/server-renderer';
 import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
 import { MetaData } from './sington';
 export { createVuex } from '@elux/core-vuex';
@@ -19,7 +20,9 @@ export const defineComponent = function (...args) {
 };
 let SSRTPL;
 export function setSsrHtmlTpl(tpl) {
-  SSRTPL = tpl;
+  if (tpl) {
+    SSRTPL = tpl;
+  }
 }
 export function setConfig(conf) {
   setCoreConfig(conf);
@@ -79,8 +82,24 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
               };
             });
           });
-        },
+        }
 
+      };
+    }
+
+  };
+}
+export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
+  setSsrHtmlTpl('');
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route');
+  return {
+    useStore({
+      storeOptions,
+      storeCreator
+    }) {
+      return {
         ssr({
           id = 'root',
           ssrKey = 'eluxInitStore',
@@ -111,9 +130,7 @@ export function createApp(moduleGetter, middlewares = [], appModuleName) {
                 deps,
                 store
               });
-
-              const htmlPromise = require('@vue/server-renderer').renderToString(app);
-
+              const htmlPromise = renderToString(app);
               return htmlPromise.then(html => {
                 const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
