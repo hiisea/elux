@@ -258,27 +258,24 @@ function moduleExports({
   cssProcessors.less && cssExtensions.push('less');
   cssProcessors.sass && cssExtensions.push('sass');
   cssProcessors.scss && cssExtensions.push('scss');
+  const commonAlias = {};
   const clientAlias = {};
   const serverAlias = {};
-  const resolve = {
-    extensions: [...scriptExtensions, '.json'],
-    alias: Object.keys(resolveAlias).reduce((obj, key) => {
-      const target = resolveAlias[key];
-      if (target.startsWith('./')) {
-        obj[key] = path.join(rootPath, target);
-      } else {
-        obj[key] = target;
-      }
-      if (key.startsWith('server:')) {
-        serverAlias[key.replace('server:', '')] = obj[key];
-        delete obj[key];
-      } else if (key.startsWith('client:')) {
-        clientAlias[key.replace('server:', '')] = obj[key];
-        delete obj[key];
-      }
-      return obj;
-    }, {}),
-  };
+
+  Object.keys(resolveAlias).forEach((key) => {
+    let target = resolveAlias[key];
+    if (target.startsWith('./')) {
+      target = path.join(rootPath, target);
+    }
+    if (key.startsWith('server//')) {
+      serverAlias[key.replace('server//', '')] = target;
+    } else if (key.startsWith('client//')) {
+      clientAlias[key.replace('server//', '')] = target;
+    } else {
+      commonAlias[key] = target;
+    }
+  });
+
   // if (isVue) {
   //   resolve.alias['vue$'] = 'vue/dist/vue.runtime.esm-bundler.js';
   // }
@@ -302,7 +299,7 @@ function moduleExports({
       hashDigestLength: 8,
       filename: isProdModel ? 'js/[name].[contenthash].js' : 'js/[name].js',
     },
-    resolve,
+    resolve: {extensions: [...scriptExtensions, '.json'], alias: {...commonAlias, ...clientAlias}},
     optimization: {
       // minimize: false,
       minimizer: ['...', new CssMinimizerPlugin()],
@@ -431,7 +428,7 @@ function moduleExports({
           hashDigestLength: 8,
           filename: '[name].js',
         },
-        resolve,
+        resolve: {extensions: [...scriptExtensions, '.json'], alias: {...commonAlias, ...serverAlias}},
         module: {
           rules: [
             isVue && {

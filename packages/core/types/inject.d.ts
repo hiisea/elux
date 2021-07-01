@@ -1,4 +1,4 @@
-import { Action, EluxComponent, IModuleHandlers, CoreModuleState, CommonModule, ModuleGetter, IStore } from './basic';
+import { Action, EluxComponent, IModuleHandlers, CommonModule, ModuleGetter, IStore } from './basic';
 declare type Handler<F> = F extends (...args: infer P) => any ? (...args: P) => {
     type: string;
 } : never;
@@ -31,7 +31,7 @@ export declare function getComponet(moduleName: string, componentName: string): 
 export declare function getComponentList(keys: string[]): Promise<EluxComponent[]>;
 export declare function loadComponet(moduleName: string, componentName: string, store: IStore, deps: Record<string, boolean>): EluxComponent | null | Promise<EluxComponent | null>;
 export declare function getCachedModules(): Record<string, CommonModule<string> | Promise<CommonModule<string>> | undefined>;
-export declare class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
+export declare class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
     readonly moduleName: string;
     readonly initState: S;
     store: IStore<R>;

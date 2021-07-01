@@ -1,7 +1,7 @@
-import {CoreModuleHandlers, CoreModuleState, effect, reducer} from '@elux/core';
+import {CoreModuleHandlers, effect, reducer} from '@elux/core';
 import {messages} from '../../utils';
 
-export interface State extends CoreModuleState {
+export interface State {
   count: number;
 }
 

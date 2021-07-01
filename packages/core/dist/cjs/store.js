@@ -227,7 +227,11 @@ function enhanceStore(baseStore, middlewares) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
             var modelInstance = injectedModules[moduleName];
-            newState[moduleName] = handler.apply(modelInstance, actionData);
+            var result = handler.apply(modelInstance, actionData);
+
+            if (result) {
+              newState[moduleName] = result;
+            }
           }
         });
         update(actionName, newState, actionData);

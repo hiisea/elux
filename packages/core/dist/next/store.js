@@ -183,7 +183,11 @@ export function enhanceStore(baseStore, middlewares) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
             const modelInstance = injectedModules[moduleName];
-            newState[moduleName] = handler.apply(modelInstance, actionData);
+            const result = handler.apply(modelInstance, actionData);
+
+            if (result) {
+              newState[moduleName] = result;
+            }
           }
         });
         update(actionName, newState, actionData);

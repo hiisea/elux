@@ -1,8 +1,8 @@
-import { CoreModuleHandlers, CoreModuleState, IStoreMiddleware, IStore, CommonModule } from '@elux/core';
+import { CoreModuleHandlers, IStoreMiddleware, IStore, CommonModule } from '@elux/core';
 import { LocationTransform } from './transform';
 import type { RootParams, RouteState, HistoryAction } from './basic';
 import type { PagenameMap, NativeLocationMap } from './transform';
-export declare class ModuleWithRouteHandlers<S extends CoreModuleState, R extends Record<string, any>> extends CoreModuleHandlers<S, R> {
+export declare class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Record<string, any>> extends CoreModuleHandlers<S, R> {
     Init(initState: S): S;
     RouteParams(payload: Partial<S>): S;
 }

@@ -5,5 +5,5 @@ export { LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromis
 export { defineModuleGetter, renderApp, ssrApp } from './render';
 export { env } from './env';
 export type { IStoreMiddleware, StoreBuilder } from './store';
-export type { Action, EluxComponent, CoreModuleState, CommonModule, ModuleGetter, IStore, BStore, BStoreOptions, IModuleHandlers, Dispatch, GetState, State, } from './basic';
+export type { Action, EluxComponent, CommonModule, ModuleGetter, IStore, BStore, BStoreOptions, IModuleHandlers, Dispatch, GetState, State, } from './basic';
 export type { RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, LoadComponent } from './inject';

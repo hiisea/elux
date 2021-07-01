@@ -1,6 +1,5 @@
 import {
   CoreModuleHandlers,
-  CoreModuleState,
   IStoreMiddleware,
   config,
   reducer,
@@ -16,7 +15,7 @@ import {createLocationTransform, LocationTransform} from './transform';
 import type {RootParams, RouteState, HistoryAction} from './basic';
 import type {PagenameMap, NativeLocationMap} from './transform';
 
-export class ModuleWithRouteHandlers<S extends CoreModuleState, R extends Record<string, any>> extends CoreModuleHandlers<S, R> {
+export class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Record<string, any>> extends CoreModuleHandlers<S, R> {
   @reducer
   public Init(initState: S): S {
     const routeParams = this.rootState.route.params[this.moduleName];

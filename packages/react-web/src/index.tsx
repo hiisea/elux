@@ -22,7 +22,7 @@ import type {RouteModule} from '@elux/route';
 import type {IRouter} from '@elux/route-browser';
 import type {LoadComponent} from './loadComponent';
 
-export type {RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState, EluxComponent} from '@elux/core';
+export type {RootModuleFacade as Facade, Dispatch, EluxComponent} from '@elux/core';
 
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
 export type {LoadComponent} from './loadComponent';

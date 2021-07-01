@@ -34,7 +34,6 @@ export type {IStoreMiddleware, StoreBuilder} from './store';
 export type {
   Action,
   EluxComponent,
-  CoreModuleState,
   CommonModule,
   ModuleGetter,
   IStore,

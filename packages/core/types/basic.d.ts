@@ -58,9 +58,6 @@ export interface IStore<S extends State = {}> {
     getCurrentActionName: () => string;
     getCurrentState: GetState<S>;
 }
-export interface CoreModuleState {
-    loading?: Record<string, LoadingState>;
-}
 export interface CommonModule<ModuleName extends string = string> {
     moduleName: ModuleName;
     model: (store: IStore) => void | Promise<void>;
@@ -121,9 +118,9 @@ export declare const MetaData: {
     componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
 };
 export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
-export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName?: string): T;
+export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;
 export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
-export declare function effect(loadingForGroupName?: string | null, loadingForModuleName?: string): (target: any, key: string, descriptor: PropertyDescriptor) => any;
+export declare function effect(loadingKey?: string | null): (target: any, key: string, descriptor: PropertyDescriptor) => any;
 export declare const mutation: typeof reducer;
 export declare const action: typeof effect;
 export declare function logger(before: (action: Action, moduleName: string, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;

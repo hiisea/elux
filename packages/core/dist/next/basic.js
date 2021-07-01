@@ -98,7 +98,7 @@ export function injectActions(moduleName, handlers) {
   }
 }
 const loadings = {};
-export function setLoading(store, item, moduleName, groupName = 'global') {
+export function setLoading(store, item, moduleName, groupName) {
   const key = moduleName + config.NSP + groupName;
 
   if (!loadings[key]) {
@@ -125,10 +125,12 @@ export function reducer(target, key, descriptor) {
   descriptor.enumerable = true;
   return target.descriptor === descriptor ? target : descriptor;
 }
-export function effect(loadingForGroupName, loadingForModuleName) {
-  if (loadingForGroupName === undefined) {
-    loadingForGroupName = 'global';
-    loadingForModuleName = '';
+export function effect(loadingKey = 'app.loading.global') {
+  let loadingForModuleName;
+  let loadingForGroupName;
+
+  if (loadingKey !== null) {
+    [loadingForModuleName,, loadingForGroupName] = loadingKey.split('.');
   }
 
   return (target, key, descriptor) => {
@@ -141,12 +143,12 @@ export function effect(loadingForGroupName, loadingForModuleName) {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForGroupName) {
+    if (loadingForModuleName && loadingForGroupName) {
       const before = (curAction, moduleName, promiseResult) => {
         if (!env.isServer) {
-          if (loadingForModuleName === '') {
+          if (loadingForModuleName === 'app') {
             loadingForModuleName = MetaData.appModuleName;
-          } else if (!loadingForModuleName) {
+          } else if (loadingForModuleName === 'this') {
             loadingForModuleName = moduleName;
           }
 

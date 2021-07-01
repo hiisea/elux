@@ -7,7 +7,7 @@ export { createVuex } from '@elux/core-vuex';
 export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { default as Link } from './components/Link';
-export type { RootModuleFacade as Facade, Dispatch, CoreModuleState as BaseModuleState, EluxComponent } from '@elux/core';
+export type { RootModuleFacade as Facade, Dispatch, EluxComponent } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export type { VuexStore, VuexOptions } from '@elux/core-vuex';
 export type { LoadComponent } from './loadComponent';

@@ -5,7 +5,6 @@ import {
   isEluxComponent,
   IModuleHandlers,
   injectActions,
-  CoreModuleState,
   CommonModule,
   MetaData,
   ModuleGetter,
@@ -223,7 +222,7 @@ export function getCachedModules() {
  * ModuleHandlers基类
  * 所有ModuleHandlers必须继承此基类
  */
-export class CoreModuleHandlers<S extends CoreModuleState = CoreModuleState, R extends Record<string, any> = {}> implements IModuleHandlers {
+export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
   store!: IStore<R>;
 
   constructor(public readonly moduleName: string, public readonly initState: S) {}

@@ -93,10 +93,6 @@ export interface IStore<S extends State = {}> {
   getCurrentState: GetState<S>;
 }
 
-export interface CoreModuleState {
-  loading?: Record<string, LoadingState>;
-}
-
 export interface CommonModule<ModuleName extends string = string> {
   moduleName: ModuleName;
   model: (store: IStore) => void | Promise<void>;
@@ -237,7 +233,7 @@ const loadings: Record<string, TaskCounter> = {};
  * @param moduleName moduleName+groupName合起来作为该加载项的key
  * @param groupName moduleName+groupName合起来作为该加载项的key
  */
-export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string = 'global'): T {
+export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T {
   const key = moduleName + config.NSP + groupName;
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(config.DepthTimeOnLoading);
@@ -264,19 +260,13 @@ export function reducer(target: any, key: string, descriptor: PropertyDescriptor
 /**
  * 一个类方法的装饰器，用来指示该方法为一个effectHandler
  * - effectHandler必须通过dispatch Action来触发
- * @param loadingForGroupName 注入加载状态的分组key，默认为global，如果为null表示不注入加载状态
- * @param loadingForModuleName 可将loading状态合并注入到其他module，默认为入口主模块
- *
- * ```
- * effect() == effect('global','app')
- * effect(null) 不注入加载状态
- * effect('global') == effect('global',thisModuleName)
- * ```
+ * @param loadingKey 注入加载状态到state，如果为null表示不注入加载状态，默认为'app.loading.global'
  */
-export function effect(loadingForGroupName?: string | null, loadingForModuleName?: string) {
-  if (loadingForGroupName === undefined) {
-    loadingForGroupName = 'global';
-    loadingForModuleName = '';
+export function effect(loadingKey: string | null = 'app.loading.global') {
+  let loadingForModuleName: string | undefined;
+  let loadingForGroupName: string | undefined;
+  if (loadingKey !== null) {
+    [loadingForModuleName, , loadingForGroupName] = loadingKey.split('.');
   }
   return (target: any, key: string, descriptor: PropertyDescriptor) => {
     if (!key && !descriptor) {
@@ -287,15 +277,15 @@ export function effect(loadingForGroupName?: string | null, loadingForModuleName
     // fun.__actionName__ = key;
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
-    if (loadingForGroupName) {
+    if (loadingForModuleName && loadingForGroupName) {
       const before = (curAction: Action, moduleName: string, promiseResult: Promise<any>) => {
         if (!env.isServer) {
-          if (loadingForModuleName === '') {
+          if (loadingForModuleName === 'app') {
             loadingForModuleName = MetaData.appModuleName;
-          } else if (!loadingForModuleName) {
+          } else if (loadingForModuleName === 'this') {
             loadingForModuleName = moduleName;
           }
-          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName, loadingForGroupName as string);
+          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName!, loadingForGroupName!);
         }
       };
       if (!fun.__decorators__) {
