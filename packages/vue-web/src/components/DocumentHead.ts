@@ -44,7 +44,7 @@ export default defineComponent({
       const title = this.title;
       let html = this.html;
       if (!html) {
-        html = title;
+        html = `<title>${title}</title>`;
       }
       if (title) {
         return html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);

@@ -23,7 +23,7 @@ const Component = ({
   html = ''
 }) => {
   if (!html) {
-    html = title;
+    html = `<title>${title}</title>`;
   }
 
   if (title) {

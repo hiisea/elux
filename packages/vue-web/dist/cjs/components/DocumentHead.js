@@ -51,7 +51,7 @@ var _default = (0, _vue.defineComponent)({
       var html = this.html;
 
       if (!html) {
-        html = title;
+        html = "<title>" + title + "</title>";
       }
 
       if (title) {
