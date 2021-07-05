@@ -1,8 +1,8 @@
-import React, {useContext} from 'react';
 import {env, isServer} from '@elux/core';
-import {EluxContext} from '../sington';
+import {inject} from 'vue';
+import {EluxContextType, EluxContextKey} from '../sington';
 
-interface Props {
+export interface Props {
   children: string;
 }
 
@@ -20,13 +20,11 @@ function setClientHead({documentHead}: {documentHead: string}) {
   }
 }
 
-const Component: React.FC<Props> = ({children}) => {
-  const eluxContext = useContext(EluxContext);
+export default function ({children}: Props) {
+  const eluxContext = inject<EluxContextType>(EluxContextKey, {documentHead: ''});
   eluxContext.documentHead = children;
   if (!isServer()) {
     setClientHead(eluxContext);
   }
   return null;
-};
-
-export default React.memo(Component);
+}

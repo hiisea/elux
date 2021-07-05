@@ -5,10 +5,7 @@ import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
 import { loadComponet, isPromise, env } from '@elux/core';
-export var DepsContext = React.createContext({
-  deps: {}
-});
-DepsContext.displayName = 'EluxComponentLoader';
+import { EluxContext } from './sington';
 var loadComponentDefaultOptions = {
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
@@ -90,7 +87,7 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
         var result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps);
+          result = loadComponet(moduleName, componentName, store, deps || {});
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -147,7 +144,7 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
     return Loader;
   }(Component);
 
-  _defineProperty(Loader, "contextType", DepsContext);
+  _defineProperty(Loader, "contextType", EluxContext);
 
   return React.forwardRef(function (props, ref) {
     return React.createElement(Loader, _extends({}, props, {

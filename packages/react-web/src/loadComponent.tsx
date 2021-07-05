@@ -1,9 +1,7 @@
 import React, {ComponentType, Component} from 'react';
 import {loadComponet, isPromise, env} from '@elux/core';
 import type {LoadComponent as BaseLoadComponent, RootModuleFacade, IStore, EluxComponent} from '@elux/core';
-
-export const DepsContext = React.createContext<{deps: Record<string, boolean>; store?: IStore}>({deps: {}});
-DepsContext.displayName = 'EluxComponentLoader';
+import {EluxContext} from './sington';
 
 export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<
   A,
@@ -29,7 +27,7 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, co
   const OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
   class Loader extends Component<{forwardedRef: any}> {
-    static contextType = DepsContext;
+    static contextType = EluxContext;
 
     private active: boolean = true;
 
@@ -43,7 +41,7 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, co
       ver: 0,
     };
 
-    constructor(props: any, public context: React.ContextType<typeof DepsContext>) {
+    constructor(props: any, public context: React.ContextType<typeof EluxContext>) {
       super(props);
       this.execute();
     }
@@ -67,7 +65,7 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, co
         this.loading = true;
         let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
         try {
-          result = loadComponet(moduleName, componentName as string, store!, deps);
+          result = loadComponet(moduleName, componentName as string, store!, deps || {});
         } catch (e: any) {
           this.loading = false;
           this.error = e.message || `${e}`;

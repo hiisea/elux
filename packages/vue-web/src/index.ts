@@ -13,8 +13,8 @@ import {
 } from '@elux/core';
 import {createRouter} from '@elux/route-browser';
 import {createApp as createVue, createSSRApp, defineComponent as defineVueComponent} from 'vue';
-import {loadComponent, setLoadComponentOptions, DepsContext} from './loadComponent';
-import {MetaData} from './sington';
+import {loadComponent, setLoadComponentOptions} from './loadComponent';
+import {MetaData, EluxContextKey, EluxContextType} from './sington';
 import type {
   Component,
   SetupContext,
@@ -205,7 +205,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
               routeModule.model(store);
               router.setStore(store);
               const app = createVue(AppView).use(store as any);
-              app.provide(DepsContext, {deps: {}, store});
+              app.provide<EluxContextType>(EluxContextKey, {store, documentHead: ''});
               if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
                 env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
               }
@@ -237,20 +237,18 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
             const baseStore = storeCreator({...storeOptions, initState});
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
               const state = store.getState();
-              const deps = {};
+              const eluxContext = {deps: {}, store, documentHead: ''};
               const app = createSSRApp(AppView).use(store as any);
-              app.provide(DepsContext, {deps, store});
+              app.provide<EluxContextType>(EluxContextKey, eluxContext);
               const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
               return htmlPromise.then((html) => {
                 const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
                 if (match) {
-                  const pageHead = html.split(/<head>|<\/head>/, 3);
-                  html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
                   return SSRTPL.replace(
                     '</head>',
-                    `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                    `${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                       state,
-                      components: Object.keys(deps),
+                      components: Object.keys(eluxContext.deps),
                     })};</script>\r\n</head>`
                   ).replace(match[0], match[0] + html);
                 }

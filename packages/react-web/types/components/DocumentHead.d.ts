@@ -1,6 +1,6 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 interface Props {
-    children?: ReactNode;
+    children: string;
 }
 declare const _default: React.NamedExoticComponent<Props>;
 export default _default;

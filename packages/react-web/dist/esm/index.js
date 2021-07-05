@@ -5,8 +5,8 @@ import { hydrate, render as _render } from 'react-dom';
 import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
-import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
-import { MetaData } from './sington';
+import { loadComponent, setLoadComponentOptions } from './loadComponent';
+import { MetaData, EluxContext } from './sington';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
@@ -70,11 +70,12 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
               var RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(React.createElement(DepsContext.Provider, {
-                value: {
-                  deps: {},
-                  store: store
-                }
+              var eluxContext = {
+                store: store,
+                documentHead: ''
+              };
+              renderFun(React.createElement(EluxContext.Provider, {
+                value: eluxContext
               }, React.createElement(RootView, {
                 store: store
               })), panel);
@@ -127,13 +128,14 @@ export function createSsrApp(moduleGetter, middlewares, appModuleName) {
                   AppView = _ref7.AppView;
               var RootView = AppView;
               var state = store.getState();
-              var deps = {};
+              var eluxContext = {
+                deps: {},
+                store: store,
+                documentHead: ''
+              };
 
-              var html = require('react-dom/server').renderToString(React.createElement(DepsContext.Provider, {
-                value: {
-                  deps: deps,
-                  store: store
-                }
+              var html = require('react-dom/server').renderToString(React.createElement(EluxContext.Provider, {
+                value: eluxContext
               }, React.createElement(RootView, {
                 store: store
               })));
@@ -141,11 +143,9 @@ export function createSsrApp(moduleGetter, middlewares, appModuleName) {
               var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
               if (match) {
-                var pageHead = html.split(/<head>|<\/head>/, 3);
-                html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
-                return SSRTPL.replace('</head>', (pageHead[1] || '') + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                return SSRTPL.replace('</head>', eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
                   state: state,
-                  components: Object.keys(deps)
+                  components: Object.keys(eluxContext.deps)
                 }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
               }
 

@@ -1,8 +1,8 @@
 import {loadComponet, isPromise, env} from '@elux/core';
 import type {LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent, IStore} from '@elux/core';
 import {defineAsyncComponent, Component, h, inject} from 'vue';
+import {EluxContextType, EluxContextKey} from './sington';
 
-export const DepsContext = '__EluxDepsContext__';
 export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<A, {OnError?: Component; OnLoading?: Component}>;
 
 const loadComponentDefaultOptions: {LoadComponentOnError: Component; LoadComponentOnLoading: Component} = {
@@ -25,11 +25,11 @@ export const loadComponent: LoadComponent = (moduleName, componentName, options 
   const loadingComponent = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
   const errorComponent = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
   const component: any = (props: any, context: any) => {
-    const {deps, store} = inject<{deps: Record<string, boolean>; store?: IStore}>(DepsContext, {deps: {}});
+    const {deps, store} = inject<EluxContextType>(EluxContextKey, {documentHead: ''});
     let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
     let errorMessage = '';
     try {
-      result = loadComponet(moduleName, componentName as string, store!, deps);
+      result = loadComponet(moduleName, componentName as string, store!, deps || {});
     } catch (e: any) {
       env.console.error(e);
       errorMessage = e.message || `${e}`;

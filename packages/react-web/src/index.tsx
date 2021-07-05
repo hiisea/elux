@@ -5,8 +5,8 @@ import {hydrate, render} from 'react-dom';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
 import {getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
 import {createRouter} from '@elux/route-browser';
-import {loadComponent, setLoadComponentOptions, DepsContext} from './loadComponent';
-import {MetaData} from './sington';
+import {loadComponent, setLoadComponentOptions} from './loadComponent';
+import {MetaData, EluxContext, EluxContextType} from './sington';
 import type {ComponentType} from 'react';
 import type {
   ModuleGetter,
@@ -116,10 +116,11 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
               const RootView: ComponentType<any> = AppView as any;
               routeModule.model(store);
               router.setStore(store);
+              const eluxContext = {store, documentHead: ''};
               renderFun(
-                <DepsContext.Provider value={{deps: {}, store}}>
+                <EluxContext.Provider value={eluxContext}>
                   <RootView store={store} />
-                </DepsContext.Provider>,
+                </EluxContext.Provider>,
                 panel
               );
               return store;
@@ -151,19 +152,20 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
               const RootView: ComponentType<any> = AppView as any;
               const state = store.getState();
-              const deps = {};
-              let html: string = require('react-dom/server').renderToString(
-                <DepsContext.Provider value={{deps, store}}>
+              const eluxContext = {deps: {}, store, documentHead: ''};
+              const html: string = require('react-dom/server').renderToString(
+                <EluxContext.Provider value={eluxContext}>
                   <RootView store={store} />
-                </DepsContext.Provider>
+                </EluxContext.Provider>
               );
               const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
               if (match) {
-                const pageHead = html.split(/<head>|<\/head>/, 3);
-                html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
                 return SSRTPL.replace(
                   '</head>',
-                  `${pageHead[1] || ''}\r\n<script>window.${ssrKey} = ${JSON.stringify({state, components: Object.keys(deps)})};</script>\r\n</head>`
+                  `${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                    state,
+                    components: Object.keys(eluxContext.deps),
+                  })};</script>\r\n</head>`
                 ).replace(match[0], match[0] + html);
               }
               return html;

@@ -4,8 +4,8 @@ import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
 import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule, exportView, exportComponent } from '@elux/core';
 import { createRouter } from '@elux/route-browser';
 import { createApp as createVue, createSSRApp, defineComponent as defineVueComponent } from 'vue';
-import { loadComponent, setLoadComponentOptions, DepsContext } from './loadComponent';
-import { MetaData } from './sington';
+import { loadComponent, setLoadComponentOptions } from './loadComponent';
+import { MetaData, EluxContextKey } from './sington';
 export { createVuex } from '@elux/core-vuex';
 export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
@@ -73,9 +73,9 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
               routeModule.model(store);
               router.setStore(store);
               var app = createVue(AppView).use(store);
-              app.provide(DepsContext, {
-                deps: {},
-                store: store
+              app.provide(EluxContextKey, {
+                store: store,
+                documentHead: ''
               });
 
               if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
@@ -133,12 +133,13 @@ export function createSsrApp(moduleGetter, middlewares, appModuleName) {
               var store = _ref7.store,
                   AppView = _ref7.AppView;
               var state = store.getState();
-              var deps = {};
+              var eluxContext = {
+                deps: {},
+                store: store,
+                documentHead: ''
+              };
               var app = createSSRApp(AppView).use(store);
-              app.provide(DepsContext, {
-                deps: deps,
-                store: store
-              });
+              app.provide(EluxContextKey, eluxContext);
 
               var htmlPromise = require('@vue/server-renderer').renderToString(app);
 
@@ -146,11 +147,9 @@ export function createSsrApp(moduleGetter, middlewares, appModuleName) {
                 var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
                 if (match) {
-                  var pageHead = html.split(/<head>|<\/head>/, 3);
-                  html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
-                  return SSRTPL.replace('</head>', (pageHead[1] || '') + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                  return SSRTPL.replace('</head>', eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
                     state: state,
-                    components: Object.keys(deps)
+                    components: Object.keys(eluxContext.deps)
                   }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
                 }
 

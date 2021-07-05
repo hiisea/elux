@@ -135,11 +135,12 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               var RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
-              renderFun(_react.default.createElement(_loadComponent.DepsContext.Provider, {
-                value: {
-                  deps: {},
-                  store: store
-                }
+              var eluxContext = {
+                store: store,
+                documentHead: ''
+              };
+              renderFun(_react.default.createElement(_sington.EluxContext.Provider, {
+                value: eluxContext
               }, _react.default.createElement(RootView, {
                 store: store
               })), panel);
@@ -192,13 +193,14 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
                   AppView = _ref7.AppView;
               var RootView = AppView;
               var state = store.getState();
-              var deps = {};
+              var eluxContext = {
+                deps: {},
+                store: store,
+                documentHead: ''
+              };
 
-              var html = require('react-dom/server').renderToString(_react.default.createElement(_loadComponent.DepsContext.Provider, {
-                value: {
-                  deps: deps,
-                  store: store
-                }
+              var html = require('react-dom/server').renderToString(_react.default.createElement(_sington.EluxContext.Provider, {
+                value: eluxContext
               }, _react.default.createElement(RootView, {
                 store: store
               })));
@@ -206,11 +208,9 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
               var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
               if (match) {
-                var pageHead = html.split(/<head>|<\/head>/, 3);
-                html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
-                return SSRTPL.replace('</head>', (pageHead[1] || '') + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                return SSRTPL.replace('</head>', eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
                   state: state,
-                  components: Object.keys(deps)
+                  components: Object.keys(eluxContext.deps)
                 }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
               }
 

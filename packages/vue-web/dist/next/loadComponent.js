@@ -1,6 +1,6 @@
 import { loadComponet, isPromise, env } from '@elux/core';
 import { defineAsyncComponent, h, inject } from 'vue';
-export const DepsContext = '__EluxDepsContext__';
+import { EluxContextKey } from './sington';
 const loadComponentDefaultOptions = {
   LoadComponentOnError: () => h('div', {
     class: 'g-component-error'
@@ -24,14 +24,14 @@ export const loadComponent = (moduleName, componentName, options = {}) => {
     const {
       deps,
       store
-    } = inject(DepsContext, {
-      deps: {}
+    } = inject(EluxContextKey, {
+      documentHead: ''
     });
     let result;
     let errorMessage = '';
 
     try {
-      result = loadComponet(moduleName, componentName, store, deps);
+      result = loadComponet(moduleName, componentName, store, deps || {});
     } catch (e) {
       env.console.error(e);
       errorMessage = e.message || `${e}`;

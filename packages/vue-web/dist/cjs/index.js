@@ -136,9 +136,9 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               routeModule.model(store);
               router.setStore(store);
               var app = (0, _vue.createApp)(AppView).use(store);
-              app.provide(_loadComponent.DepsContext, {
-                deps: {},
-                store: store
+              app.provide(_sington.EluxContextKey, {
+                store: store,
+                documentHead: ''
               });
 
               if (process.env.NODE_ENV === 'development' && _env.default.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
@@ -196,12 +196,13 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
               var store = _ref7.store,
                   AppView = _ref7.AppView;
               var state = store.getState();
-              var deps = {};
+              var eluxContext = {
+                deps: {},
+                store: store,
+                documentHead: ''
+              };
               var app = (0, _vue.createSSRApp)(AppView).use(store);
-              app.provide(_loadComponent.DepsContext, {
-                deps: deps,
-                store: store
-              });
+              app.provide(_sington.EluxContextKey, eluxContext);
 
               var htmlPromise = require('@vue/server-renderer').renderToString(app);
 
@@ -209,11 +210,9 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
                 var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
                 if (match) {
-                  var pageHead = html.split(/<head>|<\/head>/, 3);
-                  html = pageHead.length === 3 ? pageHead[0] + pageHead[2] : html;
-                  return SSRTPL.replace('</head>', (pageHead[1] || '') + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                  return SSRTPL.replace('</head>', eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
                     state: state,
-                    components: Object.keys(deps)
+                    components: Object.keys(eluxContext.deps)
                   }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
                 }
 

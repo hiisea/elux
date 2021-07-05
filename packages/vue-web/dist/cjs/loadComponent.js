@@ -2,14 +2,14 @@
 
 exports.__esModule = true;
 exports.setLoadComponentOptions = setLoadComponentOptions;
-exports.loadComponent = exports.DepsContext = void 0;
+exports.loadComponent = void 0;
 
 var _core = require("@elux/core");
 
 var _vue = require("vue");
 
-var DepsContext = '__EluxDepsContext__';
-exports.DepsContext = DepsContext;
+var _sington = require("./sington");
+
 var loadComponentDefaultOptions = {
   LoadComponentOnError: function LoadComponentOnError() {
     return (0, _vue.h)('div', {
@@ -39,8 +39,8 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   var errorComponent = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   var component = function component(props, context) {
-    var _inject = (0, _vue.inject)(DepsContext, {
-      deps: {}
+    var _inject = (0, _vue.inject)(_sington.EluxContextKey, {
+      documentHead: ''
     }),
         deps = _inject.deps,
         store = _inject.store;
@@ -49,7 +49,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     var errorMessage = '';
 
     try {
-      result = (0, _core.loadComponet)(moduleName, componentName, store, deps);
+      result = (0, _core.loadComponet)(moduleName, componentName, store, deps || {});
     } catch (e) {
       _core.env.console.error(e);
 

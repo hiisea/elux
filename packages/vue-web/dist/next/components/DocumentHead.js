@@ -1,6 +1,6 @@
-import React, { useContext } from 'react';
 import { env, isServer } from '@elux/core';
-import { EluxContext } from '../sington';
+import { inject } from 'vue';
+import { EluxContextKey } from '../sington';
 let clientTimer = 0;
 
 function setClientHead({
@@ -18,10 +18,12 @@ function setClientHead({
   }
 }
 
-const Component = ({
+export default function ({
   children
-}) => {
-  const eluxContext = useContext(EluxContext);
+}) {
+  const eluxContext = inject(EluxContextKey, {
+    documentHead: ''
+  });
   eluxContext.documentHead = children;
 
   if (!isServer()) {
@@ -29,6 +31,4 @@ const Component = ({
   }
 
   return null;
-};
-
-export default React.memo(Component);
+}

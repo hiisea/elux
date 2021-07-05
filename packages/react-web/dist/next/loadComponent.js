@@ -2,10 +2,7 @@ import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
 import { loadComponet, isPromise, env } from '@elux/core';
-export const DepsContext = React.createContext({
-  deps: {}
-});
-DepsContext.displayName = 'EluxComponentLoader';
+import { EluxContext } from './sington';
 const loadComponentDefaultOptions = {
   LoadComponentOnError: ({
     message
@@ -70,7 +67,7 @@ export const loadComponent = (moduleName, componentName, options = {}) => {
         let result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps);
+          result = loadComponet(moduleName, componentName, store, deps || {});
         } catch (e) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -127,7 +124,7 @@ export const loadComponent = (moduleName, componentName, options = {}) => {
 
   }
 
-  _defineProperty(Loader, "contextType", DepsContext);
+  _defineProperty(Loader, "contextType", EluxContext);
 
   return React.forwardRef((props, ref) => {
     return React.createElement(Loader, _extends({}, props, {

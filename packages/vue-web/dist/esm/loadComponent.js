@@ -1,6 +1,6 @@
 import { loadComponet, isPromise, env } from '@elux/core';
 import { defineAsyncComponent, h, inject } from 'vue';
-export var DepsContext = '__EluxDepsContext__';
+import { EluxContextKey } from './sington';
 var loadComponentDefaultOptions = {
   LoadComponentOnError: function LoadComponentOnError() {
     return h('div', {
@@ -28,8 +28,8 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
   var errorComponent = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
 
   var component = function component(props, context) {
-    var _inject = inject(DepsContext, {
-      deps: {}
+    var _inject = inject(EluxContextKey, {
+      documentHead: ''
     }),
         deps = _inject.deps,
         store = _inject.store;
@@ -38,7 +38,7 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
     var errorMessage = '';
 
     try {
-      result = loadComponet(moduleName, componentName, store, deps);
+      result = loadComponet(moduleName, componentName, store, deps || {});
     } catch (e) {
       env.console.error(e);
       errorMessage = e.message || "" + e;
