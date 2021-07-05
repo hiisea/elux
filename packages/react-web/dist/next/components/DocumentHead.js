@@ -1,33 +1,42 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { env, isServer } from '@elux/core';
 import { EluxContext } from '../sington';
 let clientTimer = 0;
 
-function setClientHead({
-  documentHead
-}) {
+function setClientHead(eluxContext, documentHead) {
+  eluxContext.documentHead = documentHead;
+
   if (!clientTimer) {
     clientTimer = env.setTimeout(() => {
       clientTimer = 0;
-      const arr = documentHead.match(/<title>(.*)<\/title>/) || [];
+      const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
         env.document.title = arr[1];
       }
-    }, 300);
+    }, 0);
   }
 }
 
 const Component = ({
-  html
+  title = '',
+  html = ''
 }) => {
-  const eluxContext = useContext(EluxContext);
-  eluxContext.documentHead = html;
-
-  if (!isServer()) {
-    setClientHead(eluxContext);
+  if (title) {
+    html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
   }
 
+  const eluxContext = useContext(EluxContext);
+
+  if (isServer()) {
+    eluxContext.documentHead = html;
+  }
+
+  useEffect(() => {
+    const raw = eluxContext.documentHead;
+    setClientHead(eluxContext, html);
+    return () => setClientHead(eluxContext, raw);
+  }, [eluxContext, html]);
   return null;
 };
 

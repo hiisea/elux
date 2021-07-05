@@ -1,33 +1,66 @@
 import { env, isServer } from '@elux/core';
-import { inject } from 'vue';
+import { inject, defineComponent } from 'vue';
 import { EluxContextKey } from '../sington';
 var clientTimer = 0;
 
-function setClientHead(_ref) {
-  var documentHead = _ref.documentHead;
+function setClientHead(eluxContext, documentHead) {
+  eluxContext.documentHead = documentHead;
 
   if (!clientTimer) {
     clientTimer = env.setTimeout(function () {
       clientTimer = 0;
-      var arr = documentHead.match(/<title>(.*)<\/title>/) || [];
+      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
         env.document.title = arr[1];
       }
-    }, 300);
+    }, 0);
   }
 }
 
-export default function (_ref2) {
-  var html = _ref2.html;
-  var eluxContext = inject(EluxContextKey, {
-    documentHead: ''
-  });
-  eluxContext.documentHead = html;
+export default defineComponent({
+  props: {
+    title: {
+      type: String,
+      default: ''
+    },
+    html: {
+      type: String,
+      default: ''
+    }
+  },
+  data: function data() {
+    return {
+      eluxContext: inject(EluxContextKey, {
+        documentHead: ''
+      }),
+      raw: ''
+    };
+  },
+  computed: {
+    headText: function headText() {
+      var title = this.title,
+          html = this.html;
 
-  if (!isServer()) {
-    setClientHead(eluxContext);
+      if (title) {
+        return html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
+      }
+
+      return html;
+    }
+  },
+  mounted: function mounted() {
+    this.raw = this.eluxContext.documentHead;
+    setClientHead(this.eluxContext, this.headText);
+  },
+  unmounted: function unmounted() {
+    setClientHead(this.eluxContext, this.raw);
+  },
+  render: function render() {
+    if (isServer()) {
+      this.eluxContext.documentHead = this.headText;
+    }
+
+    return null;
   }
-
-  return null;
-}
+});

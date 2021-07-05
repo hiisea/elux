@@ -15,30 +15,44 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
 
 var clientTimer = 0;
 
-function setClientHead(_ref) {
-  var documentHead = _ref.documentHead;
+function setClientHead(eluxContext, documentHead) {
+  eluxContext.documentHead = documentHead;
 
   if (!clientTimer) {
     clientTimer = _core.env.setTimeout(function () {
       clientTimer = 0;
-      var arr = documentHead.match(/<title>(.*)<\/title>/) || [];
+      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
         _core.env.document.title = arr[1];
       }
-    }, 300);
+    }, 0);
   }
 }
 
-var Component = function Component(_ref2) {
-  var html = _ref2.html;
-  var eluxContext = (0, _react.useContext)(_sington.EluxContext);
-  eluxContext.documentHead = html;
+var Component = function Component(_ref) {
+  var _ref$title = _ref.title,
+      title = _ref$title === void 0 ? '' : _ref$title,
+      _ref$html = _ref.html,
+      html = _ref$html === void 0 ? '' : _ref$html;
 
-  if (!(0, _core.isServer)()) {
-    setClientHead(eluxContext);
+  if (title) {
+    html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
   }
 
+  var eluxContext = (0, _react.useContext)(_sington.EluxContext);
+
+  if ((0, _core.isServer)()) {
+    eluxContext.documentHead = html;
+  }
+
+  (0, _react.useEffect)(function () {
+    var raw = eluxContext.documentHead;
+    setClientHead(eluxContext, html);
+    return function () {
+      return setClientHead(eluxContext, raw);
+    };
+  }, [eluxContext, html]);
   return null;
 };
 
