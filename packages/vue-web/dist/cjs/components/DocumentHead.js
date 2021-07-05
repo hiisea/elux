@@ -27,11 +27,11 @@ function setClientHead(_ref) {
 }
 
 function _default(_ref2) {
-  var children = _ref2.children;
+  var html = _ref2.html;
   var eluxContext = (0, _vue.inject)(_sington.EluxContextKey, {
     documentHead: ''
   });
-  eluxContext.documentHead = children;
+  eluxContext.documentHead = html;
 
   if (!(0, _core.isServer)()) {
     setClientHead(eluxContext);

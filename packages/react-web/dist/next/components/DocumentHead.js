@@ -19,10 +19,10 @@ function setClientHead({
 }
 
 const Component = ({
-  children
+  html
 }) => {
   const eluxContext = useContext(EluxContext);
-  eluxContext.documentHead = children;
+  eluxContext.documentHead = html;
 
   if (!isServer()) {
     setClientHead(eluxContext);

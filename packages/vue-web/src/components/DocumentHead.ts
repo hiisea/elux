@@ -3,7 +3,7 @@ import {inject} from 'vue';
 import {EluxContextType, EluxContextKey} from '../sington';
 
 export interface Props {
-  children: string;
+  html: string;
 }
 
 let clientTimer = 0;
@@ -20,9 +20,9 @@ function setClientHead({documentHead}: {documentHead: string}) {
   }
 }
 
-export default function ({children}: Props) {
+export default function ({html}: Props) {
   const eluxContext = inject<EluxContextType>(EluxContextKey, {documentHead: ''});
-  eluxContext.documentHead = children;
+  eluxContext.documentHead = html;
   if (!isServer()) {
     setClientHead(eluxContext);
   }

@@ -69,6 +69,7 @@ export {
   exportComponent,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
+export {default as DocumentHead} from './components/DocumentHead';
 export {default as Link} from './components/Link';
 
 export type {RootModuleFacade as Facade, Dispatch, EluxComponent} from '@elux/core';

@@ -3,7 +3,7 @@ import {env, isServer} from '@elux/core';
 import {EluxContext} from '../sington';
 
 interface Props {
-  children: string;
+  html: string;
 }
 
 let clientTimer = 0;
@@ -20,9 +20,9 @@ function setClientHead({documentHead}: {documentHead: string}) {
   }
 }
 
-const Component: React.FC<Props> = ({children}) => {
+const Component: React.FC<Props> = ({html}) => {
   const eluxContext = useContext(EluxContext);
-  eluxContext.documentHead = children;
+  eluxContext.documentHead = html;
   if (!isServer()) {
     setClientHead(eluxContext);
   }

@@ -31,9 +31,9 @@ function setClientHead(_ref) {
 }
 
 var Component = function Component(_ref2) {
-  var children = _ref2.children;
+  var html = _ref2.html;
   var eluxContext = (0, _react.useContext)(_sington.EluxContext);
-  eluxContext.documentHead = children;
+  eluxContext.documentHead = html;
 
   if (!(0, _core.isServer)()) {
     setClientHead(eluxContext);

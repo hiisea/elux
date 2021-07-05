@@ -19,12 +19,12 @@ function setClientHead({
 }
 
 export default function ({
-  children
+  html
 }) {
   const eluxContext = inject(EluxContextKey, {
     documentHead: ''
   });
-  eluxContext.documentHead = children;
+  eluxContext.documentHead = html;
 
   if (!isServer()) {
     setClientHead(eluxContext);

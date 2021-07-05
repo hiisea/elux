@@ -1,4 +1,4 @@
 export interface Props {
-    children: string;
+    html: string;
 }
-export default function ({ children }: Props): null;
+export default function ({ html }: Props): null;
