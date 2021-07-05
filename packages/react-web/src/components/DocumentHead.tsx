@@ -23,6 +23,9 @@ function setClientHead(eluxContext: EluxContextType, documentHead: string) {
 }
 
 const Component: React.FC<Props> = ({title = '', html = ''}) => {
+  if (!html) {
+    html = title;
+  }
   if (title) {
     html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
   }

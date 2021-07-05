@@ -36,6 +36,10 @@ var Component = function Component(_ref) {
       _ref$html = _ref.html,
       html = _ref$html === void 0 ? '' : _ref$html;
 
+  if (!html) {
+    html = title;
+  }
+
   if (title) {
     html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
   }

@@ -22,6 +22,10 @@ const Component = ({
   title = '',
   html = ''
 }) => {
+  if (!html) {
+    html = title;
+  }
+
   if (title) {
     html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
   }

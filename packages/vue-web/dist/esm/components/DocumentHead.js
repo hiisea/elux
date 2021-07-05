@@ -39,8 +39,12 @@ export default defineComponent({
   },
   computed: {
     headText: function headText() {
-      var title = this.title,
-          html = this.html;
+      var title = this.title;
+      var html = this.html;
+
+      if (!html) {
+        html = title;
+      }
 
       if (title) {
         return html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");

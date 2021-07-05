@@ -41,7 +41,11 @@ export default defineComponent({
   },
   computed: {
     headText(): string {
-      const {title, html} = this;
+      const title = this.title;
+      let html = this.html;
+      if (!html) {
+        html = title;
+      }
       if (title) {
         return html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
       }
