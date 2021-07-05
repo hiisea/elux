@@ -16,7 +16,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=14.0.0"
   },
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -28,6 +28,7 @@
     "dist/"
   ],
   "scripts": {
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
     "test": "jest",
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",
@@ -42,6 +43,8 @@
     "vuex": "next"
   },
   "devDependencies": {
+    "@elux/dev-pkg": "~1.0.0",
+    "typescript": "~4.2.0",
     "vue": "^3.0.0"
   },
   "peerDependencies": {

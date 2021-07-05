@@ -13,7 +13,10 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx,vue}"
   },
   "dependencies": {
     "stylelint-config-prettier": "~8.0.2",

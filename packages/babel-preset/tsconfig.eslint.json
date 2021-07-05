@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["es2018"],
+    "types": [],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true
+  }
+}

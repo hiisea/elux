@@ -1,12 +1,5 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["es2018"],
-    "types": [],
-    "skipLibCheck": true,
-    "noEmit": true,
-    "experimentalDecorators": true
-  },
-  "include": ["./", "./**/*.vue", ".eslintrc.js"],
-  "exclude": ["**/dist", "**/types", "**/docs", "./storage"]
+  "extends": "@elux/babel-preset/tsconfig.eslint.json",
+  "include": ["./", ".eslintrc.js"],
+  "exclude": ["**/dist", "**/docs", "**/libs", "**/types", "./storage"]
 }

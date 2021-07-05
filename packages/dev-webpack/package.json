@@ -9,7 +9,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=14.0.0"
   },
   "bin": {
     "elux-webpack": "./bin/elux-webpack.js"
@@ -19,10 +19,12 @@
     "dist/"
   ],
   "scripts": {
+    "eslint": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/eslint --fix --cache **/*.{js,ts}",
     "prebuild": "../../node_modules/.bin/rimraf ./dist && ../../node_modules/.bin/copyfiles -f ./src/*.d.ts ./dist",
     "build": "../../node_modules/.bin/tsc --build ./src"
   },
   "peerDependencies": {
+    "@types/express": "~4.17.9",
     "@elux/core": "^1.0.0",
     "@elux/dev-pkg-webpack": "^1.0.0"
   },
@@ -35,6 +37,7 @@
     "unionfs": "^4.4.0"
   },
   "devDependencies": {
+    "@types/express": "~4.17.9",
     "@elux/dev-pkg-webpack": "^1.0.0"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"

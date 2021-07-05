@@ -1,6 +1,6 @@
 {
   "name": "@elux/eslint-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "description": "Common development tools",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/eslint-plugin",
@@ -10,13 +10,16 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=14.0.0"
   },
   "files": [
     "index.js",
     "config/",
     "rules/"
   ],
+  "scripts": {
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx,vue}"
+  },
   "dependencies": {
     "eslint-config-airbnb": "~18.2.1",
     "eslint-config-airbnb-typescript": "~12.3.0",

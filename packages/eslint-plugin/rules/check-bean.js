@@ -8,11 +8,11 @@ module.exports = {
   },
   create(context) {
     const fileName = context.getFilename();
-    if (!fileName.endsWith('.bean.js')) return null;
+    if (!fileName.endsWith('.bean.js')) return {};
     return {
       'ExportNamedDeclaration > FunctionDeclaration > Identifier': (node) => {
         const nodeName = node.name;
-        if (!nodeName.startsWith('get') && !nodeName.startsWith('set') || (nodeName.charAt(3)<'A' || nodeName.charAt(3)>'Z')) {
+        if ((!nodeName.startsWith('get') && !nodeName.startsWith('set')) || nodeName.charAt(3) < 'A' || nodeName.charAt(3) > 'Z') {
           const name = `${nodeName.charAt(0).toUpperCase()}${nodeName.substr(1)}`;
           context.report({
             node,

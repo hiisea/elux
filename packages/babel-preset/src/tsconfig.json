@@ -1,13 +1,11 @@
 {
-  "extends": "../../../tsconfig-src.json",
+  "extends": "@elux/babel-preset/tsconfig.src.json",
   "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "../dist",
     "module": "CommonJS",
     "types": ["node"],
-    "outDir": "../dist",
-    "noEmit": false,
-    "emitDeclarationOnly": false,
-    "declaration": false,
-    "esModuleInterop": false
+    "emitDeclarationOnly": false
   },
   "include": ["./"],
   "exclude": []

@@ -9,7 +9,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=14.0.0"
   },
   "bin": {
     "elux-utils": "./bin/elux-utils.js"
@@ -19,6 +19,7 @@
     "dist/"
   ],
   "scripts": {
+    "eslint": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/eslint --fix --cache **/*.{js,ts}",
     "prebuild": "../../node_modules/.bin/rimraf ./dist && ../../node_modules/.bin/copyfiles -f ./src/*.d.ts ./dist",
     "build": "../../node_modules/.bin/tsc --build ./src"
   },

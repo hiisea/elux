@@ -9,7 +9,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=14.0.0"
   },
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
