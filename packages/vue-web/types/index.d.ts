@@ -3,7 +3,7 @@ import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStor
 import type { IRouter } from '@elux/route-browser';
 import type { LoadComponent } from './loadComponent';
 export { createVuex } from '@elux/core-vuex';
-export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { default as DocumentHead } from './components/DocumentHead';
 export { default as Link } from './components/Link';

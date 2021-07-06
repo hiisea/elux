@@ -16,7 +16,7 @@ module.exports = function (api: any, options: Options = {}) {
   if (options.module === 'cjs' && !options.targets) {
     options.targets = {node: 'current'};
   }
-  const {module = 'esm', targets, presets = ['@babel/preset-react'], moduleResolver, rootImport, plugins = [], classPropertiesLoose = true} = options;
+  const {module = 'esm', targets, presets = [], moduleResolver, rootImport, plugins = [], classPropertiesLoose = true} = options;
   const pluginsList = [
     rootImport && ['babel-plugin-root-import', rootImport],
     moduleResolver && ['module-resolver', moduleResolver],

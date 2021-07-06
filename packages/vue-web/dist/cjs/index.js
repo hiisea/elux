@@ -9,7 +9,7 @@ exports.createApp = createApp;
 exports.createSsrApp = createSsrApp;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.defineComponent = exports.defineView = exports.Link = exports.DocumentHead = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.action = exports.reducer = exports.errorAction = exports.mutation = exports.effect = exports.LoadingState = exports.ActionTypes = exports.createVuex = void 0;
+exports.defineComponent = exports.defineView = exports.Link = exports.DocumentHead = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.action = exports.reducer = exports.errorAction = exports.mutation = exports.effect = exports.LoadingState = exports.ActionTypes = exports.createVuex = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -46,6 +46,7 @@ exports.exportModule = _core.exportModule;
 exports.isProcessedError = _core.isProcessedError;
 exports.setProcessedError = _core.setProcessedError;
 exports.delayPromise = _core.delayPromise;
+exports.EmptyModuleHandlers = _core.EmptyModuleHandlers;
 
 var _routeBrowser = require("@elux/route-browser");
 

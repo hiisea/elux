@@ -1,4 +1,5 @@
 import _decorate from "@babel/runtime/helpers/esm/decorate";
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { isPromise } from './sprite';
 import { isEluxComponent, injectActions, MetaData, config, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
 import { env } from './env';
@@ -179,6 +180,14 @@ export function loadComponet(moduleName, componentName, store, deps) {
 export function getCachedModules() {
   return MetaData.moduleCaches;
 }
+export var EmptyModuleHandlers = function EmptyModuleHandlers(moduleName) {
+  _defineProperty(this, "store", void 0);
+
+  _defineProperty(this, "initState", void 0);
+
+  this.moduleName = moduleName;
+  this.initState = {};
+};
 export var CoreModuleHandlers = _decorate(null, function (_initialize) {
   var CoreModuleHandlers = function CoreModuleHandlers(moduleName, initState) {
     _initialize(this);

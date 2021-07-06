@@ -17,6 +17,8 @@ function getCssScopedName(srcPath, localName, mfileName) {
         return `g-${localName}`;
     }
     mfileName = mfileName
+        .replace(/^.*[/\\]node_modules[/\\]/, 'modules/')
+        .replace(/^@.+?[/\\]/, '')
         .replace(srcPath, '')
         .replace(/\W/g, '-')
         .replace(/^-|-index-module-\w+$|-module-\w+$|-index-vue$|-vue$/g, '')

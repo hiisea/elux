@@ -2,3 +2,4 @@ dist/
 types/
 docs/
 ./storage
+.eslintrc.js

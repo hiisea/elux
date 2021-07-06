@@ -6,7 +6,7 @@ import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
 import {getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
 import {createRouter} from '@elux/route-browser';
 import {loadComponent, setLoadComponentOptions} from './loadComponent';
-import {MetaData, EluxContext, EluxContextType} from './sington';
+import {MetaData, EluxContext} from './sington';
 import type {ComponentType} from 'react';
 import type {
   ModuleGetter,
@@ -49,6 +49,7 @@ export {
   delayPromise,
   exportView,
   exportComponent,
+  EmptyModuleHandlers,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
 export {connectRedux, createRedux, Provider} from '@elux/react-web-redux';

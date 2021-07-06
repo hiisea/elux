@@ -15,9 +15,11 @@ exports.getCachedModules = getCachedModules;
 exports.getRootModuleAPI = getRootModuleAPI;
 exports.exportComponent = exportComponent;
 exports.exportView = exportView;
-exports.CoreModuleHandlers = void 0;
+exports.CoreModuleHandlers = exports.EmptyModuleHandlers = void 0;
 
 var _decorate2 = _interopRequireDefault(require("@babel/runtime/helpers/decorate"));
+
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
 var _sprite = require("./sprite");
 
@@ -208,6 +210,14 @@ function getCachedModules() {
   return _basic.MetaData.moduleCaches;
 }
 
+var EmptyModuleHandlers = function EmptyModuleHandlers(moduleName) {
+  (0, _defineProperty2.default)(this, "store", void 0);
+  (0, _defineProperty2.default)(this, "initState", void 0);
+  this.moduleName = moduleName;
+  this.initState = {};
+};
+
+exports.EmptyModuleHandlers = EmptyModuleHandlers;
 var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
   var CoreModuleHandlers = function CoreModuleHandlers(moduleName, initState) {
     _initialize(this);

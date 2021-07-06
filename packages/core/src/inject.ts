@@ -218,6 +218,17 @@ export function loadComponet(
 export function getCachedModules() {
   return MetaData.moduleCaches;
 }
+
+export class EmptyModuleHandlers implements IModuleHandlers {
+  store!: IStore;
+
+  initState: any;
+
+  constructor(public readonly moduleName: string) {
+    this.initState = {};
+  }
+}
+
 /**
  * ModuleHandlers基类
  * 所有ModuleHandlers必须继承此基类

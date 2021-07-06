@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.getModuleGetter = exports.getComponet = exports.exportComponent = exports.exportView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
+exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.getModuleGetter = exports.getComponet = exports.exportComponent = exports.exportView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.EmptyModuleHandlers = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
 
 var _basic = require("./basic");
 
@@ -27,6 +27,7 @@ exports.isProcessedError = _store.isProcessedError;
 var _inject = require("./inject");
 
 exports.CoreModuleHandlers = _inject.CoreModuleHandlers;
+exports.EmptyModuleHandlers = _inject.EmptyModuleHandlers;
 exports.loadModel = _inject.loadModel;
 exports.exportModule = _inject.exportModule;
 exports.loadComponet = _inject.loadComponet;

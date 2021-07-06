@@ -7,7 +7,7 @@ import { getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as s
 import { createRouter } from '@elux/route-browser';
 import { loadComponent, setLoadComponentOptions } from './loadComponent';
 import { MetaData, EluxContext } from './sington';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
 export { default as DocumentHead } from './components/DocumentHead';

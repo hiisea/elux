@@ -31,6 +31,12 @@ export declare function getComponet(moduleName: string, componentName: string): 
 export declare function getComponentList(keys: string[]): Promise<EluxComponent[]>;
 export declare function loadComponet(moduleName: string, componentName: string, store: IStore, deps: Record<string, boolean>): EluxComponent | null | Promise<EluxComponent | null>;
 export declare function getCachedModules(): Record<string, CommonModule<string> | Promise<CommonModule<string>> | undefined>;
+export declare class EmptyModuleHandlers implements IModuleHandlers {
+    readonly moduleName: string;
+    store: IStore;
+    initState: any;
+    constructor(moduleName: string);
+}
 export declare class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
     readonly moduleName: string;
     readonly initState: S;

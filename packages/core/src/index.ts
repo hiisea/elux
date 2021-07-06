@@ -15,6 +15,7 @@ export {
 export {getActionData, setProcessedError, isProcessedError} from './store';
 export {
   CoreModuleHandlers,
+  EmptyModuleHandlers,
   loadModel,
   exportModule,
   loadComponet,

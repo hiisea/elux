@@ -67,6 +67,7 @@ export {
   delayPromise,
   exportView,
   exportComponent,
+  EmptyModuleHandlers,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
 export {default as DocumentHead} from './components/DocumentHead';

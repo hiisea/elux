@@ -7,7 +7,7 @@ export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, Pa
 export type { LoadComponent } from './loadComponent';
 export type { ConnectRedux } from '@elux/react-web-redux';
 export type { ReduxStore, ReduxOptions } from '@elux/core-redux';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
 export { default as DocumentHead } from './components/DocumentHead';

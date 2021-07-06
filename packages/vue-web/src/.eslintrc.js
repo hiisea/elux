@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 module.exports = {
   root: true,
   extends: ['plugin:@elux/vue'],
@@ -8,6 +9,4 @@ module.exports = {
   parserOptions: {
     project: `${__dirname}/tsconfig.json`,
   },
-  rules: {},
-  ignorePatterns: ['/.eslintrc.js'],
 };
