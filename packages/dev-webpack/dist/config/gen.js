@@ -126,6 +126,9 @@ const EluxConfigSchema = {
                 },
             },
         },
+        moduleFederation: {
+            type: 'object',
+        },
         ui: {
             type: 'object',
             additionalProperties: false,
@@ -167,10 +170,11 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             vueWithJSX: false,
         },
         webpackPreset: {
-            resolveAlias: { '@': './src' },
+            resolveAlias: {},
             urlLoaderLimitSize: 8192,
             cssProcessors: { less: false, scss: false, sass: false },
         },
+        moduleFederation: {},
         webpackConfig: (config) => config,
         devServerPreset: {
             port: 4003,
@@ -186,7 +190,7 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
     const eluxConfig = deep_extend_1.default(defaultBaseConfig, baseEluxConfig, envEluxConfig);
     const nodeEnvConfig = eluxConfig[nodeEnv];
     const { clientPublicPath, clientGlobalVar, serverGlobalVar } = nodeEnvConfig;
-    const { dir: { srcPath, publicPath }, type, ui: { vueWithJSX }, webpackPreset, webpackConfig: webpackConfigTransform, devServerConfig: devServerConfigTransform, devServerPreset: { port, proxy }, } = eluxConfig;
+    const { dir: { srcPath, publicPath }, type, ui: { vueWithJSX }, moduleFederation, webpackPreset, webpackConfig: webpackConfigTransform, devServerConfig: devServerConfigTransform, devServerPreset: { port, proxy }, } = eluxConfig;
     const useSSR = type === 'react ssr' || type === 'vue ssr';
     let vueType = '';
     if (type === 'vue' || type === 'vue ssr') {
@@ -210,6 +214,7 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
         useSSR,
         devServerPort: devServerPort || port,
         resolveAlias: webpackPreset.resolveAlias,
+        moduleFederation: Object.keys(moduleFederation).length > 0 ? moduleFederation : undefined,
     });
     devServerConfig = devServerConfigTransform(devServerConfig);
     clientWebpackConfig = webpackConfigTransform(clientWebpackConfig);

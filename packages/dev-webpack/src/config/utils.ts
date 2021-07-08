@@ -15,6 +15,10 @@ const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin'
 const {getSsrInjectPlugin} = require('@elux/dev-webpack/dist/plugin/ssr-inject');
 const {VueLoaderPlugin} = require('vue-loader');
 
+// const ModuleFederationPlugin = webpack.container.ModuleFederationPlugin;
+const ModuleFederationPlugin = require('../../libs/ModuleFederationPlugin');
+const ContainerReferencePlugin = require('../../libs/ContainerReferencePlugin');
+
 interface WebpackLoader {
   loader?: string;
   options?: Record<string, any>;
@@ -178,18 +182,24 @@ function oneOfTsLoader(isProdModel: boolean, isVue: boolean, isServer: boolean):
         happyPackMode: false,
       },
     });
-  } else if (!isServer && !isProdModel) {
+  } else if (!isVue && !isServer && !isProdModel) {
     loaders[0].options = {
       plugins: [require.resolve('react-refresh/babel')],
     };
   }
-  if (isProdModel || isServer) {
-    return [{use: loaders}];
+  if (isServer) {
+    return [
+      {
+        test: /[/\\]index\.ts$/,
+        use: [...loaders, {loader: '@elux/dev-webpack/dist/loader/server-module-loader'}],
+      },
+      {use: loaders},
+    ];
   }
   return [
     {
-      test: /[/\\]src[/\\]modules[/\\].+[/\\]index\.ts$/,
-      use: [...loaders, {loader: '@elux/dev-webpack/dist/loader/module-hot-loader'}],
+      test: /[/\\]index\.ts$/,
+      use: [...loaders, {loader: '@elux/dev-webpack/dist/loader/client-module-loader'}],
     },
     {use: loaders},
   ];
@@ -212,6 +222,7 @@ interface ConfigOptions {
   vueType: 'templete' | 'jsx' | '';
   devServerPort: number;
   resolveAlias: Record<string, string>;
+  moduleFederation?: Record<string, any>;
 }
 
 function moduleExports({
@@ -231,6 +242,7 @@ function moduleExports({
   useSSR,
   devServerPort,
   resolveAlias,
+  moduleFederation,
 }: ConfigOptions): {clientWebpackConfig: WebpackConfig; serverWebpackConfig: WebpackConfig; devServerConfig: DevServerConfig} {
   /**
    * webpackConfig.output.path 决定生成文件的物理path ,output.publicPath 仅决定html中引入的url
@@ -246,11 +258,20 @@ function moduleExports({
     serverDevtool = false;
   }
   if (!isProdModel) {
-    clientPublicPath = '/client/';
+    clientPublicPath = `${clientPublicPath.replace('//', '``').replace(/\/.+$/, '').replace('``', '//')}/client/`;
+  }
+  if (moduleFederation && !/^(http:|https:|)\/\//.test(clientPublicPath)) {
+    clientPublicPath = `http://localhost:${devServerPort}${clientPublicPath}`;
+  }
+  if (moduleFederation) {
+    ContainerReferencePlugin.__setModuleMap__(moduleFederation.modules || {});
+    delete moduleFederation.modules;
   }
   const isVue = !!vueType;
   const tsconfigPathTest: string[] = [path.join(srcPath, 'tsconfig.json'), path.join(rootPath, 'tsconfig.json')];
   const tsconfigPath = fs.existsSync(tsconfigPathTest[0]) ? tsconfigPathTest[0] : tsconfigPathTest[1];
+  const tsconfig = require(tsconfigPath);
+  const {paths = {}, baseUrl = ''} = tsconfig.compilerOptions || {};
   const scriptExtensions = !vueType
     ? ['.js', '.jsx', '.ts', '.tsx']
     : vueType === 'jsx'
@@ -260,7 +281,15 @@ function moduleExports({
   cssProcessors.less && cssExtensions.push('less');
   cssProcessors.sass && cssExtensions.push('sass');
   cssProcessors.scss && cssExtensions.push('scss');
-  const commonAlias = {};
+  const commonAlias = Object.keys(paths).reduce((obj, name) => {
+    const target = path.resolve(path.dirname(tsconfigPath), baseUrl, paths[name][0].replace(/\/\*$/, ''));
+    if (name.endsWith('/*')) {
+      obj[name.replace(/\/\*$/, '')] = target;
+    } else {
+      obj[`${name}$`] = target;
+    }
+    return obj;
+  }, {});
   const clientAlias = {};
   const serverAlias = {};
 
@@ -278,9 +307,6 @@ function moduleExports({
     }
   });
 
-  // if (isVue) {
-  //   resolve.alias['vue$'] = 'vue/dist/vue.runtime.esm-bundler.js';
-  // }
   const SsrPlugin = getSsrInjectPlugin();
   const clientWebpackConfig: WebpackConfig = {
     context: rootPath,
@@ -314,6 +340,13 @@ function moduleExports({
             loader: 'vue-loader',
           },
         },
+        moduleFederation && {
+          test: /src[/\\]bootstrap\.ts$/,
+          loader: 'bundle-loader',
+          options: {
+            lazy: true,
+          },
+        },
         {
           oneOf: [
             {
@@ -331,6 +364,16 @@ function moduleExports({
             {
               test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
               use: getUrlLoader(isProdModel, 'fonts', false, limitSize),
+            },
+            {
+              test: /\.(jsx|js)$/,
+              exclude: /node_modules/,
+              use: {
+                loader: 'babel-loader',
+                options: {
+                  plugins: !isVue && !isProdModel ? [require.resolve('react-refresh/babel')] : [],
+                },
+              },
             },
             {
               test: /\.(tsx|ts)$/,
@@ -357,6 +400,7 @@ function moduleExports({
       ].filter(Boolean),
     },
     plugins: [
+      moduleFederation && new ModuleFederationPlugin(moduleFederation),
       isVue && new VueLoaderPlugin(),
       isVue
         ? new ForkTsCheckerWebpackPlugin({
@@ -456,6 +500,14 @@ function moduleExports({
                 {
                   test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
                   use: getUrlLoader(isProdModel, 'fonts', false, limitSize),
+                },
+                {
+                  test: /\.(jsx|js)$/,
+                  exclude: /node_modules/,
+                  use: {
+                    loader: 'babel-loader',
+                    options: {},
+                  },
                 },
                 {
                   test: /\.(tsx|ts)$/,

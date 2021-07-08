@@ -12,6 +12,8 @@ const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const { getSsrInjectPlugin } = require('@elux/dev-webpack/dist/plugin/ssr-inject');
 const { VueLoaderPlugin } = require('vue-loader');
+const ModuleFederationPlugin = require('../../libs/ModuleFederationPlugin');
+const ContainerReferencePlugin = require('../../libs/ContainerReferencePlugin');
 function getCssScopedName(srcPath, localName, mfileName) {
     if (mfileName.match(/[/\\]global.module.\w+?$/)) {
         return `g-${localName}`;
@@ -147,23 +149,29 @@ function oneOfTsLoader(isProdModel, isVue, isServer) {
             },
         });
     }
-    else if (!isServer && !isProdModel) {
+    else if (!isVue && !isServer && !isProdModel) {
         loaders[0].options = {
             plugins: [require.resolve('react-refresh/babel')],
         };
     }
-    if (isProdModel || isServer) {
-        return [{ use: loaders }];
+    if (isServer) {
+        return [
+            {
+                test: /[/\\]index\.ts$/,
+                use: [...loaders, { loader: '@elux/dev-webpack/dist/loader/server-module-loader' }],
+            },
+            { use: loaders },
+        ];
     }
     return [
         {
-            test: /[/\\]src[/\\]modules[/\\].+[/\\]index\.ts$/,
-            use: [...loaders, { loader: '@elux/dev-webpack/dist/loader/module-hot-loader' }],
+            test: /[/\\]index\.ts$/,
+            use: [...loaders, { loader: '@elux/dev-webpack/dist/loader/client-module-loader' }],
         },
         { use: loaders },
     ];
 }
-function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, vueType, limitSize, globalVar, apiProxy, useSSR, devServerPort, resolveAlias, }) {
+function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, vueType, limitSize, globalVar, apiProxy, useSSR, devServerPort, resolveAlias, moduleFederation, }) {
     const isProdModel = nodeEnv === 'production';
     let clentDevtool = debugMode ? 'eval-cheap-module-source-map' : 'eval';
     let serverDevtool = debugMode ? 'eval-cheap-module-source-map' : 'eval';
@@ -172,11 +180,20 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
         serverDevtool = false;
     }
     if (!isProdModel) {
-        clientPublicPath = '/client/';
+        clientPublicPath = `${clientPublicPath.replace('//', '``').replace(/\/.+$/, '').replace('``', '//')}/client/`;
+    }
+    if (moduleFederation && !/^(http:|https:|)\/\//.test(clientPublicPath)) {
+        clientPublicPath = `http://localhost:${devServerPort}${clientPublicPath}`;
+    }
+    if (moduleFederation) {
+        ContainerReferencePlugin.__setModuleMap__(moduleFederation.modules || {});
+        delete moduleFederation.modules;
     }
     const isVue = !!vueType;
     const tsconfigPathTest = [path.join(srcPath, 'tsconfig.json'), path.join(rootPath, 'tsconfig.json')];
     const tsconfigPath = fs.existsSync(tsconfigPathTest[0]) ? tsconfigPathTest[0] : tsconfigPathTest[1];
+    const tsconfig = require(tsconfigPath);
+    const { paths = {}, baseUrl = '' } = tsconfig.compilerOptions || {};
     const scriptExtensions = !vueType
         ? ['.js', '.jsx', '.ts', '.tsx']
         : vueType === 'jsx'
@@ -186,7 +203,16 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
     cssProcessors.less && cssExtensions.push('less');
     cssProcessors.sass && cssExtensions.push('sass');
     cssProcessors.scss && cssExtensions.push('scss');
-    const commonAlias = {};
+    const commonAlias = Object.keys(paths).reduce((obj, name) => {
+        const target = path.resolve(path.dirname(tsconfigPath), baseUrl, paths[name][0].replace(/\/\*$/, ''));
+        if (name.endsWith('/*')) {
+            obj[name.replace(/\/\*$/, '')] = target;
+        }
+        else {
+            obj[`${name}$`] = target;
+        }
+        return obj;
+    }, {});
     const clientAlias = {};
     const serverAlias = {};
     Object.keys(resolveAlias).forEach((key) => {
@@ -236,6 +262,13 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                         loader: 'vue-loader',
                     },
                 },
+                moduleFederation && {
+                    test: /src[/\\]bootstrap\.ts$/,
+                    loader: 'bundle-loader',
+                    options: {
+                        lazy: true,
+                    },
+                },
                 {
                     oneOf: [
                         {
@@ -253,6 +286,16 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                         {
                             test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
                             use: getUrlLoader(isProdModel, 'fonts', false, limitSize),
+                        },
+                        {
+                            test: /\.(jsx|js)$/,
+                            exclude: /node_modules/,
+                            use: {
+                                loader: 'babel-loader',
+                                options: {
+                                    plugins: !isVue && !isProdModel ? [require.resolve('react-refresh/babel')] : [],
+                                },
+                            },
                         },
                         {
                             test: /\.(tsx|ts)$/,
@@ -279,6 +322,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
             ].filter(Boolean),
         },
         plugins: [
+            moduleFederation && new ModuleFederationPlugin(moduleFederation),
             isVue && new VueLoaderPlugin(),
             isVue
                 ? new ForkTsCheckerWebpackPlugin({
@@ -377,6 +421,14 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                             {
                                 test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
                                 use: getUrlLoader(isProdModel, 'fonts', false, limitSize),
+                            },
+                            {
+                                test: /\.(jsx|js)$/,
+                                exclude: /node_modules/,
+                                use: {
+                                    loader: 'babel-loader',
+                                    options: {},
+                                },
                             },
                             {
                                 test: /\.(tsx|ts)$/,

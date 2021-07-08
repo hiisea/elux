@@ -37,6 +37,7 @@ interface BaseConfig {
   ui: {
     vueWithJSX: boolean;
   };
+  moduleFederation: Record<string, any>;
   mockServerPreset: MockServerPreset;
   webpackPreset: WebpackPreset;
   webpackConfig: (config: WebpackConfig) => WebpackConfig;
@@ -163,6 +164,9 @@ const EluxConfigSchema: any = {
         },
       },
     },
+    moduleFederation: {
+      type: 'object',
+    },
     ui: {
       type: 'object',
       additionalProperties: false,
@@ -229,10 +233,11 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
       vueWithJSX: false,
     },
     webpackPreset: {
-      resolveAlias: {'@': './src'},
+      resolveAlias: {},
       urlLoaderLimitSize: 8192,
       cssProcessors: {less: false, scss: false, sass: false},
     },
+    moduleFederation: {},
     webpackConfig: (config) => config,
     devServerPreset: {
       port: 4003,
@@ -253,6 +258,7 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
     dir: {srcPath, publicPath},
     type,
     ui: {vueWithJSX},
+    moduleFederation,
     webpackPreset,
     webpackConfig: webpackConfigTransform,
     devServerConfig: devServerConfigTransform,
@@ -283,6 +289,7 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
     useSSR,
     devServerPort: devServerPort || port,
     resolveAlias: webpackPreset.resolveAlias,
+    moduleFederation: Object.keys(moduleFederation).length > 0 ? moduleFederation : undefined,
   });
   devServerConfig = devServerConfigTransform(devServerConfig);
   clientWebpackConfig = webpackConfigTransform(clientWebpackConfig);

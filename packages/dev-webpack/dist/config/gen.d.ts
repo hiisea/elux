@@ -37,6 +37,7 @@ interface BaseConfig {
     ui: {
         vueWithJSX: boolean;
     };
+    moduleFederation: Record<string, any>;
     mockServerPreset: MockServerPreset;
     webpackPreset: WebpackPreset;
     webpackConfig: (config: WebpackConfig) => WebpackConfig;
