@@ -1,6 +1,6 @@
 {
   "name": "@elux/react-web",
-  "version": "0.0.4",
+  "version": "0.0.2",
   "description": "The practice of elux on react + web",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/react-web",
   "author": "hiisea <hiisea@qq.com>",
@@ -34,14 +34,14 @@
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "peerDependencies": {
+    "@elux/react-web-redux": "^0.0.4",
     "react": "^16.8.0",
-    "react-dom": "^16.8.0",
-    "@elux/react-web-redux": "^0.0.4"
+    "react-dom": "^16.8.0"
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
     "@elux/core": "^0.0.4",
-    "@elux/route-browser": "^0.0.4"
+    "@elux/route-browser": "^0.0.2"
   },
   "devDependencies": {
     "@types/react": "~17.0.0",
