@@ -1,6 +1,6 @@
 {
   "name": "@elux/dev-pkg-webpack",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "dependencies package for webpack",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/dev-pkg-webpack",
   "author": "hiisea <hiisea@qq.com>",
@@ -42,7 +42,8 @@
     "fork-ts-checker-webpack-plugin": "^6.2.10",
     "webpack": "5.42.0",
     "webpack-bundle-analyzer": "^4.4.0",
-    "webpack-dev-server": "next"
+    "webpack-dev-server": "next",
+    "bundle-loader": "^0.5.6"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
 }
