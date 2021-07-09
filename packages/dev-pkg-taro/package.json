@@ -1,6 +1,6 @@
 {
   "name": "@elux/dev-pkg-taro",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "dependencies package for tarojs",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/dev-pkg-taro",
   "author": "hiisea <hiisea@qq.com>",

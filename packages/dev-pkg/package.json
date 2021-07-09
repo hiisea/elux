@@ -1,6 +1,6 @@
 {
   "name": "@elux/dev-pkg",
-  "version": "1.0.4",
+  "version": "0.0.2",
   "description": "dependencies package for development",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/dev-pkg",
   "author": "hiisea <hiisea@qq.com>",
