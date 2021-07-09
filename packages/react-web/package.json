@@ -34,13 +34,13 @@
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "peerDependencies": {
-    "@elux/react-web-redux": "^0.0.4",
+    "@elux/react-web-redux": "^0.0.2",
     "react": "^16.8.0",
     "react-dom": "^16.8.0"
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.0.4",
+    "@elux/core": "^0.0.2",
     "@elux/route-browser": "^0.0.2"
   },
   "devDependencies": {

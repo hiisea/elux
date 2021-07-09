@@ -1,6 +1,6 @@
 {
   "name": "@elux/dev-pkg",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "dependencies package for development",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/dev-pkg",
   "author": "hiisea <hiisea@qq.com>",
@@ -12,9 +12,9 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@elux/babel-preset": "~1.0.6",
-    "@elux/eslint-plugin": "~1.0.1",
-    "@elux/stylelint-config": "~1.0.0",
+    "@elux/babel-preset": "~0.0.2",
+    "@elux/eslint-plugin": "~0.0.2",
+    "@elux/stylelint-config": "~0.0.2",
     "concurrently": "~6.2.0",
     "stylelint": "~13.13.0",
     "eslint": "~7.25.0",

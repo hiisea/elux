@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.0.4",
+    "@elux/core": "^0.0.2",
     "vuex": "next"
   },
   "devDependencies": {
