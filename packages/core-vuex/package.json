@@ -1,6 +1,6 @@
 {
   "name": "@elux/core-vuex",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/core-vuex",
   "author": "hiisea <hiisea@qq.com>",
@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.0.2",
+    "@elux/core": "^0.0.3",
     "vuex": "next"
   },
   "devDependencies": {
