@@ -1,6 +1,6 @@
 {
   "name": "@elux/dev-webpack",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Common development tools for webpack",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/dev-webpack",
   "author": "hiisea <hiisea@qq.com>",

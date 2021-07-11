@@ -1,7 +1,11 @@
 "use strict";
-const fs = require('fs');
-const path = require('path');
-const webpack = require('webpack');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const webpack_1 = __importDefault(require("webpack"));
+const ssr_inject_1 = __importDefault(require("../plugin/ssr-inject"));
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
@@ -10,7 +14,6 @@ const StylelintPlugin = require('stylelint-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const { getSsrInjectPlugin } = require('@elux/dev-webpack/dist/plugin/ssr-inject');
 const { VueLoaderPlugin } = require('vue-loader');
 const ModuleFederationPlugin = require('../../libs/ModuleFederationPlugin');
 const ContainerReferencePlugin = require('../../libs/ContainerReferencePlugin');
@@ -190,8 +193,8 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
         delete moduleFederation.modules;
     }
     const isVue = !!vueType;
-    const tsconfigPathTest = [path.join(srcPath, 'tsconfig.json'), path.join(rootPath, 'tsconfig.json')];
-    const tsconfigPath = fs.existsSync(tsconfigPathTest[0]) ? tsconfigPathTest[0] : tsconfigPathTest[1];
+    const tsconfigPathTest = [path_1.default.join(srcPath, 'tsconfig.json'), path_1.default.join(rootPath, 'tsconfig.json')];
+    const tsconfigPath = fs_1.default.existsSync(tsconfigPathTest[0]) ? tsconfigPathTest[0] : tsconfigPathTest[1];
     const tsconfig = require(tsconfigPath);
     const { paths = {}, baseUrl = '' } = tsconfig.compilerOptions || {};
     const scriptExtensions = !vueType
@@ -204,7 +207,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
     cssProcessors.sass && cssExtensions.push('sass');
     cssProcessors.scss && cssExtensions.push('scss');
     const commonAlias = Object.keys(paths).reduce((obj, name) => {
-        const target = path.resolve(path.dirname(tsconfigPath), baseUrl, paths[name][0].replace(/\/\*$/, ''));
+        const target = path_1.default.resolve(path_1.default.dirname(tsconfigPath), baseUrl, paths[name][0].replace(/\/\*$/, ''));
         if (name.endsWith('/*')) {
             obj[name.replace(/\/\*$/, '')] = target;
         }
@@ -218,7 +221,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
     Object.keys(resolveAlias).forEach((key) => {
         let target = resolveAlias[key];
         if (target.startsWith('./')) {
-            target = path.join(rootPath, target);
+            target = path_1.default.join(rootPath, target);
         }
         if (key.startsWith('server//')) {
             serverAlias[key.replace('server//', '')] = target;
@@ -230,7 +233,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
             commonAlias[key] = target;
         }
     });
-    const SsrPlugin = getSsrInjectPlugin();
+    const SsrPlugin = ssr_inject_1.default(path_1.default.join(distPath, './server/main.js'), path_1.default.join(distPath, './client/index.html'));
     const clientWebpackConfig = {
         context: rootPath,
         name: 'client',
@@ -238,7 +241,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
         target: 'browserslist',
         stats: 'minimal',
         devtool: clentDevtool,
-        entry: path.join(srcPath, './index'),
+        entry: path_1.default.join(srcPath, './index'),
         performance: false,
         watchOptions: {
             ignored: /node_modules/,
@@ -246,7 +249,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
         ignoreWarnings: [/export .* was not found in/],
         output: {
             publicPath: clientPublicPath,
-            path: path.join(distPath, './client'),
+            path: path_1.default.join(distPath, './client'),
             hashDigestLength: 8,
             filename: isProdModel ? 'js/[name].[contenthash].js' : 'js/[name].js',
         },
@@ -349,7 +352,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
             new HtmlWebpackPlugin({
                 minify: false,
                 inject: 'body',
-                template: path.join(publicPath, './client/index.html'),
+                template: path_1.default.join(publicPath, './client/index.html'),
             }),
             new HtmlReplaceWebpackPlugin([
                 {
@@ -366,10 +369,10 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                     ignoreOrder: true,
                     filename: 'css/[name].[contenthash].css',
                 }),
-            useSSR && SsrPlugin,
+            useSSR && SsrPlugin.client,
             !isProdModel && !isVue && new ReactRefreshWebpackPlugin({ overlay: false }),
-            !isProdModel && new webpack.HotModuleReplacementPlugin(),
-            new webpack.ProgressPlugin(),
+            !isProdModel && new webpack_1.default.HotModuleReplacementPlugin(),
+            new webpack_1.default.ProgressPlugin(),
         ].filter(Boolean),
     };
     const serverWebpackConfig = useSSR
@@ -387,11 +390,11 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                 ignored: /node_modules/,
             },
             ignoreWarnings: [/export .* was not found in/],
-            entry: path.join(srcPath, './server'),
+            entry: path_1.default.join(srcPath, './server'),
             output: {
                 libraryTarget: 'commonjs2',
                 publicPath: clientPublicPath,
-                path: path.join(distPath, './server'),
+                path: path_1.default.join(distPath, './server'),
                 hashDigestLength: 8,
                 filename: '[name].js',
             },
@@ -454,16 +457,16 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                     },
                 ].filter(Boolean),
             },
-            plugins: [isVue && new VueLoaderPlugin(), SsrPlugin, new webpack.ProgressPlugin()].filter(Boolean),
+            plugins: [isVue && new VueLoaderPlugin(), SsrPlugin.server, new webpack_1.default.ProgressPlugin()].filter(Boolean),
         }
         : { name: 'server' };
     global['ENV'] = globalVar.server;
     const devServerConfig = {
         static: [
-            { publicPath: clientPublicPath, directory: path.join(envPath, './client') },
+            { publicPath: clientPublicPath, directory: path_1.default.join(envPath, './client') },
             {
                 publicPath: clientPublicPath,
-                directory: path.join(publicPath, './client'),
+                directory: path_1.default.join(publicPath, './client'),
                 staticOptions: { fallthrough: false },
             },
         ],
@@ -474,6 +477,12 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
             overlay: {
                 warnings: false,
                 errors: true,
+            },
+            needHotEntry: (compilerConfig) => {
+                return compilerConfig.name === 'client';
+            },
+            needClientEntry: (compilerConfig) => {
+                return compilerConfig.name === 'client';
             },
         },
     };

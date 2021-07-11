@@ -1,9 +1,11 @@
 /* eslint-disable no-console */
 import {Express} from 'express';
 
-const fs = require('fs');
-const path = require('path');
-const webpack = require('webpack');
+import fs from 'fs';
+import path from 'path';
+import webpack from 'webpack';
+import getSsrInjectPlugin from '../plugin/ssr-inject';
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
@@ -12,7 +14,7 @@ const StylelintPlugin = require('stylelint-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const {getSsrInjectPlugin} = require('@elux/dev-webpack/dist/plugin/ssr-inject');
+
 const {VueLoaderPlugin} = require('vue-loader');
 
 // const ModuleFederationPlugin = webpack.container.ModuleFederationPlugin;
@@ -307,7 +309,7 @@ function moduleExports({
     }
   });
 
-  const SsrPlugin = getSsrInjectPlugin();
+  const SsrPlugin = getSsrInjectPlugin(path.join(distPath, './server/main.js'), path.join(distPath, './client/index.html'));
   const clientWebpackConfig: WebpackConfig = {
     context: rootPath,
     name: 'client',
@@ -444,7 +446,7 @@ function moduleExports({
           ignoreOrder: true,
           filename: 'css/[name].[contenthash].css',
         }),
-      useSSR && SsrPlugin,
+      useSSR && SsrPlugin.client,
       !isProdModel && !isVue && new ReactRefreshWebpackPlugin({overlay: false}),
       !isProdModel && new webpack.HotModuleReplacementPlugin(),
       new webpack.ProgressPlugin(),
@@ -533,7 +535,7 @@ function moduleExports({
             },
           ].filter(Boolean),
         },
-        plugins: [isVue && new VueLoaderPlugin(), SsrPlugin, new webpack.ProgressPlugin()].filter(Boolean),
+        plugins: [isVue && new VueLoaderPlugin(), SsrPlugin.server, new webpack.ProgressPlugin()].filter(Boolean),
       }
     : {name: 'server'};
 
@@ -555,6 +557,12 @@ function moduleExports({
       overlay: {
         warnings: false,
         errors: true,
+      },
+      needHotEntry: (compilerConfig: {name: string}) => {
+        return compilerConfig.name === 'client';
+      },
+      needClientEntry: (compilerConfig: {name: string}) => {
+        return compilerConfig.name === 'client';
       },
     },
   };

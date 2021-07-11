@@ -1,8 +1,7 @@
-import path from 'path';
 import slash from 'slash';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
+
 import fs from 'fs';
-import webpack, {Compiler} from 'webpack';
+import {Compiler} from 'webpack';
 import {ufs} from 'unionfs';
 
 import {patchRequire} from 'fs-monkey';
@@ -12,115 +11,124 @@ import {validate} from 'schema-utils';
 const schema: any = {
   type: 'object',
   properties: {
-    entryFileName: {
+    htmlFilePath: {
+      type: 'string',
+    },
+    entryFilePath: {
       type: 'string',
     },
   },
   additionalProperties: false,
 };
 
-function replace(source: string, htmlKey: string, html: string) {
-  return source.replace(htmlKey, html);
-}
-
 interface Options {
-  entryFileName: string;
+  htmlFilePath: string;
+  entryFilePath: string;
 }
 
 const isWin32 = process.platform === 'win32';
 
-export class SsrInject {
-  entryFileName: string;
+class Core {
+  readonly htmlFilePath: string;
 
-  entryFilePath: string = '';
+  readonly entryFilePath: string = '';
 
-  htmlKey: string = 'process.env.ELUX_ENV_SSRTPL';
+  readonly htmlKey: string = 'process.env.ELUX_ENV_SSRTPL';
 
-  html: string = '';
+  private htmlCode: string = '';
 
-  outputFileSystem: any;
+  private jsCode: string = '';
+
+  private webpackFS: any;
 
   constructor(options: Options) {
     validate(schema, options, {name: '@elux/dev-webpack/ssr-inject'});
-    this.entryFileName = options.entryFileName;
+    this.htmlFilePath = options.htmlFilePath;
+    this.entryFilePath = options.entryFilePath;
   }
 
-  apply(compiler: Compiler) {
-    const htmlKey = this.htmlKey;
-    if (compiler.options.name === 'server') {
-      const entryFileName = this.entryFileName;
-      const outputPath: string = compiler.options.output.path as string;
-      this.entryFilePath = path.join(outputPath, entryFileName);
-      compiler.hooks.compilation.tap('SsrInject', (compilation) => {
-        compilation.hooks.afterProcessAssets.tap('SsrInjectReplace', (assets) => {
-          const html = this.html;
-          if (assets[entryFileName] && html) {
-            compilation.updateAsset(entryFileName, (source) => {
-              return new webpack.sources.RawSource(replace(source.source().toString(), htmlKey, html), false);
-            });
-          }
-        });
-      });
-      compiler.hooks.emit.tapAsync('SsrInjectDeleteCache', (compilation, callback) => {
-        const hotJsonFile = Object.keys(compilation.assets).find((name) => name.endsWith('.hot-update.json'));
-        if (hotJsonFile) {
-          const manifest = JSON.parse(compilation.assets[hotJsonFile].source().toString());
-          const keys = [...manifest.c, ...manifest.r, ...manifest.m];
-          keys.forEach((item) => {
-            let mpath = path.join(outputPath, `${item}.js`);
-            if (isWin32) {
-              mpath = slash(mpath).replace(/^.+?:\//, '/');
-            }
-            delete require.cache[mpath];
-          });
-        }
-        callback();
-      });
-    } else {
-      compiler.hooks.compilation.tap('SsrInject', (compilation) => {
-        HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync('SsrInjectSetHtml', (data, callback) => {
-          const outputFileSystem = compiler.outputFileSystem as any;
-          const html = Buffer.from(data.html).toString('base64');
-          const rawHtml = this.html || htmlKey;
-          this.html = html;
-          const entryFilePath = this.entryFilePath;
-          if (outputFileSystem.existsSync(entryFilePath)) {
-            const source: string = outputFileSystem.readFileSync(entryFilePath).toString();
-            outputFileSystem.writeFileSync(entryFilePath, replace(source, rawHtml, html));
-            let mpath = entryFilePath;
-            if (isWin32) {
-              mpath = slash(mpath).replace(/^.+?:\//, '/');
-            }
-            delete require.cache[mpath];
-          }
-          callback(null, data);
-        });
-      });
-    }
+  setWebpackFS(webpackFS: any) {
+    this.webpackFS = webpackFS;
   }
 
-  getEntryPath(res: any) {
-    // const {outputFileSystem, stats} = res.locals.webpack.devMiddleware;
-    // const compilerArr = devMiddleware.compiler.compilers;
-    // const statsArr = stats.toJson().children;
-    // const {assetsByChunkName, assets, chunks, outputPath} = statsArr[1];
-    // const mainPath = path.join(outputPath, 'main.js');
-    if (!this.outputFileSystem) {
-      const {outputFileSystem} = res.locals.webpack.devMiddleware;
-      ufs.use(fs).use(outputFileSystem);
-      patchRequire(ufs, true);
+  setHtmlCode(htmlCode: string) {
+    this.htmlCode = htmlCode;
+    this.replaceCode();
+  }
 
-      this.outputFileSystem = ufs;
+  setJSCode(jsCode: string) {
+    this.jsCode = jsCode;
+    this.replaceCode();
+  }
+
+  replaceCode() {
+    if (this.jsCode && this.htmlCode) {
+      const str = this.jsCode.replace(this.htmlKey, this.htmlCode);
+      this.webpackFS.writeFileSync(this.entryFilePath, str);
+      let mpath = this.entryFilePath;
+      if (isWin32) {
+        mpath = slash(this.entryFilePath).replace(/^.+?:\//, '/');
+      }
+      delete require.cache[mpath];
     }
-    return this.entryFilePath;
   }
 }
 
-let instance: SsrInject | null = null;
+class ServerPlugin {
+  constructor(public ssrCore: Core) {}
 
-export function getSsrInjectPlugin(entryFileName: string = 'main.js') {
-  if (!instance) {
-    instance = new SsrInject({entryFileName});
+  apply(compiler: Compiler) {
+    compiler.hooks.assetEmitted.tap('SsrInjectServer', (file, {content, source, outputPath, compilation, targetPath}) => {
+      this.ssrCore.setWebpackFS(compiler.outputFileSystem);
+      if (targetPath === this.ssrCore.entryFilePath) {
+        this.ssrCore.setJSCode(content.toString('utf8'));
+      }
+      if (isWin32) {
+        targetPath = slash(targetPath).replace(/^.+?:\//, '/');
+      }
+      delete require.cache[targetPath];
+      return true;
+    });
   }
-  return instance;
+}
+
+class ClientPlugin {
+  constructor(public ssrCore: Core) {}
+
+  apply(compiler: Compiler) {
+    compiler.hooks.assetEmitted.tap('SsrInjectClient', (file, {content, source, outputPath, compilation, targetPath}) => {
+      if (targetPath === this.ssrCore.htmlFilePath) {
+        this.ssrCore.setHtmlCode(content.toString('base64'));
+      }
+      return true;
+    });
+  }
+}
+
+let sington: {client: ClientPlugin; server: ServerPlugin; getEntryPath: (res: any) => string} | undefined;
+
+export default function getSsrInjectPlugin(entryFilePath: string, htmlFilePath: string) {
+  if (!sington) {
+    const core = new Core({entryFilePath, htmlFilePath});
+    const client = new ClientPlugin(core);
+    const server = new ServerPlugin(core);
+    let devServerFS: any = null;
+    const getEntryPath = function (res: any) {
+      // const {outputFileSystem, stats} = res.locals.webpack.devMiddleware;
+      // const compilerArr = devMiddleware.compiler.compilers;
+      // const statsArr = stats.toJson().children;
+      // const {assetsByChunkName, assets, chunks, outputPath} = statsArr[1];
+      // const mainPath = path.join(outputPath, 'main.js');
+      if (!devServerFS) {
+        const {outputFileSystem} = res.locals.webpack.devMiddleware;
+        ufs.use(fs).use(outputFileSystem);
+        patchRequire(ufs, true);
+
+        devServerFS = ufs;
+      }
+      return entryFilePath;
+    };
+    sington = {client, server, getEntryPath};
+  }
+  return sington;
 }
