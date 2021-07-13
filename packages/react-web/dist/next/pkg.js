@@ -1,22 +1,22 @@
 import React, { Component as Component$3, useContext, useEffect } from 'react';
 import { hydrate, render } from 'react-dom';
 
-let root;
+let root$1;
 
 if (typeof self !== 'undefined') {
-  root = self;
+  root$1 = self;
 } else if (typeof window !== 'undefined') {
-  root = window;
+  root$1 = window;
 } else if (typeof global !== 'undefined') {
-  root = global;
+  root$1 = global;
 } else if (typeof module !== 'undefined') {
-  root = module;
+  root$1 = module;
 } else {
-  root = Function('return this')();
+  root$1 = Function('return this')();
 }
 
-const env = root;
-env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+const env$1 = root$1;
+env$1.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
 
 function _defineProperty(obj, key, value) {
   if (key in obj) {
@@ -33,13 +33,13 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
-let LoadingState;
+let LoadingState$1;
 
 (function (LoadingState) {
   LoadingState["Start"] = "Start";
   LoadingState["Stop"] = "Stop";
   LoadingState["Depth"] = "Depth";
-})(LoadingState || (LoadingState = {}));
+})(LoadingState$1 || (LoadingState$1 = {}));
 
 class SingleDispatcher {
   constructor() {
@@ -86,12 +86,12 @@ class TaskCounter extends SingleDispatcher {
       promise.finally(() => this.completeItem(promise));
 
       if (this.list.length === 1 && !this.ctimer) {
-        this.dispatch(LoadingState.Start);
-        this.ctimer = env.setTimeout(() => {
+        this.dispatch(LoadingState$1.Start);
+        this.ctimer = env$1.setTimeout(() => {
           this.ctimer = 0;
 
           if (this.list.length > 0) {
-            this.dispatch(LoadingState.Depth);
+            this.dispatch(LoadingState$1.Depth);
           }
         }, this.deferSecond * 1000);
       }
@@ -108,11 +108,11 @@ class TaskCounter extends SingleDispatcher {
 
       if (this.list.length === 0) {
         if (this.ctimer) {
-          env.clearTimeout.call(null, this.ctimer);
+          env$1.clearTimeout.call(null, this.ctimer);
           this.ctimer = 0;
         }
 
-        this.dispatch(LoadingState.Stop);
+        this.dispatch(LoadingState$1.Stop);
       }
     }
 
@@ -120,7 +120,7 @@ class TaskCounter extends SingleDispatcher {
   }
 
 }
-function isPlainObject$1(obj) {
+function isPlainObject$2(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -129,8 +129,8 @@ function __deepMerge(optimize, target, inject) {
     const src = target[key];
     const val = inject[key];
 
-    if (isPlainObject$1(val)) {
-      if (isPlainObject$1(src)) {
+    if (isPlainObject$2(val)) {
+      if (isPlainObject$2(src)) {
         target[key] = __deepMerge(optimize, src, val);
       } else {
         target[key] = optimize ? val : __deepMerge(optimize, {}, val);
@@ -143,18 +143,18 @@ function __deepMerge(optimize, target, inject) {
 }
 
 function deepMerge(target, ...args) {
-  if (!isPlainObject$1(target)) {
+  if (!isPlainObject$2(target)) {
     target = {};
   }
 
-  args = args.filter(item => isPlainObject$1(item) && Object.keys(item).length);
+  args = args.filter(item => isPlainObject$2(item) && Object.keys(item).length);
 
   if (args.length < 1) {
     return target;
   }
 
   args.forEach(function (inject, index) {
-    if (isPlainObject$1(inject)) {
+    if (isPlainObject$2(inject)) {
       let lastArg = false;
       let last2Arg = null;
 
@@ -168,8 +168,8 @@ function deepMerge(target, ...args) {
         const src = target[key];
         const val = inject[key];
 
-        if (isPlainObject$1(val)) {
-          if (isPlainObject$1(src)) {
+        if (isPlainObject$2(val)) {
+          if (isPlainObject$2(src)) {
             target[key] = __deepMerge(lastArg, src, val);
           } else {
             target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
@@ -184,24 +184,24 @@ function deepMerge(target, ...args) {
 }
 function warn(str) {
   if (process.env.NODE_ENV === 'development') {
-    env.console.warn(str);
+    env$1.console.warn(str);
   }
 }
-function isPromise(data) {
+function isPromise$1(data) {
   return typeof data === 'object' && typeof data.then === 'function';
 }
 function isServer() {
-  return env.isServer;
+  return env$1.isServer;
 }
 function serverSide(callback) {
-  if (env.isServer) {
+  if (env$1.isServer) {
     return callback();
   }
 
   return undefined;
 }
 function clientSide(callback) {
-  if (!env.isServer) {
+  if (!env$1.isServer) {
     return callback();
   }
 
@@ -218,7 +218,7 @@ function delayPromise(second) {
 
     descriptor.value = (...args) => {
       const delay = new Promise(resolve => {
-        env.setTimeout(() => {
+        env$1.setTimeout(() => {
           resolve(true);
         }, second * 1000);
       });
@@ -241,7 +241,7 @@ function setConfig$1(_config) {
   _config.MutableData !== undefined && (config.MutableData = _config.MutableData);
   _config.DepthTimeOnLoading !== undefined && (config.DepthTimeOnLoading = _config.DepthTimeOnLoading);
 }
-const ActionTypes = {
+const ActionTypes$1 = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
@@ -249,32 +249,32 @@ const ActionTypes = {
 };
 function errorAction(error) {
   return {
-    type: ActionTypes.Error,
+    type: ActionTypes$1.Error,
     payload: [error]
   };
 }
 function moduleInitAction(moduleName, initState) {
   return {
-    type: `${moduleName}${config.NSP}${ActionTypes.MInit}`,
+    type: `${moduleName}${config.NSP}${ActionTypes$1.MInit}`,
     payload: [initState]
   };
 }
 function moduleReInitAction(moduleName, initState) {
   return {
-    type: `${moduleName}${config.NSP}${ActionTypes.MReInit}`,
+    type: `${moduleName}${config.NSP}${ActionTypes$1.MReInit}`,
     payload: [initState]
   };
 }
 function moduleLoadingAction(moduleName, loadingState) {
   return {
-    type: `${moduleName}${config.NSP}${ActionTypes.MLoading}`,
+    type: `${moduleName}${config.NSP}${ActionTypes$1.MLoading}`,
     payload: [loadingState]
   };
 }
 function isEluxComponent(data) {
   return data['__elux_component__'];
 }
-const MetaData$1 = {
+const MetaData$2 = {
   appModuleName: 'stage',
   injectedModules: {},
   reducersMap: {},
@@ -299,7 +299,7 @@ function transformAction(actionName, handler, listenerModule, actionHandlerMap) 
 }
 
 function injectActions(moduleName, handlers) {
-  const injectedModules = MetaData$1.injectedModules;
+  const injectedModules = MetaData$2.injectedModules;
 
   if (injectedModules[moduleName]) {
     return;
@@ -317,9 +317,9 @@ function injectActions(moduleName, handlers) {
           const arr = actionName.split(config.NSP);
 
           if (arr[1]) {
-            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData$1.effectsMap : MetaData$1.reducersMap);
+            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData$2.effectsMap : MetaData$2.reducersMap);
           } else {
-            transformAction(moduleName + config.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData$1.effectsMap : MetaData$1.reducersMap);
+            transformAction(moduleName + config.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData$2.effectsMap : MetaData$2.reducersMap);
           }
         });
       }
@@ -343,7 +343,7 @@ function setLoading(store, item, moduleName, groupName) {
   loadings[key].addItem(item);
   return item;
 }
-function reducer(target, key, descriptor) {
+function reducer$1(target, key, descriptor) {
   if (!key && !descriptor) {
     key = target.key;
     descriptor = target.descriptor;
@@ -374,14 +374,14 @@ function effect(loadingKey = 'app.loading.global') {
 
     if (loadingForModuleName && loadingForGroupName) {
       const before = (curAction, moduleName, promiseResult) => {
-        if (!env.isServer) {
+        if (!env$1.isServer) {
           if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData$1.appModuleName;
+            loadingForModuleName = MetaData$2.appModuleName;
           } else if (loadingForModuleName === 'this') {
             loadingForModuleName = moduleName;
           }
 
-          setLoading(MetaData$1.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
+          setLoading(MetaData$2.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
         }
       };
 
@@ -418,7 +418,7 @@ function deepMergeState(target = {}, ...args) {
 
   return deepMerge({}, target, ...args);
 }
-function mergeState(target = {}, ...args) {
+function mergeState$1(target = {}, ...args) {
   if (config.MutableData) {
     return Object.assign(target, ...args);
   }
@@ -891,14 +891,14 @@ function _optionalCallableProperty(obj, name) {
 }
 
 function getModuleGetter() {
-  return MetaData$1.moduleGetter;
+  return MetaData$2.moduleGetter;
 }
 function exportModule(moduleName, ModuleHandles, params, components) {
   Object.keys(components).forEach(key => {
     const component = components[key];
 
     if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
-      env.console.warn(`The exported component must implement interface EluxComponent: ${moduleName}.${key}`);
+      env$1.console.warn(`The exported component must implement interface EluxComponent: ${moduleName}.${key}`);
     }
   });
 
@@ -930,28 +930,28 @@ function exportModule(moduleName, ModuleHandles, params, components) {
     actions: undefined
   };
 }
-function getModule(moduleName) {
-  if (MetaData$1.moduleCaches[moduleName]) {
-    return MetaData$1.moduleCaches[moduleName];
+function getModule$1(moduleName) {
+  if (MetaData$2.moduleCaches[moduleName]) {
+    return MetaData$2.moduleCaches[moduleName];
   }
 
-  const moduleOrPromise = MetaData$1.moduleGetter[moduleName]();
+  const moduleOrPromise = MetaData$2.moduleGetter[moduleName]();
 
-  if (isPromise(moduleOrPromise)) {
+  if (isPromise$1(moduleOrPromise)) {
     const promiseModule = moduleOrPromise.then(({
       default: module
     }) => {
-      MetaData$1.moduleCaches[moduleName] = module;
+      MetaData$2.moduleCaches[moduleName] = module;
       return module;
     }, reason => {
-      MetaData$1.moduleCaches[moduleName] = undefined;
+      MetaData$2.moduleCaches[moduleName] = undefined;
       throw reason;
     });
-    MetaData$1.moduleCaches[moduleName] = promiseModule;
+    MetaData$2.moduleCaches[moduleName] = promiseModule;
     return promiseModule;
   }
 
-  MetaData$1.moduleCaches[moduleName] = moduleOrPromise;
+  MetaData$2.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
 }
 function getModuleList(moduleNames) {
@@ -960,18 +960,18 @@ function getModuleList(moduleNames) {
   }
 
   return Promise.all(moduleNames.map(moduleName => {
-    if (MetaData$1.moduleCaches[moduleName]) {
-      return MetaData$1.moduleCaches[moduleName];
+    if (MetaData$2.moduleCaches[moduleName]) {
+      return MetaData$2.moduleCaches[moduleName];
     }
 
-    return getModule(moduleName);
+    return getModule$1(moduleName);
   }));
 }
 
-function _loadModel(moduleName, store = MetaData$1.clientStore) {
-  const moduleOrPromise = getModule(moduleName);
+function _loadModel$1(moduleName, store = MetaData$2.clientStore) {
+  const moduleOrPromise = getModule$1(moduleName);
 
-  if (isPromise(moduleOrPromise)) {
+  if (isPromise$1(moduleOrPromise)) {
     return moduleOrPromise.then(module => module.model(store));
   }
 
@@ -980,8 +980,8 @@ function _loadModel(moduleName, store = MetaData$1.clientStore) {
 function getComponet(moduleName, componentName) {
   const key = [moduleName, componentName].join(config.NSP);
 
-  if (MetaData$1.componentCaches[key]) {
-    return MetaData$1.componentCaches[key];
+  if (MetaData$2.componentCaches[key]) {
+    return MetaData$2.componentCaches[key];
   }
 
   const moduleCallback = module => {
@@ -989,26 +989,26 @@ function getComponet(moduleName, componentName) {
 
     if (isEluxComponent(componentOrFun)) {
       const component = componentOrFun;
-      MetaData$1.componentCaches[key] = component;
+      MetaData$2.componentCaches[key] = component;
       return component;
     }
 
     const promiseComponent = componentOrFun().then(({
       default: component
     }) => {
-      MetaData$1.componentCaches[key] = component;
+      MetaData$2.componentCaches[key] = component;
       return component;
     }, reason => {
-      MetaData$1.componentCaches[key] = undefined;
+      MetaData$2.componentCaches[key] = undefined;
       throw reason;
     });
-    MetaData$1.componentCaches[key] = promiseComponent;
+    MetaData$2.componentCaches[key] = promiseComponent;
     return promiseComponent;
   };
 
-  const moduleOrPromise = getModule(moduleName);
+  const moduleOrPromise = getModule$1(moduleName);
 
-  if (isPromise(moduleOrPromise)) {
+  if (isPromise$1(moduleOrPromise)) {
     return moduleOrPromise.then(moduleCallback);
   }
 
@@ -1020,8 +1020,8 @@ function getComponentList(keys) {
   }
 
   return Promise.all(keys.map(key => {
-    if (MetaData$1.componentCaches[key]) {
-      return MetaData$1.componentCaches[key];
+    if (MetaData$2.componentCaches[key]) {
+      return MetaData$2.componentCaches[key];
     }
 
     const [moduleName, componentName] = key.split(config.NSP);
@@ -1033,11 +1033,11 @@ function loadComponet(moduleName, componentName, store, deps) {
 
   const callback = component => {
     if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
-      if (env.isServer) {
+      if (env$1.isServer) {
         return null;
       }
 
-      const module = getModule(moduleName);
+      const module = getModule$1(moduleName);
       module.model(store);
     }
 
@@ -1045,8 +1045,8 @@ function loadComponet(moduleName, componentName, store, deps) {
     return component;
   };
 
-  if (isPromise(promiseOrComponent)) {
-    if (env.isServer) {
+  if (isPromise$1(promiseOrComponent)) {
+    if (env$1.isServer) {
       return null;
     }
 
@@ -1087,13 +1087,13 @@ let CoreModuleHandlers = _decorate(null, function (_initialize) {
       kind: "get",
       key: "actions",
       value: function actions() {
-        return MetaData$1.facadeMap[this.moduleName].actions;
+        return MetaData$2.facadeMap[this.moduleName].actions;
       }
     }, {
       kind: "method",
       key: "getPrivateActions",
       value: function getPrivateActions(actionsMap) {
-        return MetaData$1.facadeMap[this.moduleName].actions;
+        return MetaData$2.facadeMap[this.moduleName].actions;
       }
     }, {
       kind: "get",
@@ -1135,29 +1135,29 @@ let CoreModuleHandlers = _decorate(null, function (_initialize) {
       kind: "method",
       key: "loadModel",
       value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
+        return _loadModel$1(moduleName, this.store);
       }
     }, {
       kind: "method",
-      decorators: [reducer],
+      decorators: [reducer$1],
       key: "Init",
       value: function Init(initState) {
         return initState;
       }
     }, {
       kind: "method",
-      decorators: [reducer],
+      decorators: [reducer$1],
       key: "Update",
       value: function Update(payload, key) {
-        return mergeState(this.state, payload);
+        return mergeState$1(this.state, payload);
       }
     }, {
       kind: "method",
-      decorators: [reducer],
+      decorators: [reducer$1],
       key: "Loading",
       value: function Loading(payload) {
-        const loading = mergeState(this.state.loading, payload);
-        return mergeState(this.state, {
+        const loading = mergeState$1(this.state.loading, payload);
+        return mergeState$1(this.state, {
           loading
         });
       }
@@ -1165,9 +1165,9 @@ let CoreModuleHandlers = _decorate(null, function (_initialize) {
   };
 });
 function getRootModuleAPI(data) {
-  if (!MetaData$1.facadeMap) {
+  if (!MetaData$2.facadeMap) {
     if (data) {
-      MetaData$1.facadeMap = Object.keys(data).reduce((prev, moduleName) => {
+      MetaData$2.facadeMap = Object.keys(data).reduce((prev, moduleName) => {
         const arr = data[moduleName];
         const actions = {};
         const actionNames = {};
@@ -1189,7 +1189,7 @@ function getRootModuleAPI(data) {
       }, {});
     } else {
       const cacheData = {};
-      MetaData$1.facadeMap = new Proxy({}, {
+      MetaData$2.facadeMap = new Proxy({}, {
         set(target, moduleName, val, receiver) {
           return Reflect.set(target, moduleName, val, receiver);
         },
@@ -1229,7 +1229,7 @@ function getRootModuleAPI(data) {
     }
   }
 
-  return MetaData$1.facadeMap;
+  return MetaData$2.facadeMap;
 }
 function exportComponent(component) {
   const eluxComponent = component;
@@ -1264,7 +1264,7 @@ function getActionData(action) {
   return Array.isArray(action.payload) ? action.payload : [];
 }
 
-function compose(...funcs) {
+function compose$1(...funcs) {
   if (funcs.length === 0) {
     return arg => arg;
   }
@@ -1312,7 +1312,7 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   const preMiddleware = () => next => action => {
-    if (action.type === ActionTypes.Error) {
+    if (action.type === ActionTypes$1.Error) {
       const actionData = getActionData(action);
 
       if (isProcessedError(actionData[0])) {
@@ -1324,15 +1324,15 @@ function enhanceStore(baseStore, middlewares) {
 
     const [moduleName, actionName] = action.type.split(config.NSP);
 
-    if (env.isServer && actionName === ActionTypes.MLoading) {
+    if (env$1.isServer && actionName === ActionTypes$1.MLoading) {
       return undefined;
     }
 
-    if (moduleName && actionName && MetaData$1.moduleGetter[moduleName]) {
+    if (moduleName && actionName && MetaData$2.moduleGetter[moduleName]) {
       if (!injectedModules[moduleName]) {
-        const result = _loadModel(moduleName, store);
+        const result = _loadModel$1(moduleName, store);
 
-        if (isPromise(result)) {
+        if (isPromise$1(result)) {
           return result.then(() => next(action));
         }
       }
@@ -1385,7 +1385,7 @@ function enhanceStore(baseStore, middlewares) {
   }
 
   function respondHandler(action, isReducer, prevData) {
-    const handlersMap = isReducer ? MetaData$1.reducersMap : MetaData$1.effectsMap;
+    const handlersMap = isReducer ? MetaData$2.reducersMap : MetaData$2.effectsMap;
     const actionName = action.type;
     const [actionModuleName] = actionName.split(config.NSP);
     const commonHandlers = handlersMap[action.type];
@@ -1399,7 +1399,7 @@ function enhanceStore(baseStore, middlewares) {
     if (handlerModuleNames.length > 0) {
       const orderList = [];
       handlerModuleNames.forEach(moduleName => {
-        if (moduleName === MetaData$1.appModuleName) {
+        if (moduleName === MetaData$2.appModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -1460,7 +1460,7 @@ function enhanceStore(baseStore, middlewares) {
 
   const arr = middlewares ? [preMiddleware, ...middlewares] : [preMiddleware];
   const chain = arr.map(middleware => middleware(middlewareAPI));
-  dispatch = compose(...chain)(_dispatch);
+  dispatch = compose$1(...chain)(_dispatch);
   store.dispatch = dispatch;
   return store;
 }
@@ -1468,8 +1468,8 @@ function enhanceStore(baseStore, middlewares) {
 const defFun = () => undefined;
 
 function defineModuleGetter(moduleGetter, appModuleName = 'stage') {
-  MetaData$1.appModuleName = appModuleName;
-  MetaData$1.moduleGetter = moduleGetter;
+  MetaData$2.appModuleName = appModuleName;
+  MetaData$2.moduleGetter = moduleGetter;
 
   if (!moduleGetter[appModuleName]) {
     throw `${appModuleName} could not be found in moduleGetter`;
@@ -1479,11 +1479,11 @@ async function renderApp(baseStore, preloadModules, preloadComponents, middlewar
   const {
     moduleGetter,
     appModuleName
-  } = MetaData$1;
+  } = MetaData$2;
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
-  MetaData$1.clientStore = store;
+  MetaData$2.clientStore = store;
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
   const appModule = modules[0];
@@ -1498,7 +1498,7 @@ async function ssrApp(baseStore, preloadModules, middlewares, appViewName = 'mai
   const {
     moduleGetter,
     appModuleName
-  } = MetaData$1;
+  } = MetaData$2;
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
@@ -1513,7 +1513,7 @@ async function ssrApp(baseStore, preloadModules, middlewares, appViewName = 'mai
   };
 }
 
-env.encodeBas64 = function (str) {
+env$1.encodeBas64 = function (str) {
   if (!str) {
     return '';
   }
@@ -1521,7 +1521,7 @@ env.encodeBas64 = function (str) {
   return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
 };
 
-env.decodeBas64 = function (str) {
+env$1.decodeBas64 = function (str) {
   if (!str) {
     return '';
   }
@@ -1820,7 +1820,7 @@ class History {
 
 }
 
-function isPlainObject(obj) {
+function isPlainObject$1(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -1833,7 +1833,7 @@ function __extendDefault(target, def) {
       const tval = target[key];
       const dval = def[key];
 
-      if (isPlainObject(tval) && isPlainObject(dval) && tval !== dval) {
+      if (isPlainObject$1(tval) && isPlainObject$1(dval) && tval !== dval) {
         clone[key] = __extendDefault(tval, dval);
       } else {
         clone[key] = tval;
@@ -1844,11 +1844,11 @@ function __extendDefault(target, def) {
 }
 
 function extendDefault(target, def) {
-  if (!isPlainObject(target)) {
+  if (!isPlainObject$1(target)) {
     target = {};
   }
 
-  if (!isPlainObject(def)) {
+  if (!isPlainObject$1(def)) {
     def = {};
   }
 
@@ -1863,7 +1863,7 @@ function __excludeDefault(data, def) {
     const defaultValue = def[key];
 
     if (value !== defaultValue) {
-      if (typeof value === typeof defaultValue && isPlainObject(value)) {
+      if (typeof value === typeof defaultValue && isPlainObject$1(value)) {
         value = __excludeDefault(value, defaultValue);
       }
 
@@ -1882,11 +1882,11 @@ function __excludeDefault(data, def) {
 }
 
 function excludeDefault(data, def, keepTopLevel) {
-  if (!isPlainObject(data)) {
+  if (!isPlainObject$1(data)) {
     return {};
   }
 
-  if (!isPlainObject(def)) {
+  if (!isPlainObject$1(def)) {
     return data;
   }
 
@@ -1921,7 +1921,7 @@ function __splitPrivate(data) {
       }
 
       privateData[key] = value;
-    } else if (isPlainObject(value)) {
+    } else if (isPlainObject$1(value)) {
       const [subPublicData, subPrivateData] = __splitPrivate(value);
 
       if (subPublicData) {
@@ -1951,7 +1951,7 @@ function __splitPrivate(data) {
 }
 
 function splitPrivate(data, deleteTopLevel) {
-  if (!isPlainObject(data)) {
+  if (!isPlainObject$1(data)) {
     return [undefined, undefined];
   }
 
@@ -2054,7 +2054,7 @@ function eluxUrlToEluxLocation(url) {
     try {
       params = JSON.parse(query);
     } catch (e) {
-      env.console.error(e);
+      env$1.console.error(e);
     }
   }
 
@@ -2151,7 +2151,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
         searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
         hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
       } catch (e) {
-        env.console.error(e);
+        env$1.console.error(e);
       }
 
       return {
@@ -2310,7 +2310,7 @@ let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
     F: ModuleWithRouteHandlers,
     d: [{
       kind: "method",
-      decorators: [reducer],
+      decorators: [reducer$1],
       key: "Init",
       value: function Init(initState) {
         const routeParams = this.rootState.route.params[this.moduleName];
@@ -2318,7 +2318,7 @@ let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
       }
     }, {
       kind: "method",
-      decorators: [reducer],
+      decorators: [reducer$1],
       key: "RouteParams",
       value: function RouteParams(payload) {
         return deepMergeState(this.state, payload);
@@ -2407,10 +2407,10 @@ let RouteModuleHandlers = _decorate(null, function (_initialize2) {
       }
     }, {
       kind: "method",
-      decorators: [reducer],
+      decorators: [reducer$1],
       key: "RouteChange",
       value: function RouteChange(routeState) {
-        return mergeState(this.state, routeState);
+        return mergeState$1(this.state, routeState);
       }
     }]
   };
@@ -2475,7 +2475,7 @@ class BaseNativeRouter {
       if (!result) {
         resolve(undefined);
         this.curTask = undefined;
-      } else if (isPromise(result)) {
+      } else if (isPromise$1(result)) {
         result.catch(e => {
           reject(e);
           this.curTask = undefined;
@@ -2951,7 +2951,7 @@ function resolvePathname(to, from) {
 
 var isProduction$1 = process.env.NODE_ENV === 'production';
 
-function warning(condition, message) {
+function warning$1(condition, message) {
   if (!isProduction$1) {
     if (condition) {
       return;
@@ -3099,7 +3099,7 @@ function createTransitionManager() {
   var prompt = null;
 
   function setPrompt(nextPrompt) {
-    process.env.NODE_ENV !== "production" ? warning(prompt == null, 'A history supports only one prompt at a time') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(prompt == null, 'A history supports only one prompt at a time') : void 0;
     prompt = nextPrompt;
     return function () {
       if (prompt === nextPrompt) prompt = null;
@@ -3117,7 +3117,7 @@ function createTransitionManager() {
         if (typeof getUserConfirmation === 'function') {
           getUserConfirmation(result, callback);
         } else {
-          process.env.NODE_ENV !== "production" ? warning(false, 'A history needs a getUserConfirmation function in order to use a prompt message') : void 0;
+          process.env.NODE_ENV !== "production" ? warning$1(false, 'A history needs a getUserConfirmation function in order to use a prompt message') : void 0;
           callback(true);
         }
       } else {
@@ -3258,7 +3258,7 @@ function createBrowserHistory(props) {
         search = _window$location.search,
         hash = _window$location.hash;
     var path = pathname + search + hash;
-    process.env.NODE_ENV !== "production" ? warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
     if (basename) path = stripBasename(path, basename);
     return createLocation(path, state, key);
   }
@@ -3332,7 +3332,7 @@ function createBrowserHistory(props) {
   }
 
   function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
     var action = 'PUSH';
     var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3360,14 +3360,14 @@ function createBrowserHistory(props) {
           });
         }
       } else {
-        process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history') : void 0;
+        process.env.NODE_ENV !== "production" ? warning$1(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history') : void 0;
         window.location.href = href;
       }
     });
   }
 
   function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
     var action = 'REPLACE';
     var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3393,7 +3393,7 @@ function createBrowserHistory(props) {
           });
         }
       } else {
-        process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history') : void 0;
+        process.env.NODE_ENV !== "production" ? warning$1(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history') : void 0;
         window.location.replace(href);
       }
     });
@@ -3535,7 +3535,7 @@ function createHashHistory(props) {
 
   function getDOMLocation() {
     var path = decodePath(getHashPath());
-    process.env.NODE_ENV !== "production" ? warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
     if (basename) path = stripBasename(path, basename);
     return createLocation(path);
   }
@@ -3630,7 +3630,7 @@ function createHashHistory(props) {
   }
 
   function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Hash history cannot push state; it is ignored') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(state === undefined, 'Hash history cannot push state; it is ignored') : void 0;
     var action = 'PUSH';
     var location = createLocation(path, undefined, undefined, history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3654,14 +3654,14 @@ function createHashHistory(props) {
           location: location
         });
       } else {
-        process.env.NODE_ENV !== "production" ? warning(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack') : void 0;
+        process.env.NODE_ENV !== "production" ? warning$1(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack') : void 0;
         setState();
       }
     });
   }
 
   function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Hash history cannot replace state; it is ignored') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(state === undefined, 'Hash history cannot replace state; it is ignored') : void 0;
     var action = 'REPLACE';
     var location = createLocation(path, undefined, undefined, history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3688,7 +3688,7 @@ function createHashHistory(props) {
   }
 
   function go(n) {
-    process.env.NODE_ENV !== "production" ? warning(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser') : void 0;
     globalHistory.go(n);
   }
 
@@ -3803,7 +3803,7 @@ function createMemoryHistory(props) {
   var createHref = createPath;
 
   function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
     var action = 'PUSH';
     var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3828,7 +3828,7 @@ function createMemoryHistory(props) {
   }
 
   function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    process.env.NODE_ENV !== "production" ? warning$1(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
     var action = 'REPLACE';
     var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3985,7 +3985,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
           callback = () => this.router.relaunch(url, false, false);
         }
 
-        callback && env.setTimeout(callback, 50);
+        callback && env$1.setTimeout(callback, 50);
         return false;
       }
 
@@ -4075,7 +4075,7 @@ function createRouter(createHistory, locationTransform) {
   return router;
 }
 
-const MetaData = {
+const MetaData$1 = {
   router: undefined
 };
 const EluxContext = React.createContext({
@@ -4153,7 +4153,7 @@ const loadComponent = (moduleName, componentName, options = {}) => {
         }
 
         if (result) {
-          if (isPromise(result)) {
+          if (isPromise$1(result)) {
             result.then(view => {
               if (view) {
                 this.loading = false;
@@ -4163,7 +4163,7 @@ const loadComponent = (moduleName, componentName, options = {}) => {
                 });
               }
             }, e => {
-              env.console.error(e);
+              env$1.console.error(e);
               this.loading = false;
               this.error = e.message || `${e}` || 'error';
               this.active && this.setState({
@@ -4212,18 +4212,780 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   });
 };
 
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
+}
+
+/**
+ * Adapted from React: https://github.com/facebook/react/blob/master/packages/shared/formatProdErrorMessage.js
+ *
+ * Do not require this module directly! Use normal throw error calls. These messages will be replaced with error codes
+ * during build.
+ * @param {number} code
+ */
+
+function formatProdErrorMessage(code) {
+  return "Minified Redux error #" + code + "; visit https://redux.js.org/Errors?code=" + code + " for the full message or " + 'use the non-minified dev environment for full errors. ';
+} // Inlined version of the `symbol-observable` polyfill
+
+
+var $$observable = function () {
+  return typeof Symbol === 'function' && Symbol.observable || '@@observable';
+}();
+/**
+ * These are private action types reserved by Redux.
+ * For any unknown actions, you must return the current state.
+ * If the current state is undefined, you must return the initial state.
+ * Do not reference these action types directly in your code.
+ */
+
+
+var randomString = function randomString() {
+  return Math.random().toString(36).substring(7).split('').join('.');
+};
+
+var ActionTypes = {
+  INIT: "@@redux/INIT" + randomString(),
+  REPLACE: "@@redux/REPLACE" + randomString(),
+  PROBE_UNKNOWN_ACTION: function PROBE_UNKNOWN_ACTION() {
+    return "@@redux/PROBE_UNKNOWN_ACTION" + randomString();
+  }
+};
+/**
+ * @param {any} obj The object to inspect.
+ * @returns {boolean} True if the argument appears to be a plain object.
+ */
+
+function isPlainObject(obj) {
+  if (typeof obj !== 'object' || obj === null) return false;
+  var proto = obj;
+
+  while (Object.getPrototypeOf(proto) !== null) {
+    proto = Object.getPrototypeOf(proto);
+  }
+
+  return Object.getPrototypeOf(obj) === proto;
+}
+
+function kindOf(val) {
+  var typeOfVal = typeof val;
+
+  if (process.env.NODE_ENV !== 'production') {
+    // Inlined / shortened version of `kindOf` from https://github.com/jonschlinkert/kind-of
+    function miniKindOf(val) {
+      if (val === void 0) return 'undefined';
+      if (val === null) return 'null';
+      var type = typeof val;
+
+      switch (type) {
+        case 'boolean':
+        case 'string':
+        case 'number':
+        case 'symbol':
+        case 'function':
+          {
+            return type;
+          }
+      }
+
+      if (Array.isArray(val)) return 'array';
+      if (isDate(val)) return 'date';
+      if (isError(val)) return 'error';
+      var constructorName = ctorName(val);
+
+      switch (constructorName) {
+        case 'Symbol':
+        case 'Promise':
+        case 'WeakMap':
+        case 'WeakSet':
+        case 'Map':
+        case 'Set':
+          return constructorName;
+      } // other
+
+
+      return type.slice(8, -1).toLowerCase().replace(/\s/g, '');
+    }
+
+    function ctorName(val) {
+      return typeof val.constructor === 'function' ? val.constructor.name : null;
+    }
+
+    function isError(val) {
+      return val instanceof Error || typeof val.message === 'string' && val.constructor && typeof val.constructor.stackTraceLimit === 'number';
+    }
+
+    function isDate(val) {
+      if (val instanceof Date) return true;
+      return typeof val.toDateString === 'function' && typeof val.getDate === 'function' && typeof val.setDate === 'function';
+    }
+
+    typeOfVal = miniKindOf(val);
+  }
+
+  return typeOfVal;
+}
+/**
+ * Creates a Redux store that holds the state tree.
+ * The only way to change the data in the store is to call `dispatch()` on it.
+ *
+ * There should only be a single store in your app. To specify how different
+ * parts of the state tree respond to actions, you may combine several reducers
+ * into a single reducer function by using `combineReducers`.
+ *
+ * @param {Function} reducer A function that returns the next state tree, given
+ * the current state tree and the action to handle.
+ *
+ * @param {any} [preloadedState] The initial state. You may optionally specify it
+ * to hydrate the state from the server in universal apps, or to restore a
+ * previously serialized user session.
+ * If you use `combineReducers` to produce the root reducer function, this must be
+ * an object with the same shape as `combineReducers` keys.
+ *
+ * @param {Function} [enhancer] The store enhancer. You may optionally specify it
+ * to enhance the store with third-party capabilities such as middleware,
+ * time travel, persistence, etc. The only store enhancer that ships with Redux
+ * is `applyMiddleware()`.
+ *
+ * @returns {Store} A Redux store that lets you read the state, dispatch actions
+ * and subscribe to changes.
+ */
+
+
+function createStore(reducer, preloadedState, enhancer) {
+  var _ref2;
+
+  if (typeof preloadedState === 'function' && typeof enhancer === 'function' || typeof enhancer === 'function' && typeof arguments[3] === 'function') {
+    throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(0) : 'It looks like you are passing several store enhancers to ' + 'createStore(). This is not supported. Instead, compose them ' + 'together to a single function. See https://redux.js.org/tutorials/fundamentals/part-4-store#creating-a-store-with-enhancers for an example.');
+  }
+
+  if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
+    enhancer = preloadedState;
+    preloadedState = undefined;
+  }
+
+  if (typeof enhancer !== 'undefined') {
+    if (typeof enhancer !== 'function') {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(1) : "Expected the enhancer to be a function. Instead, received: '" + kindOf(enhancer) + "'");
+    }
+
+    return enhancer(createStore)(reducer, preloadedState);
+  }
+
+  if (typeof reducer !== 'function') {
+    throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(2) : "Expected the root reducer to be a function. Instead, received: '" + kindOf(reducer) + "'");
+  }
+
+  var currentReducer = reducer;
+  var currentState = preloadedState;
+  var currentListeners = [];
+  var nextListeners = currentListeners;
+  var isDispatching = false;
+  /**
+   * This makes a shallow copy of currentListeners so we can use
+   * nextListeners as a temporary list while dispatching.
+   *
+   * This prevents any bugs around consumers calling
+   * subscribe/unsubscribe in the middle of a dispatch.
+   */
+
+  function ensureCanMutateNextListeners() {
+    if (nextListeners === currentListeners) {
+      nextListeners = currentListeners.slice();
+    }
+  }
+  /**
+   * Reads the state tree managed by the store.
+   *
+   * @returns {any} The current state tree of your application.
+   */
+
+
+  function getState() {
+    if (isDispatching) {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(3) : 'You may not call store.getState() while the reducer is executing. ' + 'The reducer has already received the state as an argument. ' + 'Pass it down from the top reducer instead of reading it from the store.');
+    }
+
+    return currentState;
+  }
+  /**
+   * Adds a change listener. It will be called any time an action is dispatched,
+   * and some part of the state tree may potentially have changed. You may then
+   * call `getState()` to read the current state tree inside the callback.
+   *
+   * You may call `dispatch()` from a change listener, with the following
+   * caveats:
+   *
+   * 1. The subscriptions are snapshotted just before every `dispatch()` call.
+   * If you subscribe or unsubscribe while the listeners are being invoked, this
+   * will not have any effect on the `dispatch()` that is currently in progress.
+   * However, the next `dispatch()` call, whether nested or not, will use a more
+   * recent snapshot of the subscription list.
+   *
+   * 2. The listener should not expect to see all state changes, as the state
+   * might have been updated multiple times during a nested `dispatch()` before
+   * the listener is called. It is, however, guaranteed that all subscribers
+   * registered before the `dispatch()` started will be called with the latest
+   * state by the time it exits.
+   *
+   * @param {Function} listener A callback to be invoked on every dispatch.
+   * @returns {Function} A function to remove this change listener.
+   */
+
+
+  function subscribe(listener) {
+    if (typeof listener !== 'function') {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(4) : "Expected the listener to be a function. Instead, received: '" + kindOf(listener) + "'");
+    }
+
+    if (isDispatching) {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(5) : 'You may not call store.subscribe() while the reducer is executing. ' + 'If you would like to be notified after the store has been updated, subscribe from a ' + 'component and invoke store.getState() in the callback to access the latest state. ' + 'See https://redux.js.org/api/store#subscribelistener for more details.');
+    }
+
+    var isSubscribed = true;
+    ensureCanMutateNextListeners();
+    nextListeners.push(listener);
+    return function unsubscribe() {
+      if (!isSubscribed) {
+        return;
+      }
+
+      if (isDispatching) {
+        throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(6) : 'You may not unsubscribe from a store listener while the reducer is executing. ' + 'See https://redux.js.org/api/store#subscribelistener for more details.');
+      }
+
+      isSubscribed = false;
+      ensureCanMutateNextListeners();
+      var index = nextListeners.indexOf(listener);
+      nextListeners.splice(index, 1);
+      currentListeners = null;
+    };
+  }
+  /**
+   * Dispatches an action. It is the only way to trigger a state change.
+   *
+   * The `reducer` function, used to create the store, will be called with the
+   * current state tree and the given `action`. Its return value will
+   * be considered the **next** state of the tree, and the change listeners
+   * will be notified.
+   *
+   * The base implementation only supports plain object actions. If you want to
+   * dispatch a Promise, an Observable, a thunk, or something else, you need to
+   * wrap your store creating function into the corresponding middleware. For
+   * example, see the documentation for the `redux-thunk` package. Even the
+   * middleware will eventually dispatch plain object actions using this method.
+   *
+   * @param {Object} action A plain object representing “what changed”. It is
+   * a good idea to keep actions serializable so you can record and replay user
+   * sessions, or use the time travelling `redux-devtools`. An action must have
+   * a `type` property which may not be `undefined`. It is a good idea to use
+   * string constants for action types.
+   *
+   * @returns {Object} For convenience, the same action object you dispatched.
+   *
+   * Note that, if you use a custom middleware, it may wrap `dispatch()` to
+   * return something else (for example, a Promise you can await).
+   */
+
+
+  function dispatch(action) {
+    if (!isPlainObject(action)) {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(7) : "Actions must be plain objects. Instead, the actual type was: '" + kindOf(action) + "'. You may need to add middleware to your store setup to handle dispatching other values, such as 'redux-thunk' to handle dispatching functions. See https://redux.js.org/tutorials/fundamentals/part-4-store#middleware and https://redux.js.org/tutorials/fundamentals/part-6-async-logic#using-the-redux-thunk-middleware for examples.");
+    }
+
+    if (typeof action.type === 'undefined') {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(8) : 'Actions may not have an undefined "type" property. You may have misspelled an action type string constant.');
+    }
+
+    if (isDispatching) {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(9) : 'Reducers may not dispatch actions.');
+    }
+
+    try {
+      isDispatching = true;
+      currentState = currentReducer(currentState, action);
+    } finally {
+      isDispatching = false;
+    }
+
+    var listeners = currentListeners = nextListeners;
+
+    for (var i = 0; i < listeners.length; i++) {
+      var listener = listeners[i];
+      listener();
+    }
+
+    return action;
+  }
+  /**
+   * Replaces the reducer currently used by the store to calculate the state.
+   *
+   * You might need this if your app implements code splitting and you want to
+   * load some of the reducers dynamically. You might also need this if you
+   * implement a hot reloading mechanism for Redux.
+   *
+   * @param {Function} nextReducer The reducer for the store to use instead.
+   * @returns {void}
+   */
+
+
+  function replaceReducer(nextReducer) {
+    if (typeof nextReducer !== 'function') {
+      throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(10) : "Expected the nextReducer to be a function. Instead, received: '" + kindOf(nextReducer));
+    }
+
+    currentReducer = nextReducer; // This action has a similiar effect to ActionTypes.INIT.
+    // Any reducers that existed in both the new and old rootReducer
+    // will receive the previous state. This effectively populates
+    // the new state tree with any relevant data from the old one.
+
+    dispatch({
+      type: ActionTypes.REPLACE
+    });
+  }
+  /**
+   * Interoperability point for observable/reactive libraries.
+   * @returns {observable} A minimal observable of state changes.
+   * For more information, see the observable proposal:
+   * https://github.com/tc39/proposal-observable
+   */
+
+
+  function observable() {
+    var _ref;
+
+    var outerSubscribe = subscribe;
+    return _ref = {
+      /**
+       * The minimal observable subscription method.
+       * @param {Object} observer Any object that can be used as an observer.
+       * The observer object should have a `next` method.
+       * @returns {subscription} An object with an `unsubscribe` method that can
+       * be used to unsubscribe the observable from the store, and prevent further
+       * emission of values from the observable.
+       */
+      subscribe: function subscribe(observer) {
+        if (typeof observer !== 'object' || observer === null) {
+          throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(11) : "Expected the observer to be an object. Instead, received: '" + kindOf(observer) + "'");
+        }
+
+        function observeState() {
+          if (observer.next) {
+            observer.next(getState());
+          }
+        }
+
+        observeState();
+        var unsubscribe = outerSubscribe(observeState);
+        return {
+          unsubscribe: unsubscribe
+        };
+      }
+    }, _ref[$$observable] = function () {
+      return this;
+    }, _ref;
+  } // When a store is created, an "INIT" action is dispatched so that every
+  // reducer returns their initial state. This effectively populates
+  // the initial state tree.
+
+
+  dispatch({
+    type: ActionTypes.INIT
+  });
+  return _ref2 = {
+    dispatch: dispatch,
+    subscribe: subscribe,
+    getState: getState,
+    replaceReducer: replaceReducer
+  }, _ref2[$$observable] = observable, _ref2;
+}
+/**
+ * Prints a warning in the console if it exists.
+ *
+ * @param {String} message The warning message.
+ * @returns {void}
+ */
+
+
+function warning(message) {
+  /* eslint-disable no-console */
+  if (typeof console !== 'undefined' && typeof console.error === 'function') {
+    console.error(message);
+  }
+  /* eslint-enable no-console */
+
+
+  try {
+    // This error was thrown as a convenience so that if you enable
+    // "break on all exceptions" in your console,
+    // it would pause the execution at this line.
+    throw new Error(message);
+  } catch (e) {} // eslint-disable-line no-empty
+
+}
+/**
+ * Composes single-argument functions from right to left. The rightmost
+ * function can take multiple arguments as it provides the signature for
+ * the resulting composite function.
+ *
+ * @param {...Function} funcs The functions to compose.
+ * @returns {Function} A function obtained by composing the argument functions
+ * from right to left. For example, compose(f, g, h) is identical to doing
+ * (...args) => f(g(h(...args))).
+ */
+
+
+function compose() {
+  for (var _len = arguments.length, funcs = new Array(_len), _key = 0; _key < _len; _key++) {
+    funcs[_key] = arguments[_key];
+  }
+
+  if (funcs.length === 0) {
+    return function (arg) {
+      return arg;
+    };
+  }
+
+  if (funcs.length === 1) {
+    return funcs[0];
+  }
+
+  return funcs.reduce(function (a, b) {
+    return function () {
+      return a(b.apply(void 0, arguments));
+    };
+  });
+}
+/**
+ * Creates a store enhancer that applies middleware to the dispatch method
+ * of the Redux store. This is handy for a variety of tasks, such as expressing
+ * asynchronous actions in a concise manner, or logging every action payload.
+ *
+ * See `redux-thunk` package as an example of the Redux middleware.
+ *
+ * Because middleware is potentially asynchronous, this should be the first
+ * store enhancer in the composition chain.
+ *
+ * Note that each middleware will be given the `dispatch` and `getState` functions
+ * as named arguments.
+ *
+ * @param {...Function} middlewares The middleware chain to be applied.
+ * @returns {Function} A store enhancer applying the middleware.
+ */
+
+
+function applyMiddleware() {
+  for (var _len = arguments.length, middlewares = new Array(_len), _key = 0; _key < _len; _key++) {
+    middlewares[_key] = arguments[_key];
+  }
+
+  return function (createStore) {
+    return function () {
+      var store = createStore.apply(void 0, arguments);
+
+      var _dispatch = function dispatch() {
+        throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(15) : 'Dispatching while constructing your middleware is not allowed. ' + 'Other middleware would not be applied to this dispatch.');
+      };
+
+      var middlewareAPI = {
+        getState: store.getState,
+        dispatch: function dispatch() {
+          return _dispatch.apply(void 0, arguments);
+        }
+      };
+      var chain = middlewares.map(function (middleware) {
+        return middleware(middlewareAPI);
+      });
+      _dispatch = compose.apply(void 0, chain)(store.dispatch);
+      return _objectSpread2(_objectSpread2({}, store), {}, {
+        dispatch: _dispatch
+      });
+    };
+  };
+}
+/*
+ * This is a dummy function to check if the function name has been altered by minification.
+ * If the function has been minified and NODE_ENV !== 'production', warn the user.
+ */
+
+
+function isCrushed() {}
+
+if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
+  warning('You are currently using minified code outside of NODE_ENV === "production". ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or setting mode to production in webpack (https://webpack.js.org/concepts/mode/) ' + 'to ensure you have the correct code for your production build.');
+}
+
+let root;
+
+if (typeof self !== 'undefined') {
+  root = self;
+} else if (typeof window !== 'undefined') {
+  root = window;
+} else if (typeof global !== 'undefined') {
+  root = global;
+} else if (typeof module !== 'undefined') {
+  root = module;
+} else {
+  root = Function('return this')();
+}
+
+const env = root;
+env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+
+let LoadingState;
+
+(function (LoadingState) {
+  LoadingState["Start"] = "Start";
+  LoadingState["Stop"] = "Stop";
+  LoadingState["Depth"] = "Depth";
+})(LoadingState || (LoadingState = {}));
+function isPromise(data) {
+  return typeof data === 'object' && typeof data.then === 'function';
+}
+
+const MetaData = {
+  appModuleName: 'stage',
+  injectedModules: {},
+  reducersMap: {},
+  effectsMap: {},
+  moduleCaches: {},
+  componentCaches: {},
+  facadeMap: null,
+  clientStore: null,
+  moduleGetter: null
+};
+function reducer(target, key, descriptor) {
+  if (!key && !descriptor) {
+    key = target.key;
+    descriptor = target.descriptor;
+  }
+
+  const fun = descriptor.value;
+  fun.__isReducer__ = true;
+  descriptor.enumerable = true;
+  return target.descriptor === descriptor ? target : descriptor;
+}
+function mergeState(target = {}, ...args) {
+
+  return Object.assign({}, target, ...args);
+}
+
+function getModule(moduleName) {
+  if (MetaData.moduleCaches[moduleName]) {
+    return MetaData.moduleCaches[moduleName];
+  }
+
+  const moduleOrPromise = MetaData.moduleGetter[moduleName]();
+  MetaData.moduleCaches[moduleName] = moduleOrPromise;
+
+  if (isPromise(moduleOrPromise)) {
+    return moduleOrPromise.then(module => {
+      MetaData.moduleCaches[moduleName] = module;
+      return module;
+    }, reason => {
+      MetaData.moduleCaches[moduleName] = undefined;
+      throw reason;
+    });
+  }
+
+  return moduleOrPromise;
+}
+
+function _loadModel(moduleName, store = MetaData.clientStore) {
+  const moduleOrPromise = getModule(moduleName);
+
+  if (isPromise(moduleOrPromise)) {
+    return moduleOrPromise.then(module => module.default.model(store));
+  }
+
+  return moduleOrPromise.default.model(store);
+}
+_decorate(null, function (_initialize) {
+  class CoreModuleHandlers {
+    constructor(moduleName, initState) {
+      _initialize(this);
+
+      this.moduleName = moduleName;
+      this.initState = initState;
+    }
+
+  }
+
+  return {
+    F: CoreModuleHandlers,
+    d: [{
+      kind: "field",
+      key: "store",
+      value: void 0
+    }, {
+      kind: "get",
+      key: "actions",
+      value: function actions() {
+        return MetaData.facadeMap[this.moduleName].actions;
+      }
+    }, {
+      kind: "method",
+      key: "getPrivateActions",
+      value: function getPrivateActions(actionsMap) {
+        return MetaData.facadeMap[this.moduleName].actions;
+      }
+    }, {
+      kind: "get",
+      key: "state",
+      value: function state() {
+        return this.store.getState(this.moduleName);
+      }
+    }, {
+      kind: "get",
+      key: "rootState",
+      value: function rootState() {
+        return this.store.getState();
+      }
+    }, {
+      kind: "method",
+      key: "getCurrentActionName",
+      value: function getCurrentActionName() {
+        return this.store.getCurrentActionName();
+      }
+    }, {
+      kind: "get",
+      key: "currentRootState",
+      value: function currentRootState() {
+        return this.store.getCurrentState();
+      }
+    }, {
+      kind: "get",
+      key: "currentState",
+      value: function currentState() {
+        return this.store.getCurrentState(this.moduleName);
+      }
+    }, {
+      kind: "method",
+      key: "dispatch",
+      value: function dispatch(action) {
+        return this.store.dispatch(action);
+      }
+    }, {
+      kind: "method",
+      key: "loadModel",
+      value: function loadModel(moduleName) {
+        return _loadModel(moduleName, this.store);
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: "Init",
+      value: function Init(initState) {
+        return initState;
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: "Update",
+      value: function Update(payload, key) {
+        return mergeState(this.state, payload);
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: "Loading",
+      value: function Loading(payload) {
+        const loading = mergeState(this.state.loading, payload);
+        return mergeState(this.state, {
+          loading
+        });
+      }
+    }]
+  };
+});
+
+const reduxReducer = (state, action) => {
+  return { ...state,
+    ...action.state
+  };
+};
+
+function storeCreator(storeOptions) {
+  const {
+    initState = {},
+    enhancers = [],
+    middlewares
+  } = storeOptions;
+
+  if (middlewares) {
+    const middlewareEnhancer = applyMiddleware(...middlewares);
+    enhancers.push(middlewareEnhancer);
+  }
+
+  if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__(env.__REDUX_DEVTOOLS_EXTENSION__OPTIONS));
+  }
+
+  const store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose(...enhancers) : enhancers[0]);
+  const {
+    dispatch
+  } = store;
+  const reduxStore = store;
+
+  reduxStore.update = (actionName, state, actionData) => {
+    dispatch({
+      type: actionName,
+      state,
+      payload: actionData
+    });
+  };
+
+  return reduxStore;
+}
+function createRedux(storeOptions = {}) {
+  return {
+    storeOptions,
+    storeCreator
+  };
+}
+
 let clientTimer = 0;
 
 function setClientHead(eluxContext, documentHead) {
   eluxContext.documentHead = documentHead;
 
   if (!clientTimer) {
-    clientTimer = env.setTimeout(() => {
+    clientTimer = env$1.setTimeout(() => {
       clientTimer = 0;
       const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
-        env.document.title = arr[1];
+        env$1.document.title = arr[1];
       }
     }, 0);
   }
@@ -4316,7 +5078,7 @@ var Link = React.forwardRef(({
 
       if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
           event.preventDefault();
-          replace ? MetaData.router.replace(rest.href) : MetaData.router.push(rest.href);
+          replace ? MetaData$1.router.replace(rest.href) : MetaData$1.router.push(rest.href);
         }
     }
   };
@@ -4339,7 +5101,7 @@ function setConfig(conf) {
 function createApp(moduleGetter, middlewares = [], appModuleName) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const routeModule = getModule('route');
+  const routeModule = getModule$1('route');
   return {
     useStore({
       storeOptions,
@@ -4352,13 +5114,13 @@ function createApp(moduleGetter, middlewares = [], appModuleName) {
           viewName
         } = {}) {
           const router = createRouter('Browser', routeModule.locationTransform);
-          MetaData.router = router;
-          const renderFun = env[ssrKey] ? hydrate : render;
+          MetaData$1.router = router;
+          const renderFun = env$1[ssrKey] ? hydrate : render;
           const {
             state,
             components = []
-          } = env[ssrKey] || {};
-          const panel = env.document.getElementById(id);
+          } = env$1[ssrKey] || {};
+          const panel = env$1.document.getElementById(id);
           return router.initedPromise.then(routeState => {
             const initState = { ...storeOptions.initState,
               route: routeState,
@@ -4397,7 +5159,7 @@ function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
   setSsrHtmlTpl('');
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const routeModule = getModule('route');
+  const routeModule = getModule$1('route');
   return {
     useStore({
       storeOptions,
@@ -4411,11 +5173,11 @@ function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
           viewName
         } = {}) {
           if (!SSRTPL) {
-            SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
+            SSRTPL = env$1.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }
 
           const router = createRouter(url, routeModule.locationTransform);
-          MetaData.router = router;
+          MetaData$1.router = router;
           return router.initedPromise.then(routeState => {
             const initState = { ...storeOptions.initState,
               route: routeState
@@ -4474,11 +5236,11 @@ function getApp() {
         return prev;
       }, {});
     },
-    GetRouter: () => MetaData.router,
+    GetRouter: () => MetaData$1.router,
     LoadComponent: loadComponent,
     Modules: modules,
     Pagenames: routeConfig.pagenames
   };
 }
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, Switch, clientSide, createApp, createRouteModule, createSsrApp, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, logger, patchActions, reducer, serverSide, setConfig, setLoading, setProcessedError, setSsrHtmlTpl };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState$1 as LoadingState, RouteActionTypes, Switch, clientSide, createApp, createRedux, createRouteModule, createSsrApp, deepMerge, deepMergeState, delayPromise, effect, env$1 as env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, logger, patchActions, reducer$1 as reducer, serverSide, setConfig, setLoading, setProcessedError, setSsrHtmlTpl };

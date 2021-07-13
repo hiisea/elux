@@ -17,17 +17,17 @@ import {loadComponent, setLoadComponentOptions} from './loadComponent';
 import {MetaData, EluxContextKey, EluxContextType} from './sington';
 import type {
   Component,
-  // SetupContext,
-  // RenderFunction,
-  // DefineComponent,
-  // ComputedOptions,
-  // MethodOptions,
-  // ComponentOptionsMixin,
-  // EmitsOptions,
-  // ComponentOptionsWithoutProps,
-  // ComponentOptionsWithArrayProps,
-  // ComponentPropsOptions,
-  // ComponentOptionsWithObjectProps,
+  SetupContext,
+  RenderFunction,
+  DefineComponent,
+  ComputedOptions,
+  MethodOptions,
+  ComponentOptionsMixin,
+  EmitsOptions,
+  ComponentOptionsWithoutProps,
+  ComponentOptionsWithArrayProps,
+  ComponentPropsOptions,
+  ComponentOptionsWithObjectProps,
 } from 'vue';
 import type {
   ModuleGetter,
@@ -39,7 +39,7 @@ import type {
   RootModuleFacade,
   RootModuleAPI,
   RootModuleActions,
-  // EluxComponent,
+  EluxComponent,
 } from '@elux/core';
 import type {RouteModule} from '@elux/route';
 import type {IRouter} from '@elux/route-browser';
@@ -85,76 +85,78 @@ declare module '@vue/runtime-core' {
   }
 }
 
-// interface ExportDefineComponent {
-//   <Props, RawBindings = object>(setup: (props: Readonly<Props>, ctx: SetupContext) => RawBindings | RenderFunction): DefineComponent<
-//     Props,
-//     RawBindings
-//   > &
-//     EluxComponent;
-//   <
-//     Props = {},
-//     RawBindings = {},
-//     D = {},
-//     C extends ComputedOptions = {},
-//     M extends MethodOptions = {},
-//     Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
-//     Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
-//     E extends EmitsOptions = EmitsOptions,
-//     EE extends string = string
-//   >(
-//     options: ComponentOptionsWithoutProps<Props, RawBindings, D, C, M, Mixin, Extends, E, EE>
-//   ): DefineComponent<Props, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
-//   <
-//     PropNames extends string,
-//     RawBindings,
-//     D,
-//     C extends ComputedOptions = {},
-//     M extends MethodOptions = {},
-//     Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
-//     Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
-//     E extends EmitsOptions = Record<string, any>,
-//     EE extends string = string
-//   >(
-//     options: ComponentOptionsWithArrayProps<PropNames, RawBindings, D, C, M, Mixin, Extends, E, EE>
-//   ): DefineComponent<
-//     Readonly<
-//       {
-//         [key in PropNames]?: any;
-//       }
-//     >,
-//     RawBindings,
-//     D,
-//     C,
-//     M,
-//     Mixin,
-//     Extends,
-//     E,
-//     EE
-//   > &
-//     EluxComponent;
-//   <
-//     PropsOptions extends Readonly<ComponentPropsOptions>,
-//     RawBindings,
-//     D,
-//     C extends ComputedOptions = {},
-//     M extends MethodOptions = {},
-//     Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
-//     Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
-//     E extends EmitsOptions = Record<string, any>,
-//     EE extends string = string
-//   >(
-//     options: ComponentOptionsWithObjectProps<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE>
-//   ): DefineComponent<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
-// }
+interface ExportDefineComponent {
+  <Props, RawBindings = object>(setup: (props: Readonly<Props>, ctx: SetupContext) => RawBindings | RenderFunction): DefineComponent<
+    Props,
+    RawBindings
+  > &
+    EluxComponent;
+  <
+    Props = {},
+    RawBindings = {},
+    D = {},
+    C extends ComputedOptions = {},
+    M extends MethodOptions = {},
+    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+    E extends EmitsOptions = EmitsOptions,
+    EE extends string = string
+  >(
+    options: ComponentOptionsWithoutProps<Props, RawBindings, D, C, M, Mixin, Extends, E, EE>
+  ): DefineComponent<Props, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+  <
+    PropNames extends string,
+    RawBindings,
+    D,
+    C extends ComputedOptions = {},
+    M extends MethodOptions = {},
+    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+    E extends EmitsOptions = Record<string, any>,
+    EE extends string = string
+  >(
+    options: ComponentOptionsWithArrayProps<PropNames, RawBindings, D, C, M, Mixin, Extends, E, EE>
+  ): DefineComponent<
+    Readonly<
+      {
+        [key in PropNames]?: any;
+      }
+    >,
+    RawBindings,
+    D,
+    C,
+    M,
+    Mixin,
+    Extends,
+    E,
+    EE
+  > &
+    EluxComponent;
+  <
+    PropsOptions extends Readonly<ComponentPropsOptions>,
+    RawBindings,
+    D,
+    C extends ComputedOptions = {},
+    M extends MethodOptions = {},
+    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+    E extends EmitsOptions = Record<string, any>,
+    EE extends string = string
+  >(
+    options: ComponentOptionsWithObjectProps<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE>
+  ): DefineComponent<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+}
 
-export const defineView = function (...args: [any]) {
+export const defineView: ExportDefineComponent = function (...args: [any]) {
   const view = defineVueComponent(...args);
   return exportView(view);
 };
-export const defineComponent = function (...args: [any]) {
+
+export const defineComponent: ExportDefineComponent = function (...args: [any]) {
   const view = defineVueComponent(...args);
   return exportComponent(view);
 };
+
 let SSRTPL: string;
 
 export function setSsrHtmlTpl(tpl: string) {
@@ -191,8 +193,8 @@ declare const process: any;
 declare const require: any;
 setCoreConfig({MutableData: true});
 
-let StageView: Component;
-const RootComponent: Component = function (props, context) {
+let StageView: any;
+const RootComponent: Component = (props, context) => {
   return h(StageView, props, context.slots);
 };
 

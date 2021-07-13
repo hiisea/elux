@@ -6,6 +6,7 @@ export type { RootModuleFacade as Facade, Dispatch, EluxComponent } from '@elux/
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export type { LoadComponent } from './loadComponent';
 export type { ReduxStore, ReduxOptions } from '@elux/core-redux';
+export { createRedux } from '@elux/core-redux';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { default as DocumentHead } from './components/DocumentHead';

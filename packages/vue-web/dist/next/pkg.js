@@ -5470,7 +5470,7 @@ setConfig$1({
 });
 let StageView;
 
-const RootComponent = function (props, context) {
+const RootComponent = (props, context) => {
   return h(StageView, props, context.slots);
 };
 

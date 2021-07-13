@@ -9,7 +9,7 @@ exports.createApp = createApp;
 exports.createSsrApp = createSsrApp;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.Link = exports.Switch = exports.Else = exports.DocumentHead = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
+exports.Link = exports.Switch = exports.Else = exports.DocumentHead = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = exports.createRedux = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -55,6 +55,10 @@ var _routeBrowser = require("@elux/route-browser");
 var _loadComponent = require("./loadComponent");
 
 var _sington = require("./sington");
+
+var _coreRedux = require("@elux/core-redux");
+
+exports.createRedux = _coreRedux.createRedux;
 
 var _DocumentHead = _interopRequireDefault(require("./components/DocumentHead"));
 

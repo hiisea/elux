@@ -29,6 +29,7 @@ export type {LoadComponent} from './loadComponent';
 
 export type {ReduxStore, ReduxOptions} from '@elux/core-redux';
 
+export {createRedux} from '@elux/core-redux';
 export {
   ActionTypes,
   LoadingState,
