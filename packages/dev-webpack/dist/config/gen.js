@@ -238,6 +238,8 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             nodeEnvConfig,
             vueRender: vueType,
             useSSR,
+            port,
+            proxy,
         },
     };
 }

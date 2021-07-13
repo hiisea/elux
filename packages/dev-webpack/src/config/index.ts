@@ -118,6 +118,8 @@ export function build(projEnvName: string, debug: boolean) {
       nodeEnvConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
       vueRender,
       useSSR,
+      port,
+      proxy,
     },
   } = config;
 
@@ -139,7 +141,10 @@ export function build(projEnvName: string, debug: boolean) {
   if (fs.existsSync(envPath)) {
     fs.copySync(envPath, distPath, {dereference: true});
   }
-
+  fs.outputFileSync(
+    path.join(distPath, 'config.js'),
+    `module.exports = ${JSON.stringify({projectType, port, proxy, clientGlobalVar, serverGlobalVar}, null, 4)}`
+  );
   const webpackCompiler = useSSR ? webpack([clientWebpackConfig, serverWebpackConfig]) : webpack(clientWebpackConfig);
 
   webpackCompiler.run((err: any, stats: any) => {
@@ -155,6 +160,7 @@ export function build(projEnvName: string, debug: boolean) {
     );
   });
 }
+
 export function pack(input: string, output: string, target: string) {
   let outputPath;
   let ouputName;

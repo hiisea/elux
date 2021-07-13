@@ -63,6 +63,10 @@ interface Config {
         nodeEnvConfig: EnvConfig;
         vueRender: '' | 'templete' | 'jsx';
         useSSR: boolean;
+        port: number;
+        proxy: Record<string, {
+            target: string;
+        }>;
     };
 }
 declare function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' | 'development', debugMode: boolean, devServerPort?: number): Config;

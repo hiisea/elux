@@ -132,7 +132,7 @@ export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
               const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
               if (match) {
-                return SSRTPL.replace('</head>', `${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                return SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                   state,
                   components: Object.keys(eluxContext.deps)
                 })};</script>\r\n</head>`).replace(match[0], match[0] + html);

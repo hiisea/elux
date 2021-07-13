@@ -11,9 +11,9 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "jsnext:main": "dist/next/index.js",
+  "main": "dist/cjs/pkg.js",
+  "module": "dist/esm/pkg.js",
+  "jsnext:main": "dist/next/pkg.js",
   "types": "types/",
   "files": [
     "env/",
@@ -31,17 +31,24 @@
     "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts,.tsx\"",
     "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts,.tsx\"",
     "build:ts": "tsc -P ./src --module ESNext --isolatedModules false --noEmit false --outDir ./dist/ts",
-    "build": "yarn build:next & yarn build:esm & yarn build:cjs"
+    "package:next": "cross-env NODE_TAG=next rollup -c",
+    "package:esm": "cross-env NODE_TAG=esm rollup -c",
+    "build": "yarn build:next & yarn build:esm & yarn build:cjs & yarn package:next && yarn package:esm"
+  },
+  "externals": {
+    "react": true,
+    "react-dom": true,
+    "@elux/react-web-redux": true
   },
   "peerDependencies": {
-    "@elux/react-web-redux": "^0.0.2",
     "react": "^16.8.0",
     "react-dom": "^16.8.0"
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
     "@elux/core": "^0.0.3",
-    "@elux/route-browser": "^0.0.3"
+    "@elux/route-browser": "^0.0.3",
+    "@elux/react-web-redux": "^0.0.2"
   },
   "devDependencies": {
     "@types/react": "~17.0.0",

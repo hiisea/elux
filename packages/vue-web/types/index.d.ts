@@ -1,5 +1,5 @@
-import type { Component, SetupContext, RenderFunction, DefineComponent, ComputedOptions, MethodOptions, ComponentOptionsMixin, EmitsOptions, ComponentOptionsWithoutProps, ComponentOptionsWithArrayProps, ComponentPropsOptions, ComponentOptionsWithObjectProps } from 'vue';
-import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions, EluxComponent } from '@elux/core';
+import type { Component } from 'vue';
+import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, IStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
 import type { IRouter } from '@elux/route-browser';
 import type { LoadComponent } from './loadComponent';
 export { createVuex } from '@elux/core-vuex';
@@ -11,16 +11,85 @@ export type { RootModuleFacade as Facade, Dispatch, EluxComponent } from '@elux/
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export type { VuexStore, VuexOptions } from '@elux/core-vuex';
 export type { LoadComponent } from './loadComponent';
-interface ExportDefineComponent {
-    <Props, RawBindings = object>(setup: (props: Readonly<Props>, ctx: SetupContext) => RawBindings | RenderFunction): DefineComponent<Props, RawBindings> & EluxComponent;
-    <Props = {}, RawBindings = {}, D = {}, C extends ComputedOptions = {}, M extends MethodOptions = {}, Mixin extends ComponentOptionsMixin = ComponentOptionsMixin, Extends extends ComponentOptionsMixin = ComponentOptionsMixin, E extends EmitsOptions = EmitsOptions, EE extends string = string>(options: ComponentOptionsWithoutProps<Props, RawBindings, D, C, M, Mixin, Extends, E, EE>): DefineComponent<Props, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
-    <PropNames extends string, RawBindings, D, C extends ComputedOptions = {}, M extends MethodOptions = {}, Mixin extends ComponentOptionsMixin = ComponentOptionsMixin, Extends extends ComponentOptionsMixin = ComponentOptionsMixin, E extends EmitsOptions = Record<string, any>, EE extends string = string>(options: ComponentOptionsWithArrayProps<PropNames, RawBindings, D, C, M, Mixin, Extends, E, EE>): DefineComponent<Readonly<{
-        [key in PropNames]?: any;
-    }>, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
-    <PropsOptions extends Readonly<ComponentPropsOptions>, RawBindings, D, C extends ComputedOptions = {}, M extends MethodOptions = {}, Mixin extends ComponentOptionsMixin = ComponentOptionsMixin, Extends extends ComponentOptionsMixin = ComponentOptionsMixin, E extends EmitsOptions = Record<string, any>, EE extends string = string>(options: ComponentOptionsWithObjectProps<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE>): DefineComponent<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+declare module '@vue/runtime-core' {
+    interface App {
+        render: (options: RenderOptions) => Promise<IStore | string>;
+    }
 }
-export declare const defineView: ExportDefineComponent;
-export declare const defineComponent: ExportDefineComponent;
+export declare const defineView: (args_0: any) => {
+    new (...args: any[]): {
+        $: import("vue").ComponentInternalInstance;
+        $data: {};
+        $props: Partial<{}> & Omit<Readonly<{
+            [x: string]: any;
+        }> & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>;
+        $attrs: {
+            [x: string]: unknown;
+        };
+        $refs: {
+            [x: string]: unknown;
+        };
+        $slots: Readonly<{
+            [name: string]: import("vue").Slot | undefined;
+        }>;
+        $root: import("vue").ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, import("vue").ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}>> | null;
+        $parent: import("vue").ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, import("vue").ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}>> | null;
+        $emit: (event: string, ...args: any[]) => void;
+        $el: any;
+        $options: import("vue").ComponentOptionsBase<Readonly<{
+            [x: string]: any;
+        }>, object, {}, import("vue").ComputedOptions, import("vue").MethodOptions, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, Record<string, any>, string, {}>;
+        $forceUpdate: import("vue").ReactiveEffect<any>;
+        $nextTick: typeof import("vue").nextTick;
+        $watch(source: string | Function, cb: Function, options?: import("vue").WatchOptions<boolean> | undefined): import("vue").WatchStopHandle;
+    } & Readonly<{
+        [x: string]: any;
+    }> & import("vue").ShallowUnwrapRef<{} & object> & {
+        [x: string]: never;
+    } & import("vue").MethodOptions & import("vue").ComponentCustomProperties;
+    __isFragment?: undefined;
+    __isTeleport?: undefined;
+    __isSuspense?: undefined;
+} & import("vue").ComponentOptionsBase<Readonly<{
+    [x: string]: any;
+}>, object, {}, import("vue").ComputedOptions, import("vue").MethodOptions, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, Record<string, any>, string, {}> & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & import("@elux/core").EluxComponent;
+export declare const defineComponent: (args_0: any) => {
+    new (...args: any[]): {
+        $: import("vue").ComponentInternalInstance;
+        $data: {};
+        $props: Partial<{}> & Omit<Readonly<{
+            [x: string]: any;
+        }> & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>;
+        $attrs: {
+            [x: string]: unknown;
+        };
+        $refs: {
+            [x: string]: unknown;
+        };
+        $slots: Readonly<{
+            [name: string]: import("vue").Slot | undefined;
+        }>;
+        $root: import("vue").ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, import("vue").ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}>> | null;
+        $parent: import("vue").ComponentPublicInstance<{}, {}, {}, {}, {}, {}, {}, {}, false, import("vue").ComponentOptionsBase<any, any, any, any, any, any, any, any, any, {}>> | null;
+        $emit: (event: string, ...args: any[]) => void;
+        $el: any;
+        $options: import("vue").ComponentOptionsBase<Readonly<{
+            [x: string]: any;
+        }>, object, {}, import("vue").ComputedOptions, import("vue").MethodOptions, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, Record<string, any>, string, {}>;
+        $forceUpdate: import("vue").ReactiveEffect<any>;
+        $nextTick: typeof import("vue").nextTick;
+        $watch(source: string | Function, cb: Function, options?: import("vue").WatchOptions<boolean> | undefined): import("vue").WatchStopHandle;
+    } & Readonly<{
+        [x: string]: any;
+    }> & import("vue").ShallowUnwrapRef<{} & object> & {
+        [x: string]: never;
+    } & import("vue").MethodOptions & import("vue").ComponentCustomProperties;
+    __isFragment?: undefined;
+    __isTeleport?: undefined;
+    __isSuspense?: undefined;
+} & import("vue").ComponentOptionsBase<Readonly<{
+    [x: string]: any;
+}>, object, {}, import("vue").ComputedOptions, import("vue").MethodOptions, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, Record<string, any>, string, {}> & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & import("@elux/core").EluxComponent;
 export declare function setSsrHtmlTpl(tpl: string): void;
 export declare function setConfig(conf: {
     actionMaxHistory?: number;
@@ -36,26 +105,15 @@ export declare function setConfig(conf: {
 }): void;
 export interface RenderOptions {
     viewName?: string;
-    ssrKey?: string;
-}
-export interface SSROptions {
-    viewName?: string;
     id?: string;
     ssrKey?: string;
-    url: string;
+    url?: string;
 }
 export declare function createApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        render({ ssrKey, viewName }?: RenderOptions): Promise<{
-            store: import("@elux/core").IStore<any> & B;
-            app: import("vue").App<Element>;
-        }>;
-    };
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): import("vue").App<Element>;
 };
 export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        render({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
-    };
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): import("vue").App<Element>;
 };
 export declare function patchActions(typeName: string, json?: string): void;
 export declare type GetAPP<A extends RootModuleFacade> = {

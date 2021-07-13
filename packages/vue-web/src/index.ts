@@ -12,22 +12,22 @@ import {
   exportComponent,
 } from '@elux/core';
 import {createRouter} from '@elux/route-browser';
-import {createApp as createVue, createSSRApp, defineComponent as defineVueComponent} from 'vue';
+import {createApp as createVue, createSSRApp, defineComponent as defineVueComponent, h} from 'vue';
 import {loadComponent, setLoadComponentOptions} from './loadComponent';
 import {MetaData, EluxContextKey, EluxContextType} from './sington';
 import type {
   Component,
-  SetupContext,
-  RenderFunction,
-  DefineComponent,
-  ComputedOptions,
-  MethodOptions,
-  ComponentOptionsMixin,
-  EmitsOptions,
-  ComponentOptionsWithoutProps,
-  ComponentOptionsWithArrayProps,
-  ComponentPropsOptions,
-  ComponentOptionsWithObjectProps,
+  // SetupContext,
+  // RenderFunction,
+  // DefineComponent,
+  // ComputedOptions,
+  // MethodOptions,
+  // ComponentOptionsMixin,
+  // EmitsOptions,
+  // ComponentOptionsWithoutProps,
+  // ComponentOptionsWithArrayProps,
+  // ComponentPropsOptions,
+  // ComponentOptionsWithObjectProps,
 } from 'vue';
 import type {
   ModuleGetter,
@@ -35,10 +35,11 @@ import type {
   StoreBuilder,
   BStoreOptions,
   BStore,
+  IStore,
   RootModuleFacade,
   RootModuleAPI,
   RootModuleActions,
-  EluxComponent,
+  // EluxComponent,
 } from '@elux/core';
 import type {RouteModule} from '@elux/route';
 import type {IRouter} from '@elux/route-browser';
@@ -78,73 +79,79 @@ export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, Pag
 export type {VuexStore, VuexOptions} from '@elux/core-vuex';
 export type {LoadComponent} from './loadComponent';
 
-interface ExportDefineComponent {
-  <Props, RawBindings = object>(setup: (props: Readonly<Props>, ctx: SetupContext) => RawBindings | RenderFunction): DefineComponent<
-    Props,
-    RawBindings
-  > &
-    EluxComponent;
-  <
-    Props = {},
-    RawBindings = {},
-    D = {},
-    C extends ComputedOptions = {},
-    M extends MethodOptions = {},
-    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
-    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
-    E extends EmitsOptions = EmitsOptions,
-    EE extends string = string
-  >(
-    options: ComponentOptionsWithoutProps<Props, RawBindings, D, C, M, Mixin, Extends, E, EE>
-  ): DefineComponent<Props, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
-  <
-    PropNames extends string,
-    RawBindings,
-    D,
-    C extends ComputedOptions = {},
-    M extends MethodOptions = {},
-    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
-    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
-    E extends EmitsOptions = Record<string, any>,
-    EE extends string = string
-  >(
-    options: ComponentOptionsWithArrayProps<PropNames, RawBindings, D, C, M, Mixin, Extends, E, EE>
-  ): DefineComponent<
-    Readonly<
-      {
-        [key in PropNames]?: any;
-      }
-    >,
-    RawBindings,
-    D,
-    C,
-    M,
-    Mixin,
-    Extends,
-    E,
-    EE
-  > &
-    EluxComponent;
-  <
-    PropsOptions extends Readonly<ComponentPropsOptions>,
-    RawBindings,
-    D,
-    C extends ComputedOptions = {},
-    M extends MethodOptions = {},
-    Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
-    Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
-    E extends EmitsOptions = Record<string, any>,
-    EE extends string = string
-  >(
-    options: ComponentOptionsWithObjectProps<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE>
-  ): DefineComponent<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+declare module '@vue/runtime-core' {
+  interface App {
+    render: (options: RenderOptions) => Promise<IStore | string>;
+  }
 }
 
-export const defineView: ExportDefineComponent = function (...args: [any]) {
+// interface ExportDefineComponent {
+//   <Props, RawBindings = object>(setup: (props: Readonly<Props>, ctx: SetupContext) => RawBindings | RenderFunction): DefineComponent<
+//     Props,
+//     RawBindings
+//   > &
+//     EluxComponent;
+//   <
+//     Props = {},
+//     RawBindings = {},
+//     D = {},
+//     C extends ComputedOptions = {},
+//     M extends MethodOptions = {},
+//     Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+//     Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+//     E extends EmitsOptions = EmitsOptions,
+//     EE extends string = string
+//   >(
+//     options: ComponentOptionsWithoutProps<Props, RawBindings, D, C, M, Mixin, Extends, E, EE>
+//   ): DefineComponent<Props, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+//   <
+//     PropNames extends string,
+//     RawBindings,
+//     D,
+//     C extends ComputedOptions = {},
+//     M extends MethodOptions = {},
+//     Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+//     Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+//     E extends EmitsOptions = Record<string, any>,
+//     EE extends string = string
+//   >(
+//     options: ComponentOptionsWithArrayProps<PropNames, RawBindings, D, C, M, Mixin, Extends, E, EE>
+//   ): DefineComponent<
+//     Readonly<
+//       {
+//         [key in PropNames]?: any;
+//       }
+//     >,
+//     RawBindings,
+//     D,
+//     C,
+//     M,
+//     Mixin,
+//     Extends,
+//     E,
+//     EE
+//   > &
+//     EluxComponent;
+//   <
+//     PropsOptions extends Readonly<ComponentPropsOptions>,
+//     RawBindings,
+//     D,
+//     C extends ComputedOptions = {},
+//     M extends MethodOptions = {},
+//     Mixin extends ComponentOptionsMixin = ComponentOptionsMixin,
+//     Extends extends ComponentOptionsMixin = ComponentOptionsMixin,
+//     E extends EmitsOptions = Record<string, any>,
+//     EE extends string = string
+//   >(
+//     options: ComponentOptionsWithObjectProps<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE>
+//   ): DefineComponent<PropsOptions, RawBindings, D, C, M, Mixin, Extends, E, EE> & EluxComponent;
+// }
+
+export const defineView = function (...args: [any]) {
   const view = defineVueComponent(...args);
   return exportView(view);
 };
-export const defineComponent: ExportDefineComponent = function (...args: [any]) {
+export const defineComponent = function (...args: [any]) {
   const view = defineVueComponent(...args);
   return exportComponent(view);
 };
@@ -175,18 +182,19 @@ export function setConfig(conf: {
 
 export interface RenderOptions {
   viewName?: string;
-  ssrKey?: string;
-}
-export interface SSROptions {
-  viewName?: string;
   id?: string;
   ssrKey?: string;
-  url: string;
+  url?: string;
 }
 
 declare const process: any;
 declare const require: any;
 setCoreConfig({MutableData: true});
+
+let StageView: Component;
+const RootComponent: Component = function () {
+  return h(StageView);
+};
 
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   defineModuleGetter(moduleGetter, appModuleName);
@@ -194,28 +202,29 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
   const routeModule = getModule('route') as RouteModule;
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
-      return {
-        render({ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
-          const router = createRouter('Browser', routeModule.locationTransform);
-          MetaData.router = router;
-          // const renderFun = env[ssrKey] ? hydrate : render;
-          const {state, components = []}: {state: any; components: string[]} = env[ssrKey] || {};
-          return router.initedPromise.then((routeState) => {
-            const initState = {...storeOptions.initState, route: routeState, ...state};
-            const baseStore = storeCreator({...storeOptions, initState});
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
-              routeModule.model(store);
-              router.setStore(store);
-              const app = createVue(AppView).use(store as any);
-              app.provide<EluxContextType>(EluxContextKey, {store, documentHead: ''});
-              if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
-                env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
-              }
-              return {store, app};
-            });
+      const app = createVue(RootComponent);
+      app.render = function ({id = 'root', ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
+        const router = createRouter('Browser', routeModule.locationTransform);
+        MetaData.router = router;
+        const {state, components = []}: {state: any; components: string[]} = env[ssrKey] || {};
+        return router.initedPromise.then((routeState) => {
+          const initState = {...storeOptions.initState, route: routeState, ...state};
+          const baseStore = storeCreator({...storeOptions, initState});
+          return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
+            StageView = AppView;
+            routeModule.model(store);
+            router.setStore(store);
+            app.use(store as any);
+            app.provide<EluxContextType>(EluxContextKey, {store, documentHead: ''});
+            if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+              env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
+            }
+            app.mount(`#${id}`);
+            return store;
           });
-        },
+        });
       };
+      return app;
     },
   };
 }
@@ -227,39 +236,40 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
   const routeModule = getModule('route') as RouteModule;
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
-      return {
-        render({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
-          if (!SSRTPL) {
-            SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
-          }
-          const router = createRouter(url, routeModule.locationTransform);
-          MetaData.router = router;
-          return router.initedPromise.then((routeState) => {
-            const initState = {...storeOptions.initState, route: routeState};
-            const baseStore = storeCreator({...storeOptions, initState});
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
-              const state = store.getState();
-              const eluxContext = {deps: {}, store, documentHead: ''};
-              const app = createSSRApp(AppView).use(store as any);
-              app.provide<EluxContextType>(EluxContextKey, eluxContext);
-              const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
-              return htmlPromise.then((html) => {
-                const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-                if (match) {
-                  return SSRTPL.replace(
-                    '</head>',
-                    `${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                      state,
-                      components: Object.keys(eluxContext.deps),
-                    })};</script>\r\n</head>`
-                  ).replace(match[0], match[0] + html);
-                }
-                return html;
-              });
+      const app = createSSRApp(RootComponent);
+      app.render = function ({id = 'root', ssrKey = 'eluxInitStore', url = '/', viewName}: RenderOptions) {
+        if (!SSRTPL) {
+          SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
+        }
+        const router = createRouter(url, routeModule.locationTransform);
+        MetaData.router = router;
+        return router.initedPromise.then((routeState) => {
+          const initState = {...storeOptions.initState, route: routeState};
+          const baseStore = storeCreator({...storeOptions, initState});
+          return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
+            StageView = AppView;
+            const state = store.getState();
+            const eluxContext = {deps: {}, store, documentHead: ''};
+            app.use(store as any);
+            app.provide<EluxContextType>(EluxContextKey, eluxContext);
+            const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
+            return htmlPromise.then((html) => {
+              const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+              if (match) {
+                return SSRTPL.replace(
+                  '</head>',
+                  `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                    state,
+                    components: Object.keys(eluxContext.deps),
+                  })};</script>\r\n</head>`
+                ).replace(match[0], match[0] + html);
+              }
+              return html;
             });
           });
-        },
+        });
       };
+      return app;
     },
   };
 }

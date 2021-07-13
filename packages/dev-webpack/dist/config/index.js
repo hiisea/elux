@@ -83,7 +83,7 @@ async function dev(projEnvName, debug, devServerPort) {
 exports.dev = dev;
 function build(projEnvName, debug) {
     const config = gen_1.default(process.cwd(), projEnvName, 'production', debug);
-    const { clientWebpackConfig, serverWebpackConfig, projectConfig: { envPath, publicPath, distPath, projectType, nodeEnv, debugMode, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, }, } = config;
+    const { clientWebpackConfig, serverWebpackConfig, projectConfig: { envPath, publicPath, distPath, projectType, nodeEnv, debugMode, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, port, proxy, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
@@ -97,6 +97,7 @@ function build(projEnvName, debug) {
     if (fs_extra_1.default.existsSync(envPath)) {
         fs_extra_1.default.copySync(envPath, distPath, { dereference: true });
     }
+    fs_extra_1.default.outputFileSync(path_1.default.join(distPath, 'config.js'), `module.exports = ${JSON.stringify({ projectType, port, proxy, clientGlobalVar, serverGlobalVar }, null, 4)}`);
     const webpackCompiler = useSSR ? webpack_1.default([clientWebpackConfig, serverWebpackConfig]) : webpack_1.default(clientWebpackConfig);
     webpackCompiler.run((err, stats) => {
         if (err)

@@ -13,11 +13,11 @@ const tag = process.env.NODE_TAG || process.env.NODE_ENV;
 function createConfig(inputFile, externals, aliasEntries) {
   const outputFile = inputFile.replace('src/', '');
   const cfg = {
-    next: {output: [{file: `dist/next/${outputFile}index.js`, format: 'esm'}], mainFields: ['jsnext:main', 'module', 'main']},
+    next: {output: [{file: `dist/next/${outputFile}pkg.js`, format: 'esm'}], mainFields: ['jsnext:main', 'module', 'main']},
     esm: {
       output: [
-        {file: `dist/esm/${outputFile}index.js`, format: 'esm'},
-        {file: `dist/cjs/${outputFile}index.js`, format: 'cjs'},
+        {file: `dist/esm/${outputFile}pkg.js`, format: 'esm'},
+        {file: `dist/cjs/${outputFile}pkg.js`, format: 'cjs'},
       ].filter(Boolean),
       mainFields: ['module', 'main'],
     },

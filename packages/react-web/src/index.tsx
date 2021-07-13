@@ -163,7 +163,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
               if (match) {
                 return SSRTPL.replace(
                   '</head>',
-                  `${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                  `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                     state,
                     components: Object.keys(eluxContext.deps),
                   })};</script>\r\n</head>`

@@ -1,13 +1,12 @@
 import {connect} from 'react-redux';
-import {exportView} from '@elux/core';
+import {exportView} from '@elux/react-web';
 import type {Options} from 'react-redux';
 import type {ComponentType, FunctionComponent, ComponentClass} from 'react';
-import type {Dispatch, EluxComponent} from '@elux/core';
+import type {Dispatch, EluxComponent} from '@elux/react-web';
 
-export {Provider} from 'react-redux';
-export {createRedux} from '@elux/core-redux';
+export {createRedux} from '@elux/react-web';
 
-export type {ReduxStore, ReduxOptions} from '@elux/core-redux';
+export type {ReduxStore, ReduxOptions} from '@elux/react-web';
 export type GetProps<C> = C extends FunctionComponent<infer P> ? P : C extends ComponentClass<infer P> ? P : never;
 
 export type InferableComponentEnhancerWithProps<TInjectedProps> = <C>(
@@ -25,3 +24,5 @@ export const connectRedux: ConnectRedux = function (...args) {
     return exportView(connect(...args)(component)) as any;
   };
 };
+
+export * from 'react-redux';

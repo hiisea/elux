@@ -1159,6 +1159,22 @@
     babel-plugin-root-import "~6.6.0"
     core-js "*"
 
+"@elux/core-redux@^0.0.2":
+  version "0.0.2"
+  resolved "http://localhost:4873/@elux%2fcore-redux/-/core-redux-0.0.2.tgz#0868160d6c5c876549e7ae91100d9cc019ea363d"
+  integrity sha512-dmwrMzmmME5ZWafbocPFN6x4bAJoBEnlgDphLaPELguqXMn4Xyx7Xn7z2a3SE9DcVmC4YdDMwtfTVDivG08lsg==
+  dependencies:
+    "@babel/runtime" "~7.12.18"
+    "@elux/core" "^0.0.4"
+    redux "^4.1.0"
+
+"@elux/core@^0.0.4":
+  version "0.0.4"
+  resolved "http://localhost:4873/@elux%2fcore/-/core-0.0.4.tgz#5e8575ff4109cf6e12f135e93bddff3b21ebf93c"
+  integrity sha512-bgC4uWEULh9XMOoCcpdQux792dZEaPlIzleL6HpFvfaAa7pE6J5fnZTB/bbO+EqaxHgWE5MOw0RKnetgGioQBw==
+  dependencies:
+    "@babel/runtime" "~7.12.18"
+
 "@elux/dev-pkg@~1.0.0", "@elux/dev-pkg@~1.0.3":
   version "1.0.3"
   resolved "http://localhost:4873/@elux%2fdev-pkg/-/dev-pkg-1.0.3.tgz#19c06d71c51690df19a87757f51d85919cd7b1ca"
@@ -1194,6 +1210,15 @@
     eslint-plugin-react "~7.23.0"
     eslint-plugin-react-hooks "~4.2.0"
     eslint-plugin-vue "~7.9.0"
+
+"@elux/react-web-redux@^0.0.2":
+  version "0.0.2"
+  resolved "http://localhost:4873/@elux%2freact-web-redux/-/react-web-redux-0.0.2.tgz#4940fd2b7fca6269fa8743c1628a21d39fa3da07"
+  integrity sha512-eGIgPDopUNXn+uspnnWC7OIg/23a8PNlo2EhExUPCr0WTz28YkhMO+50MvdmLhbgBRZHCYwnPq5WtqFuE/YqAQ==
+  dependencies:
+    "@babel/runtime" "~7.12.18"
+    "@elux/core-redux" "^0.0.2"
+    react-redux "^7.2.2"
 
 "@elux/stylelint-config@~1.0.0":
   version "1.0.0"

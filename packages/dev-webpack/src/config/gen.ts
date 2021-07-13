@@ -206,6 +206,8 @@ interface Config {
     nodeEnvConfig: EnvConfig;
     vueRender: '' | 'templete' | 'jsx';
     useSSR: boolean;
+    port: number;
+    proxy: Record<string, {target: string}>;
   };
 }
 
@@ -313,6 +315,8 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
       nodeEnvConfig,
       vueRender: vueType,
       useSSR,
+      port,
+      proxy,
     },
   };
 }

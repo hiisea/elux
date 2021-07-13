@@ -100,6 +100,11 @@ function setConfig(conf) {
 (0, _core.setConfig)({
   MutableData: true
 });
+var StageView;
+
+var RootComponent = function RootComponent() {
+  return (0, _vue.h)(StageView);
+};
 
 function createApp(moduleGetter, middlewares, appModuleName) {
   if (middlewares === void 0) {
@@ -113,51 +118,54 @@ function createApp(moduleGetter, middlewares, appModuleName) {
     useStore: function useStore(_ref) {
       var storeOptions = _ref.storeOptions,
           storeCreator = _ref.storeCreator;
-      return {
-        render: function render(_temp) {
-          var _ref2 = _temp === void 0 ? {} : _temp,
-              _ref2$ssrKey = _ref2.ssrKey,
-              ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
-              viewName = _ref2.viewName;
+      var app = (0, _vue.createApp)(RootComponent);
 
-          var router = (0, _routeBrowser.createRouter)('Browser', routeModule.locationTransform);
-          _sington.MetaData.router = router;
+      app.render = function (_temp) {
+        var _ref2 = _temp === void 0 ? {} : _temp,
+            _ref2$id = _ref2.id,
+            id = _ref2$id === void 0 ? 'root' : _ref2$id,
+            _ref2$ssrKey = _ref2.ssrKey,
+            ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
+            viewName = _ref2.viewName;
 
-          var _ref3 = _env.default[ssrKey] || {},
-              state = _ref3.state,
-              _ref3$components = _ref3.components,
-              components = _ref3$components === void 0 ? [] : _ref3$components;
+        var router = (0, _routeBrowser.createRouter)('Browser', routeModule.locationTransform);
+        _sington.MetaData.router = router;
 
-          return router.initedPromise.then(function (routeState) {
-            var initState = (0, _extends2.default)({}, storeOptions.initState, {
-              route: routeState
-            }, state);
-            var baseStore = storeCreator((0, _extends2.default)({}, storeOptions, {
-              initState: initState
-            }));
-            return (0, _core.renderApp)(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref4) {
-              var store = _ref4.store,
-                  AppView = _ref4.AppView;
-              routeModule.model(store);
-              router.setStore(store);
-              var app = (0, _vue.createApp)(AppView).use(store);
-              app.provide(_sington.EluxContextKey, {
-                store: store,
-                documentHead: ''
-              });
+        var _ref3 = _env.default[ssrKey] || {},
+            state = _ref3.state,
+            _ref3$components = _ref3.components,
+            components = _ref3$components === void 0 ? [] : _ref3$components;
 
-              if (process.env.NODE_ENV === 'development' && _env.default.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
-                _env.default.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
-              }
-
-              return {
-                store: store,
-                app: app
-              };
+        return router.initedPromise.then(function (routeState) {
+          var initState = (0, _extends2.default)({}, storeOptions.initState, {
+            route: routeState
+          }, state);
+          var baseStore = storeCreator((0, _extends2.default)({}, storeOptions, {
+            initState: initState
+          }));
+          return (0, _core.renderApp)(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref4) {
+            var store = _ref4.store,
+                AppView = _ref4.AppView;
+            StageView = AppView;
+            routeModule.model(store);
+            router.setStore(store);
+            app.use(store);
+            app.provide(_sington.EluxContextKey, {
+              store: store,
+              documentHead: ''
             });
+
+            if (process.env.NODE_ENV === 'development' && _env.default.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+              _env.default.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
+            }
+
+            app.mount("#" + id);
+            return store;
           });
-        }
+        });
       };
+
+      return app;
     }
   };
 }
@@ -175,58 +183,62 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
     useStore: function useStore(_ref5) {
       var storeOptions = _ref5.storeOptions,
           storeCreator = _ref5.storeCreator;
-      return {
-        render: function render(_ref6) {
-          var _ref6$id = _ref6.id,
-              id = _ref6$id === void 0 ? 'root' : _ref6$id,
-              _ref6$ssrKey = _ref6.ssrKey,
-              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
-              url = _ref6.url,
-              viewName = _ref6.viewName;
+      var app = (0, _vue.createSSRApp)(RootComponent);
 
-          if (!SSRTPL) {
-            SSRTPL = _env.default.decodeBas64('process.env.ELUX_ENV_SSRTPL');
-          }
+      app.render = function (_ref6) {
+        var _ref6$id = _ref6.id,
+            id = _ref6$id === void 0 ? 'root' : _ref6$id,
+            _ref6$ssrKey = _ref6.ssrKey,
+            ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
+            _ref6$url = _ref6.url,
+            url = _ref6$url === void 0 ? '/' : _ref6$url,
+            viewName = _ref6.viewName;
 
-          var router = (0, _routeBrowser.createRouter)(url, routeModule.locationTransform);
-          _sington.MetaData.router = router;
-          return router.initedPromise.then(function (routeState) {
-            var initState = (0, _extends2.default)({}, storeOptions.initState, {
-              route: routeState
-            });
-            var baseStore = storeCreator((0, _extends2.default)({}, storeOptions, {
-              initState: initState
-            }));
-            return (0, _core.ssrApp)(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref7) {
-              var store = _ref7.store,
-                  AppView = _ref7.AppView;
-              var state = store.getState();
-              var eluxContext = {
-                deps: {},
-                store: store,
-                documentHead: ''
-              };
-              var app = (0, _vue.createSSRApp)(AppView).use(store);
-              app.provide(_sington.EluxContextKey, eluxContext);
+        if (!SSRTPL) {
+          SSRTPL = _env.default.decodeBas64('process.env.ELUX_ENV_SSRTPL');
+        }
 
-              var htmlPromise = require('@vue/server-renderer').renderToString(app);
+        var router = (0, _routeBrowser.createRouter)(url, routeModule.locationTransform);
+        _sington.MetaData.router = router;
+        return router.initedPromise.then(function (routeState) {
+          var initState = (0, _extends2.default)({}, storeOptions.initState, {
+            route: routeState
+          });
+          var baseStore = storeCreator((0, _extends2.default)({}, storeOptions, {
+            initState: initState
+          }));
+          return (0, _core.ssrApp)(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref7) {
+            var store = _ref7.store,
+                AppView = _ref7.AppView;
+            StageView = AppView;
+            var state = store.getState();
+            var eluxContext = {
+              deps: {},
+              store: store,
+              documentHead: ''
+            };
+            app.use(store);
+            app.provide(_sington.EluxContextKey, eluxContext);
 
-              return htmlPromise.then(function (html) {
-                var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
+            var htmlPromise = require('@vue/server-renderer').renderToString(app);
 
-                if (match) {
-                  return SSRTPL.replace('</head>', eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
-                    state: state,
-                    components: Object.keys(eluxContext.deps)
-                  }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
-                }
+            return htmlPromise.then(function (html) {
+              var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
-                return html;
-              });
+              if (match) {
+                return SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                  state: state,
+                  components: Object.keys(eluxContext.deps)
+                }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
+              }
+
+              return html;
             });
           });
-        }
+        });
       };
+
+      return app;
     }
   };
 }
