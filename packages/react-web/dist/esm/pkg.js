@@ -1,6 +1,5 @@
 import React, { Component as Component$3, useContext, useEffect } from 'react';
 import { hydrate, render } from 'react-dom';
-export { Provider, connectRedux, createRedux } from '@elux/react-web-redux';
 
 function _extends() {
   _extends = Object.assign || function (target) {
@@ -5722,12 +5721,14 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
       var storeOptions = _ref5.storeOptions,
           storeCreator = _ref5.storeCreator;
       return {
-        render: function render(_ref6) {
-          var _ref6$id = _ref6.id,
+        render: function render(_temp2) {
+          var _ref6 = _temp2 === void 0 ? {} : _temp2,
+              _ref6$id = _ref6.id,
               id = _ref6$id === void 0 ? 'root' : _ref6$id,
               _ref6$ssrKey = _ref6.ssrKey,
               ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
-              url = _ref6.url,
+              _ref6$url = _ref6.url,
+              url = _ref6$url === void 0 ? '/' : _ref6$url,
               viewName = _ref6.viewName;
 
           if (!SSRTPL) {

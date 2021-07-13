@@ -35,8 +35,8 @@ setCoreConfig({
 });
 var StageView;
 
-var RootComponent = function RootComponent() {
-  return h(StageView);
+var RootComponent = function RootComponent(props, context) {
+  return h(StageView, props, context.slots);
 };
 
 export function createApp(moduleGetter, middlewares, appModuleName) {
@@ -118,8 +118,9 @@ export function createSsrApp(moduleGetter, middlewares, appModuleName) {
           storeCreator = _ref5.storeCreator;
       var app = createSSRApp(RootComponent);
 
-      app.render = function (_ref6) {
-        var _ref6$id = _ref6.id,
+      app.render = function (_temp2) {
+        var _ref6 = _temp2 === void 0 ? {} : _temp2,
+            _ref6$id = _ref6.id,
             id = _ref6$id === void 0 ? 'root' : _ref6$id,
             _ref6$ssrKey = _ref6.ssrKey,
             ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,

@@ -4,7 +4,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var React = require('react');
 var reactDom = require('react-dom');
-var reactWebRedux = require('@elux/react-web-redux');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -5730,12 +5729,14 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
       var storeOptions = _ref5.storeOptions,
           storeCreator = _ref5.storeCreator;
       return {
-        render: function render(_ref6) {
-          var _ref6$id = _ref6.id,
+        render: function render(_temp2) {
+          var _ref6 = _temp2 === void 0 ? {} : _temp2,
+              _ref6$id = _ref6.id,
               id = _ref6$id === void 0 ? 'root' : _ref6$id,
               _ref6$ssrKey = _ref6.ssrKey,
               ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
-              url = _ref6.url,
+              _ref6$url = _ref6.url,
+              url = _ref6$url === void 0 ? '/' : _ref6$url,
               viewName = _ref6.viewName;
 
           if (!SSRTPL) {
@@ -5813,24 +5814,6 @@ function getApp() {
   };
 }
 
-Object.defineProperty(exports, 'Provider', {
-  enumerable: true,
-  get: function () {
-    return reactWebRedux.Provider;
-  }
-});
-Object.defineProperty(exports, 'connectRedux', {
-  enumerable: true,
-  get: function () {
-    return reactWebRedux.connectRedux;
-  }
-});
-Object.defineProperty(exports, 'createRedux', {
-  enumerable: true,
-  get: function () {
-    return reactWebRedux.createRedux;
-  }
-});
 exports.ActionTypes = ActionTypes;
 exports.BaseModuleHandlers = ModuleWithRouteHandlers;
 exports.DocumentHead = DocumentHead;

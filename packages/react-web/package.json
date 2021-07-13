@@ -37,8 +37,7 @@
   },
   "externals": {
     "react": true,
-    "react-dom": true,
-    "@elux/react-web-redux": true
+    "react-dom": true
   },
   "peerDependencies": {
     "react": "^16.8.0",
@@ -47,8 +46,7 @@
   "dependencies": {
     "@babel/runtime": "~7.12.18",
     "@elux/core": "^0.0.3",
-    "@elux/route-browser": "^0.0.3",
-    "@elux/react-web-redux": "^0.0.2"
+    "@elux/route-browser": "^0.0.3"
   },
   "devDependencies": {
     "@types/react": "~17.0.0",

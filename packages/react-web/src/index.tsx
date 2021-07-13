@@ -26,7 +26,7 @@ export type {RootModuleFacade as Facade, Dispatch, EluxComponent} from '@elux/co
 
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
 export type {LoadComponent} from './loadComponent';
-export type {ConnectRedux} from '@elux/react-web-redux';
+
 export type {ReduxStore, ReduxOptions} from '@elux/core-redux';
 
 export {
@@ -52,7 +52,7 @@ export {
   EmptyModuleHandlers,
 } from '@elux/core';
 export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
-export {connectRedux, createRedux, Provider} from '@elux/react-web-redux';
+
 export {default as DocumentHead} from './components/DocumentHead';
 export {default as Else} from './components/Else';
 export {default as Switch} from './components/Switch';
@@ -89,12 +89,7 @@ export interface RenderOptions {
   viewName?: string;
   id?: string;
   ssrKey?: string;
-}
-export interface SSROptions {
-  viewName?: string;
-  id?: string;
-  ssrKey?: string;
-  url: string;
+  url?: string;
 }
 
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
@@ -141,7 +136,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return {
-        render({id = 'root', ssrKey = 'eluxInitStore', url, viewName}: SSROptions) {
+        render({id = 'root', ssrKey = 'eluxInitStore', url = '/', viewName}: RenderOptions = {}) {
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }

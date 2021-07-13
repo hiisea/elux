@@ -5470,8 +5470,8 @@ setConfig$1({
 });
 let StageView;
 
-const RootComponent = function () {
-  return h(StageView);
+const RootComponent = function (props, context) {
+  return h(StageView, props, context.slots);
 };
 
 function createApp(moduleGetter, middlewares = [], appModuleName) {
@@ -5549,7 +5549,7 @@ function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
         ssrKey = 'eluxInitStore',
         url = '/',
         viewName
-      }) {
+      } = {}) {
         if (!SSRTPL) {
           SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
         }

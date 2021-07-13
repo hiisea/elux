@@ -1,6 +1,5 @@
 import React, { Component as Component$3, useContext, useEffect } from 'react';
 import { hydrate, render } from 'react-dom';
-export { Provider, connectRedux, createRedux } from '@elux/react-web-redux';
 
 let root;
 
@@ -4408,9 +4407,9 @@ function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
         render({
           id = 'root',
           ssrKey = 'eluxInitStore',
-          url,
+          url = '/',
           viewName
-        }) {
+        } = {}) {
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }

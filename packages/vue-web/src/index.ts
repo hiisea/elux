@@ -81,7 +81,7 @@ export type {LoadComponent} from './loadComponent';
 
 declare module '@vue/runtime-core' {
   interface App {
-    render: (options: RenderOptions) => Promise<IStore | string>;
+    render: (options?: RenderOptions) => Promise<IStore | string>;
   }
 }
 
@@ -192,8 +192,8 @@ declare const require: any;
 setCoreConfig({MutableData: true});
 
 let StageView: Component;
-const RootComponent: Component = function () {
-  return h(StageView);
+const RootComponent: Component = function (props, context) {
+  return h(StageView, props, context.slots);
 };
 
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
@@ -237,7 +237,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       const app = createSSRApp(RootComponent);
-      app.render = function ({id = 'root', ssrKey = 'eluxInitStore', url = '/', viewName}: RenderOptions) {
+      app.render = function ({id = 'root', ssrKey = 'eluxInitStore', url = '/', viewName}: RenderOptions = {}) {
         if (!SSRTPL) {
           SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
         }

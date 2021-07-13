@@ -8,7 +8,6 @@ import { loadComponent, setLoadComponentOptions } from './loadComponent';
 import { MetaData, EluxContext } from './sington';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
-export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
 export { default as DocumentHead } from './components/DocumentHead';
 export { default as Else } from './components/Else';
 export { default as Switch } from './components/Switch';
@@ -95,9 +94,9 @@ export function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
         render({
           id = 'root',
           ssrKey = 'eluxInitStore',
-          url,
+          url = '/',
           viewName
-        }) {
+        } = {}) {
           if (!SSRTPL) {
             SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }

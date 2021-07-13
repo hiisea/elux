@@ -5,11 +5,9 @@ import type { LoadComponent } from './loadComponent';
 export type { RootModuleFacade as Facade, Dispatch, EluxComponent } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export type { LoadComponent } from './loadComponent';
-export type { ConnectRedux } from '@elux/react-web-redux';
 export type { ReduxStore, ReduxOptions } from '@elux/core-redux';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
-export { connectRedux, createRedux, Provider } from '@elux/react-web-redux';
 export { default as DocumentHead } from './components/DocumentHead';
 export { default as Else } from './components/Else';
 export { default as Switch } from './components/Switch';
@@ -33,12 +31,7 @@ export interface RenderOptions {
     viewName?: string;
     id?: string;
     ssrKey?: string;
-}
-export interface SSROptions {
-    viewName?: string;
-    id?: string;
-    ssrKey?: string;
-    url: string;
+    url?: string;
 }
 export declare function createApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
@@ -47,7 +40,7 @@ export declare function createApp(moduleGetter: ModuleGetter, middlewares?: ISto
 };
 export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        render({ id, ssrKey, url, viewName }: SSROptions): Promise<string>;
+        render({ id, ssrKey, url, viewName }?: RenderOptions): Promise<string>;
     };
 };
 export declare function patchActions(typeName: string, json?: string): void;

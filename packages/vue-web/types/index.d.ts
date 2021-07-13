@@ -13,7 +13,7 @@ export type { VuexStore, VuexOptions } from '@elux/core-vuex';
 export type { LoadComponent } from './loadComponent';
 declare module '@vue/runtime-core' {
     interface App {
-        render: (options: RenderOptions) => Promise<IStore | string>;
+        render: (options?: RenderOptions) => Promise<IStore | string>;
     }
 }
 export declare const defineView: (args_0: any) => {

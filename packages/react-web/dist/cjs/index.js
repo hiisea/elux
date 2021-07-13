@@ -9,7 +9,7 @@ exports.createApp = createApp;
 exports.createSsrApp = createSsrApp;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.Link = exports.Switch = exports.Else = exports.DocumentHead = exports.Provider = exports.createRedux = exports.connectRedux = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
+exports.Link = exports.Switch = exports.Else = exports.DocumentHead = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -55,12 +55,6 @@ var _routeBrowser = require("@elux/route-browser");
 var _loadComponent = require("./loadComponent");
 
 var _sington = require("./sington");
-
-var _reactWebRedux = require("@elux/react-web-redux");
-
-exports.connectRedux = _reactWebRedux.connectRedux;
-exports.createRedux = _reactWebRedux.createRedux;
-exports.Provider = _reactWebRedux.Provider;
 
 var _DocumentHead = _interopRequireDefault(require("./components/DocumentHead"));
 
@@ -168,12 +162,14 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
       var storeOptions = _ref5.storeOptions,
           storeCreator = _ref5.storeCreator;
       return {
-        render: function render(_ref6) {
-          var _ref6$id = _ref6.id,
+        render: function render(_temp2) {
+          var _ref6 = _temp2 === void 0 ? {} : _temp2,
+              _ref6$id = _ref6.id,
               id = _ref6$id === void 0 ? 'root' : _ref6$id,
               _ref6$ssrKey = _ref6.ssrKey,
               ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
-              url = _ref6.url,
+              _ref6$url = _ref6.url,
+              url = _ref6$url === void 0 ? '/' : _ref6$url,
               viewName = _ref6.viewName;
 
           if (!SSRTPL) {
