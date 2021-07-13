@@ -124,6 +124,10 @@ const EluxConfigSchema = {
                     type: 'string',
                     description: 'Relative to the project root directory. Defalut is ./mock',
                 },
+                envPath: {
+                    type: 'string',
+                    description: 'Relative to the project root directory. Defalut is ./env',
+                },
             },
         },
         moduleFederation: {
@@ -152,10 +156,11 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
         ? require(path_1.default.join(rootPath, 'elux.config.js'))
         : {};
     schema_utils_1.validate(EluxConfigSchema, baseEluxConfig, { name: '@elux/EluxConfig' });
-    const projEnvPath = path_1.default.join(rootPath, `./env/${projEnv}`);
+    const envPath = baseEluxConfig.dir?.envPath || './env';
+    const projEnvPath = path_1.default.resolve(rootPath, envPath, `./${projEnv}`);
     fs_extra_1.default.ensureDirSync(projEnvPath);
     const envEluxConfig = fs_extra_1.default.existsSync(path_1.default.join(projEnvPath, `elux.config.js`))
-        ? require(path_1.default.join(rootPath, `./env/${projEnv}/elux.config.js`))
+        ? require(path_1.default.join(projEnvPath, `./elux.config.js`))
         : {};
     schema_utils_1.validate(EluxConfigSchema, envEluxConfig, { name: '@elux/EluxConfig' });
     const defaultBaseConfig = {
@@ -165,6 +170,7 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             distPath: './dist',
             publicPath: './public',
             mockPath: './mock',
+            envPath: './env',
         },
         ui: {
             vueWithJSX: false,

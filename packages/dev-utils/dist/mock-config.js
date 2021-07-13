@@ -9,14 +9,16 @@ module.exports = function (rootPath, projEnv, port, mockPath) {
     const baseEluxConfig = fs_extra_1.default.existsSync(path_1.default.join(rootPath, 'elux.config.js'))
         ? require(path_1.default.join(rootPath, 'elux.config.js'))
         : {};
-    const projEnvPath = path_1.default.join(rootPath, `./env/${projEnv}`);
+    const envPath = baseEluxConfig.dir?.envPath || './env';
+    const projEnvPath = path_1.default.resolve(rootPath, envPath, `./${projEnv}`);
     fs_extra_1.default.ensureDirSync(projEnvPath);
     const envEluxConfig = fs_extra_1.default.existsSync(path_1.default.join(projEnvPath, `elux.config.js`))
-        ? require(path_1.default.join(rootPath, `./env/${projEnv}/elux.config.js`))
+        ? require(path_1.default.join(projEnvPath, `elux.config.js`))
         : {};
     const defaultBaseConfig = {
         dir: {
             mockPath: './mock',
+            envPath: './env',
         },
         mockServerPreset: {
             port: 3003,

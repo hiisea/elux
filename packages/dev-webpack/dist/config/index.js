@@ -13,14 +13,14 @@ const webpack_1 = __importDefault(require("webpack"));
 const gen_1 = __importDefault(require("./gen"));
 async function dev(projEnvName, debug, devServerPort) {
     const config = gen_1.default(process.cwd(), projEnvName, 'development', debug, devServerPort);
-    const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { projectType, nodeEnv, debugMode, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, }, } = config;
+    const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { projectType, nodeEnv, debugMode, envPath, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
         serverGlobalVar,
     };
     console.info(`projectType: ${chalk_1.default.magenta(projectType)}${vueRender ? ` (${chalk_1.default.green(vueRender)})` : ''} runMode: ${chalk_1.default.magenta(nodeEnv)} debugMode: ${chalk_1.default.magenta(debugMode)}`);
-    console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvInfo: \n${chalk_1.default.blue(JSON.stringify(envInfo, null, 4))} \n`);
+    console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvPath: ${chalk_1.default.magenta(envPath)} EnvInfo: \n${chalk_1.default.blue(JSON.stringify(envInfo, null, 4))} \n`);
     let webpackCompiler;
     if (useSSR) {
         const compiler = webpack_1.default([clientWebpackConfig, serverWebpackConfig]);
@@ -90,7 +90,7 @@ function build(projEnvName, debug) {
         serverGlobalVar,
     };
     console.info(`projectType: ${chalk_1.default.magenta(projectType)}${vueRender ? ` (${chalk_1.default.green(vueRender)})` : ''} runMode: ${chalk_1.default.magenta(nodeEnv)} debugMode: ${chalk_1.default.magenta(debugMode)}`);
-    console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvInfo: \n${chalk_1.default.blue(JSON.stringify(envInfo, null, 4))} \n`);
+    console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvPath: ${chalk_1.default.magenta(envPath)} EnvInfo: \n${chalk_1.default.blue(JSON.stringify(envInfo, null, 4))} \n`);
     fs_extra_1.default.ensureDirSync(distPath);
     fs_extra_1.default.emptyDirSync(distPath);
     fs_extra_1.default.copySync(publicPath, distPath, { dereference: true });

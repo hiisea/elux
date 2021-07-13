@@ -8,6 +8,7 @@ interface MockServerPreset {
 interface EluxConfig {
   dir: {
     mockPath: string;
+    envPath: string;
   };
   mockServerPreset: MockServerPreset;
 }
@@ -15,15 +16,17 @@ export = function (rootPath: string, projEnv: string, port?: number, mockPath?: 
   const baseEluxConfig: Partial<EluxConfig> = fs.existsSync(path.join(rootPath, 'elux.config.js'))
     ? require(path.join(rootPath, 'elux.config.js'))
     : {};
-  const projEnvPath = path.join(rootPath, `./env/${projEnv}`);
+  const envPath = baseEluxConfig.dir?.envPath || './env';
+  const projEnvPath = path.resolve(rootPath, envPath, `./${projEnv}`);
   fs.ensureDirSync(projEnvPath);
   const envEluxConfig: Partial<EluxConfig> = fs.existsSync(path.join(projEnvPath, `elux.config.js`))
-    ? require(path.join(rootPath, `./env/${projEnv}/elux.config.js`))
+    ? require(path.join(projEnvPath, `elux.config.js`))
     : {};
 
   const defaultBaseConfig: EluxConfig = {
     dir: {
       mockPath: './mock',
+      envPath: './env',
     },
     mockServerPreset: {
       port: 3003,

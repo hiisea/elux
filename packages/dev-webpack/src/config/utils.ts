@@ -316,7 +316,7 @@ function moduleExports({
     watchOptions: {
       ignored: /node_modules/,
     },
-    ignoreWarnings: [/export .* was not found in/],
+    ignoreWarnings: [/export .* was not found in/, /Critical dependency:\s+require function.*/],
     output: {
       publicPath: clientPublicPath,
       path: path.join(distPath, './client'),
@@ -461,7 +461,7 @@ function moduleExports({
         watchOptions: {
           ignored: /node_modules/,
         },
-        ignoreWarnings: [/export .* was not found in/],
+        ignoreWarnings: [/export .* was not found in/, /Critical dependency:\s+require function.*/],
         entry: path.join(srcPath, './server'),
         output: {
           libraryTarget: 'commonjs2',

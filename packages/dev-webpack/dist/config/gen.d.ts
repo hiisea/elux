@@ -33,6 +33,7 @@ interface BaseConfig {
         distPath: string;
         publicPath: string;
         mockPath: string;
+        envPath: string;
     };
     ui: {
         vueWithJSX: boolean;

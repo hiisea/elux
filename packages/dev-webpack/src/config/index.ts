@@ -19,6 +19,7 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
       projectType,
       nodeEnv,
       debugMode,
+      envPath,
       projEnv,
       nodeEnvConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
       vueRender,
@@ -35,7 +36,7 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
       nodeEnv
     )} debugMode: ${chalk.magenta(debugMode)}`
   );
-  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
+  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
 
   let webpackCompiler: MultiCompiler | Compiler;
   if (useSSR) {
@@ -133,7 +134,7 @@ export function build(projEnvName: string, debug: boolean) {
       nodeEnv
     )} debugMode: ${chalk.magenta(debugMode)}`
   );
-  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
+  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
 
   fs.ensureDirSync(distPath);
   fs.emptyDirSync(distPath);
