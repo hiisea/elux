@@ -11,9 +11,9 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "main": "dist/cjs/pkg.js",
-  "module": "dist/esm/pkg.js",
-  "jsnext:main": "dist/next/pkg.js",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "jsnext:main": "dist/next/index.js",
   "types": "types/",
   "files": [
     "env/",
