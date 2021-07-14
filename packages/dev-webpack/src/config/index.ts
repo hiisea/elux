@@ -24,6 +24,7 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
       nodeEnvConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
       vueRender,
       useSSR,
+      onCompiled,
     },
   } = config;
   const envInfo = {
@@ -41,18 +42,18 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
   let webpackCompiler: MultiCompiler | Compiler;
   if (useSSR) {
     const compiler = webpack([clientWebpackConfig, serverWebpackConfig]);
-    compiler.compilers[0].hooks.failed.tap('elux-webpack dev', (msg) => {
+    compiler.compilers[0].hooks.failed.tap('elux-webpack-client dev', (msg) => {
       console.error(msg);
       process.exit(1);
     });
-    compiler.compilers[1].hooks.failed.tap('elux-webpack dev', (msg) => {
+    compiler.compilers[1].hooks.failed.tap('elux-webpack-server dev', (msg) => {
       console.error(msg);
       process.exit(1);
     });
     webpackCompiler = compiler;
   } else {
     const compiler = webpack(clientWebpackConfig);
-    compiler.hooks.failed.tap('elux-webpack dev', (msg) => {
+    compiler.hooks.failed.tap('elux-webpack-client dev', (msg) => {
       console.error(msg);
       process.exit(1);
     });
@@ -92,6 +93,7 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
 ***************************************
 `);
       console.info(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta(localUrl)}`);
+      onCompiled();
     }
   });
 
@@ -121,6 +123,7 @@ export function build(projEnvName: string, debug: boolean) {
       useSSR,
       port,
       proxy,
+      onCompiled,
     },
   } = config;
 
@@ -159,6 +162,7 @@ export function build(projEnvName: string, debug: boolean) {
         chunkModules: false,
       })}\n\n`
     );
+    onCompiled();
   });
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@elux/eslint-plugin",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "main": "index.js",
   "description": "Common development tools",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/eslint-plugin",

@@ -9,6 +9,7 @@ interface EnvConfig {
   clientPublicPath: string;
   clientGlobalVar: Record<string, any>;
   serverGlobalVar: Record<string, any>;
+  onCompiled: () => void;
 }
 interface ProjConfig {
   development: EnvConfig;
@@ -58,6 +59,7 @@ const EluxConfigSchema: any = {
         clientPublicPath: {type: 'string'},
         clientGlobalVar: {type: 'object'},
         serverGlobalVar: {type: 'object'},
+        onCompiled: {instanceof: 'Function'},
       },
     },
   },
@@ -213,6 +215,7 @@ interface Config {
     useSSR: boolean;
     port: number;
     proxy: Record<string, {target: string}>;
+    onCompiled: () => void;
   };
 }
 
@@ -255,13 +258,13 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
     mockServerPreset: {
       port: 3003,
     },
-    development: {clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}},
-    production: {clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}},
+    development: {clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}, onCompiled: () => undefined},
+    production: {clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}, onCompiled: () => undefined},
   };
   const eluxConfig: EluxConfig = deepExtend(defaultBaseConfig, baseEluxConfig, envEluxConfig);
 
   const nodeEnvConfig = eluxConfig[nodeEnv];
-  const {clientPublicPath, clientGlobalVar, serverGlobalVar} = nodeEnvConfig;
+  const {clientPublicPath, clientGlobalVar, serverGlobalVar, onCompiled} = nodeEnvConfig;
   const {
     dir: {srcPath, publicPath},
     type,
@@ -323,6 +326,7 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
       useSSR,
       port,
       proxy,
+      onCompiled,
     },
   };
 }

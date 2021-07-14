@@ -13,7 +13,7 @@ const webpack_1 = __importDefault(require("webpack"));
 const gen_1 = __importDefault(require("./gen"));
 async function dev(projEnvName, debug, devServerPort) {
     const config = gen_1.default(process.cwd(), projEnvName, 'development', debug, devServerPort);
-    const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { projectType, nodeEnv, debugMode, envPath, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, }, } = config;
+    const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { projectType, nodeEnv, debugMode, envPath, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, onCompiled, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
@@ -24,11 +24,11 @@ async function dev(projEnvName, debug, devServerPort) {
     let webpackCompiler;
     if (useSSR) {
         const compiler = webpack_1.default([clientWebpackConfig, serverWebpackConfig]);
-        compiler.compilers[0].hooks.failed.tap('elux-webpack dev', (msg) => {
+        compiler.compilers[0].hooks.failed.tap('elux-webpack-client dev', (msg) => {
             console.error(msg);
             process.exit(1);
         });
-        compiler.compilers[1].hooks.failed.tap('elux-webpack dev', (msg) => {
+        compiler.compilers[1].hooks.failed.tap('elux-webpack-server dev', (msg) => {
             console.error(msg);
             process.exit(1);
         });
@@ -36,7 +36,7 @@ async function dev(projEnvName, debug, devServerPort) {
     }
     else {
         const compiler = webpack_1.default(clientWebpackConfig);
-        compiler.hooks.failed.tap('elux-webpack dev', (msg) => {
+        compiler.hooks.failed.tap('elux-webpack-client dev', (msg) => {
             console.error(msg);
             process.exit(1);
         });
@@ -71,6 +71,7 @@ async function dev(projEnvName, debug, devServerPort) {
 ***************************************
 `);
             console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta(localUrl)}`);
+            onCompiled();
         }
     });
     devServer.listen(port, host, (err) => {
@@ -83,7 +84,7 @@ async function dev(projEnvName, debug, devServerPort) {
 exports.dev = dev;
 function build(projEnvName, debug) {
     const config = gen_1.default(process.cwd(), projEnvName, 'production', debug);
-    const { clientWebpackConfig, serverWebpackConfig, projectConfig: { envPath, publicPath, distPath, projectType, nodeEnv, debugMode, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, port, proxy, }, } = config;
+    const { clientWebpackConfig, serverWebpackConfig, projectConfig: { envPath, publicPath, distPath, projectType, nodeEnv, debugMode, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, port, proxy, onCompiled, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
@@ -109,6 +110,7 @@ function build(projEnvName, debug) {
             chunks: false,
             chunkModules: false,
         })}\n\n`);
+        onCompiled();
     });
 }
 exports.build = build;

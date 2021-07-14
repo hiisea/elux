@@ -19,6 +19,7 @@ const EluxConfigSchema = {
                 clientPublicPath: { type: 'string' },
                 clientGlobalVar: { type: 'object' },
                 serverGlobalVar: { type: 'object' },
+                onCompiled: { instanceof: 'Function' },
             },
         },
     },
@@ -160,7 +161,7 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
     const projEnvPath = path_1.default.resolve(rootPath, envPath, `./${projEnv}`);
     fs_extra_1.default.ensureDirSync(projEnvPath);
     const envEluxConfig = fs_extra_1.default.existsSync(path_1.default.join(projEnvPath, `elux.config.js`))
-        ? require(path_1.default.join(projEnvPath, `./elux.config.js`))
+        ? require(path_1.default.join(projEnvPath, `elux.config.js`))
         : {};
     schema_utils_1.validate(EluxConfigSchema, envEluxConfig, { name: '@elux/EluxConfig' });
     const defaultBaseConfig = {
@@ -190,12 +191,12 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
         mockServerPreset: {
             port: 3003,
         },
-        development: { clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {} },
-        production: { clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {} },
+        development: { clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}, onCompiled: () => undefined },
+        production: { clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}, onCompiled: () => undefined },
     };
     const eluxConfig = deep_extend_1.default(defaultBaseConfig, baseEluxConfig, envEluxConfig);
     const nodeEnvConfig = eluxConfig[nodeEnv];
-    const { clientPublicPath, clientGlobalVar, serverGlobalVar } = nodeEnvConfig;
+    const { clientPublicPath, clientGlobalVar, serverGlobalVar, onCompiled } = nodeEnvConfig;
     const { dir: { srcPath, publicPath }, type, ui: { vueWithJSX }, moduleFederation, webpackPreset, webpackConfig: webpackConfigTransform, devServerConfig: devServerConfigTransform, devServerPreset: { port, proxy }, } = eluxConfig;
     const useSSR = type === 'react ssr' || type === 'vue ssr';
     let vueType = '';
@@ -246,6 +247,7 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             useSSR,
             port,
             proxy,
+            onCompiled,
         },
     };
 }

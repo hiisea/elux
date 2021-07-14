@@ -3,6 +3,7 @@ interface EnvConfig {
     clientPublicPath: string;
     clientGlobalVar: Record<string, any>;
     serverGlobalVar: Record<string, any>;
+    onCompiled: () => void;
 }
 interface ProjConfig {
     development: EnvConfig;
@@ -68,6 +69,7 @@ interface Config {
         proxy: Record<string, {
             target: string;
         }>;
+        onCompiled: () => void;
     };
 }
 declare function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' | 'development', debugMode: boolean, devServerPort?: number): Config;
