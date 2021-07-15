@@ -6,6 +6,7 @@ export type Options = {
   moduleResolver?: {root: string[]; alias: {[key: string]: string}};
   rootImport?: any;
   classPropertiesLoose?: boolean;
+  ui?: 'react' | 'vue' | 'vue2' | 'vue3';
 };
 const runtimeVersion = require('@babel/runtime/package.json').version;
 
@@ -16,7 +17,16 @@ module.exports = function (api: any, options: Options = {}) {
   if (options.module === 'cjs' && !options.targets) {
     options.targets = {node: 'current'};
   }
-  const {module = 'esm', targets, presets = [], moduleResolver, rootImport, plugins = [], classPropertiesLoose = true} = options;
+  const {module = 'esm', targets, presets = [], moduleResolver, rootImport, plugins = [], classPropertiesLoose = true, ui} = options;
+
+  if (ui === 'react') {
+    presets.unshift('@babel/preset-react');
+  } else if (ui === 'vue2') {
+    presets.unshift('@vue/babel-preset-jsx');
+  } else if (ui === 'vue' || ui === 'vue3') {
+    plugins.unshift('@vue/babel-plugin-jsx');
+  }
+
   const pluginsList = [
     rootImport && ['babel-plugin-root-import', rootImport],
     moduleResolver && ['module-resolver', moduleResolver],
@@ -31,6 +41,7 @@ module.exports = function (api: any, options: Options = {}) {
       },
     ],
   ].filter(Boolean);
+
   return {
     sourceType: 'unambiguous',
     presets: [

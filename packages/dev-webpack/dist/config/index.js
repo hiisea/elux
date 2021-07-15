@@ -13,13 +13,13 @@ const webpack_1 = __importDefault(require("webpack"));
 const gen_1 = __importDefault(require("./gen"));
 async function dev(projEnvName, debug, devServerPort) {
     const config = gen_1.default(process.cwd(), projEnvName, 'development', debug, devServerPort);
-    const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { projectType, nodeEnv, debugMode, envPath, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, onCompiled, }, } = config;
+    const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { projectType, nodeEnv, debugMode, envPath, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, useSSR, onCompiled, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
         serverGlobalVar,
     };
-    console.info(`projectType: ${chalk_1.default.magenta(projectType)}${vueRender ? ` (${chalk_1.default.green(vueRender)})` : ''} runMode: ${chalk_1.default.magenta(nodeEnv)} debugMode: ${chalk_1.default.magenta(debugMode)}`);
+    console.info(`projectType: ${chalk_1.default.magenta(projectType)} runMode: ${chalk_1.default.magenta(nodeEnv)} debugMode: ${chalk_1.default.magenta(debugMode)}`);
     console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvPath: ${chalk_1.default.magenta(envPath)} EnvInfo: \n${chalk_1.default.blue(JSON.stringify(envInfo, null, 4))} \n`);
     let webpackCompiler;
     if (useSSR) {
@@ -84,13 +84,13 @@ async function dev(projEnvName, debug, devServerPort) {
 exports.dev = dev;
 function build(projEnvName, debug) {
     const config = gen_1.default(process.cwd(), projEnvName, 'production', debug);
-    const { clientWebpackConfig, serverWebpackConfig, projectConfig: { envPath, publicPath, distPath, projectType, nodeEnv, debugMode, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, vueRender, useSSR, port, proxy, onCompiled, }, } = config;
+    const { clientWebpackConfig, serverWebpackConfig, projectConfig: { envPath, publicPath, distPath, projectType, nodeEnv, debugMode, projEnv, nodeEnvConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, useSSR, port, proxy, onCompiled, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
         serverGlobalVar,
     };
-    console.info(`projectType: ${chalk_1.default.magenta(projectType)}${vueRender ? ` (${chalk_1.default.green(vueRender)})` : ''} runMode: ${chalk_1.default.magenta(nodeEnv)} debugMode: ${chalk_1.default.magenta(debugMode)}`);
+    console.info(`projectType: ${chalk_1.default.magenta(projectType)} runMode: ${chalk_1.default.magenta(nodeEnv)} debugMode: ${chalk_1.default.magenta(debugMode)}`);
     console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvPath: ${chalk_1.default.magenta(envPath)} EnvInfo: \n${chalk_1.default.blue(JSON.stringify(envInfo, null, 4))} \n`);
     fs_extra_1.default.ensureDirSync(distPath);
     fs_extra_1.default.emptyDirSync(distPath);

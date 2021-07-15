@@ -10,6 +10,7 @@ interface ProjConfig {
     production: EnvConfig;
 }
 interface WebpackPreset {
+    eslintPlugin: 'development' | 'production' | 'always';
     resolveAlias: Record<string, string>;
     urlLoaderLimitSize: number;
     cssProcessors: {
@@ -36,9 +37,6 @@ interface BaseConfig {
         mockPath: string;
         envPath: string;
     };
-    ui: {
-        vueWithJSX: boolean;
-    };
     moduleFederation: Record<string, any>;
     mockServerPreset: MockServerPreset;
     webpackPreset: WebpackPreset;
@@ -63,7 +61,6 @@ interface Config {
         debugMode: string;
         projectType: 'vue' | 'react' | 'vue ssr' | 'react ssr';
         nodeEnvConfig: EnvConfig;
-        vueRender: '' | 'templete' | 'jsx';
         useSSR: boolean;
         port: number;
         proxy: Record<string, {

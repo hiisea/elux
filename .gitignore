@@ -4,4 +4,3 @@ storage/
 .eslintcache
 .DS_Store
 tsconfig.tsbuildinfo
-packages/core1/

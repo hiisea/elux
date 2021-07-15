@@ -1,6 +1,6 @@
 {
   "name": "@elux/babel-preset",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "main": "dist/index.js",
   "description": "Common development tools",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/babel-preset",
@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@babel/plugin-transform-typescript": "~7.12.0",
-    "@babel/plugin-proposal-class-properties": "~7.12.0",
     "@babel/plugin-proposal-decorators": "~7.12.0",
     "@babel/plugin-transform-runtime": "~7.12.0",
     "@babel/preset-env": "~7.12.0",
@@ -32,6 +31,8 @@
     "@babel/preset-react": "~7.12.0",
     "@babel/cli": "~7.12.0",
     "@babel/core": "~7.12.0",
+    "@vue/babel-plugin-jsx": "~1.0.6",
+    "@vue/babel-preset-jsx": "~1.2.4",
     "babel-plugin-module-resolver": "~4.1.0",
     "babel-plugin-root-import": "~6.6.0",
     "core-js": "^3.0.0"

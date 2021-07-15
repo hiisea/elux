@@ -8,7 +8,16 @@ module.exports = function (api, options = {}) {
     if (options.module === 'cjs' && !options.targets) {
         options.targets = { node: 'current' };
     }
-    const { module = 'esm', targets, presets = [], moduleResolver, rootImport, plugins = [], classPropertiesLoose = true } = options;
+    const { module = 'esm', targets, presets = [], moduleResolver, rootImport, plugins = [], classPropertiesLoose = true, ui } = options;
+    if (ui === 'react') {
+        presets.unshift('@babel/preset-react');
+    }
+    else if (ui === 'vue2') {
+        presets.unshift('@vue/babel-preset-jsx');
+    }
+    else if (ui === 'vue' || ui === 'vue3') {
+        plugins.unshift('@vue/babel-plugin-jsx');
+    }
     const pluginsList = [
         rootImport && ['babel-plugin-root-import', rootImport],
         moduleResolver && ['module-resolver', moduleResolver],

@@ -11,4 +11,5 @@ export declare type Options = {
     };
     rootImport?: any;
     classPropertiesLoose?: boolean;
+    ui?: 'react' | 'vue' | 'vue2' | 'vue3';
 };

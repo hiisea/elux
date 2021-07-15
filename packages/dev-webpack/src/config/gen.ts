@@ -16,6 +16,7 @@ interface ProjConfig {
   production: EnvConfig;
 }
 interface WebpackPreset {
+  eslintPlugin: 'development' | 'production' | 'always';
   resolveAlias: Record<string, string>;
   urlLoaderLimitSize: number;
   cssProcessors: {less: WebpackLoader | boolean; scss: WebpackLoader | boolean; sass: WebpackLoader | boolean};
@@ -35,9 +36,6 @@ interface BaseConfig {
     publicPath: string;
     mockPath: string;
     envPath: string;
-  };
-  ui: {
-    vueWithJSX: boolean;
   };
   moduleFederation: Record<string, any>;
   mockServerPreset: MockServerPreset;
@@ -79,6 +77,9 @@ const EluxConfigSchema: any = {
       type: 'object',
       additionalProperties: false,
       properties: {
+        eslintPlugin: {
+          enum: ['development', 'production', 'always'],
+        },
         urlLoaderLimitSize: {
           type: 'number',
           description: 'Default is 8192',
@@ -174,16 +175,6 @@ const EluxConfigSchema: any = {
     moduleFederation: {
       type: 'object',
     },
-    ui: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        vueWithJSX: {
-          type: 'boolean',
-          description: 'Default is false, vue renderer with templete style',
-        },
-      },
-    },
     development: {
       $ref: '#/definitions/EnvConfig',
     },
@@ -192,10 +183,7 @@ const EluxConfigSchema: any = {
     },
   },
 };
-// const rootPath = process.cwd();
-// const projEnv = process.env.PROJ_ENV || 'local';
-// const nodeEnv = process.env.NODE_ENV === 'production' ? 'production' : 'development';
-// const debugMode = !!process.env.DEBUG;
+
 interface Config {
   devServerConfig: DevServerConfig;
   clientWebpackConfig: WebpackConfig;
@@ -211,7 +199,6 @@ interface Config {
     debugMode: string;
     projectType: 'vue' | 'react' | 'vue ssr' | 'react ssr';
     nodeEnvConfig: EnvConfig;
-    vueRender: '' | 'templete' | 'jsx';
     useSSR: boolean;
     port: number;
     proxy: Record<string, {target: string}>;
@@ -240,10 +227,8 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
       mockPath: './mock',
       envPath: './env',
     },
-    ui: {
-      vueWithJSX: false,
-    },
     webpackPreset: {
+      eslintPlugin: 'always',
       resolveAlias: {},
       urlLoaderLimitSize: 8192,
       cssProcessors: {less: false, scss: false, sass: false},
@@ -268,7 +253,6 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
   const {
     dir: {srcPath, publicPath},
     type,
-    ui: {vueWithJSX},
     moduleFederation,
     webpackPreset,
     webpackConfig: webpackConfigTransform,
@@ -277,10 +261,7 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
   } = eluxConfig;
 
   const useSSR = type === 'react ssr' || type === 'vue ssr';
-  let vueType: 'templete' | 'jsx' | '' = '';
-  if (type === 'vue' || type === 'vue ssr') {
-    vueType = vueWithJSX ? 'jsx' : 'templete';
-  }
+  const UIType = type.split(' ')[0] as 'react' | 'vue';
 
   const distPath = path.resolve(rootPath, eluxConfig.dir.distPath, projEnv);
   let {devServerConfig, clientWebpackConfig, serverWebpackConfig} = genConfig({
@@ -293,7 +274,8 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
     clientPublicPath,
     envPath: projEnvPath,
     cssProcessors: webpackPreset.cssProcessors,
-    vueType,
+    enableEslintPlugin: webpackPreset.eslintPlugin === 'always' || webpackPreset.eslintPlugin === nodeEnv,
+    UIType,
     limitSize: webpackPreset.urlLoaderLimitSize,
     globalVar: {client: clientGlobalVar, server: serverGlobalVar},
     apiProxy: proxy,
@@ -322,7 +304,6 @@ function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' 
       debugMode: (useSSR ? `client ${clientWebpackConfig.devtool} server ${serverWebpackConfig.devtool}` : clientWebpackConfig.devtool) as string,
       projectType: type,
       nodeEnvConfig,
-      vueRender: vueType,
       useSSR,
       port,
       proxy,

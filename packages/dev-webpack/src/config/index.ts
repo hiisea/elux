@@ -22,7 +22,6 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
       envPath,
       projEnv,
       nodeEnvConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
-      vueRender,
       useSSR,
       onCompiled,
     },
@@ -32,11 +31,7 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
     clientGlobalVar,
     serverGlobalVar,
   };
-  console.info(
-    `projectType: ${chalk.magenta(projectType)}${vueRender ? ` (${chalk.green(vueRender)})` : ''} runMode: ${chalk.magenta(
-      nodeEnv
-    )} debugMode: ${chalk.magenta(debugMode)}`
-  );
+  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} debugMode: ${chalk.magenta(debugMode)}`);
   console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
 
   let webpackCompiler: MultiCompiler | Compiler;
@@ -119,7 +114,6 @@ export function build(projEnvName: string, debug: boolean) {
       debugMode,
       projEnv,
       nodeEnvConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
-      vueRender,
       useSSR,
       port,
       proxy,
@@ -132,11 +126,7 @@ export function build(projEnvName: string, debug: boolean) {
     clientGlobalVar,
     serverGlobalVar,
   };
-  console.info(
-    `projectType: ${chalk.magenta(projectType)}${vueRender ? ` (${chalk.green(vueRender)})` : ''} runMode: ${chalk.magenta(
-      nodeEnv
-    )} debugMode: ${chalk.magenta(debugMode)}`
-  );
+  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} debugMode: ${chalk.magenta(debugMode)}`);
   console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
 
   fs.ensureDirSync(distPath);

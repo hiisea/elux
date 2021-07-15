@@ -42,12 +42,13 @@ interface ConfigOptions {
         [key: string]: any;
     };
     useSSR: boolean;
-    vueType: 'templete' | 'jsx' | '';
+    UIType: 'react' | 'vue';
     devServerPort: number;
     resolveAlias: Record<string, string>;
     moduleFederation?: Record<string, any>;
+    enableEslintPlugin: boolean;
 }
-declare function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, vueType, limitSize, globalVar, apiProxy, useSSR, devServerPort, resolveAlias, moduleFederation, }: ConfigOptions): {
+declare function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, enableEslintPlugin, UIType, limitSize, globalVar, apiProxy, useSSR, devServerPort, resolveAlias, moduleFederation, }: ConfigOptions): {
     clientWebpackConfig: WebpackConfig;
     serverWebpackConfig: WebpackConfig;
     devServerConfig: DevServerConfig;

@@ -2,7 +2,7 @@
   "name": "@elux/core",
   "version": "0.1.0",
   "description": "Stateful and Modular for Front-End Engineering, Suitable for various javascript runtime",
-  "repository": "https://github.com/hiisea/elux/tree/master/packages/core",
+  "homepage": "https://github.com/hiisea/elux/tree/master/packages/core",
   "author": "hiisea <hiisea@qq.com>",
   "license": "MIT",
   "keywords": [
@@ -41,10 +41,6 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18"
-  },
-  "devDependencies": {
-    "@elux/dev-pkg": "~1.0.0",
-    "typescript": "~4.2.0"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

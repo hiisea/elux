@@ -39,6 +39,9 @@ const EluxConfigSchema = {
             type: 'object',
             additionalProperties: false,
             properties: {
+                eslintPlugin: {
+                    enum: ['development', 'production', 'always'],
+                },
                 urlLoaderLimitSize: {
                     type: 'number',
                     description: 'Default is 8192',
@@ -134,16 +137,6 @@ const EluxConfigSchema = {
         moduleFederation: {
             type: 'object',
         },
-        ui: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-                vueWithJSX: {
-                    type: 'boolean',
-                    description: 'Default is false, vue renderer with templete style',
-                },
-            },
-        },
         development: {
             $ref: '#/definitions/EnvConfig',
         },
@@ -173,10 +166,8 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             mockPath: './mock',
             envPath: './env',
         },
-        ui: {
-            vueWithJSX: false,
-        },
         webpackPreset: {
+            eslintPlugin: 'always',
             resolveAlias: {},
             urlLoaderLimitSize: 8192,
             cssProcessors: { less: false, scss: false, sass: false },
@@ -197,12 +188,9 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
     const eluxConfig = deep_extend_1.default(defaultBaseConfig, baseEluxConfig, envEluxConfig);
     const nodeEnvConfig = eluxConfig[nodeEnv];
     const { clientPublicPath, clientGlobalVar, serverGlobalVar, onCompiled } = nodeEnvConfig;
-    const { dir: { srcPath, publicPath }, type, ui: { vueWithJSX }, moduleFederation, webpackPreset, webpackConfig: webpackConfigTransform, devServerConfig: devServerConfigTransform, devServerPreset: { port, proxy }, } = eluxConfig;
+    const { dir: { srcPath, publicPath }, type, moduleFederation, webpackPreset, webpackConfig: webpackConfigTransform, devServerConfig: devServerConfigTransform, devServerPreset: { port, proxy }, } = eluxConfig;
     const useSSR = type === 'react ssr' || type === 'vue ssr';
-    let vueType = '';
-    if (type === 'vue' || type === 'vue ssr') {
-        vueType = vueWithJSX ? 'jsx' : 'templete';
-    }
+    const UIType = type.split(' ')[0];
     const distPath = path_1.default.resolve(rootPath, eluxConfig.dir.distPath, projEnv);
     let { devServerConfig, clientWebpackConfig, serverWebpackConfig } = utils_1.default({
         debugMode,
@@ -214,7 +202,8 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
         clientPublicPath,
         envPath: projEnvPath,
         cssProcessors: webpackPreset.cssProcessors,
-        vueType,
+        enableEslintPlugin: webpackPreset.eslintPlugin === 'always' || webpackPreset.eslintPlugin === nodeEnv,
+        UIType,
         limitSize: webpackPreset.urlLoaderLimitSize,
         globalVar: { client: clientGlobalVar, server: serverGlobalVar },
         apiProxy: proxy,
@@ -243,7 +232,6 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             debugMode: (useSSR ? `client ${clientWebpackConfig.devtool} server ${serverWebpackConfig.devtool}` : clientWebpackConfig.devtool),
             projectType: type,
             nodeEnvConfig,
-            vueRender: vueType,
             useSSR,
             port,
             proxy,

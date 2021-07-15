@@ -207,6 +207,28 @@ function oneOfTsLoader(isProdModel: boolean, isVue: boolean, isServer: boolean):
   ];
 }
 
+function tsxLoaders(isProdModel: boolean, isVue: boolean, isServer: boolean): WebpackLoader[] {
+  const loaders: WebpackLoader[] = [
+    {
+      loader: 'babel-loader',
+    },
+  ];
+  if (isVue) {
+    loaders.push({
+      loader: 'ts-loader',
+      options: {
+        transpileOnly: true,
+        appendTsxSuffixTo: ['\\.vue$'],
+        happyPackMode: false,
+      },
+    });
+  } else if (!isVue && !isServer && !isProdModel) {
+    loaders[0].options = {
+      plugins: [require.resolve('react-refresh/babel')],
+    };
+  }
+  return loaders;
+}
 interface ConfigOptions {
   debugMode: boolean;
   nodeEnv: 'production' | 'development';
@@ -221,10 +243,11 @@ interface ConfigOptions {
   globalVar: {client?: any; server?: any};
   apiProxy: {[key: string]: any};
   useSSR: boolean;
-  vueType: 'templete' | 'jsx' | '';
+  UIType: 'react' | 'vue';
   devServerPort: number;
   resolveAlias: Record<string, string>;
   moduleFederation?: Record<string, any>;
+  enableEslintPlugin: boolean;
 }
 
 function moduleExports({
@@ -237,7 +260,8 @@ function moduleExports({
   clientPublicPath,
   envPath,
   cssProcessors,
-  vueType,
+  enableEslintPlugin,
+  UIType,
   limitSize,
   globalVar,
   apiProxy,
@@ -263,17 +287,17 @@ function moduleExports({
     ContainerReferencePlugin.__setModuleMap__(moduleFederation.modules || {});
     delete moduleFederation.modules;
   }
-  const isVue = !!vueType;
+  const isVue = UIType === 'vue';
   const tsconfigPathTest: string[] = [path.join(srcPath, 'tsconfig.json'), path.join(rootPath, 'tsconfig.json')];
   const tsconfigPath = fs.existsSync(tsconfigPathTest[0]) ? tsconfigPathTest[0] : tsconfigPathTest[1];
   const tsconfig = require(tsconfigPath);
   const {paths = {}, baseUrl = ''} = tsconfig.compilerOptions || {};
-  const scriptExtensions = !vueType
-    ? ['.js', '.jsx', '.ts', '.tsx']
-    : vueType === 'jsx'
-    ? ['.js', '.jsx', '.ts', '.tsx', 'vue']
-    : ['.js', '.ts', 'vue'];
-  const cssExtensions = !vueType ? ['css'] : ['css', 'vue'];
+  const scriptExtensions = ['.js', '.jsx', '.ts', '.tsx', '.json'];
+  const cssExtensions = ['css'];
+  if (isVue) {
+    scriptExtensions.unshift('.vue');
+    cssExtensions.unshift('vue');
+  }
   cssProcessors.less && cssExtensions.push('less');
   cssProcessors.sass && cssExtensions.push('sass');
   cssProcessors.scss && cssExtensions.push('scss');
@@ -372,8 +396,12 @@ function moduleExports({
               },
             },
             {
-              test: /\.(tsx|ts)$/,
+              test: /\.ts$/,
               oneOf: oneOfTsLoader(isProdModel, isVue, false),
+            },
+            {
+              test: /\.tsx$/,
+              use: tsxLoaders(isProdModel, isVue, false),
             },
             {
               test: /\.css$/,
@@ -418,7 +446,7 @@ function moduleExports({
               },
             },
           }),
-      new EslintWebpackPlugin({cache: true, extensions: scriptExtensions}),
+      enableEslintPlugin && new EslintWebpackPlugin({cache: true, extensions: scriptExtensions}),
       new StylelintPlugin({files: `src/**/*.{${cssExtensions.join(',')}}`}),
       new HtmlWebpackPlugin({
         minify: false,
@@ -506,8 +534,12 @@ function moduleExports({
                   },
                 },
                 {
-                  test: /\.(tsx|ts)$/,
+                  test: /\.ts$/,
                   oneOf: oneOfTsLoader(isProdModel, isVue, true),
+                },
+                {
+                  test: /\.tsx$/,
+                  use: tsxLoaders(isProdModel, isVue, true),
                 },
                 {
                   test: /\.css$/,
