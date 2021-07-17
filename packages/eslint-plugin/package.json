@@ -1,6 +1,6 @@
 {
   "name": "@elux/eslint-plugin",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "main": "index.js",
   "description": "Common development tools",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/eslint-plugin",
@@ -21,14 +21,15 @@
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx,vue}"
   },
   "dependencies": {
+    "@typescript-eslint/parser": "^4.28.0",
+    "@typescript-eslint/eslint-plugin": "^4.28.0",
     "eslint-config-airbnb": "~18.2.1",
     "eslint-config-airbnb-typescript": "~12.3.0",
-    "eslint-plugin-import": "~2.22.0",
+    "eslint-plugin-import": "~2.23.0",
     "eslint-plugin-jsx-a11y": "~6.4.0",
-    "eslint-plugin-react": "~7.23.0",
+    "eslint-plugin-react": "~7.24.0",
     "eslint-plugin-react-hooks": "~4.2.0",
-    "eslint-plugin-vue": "~7.9.0",
-    "@typescript-eslint/eslint-plugin": "~4.22.0",
+    "eslint-plugin-vue": "~7.13.0",
     "eslint-config-prettier": "~8.3.0",
     "eslint-plugin-prettier": "~3.4.0"
   },

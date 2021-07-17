@@ -20,93 +20,41 @@ const EluxConfigSchema = {
                 clientGlobalVar: { type: 'object' },
                 serverGlobalVar: { type: 'object' },
                 onCompiled: { instanceof: 'Function' },
+                sourceMap: { type: 'string' },
+                cache: {
+                    anyOf: [
+                        {
+                            type: 'boolean',
+                        },
+                        {
+                            type: 'object',
+                        },
+                    ],
+                },
+                eslint: { type: 'boolean' },
+                stylelint: { type: 'boolean' },
+                resolveAlias: {
+                    type: 'object',
+                },
+                urlLoaderLimitSize: {
+                    type: 'number',
+                    description: 'Default is 8192',
+                },
+                apiProxy: { type: 'object' },
+                serverPort: {
+                    type: 'number',
+                    description: 'Default is 4003',
+                },
+                webpackConfigTransform: {
+                    instanceof: 'Function',
+                    description: 'Provides an custom function to transform webpackConfig: (webpackConfig) => webpackConfig',
+                },
             },
         },
     },
     properties: {
         type: {
             enum: ['vue', 'vue ssr', 'react', 'react ssr'],
-        },
-        webpackConfig: {
-            instanceof: 'Function',
-            description: 'Provides an custom function to transform webpackConfig: (webpackConfig) => webpackConfig',
-        },
-        devServerConfig: {
-            instanceof: 'Function',
-            description: 'Provides an custom function to transform webpack devServerConfig: (devServerConfig) => devServerConfig',
-        },
-        webpackPreset: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-                eslintPlugin: {
-                    enum: ['development', 'production', 'always'],
-                },
-                urlLoaderLimitSize: {
-                    type: 'number',
-                    description: 'Default is 8192',
-                },
-                cssProcessors: {
-                    type: 'object',
-                    additionalProperties: false,
-                    properties: {
-                        less: {
-                            anyOf: [
-                                {
-                                    type: 'boolean',
-                                },
-                                {
-                                    $ref: '#/definitions/CssLoader',
-                                },
-                            ],
-                        },
-                        sass: {
-                            anyOf: [
-                                {
-                                    type: 'boolean',
-                                },
-                                {
-                                    $ref: '#/definitions/CssLoader',
-                                },
-                            ],
-                        },
-                        scss: {
-                            anyOf: [
-                                {
-                                    type: 'boolean',
-                                },
-                                {
-                                    $ref: '#/definitions/CssLoader',
-                                },
-                            ],
-                        },
-                    },
-                },
-                resolveAlias: {
-                    type: 'object',
-                },
-            },
-        },
-        devServerPreset: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-                port: {
-                    type: 'number',
-                    description: 'Default is 4003',
-                },
-                proxy: { type: 'object' },
-            },
-        },
-        mockServerPreset: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-                port: {
-                    type: 'number',
-                    description: 'Default is 3003',
-                },
-            },
         },
         dir: {
             type: 'object',
@@ -134,18 +82,74 @@ const EluxConfigSchema = {
                 },
             },
         },
+        cssModulesOptions: {
+            type: 'object',
+        },
+        cssProcessors: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+                less: {
+                    anyOf: [
+                        {
+                            type: 'boolean',
+                        },
+                        {
+                            $ref: '#/definitions/CssLoader',
+                        },
+                    ],
+                },
+                sass: {
+                    anyOf: [
+                        {
+                            type: 'boolean',
+                        },
+                        {
+                            $ref: '#/definitions/CssLoader',
+                        },
+                    ],
+                },
+                scss: {
+                    anyOf: [
+                        {
+                            type: 'boolean',
+                        },
+                        {
+                            $ref: '#/definitions/CssLoader',
+                        },
+                    ],
+                },
+            },
+        },
         moduleFederation: {
             type: 'object',
         },
-        development: {
+        devServerConfigTransform: {
+            instanceof: 'Function',
+            description: 'Provides an custom function to transform webpack devServerConfig: (devServerConfig) => devServerConfig',
+        },
+        mockServer: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+                port: {
+                    type: 'number',
+                    description: 'Default is 3003',
+                },
+            },
+        },
+        all: {
             $ref: '#/definitions/EnvConfig',
         },
-        production: {
+        dev: {
+            $ref: '#/definitions/EnvConfig',
+        },
+        prod: {
             $ref: '#/definitions/EnvConfig',
         },
     },
 };
-function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
+function moduleExports(rootPath, projEnv, nodeEnv, _serverPort) {
     const baseEluxConfig = fs_extra_1.default.existsSync(path_1.default.join(rootPath, 'elux.config.js'))
         ? require(path_1.default.join(rootPath, 'elux.config.js'))
         : {};
@@ -166,34 +170,40 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             mockPath: './mock',
             envPath: './env',
         },
-        webpackPreset: {
-            eslintPlugin: 'always',
+        cssProcessors: { less: false, scss: false, sass: false },
+        cssModulesOptions: {},
+        moduleFederation: {},
+        devServerConfigTransform: (config) => config,
+        all: {
+            serverPort: 4003,
+            eslint: true,
+            stylelint: true,
+            cache: true,
             resolveAlias: {},
             urlLoaderLimitSize: 8192,
-            cssProcessors: { less: false, scss: false, sass: false },
+            clientPublicPath: '/client/',
+            clientGlobalVar: {},
+            serverGlobalVar: {},
+            sourceMap: 'eval-cheap-module-source-map',
+            webpackConfigTransform: (config) => config,
+            onCompiled: () => undefined,
+            apiProxy: {},
         },
-        moduleFederation: {},
-        webpackConfig: (config) => config,
-        devServerPreset: {
-            port: 4003,
-            proxy: {},
+        prod: {
+            sourceMap: 'hidden-cheap-module-source-map',
         },
-        devServerConfig: (config) => config,
-        mockServerPreset: {
-            port: 3003,
-        },
-        development: { clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}, onCompiled: () => undefined },
-        production: { clientPublicPath: '/client/', clientGlobalVar: {}, serverGlobalVar: {}, onCompiled: () => undefined },
+        mockServer: { port: 3003 },
     };
     const eluxConfig = deep_extend_1.default(defaultBaseConfig, baseEluxConfig, envEluxConfig);
-    const nodeEnvConfig = eluxConfig[nodeEnv];
-    const { clientPublicPath, clientGlobalVar, serverGlobalVar, onCompiled } = nodeEnvConfig;
-    const { dir: { srcPath, publicPath }, type, moduleFederation, webpackPreset, webpackConfig: webpackConfigTransform, devServerConfig: devServerConfigTransform, devServerPreset: { port, proxy }, } = eluxConfig;
+    const envConfig = deep_extend_1.default(eluxConfig.all, eluxConfig[nodeEnv === 'development' ? 'dev' : 'prod']);
+    const { dir: { srcPath, publicPath }, type, moduleFederation, devServerConfigTransform, cssProcessors, cssModulesOptions, } = eluxConfig;
+    const { serverPort, cache, eslint, stylelint, urlLoaderLimitSize, resolveAlias, clientPublicPath, clientGlobalVar, serverGlobalVar, sourceMap, onCompiled, webpackConfigTransform, apiProxy, } = envConfig;
     const useSSR = type === 'react ssr' || type === 'vue ssr';
     const UIType = type.split(' ')[0];
     const distPath = path_1.default.resolve(rootPath, eluxConfig.dir.distPath, projEnv);
     let { devServerConfig, clientWebpackConfig, serverWebpackConfig } = utils_1.default({
-        debugMode,
+        cache,
+        sourceMap,
         nodeEnv,
         rootPath,
         srcPath: path_1.default.resolve(rootPath, srcPath),
@@ -201,15 +211,17 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
         publicPath: path_1.default.resolve(rootPath, publicPath),
         clientPublicPath,
         envPath: projEnvPath,
-        cssProcessors: webpackPreset.cssProcessors,
-        enableEslintPlugin: webpackPreset.eslintPlugin === 'always' || webpackPreset.eslintPlugin === nodeEnv,
+        cssProcessors,
+        cssModulesOptions,
+        enableEslintPlugin: eslint,
+        enableStylelintPlugin: stylelint,
         UIType,
-        limitSize: webpackPreset.urlLoaderLimitSize,
+        limitSize: urlLoaderLimitSize,
         globalVar: { client: clientGlobalVar, server: serverGlobalVar },
-        apiProxy: proxy,
+        apiProxy,
         useSSR,
-        devServerPort: devServerPort || port,
-        resolveAlias: webpackPreset.resolveAlias,
+        serverPort: _serverPort || serverPort,
+        resolveAlias,
         moduleFederation: Object.keys(moduleFederation).length > 0 ? moduleFederation : undefined,
     });
     devServerConfig = devServerConfigTransform(devServerConfig);
@@ -229,12 +241,13 @@ function moduleExports(rootPath, projEnv, nodeEnv, debugMode, devServerPort) {
             distPath: path_1.default.resolve(rootPath, distPath),
             publicPath: path_1.default.resolve(rootPath, publicPath),
             envPath: projEnvPath,
-            debugMode: (useSSR ? `client ${clientWebpackConfig.devtool} server ${serverWebpackConfig.devtool}` : clientWebpackConfig.devtool),
+            sourceMap,
+            cache: cache === true ? 'memory' : cache === false ? '' : cache.type,
             projectType: type,
-            nodeEnvConfig,
+            envConfig,
             useSSR,
-            port,
-            proxy,
+            serverPort: _serverPort || serverPort,
+            apiProxy,
             onCompiled,
         },
     };

@@ -20,10 +20,10 @@ module.exports = function (rootPath, projEnv, port, mockPath) {
             mockPath: './mock',
             envPath: './env',
         },
-        mockServerPreset: {
+        mockServer: {
             port: 3003,
         },
     };
     const eluxConfig = deep_extend_1.default(defaultBaseConfig, baseEluxConfig, envEluxConfig);
-    return { port: port || eluxConfig.mockServerPreset.port, dir: path_1.default.resolve(rootPath, mockPath || eluxConfig.dir.mockPath) };
+    return { port: port || eluxConfig.mockServer.port, dir: path_1.default.resolve(rootPath, mockPath || eluxConfig.dir.mockPath) };
 };

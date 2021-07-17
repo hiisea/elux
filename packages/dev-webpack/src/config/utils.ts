@@ -81,6 +81,7 @@ function oneOfCssLoader(
   srcPath: string,
   isVue: boolean,
   isServer: boolean,
+  cssModulesOptions: Record<string, any>,
   extensionLoader: WebpackLoader | 'less' | 'sass' | 'scss' | ''
 ): WebpackLoader[] {
   let cssProcessors: WebpackLoader | null = null;
@@ -130,6 +131,7 @@ function oneOfCssLoader(
           return getCssScopedName(srcPath, localName, context.resourcePath);
         },
         localIdentContext: srcPath,
+        ...cssModulesOptions,
         exportOnlyLocals: isServer,
       },
     },
@@ -230,7 +232,8 @@ function tsxLoaders(isProdModel: boolean, isVue: boolean, isServer: boolean): We
   return loaders;
 }
 interface ConfigOptions {
-  debugMode: boolean;
+  cache: boolean | Record<string, any>;
+  sourceMap: string;
   nodeEnv: 'production' | 'development';
   rootPath: string;
   srcPath: string;
@@ -239,19 +242,22 @@ interface ConfigOptions {
   clientPublicPath: string;
   envPath: string;
   cssProcessors: {less?: WebpackLoader | boolean; sass?: WebpackLoader | boolean; scss?: WebpackLoader | boolean};
+  cssModulesOptions: Record<string, any>;
   limitSize: number;
   globalVar: {client?: any; server?: any};
   apiProxy: {[key: string]: any};
   useSSR: boolean;
   UIType: 'react' | 'vue';
-  devServerPort: number;
+  serverPort: number;
   resolveAlias: Record<string, string>;
   moduleFederation?: Record<string, any>;
   enableEslintPlugin: boolean;
+  enableStylelintPlugin: boolean;
 }
 
 function moduleExports({
-  debugMode,
+  cache,
+  sourceMap,
   nodeEnv,
   rootPath,
   srcPath,
@@ -260,28 +266,25 @@ function moduleExports({
   clientPublicPath,
   envPath,
   cssProcessors,
+  cssModulesOptions,
   enableEslintPlugin,
+  enableStylelintPlugin,
   UIType,
   limitSize,
   globalVar,
   apiProxy,
   useSSR,
-  devServerPort,
+  serverPort,
   resolveAlias,
   moduleFederation,
 }: ConfigOptions): {clientWebpackConfig: WebpackConfig; serverWebpackConfig: WebpackConfig; devServerConfig: DevServerConfig} {
   const isProdModel = nodeEnv === 'production';
-  let clentDevtool: boolean | string = debugMode ? 'eval-cheap-module-source-map' : 'eval';
-  let serverDevtool: boolean | string = debugMode ? 'eval-cheap-module-source-map' : 'eval';
-  if (isProdModel) {
-    clentDevtool = debugMode ? 'cheap-module-source-map' : false;
-    serverDevtool = false;
-  }
+
   if (!isProdModel) {
     clientPublicPath = `${clientPublicPath.replace('//', '``').replace(/\/.+$/, '').replace('``', '//')}/client/`;
   }
   if (moduleFederation && !/^(http:|https:|)\/\//.test(clientPublicPath)) {
-    clientPublicPath = `http://localhost:${devServerPort}${clientPublicPath}`;
+    clientPublicPath = `http://localhost:${serverPort}${clientPublicPath}`;
   }
   if (moduleFederation) {
     ContainerReferencePlugin.__setModuleMap__(moduleFederation.modules || {});
@@ -329,12 +332,13 @@ function moduleExports({
 
   const SsrPlugin = getSsrInjectPlugin(path.join(distPath, './server/main.js'), path.join(distPath, './client/index.html'));
   const clientWebpackConfig: WebpackConfig = {
+    cache,
     context: rootPath,
     name: 'client',
     mode: nodeEnv,
     target: 'browserslist',
     stats: 'minimal',
-    devtool: clentDevtool,
+    devtool: sourceMap,
     entry: path.join(srcPath, './index'),
     performance: false,
     watchOptions: {
@@ -405,19 +409,19 @@ function moduleExports({
             },
             {
               test: /\.css$/,
-              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, ''),
+              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, ''),
             },
             cssProcessors.less && {
               test: /\.less$/,
-              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssProcessors.less === true ? 'less' : cssProcessors.less),
+              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, cssProcessors.less === true ? 'less' : cssProcessors.less),
             },
             cssProcessors.sass && {
               test: /\.sass$/,
-              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssProcessors.sass === true ? 'sass' : cssProcessors.sass),
+              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, cssProcessors.sass === true ? 'sass' : cssProcessors.sass),
             },
             cssProcessors.scss && {
               test: /\.scss$/,
-              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssProcessors.scss === true ? 'scss' : cssProcessors.scss),
+              oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, cssProcessors.scss === true ? 'scss' : cssProcessors.scss),
             },
           ].filter(Boolean),
         },
@@ -447,7 +451,7 @@ function moduleExports({
             },
           }),
       enableEslintPlugin && new EslintWebpackPlugin({cache: true, extensions: scriptExtensions}),
-      new StylelintPlugin({files: `src/**/*.{${cssExtensions.join(',')}}`}),
+      enableStylelintPlugin && new StylelintPlugin({files: `src/**/*.{${cssExtensions.join(',')}}`}),
       new HtmlWebpackPlugin({
         minify: false,
         inject: 'body',
@@ -477,6 +481,7 @@ function moduleExports({
 
   const serverWebpackConfig: WebpackConfig = useSSR
     ? {
+        cache,
         context: rootPath,
         name: 'server',
         mode: nodeEnv,
@@ -485,7 +490,7 @@ function moduleExports({
         optimization: {
           minimize: false,
         },
-        devtool: serverDevtool,
+        devtool: sourceMap,
         watchOptions: {
           ignored: /node_modules/,
         },
@@ -543,19 +548,40 @@ function moduleExports({
                 },
                 {
                   test: /\.css$/,
-                  oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, ''),
+                  oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssModulesOptions, ''),
                 },
                 cssProcessors.less && {
                   test: /\.less$/,
-                  oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssProcessors.less === true ? 'less' : cssProcessors.less),
+                  oneOf: oneOfCssLoader(
+                    isProdModel,
+                    srcPath,
+                    isVue,
+                    true,
+                    cssModulesOptions,
+                    cssProcessors.less === true ? 'less' : cssProcessors.less
+                  ),
                 },
                 cssProcessors.sass && {
                   test: /\.sass$/,
-                  oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssProcessors.sass === true ? 'sass' : cssProcessors.sass),
+                  oneOf: oneOfCssLoader(
+                    isProdModel,
+                    srcPath,
+                    isVue,
+                    true,
+                    cssModulesOptions,
+                    cssProcessors.sass === true ? 'sass' : cssProcessors.sass
+                  ),
                 },
                 cssProcessors.scss && {
                   test: /\.scss$/,
-                  oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssProcessors.scss === true ? 'scss' : cssProcessors.scss),
+                  oneOf: oneOfCssLoader(
+                    isProdModel,
+                    srcPath,
+                    isVue,
+                    true,
+                    cssModulesOptions,
+                    cssProcessors.scss === true ? 'scss' : cssProcessors.scss
+                  ),
                 },
               ].filter(Boolean),
             },
@@ -578,7 +604,7 @@ function moduleExports({
     ],
     historyApiFallback: {index: '/client/index.html'},
     proxy: apiProxy,
-    port: devServerPort,
+    port: serverPort,
     client: {
       overlay: {
         warnings: false,

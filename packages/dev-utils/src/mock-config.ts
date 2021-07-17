@@ -10,7 +10,7 @@ interface EluxConfig {
     mockPath: string;
     envPath: string;
   };
-  mockServerPreset: MockServerPreset;
+  mockServer: MockServerPreset;
 }
 export = function (rootPath: string, projEnv: string, port?: number, mockPath?: string) {
   const baseEluxConfig: Partial<EluxConfig> = fs.existsSync(path.join(rootPath, 'elux.config.js'))
@@ -28,10 +28,10 @@ export = function (rootPath: string, projEnv: string, port?: number, mockPath?: 
       mockPath: './mock',
       envPath: './env',
     },
-    mockServerPreset: {
+    mockServer: {
       port: 3003,
     },
   };
   const eluxConfig: EluxConfig = deepExtend(defaultBaseConfig, baseEluxConfig, envEluxConfig);
-  return {port: port || eluxConfig.mockServerPreset.port, dir: path.resolve(rootPath, mockPath || eluxConfig.dir.mockPath)};
+  return {port: port || eluxConfig.mockServer.port, dir: path.resolve(rootPath, mockPath || eluxConfig.dir.mockPath)};
 };

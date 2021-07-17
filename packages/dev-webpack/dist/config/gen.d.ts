@@ -4,31 +4,19 @@ interface EnvConfig {
     clientGlobalVar: Record<string, any>;
     serverGlobalVar: Record<string, any>;
     onCompiled: () => void;
-}
-interface ProjConfig {
-    development: EnvConfig;
-    production: EnvConfig;
-}
-interface WebpackPreset {
-    eslintPlugin: 'development' | 'production' | 'always';
+    sourceMap: string;
+    cache: boolean | Record<string, any>;
+    eslint: boolean;
+    stylelint: boolean;
     resolveAlias: Record<string, string>;
     urlLoaderLimitSize: number;
-    cssProcessors: {
-        less: WebpackLoader | boolean;
-        scss: WebpackLoader | boolean;
-        sass: WebpackLoader | boolean;
-    };
-}
-interface DevServerPreset {
-    port: number;
-    proxy: Record<string, {
+    apiProxy: Record<string, {
         target: string;
     }>;
+    serverPort: number;
+    webpackConfigTransform: (config: WebpackConfig) => WebpackConfig;
 }
-interface MockServerPreset {
-    port: number;
-}
-interface BaseConfig {
+interface EluxConfig {
     type: 'vue' | 'react' | 'vue ssr' | 'react ssr';
     dir: {
         srcPath: string;
@@ -37,40 +25,47 @@ interface BaseConfig {
         mockPath: string;
         envPath: string;
     };
+    cssProcessors: {
+        less: WebpackLoader | boolean;
+        scss: WebpackLoader | boolean;
+        sass: WebpackLoader | boolean;
+    };
+    cssModulesOptions: Record<string, any>;
     moduleFederation: Record<string, any>;
-    mockServerPreset: MockServerPreset;
-    webpackPreset: WebpackPreset;
-    webpackConfig: (config: WebpackConfig) => WebpackConfig;
-    devServerPreset: DevServerPreset;
-    devServerConfig: (config: DevServerConfig) => DevServerConfig;
+    devServerConfigTransform: (config: DevServerConfig) => DevServerConfig;
+    mockServer: {
+        port: number;
+    };
+    all: EnvConfig;
+    dev?: Partial<EnvConfig>;
+    prod?: Partial<EnvConfig>;
 }
-interface EluxConfig extends BaseConfig, ProjConfig {
-}
-interface Config {
+interface Info {
     devServerConfig: DevServerConfig;
     clientWebpackConfig: WebpackConfig;
     serverWebpackConfig: WebpackConfig;
     projectConfig: {
+        projectType: 'vue' | 'react' | 'vue ssr' | 'react ssr';
+        nodeEnv: 'production' | 'development';
+        cache: string;
         rootPath: string;
         projEnv: string;
-        nodeEnv: 'production' | 'development';
         srcPath: string;
         distPath: string;
         publicPath: string;
         envPath: string;
-        debugMode: string;
-        projectType: 'vue' | 'react' | 'vue ssr' | 'react ssr';
-        nodeEnvConfig: EnvConfig;
+        envConfig: EnvConfig;
         useSSR: boolean;
-        port: number;
-        proxy: Record<string, {
+        serverPort: number;
+        apiProxy: Record<string, {
             target: string;
         }>;
+        sourceMap: string;
         onCompiled: () => void;
     };
 }
-declare function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' | 'development', debugMode: boolean, devServerPort?: number): Config;
+declare function moduleExports(rootPath: string, projEnv: string, nodeEnv: 'production' | 'development', _serverPort?: number): Info;
 declare namespace moduleExports {
-    export { EnvConfig, ProjConfig, WebpackPreset, DevServerPreset, BaseConfig, EluxConfig, Config, WebpackLoader, WebpackConfig, DevServerConfig };
+    export { EnvConfig, EluxConfig, Info, WebpackLoader, WebpackConfig, DevServerConfig };
 }
 export = moduleExports;

@@ -9,19 +9,21 @@ import chalk from 'chalk';
 import webpack, {Compiler, MultiCompiler} from 'webpack';
 import genConfig from './gen';
 
-export async function dev(projEnvName: string, debug: boolean, devServerPort: number) {
-  const config = genConfig(process.cwd(), projEnvName, 'development', debug, devServerPort);
+export async function dev(projEnvName: string, port?: number) {
+  const config = genConfig(process.cwd(), projEnvName, 'development', port);
   const {
     devServerConfig,
     clientWebpackConfig,
     serverWebpackConfig,
     projectConfig: {
+      cache,
+      sourceMap,
       projectType,
+      serverPort,
       nodeEnv,
-      debugMode,
       envPath,
       projEnv,
-      nodeEnvConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
+      envConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
       useSSR,
       onCompiled,
     },
@@ -31,8 +33,8 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
     clientGlobalVar,
     serverGlobalVar,
   };
-  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} debugMode: ${chalk.magenta(debugMode)}`);
-  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
+  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} sourceMap: ${chalk.magenta(sourceMap)}`);
+  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.gray(JSON.stringify(envInfo, null, 4))} \n`);
 
   let webpackCompiler: MultiCompiler | Compiler;
   if (useSSR) {
@@ -57,9 +59,8 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
 
   const protocol = devServerConfig.https ? 'https' : 'http';
   const host = devServerConfig.host || '0.0.0.0';
-  const port = devServerConfig.port || 8080;
   const publicPath = devServerConfig.dev?.publicPath || '/';
-  const localUrl = `${protocol}://localhost:${port}${publicPath}`;
+  const localUrl = `${protocol}://localhost:${serverPort}${publicPath}`;
 
   const devServer = new WebpackDevServer(webpackCompiler, devServerConfig);
 
@@ -87,12 +88,16 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
 *                                     *
 ***************************************
 `);
-      console.info(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta(localUrl)}`);
+      console.info(`WebpackCache: ${chalk.blue(cache)}`);
+      if (cache !== 'filesystem') {
+        console.info(`${chalk.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);
+      }
+      console.info(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localUrl)}`);
       onCompiled();
     }
   });
 
-  devServer.listen(port, host, (err: any) => {
+  devServer.listen(serverPort, host, (err: any) => {
     if (err) {
       console.error(err);
       process.exit(1);
@@ -100,23 +105,24 @@ export async function dev(projEnvName: string, debug: boolean, devServerPort: nu
   });
 }
 
-export function build(projEnvName: string, debug: boolean) {
-  const config = genConfig(process.cwd(), projEnvName, 'production', debug);
+export function build(projEnvName: string, port?: number) {
+  const config = genConfig(process.cwd(), projEnvName, 'production', port);
   const {
     clientWebpackConfig,
     serverWebpackConfig,
     projectConfig: {
+      cache,
+      sourceMap,
       envPath,
       publicPath,
       distPath,
       projectType,
       nodeEnv,
-      debugMode,
       projEnv,
-      nodeEnvConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
+      envConfig: {clientPublicPath, clientGlobalVar, serverGlobalVar},
       useSSR,
-      port,
-      proxy,
+      serverPort,
+      apiProxy,
       onCompiled,
     },
   } = config;
@@ -126,7 +132,7 @@ export function build(projEnvName: string, debug: boolean) {
     clientGlobalVar,
     serverGlobalVar,
   };
-  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} debugMode: ${chalk.magenta(debugMode)}`);
+  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} sourceMap: ${chalk.magenta(sourceMap)}`);
   console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
 
   fs.ensureDirSync(distPath);
@@ -137,7 +143,7 @@ export function build(projEnvName: string, debug: boolean) {
   }
   fs.outputFileSync(
     path.join(distPath, 'config.js'),
-    `module.exports = ${JSON.stringify({projectType, port, proxy, clientGlobalVar, serverGlobalVar}, null, 4)}`
+    `module.exports = ${JSON.stringify({projectType, port: serverPort, proxy: apiProxy, clientGlobalVar, serverGlobalVar}, null, 4)}`
   );
   const webpackCompiler = useSSR ? webpack([clientWebpackConfig, serverWebpackConfig]) : webpack(clientWebpackConfig);
 
@@ -152,6 +158,7 @@ export function build(projEnvName: string, debug: boolean) {
         chunkModules: false,
       })}\n\n`
     );
+    console.info(`WebpackCache: ${chalk.blue(cache)}`);
     onCompiled();
   });
 }

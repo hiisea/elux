@@ -8,7 +8,7 @@ module.exports = {
     extraFileExtensions: ['.vue'],
     parser: '@typescript-eslint/parser',
   },
-  extends: ['airbnb-typescript', 'plugin:vue/vue3-recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
+  extends: ['plugin:vue/vue3-essential', 'airbnb-typescript', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
   rules: {
     ...common.rules,
     'jsx-a11y/anchor-is-valid': 'off',

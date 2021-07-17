@@ -50,7 +50,7 @@ function getUrlLoader(isProdModel, type, disable, limitSize) {
         },
     };
 }
-function oneOfCssLoader(isProdModel, srcPath, isVue, isServer, extensionLoader) {
+function oneOfCssLoader(isProdModel, srcPath, isVue, isServer, cssModulesOptions, extensionLoader) {
     let cssProcessors = null;
     if (extensionLoader === 'less') {
         cssProcessors = {
@@ -100,6 +100,7 @@ function oneOfCssLoader(isProdModel, srcPath, isVue, isServer, extensionLoader) 
                     return getCssScopedName(srcPath, localName, context.resourcePath);
                 },
                 localIdentContext: srcPath,
+                ...cssModulesOptions,
                 exportOnlyLocals: isServer,
             },
         },
@@ -197,19 +198,13 @@ function tsxLoaders(isProdModel, isVue, isServer) {
     }
     return loaders;
 }
-function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, enableEslintPlugin, UIType, limitSize, globalVar, apiProxy, useSSR, devServerPort, resolveAlias, moduleFederation, }) {
+function moduleExports({ cache, sourceMap, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, cssModulesOptions, enableEslintPlugin, enableStylelintPlugin, UIType, limitSize, globalVar, apiProxy, useSSR, serverPort, resolveAlias, moduleFederation, }) {
     const isProdModel = nodeEnv === 'production';
-    let clentDevtool = debugMode ? 'eval-cheap-module-source-map' : 'eval';
-    let serverDevtool = debugMode ? 'eval-cheap-module-source-map' : 'eval';
-    if (isProdModel) {
-        clentDevtool = debugMode ? 'cheap-module-source-map' : false;
-        serverDevtool = false;
-    }
     if (!isProdModel) {
         clientPublicPath = `${clientPublicPath.replace('//', '``').replace(/\/.+$/, '').replace('``', '//')}/client/`;
     }
     if (moduleFederation && !/^(http:|https:|)\/\//.test(clientPublicPath)) {
-        clientPublicPath = `http://localhost:${devServerPort}${clientPublicPath}`;
+        clientPublicPath = `http://localhost:${serverPort}${clientPublicPath}`;
     }
     if (moduleFederation) {
         ContainerReferencePlugin.__setModuleMap__(moduleFederation.modules || {});
@@ -258,12 +253,13 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
     });
     const SsrPlugin = ssr_inject_1.default(path_1.default.join(distPath, './server/main.js'), path_1.default.join(distPath, './client/index.html'));
     const clientWebpackConfig = {
+        cache,
         context: rootPath,
         name: 'client',
         mode: nodeEnv,
         target: 'browserslist',
         stats: 'minimal',
-        devtool: clentDevtool,
+        devtool: sourceMap,
         entry: path_1.default.join(srcPath, './index'),
         performance: false,
         watchOptions: {
@@ -333,19 +329,19 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                         },
                         {
                             test: /\.css$/,
-                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, ''),
+                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, ''),
                         },
                         cssProcessors.less && {
                             test: /\.less$/,
-                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssProcessors.less === true ? 'less' : cssProcessors.less),
+                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, cssProcessors.less === true ? 'less' : cssProcessors.less),
                         },
                         cssProcessors.sass && {
                             test: /\.sass$/,
-                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssProcessors.sass === true ? 'sass' : cssProcessors.sass),
+                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, cssProcessors.sass === true ? 'sass' : cssProcessors.sass),
                         },
                         cssProcessors.scss && {
                             test: /\.scss$/,
-                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssProcessors.scss === true ? 'scss' : cssProcessors.scss),
+                            oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, false, cssModulesOptions, cssProcessors.scss === true ? 'scss' : cssProcessors.scss),
                         },
                     ].filter(Boolean),
                 },
@@ -375,7 +371,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                     },
                 }),
             enableEslintPlugin && new EslintWebpackPlugin({ cache: true, extensions: scriptExtensions }),
-            new StylelintPlugin({ files: `src/**/*.{${cssExtensions.join(',')}}` }),
+            enableStylelintPlugin && new StylelintPlugin({ files: `src/**/*.{${cssExtensions.join(',')}}` }),
             new HtmlWebpackPlugin({
                 minify: false,
                 inject: 'body',
@@ -404,6 +400,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
     };
     const serverWebpackConfig = useSSR
         ? {
+            cache,
             context: rootPath,
             name: 'server',
             mode: nodeEnv,
@@ -412,7 +409,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
             optimization: {
                 minimize: false,
             },
-            devtool: serverDevtool,
+            devtool: sourceMap,
             watchOptions: {
                 ignored: /node_modules/,
             },
@@ -470,19 +467,19 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
                             },
                             {
                                 test: /\.css$/,
-                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, ''),
+                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssModulesOptions, ''),
                             },
                             cssProcessors.less && {
                                 test: /\.less$/,
-                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssProcessors.less === true ? 'less' : cssProcessors.less),
+                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssModulesOptions, cssProcessors.less === true ? 'less' : cssProcessors.less),
                             },
                             cssProcessors.sass && {
                                 test: /\.sass$/,
-                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssProcessors.sass === true ? 'sass' : cssProcessors.sass),
+                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssModulesOptions, cssProcessors.sass === true ? 'sass' : cssProcessors.sass),
                             },
                             cssProcessors.scss && {
                                 test: /\.scss$/,
-                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssProcessors.scss === true ? 'scss' : cssProcessors.scss),
+                                oneOf: oneOfCssLoader(isProdModel, srcPath, isVue, true, cssModulesOptions, cssProcessors.scss === true ? 'scss' : cssProcessors.scss),
                             },
                         ].filter(Boolean),
                     },
@@ -503,7 +500,7 @@ function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, public
         ],
         historyApiFallback: { index: '/client/index.html' },
         proxy: apiProxy,
-        port: devServerPort,
+        port: serverPort,
         client: {
             overlay: {
                 warnings: false,

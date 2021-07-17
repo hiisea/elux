@@ -20,7 +20,8 @@ interface DevServerConfig {
     [key: string]: any;
 }
 interface ConfigOptions {
-    debugMode: boolean;
+    cache: boolean | Record<string, any>;
+    sourceMap: string;
     nodeEnv: 'production' | 'development';
     rootPath: string;
     srcPath: string;
@@ -33,6 +34,7 @@ interface ConfigOptions {
         sass?: WebpackLoader | boolean;
         scss?: WebpackLoader | boolean;
     };
+    cssModulesOptions: Record<string, any>;
     limitSize: number;
     globalVar: {
         client?: any;
@@ -43,12 +45,13 @@ interface ConfigOptions {
     };
     useSSR: boolean;
     UIType: 'react' | 'vue';
-    devServerPort: number;
+    serverPort: number;
     resolveAlias: Record<string, string>;
     moduleFederation?: Record<string, any>;
     enableEslintPlugin: boolean;
+    enableStylelintPlugin: boolean;
 }
-declare function moduleExports({ debugMode, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, enableEslintPlugin, UIType, limitSize, globalVar, apiProxy, useSSR, devServerPort, resolveAlias, moduleFederation, }: ConfigOptions): {
+declare function moduleExports({ cache, sourceMap, nodeEnv, rootPath, srcPath, distPath, publicPath, clientPublicPath, envPath, cssProcessors, cssModulesOptions, enableEslintPlugin, enableStylelintPlugin, UIType, limitSize, globalVar, apiProxy, useSSR, serverPort, resolveAlias, moduleFederation, }: ConfigOptions): {
     clientWebpackConfig: WebpackConfig;
     serverWebpackConfig: WebpackConfig;
     devServerConfig: DevServerConfig;

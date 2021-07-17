@@ -28,7 +28,7 @@ server.on('error', (error) => {
     }
 });
 server.on('listening', () => {
-    console.info(`\n.....${chalk_1.default.blue('MockServer')} running at ${chalk_1.default.blue(`http://localhost:${port}/`)}\n`);
+    console.info(`\n.....${chalk_1.default.blue('MockServer')} running at ${chalk_1.default.blue.underline(`http://localhost:${port}/`)}\n`);
 });
 ['SIGINT', 'SIGTERM'].forEach((signal) => {
     process.on(signal, () => {
