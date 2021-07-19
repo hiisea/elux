@@ -87,6 +87,15 @@
     semver "^5.4.1"
     source-map "^0.5.0"
 
+"@babel/eslint-parser@^7.12.0":
+  version "7.14.7"
+  resolved "https://registry.yarnpkg.com/@babel/eslint-parser/-/eslint-parser-7.14.7.tgz#91be59a4f7dd60d02a3ef772d156976465596bda"
+  integrity sha512-6WPwZqO5priAGIwV6msJcdc9TsEPzYeYdS/Xuoap+/ihkgN6dzHp2bcAAwyWZ5bLzk0vvjDmKvRwkqNaiJ8BiQ==
+  dependencies:
+    eslint-scope "^5.1.1"
+    eslint-visitor-keys "^2.1.0"
+    semver "^6.3.0"
+
 "@babel/generator@^7.12.17", "@babel/generator@^7.14.0":
   version "7.14.1"
   resolved "http://localhost:4873/@babel%2fgenerator/-/generator-7.14.1.tgz#1f99331babd65700183628da186f36f63d615c93"
@@ -1296,11 +1305,12 @@
     rimraf "^3.0.0"
     stylelint "~13.13.0"
 
-"@elux/eslint-plugin@0.1.6", "@elux/eslint-plugin@~0.1.2", "@elux/eslint-plugin@~1.0.1":
-  version "0.1.6"
-  resolved "http://localhost:4873/@elux%2feslint-plugin/-/eslint-plugin-0.1.6.tgz#2e7e46647c16516c8a4e590df0d90855b78ba0b7"
-  integrity sha512-WC74+NmQ4X7R/C8Fbb0Xq1xGpeu8jo+8e8z7T7d4oKJXXhll8eTP7T6ZzpE74egMIkrVyKD1ZJTe5NpKmGKE7g==
+"@elux/eslint-plugin@~0.1.2", "@elux/eslint-plugin@~0.1.8", "@elux/eslint-plugin@~1.0.1":
+  version "0.1.8"
+  resolved "http://localhost:4873/@elux%2feslint-plugin/-/eslint-plugin-0.1.8.tgz#1b014ad922f0a06294ce86d5fbfb3f6fbfacd1ea"
+  integrity sha512-507Z+z9nOTqWf65JFyQ91eq/LO+60cuYMA0OUYlVu29x04olRDZ3Gouq59nt2Vq7bO+AY1DFSLPJ9iqEDnp9dw==
   dependencies:
+    "@babel/eslint-parser" "^7.12.0"
     "@typescript-eslint/eslint-plugin" "^4.28.0"
     "@typescript-eslint/parser" "^4.28.0"
     eslint-config-airbnb "~18.2.1"
@@ -5075,7 +5085,7 @@ eslint-visitor-keys@^1.1.0, eslint-visitor-keys@^1.3.0:
   resolved "http://localhost:4873/eslint-visitor-keys/-/eslint-visitor-keys-1.3.0.tgz#30ebd1ef7c2fdff01c3a4f151044af25fab0523e"
   integrity sha512-6J72N8UNa462wa/KFODt/PJ3IU60SDpC3QXC1Hjc1BXXpfL2C9R5+AU7jhe0F6GREqVMh4Juu+NY7xn+6dipUQ==
 
-eslint-visitor-keys@^2.0.0:
+eslint-visitor-keys@^2.0.0, eslint-visitor-keys@^2.1.0:
   version "2.1.0"
   resolved "http://localhost:4873/eslint-visitor-keys/-/eslint-visitor-keys-2.1.0.tgz#f65328259305927392c938ed44eb0a5c9b2bd303"
   integrity sha512-0rSmRBzXgDzIsD6mGdJgevzgezI534Cer5L/vyMX0kHzT/jiB43jRhd9YUlMGYLQy2zprNmoT8qasCGtY+QaKw==

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {BaseRouter, BaseNativeRouter, NativeLocation, NativeData, RootParams, LocationTransform, IBaseRouter} from '@elux/route';
 
 type UnregisterCallback = () => void;
