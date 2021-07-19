@@ -23,14 +23,14 @@ export class ModuleHandlers extends CoreModuleHandlers<State, {}> {
   }
 
   @effect()
-  protected async ['moduleA.add']() {
+  protected async ['moduleA.add'](): Promise<void> {
     const prevState = this.currentRootState;
     this.dispatch(this.actions.add());
     messages.push(['moduleC/moduleA.add', JSON.stringify(this.rootState), JSON.stringify(prevState)]);
   }
 
   @effect()
-  protected async ['moduleA.add2']() {
+  protected async ['moduleA.add2'](): Promise<void> {
     const prevState = this.currentRootState;
     this.dispatch(this.actions.add2());
     messages.push(['moduleC/moduleA.add2', JSON.stringify(this.rootState), JSON.stringify(prevState)]);

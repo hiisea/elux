@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import {getRootModuleAPI, RootModuleFacade} from '@elux/core';
 import moduleA from './moduleA';
 import moduleB from './moduleB';

@@ -1,21 +1,21 @@
-import React from 'react';
-import {h} from 'vue';
+import {h, AnchorHTMLAttributes} from 'vue';
 import {MetaData} from '../sington';
 
-export interface Props extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface Props extends AnchorHTMLAttributes {
   replace?: boolean;
 }
 
-function isModifiedEvent(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) {
+function isModifiedEvent(event: MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function (props: Props, context: {slots: any}) {
   const {onClick, replace, ...rest} = props;
   const {target} = rest;
   const newProps = {
     ...rest,
-    onClick: (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    onClick: (event: MouseEvent) => {
       try {
         onClick && onClick(event);
       } catch (ex) {

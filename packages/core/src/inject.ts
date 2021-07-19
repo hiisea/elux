@@ -42,7 +42,7 @@ type HandlerThis<T> = T extends (...args: infer P) => any
 
 type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
 
-export function getModuleGetter() {
+export function getModuleGetter(): ModuleGetter {
   return MetaData.moduleGetter;
 }
 export function exportModule<
@@ -215,7 +215,7 @@ export function loadComponet(
   return callback(promiseOrComponent);
 }
 
-export function getCachedModules() {
+export function getCachedModules(): Record<string, undefined | CommonModule | Promise<CommonModule>> {
   return MetaData.moduleCaches;
 }
 
@@ -266,14 +266,14 @@ export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Re
     return this.store.getCurrentState(this.moduleName) as S;
   }
 
-  protected dispatch(action: Action) {
+  protected dispatch(action: Action): void | Promise<void> {
     return this.store.dispatch(action);
   }
 
   /**
    * 动态加载并初始化其他模块的model
    */
-  protected loadModel(moduleName: string) {
+  protected loadModel(moduleName: string): void | Promise<void> {
     return loadModel(moduleName, this.store);
   }
 

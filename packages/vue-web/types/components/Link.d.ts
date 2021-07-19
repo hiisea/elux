@@ -1,5 +1,5 @@
-import React from 'react';
-export interface Props extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+import { AnchorHTMLAttributes } from 'vue';
+export interface Props extends AnchorHTMLAttributes {
     replace?: boolean;
 }
 export default function (props: Props, context: {

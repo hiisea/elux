@@ -6,7 +6,5 @@ module.exports = {
     browser: false,
     node: false,
   },
-  parserOptions: {
-    project: `${__dirname}/tsconfig.json`,
-  },
+  rules: {},
 };

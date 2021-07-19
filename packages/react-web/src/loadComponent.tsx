@@ -1,6 +1,6 @@
 import React, {ComponentType, Component} from 'react';
 import {loadComponet, isPromise, env} from '@elux/core';
-import type {LoadComponent as BaseLoadComponent, RootModuleFacade, IStore, EluxComponent} from '@elux/core';
+import type {LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
 import {EluxContext} from './sington';
 
 export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<
@@ -18,7 +18,7 @@ export function setLoadComponentOptions({
 }: {
   LoadComponentOnError?: ComponentType<{message: string}>;
   LoadComponentOnLoading?: ComponentType<{}>;
-}) {
+}): void {
   LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
   LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }
@@ -29,11 +29,11 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, co
   class Loader extends Component<{forwardedRef: any}> {
     static contextType = EluxContext;
 
-    private active: boolean = true;
+    private active = true;
 
-    private loading: boolean = false;
+    private loading = false;
 
-    private error: string = '';
+    private error = '';
 
     private view?: EluxComponent;
 

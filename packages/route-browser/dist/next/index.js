@@ -33,15 +33,25 @@ export class BrowserNativeRouter extends BaseNativeRouter {
           return '';
         },
 
-        push() {},
+        push() {
+          return undefined;
+        },
 
-        replace() {},
+        replace() {
+          return undefined;
+        },
 
-        go() {},
+        go() {
+          return undefined;
+        },
 
-        goBack() {},
+        goBack() {
+          return undefined;
+        },
 
-        goForward() {},
+        goForward() {
+          return undefined;
+        },
 
         block() {
           return () => undefined;

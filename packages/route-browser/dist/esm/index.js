@@ -43,11 +43,21 @@ export var BrowserNativeRouter = function (_BaseNativeRouter) {
         createHref: function createHref() {
           return '';
         },
-        push: function push() {},
-        replace: function replace() {},
-        go: function go() {},
-        goBack: function goBack() {},
-        goForward: function goForward() {},
+        push: function push() {
+          return undefined;
+        },
+        replace: function replace() {
+          return undefined;
+        },
+        go: function go() {
+          return undefined;
+        },
+        goBack: function goBack() {
+          return undefined;
+        },
+        goForward: function goForward() {
+          return undefined;
+        },
         block: function block() {
           return function () {
             return undefined;

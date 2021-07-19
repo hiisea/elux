@@ -36,23 +36,23 @@ export class ModuleHandlers extends CoreModuleHandlers<State, {}> {
   }
 
   @effect(null)
-  public async effectError(error: string) {
+  public async effectError(error: string): Promise<void> {
     throw error;
   }
 
   @effect(null)
-  public async effectReducerError(error: string) {
+  public async effectReducerError(error: string): Promise<void> {
     this.dispatch(this.actions.reducerError(error));
   }
 
   @effect(null)
-  public async effectEffectError(error: string) {
+  public async effectEffectError(error: string): Promise<void> {
     this.dispatch(this.actions.effectError(error));
     this.dispatch(this.actions.simple());
   }
 
   @effect(null)
-  protected async [ActionTypes.Error](error: any) {
+  protected async [ActionTypes.Error](error: any): Promise<boolean> {
     messages.push(error, error.__eluxProcessed__);
     return true;
   }

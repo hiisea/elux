@@ -4,6 +4,7 @@ import chalk from 'chalk';
 
 const port = process.env.PORT;
 const src = process.env.SRC;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const app = require(src!);
 const server = http.createServer(app);
 app.set('port', port);

@@ -21,7 +21,7 @@ export function setRouteConfig(conf: {
   indexUrl?: string;
   disableNativeRoute?: boolean;
   defaultParams?: Record<string, any>;
-}) {
+}): void {
   conf.actionMaxHistory && (routeConfig.actionMaxHistory = conf.actionMaxHistory);
   conf.pagesMaxHistory && (routeConfig.pagesMaxHistory = conf.pagesMaxHistory);
   conf.disableNativeRoute && (routeConfig.disableNativeRoute = true);

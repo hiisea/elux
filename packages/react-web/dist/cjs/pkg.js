@@ -27,22 +27,22 @@ function _extends() {
   return _extends.apply(this, arguments);
 }
 
-var root$1;
+var root;
 
 if (typeof self !== 'undefined') {
-  root$1 = self;
+  root = self;
 } else if (typeof window !== 'undefined') {
-  root$1 = window;
+  root = window;
 } else if (typeof global !== 'undefined') {
-  root$1 = global;
+  root = global;
 } else if (typeof module !== 'undefined') {
-  root$1 = module;
+  root = module;
 } else {
-  root$1 = Function('return this')();
+  root = Function('return this')();
 }
 
-var env$1 = root$1;
-env$1.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+var env = root;
+env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
 
 function _assertThisInitialized(self) {
   if (self === void 0) {
@@ -90,7 +90,7 @@ exports.LoadingState = void 0;
   LoadingState["Depth"] = "Depth";
 })(exports.LoadingState || (exports.LoadingState = {}));
 
-var SingleDispatcher$1 = function () {
+var SingleDispatcher = function () {
   function SingleDispatcher() {
     _defineProperty(this, "listenerId", 0);
 
@@ -156,7 +156,7 @@ var TaskCounter = function (_SingleDispatcher) {
 
       if (this.list.length === 1 && !this.ctimer) {
         this.dispatch(exports.LoadingState.Start);
-        this.ctimer = env$1.setTimeout(function () {
+        this.ctimer = env.setTimeout(function () {
           _this2.ctimer = 0;
 
           if (_this2.list.length > 0) {
@@ -179,7 +179,7 @@ var TaskCounter = function (_SingleDispatcher) {
 
       if (this.list.length === 0) {
         if (this.ctimer) {
-          env$1.clearTimeout.call(null, this.ctimer);
+          env.clearTimeout.call(null, this.ctimer);
           this.ctimer = 0;
         }
 
@@ -191,7 +191,7 @@ var TaskCounter = function (_SingleDispatcher) {
   };
 
   return TaskCounter;
-}(SingleDispatcher$1);
+}(SingleDispatcher);
 function isPlainObject$2(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
@@ -262,24 +262,24 @@ function deepMerge(target) {
 }
 function warn(str) {
   if (process.env.NODE_ENV === 'development') {
-    env$1.console.warn(str);
+    env.console.warn(str);
   }
 }
-function isPromise$1(data) {
+function isPromise(data) {
   return typeof data === 'object' && typeof data.then === 'function';
 }
 function isServer() {
-  return env$1.isServer;
+  return env.isServer;
 }
 function serverSide(callback) {
-  if (env$1.isServer) {
+  if (env.isServer) {
     return callback();
   }
 
   return undefined;
 }
 function clientSide(callback) {
-  if (!env$1.isServer) {
+  if (!env.isServer) {
     return callback();
   }
 
@@ -296,7 +296,7 @@ function delayPromise(second) {
 
     descriptor.value = function () {
       var delay = new Promise(function (resolve) {
-        env$1.setTimeout(function () {
+        env.setTimeout(function () {
           resolve(true);
         }, second * 1000);
       });
@@ -357,7 +357,7 @@ function moduleLoadingAction(moduleName, loadingState) {
 function isEluxComponent(data) {
   return data['__elux_component__'];
 }
-var MetaData$2 = {
+var MetaData$1 = {
   appModuleName: 'stage',
   injectedModules: {},
   reducersMap: {},
@@ -382,7 +382,7 @@ function transformAction(actionName, handler, listenerModule, actionHandlerMap) 
 }
 
 function injectActions(moduleName, handlers) {
-  var injectedModules = MetaData$2.injectedModules;
+  var injectedModules = MetaData$1.injectedModules;
 
   if (injectedModules[moduleName]) {
     return;
@@ -401,9 +401,9 @@ function injectActions(moduleName, handlers) {
             var arr = actionName.split(config.NSP);
 
             if (arr[1]) {
-              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData$2.effectsMap : MetaData$2.reducersMap);
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData$1.effectsMap : MetaData$1.reducersMap);
             } else {
-              transformAction(moduleName + config.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData$2.effectsMap : MetaData$2.reducersMap);
+              transformAction(moduleName + config.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData$1.effectsMap : MetaData$1.reducersMap);
             }
           });
         }
@@ -428,7 +428,7 @@ function setLoading(store, item, moduleName, groupName) {
   loadings[key].addItem(item);
   return item;
 }
-function reducer$1(target, key, descriptor) {
+function reducer(target, key, descriptor) {
   if (!key && !descriptor) {
     key = target.key;
     descriptor = target.descriptor;
@@ -466,14 +466,14 @@ function effect(loadingKey) {
 
     if (loadingForModuleName && loadingForGroupName) {
       var before = function before(curAction, moduleName, promiseResult) {
-        if (!env$1.isServer) {
+        if (!env.isServer) {
           if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData$2.appModuleName;
+            loadingForModuleName = MetaData$1.appModuleName;
           } else if (loadingForModuleName === 'this') {
             loadingForModuleName = moduleName;
           }
 
-          setLoading(MetaData$2.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
+          setLoading(MetaData$1.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
         }
       };
 
@@ -518,7 +518,7 @@ function deepMergeState(target) {
 
   return deepMerge.apply(void 0, [{}, target].concat(args));
 }
-function mergeState$1(target) {
+function mergeState(target) {
   if (target === void 0) {
     target = {};
   }
@@ -999,14 +999,14 @@ function _optionalCallableProperty(obj, name) {
 }
 
 function getModuleGetter() {
-  return MetaData$2.moduleGetter;
+  return MetaData$1.moduleGetter;
 }
 function exportModule(moduleName, ModuleHandles, params, components) {
   Object.keys(components).forEach(function (key) {
     var component = components[key];
 
     if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
-      env$1.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
+      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
     }
   });
 
@@ -1038,27 +1038,27 @@ function exportModule(moduleName, ModuleHandles, params, components) {
     actions: undefined
   };
 }
-function getModule$1(moduleName) {
-  if (MetaData$2.moduleCaches[moduleName]) {
-    return MetaData$2.moduleCaches[moduleName];
+function getModule(moduleName) {
+  if (MetaData$1.moduleCaches[moduleName]) {
+    return MetaData$1.moduleCaches[moduleName];
   }
 
-  var moduleOrPromise = MetaData$2.moduleGetter[moduleName]();
+  var moduleOrPromise = MetaData$1.moduleGetter[moduleName]();
 
-  if (isPromise$1(moduleOrPromise)) {
+  if (isPromise(moduleOrPromise)) {
     var promiseModule = moduleOrPromise.then(function (_ref) {
       var module = _ref.default;
-      MetaData$2.moduleCaches[moduleName] = module;
+      MetaData$1.moduleCaches[moduleName] = module;
       return module;
     }, function (reason) {
-      MetaData$2.moduleCaches[moduleName] = undefined;
+      MetaData$1.moduleCaches[moduleName] = undefined;
       throw reason;
     });
-    MetaData$2.moduleCaches[moduleName] = promiseModule;
+    MetaData$1.moduleCaches[moduleName] = promiseModule;
     return promiseModule;
   }
 
-  MetaData$2.moduleCaches[moduleName] = moduleOrPromise;
+  MetaData$1.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
 }
 function getModuleList(moduleNames) {
@@ -1067,22 +1067,22 @@ function getModuleList(moduleNames) {
   }
 
   return Promise.all(moduleNames.map(function (moduleName) {
-    if (MetaData$2.moduleCaches[moduleName]) {
-      return MetaData$2.moduleCaches[moduleName];
+    if (MetaData$1.moduleCaches[moduleName]) {
+      return MetaData$1.moduleCaches[moduleName];
     }
 
-    return getModule$1(moduleName);
+    return getModule(moduleName);
   }));
 }
 
-function _loadModel$1(moduleName, store) {
+function _loadModel(moduleName, store) {
   if (store === void 0) {
-    store = MetaData$2.clientStore;
+    store = MetaData$1.clientStore;
   }
 
-  var moduleOrPromise = getModule$1(moduleName);
+  var moduleOrPromise = getModule(moduleName);
 
-  if (isPromise$1(moduleOrPromise)) {
+  if (isPromise(moduleOrPromise)) {
     return moduleOrPromise.then(function (module) {
       return module.model(store);
     });
@@ -1093,8 +1093,8 @@ function _loadModel$1(moduleName, store) {
 function getComponet(moduleName, componentName) {
   var key = [moduleName, componentName].join(config.NSP);
 
-  if (MetaData$2.componentCaches[key]) {
-    return MetaData$2.componentCaches[key];
+  if (MetaData$1.componentCaches[key]) {
+    return MetaData$1.componentCaches[key];
   }
 
   var moduleCallback = function moduleCallback(module) {
@@ -1102,25 +1102,25 @@ function getComponet(moduleName, componentName) {
 
     if (isEluxComponent(componentOrFun)) {
       var component = componentOrFun;
-      MetaData$2.componentCaches[key] = component;
+      MetaData$1.componentCaches[key] = component;
       return component;
     }
 
     var promiseComponent = componentOrFun().then(function (_ref2) {
       var component = _ref2.default;
-      MetaData$2.componentCaches[key] = component;
+      MetaData$1.componentCaches[key] = component;
       return component;
     }, function (reason) {
-      MetaData$2.componentCaches[key] = undefined;
+      MetaData$1.componentCaches[key] = undefined;
       throw reason;
     });
-    MetaData$2.componentCaches[key] = promiseComponent;
+    MetaData$1.componentCaches[key] = promiseComponent;
     return promiseComponent;
   };
 
-  var moduleOrPromise = getModule$1(moduleName);
+  var moduleOrPromise = getModule(moduleName);
 
-  if (isPromise$1(moduleOrPromise)) {
+  if (isPromise(moduleOrPromise)) {
     return moduleOrPromise.then(moduleCallback);
   }
 
@@ -1132,8 +1132,8 @@ function getComponentList(keys) {
   }
 
   return Promise.all(keys.map(function (key) {
-    if (MetaData$2.componentCaches[key]) {
-      return MetaData$2.componentCaches[key];
+    if (MetaData$1.componentCaches[key]) {
+      return MetaData$1.componentCaches[key];
     }
 
     var _key$split = key.split(config.NSP),
@@ -1148,11 +1148,11 @@ function loadComponet(moduleName, componentName, store, deps) {
 
   var callback = function callback(component) {
     if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
-      if (env$1.isServer) {
+      if (env.isServer) {
         return null;
       }
 
-      var module = getModule$1(moduleName);
+      var module = getModule(moduleName);
       module.model(store);
     }
 
@@ -1160,8 +1160,8 @@ function loadComponet(moduleName, componentName, store, deps) {
     return component;
   };
 
-  if (isPromise$1(promiseOrComponent)) {
-    if (env$1.isServer) {
+  if (isPromise(promiseOrComponent)) {
+    if (env.isServer) {
       return null;
     }
 
@@ -1196,13 +1196,13 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
       kind: "get",
       key: "actions",
       value: function actions() {
-        return MetaData$2.facadeMap[this.moduleName].actions;
+        return MetaData$1.facadeMap[this.moduleName].actions;
       }
     }, {
       kind: "method",
       key: "getPrivateActions",
       value: function getPrivateActions(actionsMap) {
-        return MetaData$2.facadeMap[this.moduleName].actions;
+        return MetaData$1.facadeMap[this.moduleName].actions;
       }
     }, {
       kind: "get",
@@ -1244,29 +1244,29 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
       kind: "method",
       key: "loadModel",
       value: function loadModel(moduleName) {
-        return _loadModel$1(moduleName, this.store);
+        return _loadModel(moduleName, this.store);
       }
     }, {
       kind: "method",
-      decorators: [reducer$1],
+      decorators: [reducer],
       key: "Init",
       value: function Init(initState) {
         return initState;
       }
     }, {
       kind: "method",
-      decorators: [reducer$1],
+      decorators: [reducer],
       key: "Update",
       value: function Update(payload, key) {
-        return mergeState$1(this.state, payload);
+        return mergeState(this.state, payload);
       }
     }, {
       kind: "method",
-      decorators: [reducer$1],
+      decorators: [reducer],
       key: "Loading",
       value: function Loading(payload) {
-        var loading = mergeState$1(this.state.loading, payload);
-        return mergeState$1(this.state, {
+        var loading = mergeState(this.state.loading, payload);
+        return mergeState(this.state, {
           loading: loading
         });
       }
@@ -1274,9 +1274,9 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
   };
 });
 function getRootModuleAPI(data) {
-  if (!MetaData$2.facadeMap) {
+  if (!MetaData$1.facadeMap) {
     if (data) {
-      MetaData$2.facadeMap = Object.keys(data).reduce(function (prev, moduleName) {
+      MetaData$1.facadeMap = Object.keys(data).reduce(function (prev, moduleName) {
         var arr = data[moduleName];
         var actions = {};
         var actionNames = {};
@@ -1304,7 +1304,7 @@ function getRootModuleAPI(data) {
       }, {});
     } else {
       var cacheData = {};
-      MetaData$2.facadeMap = new Proxy({}, {
+      MetaData$1.facadeMap = new Proxy({}, {
         set: function set(target, moduleName, val, receiver) {
           return Reflect.set(target, moduleName, val, receiver);
         },
@@ -1346,7 +1346,7 @@ function getRootModuleAPI(data) {
     }
   }
 
-  return MetaData$2.facadeMap;
+  return MetaData$1.facadeMap;
 }
 function exportComponent(component) {
   var eluxComponent = component;
@@ -1459,15 +1459,15 @@ function enhanceStore(baseStore, middlewares) {
             moduleName = _action$type$split[0],
             actionName = _action$type$split[1];
 
-        if (env$1.isServer && actionName === ActionTypes$1.MLoading) {
+        if (env.isServer && actionName === ActionTypes$1.MLoading) {
           return undefined;
         }
 
-        if (moduleName && actionName && MetaData$2.moduleGetter[moduleName]) {
+        if (moduleName && actionName && MetaData$1.moduleGetter[moduleName]) {
           if (!injectedModules[moduleName]) {
-            var result = _loadModel$1(moduleName, store);
+            var result = _loadModel(moduleName, store);
 
-            if (isPromise$1(result)) {
+            if (isPromise(result)) {
               return result.then(function () {
                 return next(action);
               });
@@ -1526,7 +1526,7 @@ function enhanceStore(baseStore, middlewares) {
   }
 
   function respondHandler(action, isReducer, prevData) {
-    var handlersMap = isReducer ? MetaData$2.reducersMap : MetaData$2.effectsMap;
+    var handlersMap = isReducer ? MetaData$1.reducersMap : MetaData$1.effectsMap;
     var actionName = action.type;
 
     var _actionName$split = actionName.split(config.NSP),
@@ -1543,7 +1543,7 @@ function enhanceStore(baseStore, middlewares) {
     if (handlerModuleNames.length > 0) {
       var orderList = [];
       handlerModuleNames.forEach(function (moduleName) {
-        if (moduleName === MetaData$2.appModuleName) {
+        if (moduleName === MetaData$1.appModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -2388,8 +2388,8 @@ function defineModuleGetter(moduleGetter, appModuleName) {
     appModuleName = 'stage';
   }
 
-  MetaData$2.appModuleName = appModuleName;
-  MetaData$2.moduleGetter = moduleGetter;
+  MetaData$1.appModuleName = appModuleName;
+  MetaData$1.moduleGetter = moduleGetter;
 
   if (!moduleGetter[appModuleName]) {
     throw appModuleName + " could not be found in moduleGetter";
@@ -2410,13 +2410,13 @@ function _renderApp() {
               appViewName = 'main';
             }
 
-            moduleGetter = MetaData$2.moduleGetter, appModuleName = MetaData$2.appModuleName;
+            moduleGetter = MetaData$1.moduleGetter, appModuleName = MetaData$1.appModuleName;
             preloadModules = preloadModules.filter(function (moduleName) {
               return moduleGetter[moduleName] && moduleName !== appModuleName;
             });
             preloadModules.unshift(appModuleName);
             store = enhanceStore(baseStore, middlewares);
-            MetaData$2.clientStore = store;
+            MetaData$1.clientStore = store;
             _context.next = 8;
             return getModuleList(preloadModules);
 
@@ -2463,7 +2463,7 @@ function _ssrApp() {
               appViewName = 'main';
             }
 
-            moduleGetter = MetaData$2.moduleGetter, appModuleName = MetaData$2.appModuleName;
+            moduleGetter = MetaData$1.moduleGetter, appModuleName = MetaData$1.appModuleName;
             preloadModules = preloadModules.filter(function (moduleName) {
               return moduleGetter[moduleName] && moduleName !== appModuleName;
             });
@@ -2503,7 +2503,7 @@ function _ssrApp() {
   return _ssrApp.apply(this, arguments);
 }
 
-env$1.encodeBas64 = function (str) {
+env.encodeBas64 = function (str) {
   if (!str) {
     return '';
   }
@@ -2511,7 +2511,7 @@ env$1.encodeBas64 = function (str) {
   return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
 };
 
-env$1.decodeBas64 = function (str) {
+env.decodeBas64 = function (str) {
   if (!str) {
     return '';
   }
@@ -3075,7 +3075,7 @@ function eluxUrlToEluxLocation(url) {
     try {
       params = JSON.parse(query);
     } catch (e) {
-      env$1.console.error(e);
+      env.console.error(e);
     }
   }
 
@@ -3176,7 +3176,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
         searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
         hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
       } catch (e) {
-        env$1.console.error(e);
+        env.console.error(e);
       }
 
       return {
@@ -3347,7 +3347,7 @@ var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
     F: ModuleWithRouteHandlers,
     d: [{
       kind: "method",
-      decorators: [reducer$1],
+      decorators: [reducer],
       key: "Init",
       value: function Init(initState) {
         var routeParams = this.rootState.route.params[this.moduleName];
@@ -3355,7 +3355,7 @@ var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
       }
     }, {
       kind: "method",
-      decorators: [reducer$1],
+      decorators: [reducer],
       key: "RouteParams",
       value: function RouteParams(payload) {
         return deepMergeState(this.state, payload);
@@ -3444,10 +3444,10 @@ var RouteModuleHandlers = _decorate(null, function (_initialize2) {
       }
     }, {
       kind: "method",
-      decorators: [reducer$1],
+      decorators: [reducer],
       key: "RouteChange",
       value: function RouteChange(routeState) {
-        return mergeState$1(this.state, routeState);
+        return mergeState(this.state, routeState);
       }
     }]
   };
@@ -3531,7 +3531,7 @@ var BaseNativeRouter = function () {
       if (!result) {
         resolve(undefined);
         _this.curTask = undefined;
-      } else if (isPromise$1(result)) {
+      } else if (isPromise(result)) {
         result.catch(function (e) {
           reject(e);
           _this.curTask = undefined;
@@ -5259,7 +5259,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
           };
         }
 
-        callback && env$1.setTimeout(callback, 50);
+        callback && env.setTimeout(callback, 50);
         return false;
       }
 
@@ -5373,7 +5373,7 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
-var MetaData$1 = {
+var MetaData = {
   router: undefined
 };
 var EluxContext = React__default['default'].createContext({
@@ -5468,7 +5468,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
         }
 
         if (result) {
-          if (isPromise$1(result)) {
+          if (isPromise(result)) {
             result.then(function (view) {
               if (view) {
                 _this2.loading = false;
@@ -5478,7 +5478,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
                 });
               }
             }, function (e) {
-              env$1.console.error(e);
+              env.console.error(e);
               _this2.loading = false;
               _this2.error = e.message || "" + e || 'error';
               _this2.active && _this2.setState({
@@ -6060,303 +6060,6 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
   warning('You are currently using minified code outside of NODE_ENV === "production". ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or setting mode to production in webpack (https://webpack.js.org/concepts/mode/) ' + 'to ensure you have the correct code for your production build.');
 }
 
-var root;
-
-if (typeof self !== 'undefined') {
-  root = self;
-} else if (typeof window !== 'undefined') {
-  root = window;
-} else if (typeof global !== 'undefined') {
-  root = global;
-} else if (typeof module !== 'undefined') {
-  root = module;
-} else {
-  root = Function('return this')();
-}
-
-var env = root;
-env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
-
-var LoadingState;
-
-(function (LoadingState) {
-  LoadingState["Start"] = "Start";
-  LoadingState["Stop"] = "Stop";
-  LoadingState["Depth"] = "Depth";
-})(LoadingState || (LoadingState = {}));
-
-var SingleDispatcher = function () {
-  function SingleDispatcher() {
-    _defineProperty(this, "listenerId", 0);
-
-    _defineProperty(this, "listenerMap", {});
-  }
-
-  var _proto = SingleDispatcher.prototype;
-
-  _proto.addListener = function addListener(callback) {
-    this.listenerId++;
-    var id = "" + this.listenerId;
-    var listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
-  };
-
-  _proto.dispatch = function dispatch(data) {
-    var listenerMap = this.listenerMap;
-    Object.keys(listenerMap).forEach(function (id) {
-      listenerMap[id](data);
-    });
-  };
-
-  return SingleDispatcher;
-}();
-(function (_SingleDispatcher) {
-  _inheritsLoose(TaskCounter, _SingleDispatcher);
-
-  function TaskCounter(deferSecond) {
-    var _this;
-
-    _this = _SingleDispatcher.call(this) || this;
-
-    _defineProperty(_assertThisInitialized(_this), "list", []);
-
-    _defineProperty(_assertThisInitialized(_this), "ctimer", 0);
-
-    _this.deferSecond = deferSecond;
-    return _this;
-  }
-
-  var _proto3 = TaskCounter.prototype;
-
-  _proto3.addItem = function addItem(promise, note) {
-    var _this2 = this;
-
-    if (note === void 0) {
-      note = '';
-    }
-
-    if (!this.list.some(function (item) {
-      return item.promise === promise;
-    })) {
-      this.list.push({
-        promise: promise,
-        note: note
-      });
-      promise.finally(function () {
-        return _this2.completeItem(promise);
-      });
-
-      if (this.list.length === 1 && !this.ctimer) {
-        this.dispatch(LoadingState.Start);
-        this.ctimer = env.setTimeout(function () {
-          _this2.ctimer = 0;
-
-          if (_this2.list.length > 0) {
-            _this2.dispatch(LoadingState.Depth);
-          }
-        }, this.deferSecond * 1000);
-      }
-    }
-
-    return promise;
-  };
-
-  _proto3.completeItem = function completeItem(promise) {
-    var i = this.list.findIndex(function (item) {
-      return item.promise === promise;
-    });
-
-    if (i > -1) {
-      this.list.splice(i, 1);
-
-      if (this.list.length === 0) {
-        if (this.ctimer) {
-          env.clearTimeout.call(null, this.ctimer);
-          this.ctimer = 0;
-        }
-
-        this.dispatch(LoadingState.Stop);
-      }
-    }
-
-    return this;
-  };
-
-  return TaskCounter;
-})(SingleDispatcher);
-function isPromise(data) {
-  return typeof data === 'object' && typeof data.then === 'function';
-}
-
-var MetaData = {
-  appModuleName: 'stage',
-  injectedModules: {},
-  reducersMap: {},
-  effectsMap: {},
-  moduleCaches: {},
-  componentCaches: {},
-  facadeMap: null,
-  clientStore: null,
-  moduleGetter: null
-};
-function reducer(target, key, descriptor) {
-  if (!key && !descriptor) {
-    key = target.key;
-    descriptor = target.descriptor;
-  }
-
-  var fun = descriptor.value;
-  fun.__isReducer__ = true;
-  descriptor.enumerable = true;
-  return target.descriptor === descriptor ? target : descriptor;
-}
-function mergeState(target) {
-  if (target === void 0) {
-    target = {};
-  }
-
-  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    args[_key2 - 1] = arguments[_key2];
-  }
-
-  return Object.assign.apply(Object, [{}, target].concat(args));
-}
-
-function getModule(moduleName) {
-  if (MetaData.moduleCaches[moduleName]) {
-    return MetaData.moduleCaches[moduleName];
-  }
-
-  var moduleOrPromise = MetaData.moduleGetter[moduleName]();
-  MetaData.moduleCaches[moduleName] = moduleOrPromise;
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(function (module) {
-      MetaData.moduleCaches[moduleName] = module;
-      return module;
-    }, function (reason) {
-      MetaData.moduleCaches[moduleName] = undefined;
-      throw reason;
-    });
-  }
-
-  return moduleOrPromise;
-}
-
-function _loadModel(moduleName, store) {
-  if (store === void 0) {
-    store = MetaData.clientStore;
-  }
-
-  var moduleOrPromise = getModule(moduleName);
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(function (module) {
-      return module.default.model(store);
-    });
-  }
-
-  return moduleOrPromise.default.model(store);
-}
-_decorate(null, function (_initialize) {
-  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, initState) {
-    _initialize(this);
-
-    this.moduleName = moduleName;
-    this.initState = initState;
-  };
-
-  return {
-    F: CoreModuleHandlers,
-    d: [{
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
-      kind: "get",
-      key: "actions",
-      value: function actions() {
-        return MetaData.facadeMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "method",
-      key: "getPrivateActions",
-      value: function getPrivateActions(actionsMap) {
-        return MetaData.facadeMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "get",
-      key: "state",
-      value: function state() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "get",
-      key: "rootState",
-      value: function rootState() {
-        return this.store.getState();
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentActionName",
-      value: function getCurrentActionName() {
-        return this.store.getCurrentActionName();
-      }
-    }, {
-      kind: "get",
-      key: "currentRootState",
-      value: function currentRootState() {
-        return this.store.getCurrentState();
-      }
-    }, {
-      kind: "get",
-      key: "currentState",
-      value: function currentState() {
-        return this.store.getCurrentState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "dispatch",
-      value: function dispatch(action) {
-        return this.store.dispatch(action);
-      }
-    }, {
-      kind: "method",
-      key: "loadModel",
-      value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "Init",
-      value: function Init(initState) {
-        return initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "Update",
-      value: function Update(payload, key) {
-        return mergeState(this.state, payload);
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "Loading",
-      value: function Loading(payload) {
-        var loading = mergeState(this.state.loading, payload);
-        return mergeState(this.state, {
-          loading: loading
-        });
-      }
-    }]
-  };
-});
-
 var reduxReducer = function reduxReducer(state, action) {
   return _extends({}, state, action.state);
 };
@@ -6408,12 +6111,12 @@ function setClientHead(eluxContext, documentHead) {
   eluxContext.documentHead = documentHead;
 
   if (!clientTimer) {
-    clientTimer = env$1.setTimeout(function () {
+    clientTimer = env.setTimeout(function () {
       clientTimer = 0;
       var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
-        env$1.document.title = arr[1];
+        env.document.title = arr[1];
       }
     }, 0);
   }
@@ -6507,7 +6210,7 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
 
       if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
           event.preventDefault();
-          replace ? MetaData$1.router.replace(rest.href) : MetaData$1.router.push(rest.href);
+          replace ? MetaData.router.replace(rest.href) : MetaData.router.push(rest.href);
         }
     }
   });
@@ -6535,7 +6238,7 @@ function createApp(moduleGetter, middlewares, appModuleName) {
 
   defineModuleGetter(moduleGetter, appModuleName);
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule$1('route');
+  var routeModule = getModule('route');
   return {
     useStore: function useStore(_ref) {
       var storeOptions = _ref.storeOptions,
@@ -6550,15 +6253,15 @@ function createApp(moduleGetter, middlewares, appModuleName) {
               viewName = _ref2.viewName;
 
           var router = createRouter('Browser', routeModule.locationTransform);
-          MetaData$1.router = router;
-          var renderFun = env$1[ssrKey] ? reactDom.hydrate : reactDom.render;
+          MetaData.router = router;
+          var renderFun = env[ssrKey] ? reactDom.hydrate : reactDom.render;
 
-          var _ref3 = env$1[ssrKey] || {},
+          var _ref3 = env[ssrKey] || {},
               state = _ref3.state,
               _ref3$components = _ref3.components,
               components = _ref3$components === void 0 ? [] : _ref3$components;
 
-          var panel = env$1.document.getElementById(id);
+          var panel = env.document.getElementById(id);
           return router.initedPromise.then(function (routeState) {
             var initState = _extends({}, storeOptions.initState, {
               route: routeState
@@ -6598,7 +6301,7 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
   setSsrHtmlTpl('');
   defineModuleGetter(moduleGetter, appModuleName);
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule$1('route');
+  var routeModule = getModule('route');
   return {
     useStore: function useStore(_ref5) {
       var storeOptions = _ref5.storeOptions,
@@ -6615,11 +6318,11 @@ function createSsrApp(moduleGetter, middlewares, appModuleName) {
               viewName = _ref6.viewName;
 
           if (!SSRTPL) {
-            SSRTPL = env$1.decodeBas64('process.env.ELUX_ENV_SSRTPL');
+            SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
           }
 
           var router = createRouter(url, routeModule.locationTransform);
-          MetaData$1.router = router;
+          MetaData.router = router;
           return router.initedPromise.then(function (routeState) {
             var initState = _extends({}, storeOptions.initState, {
               route: routeState
@@ -6681,7 +6384,7 @@ function getApp() {
       }, {});
     },
     GetRouter: function GetRouter() {
-      return MetaData$1.router;
+      return MetaData.router;
     },
     LoadComponent: loadComponent,
     Modules: modules,
@@ -6706,7 +6409,7 @@ exports.deepMerge = deepMerge;
 exports.deepMergeState = deepMergeState;
 exports.delayPromise = delayPromise;
 exports.effect = effect;
-exports.env = env$1;
+exports.env = env;
 exports.errorAction = errorAction;
 exports.exportComponent = exportComponent;
 exports.exportModule = exportModule;
@@ -6716,7 +6419,7 @@ exports.isProcessedError = isProcessedError;
 exports.isServer = isServer;
 exports.logger = logger;
 exports.patchActions = patchActions;
-exports.reducer = reducer$1;
+exports.reducer = reducer;
 exports.serverSide = serverSide;
 exports.setConfig = setConfig;
 exports.setLoading = setLoading;

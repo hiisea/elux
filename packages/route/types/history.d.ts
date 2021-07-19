@@ -25,7 +25,7 @@ export declare class History {
         location: Location;
         key: string;
     }, parent?: History | undefined);
-    getLength(): number;
+    getLength(): Number;
     getRecord(keyOrIndex: number | string): HistoryRecord | undefined;
     findIndex(key: string): number;
     getCurrentInternalHistory(): History | undefined;

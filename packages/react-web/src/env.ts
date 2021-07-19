@@ -1,4 +1,3 @@
-/* eslint-disable no-nested-ternary */
 /// <reference path="../env/global.d.ts" />
 import {env} from '@elux/core';
 

@@ -1,5 +1,5 @@
 import {loadComponet, isPromise, env} from '@elux/core';
-import type {LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent, IStore} from '@elux/core';
+import type {LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
 import {defineAsyncComponent, Component, h, inject} from 'vue';
 import {EluxContextType, EluxContextKey} from './sington';
 
@@ -16,7 +16,7 @@ export function setLoadComponentOptions({
 }: {
   LoadComponentOnError?: Component<{message: string}>;
   LoadComponentOnLoading?: Component<{}>;
-}) {
+}): void {
   LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
   LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
 }

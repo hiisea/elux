@@ -7,6 +7,7 @@ import {
   mergeState,
   deepMergeState,
   IStore,
+  Action,
   CommonModule,
   IModuleHandlers,
   exportModule,
@@ -32,19 +33,19 @@ export const RouteActionTypes = {
   RouteChange: `route${config.NSP}RouteChange`,
   TestRouteChange: `route${config.NSP}TestRouteChange`,
 };
-export function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>) {
+export function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
   return {
     type: RouteActionTypes.TestRouteChange,
     payload: [routeState],
   };
 }
-export function routeParamsAction(moduleName: string, params: any, action: HistoryAction) {
+export function routeParamsAction(moduleName: string, params: any, action: HistoryAction): Action {
   return {
     type: `${moduleName}${config.NSP}${RouteActionTypes.MRouteParams}`,
     payload: [params, action],
   };
 }
-export function routeChangeAction<P extends RootParams>(routeState: RouteState<P>) {
+export function routeChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
   return {
     type: RouteActionTypes.RouteChange,
     payload: [routeState],
@@ -102,11 +103,12 @@ const defaultNativeLocationMap: NativeLocationMap = {
     return nativeLocation;
   },
 };
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createRouteModule<G extends PagenameMap>(
   pagenameMap: G,
   nativeLocationMap: NativeLocationMap = defaultNativeLocationMap,
-  notfoundPagename: string = '/404',
-  paramsKey: string = '_'
+  notfoundPagename = '/404',
+  paramsKey = '_'
 ) {
   const handlers: {new (): IRouteModuleHandlers} = RouteModuleHandlers;
   const locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);

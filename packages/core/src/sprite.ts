@@ -20,11 +20,11 @@ export enum LoadingState {
 }
 
 export class SingleDispatcher<T> {
-  protected listenerId: number = 0;
+  protected listenerId = 0;
 
   protected readonly listenerMap: Record<string, (data: T) => void> = {};
 
-  addListener(callback: (data: T) => void) {
+  addListener(callback: (data: T) => void): () => void {
     this.listenerId++;
     const id = `${this.listenerId}`;
     const listenerMap = this.listenerMap;
@@ -34,7 +34,7 @@ export class SingleDispatcher<T> {
     };
   }
 
-  dispatch(data: T) {
+  dispatch(data: T): void {
     const listenerMap = this.listenerMap;
     Object.keys(listenerMap).forEach((id) => {
       listenerMap[id](data);
@@ -43,13 +43,13 @@ export class SingleDispatcher<T> {
 }
 
 export class MultipleDispatcher<T extends Record<string, any> = {}> {
-  protected listenerId: number = 0;
+  protected listenerId = 0;
 
   protected listenerMap: {
     [N in keyof T]?: {[id: string]: (data: T[N]) => void};
   } = {};
 
-  addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void) {
+  addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void): () => void {
     this.listenerId++;
     const id = `${this.listenerId}`;
     if (!this.listenerMap[name]) {
@@ -64,7 +64,7 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
     };
   }
 
-  dispatch<N extends keyof T>(name: N, data: T[N]) {
+  dispatch<N extends keyof T>(name: N, data: T[N]): void {
     const listenerMap = this.listenerMap[name] as {
       [id: string]: (data: T[N]) => void;
     };
@@ -79,7 +79,7 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
 export class TaskCounter extends SingleDispatcher<LoadingState> {
   public readonly list: {promise: Promise<any>; note: string}[] = [];
 
-  private ctimer: number = 0;
+  private ctimer = 0;
 
   public constructor(public deferSecond: number) {
     super();
@@ -119,7 +119,7 @@ export class TaskCounter extends SingleDispatcher<LoadingState> {
   }
 }
 
-export function isPlainObject(obj: any) {
+export function isPlainObject(obj: any): Boolean {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -177,7 +177,7 @@ export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
 
 declare const process: any;
 
-export function warn(str: string) {
+export function warn(str: string): void {
   if (process.env.NODE_ENV === 'development') {
     env.console.warn(str);
   }
@@ -188,13 +188,13 @@ export function isPromise(data: any): data is Promise<any> {
 export function isServer(): boolean {
   return env.isServer;
 }
-export function serverSide<T>(callback: () => T) {
+export function serverSide<T>(callback: () => T): any {
   if (env.isServer) {
     return callback();
   }
   return undefined;
 }
-export function clientSide<T>(callback: () => T) {
+export function clientSide<T>(callback: () => T): any {
   if (!env.isServer) {
     return callback();
   }
@@ -207,7 +207,7 @@ export function clientSide<T>(callback: () => T) {
  * @param second 延迟秒数
  */
 export function delayPromise(second: number) {
-  return (target: any, key: string, descriptor: PropertyDescriptor) => {
+  return (target: any, key: string, descriptor: PropertyDescriptor): void => {
     if (!key && !descriptor) {
       key = target.key;
       descriptor = target.descriptor;

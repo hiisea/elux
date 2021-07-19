@@ -11,7 +11,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
 
   public history: History<never>;
 
-  private serverSide: boolean = false;
+  private serverSide = false;
 
   constructor(createHistory: 'Browser' | 'Hash' | 'Memory' | string) {
     super();
@@ -33,11 +33,21 @@ export class BrowserNativeRouter extends BaseNativeRouter {
         createHref() {
           return '';
         },
-        push() {},
-        replace() {},
-        go() {},
-        goBack() {},
-        goForward() {},
+        push() {
+          return undefined;
+        },
+        replace() {
+          return undefined;
+        },
+        go() {
+          return undefined;
+        },
+        goBack() {
+          return undefined;
+        },
+        goForward() {
+          return undefined;
+        },
         block() {
           return () => undefined;
         },
@@ -54,7 +64,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
       const key = this.getKey(location);
       const changed = this.onChange(key);
       if (changed) {
-        let index: number = -1;
+        let index = -1;
         let callback: () => void;
         if (action === 'POP') {
           index = this.router.findHistoryIndexByKey(key);
@@ -88,11 +98,11 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     return true;
   }
 
-  refresh() {
+  refresh(): void {
     this.history.go(0);
   }
 
-  protected push(getNativeData: () => NativeData, key: string) {
+  protected push(getNativeData: () => NativeData, key: string): NativeData | undefined {
     if (!this.serverSide) {
       const nativeData = getNativeData();
       this.history.push(nativeData.nativeUrl, key as any);
@@ -101,7 +111,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     return undefined;
   }
 
-  protected replace(getNativeData: () => NativeData, key: string) {
+  protected replace(getNativeData: () => NativeData, key: string): NativeData | undefined {
     if (!this.serverSide) {
       const nativeData = getNativeData();
       this.history.replace(nativeData.nativeUrl, key as any);
@@ -110,7 +120,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     return undefined;
   }
 
-  protected relaunch(getNativeData: () => NativeData, key: string) {
+  protected relaunch(getNativeData: () => NativeData, key: string): NativeData | undefined {
     if (!this.serverSide) {
       const nativeData = getNativeData();
       this.history.push(nativeData.nativeUrl, key as any);
@@ -121,7 +131,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
 
   // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
   // history.go会触发onChange，所以必须返回NativeData
-  protected back(getNativeData: () => NativeData, n: number, key: string) {
+  protected back(getNativeData: () => NativeData, n: number, key: string): NativeData | undefined {
     if (!this.serverSide) {
       const nativeData = getNativeData();
       this.history.go(-n);
@@ -130,11 +140,11 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     return undefined;
   }
 
-  toOutside(url: string) {
+  toOutside(url: string): void {
     this.history.push(url);
   }
 
-  destroy() {
+  destroy(): void {
     this._unlistenHistory();
   }
 }
@@ -150,7 +160,7 @@ export class Router<P extends RootParams, N extends string> extends BaseRouter<P
 export function createRouter<P extends RootParams, N extends string>(
   createHistory: 'Browser' | 'Hash' | 'Memory' | string,
   locationTransform: LocationTransform
-) {
+): Router<P, N> {
   const browserNativeRouter = new BrowserNativeRouter(createHistory);
   const router = new Router<P, N>(browserNativeRouter, locationTransform);
   return router;

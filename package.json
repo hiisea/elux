@@ -63,7 +63,7 @@
     "@types/react-dom": "~17.0.0",
     "@types/react-redux": "~7.1.16",
     "@babel/runtime": "~7.12.0",
-    "@elux/dev-pkg": "~0.1.0",
+    "@elux/dev-pkg": "~0.1.2",
     "typescript": "~4.2.0",
     "express": "^4.0.0",
     "react": "~17.0.1",

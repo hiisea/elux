@@ -11,14 +11,16 @@ const terser_webpack_plugin_1 = __importDefault(require("terser-webpack-plugin")
 const chalk_1 = __importDefault(require("chalk"));
 const webpack_1 = __importDefault(require("webpack"));
 const gen_1 = __importDefault(require("./gen"));
-async function dev(projEnvName, port) {
+function dev(projEnvName, port) {
     const config = gen_1.default(process.cwd(), projEnvName, 'development', port);
     const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { cache, sourceMap, projectType, serverPort, nodeEnv, envPath, projEnv, envConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, useSSR, onCompiled, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
-        serverGlobalVar,
     };
+    if (useSSR) {
+        envInfo.serverGlobalVar = serverGlobalVar;
+    }
     console.info(`projectType: ${chalk_1.default.magenta(projectType)} runMode: ${chalk_1.default.magenta(nodeEnv)} sourceMap: ${chalk_1.default.magenta(sourceMap)}`);
     console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvPath: ${chalk_1.default.magenta(envPath)} EnvInfo: \n${chalk_1.default.gray(JSON.stringify(envInfo, null, 4))} \n`);
     let webpackCompiler;

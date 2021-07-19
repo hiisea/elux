@@ -1,4 +1,3 @@
-/* eslint-disable import/order */
 import env from './env';
 import React from 'react';
 import {hydrate, render} from 'react-dom';
@@ -63,7 +62,7 @@ declare const require: any;
 
 let SSRTPL: string;
 
-export function setSsrHtmlTpl(tpl: string) {
+export function setSsrHtmlTpl(tpl: string): void {
   if (tpl) {
     SSRTPL = tpl;
   }
@@ -80,7 +79,7 @@ export function setConfig(conf: {
   LoadComponentOnError?: ComponentType<{message: string}>;
   LoadComponentOnLoading?: ComponentType<{}>;
   disableNativeRoute?: boolean;
-}) {
+}): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
   setLoadComponentOptions(conf);
@@ -93,6 +92,7 @@ export interface RenderOptions {
   url?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
@@ -129,6 +129,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   setSsrHtmlTpl('');
   defineModuleGetter(moduleGetter, appModuleName);
@@ -150,6 +151,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
               const RootView: ComponentType<any> = AppView as any;
               const state = store.getState();
               const eluxContext = {deps: {}, store, documentHead: ''};
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
               const html: string = require('react-dom/server').renderToString(
                 <EluxContext.Provider value={eluxContext}>
                   <RootView store={store} />

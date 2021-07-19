@@ -1,4 +1,4 @@
-export function isPlainObject(obj: any) {
+export function isPlainObject(obj: any): Boolean {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 

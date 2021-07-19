@@ -65,7 +65,7 @@ defineModuleGetter(
 type RouteParams = {admin: {}; member: MemberRouteParams; article: ArticleRouteParams};
 type PartialRouteParams = DeepPartial<RouteParams>;
 
-const pagenameMap: PagenameMap<RouteParams> = {
+const pagenameMap: PagenameMap = {
   '/admin/member': {
     argsToParams() {
       const params: PartialRouteParams = {admin: {}, member: {}};
@@ -119,37 +119,43 @@ export const locationTransform = createLocationTransform(pagenameMap, {
   },
 });
 export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> {
-  destroy() {}
+  destroy(): void {
+    return undefined;
+  }
 }
 
 export class NativeRouter extends BaseNativeRouter {
-  protected push(getNativeData: () => NativeData, key: string) {
+  protected push(getNativeData: () => NativeData, key: string): NativeData {
     const nativeData = getNativeData();
     nativeRouterMock.push(nativeData.nativeUrl, key);
     return nativeData;
   }
 
-  protected replace(getNativeData: () => NativeData, key: string) {
+  protected replace(getNativeData: () => NativeData, key: string): NativeData {
     const nativeData = getNativeData();
     nativeRouterMock.replace(nativeData.nativeUrl, key);
     return nativeData;
   }
 
-  protected relaunch(getNativeData: () => NativeData, key: string) {
+  protected relaunch(getNativeData: () => NativeData, key: string): NativeData {
     const nativeData = getNativeData();
     nativeRouterMock.relaunch(nativeData.nativeUrl, key);
     return nativeData;
   }
 
-  protected back(getNativeData: () => NativeData, n: number, key: string) {
+  protected back(getNativeData: () => NativeData, n: number, key: string): NativeData {
     const nativeData = getNativeData();
     nativeRouterMock.back(nativeData.nativeUrl, n, key);
     return nativeData;
   }
 
-  toOutside() {}
+  toOutside(): void {
+    return undefined;
+  }
 
-  destroy() {}
+  destroy(): void {
+    return undefined;
+  }
 }
 export const nativeRouter: NativeRouter = new NativeRouter();
 

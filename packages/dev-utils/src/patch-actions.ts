@@ -4,7 +4,7 @@ import fs from 'fs';
 import TJS from 'typescript-json-schema';
 import chalk from 'chalk';
 
-function moduleExports(_tsconfig?: string | Object, _entryFilePath?: string, _echo?: boolean) {
+function moduleExports(_tsconfig?: string | Object, _entryFilePath?: string, _echo?: boolean): void {
   const rootPath = process.cwd();
   const srcPath = path.join(rootPath, 'src');
   let tsconfig;

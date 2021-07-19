@@ -52,7 +52,7 @@ export class History {
     }
   }
 
-  getLength() {
+  getLength(): Number {
     return this.actions.length;
   }
 
@@ -70,7 +70,7 @@ export class History {
     return this.actions.findIndex((item) => item.key === key);
   }
 
-  getCurrentInternalHistory() {
+  getCurrentInternalHistory(): History | undefined {
     return this.curRecord.sub;
   }
 
@@ -86,7 +86,7 @@ export class History {
     return this.pages;
   }
 
-  push(location: Location, key: string) {
+  push(location: Location, key: string): void {
     const historyRecord = this.curRecord;
     const {uri, pagename, query} = locationToUri(location, key);
     this.curRecord = {uri, pagename, query, key, sub: new History({uri, pagename, query, key}, this)};
@@ -113,7 +113,7 @@ export class History {
     }
   }
 
-  replace(location: Location, key: string) {
+  replace(location: Location, key: string): void {
     const {uri, pagename, query} = locationToUri(location, key);
     this.curRecord = {uri, pagename, query, key, sub: new History({uri, pagename, query, key}, this)};
     if (this.parent) {
@@ -121,7 +121,7 @@ export class History {
     }
   }
 
-  relaunch(location: Location, key: string) {
+  relaunch(location: Location, key: string): void {
     const {uri, pagename, query} = locationToUri(location, key);
     this.curRecord = {uri, pagename, query, key, sub: new History({uri, pagename, query, key}, this)};
     this.actions = [];
@@ -144,7 +144,7 @@ export class History {
   //   return true;
   // }
 
-  back(delta: number) {
+  back(delta: number): boolean {
     const historyRecord = this.getRecord(delta - 1);
     if (!historyRecord) {
       return false;

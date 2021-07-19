@@ -112,8 +112,8 @@ export function eluxLocationToEluxUrl(location: EluxLocation): string {
 export function createLocationTransform(
   pagenameMap: PagenameMap,
   nativeLocationMap: NativeLocationMap,
-  notfoundPagename: string = '/404',
-  paramsKey: string = '_'
+  notfoundPagename = '/404',
+  paramsKey = '_'
 ): LocationTransform {
   let pagenames = Object.keys(pagenameMap);
   pagenameMap = pagenames

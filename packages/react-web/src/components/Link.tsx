@@ -32,6 +32,5 @@ export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, replace, ..
       }
     },
   };
-  // eslint-disable-next-line jsx-a11y/anchor-has-content
   return <a {...props} ref={ref} />;
 });

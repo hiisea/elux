@@ -4,7 +4,7 @@ import {IStoreMiddleware, enhanceStore} from './store';
 
 const defFun: any = () => undefined;
 
-export function defineModuleGetter(moduleGetter: ModuleGetter, appModuleName: string = 'stage') {
+export function defineModuleGetter(moduleGetter: ModuleGetter, appModuleName = 'stage'): void {
   MetaData.appModuleName = appModuleName;
   MetaData.moduleGetter = moduleGetter;
   if (!moduleGetter[appModuleName]) {
@@ -17,8 +17,8 @@ export async function renderApp<ST extends BStore = BStore>(
   preloadModules: string[],
   preloadComponents: string[],
   middlewares?: IStoreMiddleware[],
-  appViewName: string = 'main'
-) {
+  appViewName = 'main'
+): Promise<{store: IStore<any> & ST; AppView: EluxComponent}> {
   const {moduleGetter, appModuleName} = MetaData;
   preloadModules = preloadModules.filter((moduleName) => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
@@ -40,8 +40,8 @@ export async function ssrApp<ST extends BStore = BStore>(
   baseStore: ST,
   preloadModules: string[],
   middlewares?: IStoreMiddleware[],
-  appViewName: string = 'main'
-) {
+  appViewName = 'main'
+): Promise<{store: IStore<any> & ST; AppView: EluxComponent}> {
   const {moduleGetter, appModuleName} = MetaData;
   preloadModules = preloadModules.filter((moduleName) => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
@@ -50,7 +50,7 @@ export async function ssrApp<ST extends BStore = BStore>(
   await appModule.model(store);
   await Promise.all(otherModules.map((module) => module.model(store)));
   store.dispatch = defFun;
-  const AppView = getComponet(appModuleName, appViewName);
+  const AppView = getComponet(appModuleName, appViewName) as EluxComponent;
   return {
     store,
     AppView,

@@ -7,5 +7,5 @@ export declare function renderApp<ST extends BStore = BStore>(baseStore: ST, pre
 }>;
 export declare function ssrApp<ST extends BStore = BStore>(baseStore: ST, preloadModules: string[], middlewares?: IStoreMiddleware[], appViewName?: string): Promise<{
     store: IStore<any> & ST;
-    AppView: EluxComponent | Promise<EluxComponent>;
+    AppView: EluxComponent;
 }>;

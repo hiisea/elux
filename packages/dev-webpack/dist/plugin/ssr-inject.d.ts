@@ -26,9 +26,10 @@ declare class ClientPlugin {
     constructor(ssrCore: Core);
     apply(compiler: Compiler): void;
 }
-export default function getSsrInjectPlugin(entryFilePath: string, htmlFilePath: string): {
+interface SingTon {
     client: ClientPlugin;
     server: ServerPlugin;
     getEntryPath: (res: any) => string;
-};
+}
+export default function getSsrInjectPlugin(entryFilePath: string, htmlFilePath: string): SingTon;
 export {};

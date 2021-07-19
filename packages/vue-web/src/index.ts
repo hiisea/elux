@@ -1,4 +1,3 @@
-/* eslint-disable import/order */
 import env from './env';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
 import {
@@ -159,7 +158,7 @@ export const defineComponent: ExportDefineComponent = function (...args: [any]) 
 
 let SSRTPL: string;
 
-export function setSsrHtmlTpl(tpl: string) {
+export function setSsrHtmlTpl(tpl: string): void {
   if (tpl) {
     SSRTPL = tpl;
   }
@@ -176,7 +175,7 @@ export function setConfig(conf: {
   LoadComponentOnError?: Component;
   LoadComponentOnLoading?: Component;
   disableNativeRoute?: boolean;
-}) {
+}): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
   setLoadComponentOptions(conf);
@@ -198,6 +197,7 @@ const RootComponent: Component = (props, context) => {
   return h(StageView, props, context.slots);
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
@@ -231,6 +231,7 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] = [], appModuleName?: string) {
   setSsrHtmlTpl('');
   defineModuleGetter(moduleGetter, appModuleName);
@@ -254,6 +255,7 @@ export function createSsrApp(moduleGetter: ModuleGetter, middlewares: IStoreMidd
             const eluxContext = {deps: {}, store, documentHead: ''};
             app.use(store as any);
             app.provide<EluxContextType>(EluxContextKey, eluxContext);
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
             return htmlPromise.then((html) => {
               const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));

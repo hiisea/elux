@@ -35,9 +35,9 @@ class Core {
 
   readonly htmlKey: string = 'process.env.ELUX_ENV_SSRTPL';
 
-  private htmlCode: string = '';
+  private htmlCode = '';
 
-  private jsCode: string = '';
+  private jsCode = '';
 
   private webpackFS: any;
 
@@ -104,10 +104,14 @@ class ClientPlugin {
     });
   }
 }
+interface SingTon {
+  client: ClientPlugin;
+  server: ServerPlugin;
+  getEntryPath: (res: any) => string;
+}
+let sington: SingTon | undefined;
 
-let sington: {client: ClientPlugin; server: ServerPlugin; getEntryPath: (res: any) => string} | undefined;
-
-export default function getSsrInjectPlugin(entryFilePath: string, htmlFilePath: string) {
+export default function getSsrInjectPlugin(entryFilePath: string, htmlFilePath: string): SingTon {
   if (!sington) {
     const core = new Core({entryFilePath, htmlFilePath});
     const client = new ClientPlugin(core);

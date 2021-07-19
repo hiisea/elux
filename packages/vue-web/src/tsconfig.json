@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "./",
     "declarationDir": "../types",
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "lib": ["es2018", "DOM"]
   },
   "include": ["./"],
   "exclude": []

@@ -3,6 +3,7 @@ import {createRedux} from 'src/index';
 import {messages} from './utils';
 import {App, moduleGetter} from './modules';
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createAppWithRedux(
   // eslint-disable-next-line @typescript-eslint/no-shadow
   moduleGetter: ModuleGetter,

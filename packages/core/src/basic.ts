@@ -18,7 +18,7 @@ export const config: {
  * - NSP 默认为. ModuleName${NSP}ActionName 用于ActionName的连接、ModuleName${NSP}ComponentName 用于ComponentName的连接
  * - MSP 默认为, 用于一个ActionHandler同时监听多个Action的连接
  */
-export function setConfig(_config: {NSP?: string; MSP?: string; SSRKey?: string; MutableData?: boolean; DepthTimeOnLoading?: number}) {
+export function setConfig(_config: {NSP?: string; MSP?: string; SSRKey?: string; MutableData?: boolean; DepthTimeOnLoading?: number}): void {
   _config.NSP !== undefined && (config.NSP = _config.NSP);
   _config.MSP !== undefined && (config.MSP = _config.MSP);
   _config.MutableData !== undefined && (config.MutableData = _config.MutableData);
@@ -127,25 +127,25 @@ export const ActionTypes = {
    */
   Error: `Elux${config.NSP}Error`,
 };
-export function errorAction(error: Object) {
+export function errorAction(error: Object): Action {
   return {
     type: ActionTypes.Error,
     payload: [error],
   };
 }
-export function moduleInitAction(moduleName: string, initState: any) {
+export function moduleInitAction(moduleName: string, initState: any): Action {
   return {
     type: `${moduleName}${config.NSP}${ActionTypes.MInit}`,
     payload: [initState],
   };
 }
-export function moduleReInitAction(moduleName: string, initState: any) {
+export function moduleReInitAction(moduleName: string, initState: any): Action {
   return {
     type: `${moduleName}${config.NSP}${ActionTypes.MReInit}`,
     payload: [initState],
   };
 }
-export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}) {
+export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}): Action {
   return {
     type: `${moduleName}${config.NSP}${ActionTypes.MLoading}`,
     payload: [loadingState],
@@ -190,7 +190,7 @@ function transformAction(actionName: string, handler: ActionHandler, listenerMod
   actionHandlerMap[actionName][listenerModule] = handler;
 }
 
-export function injectActions(moduleName: string, handlers: ActionHandlerList) {
+export function injectActions(moduleName: string, handlers: ActionHandlerList): void {
   const injectedModules = MetaData.injectedModules;
   if (injectedModules[moduleName]) {
     return;
@@ -246,7 +246,7 @@ export function setLoading<T extends Promise<any>>(store: IStore, item: T, modul
   return item;
 }
 
-export function reducer(target: any, key: string, descriptor: PropertyDescriptor) {
+export function reducer(target: any, key: string, descriptor: PropertyDescriptor): any {
   if (!key && !descriptor) {
     key = target.key;
     descriptor = target.descriptor;
@@ -262,7 +262,7 @@ export function reducer(target: any, key: string, descriptor: PropertyDescriptor
  * - effectHandler必须通过dispatch Action来触发
  * @param loadingKey 注入加载状态到state，如果为null表示不注入加载状态，默认为'app.loading.global'
  */
-export function effect(loadingKey: string | null = 'app.loading.global') {
+export function effect(loadingKey: string | null = 'app.loading.global'): Function {
   let loadingForModuleName: string | undefined;
   let loadingForGroupName: string | undefined;
   if (loadingKey !== null) {
@@ -308,7 +308,7 @@ export function logger(
   before: (action: Action, moduleName: string, promiseResult: Promise<any>) => void,
   after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)
 ) {
-  return (target: any, key: string, descriptor: PropertyDescriptor) => {
+  return (target: any, key: string, descriptor: PropertyDescriptor): void => {
     if (!key && !descriptor) {
       key = target.key;
       descriptor = target.descriptor;
@@ -320,14 +320,14 @@ export function logger(
     fun.__decorators__.push([before, after]);
   };
 }
-export function deepMergeState(target: any = {}, ...args: any[]) {
+export function deepMergeState(target: any = {}, ...args: any[]): any {
   if (config.MutableData) {
     return deepMerge(target, ...args);
   }
   return deepMerge({}, target, ...args);
 }
 
-export function mergeState(target: any = {}, ...args: any[]) {
+export function mergeState(target: any = {}, ...args: any[]): any {
   if (config.MutableData) {
     return Object.assign(target, ...args);
   }

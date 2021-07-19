@@ -1,4 +1,4 @@
-export declare function isPlainObject(obj: any): boolean;
+export declare function isPlainObject(obj: any): Boolean;
 export declare function extendDefault(target: any, def: any): {
     [key: string]: any;
 };

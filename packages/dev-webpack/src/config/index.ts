@@ -9,7 +9,7 @@ import chalk from 'chalk';
 import webpack, {Compiler, MultiCompiler} from 'webpack';
 import genConfig from './gen';
 
-export async function dev(projEnvName: string, port?: number) {
+export function dev(projEnvName: string, port?: number): void {
   const config = genConfig(process.cwd(), projEnvName, 'development', port);
   const {
     devServerConfig,
@@ -28,11 +28,13 @@ export async function dev(projEnvName: string, port?: number) {
       onCompiled,
     },
   } = config;
-  const envInfo = {
+  const envInfo: any = {
     clientPublicPath,
     clientGlobalVar,
-    serverGlobalVar,
   };
+  if (useSSR) {
+    envInfo.serverGlobalVar = serverGlobalVar;
+  }
   console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} sourceMap: ${chalk.magenta(sourceMap)}`);
   console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.gray(JSON.stringify(envInfo, null, 4))} \n`);
 
@@ -105,7 +107,7 @@ export async function dev(projEnvName: string, port?: number) {
   });
 }
 
-export function build(projEnvName: string, port?: number) {
+export function build(projEnvName: string, port?: number): void {
   const config = genConfig(process.cwd(), projEnvName, 'production', port);
   const {
     clientWebpackConfig,
@@ -163,7 +165,7 @@ export function build(projEnvName: string, port?: number) {
   });
 }
 
-export function pack(input: string, output: string, target: string) {
+export function pack(input: string, output: string, target: string): void {
   let outputPath;
   let ouputName;
   if (path.extname(output)) {

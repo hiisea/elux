@@ -30,7 +30,7 @@ export declare function loadModel<MG extends ModuleGetter>(moduleName: keyof MG,
 export declare function getComponet(moduleName: string, componentName: string): EluxComponent | Promise<EluxComponent>;
 export declare function getComponentList(keys: string[]): Promise<EluxComponent[]>;
 export declare function loadComponet(moduleName: string, componentName: string, store: IStore, deps: Record<string, boolean>): EluxComponent | null | Promise<EluxComponent | null>;
-export declare function getCachedModules(): Record<string, CommonModule<string> | Promise<CommonModule<string>> | undefined>;
+export declare function getCachedModules(): Record<string, undefined | CommonModule | Promise<CommonModule>>;
 export declare class EmptyModuleHandlers implements IModuleHandlers {
     readonly moduleName: string;
     store: IStore;

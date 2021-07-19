@@ -7,9 +7,6 @@ module.exports = {
     browser: false,
     node: true,
   },
-  parserOptions: {
-    project: './tsconfig.json',
-  },
-  rules: {'@typescript-eslint/no-namespace': 'off'},
+  rules: {},
   ignorePatterns: tsconfig.exclude,
 };

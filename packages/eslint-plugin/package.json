@@ -1,6 +1,6 @@
 {
   "name": "@elux/eslint-plugin",
-  "version": "0.1.2",
+  "version": "0.1.6",
   "main": "index.js",
   "description": "Common development tools",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/eslint-plugin",
@@ -18,7 +18,7 @@
     "rules/"
   ],
   "scripts": {
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx,vue}"
+    "eslint": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/eslint --fix --cache **/*.{js,ts}"
   },
   "dependencies": {
     "@typescript-eslint/parser": "^4.28.0",

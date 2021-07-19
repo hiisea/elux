@@ -50,7 +50,7 @@ function compose(...funcs: Function[]) {
   return funcs.reduce((a, b) => (...args: any[]) => a(b(...args)));
 }
 
-export function enhanceStore<S extends State = any>(baseStore: BStore, middlewares?: IStoreMiddleware[]) {
+export function enhanceStore<S extends State = any>(baseStore: BStore, middlewares?: IStoreMiddleware[]): IStore<S> {
   const store: IStore<S> = baseStore as any;
   const _getState = baseStore.getState;
   const getState: GetState<S> = (moduleName?: string) => {

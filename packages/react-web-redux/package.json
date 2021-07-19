@@ -22,6 +22,7 @@
     "lib/"
   ],
   "scripts": {
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",
     "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts,.tsx\"",

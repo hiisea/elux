@@ -12,7 +12,15 @@ interface EluxConfig {
   };
   mockServer: MockServerPreset;
 }
-export = function (rootPath: string, projEnv: string, port?: number, mockPath?: string) {
+export = function (
+  rootPath: string,
+  projEnv: string,
+  port?: number,
+  mockPath?: string
+): {
+  port: number;
+  dir: string;
+} {
   const baseEluxConfig: Partial<EluxConfig> = fs.existsSync(path.join(rootPath, 'elux.config.js'))
     ? require(path.join(rootPath, 'elux.config.js'))
     : {};

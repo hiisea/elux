@@ -82,26 +82,12 @@ export declare const ActionTypes: {
     MReInit: string;
     Error: string;
 };
-export declare function errorAction(error: Object): {
-    type: string;
-    payload: Object[];
-};
-export declare function moduleInitAction(moduleName: string, initState: any): {
-    type: string;
-    payload: any[];
-};
-export declare function moduleReInitAction(moduleName: string, initState: any): {
-    type: string;
-    payload: any[];
-};
+export declare function errorAction(error: Object): Action;
+export declare function moduleInitAction(moduleName: string, initState: any): Action;
+export declare function moduleReInitAction(moduleName: string, initState: any): Action;
 export declare function moduleLoadingAction(moduleName: string, loadingState: {
     [group: string]: LoadingState;
-}): {
-    type: string;
-    payload: {
-        [group: string]: LoadingState;
-    }[];
-};
+}): Action;
 export interface EluxComponent {
     __elux_component__: 'view' | 'component';
 }
@@ -120,7 +106,7 @@ export declare const MetaData: {
 export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
 export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;
 export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
-export declare function effect(loadingKey?: string | null): (target: any, key: string, descriptor: PropertyDescriptor) => any;
+export declare function effect(loadingKey?: string | null): Function;
 export declare const mutation: typeof reducer;
 export declare const action: typeof effect;
 export declare function logger(before: (action: Action, moduleName: string, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;

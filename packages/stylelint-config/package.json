@@ -16,7 +16,7 @@
     "node": ">=14.0.0"
   },
   "scripts": {
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx,vue}"
+    "eslint": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/eslint --fix --cache **/*.{js,ts}"
   },
   "dependencies": {
     "stylelint-config-prettier": "~8.0.2",

@@ -58,7 +58,7 @@ export abstract class BaseNativeRouter {
     return key !== this.router.getCurKey();
   }
 
-  setRouter(router: BaseRouter<any, string>) {
+  setRouter(router: BaseRouter<any, string>): void {
     this.router = router;
   }
 
@@ -103,7 +103,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 
   public history!: History;
 
-  private _lid: number = 0;
+  private _lid = 0;
 
   protected readonly listenerMap: {[id: string]: (data: RouteState<P>) => void | Promise<void>} = {};
 
@@ -125,7 +125,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     });
   }
 
-  addListener(callback: (data: RouteState<P>) => void | Promise<void>) {
+  addListener(callback: (data: RouteState<P>) => void | Promise<void>): () => void {
     this._lid++;
     const id = `${this._lid}`;
     const listenerMap = this.listenerMap;
@@ -135,7 +135,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     };
   }
 
-  protected dispatch(data: RouteState<P>) {
+  protected dispatch(data: RouteState<P>): Promise<void[]> {
     const listenerMap = this.listenerMap;
     const arr = Object.keys(listenerMap).map((id) => listenerMap[id](data));
     return Promise.all(arr);
@@ -145,33 +145,33 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return this.routeState;
   }
 
-  getPagename() {
+  getPagename(): string {
     return this.routeState.pagename;
   }
 
-  getParams() {
+  getParams(): Partial<P> {
     return this.routeState.params;
   }
 
-  getInternalUrl() {
+  getInternalUrl(): string {
     return this.internalUrl;
   }
 
-  getNativeLocation() {
+  getNativeLocation(): NativeLocation {
     if (!this._nativeData) {
       this._nativeData = this.locationToNativeData(this.routeState);
     }
     return this._nativeData.nativeLocation;
   }
 
-  getNativeUrl() {
+  getNativeUrl(): string {
     if (!this._nativeData) {
       this._nativeData = this.locationToNativeData(this.routeState);
     }
     return this._nativeData.nativeUrl;
   }
 
-  setStore(_store: Store) {
+  setStore(_store: Store): void {
     this.store = _store;
   }
 
@@ -179,7 +179,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return this.routeState.key;
   }
 
-  findHistoryIndexByKey(key: string) {
+  findHistoryIndexByKey(key: string): number {
     return this.history.findIndex(key);
   }
 
@@ -236,7 +236,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   }
 
-  relaunch(data: PayloadLocation<P, N> | string, internal: boolean = false, disableNative: boolean = routeConfig.disableNativeRoute) {
+  relaunch(data: PayloadLocation<P, N> | string, internal = false, disableNative: boolean = routeConfig.disableNativeRoute): void {
     this.addTask(this._relaunch.bind(this, data, internal, disableNative));
   }
 
@@ -265,7 +265,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     }
   }
 
-  push(data: PayloadLocation<P, N> | string, internal: boolean = false, disableNative: boolean = routeConfig.disableNativeRoute) {
+  push(data: PayloadLocation<P, N> | string, internal = false, disableNative: boolean = routeConfig.disableNativeRoute): void {
     this.addTask(this._push.bind(this, data, internal, disableNative));
   }
 
@@ -294,7 +294,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     this.store.dispatch(routeChangeAction(routeState));
   }
 
-  replace(data: PayloadLocation<P, N> | string, internal: boolean = false, disableNative: boolean = routeConfig.disableNativeRoute) {
+  replace(data: PayloadLocation<P, N> | string, internal = false, disableNative: boolean = routeConfig.disableNativeRoute): void {
     this.addTask(this._replace.bind(this, data, internal, disableNative));
   }
 
@@ -323,11 +323,11 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     this.store.dispatch(routeChangeAction(routeState));
   }
 
-  back(n: number = 1, indexUrl: string = 'index', internal: boolean = false, disableNative: boolean = routeConfig.disableNativeRoute) {
+  back(n = 1, indexUrl = 'index', internal = false, disableNative: boolean = routeConfig.disableNativeRoute): void {
     this.addTask(this._back.bind(this, n, indexUrl === 'index' ? routeConfig.indexUrl : indexUrl, internal, disableNative));
   }
 
-  private async _back(n: number = 1, indexUrl: string, internal: boolean, disableNative: boolean) {
+  private async _back(n = 1, indexUrl: string, internal: boolean, disableNative: boolean) {
     const stack = internal ? this.history.getCurrentInternalHistory()!.getRecord(n - 1) : this.history.getRecord(n - 1);
     if (!stack) {
       if (indexUrl) {
@@ -378,7 +378,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     }
   }
 
-  destroy() {
+  destroy(): void {
     this.nativeRouter.destroy();
   }
 }

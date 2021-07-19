@@ -1,4 +1,4 @@
-import { CoreModuleHandlers, IStoreMiddleware, IStore, CommonModule } from '@elux/core';
+import { CoreModuleHandlers, IStoreMiddleware, IStore, Action, CommonModule } from '@elux/core';
 import { LocationTransform } from './transform';
 import type { RootParams, RouteState, HistoryAction } from './basic';
 import type { PagenameMap, NativeLocationMap } from './transform';
@@ -11,18 +11,9 @@ export declare const RouteActionTypes: {
     RouteChange: string;
     TestRouteChange: string;
 };
-export declare function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): {
-    type: string;
-    payload: RouteState<P>[];
-};
-export declare function routeParamsAction(moduleName: string, params: any, action: HistoryAction): {
-    type: string;
-    payload: any[];
-};
-export declare function routeChangeAction<P extends RootParams>(routeState: RouteState<P>): {
-    type: string;
-    payload: RouteState<P>[];
-};
+export declare function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
+export declare function routeParamsAction(moduleName: string, params: any, action: HistoryAction): Action;
+export declare function routeChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
 export declare const routeMiddleware: IStoreMiddleware;
 export declare type RouteModule = CommonModule & {
     locationTransform: LocationTransform;
