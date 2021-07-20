@@ -35,7 +35,7 @@
     "stylelint": "cross-env NODE_ENV=production stylelint --cache **/*.{css,less,vue}",
     "jsonlint": "prettier --write **/*.json",
     "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
-    "pre-lerna": "lerna publish --no-git-tag-version --no-push --registry=http://localhost:4873/",
+    "pre-lerna": "lerna publish --no-push --registry=http://localhost:4873/",
     "lerna": "lerna publish",
     "debug": "node --inspect=19248 --debug-brk"
   },
