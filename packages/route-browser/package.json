@@ -1,6 +1,6 @@
 {
   "name": "@elux/route-browser",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Using @elux/route in browser",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route-browser",
   "author": "hiisea <hiisea@qq.com>",
@@ -31,8 +31,8 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.0",
-    "@elux/route": "^0.1.0",
+    "@elux/core": "^0.1.2",
+    "@elux/route": "^0.1.2",
     "@types/history": "~4.7.7",
     "history": "~4.10.1"
   },
