@@ -11,4 +11,4 @@ export interface ConnectRedux {
     }>;
 }
 export declare const connectRedux: ConnectRedux;
-export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook } from 'react-redux';
+export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider } from 'react-redux';

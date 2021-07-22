@@ -24,4 +24,4 @@ export const connectRedux: ConnectRedux = function (...args) {
   };
 };
 
-export {shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook} from 'react-redux';
+export {shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider} from 'react-redux';

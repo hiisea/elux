@@ -79,10 +79,13 @@ function setSsrHtmlTpl(tpl) {
   }
 }
 
+var rootViewBuilder;
+
 function setConfig(conf) {
   (0, _core.setConfig)(conf);
   (0, _route.setRouteConfig)(conf);
   (0, _loadComponent.setLoadComponentOptions)(conf);
+  rootViewBuilder = conf.appViewBuilder;
 }
 
 function createApp(moduleGetter, middlewares, appModuleName) {
@@ -127,18 +130,16 @@ function createApp(moduleGetter, middlewares, appModuleName) {
             return (0, _core.renderApp)(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref4) {
               var store = _ref4.store,
                   AppView = _ref4.AppView;
-              var RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
               var eluxContext = {
                 store: store,
                 documentHead: ''
               };
+              var rootView = rootViewBuilder(AppView, store);
               renderFun(_react.default.createElement(_sington.EluxContext.Provider, {
                 value: eluxContext
-              }, _react.default.createElement(RootView, {
-                store: store
-              })), panel);
+              }, rootView), panel);
               return store;
             });
           });

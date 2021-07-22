@@ -19,10 +19,12 @@ export function setSsrHtmlTpl(tpl) {
     SSRTPL = tpl;
   }
 }
+var rootViewBuilder;
 export function setConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
   setLoadComponentOptions(conf);
+  rootViewBuilder = conf.appViewBuilder;
 }
 export function createApp(moduleGetter, middlewares, appModuleName) {
   if (middlewares === void 0) {
@@ -66,18 +68,16 @@ export function createApp(moduleGetter, middlewares, appModuleName) {
             return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref4) {
               var store = _ref4.store,
                   AppView = _ref4.AppView;
-              var RootView = AppView;
               routeModule.model(store);
               router.setStore(store);
               var eluxContext = {
                 store: store,
                 documentHead: ''
               };
+              var rootView = rootViewBuilder(AppView, store);
               renderFun(React.createElement(EluxContext.Provider, {
                 value: eluxContext
-              }, React.createElement(RootView, {
-                store: store
-              })), panel);
+              }, rootView), panel);
               return store;
             });
           });

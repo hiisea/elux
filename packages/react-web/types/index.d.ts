@@ -1,8 +1,8 @@
-import type { ComponentType } from 'react';
-import type { ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
-import type { IRouter } from '@elux/route-browser';
-import type { LoadComponent } from './loadComponent';
-export type { RootModuleFacade as Facade, Dispatch, EluxComponent } from '@elux/core';
+import { ComponentType, ReactElement } from 'react';
+import { IStore, ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
+import { IRouter } from '@elux/route-browser';
+import { LoadComponent } from './loadComponent';
+export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export type { LoadComponent } from './loadComponent';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, } from '@elux/core';
@@ -25,6 +25,7 @@ export declare function setConfig(conf: {
     }>;
     LoadComponentOnLoading?: ComponentType<{}>;
     disableNativeRoute?: boolean;
+    appViewBuilder: (view: ComponentType<any>, store: IStore) => ReactElement;
 }): void;
 export interface RenderOptions {
     viewName?: string;
@@ -34,7 +35,7 @@ export interface RenderOptions {
 }
 export declare function createApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        render({ id, ssrKey, viewName }?: RenderOptions): Promise<import("@elux/core").IStore<any> & B>;
+        render({ id, ssrKey, viewName }?: RenderOptions): Promise<IStore<any> & B>;
     };
 };
 export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {

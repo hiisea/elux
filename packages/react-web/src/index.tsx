@@ -1,13 +1,15 @@
 import env from './env';
-import React from 'react';
+import React, {ComponentType, ReactElement} from 'react';
 import {hydrate, render} from 'react-dom';
 import {routeMiddleware, setRouteConfig, routeConfig} from '@elux/route';
-import {getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule} from '@elux/core';
-import {createRouter} from '@elux/route-browser';
-import {loadComponent, setLoadComponentOptions} from './loadComponent';
-import {MetaData, EluxContext} from './sington';
-import type {ComponentType} from 'react';
-import type {
+import {
+  getRootModuleAPI,
+  renderApp,
+  ssrApp,
+  defineModuleGetter,
+  setConfig as setCoreConfig,
+  getModule,
+  IStore,
   ModuleGetter,
   IStoreMiddleware,
   StoreBuilder,
@@ -17,12 +19,12 @@ import type {
   RootModuleAPI,
   RootModuleActions,
 } from '@elux/core';
-import type {RouteModule} from '@elux/route';
-import type {IRouter} from '@elux/route-browser';
-import type {LoadComponent} from './loadComponent';
+import {createRouter, IRouter} from '@elux/route-browser';
+import {loadComponent, setLoadComponentOptions, LoadComponent} from './loadComponent';
+import {MetaData, EluxContext} from './sington';
+import {RouteModule} from '@elux/route';
 
-export type {RootModuleFacade as Facade, Dispatch, EluxComponent} from '@elux/core';
-
+export type {RootModuleFacade as Facade, Dispatch, IStore, EluxComponent} from '@elux/core';
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
 export type {LoadComponent} from './loadComponent';
 
@@ -65,6 +67,8 @@ export function setSsrHtmlTpl(tpl: string): void {
   }
 }
 
+let rootViewBuilder: (view: ComponentType<any>, store: IStore) => ReactElement;
+
 export function setConfig(conf: {
   actionMaxHistory?: number;
   pagesMaxHistory?: number;
@@ -76,10 +80,12 @@ export function setConfig(conf: {
   LoadComponentOnError?: ComponentType<{message: string}>;
   LoadComponentOnLoading?: ComponentType<{}>;
   disableNativeRoute?: boolean;
+  appViewBuilder: (view: ComponentType<any>, store: IStore) => ReactElement;
 }): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
   setLoadComponentOptions(conf);
+  rootViewBuilder = conf.appViewBuilder;
 }
 
 export interface RenderOptions {
@@ -107,16 +113,11 @@ export function createApp(moduleGetter: ModuleGetter, middlewares: IStoreMiddlew
             const initState = {...storeOptions.initState, route: routeState, ...state};
             const baseStore = storeCreator({...storeOptions, initState});
             return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
-              const RootView: ComponentType<any> = AppView as any;
               routeModule.model(store);
               router.setStore(store);
               const eluxContext = {store, documentHead: ''};
-              renderFun(
-                <EluxContext.Provider value={eluxContext}>
-                  <RootView store={store} />
-                </EluxContext.Provider>,
-                panel
-              );
+              const rootView = rootViewBuilder(AppView as any, store);
+              renderFun(<EluxContext.Provider value={eluxContext}>{rootView}</EluxContext.Provider>, panel);
               return store;
             });
           });
