@@ -1,5 +1,5 @@
-/// <reference path="../env/global.d.ts" />
-
+/* eslint-disable no-undef */
+/// <reference path="../runtime/runtime.d.ts" />
 declare const window: any;
 declare const global: any;
 declare const module: any;
@@ -15,10 +15,11 @@ if (typeof self !== 'undefined') {
 } else if (typeof module !== 'undefined') {
   root = module;
 } else {
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  root = Function('return this')();
+  root = new Function('return this')();
 }
 
-export const env: EluxCore.ENV = root;
+const env: EluxRuntime.ENV = root;
 
 env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+
+export default env;

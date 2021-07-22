@@ -139,7 +139,7 @@ var Router = function (_BaseRouter) {
   (0, _inheritsLoose2.default)(Router, _BaseRouter);
 
   function Router(mpNativeRouter, locationTransform) {
-    return _BaseRouter.call(this, mpNativeRouter.getLocation(), mpNativeRouter, locationTransform) || this;
+    return _BaseRouter.call(this, (0, _route.nativeLocationToNativeUrl)(mpNativeRouter.getLocation()), mpNativeRouter, locationTransform) || this;
   }
 
   return Router;

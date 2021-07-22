@@ -1,4 +1,4 @@
-/// <reference path="../env/global.d.ts" />
+/// <reference path="../runtime/runtime.d.ts" />
 import {compose, createStore, applyMiddleware, Reducer, Unsubscribe, StoreEnhancer, Middleware} from 'redux';
 import {env, BStore, StoreBuilder} from '@elux/core';
 

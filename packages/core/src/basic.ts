@@ -1,4 +1,4 @@
-import {env} from './env';
+import env from './env';
 import {LoadingState, TaskCounter, deepMerge, warn} from './sprite';
 
 export const config: {

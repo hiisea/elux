@@ -23,12 +23,11 @@
   "jsnext:main": "dist/next/index.js",
   "types": "types/",
   "files": [
-    "env/",
     "types/",
     "dist/"
   ],
   "scripts": {
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts} --ignore-pattern **/*.d.ts",
     "test": "jest",
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",

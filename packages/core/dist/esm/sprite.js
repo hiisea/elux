@@ -1,7 +1,7 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { env } from './env';
+import env from './env';
 export var LoadingState;
 
 (function (LoadingState) {

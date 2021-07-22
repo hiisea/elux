@@ -1,4 +1,4 @@
-import {env} from './env';
+import env from './env';
 
 /**
  * Loading状态，可通过effect注入，也可通过setLoading注入

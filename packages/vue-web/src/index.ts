@@ -44,7 +44,6 @@ import type {RouteModule} from '@elux/route';
 import type {IRouter} from '@elux/route-browser';
 import type {LoadComponent} from './loadComponent';
 
-export {createVuex} from '@elux/core-vuex';
 export {
   ActionTypes,
   LoadingState,
@@ -75,7 +74,7 @@ export {default as Link} from './components/Link';
 
 export type {RootModuleFacade as Facade, Dispatch, EluxComponent} from '@elux/core';
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
-export type {VuexStore, VuexOptions} from '@elux/core-vuex';
+
 export type {LoadComponent} from './loadComponent';
 
 declare module '@vue/runtime-core' {

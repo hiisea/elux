@@ -1,5 +1,7 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
 exports.__esModule = true;
 exports.setConfig = setConfig;
 exports.errorAction = errorAction;
@@ -16,7 +18,7 @@ exports.deepMergeState = deepMergeState;
 exports.mergeState = mergeState;
 exports.action = exports.mutation = exports.MetaData = exports.ActionTypes = exports.config = void 0;
 
-var _env = require("./env");
+var _env = _interopRequireDefault(require("./env"));
 
 var _sprite = require("./sprite");
 
@@ -189,7 +191,7 @@ function effect(loadingKey) {
 
     if (loadingForModuleName && loadingForGroupName) {
       var before = function before(curAction, moduleName, promiseResult) {
-        if (!_env.env.isServer) {
+        if (!_env.default.isServer) {
           if (loadingForModuleName === 'app') {
             loadingForModuleName = MetaData.appModuleName;
           } else if (loadingForModuleName === 'this') {

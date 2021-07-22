@@ -19,7 +19,7 @@ var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/inh
 
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
-var _env = require("./env");
+var _env = _interopRequireDefault(require("./env"));
 
 var LoadingState;
 exports.LoadingState = LoadingState;
@@ -133,7 +133,7 @@ var TaskCounter = function (_SingleDispatcher) {
 
       if (this.list.length === 1 && !this.ctimer) {
         this.dispatch(LoadingState.Start);
-        this.ctimer = _env.env.setTimeout(function () {
+        this.ctimer = _env.default.setTimeout(function () {
           _this2.ctimer = 0;
 
           if (_this2.list.length > 0) {
@@ -156,7 +156,7 @@ var TaskCounter = function (_SingleDispatcher) {
 
       if (this.list.length === 0) {
         if (this.ctimer) {
-          _env.env.clearTimeout.call(null, this.ctimer);
+          _env.default.clearTimeout.call(null, this.ctimer);
 
           this.ctimer = 0;
         }
@@ -244,7 +244,7 @@ function deepMerge(target) {
 
 function warn(str) {
   if (process.env.NODE_ENV === 'development') {
-    _env.env.console.warn(str);
+    _env.default.console.warn(str);
   }
 }
 
@@ -253,11 +253,11 @@ function isPromise(data) {
 }
 
 function isServer() {
-  return _env.env.isServer;
+  return _env.default.isServer;
 }
 
 function serverSide(callback) {
-  if (_env.env.isServer) {
+  if (_env.default.isServer) {
     return callback();
   }
 
@@ -265,7 +265,7 @@ function serverSide(callback) {
 }
 
 function clientSide(callback) {
-  if (!_env.env.isServer) {
+  if (!_env.default.isServer) {
     return callback();
   }
 
@@ -283,7 +283,7 @@ function delayPromise(second) {
 
     descriptor.value = function () {
       var delay = new Promise(function (resolve) {
-        _env.env.setTimeout(function () {
+        _env.default.setTimeout(function () {
           resolve(true);
         }, second * 1000);
       });

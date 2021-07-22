@@ -1,7 +1,8 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
-import { loadComponet, isPromise, env } from '@elux/core';
+import { loadComponet, isPromise } from '@elux/core';
+import env from './env';
 import { EluxContext } from './sington';
 const loadComponentDefaultOptions = {
   LoadComponentOnError: ({

@@ -1,3 +1,4 @@
+/* global MouseEvent */
 import {h, AnchorHTMLAttributes} from 'vue';
 import {MetaData} from '../sington';
 

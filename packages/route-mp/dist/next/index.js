@@ -1,5 +1,5 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { BaseRouter, BaseNativeRouter } from '@elux/route';
+import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter } from '@elux/route';
 export class MPNativeRouter extends BaseNativeRouter {
   constructor(routeENV, tabPages) {
     super();
@@ -103,7 +103,7 @@ export class MPNativeRouter extends BaseNativeRouter {
 }
 export class Router extends BaseRouter {
   constructor(mpNativeRouter, locationTransform) {
-    super(mpNativeRouter.getLocation(), mpNativeRouter, locationTransform);
+    super(nativeLocationToNativeUrl(mpNativeRouter.getLocation()), mpNativeRouter, locationTransform);
   }
 
 }

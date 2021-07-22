@@ -5,7 +5,6 @@ import { createRouter } from '@elux/route-browser';
 import { createApp as createVue, createSSRApp, defineComponent as defineVueComponent, h } from 'vue';
 import { loadComponent, setLoadComponentOptions } from './loadComponent';
 import { MetaData, EluxContextKey } from './sington';
-export { createVuex } from '@elux/core-vuex';
 export { ActionTypes, LoadingState, env, effect, mutation, errorAction, reducer, action, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export { default as DocumentHead } from './components/DocumentHead';

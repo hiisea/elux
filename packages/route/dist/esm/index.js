@@ -6,9 +6,9 @@ import { isPromise, deepMerge } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
 import { History, uriToLocation } from './history';
 import { testRouteChangeAction, routeChangeAction } from './module';
-import { eluxLocationToEluxUrl, nativeLocationToNativeUrl } from './transform';
+import { eluxLocationToEluxUrl, nativeLocationToNativeUrl as _nativeLocationToNativeUrl } from './transform';
 export { setRouteConfig, routeConfig } from './basic';
-export { createLocationTransform, nativeUrlToNativeLocation } from './transform';
+export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
 export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
 export var BaseNativeRouter = function () {
   function BaseNativeRouter() {
@@ -193,7 +193,7 @@ export var BaseRouter = function () {
 
   _proto2.locationToNativeData = function locationToNativeData(location) {
     var nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    var nativeUrl = nativeLocationToNativeUrl(nativeLocation);
+    var nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
     return {
       nativeUrl: nativeUrl,
       nativeLocation: nativeLocation
@@ -212,7 +212,11 @@ export var BaseRouter = function () {
   _proto2.payloadLocationToNativeUrl = function payloadLocationToNativeUrl(data) {
     var eluxLocation = this.payloadToEluxLocation(data);
     var nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
-    return nativeLocationToNativeUrl(nativeLocation);
+    return this.nativeLocationToNativeUrl(nativeLocation);
+  };
+
+  _proto2.nativeLocationToNativeUrl = function nativeLocationToNativeUrl(nativeLocation) {
+    return _nativeLocationToNativeUrl(nativeLocation);
   };
 
   _proto2._createKey = function _createKey() {

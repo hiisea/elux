@@ -1,0 +1,235 @@
+// https://github.com/fjc0k/vtils
+let prevPagesInfo:
+  | {
+      count: number;
+      lastPageUrl: string;
+      lastPagePath: string;
+      lastPageQuery: AnyObject;
+    }
+  | undefined;
+
+function patchPageOptions(mp: MiniProgramApi, pageOptions: WechatMiniprogram.Page.Options<{}, {}>) {
+  const onLoad = pageOptions.onLoad;
+  pageOptions.onLoad = function (pageQuery) {
+    if (mp.$brand === '支付宝') {
+      // 支持通过 options 获取页面参数
+      (this as any).options = pageQuery;
+    }
+    (this as any).__PAGE_ID__ = ++patchMiniProgram.__CURRENT_PAGE_ID__;
+    miniProgramBus.emit({name: 'pageLoad', context: this}, pageQuery);
+    return onLoad?.call(this, pageQuery);
+  };
+
+  const onShow = pageOptions.onShow;
+  pageOptions.onShow = function () {
+    const currentPagesInfo = {
+      count: getCurrentPages().length,
+      lastPageUrl: getCurrentPageUrl(),
+      lastPagePath: getCurrentPagePath(),
+      lastPageQuery: getCurrentPageQuery(),
+    };
+    if (!(prevPagesInfo && currentPagesInfo.count === prevPagesInfo.count && currentPagesInfo.lastPageUrl === prevPagesInfo.lastPageUrl)) {
+      miniProgramBus.emit('routeChange', {
+        from: prevPagesInfo && {
+          url: prevPagesInfo.lastPageUrl,
+          path: prevPagesInfo.lastPagePath,
+          query: prevPagesInfo.lastPageQuery,
+        },
+        to: {
+          url: currentPagesInfo.lastPageUrl,
+          path: currentPagesInfo.lastPagePath,
+          query: currentPagesInfo.lastPageQuery,
+        },
+        action: !prevPagesInfo || currentPagesInfo.count > prevPagesInfo.count ? 'push' : currentPagesInfo.count < prevPagesInfo.count ? 'pop' : 'replace',
+      });
+    }
+
+    patchMiniProgram.__CURRENT_PAGE_ID__ = (this as any).__PAGE_ID__;
+    miniProgramBus.emit({
+      name: 'currentPageShow',
+      context: this,
+      tag: (this as any).__PAGE_ID__,
+    });
+    miniProgramBus.emit({name: 'pageShow', context: this});
+    return onShow?.call(this);
+  };
+
+  const onReady = pageOptions.onReady;
+  pageOptions.onReady = function () {
+    miniProgramBus.emit({
+      name: 'currentPageReady',
+      context: this,
+      tag: (this as any).__PAGE_ID__,
+    });
+    miniProgramBus.emit({name: 'pageReady', context: this});
+    return onReady?.call(this);
+  };
+
+  const onHide = pageOptions.onHide;
+  pageOptions.onHide = function () {
+    prevPagesInfo = {
+      count: getCurrentPages().length,
+      lastPageUrl: getCurrentPageUrl(),
+      lastPagePath: getCurrentPagePath(),
+      lastPageQuery: getCurrentPageQuery(),
+    };
+
+    miniProgramBus.emit({
+      name: 'currentPageHide',
+      context: this,
+      tag: (this as any).__PAGE_ID__,
+    });
+    miniProgramBus.emit({name: 'pageHide', context: this});
+    return onHide?.call(this);
+  };
+
+  const onUnload = pageOptions.onUnload;
+  pageOptions.onUnload = function () {
+    prevPagesInfo = {
+      count: getCurrentPages().length,
+      lastPageUrl: getCurrentPageUrl(),
+      lastPagePath: getCurrentPagePath(),
+      lastPageQuery: getCurrentPageQuery(),
+    };
+
+    miniProgramBus.emit({
+      name: 'currentPageUnload',
+      context: this,
+      tag: (this as any).__PAGE_ID__,
+    });
+    miniProgramBus.emit({name: 'pageUnload', context: this});
+    const res = onUnload?.call(this);
+    for (const currentPageListenerName of currentPageListeners) {
+      miniProgramBus.off(currentPageListenerName, (this as any).__PAGE_ID__);
+    }
+    return res;
+  };
+
+  const onPullDownRefresh = pageOptions.onPullDownRefresh;
+  pageOptions.onPullDownRefresh = function () {
+    miniProgramBus.emit({
+      name: 'currentPagePullDownRefresh',
+      context: this,
+      tag: (this as any).__PAGE_ID__,
+    });
+    miniProgramBus.emit({name: 'pagePullDownRefresh', context: this});
+    return onPullDownRefresh?.call(this);
+  };
+
+  const onReachBottom = pageOptions.onReachBottom;
+  pageOptions.onReachBottom = function () {
+    miniProgramBus.emit({
+      name: 'currentPageReachBottom',
+      context: this,
+      tag: (this as any).__PAGE_ID__,
+    });
+    miniProgramBus.emit({name: 'pageReachBottom', context: this});
+    return onReachBottom?.call(this);
+  };
+
+  const onShareAppMessage = pageOptions.onShareAppMessage;
+  pageOptions.onShareAppMessage = function (payload) {
+    const pageListenerData = miniProgramBus.emit(
+      {
+        name: 'currentPageShareAppMessage',
+        context: this,
+        tag: (this as any).__PAGE_ID__,
+      },
+      payload
+    );
+    const globalListenerData = miniProgramBus.emit({name: 'pageShareAppMessage', context: this}, payload);
+    const originalListenerData = onShareAppMessage?.call(this, payload);
+    return originalListenerData || last(pageListenerData) || last(globalListenerData);
+  };
+
+  // @ts-ignore
+  const onShareTimeline = pageOptions.onShareTimeline;
+  // @ts-ignore
+  pageOptions.onShareTimeline = function (payload) {
+    const pageListenerData = miniProgramBus.emit(
+      {
+        name: 'currentPageShareTimeline',
+        context: this,
+        tag: (this as any).__PAGE_ID__,
+      },
+      // @ts-ignore
+      payload
+    );
+    const globalListenerData = miniProgramBus.emit(
+      {name: 'pageShareTimeline', context: this},
+      // @ts-ignore
+      payload
+    );
+    const originalListenerData = onShareTimeline?.call(
+      this,
+      // @ts-ignore
+      payload
+    );
+    return originalListenerData || last(pageListenerData) || last(globalListenerData);
+  };
+
+  const onAddToFavorites = pageOptions.onAddToFavorites;
+  pageOptions.onAddToFavorites = function (payload) {
+    const pageListenerData = miniProgramBus.emit(
+      {
+        name: 'currentPageAddToFavorites',
+        context: this,
+        tag: (this as any).__PAGE_ID__,
+      },
+      payload
+    );
+    const globalListenerData = miniProgramBus.emit({name: 'pageAddToFavorites', context: this}, payload);
+    const originalListenerData = onAddToFavorites?.call(this, payload);
+    return originalListenerData || last(pageListenerData) || last(globalListenerData) || {};
+  };
+
+  const onResize = pageOptions.onResize;
+  pageOptions.onResize = function (payload) {
+    miniProgramBus.emit(
+      {
+        name: 'currentPageResize',
+        context: this,
+        tag: (this as any).__PAGE_ID__,
+      },
+      payload
+    );
+    miniProgramBus.emit({name: 'pageResize', context: this}, payload);
+    return onResize?.call(this, payload);
+  };
+
+  const onTabItemTap = pageOptions.onTabItemTap;
+  pageOptions.onTabItemTap = function (payload) {
+    miniProgramBus.emit(
+      {
+        name: 'currentPageTabItemTap',
+        context: this,
+        tag: (this as any).__PAGE_ID__,
+      },
+      payload
+    );
+    miniProgramBus.emit({name: 'pageTabItemTap', context: this}, payload);
+    return onTabItemTap?.call(this, payload);
+  };
+}
+
+/**
+ * 打补丁。
+ */
+export function patchMiniProgram() {
+  // 重写 Page
+  const originalPage = Page;
+  Page = function (pageOptions) {
+    patchPageOptions(mp, pageOptions);
+    return originalPage(pageOptions);
+  };
+
+  // 重写 Component
+  const originalComponent = Component;
+  Component = function (componentOptions) {
+    componentOptions.methods = componentOptions.methods || ({} as any);
+    patchPageOptions(mp, componentOptions.methods as any);
+    return originalComponent(componentOptions);
+  };
+}
+
+patchMiniProgram.__CURRENT_PAGE_ID__ = 0;

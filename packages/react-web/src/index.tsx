@@ -26,9 +26,6 @@ export type {RootModuleFacade as Facade, Dispatch, EluxComponent} from '@elux/co
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
 export type {LoadComponent} from './loadComponent';
 
-export type {ReduxStore, ReduxOptions} from '@elux/core-redux';
-
-export {createRedux} from '@elux/core-redux';
 export {
   ActionTypes,
   LoadingState,

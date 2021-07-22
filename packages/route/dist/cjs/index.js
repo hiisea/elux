@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.BaseRouter = exports.BaseNativeRouter = exports.ModuleWithRouteHandlers = exports.RouteActionTypes = exports.createRouteModule = exports.routeMiddleware = exports.nativeUrlToNativeLocation = exports.createLocationTransform = void 0;
+exports.BaseRouter = exports.BaseNativeRouter = exports.ModuleWithRouteHandlers = exports.RouteActionTypes = exports.createRouteModule = exports.routeMiddleware = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.createLocationTransform = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -33,6 +33,7 @@ var _transform = require("./transform");
 
 exports.createLocationTransform = _transform.createLocationTransform;
 exports.nativeUrlToNativeLocation = _transform.nativeUrlToNativeLocation;
+exports.nativeLocationToNativeUrl = _transform.nativeLocationToNativeUrl;
 
 var BaseNativeRouter = function () {
   function BaseNativeRouter() {
@@ -206,7 +207,7 @@ var BaseRouter = function () {
 
   _proto2.locationToNativeData = function locationToNativeData(location) {
     var nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    var nativeUrl = (0, _transform.nativeLocationToNativeUrl)(nativeLocation);
+    var nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
     return {
       nativeUrl: nativeUrl,
       nativeLocation: nativeLocation
@@ -225,6 +226,10 @@ var BaseRouter = function () {
   _proto2.payloadLocationToNativeUrl = function payloadLocationToNativeUrl(data) {
     var eluxLocation = this.payloadToEluxLocation(data);
     var nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
+    return this.nativeLocationToNativeUrl(nativeLocation);
+  };
+
+  _proto2.nativeLocationToNativeUrl = function nativeLocationToNativeUrl(nativeLocation) {
     return (0, _transform.nativeLocationToNativeUrl)(nativeLocation);
   };
 

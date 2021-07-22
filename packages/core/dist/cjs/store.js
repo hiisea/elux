@@ -10,7 +10,7 @@ exports.enhanceStore = enhanceStore;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
-var _env = require("./env");
+var _env = _interopRequireDefault(require("./env"));
 
 var _sprite = require("./sprite");
 
@@ -121,7 +121,7 @@ function enhanceStore(baseStore, middlewares) {
             moduleName = _action$type$split[0],
             actionName = _action$type$split[1];
 
-        if (_env.env.isServer && actionName === _basic.ActionTypes.MLoading) {
+        if (_env.default.isServer && actionName === _basic.ActionTypes.MLoading) {
           return undefined;
         }
 

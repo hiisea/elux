@@ -1,5 +1,5 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { env } from './env';
+import env from './env';
 export let LoadingState;
 
 (function (LoadingState) {

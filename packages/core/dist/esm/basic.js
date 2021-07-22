@@ -1,4 +1,4 @@
-import { env } from './env';
+import env from './env';
 import { TaskCounter, deepMerge, warn } from './sprite';
 export var config = {
   NSP: '.',

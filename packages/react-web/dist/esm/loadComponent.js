@@ -4,7 +4,8 @@ import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitial
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
-import { loadComponet, isPromise, env } from '@elux/core';
+import { loadComponet, isPromise } from '@elux/core';
+import env from './env';
 import { EluxContext } from './sington';
 var loadComponentDefaultOptions = {
   LoadComponentOnError: function LoadComponentOnError(_ref) {

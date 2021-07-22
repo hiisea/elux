@@ -5,7 +5,7 @@ import { History, uriToLocation } from './history';
 import { testRouteChangeAction, routeChangeAction } from './module';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl } from './transform';
 export { setRouteConfig, routeConfig } from './basic';
-export { createLocationTransform, nativeUrlToNativeLocation } from './transform';
+export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
 export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
 export class BaseNativeRouter {
   constructor() {
@@ -173,7 +173,7 @@ export class BaseRouter {
 
   locationToNativeData(location) {
     const nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    const nativeUrl = nativeLocationToNativeUrl(nativeLocation);
+    const nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
     return {
       nativeUrl,
       nativeLocation
@@ -192,6 +192,10 @@ export class BaseRouter {
   payloadLocationToNativeUrl(data) {
     const eluxLocation = this.payloadToEluxLocation(data);
     const nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
+    return this.nativeLocationToNativeUrl(nativeLocation);
+  }
+
+  nativeLocationToNativeUrl(nativeLocation) {
     return nativeLocationToNativeUrl(nativeLocation);
   }
 

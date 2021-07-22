@@ -2,7 +2,8 @@
   "extends": "@elux/babel-preset/tsconfig.src.json",
   "compilerOptions": {
     "rootDir": "./",
-    "declarationDir": "../types"
+    "declarationDir": "../types",
+    "lib": ["ES2020", "DOM"]
   },
   "include": ["./"],
   "exclude": []

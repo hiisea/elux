@@ -1,4 +1,4 @@
-/// <reference path="../env/global.d.ts" />
+/// <reference path="../runtime/runtime.d.ts" />
 import {env} from '@elux/core';
 
 declare const btoa: any;

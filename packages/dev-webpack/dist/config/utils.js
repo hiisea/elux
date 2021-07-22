@@ -506,12 +506,6 @@ function moduleExports({ cache, sourceMap, nodeEnv, rootPath, srcPath, distPath,
                 warnings: false,
                 errors: true,
             },
-            needHotEntry: (compilerConfig) => {
-                return compilerConfig.name === 'client';
-            },
-            needClientEntry: (compilerConfig) => {
-                return compilerConfig.name === 'client';
-            },
         },
     };
     if (useSSR) {

@@ -1,5 +1,7 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
 exports.__esModule = true;
 exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.getModuleGetter = exports.getComponet = exports.exportComponent = exports.exportView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.EmptyModuleHandlers = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
 
@@ -58,6 +60,6 @@ exports.defineModuleGetter = _render.defineModuleGetter;
 exports.renderApp = _render.renderApp;
 exports.ssrApp = _render.ssrApp;
 
-var _env = require("./env");
+var _env = _interopRequireDefault(require("./env"));
 
-exports.env = _env.env;
+exports.env = _env.default;

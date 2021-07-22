@@ -16,7 +16,7 @@
   "jsnext:main": "dist/next/index.js",
   "types": "types/",
   "files": [
-    "env/",
+    "runtime/",
     "types/",
     "dist/"
   ],
@@ -26,19 +26,13 @@
     "dist/cjs/index.js"
   ],
   "scripts": {
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx}",
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx} --ignore-pattern **/*.d.ts",
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",
     "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts,.tsx\"",
     "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts,.tsx\"",
     "build:ts": "tsc -P ./src --module ESNext --isolatedModules false --noEmit false --outDir ./dist/ts",
-    "package:next": "cross-env NODE_TAG=next rollup -c",
-    "package:esm": "cross-env NODE_TAG=esm rollup -c",
-    "build": "yarn build:next & yarn build:esm & yarn build:cjs & yarn package:next && yarn package:esm"
-  },
-  "externals": {
-    "react": true,
-    "react-dom": true
+    "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "peerDependencies": {
     "react": "^16.8.0 || ^17",
@@ -47,7 +41,6 @@
   "dependencies": {
     "@babel/runtime": "~7.12.18",
     "@elux/core": "^0.1.2",
-    "@elux/core-redux": "^0.1.2",
     "@elux/route-browser": "^0.1.2"
   },
   "devDependencies": {

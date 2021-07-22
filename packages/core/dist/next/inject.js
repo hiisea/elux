@@ -2,7 +2,7 @@ import _decorate from "@babel/runtime/helpers/esm/decorate";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { isPromise } from './sprite';
 import { isEluxComponent, injectActions, MetaData, config, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
-import { env } from './env';
+import env from './env';
 export function getModuleGetter() {
   return MetaData.moduleGetter;
 }

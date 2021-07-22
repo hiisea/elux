@@ -1,2 +1,3 @@
-/// <reference path="../env/global.d.ts" />
-export declare const env: EluxCore.ENV;
+/// <reference path="../runtime/runtime.d.ts" />
+declare const env: EluxRuntime.ENV;
+export default env;

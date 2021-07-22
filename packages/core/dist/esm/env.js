@@ -9,8 +9,9 @@ if (typeof self !== 'undefined') {
 } else if (typeof module !== 'undefined') {
   root = module;
 } else {
-  root = Function('return this')();
+  root = new Function('return this')();
 }
 
-export var env = root;
+var env = root;
 env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+export default env;

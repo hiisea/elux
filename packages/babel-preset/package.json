@@ -18,7 +18,7 @@
     "tsconfig.eslint.json"
   ],
   "scripts": {
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts} --ignore-pattern **/*.d.ts",
     "prebuild": "../../node_modules/.bin/rimraf ./dist",
     "build": "../../node_modules/.bin/tsc --build ./src"
   },

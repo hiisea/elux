@@ -4,7 +4,7 @@
     "rootDir": "./",
     "declarationDir": "../types",
     "jsx": "preserve",
-    "lib": ["es2018", "DOM"]
+    "lib": ["ES2020", "DOM"]
   },
   "include": ["./"],
   "exclude": []

@@ -13,7 +13,7 @@ module.exports = {
       jsx: true,
     },
   },
-  extends: ['eslint:recommended', 'plugin:prettier/recommended'],
+  extends: ['eslint:recommended', 'plugin:prettier/recommended', 'plugin:markdown/recommended'],
   plugins: [],
   rules: {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',

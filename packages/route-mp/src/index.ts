@@ -1,5 +1,13 @@
-/* eslint-disable */
-import {BaseRouter, BaseNativeRouter, NativeLocation, NativeData, RootParams, LocationTransform, IBaseRouter} from '@elux/route';
+import {
+  nativeLocationToNativeUrl,
+  BaseRouter,
+  BaseNativeRouter,
+  NativeLocation,
+  NativeData,
+  RootParams,
+  LocationTransform,
+  IBaseRouter,
+} from '@elux/route';
 
 type UnregisterCallback = () => void;
 interface RouteOption {
@@ -36,7 +44,7 @@ export class MPNativeRouter extends BaseNativeRouter {
       const nativeLocation: NativeLocation = {pathname, searchData};
       const changed = this.onChange(key);
       if (changed) {
-        let index: number = -1;
+        let index = -1;
         if (action === 'POP') {
           index = this.router.findHistoryIndexByKey(key);
         }
@@ -61,7 +69,7 @@ export class MPNativeRouter extends BaseNativeRouter {
     return url.indexOf('?') > -1 ? `${url}&__key__=${key}` : `${url}?__key__=${key}`;
   }
 
-  protected push(getNativeData: () => NativeData, key: string) {
+  protected push(getNativeData: () => NativeData, key: string): Promise<NativeData> {
     const nativeData = getNativeData();
     if (this.tabPages[nativeData.nativeUrl]) {
       throw `Replacing 'push' with 'relaunch' for TabPage: ${nativeData.nativeUrl}`;
@@ -69,7 +77,7 @@ export class MPNativeRouter extends BaseNativeRouter {
     return this.routeENV.navigateTo({url: this.toUrl(nativeData.nativeUrl, key)}).then(() => nativeData);
   }
 
-  protected replace(getNativeData: () => NativeData, key: string) {
+  protected replace(getNativeData: () => NativeData, key: string): Promise<NativeData> {
     const nativeData = getNativeData();
     if (this.tabPages[nativeData.nativeUrl]) {
       throw `Replacing 'push' with 'relaunch' for TabPage: ${nativeData.nativeUrl}`;
@@ -77,7 +85,7 @@ export class MPNativeRouter extends BaseNativeRouter {
     return this.routeENV.redirectTo({url: this.toUrl(nativeData.nativeUrl, key)}).then(() => nativeData);
   }
 
-  protected relaunch(getNativeData: () => NativeData, key: string) {
+  protected relaunch(getNativeData: () => NativeData, key: string): Promise<NativeData> {
     const nativeData = getNativeData();
     if (this.tabPages[nativeData.nativeUrl]) {
       return this.routeENV.switchTab({url: nativeData.nativeUrl}).then(() => nativeData);
@@ -87,16 +95,16 @@ export class MPNativeRouter extends BaseNativeRouter {
 
   // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
   // history.go会触发onChange，所以必须返回NativeData
-  protected back(getNativeData: () => NativeData, n: number, key: string) {
+  protected back(getNativeData: () => NativeData, n: number, key: string): Promise<NativeData> {
     const nativeData = getNativeData();
     return this.routeENV.navigateBack({delta: n}).then(() => nativeData);
   }
 
-  toOutside(url: string) {
+  toOutside(url: string): void {
     // this.history.push(url);
   }
 
-  destroy() {
+  destroy(): void {
     this._unlistenHistory();
   }
 }
@@ -105,7 +113,7 @@ export class Router<P extends RootParams, N extends string> extends BaseRouter<P
   public declare nativeRouter: MPNativeRouter;
 
   constructor(mpNativeRouter: MPNativeRouter, locationTransform: LocationTransform) {
-    super(mpNativeRouter.getLocation(), mpNativeRouter, locationTransform);
+    super(nativeLocationToNativeUrl(mpNativeRouter.getLocation()), mpNativeRouter, locationTransform);
   }
 }
 
@@ -113,7 +121,7 @@ export function createRouter<P extends RootParams, N extends string>(
   locationTransform: LocationTransform,
   routeENV: RouteENV,
   tabPages: Record<string, boolean>
-) {
+): Router<P, N> {
   const mpNativeRouter = new MPNativeRouter(routeENV, tabPages);
   const router = new Router<P, N>(mpNativeRouter, locationTransform);
   return router;

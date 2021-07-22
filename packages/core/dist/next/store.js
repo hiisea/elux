@@ -1,4 +1,4 @@
-import { env } from './env';
+import env from './env';
 import { isPromise } from './sprite';
 import { ActionTypes, config, errorAction, MetaData } from './basic';
 import { loadModel } from './inject';

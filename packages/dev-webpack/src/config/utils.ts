@@ -610,12 +610,6 @@ function moduleExports({
         warnings: false,
         errors: true,
       },
-      needHotEntry: (compilerConfig: {name: string}) => {
-        return compilerConfig.name === 'client';
-      },
-      needClientEntry: (compilerConfig: {name: string}) => {
-        return compilerConfig.name === 'client';
-      },
     },
   };
   if (useSSR) {

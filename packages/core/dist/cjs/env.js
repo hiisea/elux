@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.env = void 0;
+exports.default = void 0;
 var root;
 
 if (typeof self !== 'undefined') {
@@ -13,9 +13,10 @@ if (typeof self !== 'undefined') {
 } else if (typeof module !== 'undefined') {
   root = module;
 } else {
-  root = Function('return this')();
+  root = new Function('return this')();
 }
 
 var env = root;
-exports.env = env;
 env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+var _default = env;
+exports.default = _default;

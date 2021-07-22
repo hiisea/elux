@@ -1,4 +1,3 @@
-/// <reference path="../env/global.d.ts" />
 import { Plugin, MutationPayload, SubscribeOptions } from 'vuex';
 import { WatchOptions } from 'vue';
 import type { BStore, StoreBuilder } from '@elux/core';

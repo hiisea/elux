@@ -20,6 +20,8 @@ var _react = _interopRequireWildcard(require("react"));
 
 var _core = require("@elux/core");
 
+var _env = _interopRequireDefault(require("./env"));
+
 var _sington = require("./sington");
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
@@ -120,7 +122,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
                 });
               }
             }, function (e) {
-              _core.env.console.error(e);
+              _env.default.console.error(e);
 
               _this2.loading = false;
               _this2.error = e.message || "" + e || 'error';

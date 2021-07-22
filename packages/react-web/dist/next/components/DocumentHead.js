@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react';
-import { env, isServer } from '@elux/core';
+import env from '../env';
 import { EluxContext } from '../sington';
 let clientTimer = 0;
 
@@ -32,7 +32,7 @@ const Component = ({
 
   const eluxContext = useContext(EluxContext);
 
-  if (isServer()) {
+  if (env.isServer) {
     eluxContext.documentHead = html;
   }
 

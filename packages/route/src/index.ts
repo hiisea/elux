@@ -8,7 +8,7 @@ import type {LocationTransform} from './transform';
 import type {RootParams, Location, RouteState, PayloadLocation} from './basic';
 
 export {setRouteConfig, routeConfig} from './basic';
-export {createLocationTransform, nativeUrlToNativeLocation} from './transform';
+export {createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl} from './transform';
 export {routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers} from './module';
 export type {RouteModule} from './module';
 export type {PagenameMap, LocationTransform} from './transform';
@@ -185,7 +185,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation} {
     const nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    const nativeUrl = nativeLocationToNativeUrl(nativeLocation);
+    const nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
     return {nativeUrl, nativeLocation};
   }
 
@@ -201,6 +201,10 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
   payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string {
     const eluxLocation = this.payloadToEluxLocation(data);
     const nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
+    return this.nativeLocationToNativeUrl(nativeLocation);
+  }
+
+  nativeLocationToNativeUrl(nativeLocation: NativeLocation): string {
     return nativeLocationToNativeUrl(nativeLocation);
   }
 
@@ -393,6 +397,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   getInternalUrl(): string;
   getNativeLocation(): NativeLocation;
   getNativeUrl(): string;
+  nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation};
   setStore(_store: Store): void;
   getCurKey(): string;

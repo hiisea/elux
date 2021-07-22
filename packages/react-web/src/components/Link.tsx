@@ -1,3 +1,4 @@
+/* global HTMLAnchorElement MouseEvent */
 import React from 'react';
 import {MetaData} from '../sington';
 

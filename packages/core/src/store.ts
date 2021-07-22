@@ -1,5 +1,4 @@
-/* eslint-disable prefer-spread */
-import {env} from './env';
+import env from './env';
 import {isPromise} from './sprite';
 import {
   Action,

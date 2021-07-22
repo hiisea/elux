@@ -3,3 +3,4 @@ types/
 docs/
 libs/
 ./storage
+*.d.ts

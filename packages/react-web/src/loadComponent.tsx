@@ -1,6 +1,7 @@
 import React, {ComponentType, Component} from 'react';
-import {loadComponet, isPromise, env} from '@elux/core';
+import {loadComponet, isPromise} from '@elux/core';
 import type {LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
+import env from './env';
 import {EluxContext} from './sington';
 
 export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<
@@ -77,7 +78,6 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, co
                 if (view) {
                   this.loading = false;
                   this.view = view;
-                  // eslint-disable-next-line react/no-access-state-in-setstate
                   this.active && this.setState({ver: this.state.ver + 1});
                 }
               },
@@ -85,7 +85,6 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, co
                 env.console.error(e);
                 this.loading = false;
                 this.error = e.message || `${e}` || 'error';
-                // eslint-disable-next-line react/no-access-state-in-setstate
                 this.active && this.setState({ver: this.state.ver + 1});
               }
             );

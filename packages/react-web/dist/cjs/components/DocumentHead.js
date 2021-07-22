@@ -1,11 +1,13 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
 exports.__esModule = true;
 exports.default = void 0;
 
 var _react = _interopRequireWildcard(require("react"));
 
-var _core = require("@elux/core");
+var _env = _interopRequireDefault(require("../env"));
 
 var _sington = require("../sington");
 
@@ -19,12 +21,12 @@ function setClientHead(eluxContext, documentHead) {
   eluxContext.documentHead = documentHead;
 
   if (!clientTimer) {
-    clientTimer = _core.env.setTimeout(function () {
+    clientTimer = _env.default.setTimeout(function () {
       clientTimer = 0;
       var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
-        _core.env.document.title = arr[1];
+        _env.default.document.title = arr[1];
       }
     }, 0);
   }
@@ -46,7 +48,7 @@ var Component = function Component(_ref) {
 
   var eluxContext = (0, _react.useContext)(_sington.EluxContext);
 
-  if ((0, _core.isServer)()) {
+  if (_env.default.isServer) {
     eluxContext.documentHead = html;
   }
 

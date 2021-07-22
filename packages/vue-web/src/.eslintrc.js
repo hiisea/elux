@@ -6,4 +6,7 @@ module.exports = {
     browser: false,
     node: false,
   },
+  rules: {
+    'no-undef': 'error',
+  },
 };

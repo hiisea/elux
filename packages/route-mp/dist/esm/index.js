@@ -1,7 +1,7 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { BaseRouter, BaseNativeRouter } from '@elux/route';
+import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter } from '@elux/route';
 export var MPNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(MPNativeRouter, _BaseNativeRouter);
 
@@ -126,7 +126,7 @@ export var Router = function (_BaseRouter) {
   _inheritsLoose(Router, _BaseRouter);
 
   function Router(mpNativeRouter, locationTransform) {
-    return _BaseRouter.call(this, mpNativeRouter.getLocation(), mpNativeRouter, locationTransform) || this;
+    return _BaseRouter.call(this, nativeLocationToNativeUrl(mpNativeRouter.getLocation()), mpNativeRouter, locationTransform) || this;
   }
 
   return Router;

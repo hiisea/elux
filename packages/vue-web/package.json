@@ -27,14 +27,12 @@
   ],
   "scripts": {
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,vue}",
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx} --ignore-pattern **/*.d.ts",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",
     "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts,.tsx\"",
     "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts,.tsx\"",
     "build:ts": "tsc -P ./src --module ESNext --isolatedModules false --noEmit false --outDir ./dist/ts",
-    "package:next": "cross-env NODE_TAG=next rollup -c",
-    "package:esm": "cross-env NODE_TAG=esm rollup -c",
-    "build": "yarn build:next & yarn build:esm & yarn build:cjs & yarn package:next && yarn package:esm"
+    "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "externals": {
     "vue": true,
@@ -45,7 +43,6 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core-vuex": "^0.1.2",
     "@elux/route-browser": "^0.1.2",
     "@vue/server-renderer": "^3.0.0",
     "stream": "^0.0.2"

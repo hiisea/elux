@@ -24,14 +24,18 @@
     "packages/route",
     "packages/route-browser",
     "packages/route-mp",
-    "packages/react-web-redux",
+    "packages/react-redux",
     "packages/react-web",
-    "packages/vue-web"
+    "packages/react-redux-web",
+    "packages/vue-web",
+    "packages/vue-vuex",
+    "packages/vue-vuex-web",
+    "packages/react-taro"
   ],
   "scripts": {
     "commit": "git-cz",
     "pnpm": "verdaccio",
-    "eslint": "cross-env NODE_ENV=production eslint --cache **/*.{js,jsx,ts,tsx,vue}",
+    "eslint": "cross-env NODE_ENV=production eslint --cache **/*.{js,jsx,ts,tsx,vue} --ignore-pattern **/*.d.ts",
     "stylelint": "cross-env NODE_ENV=production stylelint --cache **/*.{css,less,vue}",
     "jsonlint": "prettier --write **/*.json",
     "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
@@ -51,8 +55,8 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,vue}": "cross-env NODE_ENV=production eslint --fix --quiet --cache",
-    "*.{css,less,vue}": "cross-env NODE_ENV=production stylelint --fix --quiet --cache",
+    "*.{js,jsx,ts,tsx,vue}": "cross-env NODE_ENV=production eslint  --ignore-pattern **/*.d.ts --fix --quiet --cache",
+    "*.{css,less,vue}": "cross-env NODE_ENV=production stylelint  --ignore-pattern **/*.d.ts --fix --quiet --cache",
     "*.json": "prettier --write"
   },
   "resolutions": {
@@ -61,13 +65,11 @@
     "@types/express": "~4.17.9",
     "@types/react": "~17.0.0",
     "@types/react-dom": "~17.0.0",
-    "@types/react-redux": "~7.1.16",
     "@babel/runtime": "~7.12.0",
     "@elux/dev-pkg": "~0.1.2",
     "typescript": "~4.2.0",
     "express": "^4.0.0",
     "react": "~17.0.1",
-    "react-redux": "^7.2.2",
     "vue": "~3.0.0",
     "jest": "~26.6.3"
   },

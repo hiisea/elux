@@ -25,7 +25,7 @@ var _sprite = require("./sprite");
 
 var _basic = require("./basic");
 
-var _env = require("./env");
+var _env = _interopRequireDefault(require("./env"));
 
 function getModuleGetter() {
   return _basic.MetaData.moduleGetter;
@@ -36,7 +36,7 @@ function exportModule(moduleName, ModuleHandles, params, components) {
     var component = components[key];
 
     if (!(0, _basic.isEluxComponent)(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
-      _env.env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
+      _env.default.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
     }
   });
 
@@ -183,7 +183,7 @@ function loadComponet(moduleName, componentName, store, deps) {
 
   var callback = function callback(component) {
     if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
-      if (_env.env.isServer) {
+      if (_env.default.isServer) {
         return null;
       }
 
@@ -196,7 +196,7 @@ function loadComponet(moduleName, componentName, store, deps) {
   };
 
   if ((0, _sprite.isPromise)(promiseOrComponent)) {
-    if (_env.env.isServer) {
+    if (_env.default.isServer) {
       return null;
     }
 

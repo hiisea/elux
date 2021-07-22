@@ -6,18 +6,19 @@
     "packages/route",
     "packages/route-browser",
     "packages/route-mp",
-    "packages/react-web-redux",
+    "packages/react-redux",
     "packages/react-web",
-    "packages/vue-web"
+    "packages/react-redux-web",
+    "packages/vue-web",
+    "packages/vue-vuex",
+    "packages/vue-vuex-web",
+    "packages/react-taro"
   ],
   "command": {
     "publish": {
       "message": "chore(release): publish %s",
       "npmClient": "npm",
-      "ignoreChanges": [
-        "**/tests/**",
-        "**/dist/**"
-      ]
+      "ignoreChanges": ["**/tests/**", "**/dist/**"]
     }
   },
   "npmClient": "yarn",

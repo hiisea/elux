@@ -16,7 +16,7 @@ import {
   moduleInitAction,
   moduleReInitAction,
 } from './basic';
-import {env} from './env';
+import env from './env';
 
 type Handler<F> = F extends (...args: infer P) => any
   ? (

@@ -1,4 +1,3 @@
-/// <reference path="../env/global.d.ts" />
 import {Plugin, MutationPayload, SubscribeOptions, Mutation, Store} from 'vuex';
 import {WatchOptions} from 'vue';
 import {mergeState} from '@elux/core';

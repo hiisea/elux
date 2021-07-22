@@ -1,8 +1,13 @@
 module.exports = {
-  extends: require.resolve('./common'),
-  parser: 'vue-eslint-parser',
-  parserOptions: {
-    extraFileExtensions: ['.vue'],
-    parser: '@typescript-eslint/parser',
-  },
+  extends: ['plugin:vue/vue3-recommended', require.resolve('./common')],
+  overrides: [
+    {
+      files: ['*.vue'],
+      parser: require.resolve('vue-eslint-parser'),
+      parserOptions: {
+        extraFileExtensions: ['.vue'],
+        parser: '@typescript-eslint/parser',
+      },
+    },
+  ],
 };

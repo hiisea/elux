@@ -1,5 +1,5 @@
 import React, {useContext, useEffect} from 'react';
-import {env, isServer} from '@elux/core';
+import env from '../env';
 import {EluxContext, EluxContextType} from '../sington';
 
 interface Props {
@@ -21,7 +21,6 @@ function setClientHead(eluxContext: EluxContextType, documentHead: string) {
     }, 0);
   }
 }
-
 const Component: React.FC<Props> = ({title = '', html = ''}) => {
   if (!html) {
     html = `<title>${title}</title>`;
@@ -30,7 +29,7 @@ const Component: React.FC<Props> = ({title = '', html = ''}) => {
     html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
   }
   const eluxContext = useContext(EluxContext);
-  if (isServer()) {
+  if (env.isServer) {
     eluxContext.documentHead = html;
   }
   useEffect(() => {
