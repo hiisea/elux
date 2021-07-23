@@ -1452,7 +1452,7 @@ var Subscription = /*#__PURE__*/function () {
 
 var useIsomorphicLayoutEffect = typeof window !== 'undefined' && typeof window.document !== 'undefined' && typeof window.document.createElement !== 'undefined' ? useLayoutEffect : useEffect;
 
-function Provider(_ref) {
+function Provider$1(_ref) {
   var store = _ref.store,
       context = _ref.context,
       children = _ref.children;
@@ -1487,7 +1487,7 @@ function Provider(_ref) {
 }
 
 if (process.env.NODE_ENV !== 'production') {
-  Provider.propTypes = {
+  Provider$1.propTypes = {
     store: propTypes.shape({
       subscribe: propTypes.func.isRequired,
       dispatch: propTypes.func.isRequired,
@@ -2604,6 +2604,22 @@ if (typeof self !== 'undefined') {
 
 const env = root;
 env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+
+env.encodeBas64 = function (str) {
+  if (!str) {
+    return '';
+  }
+
+  return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
+};
+
+env.decodeBas64 = function (str) {
+  if (!str) {
+    return '';
+  }
+
+  return typeof atob === 'function' ? atob(str) : typeof Buffer !== 'undefined' ? Buffer.from(str, 'base64').toString() : str;
+};
 
 function _defineProperty(obj, key, value) {
   if (key in obj) {
@@ -4684,21 +4700,276 @@ const connectRedux = function (...args) {
   };
 };
 
-env.encodeBas64 = function (str) {
-  if (!str) {
-    return '';
+const EluxContextComponent = React.createContext({
+  documentHead: ''
+});
+
+let clientTimer = 0;
+
+function setClientHead(eluxContext, documentHead) {
+  eluxContext.documentHead = documentHead;
+
+  if (!clientTimer) {
+    clientTimer = env.setTimeout(() => {
+      clientTimer = 0;
+      const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
+
+      if (arr[1]) {
+        env.document.title = arr[1];
+      }
+    }, 0);
+  }
+}
+
+const Component$2 = ({
+  title = '',
+  html = ''
+}) => {
+  if (!html) {
+    html = `<title>${title}</title>`;
   }
 
-  return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
-};
-
-env.decodeBas64 = function (str) {
-  if (!str) {
-    return '';
+  if (title) {
+    html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
   }
 
-  return typeof atob === 'function' ? atob(str) : typeof Buffer !== 'undefined' ? Buffer.from(str, 'base64').toString() : str;
+  const eluxContext = useContext(EluxContextComponent);
+
+  if (env.isServer) {
+    eluxContext.documentHead = html;
+  }
+
+  useEffect(() => {
+    const raw = eluxContext.documentHead;
+    setClientHead(eluxContext, html);
+    return () => setClientHead(eluxContext, raw);
+  }, [eluxContext, html]);
+  return null;
 };
+
+var DocumentHead = React.memo(Component$2);
+
+const Component$1 = ({
+  children,
+  elseView
+}) => {
+  const arr = [];
+  React.Children.forEach(children, item => {
+    item && arr.push(item);
+  });
+
+  if (arr.length > 0) {
+    return React.createElement(React.Fragment, null, arr);
+  }
+
+  return React.createElement(React.Fragment, null, elseView);
+};
+
+var Else = React.memo(Component$1);
+
+const Component = ({
+  children,
+  elseView
+}) => {
+  const arr = [];
+  React.Children.forEach(children, item => {
+    item && arr.push(item);
+  });
+
+  if (arr.length > 0) {
+    return React.createElement(React.Fragment, null, arr[0]);
+  }
+
+  return React.createElement(React.Fragment, null, elseView);
+};
+
+var Switch = React.memo(Component);
+
+function isModifiedEvent(event) {
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+}
+
+var Link = React.forwardRef(({
+  onClick,
+  replace,
+  ...rest
+}, ref) => {
+  const eluxContext = useContext(EluxContextComponent);
+  const {
+    target
+  } = rest;
+  const props = { ...rest,
+    onClick: event => {
+      try {
+        onClick && onClick(event);
+      } catch (ex) {
+        event.preventDefault();
+        throw ex;
+      }
+
+      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
+        event.preventDefault();
+        replace ? eluxContext.router.replace(rest.href) : eluxContext.router.push(rest.href);
+      }
+    }
+  };
+  return React.createElement("a", _extends({}, props, {
+    ref: ref
+  }));
+});
+
+const loadComponentDefaultOptions = {
+  LoadComponentOnError: ({
+    message
+  }) => React.createElement("div", {
+    className: "g-component-error"
+  }, message),
+  LoadComponentOnLoading: () => React.createElement("div", {
+    className: "g-component-loading"
+  }, "loading...")
+};
+function setLoadComponentOptions({
+  LoadComponentOnError,
+  LoadComponentOnLoading
+}) {
+  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
+  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
+}
+const loadComponent = (moduleName, componentName, options = {}) => {
+  const OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
+  const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
+
+  class Loader extends Component$3 {
+    constructor(props, context) {
+      super(props);
+
+      _defineProperty(this, "active", true);
+
+      _defineProperty(this, "loading", false);
+
+      _defineProperty(this, "error", '');
+
+      _defineProperty(this, "view", void 0);
+
+      _defineProperty(this, "state", {
+        ver: 0
+      });
+
+      this.context = context;
+      this.execute();
+    }
+
+    componentWillUnmount() {
+      this.active = false;
+    }
+
+    shouldComponentUpdate() {
+      this.execute();
+      return true;
+    }
+
+    componentDidMount() {
+      this.error = '';
+    }
+
+    execute() {
+      if (!this.view && !this.loading && !this.error) {
+        const {
+          deps,
+          store
+        } = this.context || {};
+        this.loading = true;
+        let result;
+
+        try {
+          result = loadComponet(moduleName, componentName, store, deps || {});
+        } catch (e) {
+          this.loading = false;
+          this.error = e.message || `${e}`;
+        }
+
+        if (result) {
+          if (isPromise(result)) {
+            result.then(view => {
+              if (view) {
+                this.loading = false;
+                this.view = view;
+                this.active && this.setState({
+                  ver: this.state.ver + 1
+                });
+              }
+            }, e => {
+              env.console.error(e);
+              this.loading = false;
+              this.error = e.message || `${e}` || 'error';
+              this.active && this.setState({
+                ver: this.state.ver + 1
+              });
+            });
+          } else {
+            this.loading = false;
+            this.view = result;
+          }
+        }
+      }
+    }
+
+    render() {
+      const {
+        forwardedRef,
+        ...rest
+      } = this.props;
+
+      if (this.view) {
+        const View = this.view;
+        return React.createElement(View, _extends({
+          ref: forwardedRef
+        }, rest));
+      }
+
+      if (this.loading) {
+        const Loading = OnLoading;
+        return React.createElement(Loading, null);
+      }
+
+      return React.createElement(OnError, {
+        message: this.error
+      });
+    }
+
+  }
+
+  _defineProperty(Loader, "contextType", EluxContextComponent);
+
+  return React.forwardRef((props, ref) => {
+    return React.createElement(Loader, _extends({}, props, {
+      forwardedRef: ref
+    }));
+  });
+};
+
+let Provider;
+function setRootViewOptions(options) {
+  options.Provider !== undefined && (Provider = options.Provider);
+}
+function renderToDocument(id, APP, store, eluxContext, fromSSR) {
+  const renderFun = fromSSR ? hydrate : render;
+  const panel = env.document.getElementById(id);
+  renderFun(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Provider, {
+    store: store
+  }, React.createElement(APP, null))), panel);
+}
+function renderToString(id, APP, store, eluxContext) {
+  const html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Provider, {
+    store: store
+  }, React.createElement(APP, null))));
+
+  return html;
+}
 
 const routeConfig = {
   actionMaxHistory: 10,
@@ -6042,6 +6313,152 @@ class BaseRouter {
 
 }
 
+const MetaData = {
+  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
+};
+function setBaseMeta({
+  loadComponent,
+  MutableData,
+  router
+}) {
+  loadComponent !== undefined && (MetaData.loadComponent = loadComponent);
+  MutableData !== undefined && setConfig$1({
+    MutableData
+  });
+  router !== undefined && (MetaData.router = router);
+}
+function setBaseConfig(conf) {
+  setConfig$1(conf);
+  setRouteConfig(conf);
+}
+const EluxContextKey = '__EluxContext__';
+function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = [], appModuleName) {
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route');
+  return {
+    useStore({
+      storeOptions,
+      storeCreator
+    }) {
+      return Object.assign(ins, {
+        render({
+          id = 'root',
+          ssrKey = 'eluxInitStore',
+          viewName
+        } = {}) {
+          const router = createRouter(routeModule.locationTransform);
+          MetaData.router = router;
+          const {
+            state,
+            components = []
+          } = env[ssrKey] || {};
+          return router.initedPromise.then(routeState => {
+            const initState = { ...storeOptions.initState,
+              route: routeState,
+              ...state
+            };
+            const baseStore = storeCreator({ ...storeOptions,
+              initState
+            });
+            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({
+              store,
+              AppView
+            }) => {
+              routeModule.model(store);
+              router.setStore(store);
+              render(id, AppView, store, {
+                deps: {},
+                store,
+                router,
+                documentHead: ''
+              }, !!env[ssrKey]);
+              return store;
+            });
+          });
+        }
+
+      });
+    }
+
+  };
+}
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = [], appModuleName) {
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route');
+  return {
+    useStore({
+      storeOptions,
+      storeCreator
+    }) {
+      return Object.assign(ins, {
+        render({
+          id = 'root',
+          ssrKey = 'eluxInitStore',
+          viewName
+        } = {}) {
+          const router = createRouter(routeModule.locationTransform);
+          MetaData.router = router;
+          return router.initedPromise.then(routeState => {
+            const initState = { ...storeOptions.initState,
+              route: routeState
+            };
+            const baseStore = storeCreator({ ...storeOptions,
+              initState
+            });
+            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({
+              store,
+              AppView
+            }) => {
+              const state = store.getState();
+              const eluxContext = {
+                deps: {},
+                store,
+                router,
+                documentHead: ''
+              };
+              const html = render(id, AppView, store, eluxContext);
+              const match = MetaData.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+
+              if (match) {
+                return MetaData.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                  state,
+                  components: Object.keys(eluxContext.deps)
+                })};</script>\r\n</head>`).replace(match[0], match[0] + html);
+              }
+
+              return html;
+            });
+          });
+        }
+
+      });
+    }
+
+  };
+}
+function patchActions(typeName, json) {
+  if (json) {
+    getRootModuleAPI(JSON.parse(json));
+  }
+}
+function getApp() {
+  const modules = getRootModuleAPI();
+  return {
+    GetActions: (...args) => {
+      return args.reduce((prev, moduleName) => {
+        prev[moduleName] = modules[moduleName].actions;
+        return prev;
+      }, {});
+    },
+    GetRouter: () => MetaData.router,
+    LoadComponent: MetaData.loadComponent,
+    Modules: modules,
+    Pagenames: routeConfig.pagenames
+  };
+}
+
 function isAbsolute(pathname) {
   return pathname.charAt(0) === '/';
 } // About 1.5x faster than the two-arg version of Array#splice()
@@ -7242,420 +7659,19 @@ function createRouter(createHistory, locationTransform) {
   return router;
 }
 
-const MetaData = {
-  router: undefined
-};
-const EluxContext = React.createContext({
-  documentHead: ''
-});
-
-const loadComponentDefaultOptions = {
-  LoadComponentOnError: ({
-    message
-  }) => React.createElement("div", {
-    className: "g-component-error"
-  }, message),
-  LoadComponentOnLoading: () => React.createElement("div", {
-    className: "g-component-loading"
-  }, "loading...")
-};
-function setLoadComponentOptions({
-  LoadComponentOnError,
-  LoadComponentOnLoading
-}) {
-  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
-  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
-}
-const loadComponent = (moduleName, componentName, options = {}) => {
-  const OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
-  const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
-
-  class Loader extends Component$3 {
-    constructor(props, context) {
-      super(props);
-
-      _defineProperty(this, "active", true);
-
-      _defineProperty(this, "loading", false);
-
-      _defineProperty(this, "error", '');
-
-      _defineProperty(this, "view", void 0);
-
-      _defineProperty(this, "state", {
-        ver: 0
-      });
-
-      this.context = context;
-      this.execute();
-    }
-
-    componentWillUnmount() {
-      this.active = false;
-    }
-
-    shouldComponentUpdate() {
-      this.execute();
-      return true;
-    }
-
-    componentDidMount() {
-      this.error = '';
-    }
-
-    execute() {
-      if (!this.view && !this.loading && !this.error) {
-        const {
-          deps,
-          store
-        } = this.context || {};
-        this.loading = true;
-        let result;
-
-        try {
-          result = loadComponet(moduleName, componentName, store, deps || {});
-        } catch (e) {
-          this.loading = false;
-          this.error = e.message || `${e}`;
-        }
-
-        if (result) {
-          if (isPromise(result)) {
-            result.then(view => {
-              if (view) {
-                this.loading = false;
-                this.view = view;
-                this.active && this.setState({
-                  ver: this.state.ver + 1
-                });
-              }
-            }, e => {
-              env.console.error(e);
-              this.loading = false;
-              this.error = e.message || `${e}` || 'error';
-              this.active && this.setState({
-                ver: this.state.ver + 1
-              });
-            });
-          } else {
-            this.loading = false;
-            this.view = result;
-          }
-        }
-      }
-    }
-
-    render() {
-      const {
-        forwardedRef,
-        ...rest
-      } = this.props;
-
-      if (this.view) {
-        const View = this.view;
-        return React.createElement(View, _extends({
-          ref: forwardedRef
-        }, rest));
-      }
-
-      if (this.loading) {
-        const Loading = OnLoading;
-        return React.createElement(Loading, null);
-      }
-
-      return React.createElement(OnError, {
-        message: this.error
-      });
-    }
-
-  }
-
-  _defineProperty(Loader, "contextType", EluxContext);
-
-  return React.forwardRef((props, ref) => {
-    return React.createElement(Loader, _extends({}, props, {
-      forwardedRef: ref
-    }));
-  });
-};
-
-let clientTimer = 0;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(() => {
-      clientTimer = 0;
-      const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        env.document.title = arr[1];
-      }
-    }, 0);
-  }
-}
-
-const Component$2 = ({
-  title = '',
-  html = ''
-}) => {
-  if (!html) {
-    html = `<title>${title}</title>`;
-  }
-
-  if (title) {
-    html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-  }
-
-  const eluxContext = useContext(EluxContext);
-
-  if (env.isServer) {
-    eluxContext.documentHead = html;
-  }
-
-  useEffect(() => {
-    const raw = eluxContext.documentHead;
-    setClientHead(eluxContext, html);
-    return () => setClientHead(eluxContext, raw);
-  }, [eluxContext, html]);
-  return null;
-};
-
-var DocumentHead = React.memo(Component$2);
-
-const Component$1 = ({
-  children,
-  elseView
-}) => {
-  const arr = [];
-  React.Children.forEach(children, item => {
-    item && arr.push(item);
-  });
-
-  if (arr.length > 0) {
-    return React.createElement(React.Fragment, null, arr);
-  }
-
-  return React.createElement(React.Fragment, null, elseView);
-};
-
-var Else = React.memo(Component$1);
-
-const Component = ({
-  children,
-  elseView
-}) => {
-  const arr = [];
-  React.Children.forEach(children, item => {
-    item && arr.push(item);
-  });
-
-  if (arr.length > 0) {
-    return React.createElement(React.Fragment, null, arr[0]);
-  }
-
-  return React.createElement(React.Fragment, null, elseView);
-};
-
-var Switch = React.memo(Component);
-
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
-var Link = React.forwardRef(({
-  onClick,
-  replace,
-  ...rest
-}, ref) => {
-  const {
-    target
-  } = rest;
-  const props = { ...rest,
-    onClick: event => {
-      try {
-        onClick && onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
-      }
-
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-        event.preventDefault();
-        replace ? MetaData.router.replace(rest.href) : MetaData.router.push(rest.href);
-      }
-    }
-  };
-  return React.createElement("a", _extends({}, props, {
-    ref: ref
-  }));
-});
-
-let SSRTPL;
-function setSsrHtmlTpl(tpl) {
-  if (tpl) {
-    SSRTPL = tpl;
-  }
-}
-let rootViewBuilder;
 function setConfig(conf) {
-  setConfig$1(conf);
-  setRouteConfig(conf);
   setLoadComponentOptions(conf);
-  rootViewBuilder = conf.appViewBuilder;
+  setBaseConfig(conf);
 }
-function createApp(moduleGetter, middlewares = [], appModuleName) {
-  defineModuleGetter(moduleGetter, appModuleName);
-  const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const routeModule = getModule('route');
-  return {
-    useStore({
-      storeOptions,
-      storeCreator
-    }) {
-      return {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName
-        } = {}) {
-          const router = createRouter('Browser', routeModule.locationTransform);
-          MetaData.router = router;
-          const renderFun = env[ssrKey] ? hydrate : render;
-          const {
-            state,
-            components = []
-          } = env[ssrKey] || {};
-          const panel = env.document.getElementById(id);
-          return router.initedPromise.then(routeState => {
-            const initState = { ...storeOptions.initState,
-              route: routeState,
-              ...state
-            };
-            const baseStore = storeCreator({ ...storeOptions,
-              initState
-            });
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({
-              store,
-              AppView
-            }) => {
-              routeModule.model(store);
-              router.setStore(store);
-              const eluxContext = {
-                store,
-                documentHead: ''
-              };
-              const rootView = rootViewBuilder(AppView, store);
-              renderFun(React.createElement(EluxContext.Provider, {
-                value: eluxContext
-              }, rootView), panel);
-              return store;
-            });
-          });
-        }
-
-      };
-    }
-
-  };
-}
-function createSsrApp(moduleGetter, middlewares = [], appModuleName) {
-  setSsrHtmlTpl('');
-  defineModuleGetter(moduleGetter, appModuleName);
-  const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const routeModule = getModule('route');
-  return {
-    useStore({
-      storeOptions,
-      storeCreator
-    }) {
-      return {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          url = '/',
-          viewName
-        } = {}) {
-          if (!SSRTPL) {
-            SSRTPL = env.decodeBas64('process.env.ELUX_ENV_SSRTPL');
-          }
-
-          const router = createRouter(url, routeModule.locationTransform);
-          MetaData.router = router;
-          return router.initedPromise.then(routeState => {
-            const initState = { ...storeOptions.initState,
-              route: routeState
-            };
-            const baseStore = storeCreator({ ...storeOptions,
-              initState
-            });
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({
-              store,
-              AppView
-            }) => {
-              const RootView = AppView;
-              const state = store.getState();
-              const eluxContext = {
-                deps: {},
-                store,
-                documentHead: ''
-              };
-
-              const html = require('react-dom/server').renderToString(React.createElement(EluxContext.Provider, {
-                value: eluxContext
-              }, React.createElement(RootView, {
-                store: store
-              })));
-
-              const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-
-              if (match) {
-                return SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                  state,
-                  components: Object.keys(eluxContext.deps)
-                })};</script>\r\n</head>`).replace(match[0], match[0] + html);
-              }
-
-              return html;
-            });
-          });
-        }
-
-      };
-    }
-
-  };
-}
-function patchActions(typeName, json) {
-  if (json) {
-    getRootModuleAPI(JSON.parse(json));
-  }
-}
-function getApp() {
-  const modules = getRootModuleAPI();
-  return {
-    GetActions: (...args) => {
-      return args.reduce((prev, moduleName) => {
-        prev[moduleName] = modules[moduleName].actions;
-        return prev;
-      }, {});
-    },
-    GetRouter: () => MetaData.router,
-    LoadComponent: loadComponent,
-    Modules: modules,
-    Pagenames: routeConfig.pagenames
-  };
-}
-
-const appViewBuilder = (View, store) => {
-  return React.createElement(Provider, {
-    store: store
-  }, React.createElement(View, null));
+const createApp = (moduleGetter, middlewares, appModuleName) => {
+  return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares, appModuleName);
+};
+const createSSR = (moduleGetter, url, middlewares, appModuleName) => {
+  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares, appModuleName);
 };
 
-setConfig({
-  appViewBuilder
+setRootViewOptions({
+  Provider: Provider$1
 });
 
-export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, clientSide, connectAdvanced, connectRedux, createApp, createRedux, createRouteModule, createSelectorHook, createSsrApp, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, logger, patchActions, reducer, serverSide, setConfig, setLoading, setProcessedError, setSsrHtmlTpl, shallowEqual, useSelector };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EluxContextKey, EmptyModuleHandlers, Link, LoadingState, Provider$1 as Provider, RouteActionTypes, Switch, clientSide, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, patchActions, reducer, renderToDocument, renderToString, serverSide, setBaseConfig, setBaseMeta, setConfig, setLoadComponentOptions, setLoading, setProcessedError, setRootViewOptions, shallowEqual, useSelector };

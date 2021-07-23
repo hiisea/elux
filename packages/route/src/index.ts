@@ -388,8 +388,9 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 }
 
 export interface IBaseRouter<P extends RootParams, N extends string> {
+  initedPromise: Promise<RouteState<P>>;
   history: History;
-  nativeRouter: BaseNativeRouter;
+  nativeRouter: any;
   addListener(callback: (data: RouteState<P>) => void | Promise<void>): void;
   getRouteState(): RouteState<P>;
   getPagename(): string;

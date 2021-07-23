@@ -1,11 +1,13 @@
 {
   "packages": [
+    "packages/app",
     "packages/core",
     "packages/core-redux",
     "packages/core-vuex",
     "packages/route",
     "packages/route-browser",
     "packages/route-mp",
+    "packages/react-components",
     "packages/react-redux",
     "packages/react-web",
     "packages/react-redux-web",
@@ -18,10 +20,7 @@
     "publish": {
       "message": "chore(release): publish %s",
       "npmClient": "npm",
-      "ignoreChanges": [
-        "**/tests/**",
-        "**/dist/**"
-      ]
+      "ignoreChanges": ["**/tests/**", "**/dist/**"]
     }
   },
   "npmClient": "yarn",

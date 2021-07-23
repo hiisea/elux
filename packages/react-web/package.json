@@ -20,11 +20,6 @@
     "types/",
     "dist/"
   ],
-  "sideEffects": [
-    "dist/esm/index.js",
-    "dist/next/index.js",
-    "dist/cjs/index.js"
-  ],
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx} --ignore-pattern **/*.d.ts",
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
@@ -40,7 +35,8 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.3",
+    "@elux/app": "^0.1.3",
+    "@elux/react-components": "^0.1.3",
     "@elux/route-browser": "^0.1.3"
   },
   "devDependencies": {

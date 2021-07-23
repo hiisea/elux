@@ -1,73 +1,12 @@
-import { ComponentType, ReactElement } from 'react';
-import { IStore, ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
-import { IRouter } from '@elux/route-browser';
-import { LoadComponent } from './loadComponent';
-export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent } from '@elux/core';
-export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
-export type { LoadComponent } from './loadComponent';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, } from '@elux/core';
-export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
-export { default as DocumentHead } from './components/DocumentHead';
-export { default as Else } from './components/Else';
-export { default as Switch } from './components/Switch';
-export { default as Link } from './components/Link';
-export declare function setSsrHtmlTpl(tpl: string): void;
-export declare function setConfig(conf: {
-    actionMaxHistory?: number;
-    pagesMaxHistory?: number;
-    pagenames?: Record<string, string>;
-    NSP?: string;
-    MSP?: string;
-    MutableData?: boolean;
-    DepthTimeOnLoading?: number;
+import { ComponentType } from 'react';
+import { CreateApp, CreateSSR, BaseConfig } from '@elux/app';
+export * from '@elux/react-components';
+export * from '@elux/app';
+export declare function setConfig(conf: BaseConfig & {
     LoadComponentOnError?: ComponentType<{
         message: string;
     }>;
     LoadComponentOnLoading?: ComponentType<{}>;
-    disableNativeRoute?: boolean;
-    appViewBuilder: (view: ComponentType<any>, store: IStore) => ReactElement;
 }): void;
-export interface RenderOptions {
-    viewName?: string;
-    id?: string;
-    ssrKey?: string;
-    url?: string;
-}
-export declare function createApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        render({ id, ssrKey, viewName }?: RenderOptions): Promise<IStore<any> & B>;
-    };
-};
-export declare function createSsrApp(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator }: StoreBuilder<O, B>): {
-        render({ id, ssrKey, url, viewName }?: RenderOptions): Promise<string>;
-    };
-};
-export declare function patchActions(typeName: string, json?: string): void;
-export declare type GetAPP<A extends RootModuleFacade> = {
-    State: {
-        [M in keyof A]: A[M]['state'];
-    };
-    RouteParams: {
-        [M in keyof A]?: A[M]['params'];
-    };
-    GetRouter: () => IRouter<{
-        [M in keyof A]: A[M]['params'];
-    }, Extract<keyof A['route']['components'], string>>;
-    GetActions<N extends keyof A>(...args: N[]): {
-        [K in N]: A[K]['actions'];
-    };
-    LoadComponent: LoadComponent<A>;
-    Modules: RootModuleAPI<A>;
-    Actions: RootModuleActions<A>;
-    Pagenames: {
-        [K in keyof A['route']['components']]: K;
-    };
-};
-export declare function getApp<T extends {
-    GetActions: any;
-    GetRouter: any;
-    LoadComponent: any;
-    Modules: any;
-    Pagenames: any;
-}>(): Pick<T, 'GetActions' | 'GetRouter' | 'LoadComponent' | 'Modules' | 'Pagenames'>;
+export declare const createApp: CreateApp;
+export declare const createSSR: CreateSSR;

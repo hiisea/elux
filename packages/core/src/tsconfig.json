@@ -3,7 +3,7 @@
   "compilerOptions": {
     "rootDir": "./",
     "declarationDir": "../types",
-    "lib": ["ES2020", "DOM"]
+    "types": ["../global/global"]
   },
   "include": ["./"],
   "exclude": []

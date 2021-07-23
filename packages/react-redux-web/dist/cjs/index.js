@@ -1,10 +1,6 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
 exports.__esModule = true;
-
-var _react = _interopRequireDefault(require("react"));
 
 var _reactRedux = require("@elux/react-redux");
 
@@ -21,13 +17,6 @@ Object.keys(_reactWeb).forEach(function (key) {
   if (key in exports && exports[key] === _reactWeb[key]) return;
   exports[key] = _reactWeb[key];
 });
-
-var appViewBuilder = function appViewBuilder(View, store) {
-  return _react.default.createElement(_reactRedux.Provider, {
-    store: store
-  }, _react.default.createElement(View, null));
-};
-
-(0, _reactWeb.setConfig)({
-  appViewBuilder: appViewBuilder
+(0, _reactWeb.setRootViewOptions)({
+  Provider: _reactRedux.Provider
 });

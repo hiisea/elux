@@ -4,5 +4,7 @@ declare namespace EluxRuntime {
     clearTimeout: typeof clearTimeout;
     console: typeof console;
     isServer: boolean;
+    encodeBas64(str: string): string;
+    decodeBas64(str: string): string;
   }
 }

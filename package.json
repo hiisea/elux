@@ -18,12 +18,14 @@
     "node": ">=14.0.0"
   },
   "workspaces": [
+    "packages/app",
     "packages/core",
     "packages/core-redux",
     "packages/core-vuex",
     "packages/route",
     "packages/route-browser",
     "packages/route-mp",
+    "packages/react-components",
     "packages/react-redux",
     "packages/react-web",
     "packages/react-redux-web",
