@@ -1,5 +1,5 @@
 import _decorate from "@babel/runtime/helpers/esm/decorate";
-import { CoreModuleHandlers, config, reducer, deepMerge, mergeState, deepMergeState, exportModule } from '@elux/core';
+import { CoreModuleHandlers, coreConfig, reducer, deepMerge, mergeState, deepMergeState, exportModule } from '@elux/core';
 import { createLocationTransform } from './transform';
 export let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModuleHandlers) {
   class ModuleWithRouteHandlers extends _CoreModuleHandlers {
@@ -33,8 +33,8 @@ export let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _Cor
 }, CoreModuleHandlers);
 export const RouteActionTypes = {
   MRouteParams: 'RouteParams',
-  RouteChange: `route${config.NSP}RouteChange`,
-  TestRouteChange: `route${config.NSP}TestRouteChange`
+  RouteChange: `route${coreConfig.NSP}RouteChange`,
+  TestRouteChange: `route${coreConfig.NSP}TestRouteChange`
 };
 export function testRouteChangeAction(routeState) {
   return {
@@ -44,7 +44,7 @@ export function testRouteChangeAction(routeState) {
 }
 export function routeParamsAction(moduleName, params, action) {
   return {
-    type: `${moduleName}${config.NSP}${RouteActionTypes.MRouteParams}`,
+    type: `${moduleName}${coreConfig.NSP}${RouteActionTypes.MRouteParams}`,
     payload: [params, action]
   };
 }

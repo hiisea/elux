@@ -1,22 +1,24 @@
 import env from './env';
 import { TaskCounter, deepMerge, warn } from './sprite';
-export var config = {
+export var coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2
 };
-export function setConfig(_config) {
-  _config.NSP !== undefined && (config.NSP = _config.NSP);
-  _config.MSP !== undefined && (config.MSP = _config.MSP);
-  _config.MutableData !== undefined && (config.MutableData = _config.MutableData);
-  _config.DepthTimeOnLoading !== undefined && (config.DepthTimeOnLoading = _config.DepthTimeOnLoading);
+export function buildConfigSetter(data) {
+  return function (config) {
+    return Object.keys(data).forEach(function (key) {
+      config[key] !== undefined && (data[key] = config[key]);
+    });
+  };
 }
+export var setCoreConfig = buildConfigSetter(coreConfig);
 export var ActionTypes = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
-  Error: "Elux" + config.NSP + "Error"
+  Error: "Elux" + coreConfig.NSP + "Error"
 };
 export function errorAction(error) {
   return {
@@ -26,19 +28,19 @@ export function errorAction(error) {
 }
 export function moduleInitAction(moduleName, initState) {
   return {
-    type: "" + moduleName + config.NSP + ActionTypes.MInit,
+    type: "" + moduleName + coreConfig.NSP + ActionTypes.MInit,
     payload: [initState]
   };
 }
 export function moduleReInitAction(moduleName, initState) {
   return {
-    type: "" + moduleName + config.NSP + ActionTypes.MReInit,
+    type: "" + moduleName + coreConfig.NSP + ActionTypes.MReInit,
     payload: [initState]
   };
 }
 export function moduleLoadingAction(moduleName, loadingState) {
   return {
-    type: "" + moduleName + config.NSP + ActionTypes.MLoading,
+    type: "" + moduleName + coreConfig.NSP + ActionTypes.MLoading,
     payload: [loadingState]
   };
 }
@@ -84,14 +86,14 @@ export function injectActions(moduleName, handlers) {
         var handler = handlers[actionNames];
 
         if (handler.__isReducer__ || handler.__isEffect__) {
-          actionNames.split(config.MSP).forEach(function (actionName) {
-            actionName = actionName.trim().replace(new RegExp("^this[" + config.NSP + "]"), "" + moduleName + config.NSP);
-            var arr = actionName.split(config.NSP);
+          actionNames.split(coreConfig.MSP).forEach(function (actionName) {
+            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
+            var arr = actionName.split(coreConfig.NSP);
 
             if (arr[1]) {
               transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
             } else {
-              transformAction(moduleName + config.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
+              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
             }
           });
         }
@@ -101,10 +103,10 @@ export function injectActions(moduleName, handlers) {
 }
 var loadings = {};
 export function setLoading(store, item, moduleName, groupName) {
-  var key = moduleName + config.NSP + groupName;
+  var key = moduleName + coreConfig.NSP + groupName;
 
   if (!loadings[key]) {
-    loadings[key] = new TaskCounter(config.DepthTimeOnLoading);
+    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
     loadings[key].addListener(function (loadingState) {
       var _moduleLoadingAction;
 
@@ -202,7 +204,7 @@ export function deepMergeState(target) {
     args[_key - 1] = arguments[_key];
   }
 
-  if (config.MutableData) {
+  if (coreConfig.MutableData) {
     return deepMerge.apply(void 0, [target].concat(args));
   }
 
@@ -217,7 +219,7 @@ export function mergeState(target) {
     args[_key2 - 1] = arguments[_key2];
   }
 
-  if (config.MutableData) {
+  if (coreConfig.MutableData) {
     return Object.assign.apply(Object, [target].concat(args));
   }
 

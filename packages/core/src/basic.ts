@@ -1,7 +1,7 @@
 import env from './env';
 import {LoadingState, TaskCounter, deepMerge, warn} from './sprite';
 
-export const config: {
+export const coreConfig: {
   NSP: string;
   MSP: string;
   MutableData: boolean;
@@ -12,18 +12,13 @@ export const config: {
   MutableData: false,
   DepthTimeOnLoading: 2,
 };
-/**
- * 可供设置的全局参数
- * @param _config 设置参数
- * - NSP 默认为. ModuleName${NSP}ActionName 用于ActionName的连接、ModuleName${NSP}ComponentName 用于ComponentName的连接
- * - MSP 默认为, 用于一个ActionHandler同时监听多个Action的连接
- */
-export function setConfig(_config: {NSP?: string; MSP?: string; SSRKey?: string; MutableData?: boolean; DepthTimeOnLoading?: number}): void {
-  _config.NSP !== undefined && (config.NSP = _config.NSP);
-  _config.MSP !== undefined && (config.MSP = _config.MSP);
-  _config.MutableData !== undefined && (config.MutableData = _config.MutableData);
-  _config.DepthTimeOnLoading !== undefined && (config.DepthTimeOnLoading = _config.DepthTimeOnLoading);
+export function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void {
+  return (config) =>
+    Object.keys(data).forEach((key) => {
+      config[key] !== undefined && ((data as any)[key] = config[key]);
+    });
 }
+export const setCoreConfig = buildConfigSetter(coreConfig);
 
 /**
  *
@@ -125,7 +120,7 @@ export const ActionTypes = {
   /**
    * 全局捕获到错误时使用ActionType：{Error}
    */
-  Error: `Elux${config.NSP}Error`,
+  Error: `Elux${coreConfig.NSP}Error`,
 };
 export function errorAction(error: Object): Action {
   return {
@@ -135,19 +130,19 @@ export function errorAction(error: Object): Action {
 }
 export function moduleInitAction(moduleName: string, initState: any): Action {
   return {
-    type: `${moduleName}${config.NSP}${ActionTypes.MInit}`,
+    type: `${moduleName}${coreConfig.NSP}${ActionTypes.MInit}`,
     payload: [initState],
   };
 }
 export function moduleReInitAction(moduleName: string, initState: any): Action {
   return {
-    type: `${moduleName}${config.NSP}${ActionTypes.MReInit}`,
+    type: `${moduleName}${coreConfig.NSP}${ActionTypes.MReInit}`,
     payload: [initState],
   };
 }
 export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}): Action {
   return {
-    type: `${moduleName}${config.NSP}${ActionTypes.MLoading}`,
+    type: `${moduleName}${coreConfig.NSP}${ActionTypes.MLoading}`,
     payload: [loadingState],
   };
 }
@@ -201,16 +196,16 @@ export function injectActions(moduleName: string, handlers: ActionHandlerList): 
     if (typeof handlers[actionNames] === 'function') {
       const handler = handlers[actionNames];
       if (handler.__isReducer__ || handler.__isEffect__) {
-        actionNames.split(config.MSP).forEach((actionName) => {
-          actionName = actionName.trim().replace(new RegExp(`^this[${config.NSP}]`), `${moduleName}${config.NSP}`);
-          const arr = actionName.split(config.NSP);
+        actionNames.split(coreConfig.MSP).forEach((actionName) => {
+          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+          const arr = actionName.split(coreConfig.NSP);
           if (arr[1]) {
             // handler.__isHandler__ = true;
             transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
           } else {
             // handler.__isHandler__ = false;
             transformAction(
-              moduleName + config.NSP + actionName,
+              moduleName + coreConfig.NSP + actionName,
               handler,
               moduleName,
               handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap
@@ -234,9 +229,9 @@ const loadings: Record<string, TaskCounter> = {};
  * @param groupName moduleName+groupName合起来作为该加载项的key
  */
 export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T {
-  const key = moduleName + config.NSP + groupName;
+  const key = moduleName + coreConfig.NSP + groupName;
   if (!loadings[key]) {
-    loadings[key] = new TaskCounter(config.DepthTimeOnLoading);
+    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
     loadings[key].addListener((loadingState) => {
       const action = moduleLoadingAction(moduleName, {[groupName]: loadingState});
       store.dispatch(action);
@@ -321,21 +316,21 @@ export function logger(
   };
 }
 export function deepMergeState(target: any = {}, ...args: any[]): any {
-  if (config.MutableData) {
+  if (coreConfig.MutableData) {
     return deepMerge(target, ...args);
   }
   return deepMerge({}, target, ...args);
 }
 
 export function mergeState(target: any = {}, ...args: any[]): any {
-  if (config.MutableData) {
+  if (coreConfig.MutableData) {
     return Object.assign(target, ...args);
   }
   return Object.assign({}, target, ...args);
 }
 
 // export function snapshotState(target: any) {
-//   if (config.MutableData) {
+//   if (coreConfig.MutableData) {
 //     return JSON.parse(JSON.stringify(target));
 //   }
 //   return target;

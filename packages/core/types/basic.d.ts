@@ -1,17 +1,17 @@
 import { LoadingState } from './sprite';
-export declare const config: {
+export declare const coreConfig: {
     NSP: string;
     MSP: string;
     MutableData: boolean;
     DepthTimeOnLoading: number;
 };
-export declare function setConfig(_config: {
-    NSP?: string;
-    MSP?: string;
-    SSRKey?: string;
-    MutableData?: boolean;
-    DepthTimeOnLoading?: number;
-}): void;
+export declare function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void;
+export declare const setCoreConfig: (config: Partial<{
+    NSP: string;
+    MSP: string;
+    MutableData: boolean;
+    DepthTimeOnLoading: number;
+}>) => void;
 export interface Action {
     type: string;
     priority?: string[];

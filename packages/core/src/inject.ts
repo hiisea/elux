@@ -10,7 +10,7 @@ import {
   ModuleGetter,
   IStore,
   FacadeMap,
-  config,
+  coreConfig,
   reducer,
   mergeState,
   moduleInitAction,
@@ -143,7 +143,7 @@ export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: 
 }
 
 export function getComponet(moduleName: string, componentName: string): EluxComponent | Promise<EluxComponent> {
-  const key = [moduleName, componentName].join(config.NSP);
+  const key = [moduleName, componentName].join(coreConfig.NSP);
   if (MetaData.componentCaches[key]) {
     return MetaData.componentCaches[key]!;
   }
@@ -183,7 +183,7 @@ export function getComponentList(keys: string[]): Promise<EluxComponent[]> {
       if (MetaData.componentCaches[key]) {
         return MetaData.componentCaches[key]!;
       }
-      const [moduleName, componentName] = key.split(config.NSP);
+      const [moduleName, componentName] = key.split(coreConfig.NSP);
       return getComponet(moduleName, componentName);
     })
   );
@@ -203,7 +203,7 @@ export function loadComponet(
       const module = getModule(moduleName) as CommonModule;
       module.model(store);
     }
-    deps[moduleName + config.NSP + componentName] = true;
+    deps[moduleName + coreConfig.NSP + componentName] = true;
     return component;
   };
   if (isPromise(promiseOrComponent)) {
@@ -331,8 +331,8 @@ export function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record
         const actions: Record<string, any> = {};
         const actionNames: Record<string, string> = {};
         arr.forEach((actionName) => {
-          actions[actionName] = (...payload: any[]) => ({type: moduleName + config.NSP + actionName, payload});
-          actionNames[actionName] = moduleName + config.NSP + actionName;
+          actions[actionName] = (...payload: any[]) => ({type: moduleName + coreConfig.NSP + actionName, payload});
+          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
         });
         const moduleFacade = {name: moduleName, actions, actionNames};
         prev[moduleName] = moduleFacade;
@@ -358,7 +358,7 @@ export function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record
                   {},
                   {
                     get(__, actionName: string) {
-                      return moduleName + config.NSP + actionName;
+                      return moduleName + coreConfig.NSP + actionName;
                     },
                   }
                 ),
@@ -366,7 +366,7 @@ export function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record
                   {},
                   {
                     get(__, actionName: string) {
-                      return (...payload: any[]) => ({type: moduleName + config.NSP + actionName, payload});
+                      return (...payload: any[]) => ({type: moduleName + coreConfig.NSP + actionName, payload});
                     },
                   }
                 ),

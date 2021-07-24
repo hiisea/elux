@@ -2,7 +2,7 @@ import _extends from "@babel/runtime/helpers/esm/extends";
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _decorate from "@babel/runtime/helpers/esm/decorate";
-import { CoreModuleHandlers, config, reducer, deepMerge, mergeState, deepMergeState, exportModule } from '@elux/core';
+import { CoreModuleHandlers, coreConfig, reducer, deepMerge, mergeState, deepMergeState, exportModule } from '@elux/core';
 import { createLocationTransform } from './transform';
 export var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModuleHandlers) {
   var ModuleWithRouteHandlers = function (_CoreModuleHandlers2) {
@@ -47,8 +47,8 @@ export var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _Cor
 }, CoreModuleHandlers);
 export var RouteActionTypes = {
   MRouteParams: 'RouteParams',
-  RouteChange: "route" + config.NSP + "RouteChange",
-  TestRouteChange: "route" + config.NSP + "TestRouteChange"
+  RouteChange: "route" + coreConfig.NSP + "RouteChange",
+  TestRouteChange: "route" + coreConfig.NSP + "TestRouteChange"
 };
 export function testRouteChangeAction(routeState) {
   return {
@@ -58,7 +58,7 @@ export function testRouteChangeAction(routeState) {
 }
 export function routeParamsAction(moduleName, params, action) {
   return {
-    type: "" + moduleName + config.NSP + RouteActionTypes.MRouteParams,
+    type: "" + moduleName + coreConfig.NSP + RouteActionTypes.MRouteParams,
     payload: [params, action]
   };
 }

@@ -1,8 +1,7 @@
-import { PartialLocation, NativeLocation } from './basic';
+import { PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation } from './basic';
 import { History } from './history';
-import type { LocationTransform } from './transform';
-import type { RootParams, Location, RouteState, PayloadLocation } from './basic';
-export { setRouteConfig, routeConfig } from './basic';
+import { LocationTransform } from './transform';
+export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
 export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
 export type { RouteModule } from './module';

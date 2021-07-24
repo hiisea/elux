@@ -65,8 +65,8 @@ var ModuleWithRouteHandlers = (0, _decorate2.default)(null, function (_initializ
 exports.ModuleWithRouteHandlers = ModuleWithRouteHandlers;
 var RouteActionTypes = {
   MRouteParams: 'RouteParams',
-  RouteChange: "route" + _core.config.NSP + "RouteChange",
-  TestRouteChange: "route" + _core.config.NSP + "TestRouteChange"
+  RouteChange: "route" + _core.coreConfig.NSP + "RouteChange",
+  TestRouteChange: "route" + _core.coreConfig.NSP + "TestRouteChange"
 };
 exports.RouteActionTypes = RouteActionTypes;
 
@@ -79,7 +79,7 @@ function testRouteChangeAction(routeState) {
 
 function routeParamsAction(moduleName, params, action) {
   return {
-    type: "" + moduleName + _core.config.NSP + RouteActionTypes.MRouteParams,
+    type: "" + moduleName + _core.coreConfig.NSP + RouteActionTypes.MRouteParams,
     payload: [params, action]
   };
 }

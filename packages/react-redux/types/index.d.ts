@@ -1,6 +1,6 @@
-import type { Options } from 'react-redux';
-import type { ComponentType, FunctionComponent, ComponentClass } from 'react';
-import type { Dispatch, EluxComponent } from '@elux/core';
+import { ComponentType, FunctionComponent, ComponentClass } from 'react';
+import { Options } from 'react-redux';
+import { Dispatch, EluxComponent } from '@elux/core';
 export type { ReduxStore, ReduxOptions } from '@elux/core-redux';
 export { createRedux } from '@elux/core-redux';
 export declare type GetProps<C> = C extends FunctionComponent<infer P> ? P : C extends ComponentClass<infer P> ? P : never;
@@ -11,4 +11,4 @@ export interface ConnectRedux {
     }>;
 }
 export declare const connectRedux: ConnectRedux;
-export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider } from 'react-redux';
+export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect } from 'react-redux';

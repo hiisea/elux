@@ -1,6 +1,6 @@
 import env from './env';
 import { isPromise } from './sprite';
-import { ActionTypes, config, errorAction, MetaData } from './basic';
+import { ActionTypes, coreConfig, errorAction, MetaData } from './basic';
 import { loadModel } from './inject';
 const errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error) {
@@ -82,7 +82,7 @@ export function enhanceStore(baseStore, middlewares) {
       actionData[0] = setProcessedError(actionData[0], true);
     }
 
-    const [moduleName, actionName] = action.type.split(config.NSP);
+    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
 
     if (env.isServer && actionName === ActionTypes.MLoading) {
       return undefined;
@@ -147,9 +147,9 @@ export function enhanceStore(baseStore, middlewares) {
   function respondHandler(action, isReducer, prevData) {
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
-    const [actionModuleName] = actionName.split(config.NSP);
+    const [actionModuleName] = actionName.split(coreConfig.NSP);
     const commonHandlers = handlersMap[action.type];
-    const universalActionType = actionName.replace(new RegExp(`[^${config.NSP}]+`), '*');
+    const universalActionType = actionName.replace(new RegExp(`[^${coreConfig.NSP}]+`), '*');
     const universalHandlers = handlersMap[universalActionType];
     const handlers = { ...commonHandlers,
       ...universalHandlers

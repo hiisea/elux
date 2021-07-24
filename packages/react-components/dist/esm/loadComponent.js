@@ -5,33 +5,15 @@ import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
 import { env, loadComponet, isPromise } from '@elux/core';
-import { EluxContextComponent } from './base';
-var loadComponentDefaultOptions = {
-  LoadComponentOnError: function LoadComponentOnError(_ref) {
-    var message = _ref.message;
-    return React.createElement("div", {
-      className: "g-component-error"
-    }, message);
-  },
-  LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return React.createElement("div", {
-      className: "g-component-loading"
-    }, "loading...");
-  }
-};
-export function setLoadComponentOptions(_ref2) {
-  var LoadComponentOnError = _ref2.LoadComponentOnError,
-      LoadComponentOnLoading = _ref2.LoadComponentOnLoading;
-  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
-  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
-}
-export var loadComponent = function loadComponent(moduleName, componentName, options) {
+import { EluxContextComponent, reactComponentsConfig } from './base';
+
+var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
 
-  var OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
-  var OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
+  var OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
+  var OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
   var Loader = function (_Component) {
     _inheritsLoose(Loader, _Component);
@@ -79,9 +61,9 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
       var _this2 = this;
 
       if (!this.view && !this.loading && !this.error) {
-        var _ref3 = this.context || {},
-            deps = _ref3.deps,
-            store = _ref3.store;
+        var _ref = this.context || {},
+            deps = _ref.deps,
+            store = _ref.store;
 
         this.loading = true;
         var result;
@@ -152,3 +134,5 @@ export var loadComponent = function loadComponent(moduleName, componentName, opt
     }));
   });
 };
+
+export default loadComponent;

@@ -29,9 +29,14 @@ Object.keys(_app).forEach(function (key) {
 
 var _routeBrowser = require("@elux/route-browser");
 
+(0, _app.setAppConfig)({
+  loadComponent: _reactComponents.loadComponent,
+  MutableData: false
+});
+
 function setConfig(conf) {
-  (0, _reactComponents.setLoadComponentOptions)(conf);
-  (0, _app.setBaseConfig)(conf);
+  (0, _reactComponents.setReactComponentsConfig)(conf);
+  (0, _app.setUserConfig)(conf);
 }
 
 var createApp = function createApp(moduleGetter, middlewares, appModuleName) {

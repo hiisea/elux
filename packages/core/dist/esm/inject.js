@@ -1,7 +1,7 @@
 import _decorate from "@babel/runtime/helpers/esm/decorate";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { isPromise } from './sprite';
-import { isEluxComponent, injectActions, MetaData, config, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
+import { isEluxComponent, injectActions, MetaData, coreConfig, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
 import env from './env';
 export function getModuleGetter() {
   return MetaData.moduleGetter;
@@ -98,7 +98,7 @@ function _loadModel(moduleName, store) {
 
 export { _loadModel as loadModel };
 export function getComponet(moduleName, componentName) {
-  var key = [moduleName, componentName].join(config.NSP);
+  var key = [moduleName, componentName].join(coreConfig.NSP);
 
   if (MetaData.componentCaches[key]) {
     return MetaData.componentCaches[key];
@@ -143,7 +143,7 @@ export function getComponentList(keys) {
       return MetaData.componentCaches[key];
     }
 
-    var _key$split = key.split(config.NSP),
+    var _key$split = key.split(coreConfig.NSP),
         moduleName = _key$split[0],
         componentName = _key$split[1];
 
@@ -163,7 +163,7 @@ export function loadComponet(moduleName, componentName, store, deps) {
       module.model(store);
     }
 
-    deps[moduleName + config.NSP + componentName] = true;
+    deps[moduleName + coreConfig.NSP + componentName] = true;
     return component;
   };
 
@@ -297,12 +297,12 @@ export function getRootModuleAPI(data) {
             }
 
             return {
-              type: moduleName + config.NSP + actionName,
+              type: moduleName + coreConfig.NSP + actionName,
               payload: payload
             };
           };
 
-          actionNames[actionName] = moduleName + config.NSP + actionName;
+          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
         });
         var moduleFacade = {
           name: moduleName,
@@ -330,7 +330,7 @@ export function getRootModuleAPI(data) {
               name: moduleName,
               actionNames: new Proxy({}, {
                 get: function get(__, actionName) {
-                  return moduleName + config.NSP + actionName;
+                  return moduleName + coreConfig.NSP + actionName;
                 }
               }),
               actions: new Proxy({}, {
@@ -341,7 +341,7 @@ export function getRootModuleAPI(data) {
                     }
 
                     return {
-                      type: moduleName + config.NSP + actionName,
+                      type: moduleName + coreConfig.NSP + actionName,
                       payload: payload
                     };
                   };

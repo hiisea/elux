@@ -7,7 +7,7 @@ import { routeConfig, setRouteConfig } from './basic';
 import { History, uriToLocation } from './history';
 import { testRouteChangeAction, routeChangeAction } from './module';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl as _nativeLocationToNativeUrl } from './transform';
-export { setRouteConfig, routeConfig } from './basic';
+export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
 export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
 export var BaseNativeRouter = function () {

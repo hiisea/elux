@@ -16,22 +16,19 @@
   "jsnext:main": "dist/next/index.js",
   "types": "types/",
   "files": [
-    "env/",
     "types/",
     "dist/"
   ],
   "scripts": {
-    "test": "jest",
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts} --ignore-pattern **/*.d.ts",
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
-    "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",
-    "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts,.tsx\"",
-    "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts,.tsx\"",
+    "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts\"",
+    "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts\"",
+    "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts\"",
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.5",
     "@elux/route": "^0.1.5",
     "@types/history": "~4.7.7",
     "history": "~4.10.1"

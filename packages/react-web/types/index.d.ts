@@ -1,8 +1,8 @@
 import { ComponentType } from 'react';
-import { CreateApp, CreateSSR, BaseConfig } from '@elux/app';
+import { CreateApp, CreateSSR, UserConfig } from '@elux/app';
 export * from '@elux/react-components';
 export * from '@elux/app';
-export declare function setConfig(conf: BaseConfig & {
+export declare function setConfig(conf: UserConfig & {
     LoadComponentOnError?: ComponentType<{
         message: string;
     }>;

@@ -1,10 +1,11 @@
 import {
   env,
   getRootModuleAPI,
+  buildConfigSetter,
   renderApp,
   ssrApp,
   defineModuleGetter,
-  setConfig as setCoreConfig,
+  setCoreConfig,
   getModule,
   IStore,
   LoadComponent,
@@ -18,7 +19,7 @@ import {
   RootModuleActions,
 } from '@elux/core';
 
-import {routeMiddleware, setRouteConfig, routeConfig, IBaseRouter, RouteModule, LocationTransform} from '@elux/route';
+import {routeMiddleware, setRouteConfig, IBaseRouter, RouteModule, LocationTransform, routeMeta} from '@elux/route';
 
 export {
   ActionTypes,
@@ -47,38 +48,27 @@ export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createR
 export type {RootModuleFacade as Facade, Dispatch, IStore, EluxComponent} from '@elux/core';
 export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
 
-const MetaData: {
-  loadComponent?: LoadComponent;
-  router?: IBaseRouter<any, string>;
+const appMeta: {
   SSRTPL: string;
+  router: IBaseRouter<any, string>;
 } = {
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
-};
+} as any;
 
-export function setBaseMeta({
-  loadComponent,
-  MutableData,
-  router,
-}: {
-  loadComponent?: LoadComponent;
-  MutableData?: boolean;
-  router?: IBaseRouter<any, string>;
-}): void {
-  loadComponent !== undefined && (MetaData.loadComponent = loadComponent);
-  MutableData !== undefined && setCoreConfig({MutableData});
-  router !== undefined && (MetaData.router = router);
-}
-export interface BaseConfig {
+export const appConfig: {
+  loadComponent: LoadComponent;
+  MutableData: boolean;
+} = {} as any;
+export const setAppConfig = buildConfigSetter(appConfig);
+export interface UserConfig {
   actionMaxHistory?: number;
   pagesMaxHistory?: number;
-  pagenames?: Record<string, string>;
   NSP?: string;
   MSP?: string;
-  MutableData?: boolean;
   DepthTimeOnLoading?: number;
   disableNativeRoute?: boolean;
 }
-export function setBaseConfig(conf: BaseConfig): void {
+export function setUserConfig(conf: UserConfig): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
@@ -143,7 +133,7 @@ export function createBaseApp<INS = {}>(
       return Object.assign(ins, {
         render({id = 'root', ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
           const router = createRouter(routeModule.locationTransform);
-          MetaData.router = router;
+          appMeta.router = router;
           const {state, components = []}: {state: any; components: string[]} = env[ssrKey] || {};
           return router.initedPromise.then((routeState) => {
             const initState = {...storeOptions.initState, route: routeState, ...state};
@@ -184,7 +174,7 @@ export function createBaseSSR<INS = {}>(
       return Object.assign(ins, {
         render({id = 'root', ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
           const router = createRouter(routeModule.locationTransform);
-          MetaData.router = router;
+          appMeta.router = router;
           return router.initedPromise.then((routeState) => {
             const initState = {...storeOptions.initState, route: routeState};
             const baseStore = storeCreator({...storeOptions, initState});
@@ -192,9 +182,9 @@ export function createBaseSSR<INS = {}>(
               const state = store.getState();
               const eluxContext = {deps: {}, store, router, documentHead: ''};
               const html = render(id, AppView, store, eluxContext);
-              const match = MetaData.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+              const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
               if (match) {
-                return MetaData.SSRTPL.replace(
+                return appMeta.SSRTPL.replace(
                   '</head>',
                   `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                     state,
@@ -239,9 +229,9 @@ export function getApp<T extends {GetActions: any; GetRouter: any; LoadComponent
         return prev;
       }, {});
     },
-    GetRouter: () => MetaData.router,
-    LoadComponent: MetaData.loadComponent,
+    GetRouter: () => appMeta.router,
+    LoadComponent: appConfig.loadComponent,
     Modules: modules,
-    Pagenames: routeConfig.pagenames,
+    Pagenames: routeMeta.pagenames,
   };
 }

@@ -1,7 +1,7 @@
 export {
   ActionTypes,
   reducer,
-  config,
+  coreConfig,
   effect,
   mutation,
   action,
@@ -9,8 +9,9 @@ export {
   logger,
   mergeState,
   deepMergeState,
-  setConfig,
+  setCoreConfig,
   setLoading,
+  buildConfigSetter,
 } from './basic';
 export {getActionData, setProcessedError, isProcessedError} from './store';
 export {

@@ -138,7 +138,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     map[fullPagename] = pagenameMap[pagename];
     return map;
   }, {});
-  _basic.routeConfig.pagenames = pagenames.reduce(function (obj, key) {
+  _basic.routeMeta.pagenames = pagenames.reduce(function (obj, key) {
     obj[key] = key;
     return obj;
   }, {});

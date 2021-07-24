@@ -3,8 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.setLoadComponentOptions = setLoadComponentOptions;
-exports.loadComponent = void 0;
+exports.default = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -26,34 +25,13 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-var loadComponentDefaultOptions = {
-  LoadComponentOnError: function LoadComponentOnError(_ref) {
-    var message = _ref.message;
-    return _react.default.createElement("div", {
-      className: "g-component-error"
-    }, message);
-  },
-  LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return _react.default.createElement("div", {
-      className: "g-component-loading"
-    }, "loading...");
-  }
-};
-
-function setLoadComponentOptions(_ref2) {
-  var LoadComponentOnError = _ref2.LoadComponentOnError,
-      LoadComponentOnLoading = _ref2.LoadComponentOnLoading;
-  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
-  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
-}
-
 var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
 
-  var OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
-  var OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
+  var OnLoading = options.OnLoading || _base.reactComponentsConfig.LoadComponentOnLoading;
+  var OnError = options.OnError || _base.reactComponentsConfig.LoadComponentOnError;
 
   var Loader = function (_Component) {
     (0, _inheritsLoose2.default)(Loader, _Component);
@@ -95,9 +73,9 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       var _this2 = this;
 
       if (!this.view && !this.loading && !this.error) {
-        var _ref3 = this.context || {},
-            deps = _ref3.deps,
-            store = _ref3.store;
+        var _ref = this.context || {},
+            deps = _ref.deps,
+            store = _ref.store;
 
         this.loading = true;
         var result;
@@ -169,4 +147,5 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   });
 };
 
-exports.loadComponent = loadComponent;
+var _default = loadComponent;
+exports.default = _default;

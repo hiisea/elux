@@ -22,9 +22,9 @@
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts} --ignore-pattern **/*.d.ts",
     "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
-    "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",
-    "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts,.tsx\"",
-    "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts,.tsx\"",
+    "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts\"",
+    "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts\"",
+    "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts\"",
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "peerDependencies": {
@@ -34,6 +34,7 @@
   "dependencies": {
     "@babel/runtime": "~7.12.18",
     "@elux/core-redux": "^0.1.5",
+    "@elux/react-components": "^0.1.5",
     "react-redux": "^7.2.2"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"

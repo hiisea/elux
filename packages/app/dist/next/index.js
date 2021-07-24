@@ -1,22 +1,13 @@
-import { env, getRootModuleAPI, renderApp, ssrApp, defineModuleGetter, setConfig as setCoreConfig, getModule } from '@elux/core';
-import { routeMiddleware, setRouteConfig, routeConfig } from '@elux/route';
+import { env, getRootModuleAPI, buildConfigSetter, renderApp, ssrApp, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
+import { routeMiddleware, setRouteConfig, routeMeta } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
-const MetaData = {
+const appMeta = {
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
-export function setBaseMeta({
-  loadComponent,
-  MutableData,
-  router
-}) {
-  loadComponent !== undefined && (MetaData.loadComponent = loadComponent);
-  MutableData !== undefined && setCoreConfig({
-    MutableData
-  });
-  router !== undefined && (MetaData.router = router);
-}
-export function setBaseConfig(conf) {
+export const appConfig = {};
+export const setAppConfig = buildConfigSetter(appConfig);
+export function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
@@ -37,7 +28,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
           viewName
         } = {}) {
           const router = createRouter(routeModule.locationTransform);
-          MetaData.router = router;
+          appMeta.router = router;
           const {
             state,
             components = []
@@ -88,7 +79,7 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
           viewName
         } = {}) {
           const router = createRouter(routeModule.locationTransform);
-          MetaData.router = router;
+          appMeta.router = router;
           return router.initedPromise.then(routeState => {
             const initState = { ...storeOptions.initState,
               route: routeState
@@ -108,10 +99,10 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
                 documentHead: ''
               };
               const html = render(id, AppView, store, eluxContext);
-              const match = MetaData.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+              const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
               if (match) {
-                return MetaData.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                   state,
                   components: Object.keys(eluxContext.deps)
                 })};</script>\r\n</head>`).replace(match[0], match[0] + html);
@@ -141,9 +132,9 @@ export function getApp() {
         return prev;
       }, {});
     },
-    GetRouter: () => MetaData.router,
-    LoadComponent: MetaData.loadComponent,
+    GetRouter: () => appMeta.router,
+    LoadComponent: appConfig.loadComponent,
     Modules: modules,
-    Pagenames: routeConfig.pagenames
+    Pagenames: routeMeta.pagenames
   };
 }

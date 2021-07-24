@@ -1,13 +1,11 @@
 import {isPromise, deepMerge} from '@elux/core';
 
-import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation} from './basic';
+import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation} from './basic';
 import {History, uriToLocation} from './history';
 import {testRouteChangeAction, routeChangeAction} from './module';
-import {eluxLocationToEluxUrl, nativeLocationToNativeUrl} from './transform';
-import type {LocationTransform} from './transform';
-import type {RootParams, Location, RouteState, PayloadLocation} from './basic';
+import {eluxLocationToEluxUrl, nativeLocationToNativeUrl, LocationTransform} from './transform';
 
-export {setRouteConfig, routeConfig} from './basic';
+export {setRouteConfig, routeConfig, routeMeta} from './basic';
 export {createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl} from './transform';
 export {routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers} from './module';
 export type {RouteModule} from './module';

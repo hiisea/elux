@@ -3,13 +3,13 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.getModuleGetter = exports.getComponet = exports.exportComponent = exports.exportView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.EmptyModuleHandlers = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.setLoading = exports.setConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.config = exports.reducer = exports.ActionTypes = void 0;
+exports.env = exports.ssrApp = exports.renderApp = exports.defineModuleGetter = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.getModuleGetter = exports.getComponet = exports.exportComponent = exports.exportView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.EmptyModuleHandlers = exports.CoreModuleHandlers = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.buildConfigSetter = exports.setLoading = exports.setCoreConfig = exports.deepMergeState = exports.mergeState = exports.logger = exports.errorAction = exports.action = exports.mutation = exports.effect = exports.coreConfig = exports.reducer = exports.ActionTypes = void 0;
 
 var _basic = require("./basic");
 
 exports.ActionTypes = _basic.ActionTypes;
 exports.reducer = _basic.reducer;
-exports.config = _basic.config;
+exports.coreConfig = _basic.coreConfig;
 exports.effect = _basic.effect;
 exports.mutation = _basic.mutation;
 exports.action = _basic.action;
@@ -17,8 +17,9 @@ exports.errorAction = _basic.errorAction;
 exports.logger = _basic.logger;
 exports.mergeState = _basic.mergeState;
 exports.deepMergeState = _basic.deepMergeState;
-exports.setConfig = _basic.setConfig;
+exports.setCoreConfig = _basic.setCoreConfig;
 exports.setLoading = _basic.setLoading;
+exports.buildConfigSetter = _basic.buildConfigSetter;
 
 var _store = require("./store");
 

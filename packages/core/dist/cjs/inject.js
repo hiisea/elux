@@ -124,7 +124,7 @@ function _loadModel(moduleName, store) {
 }
 
 function getComponet(moduleName, componentName) {
-  var key = [moduleName, componentName].join(_basic.config.NSP);
+  var key = [moduleName, componentName].join(_basic.coreConfig.NSP);
 
   if (_basic.MetaData.componentCaches[key]) {
     return _basic.MetaData.componentCaches[key];
@@ -170,7 +170,7 @@ function getComponentList(keys) {
       return _basic.MetaData.componentCaches[key];
     }
 
-    var _key$split = key.split(_basic.config.NSP),
+    var _key$split = key.split(_basic.coreConfig.NSP),
         moduleName = _key$split[0],
         componentName = _key$split[1];
 
@@ -191,7 +191,7 @@ function loadComponet(moduleName, componentName, store, deps) {
       module.model(store);
     }
 
-    deps[moduleName + _basic.config.NSP + componentName] = true;
+    deps[moduleName + _basic.coreConfig.NSP + componentName] = true;
     return component;
   };
 
@@ -329,12 +329,12 @@ function getRootModuleAPI(data) {
             }
 
             return {
-              type: moduleName + _basic.config.NSP + actionName,
+              type: moduleName + _basic.coreConfig.NSP + actionName,
               payload: payload
             };
           };
 
-          actionNames[actionName] = moduleName + _basic.config.NSP + actionName;
+          actionNames[actionName] = moduleName + _basic.coreConfig.NSP + actionName;
         });
         var moduleFacade = {
           name: moduleName,
@@ -362,7 +362,7 @@ function getRootModuleAPI(data) {
               name: moduleName,
               actionNames: new Proxy({}, {
                 get: function get(__, actionName) {
-                  return moduleName + _basic.config.NSP + actionName;
+                  return moduleName + _basic.coreConfig.NSP + actionName;
                 }
               }),
               actions: new Proxy({}, {
@@ -373,7 +373,7 @@ function getRootModuleAPI(data) {
                     }
 
                     return {
-                      type: moduleName + _basic.config.NSP + actionName,
+                      type: moduleName + _basic.coreConfig.NSP + actionName,
                       payload: payload
                     };
                   };

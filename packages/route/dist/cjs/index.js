@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.BaseRouter = exports.BaseNativeRouter = exports.ModuleWithRouteHandlers = exports.RouteActionTypes = exports.createRouteModule = exports.routeMiddleware = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.createLocationTransform = void 0;
+exports.BaseRouter = exports.BaseNativeRouter = exports.ModuleWithRouteHandlers = exports.RouteActionTypes = exports.createRouteModule = exports.routeMiddleware = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.createLocationTransform = exports.routeMeta = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -19,6 +19,7 @@ var _basic = require("./basic");
 
 exports.routeConfig = _basic.routeConfig;
 exports.setRouteConfig = _basic.setRouteConfig;
+exports.routeMeta = _basic.routeMeta;
 
 var _history = require("./history");
 

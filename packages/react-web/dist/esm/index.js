@@ -1,11 +1,15 @@
-import { renderToString, renderToDocument, setLoadComponentOptions } from '@elux/react-components';
-import { createBaseApp, createBaseSSR, setBaseConfig } from '@elux/app';
+import { renderToString, renderToDocument, setReactComponentsConfig, loadComponent } from '@elux/react-components';
+import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
 import { createRouter } from '@elux/route-browser';
 export * from '@elux/react-components';
 export * from '@elux/app';
+setAppConfig({
+  loadComponent: loadComponent,
+  MutableData: false
+});
 export function setConfig(conf) {
-  setLoadComponentOptions(conf);
-  setBaseConfig(conf);
+  setReactComponentsConfig(conf);
+  setUserConfig(conf);
 }
 export var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
   return createBaseApp({}, function (locationTransform) {

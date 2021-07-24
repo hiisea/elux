@@ -1,7 +1,7 @@
 import {
   CoreModuleHandlers,
   IStoreMiddleware,
-  config,
+  coreConfig,
   reducer,
   deepMerge,
   mergeState,
@@ -12,9 +12,8 @@ import {
   IModuleHandlers,
   exportModule,
 } from '@elux/core';
-import {createLocationTransform, LocationTransform} from './transform';
-import type {RootParams, RouteState, HistoryAction} from './basic';
-import type {PagenameMap, NativeLocationMap} from './transform';
+import {createLocationTransform, LocationTransform, PagenameMap, NativeLocationMap} from './transform';
+import {RootParams, RouteState, HistoryAction} from './basic';
 
 export class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Record<string, any>> extends CoreModuleHandlers<S, R> {
   @reducer
@@ -30,8 +29,8 @@ export class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Re
 }
 export const RouteActionTypes = {
   MRouteParams: 'RouteParams',
-  RouteChange: `route${config.NSP}RouteChange`,
-  TestRouteChange: `route${config.NSP}TestRouteChange`,
+  RouteChange: `route${coreConfig.NSP}RouteChange`,
+  TestRouteChange: `route${coreConfig.NSP}TestRouteChange`,
 };
 export function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
   return {
@@ -41,7 +40,7 @@ export function testRouteChangeAction<P extends RootParams>(routeState: RouteSta
 }
 export function routeParamsAction(moduleName: string, params: any, action: HistoryAction): Action {
   return {
-    type: `${moduleName}${config.NSP}${RouteActionTypes.MRouteParams}`,
+    type: `${moduleName}${coreConfig.NSP}${RouteActionTypes.MRouteParams}`,
     payload: [params, action],
   };
 }

@@ -1,6 +1,6 @@
 import { deepMerge, env, getModuleList, getModuleGetter } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
-import { routeConfig } from './basic';
+import { routeConfig, routeMeta } from './basic';
 export function assignDefaultData(data) {
   const def = routeConfig.defaultParams;
   return Object.keys(data).reduce((params, moduleName) => {
@@ -104,7 +104,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
     map[fullPagename] = pagenameMap[pagename];
     return map;
   }, {});
-  routeConfig.pagenames = pagenames.reduce((obj, key) => {
+  routeMeta.pagenames = pagenames.reduce((obj, key) => {
     obj[key] = key;
     return obj;
   }, {});

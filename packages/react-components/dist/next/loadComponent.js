@@ -2,27 +2,11 @@ import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component } from 'react';
 import { env, loadComponet, isPromise } from '@elux/core';
-import { EluxContextComponent } from './base';
-const loadComponentDefaultOptions = {
-  LoadComponentOnError: ({
-    message
-  }) => React.createElement("div", {
-    className: "g-component-error"
-  }, message),
-  LoadComponentOnLoading: () => React.createElement("div", {
-    className: "g-component-loading"
-  }, "loading...")
-};
-export function setLoadComponentOptions({
-  LoadComponentOnError,
-  LoadComponentOnLoading
-}) {
-  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
-  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
-}
-export const loadComponent = (moduleName, componentName, options = {}) => {
-  const OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
-  const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
+import { EluxContextComponent, reactComponentsConfig } from './base';
+
+const loadComponent = (moduleName, componentName, options = {}) => {
+  const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
+  const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
   class Loader extends Component {
     constructor(props, context) {
@@ -132,3 +116,5 @@ export const loadComponent = (moduleName, componentName, options = {}) => {
     }));
   });
 };
+
+export default loadComponent;

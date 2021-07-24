@@ -17,6 +17,3 @@ Object.keys(_reactWeb).forEach(function (key) {
   if (key in exports && exports[key] === _reactWeb[key]) return;
   exports[key] = _reactWeb[key];
 });
-(0, _reactWeb.setRootViewOptions)({
-  Provider: _reactRedux.Provider
-});

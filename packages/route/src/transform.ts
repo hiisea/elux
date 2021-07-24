@@ -1,6 +1,6 @@
 import {deepMerge, env, getModuleList, getModuleGetter} from '@elux/core';
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
-import {routeConfig, EluxLocation, PartialLocation, Location, RootParams, NativeLocation} from './basic';
+import {routeConfig, routeMeta, EluxLocation, PartialLocation, Location, RootParams, NativeLocation} from './basic';
 
 export interface LocationTransform {
   eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation; // E->L
@@ -123,7 +123,7 @@ export function createLocationTransform(
       map[fullPagename] = pagenameMap[pagename];
       return map;
     }, {});
-  routeConfig.pagenames = pagenames.reduce((obj, key) => {
+  routeMeta.pagenames = pagenames.reduce((obj, key) => {
     obj[key] = key;
     return obj;
   }, {});

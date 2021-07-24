@@ -5,7 +5,7 @@ import {
   ActionHandler,
   ActionHandlerList,
   ActionTypes,
-  config,
+  coreConfig,
   errorAction,
   MetaData,
   IStore,
@@ -81,7 +81,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
       }
       actionData[0] = setProcessedError(actionData[0], true);
     }
-    const [moduleName, actionName] = action.type.split(config.NSP);
+    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
     if (env.isServer && actionName === ActionTypes.MLoading) {
       return undefined;
     }
@@ -139,9 +139,9 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
   function respondHandler(action: Action, isReducer: boolean, prevData: {actionName: string; prevState: S}): void | Promise<void> {
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
-    const [actionModuleName] = actionName.split(config.NSP);
+    const [actionModuleName] = actionName.split(coreConfig.NSP);
     const commonHandlers = handlersMap[action.type];
-    const universalActionType = actionName.replace(new RegExp(`[^${config.NSP}]+`), '*');
+    const universalActionType = actionName.replace(new RegExp(`[^${coreConfig.NSP}]+`), '*');
     const universalHandlers = handlersMap[universalActionType];
     const handlers: ActionHandlerList = {...commonHandlers, ...universalHandlers};
     const handlerModuleNames = Object.keys(handlers);

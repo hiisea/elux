@@ -1,16 +1,18 @@
 import {ComponentType} from 'react';
-import {renderToString, renderToDocument, setLoadComponentOptions} from '@elux/react-components';
-import {createBaseApp, createBaseSSR, setBaseConfig, CreateApp, CreateSSR, LocationTransform, BaseConfig} from '@elux/app';
+import {renderToString, renderToDocument, setReactComponentsConfig, loadComponent} from '@elux/react-components';
+import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, CreateSSR, LocationTransform, UserConfig} from '@elux/app';
 import {createRouter} from '@elux/route-browser';
 
 export * from '@elux/react-components';
 export * from '@elux/app';
 
+setAppConfig({loadComponent, MutableData: false});
+
 export function setConfig(
-  conf: BaseConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
+  conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
 ): void {
-  setLoadComponentOptions(conf);
-  setBaseConfig(conf);
+  setReactComponentsConfig(conf);
+  setUserConfig(conf);
 }
 
 export const createApp: CreateApp = (moduleGetter, middlewares, appModuleName) => {

@@ -1,22 +1,19 @@
 "use strict";
 
 exports.__esModule = true;
-exports.setRouteConfig = setRouteConfig;
-exports.routeConfig = void 0;
+exports.routeMeta = exports.setRouteConfig = exports.routeConfig = void 0;
+
+var _core = require("@elux/core");
+
 var routeConfig = {
   actionMaxHistory: 10,
   pagesMaxHistory: 10,
-  pagenames: {},
   disableNativeRoute: false,
   indexUrl: '',
   defaultParams: {}
 };
 exports.routeConfig = routeConfig;
-
-function setRouteConfig(conf) {
-  conf.actionMaxHistory && (routeConfig.actionMaxHistory = conf.actionMaxHistory);
-  conf.pagesMaxHistory && (routeConfig.pagesMaxHistory = conf.pagesMaxHistory);
-  conf.disableNativeRoute && (routeConfig.disableNativeRoute = true);
-  conf.indexUrl && (routeConfig.indexUrl = conf.indexUrl);
-  conf.defaultParams && (routeConfig.defaultParams = conf.defaultParams);
-}
+var setRouteConfig = (0, _core.buildConfigSetter)(routeConfig);
+exports.setRouteConfig = setRouteConfig;
+var routeMeta = {};
+exports.routeMeta = routeMeta;

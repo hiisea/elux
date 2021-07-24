@@ -4,22 +4,23 @@ export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoadin
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
-export declare function setBaseMeta({ loadComponent, MutableData, router, }: {
-    loadComponent?: LoadComponent;
-    MutableData?: boolean;
-    router?: IBaseRouter<any, string>;
-}): void;
-export interface BaseConfig {
+export declare const appConfig: {
+    loadComponent: LoadComponent;
+    MutableData: boolean;
+};
+export declare const setAppConfig: (config: Partial<{
+    loadComponent: LoadComponent;
+    MutableData: boolean;
+}>) => void;
+export interface UserConfig {
     actionMaxHistory?: number;
     pagesMaxHistory?: number;
-    pagenames?: Record<string, string>;
     NSP?: string;
     MSP?: string;
-    MutableData?: boolean;
     DepthTimeOnLoading?: number;
     disableNativeRoute?: boolean;
 }
-export declare function setBaseConfig(conf: BaseConfig): void;
+export declare function setUserConfig(conf: UserConfig): void;
 export interface RenderOptions {
     viewName?: string;
     id?: string;

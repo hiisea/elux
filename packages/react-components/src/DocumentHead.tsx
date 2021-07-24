@@ -1,6 +1,6 @@
 import React, {useContext, useEffect} from 'react';
 import {env} from '@elux/core';
-import {EluxContext, EluxContextComponent} from './base';
+import {EluxContext, EluxContextComponent, reactComponentsConfig} from './base';
 
 interface Props {
   title?: string;
@@ -16,7 +16,7 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
       clientTimer = 0;
       const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
       if (arr[1]) {
-        env.document.title = arr[1];
+        reactComponentsConfig.setPageTitle(arr[1]);
       }
     }, 0);
   }

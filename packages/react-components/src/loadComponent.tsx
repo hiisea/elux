@@ -1,31 +1,14 @@
 import React, {ComponentType, Component} from 'react';
-import {env, loadComponet, isPromise} from '@elux/core';
-import type {LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
-import {EluxContextComponent, EluxContext} from './base';
+import {env, loadComponet, isPromise, LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
+import {EluxContextComponent, EluxContext, reactComponentsConfig} from './base';
 
 export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<
   A,
   {OnError?: ComponentType<{message: string}>; OnLoading?: ComponentType<{}>}
 >;
-
-const loadComponentDefaultOptions: {LoadComponentOnError: ComponentType<{message: string}>; LoadComponentOnLoading: ComponentType<{}>} = {
-  LoadComponentOnError: ({message}) => <div className="g-component-error">{message}</div>,
-  LoadComponentOnLoading: () => <div className="g-component-loading">loading...</div>,
-};
-export function setLoadComponentOptions({
-  LoadComponentOnError,
-  LoadComponentOnLoading,
-}: {
-  LoadComponentOnError?: ComponentType<{message: string}>;
-  LoadComponentOnLoading?: ComponentType<{}>;
-}): void {
-  LoadComponentOnError && (loadComponentDefaultOptions.LoadComponentOnError = LoadComponentOnError);
-  LoadComponentOnLoading && (loadComponentDefaultOptions.LoadComponentOnLoading = LoadComponentOnLoading);
-}
-
-export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, componentName, options = {}) => {
-  const OnLoading = options.OnLoading || loadComponentDefaultOptions.LoadComponentOnLoading;
-  const OnError = options.OnError || loadComponentDefaultOptions.LoadComponentOnError;
+const loadComponent: LoadComponent<Record<string, any>> = (moduleName, componentName, options = {}) => {
+  const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
+  const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
   class Loader extends Component<{forwardedRef: any}> {
     static contextType = EluxContextComponent;
 
@@ -113,3 +96,5 @@ export const loadComponent: LoadComponent<Record<string, any>> = (moduleName, co
     return <Loader {...props} forwardedRef={ref} />;
   }) as any;
 };
+
+export default loadComponent;

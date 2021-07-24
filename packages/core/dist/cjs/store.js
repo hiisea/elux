@@ -117,7 +117,7 @@ function enhanceStore(baseStore, middlewares) {
           actionData[0] = setProcessedError(actionData[0], true);
         }
 
-        var _action$type$split = action.type.split(_basic.config.NSP),
+        var _action$type$split = action.type.split(_basic.coreConfig.NSP),
             moduleName = _action$type$split[0],
             actionName = _action$type$split[1];
 
@@ -191,11 +191,11 @@ function enhanceStore(baseStore, middlewares) {
     var handlersMap = isReducer ? _basic.MetaData.reducersMap : _basic.MetaData.effectsMap;
     var actionName = action.type;
 
-    var _actionName$split = actionName.split(_basic.config.NSP),
+    var _actionName$split = actionName.split(_basic.coreConfig.NSP),
         actionModuleName = _actionName$split[0];
 
     var commonHandlers = handlersMap[action.type];
-    var universalActionType = actionName.replace(new RegExp("[^" + _basic.config.NSP + "]+"), '*');
+    var universalActionType = actionName.replace(new RegExp("[^" + _basic.coreConfig.NSP + "]+"), '*');
     var universalHandlers = handlersMap[universalActionType];
     var handlers = (0, _extends2.default)({}, commonHandlers, universalHandlers);
     var handlerModuleNames = Object.keys(handlers);

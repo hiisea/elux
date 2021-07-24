@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.setConfig = setConfig;
+exports.buildConfigSetter = buildConfigSetter;
 exports.errorAction = errorAction;
 exports.moduleInitAction = moduleInitAction;
 exports.moduleReInitAction = moduleReInitAction;
@@ -16,32 +16,35 @@ exports.effect = effect;
 exports.logger = logger;
 exports.deepMergeState = deepMergeState;
 exports.mergeState = mergeState;
-exports.action = exports.mutation = exports.MetaData = exports.ActionTypes = exports.config = void 0;
+exports.action = exports.mutation = exports.MetaData = exports.ActionTypes = exports.setCoreConfig = exports.coreConfig = void 0;
 
 var _env = _interopRequireDefault(require("./env"));
 
 var _sprite = require("./sprite");
 
-var config = {
+var coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2
 };
-exports.config = config;
+exports.coreConfig = coreConfig;
 
-function setConfig(_config) {
-  _config.NSP !== undefined && (config.NSP = _config.NSP);
-  _config.MSP !== undefined && (config.MSP = _config.MSP);
-  _config.MutableData !== undefined && (config.MutableData = _config.MutableData);
-  _config.DepthTimeOnLoading !== undefined && (config.DepthTimeOnLoading = _config.DepthTimeOnLoading);
+function buildConfigSetter(data) {
+  return function (config) {
+    return Object.keys(data).forEach(function (key) {
+      config[key] !== undefined && (data[key] = config[key]);
+    });
+  };
 }
 
+var setCoreConfig = buildConfigSetter(coreConfig);
+exports.setCoreConfig = setCoreConfig;
 var ActionTypes = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
-  Error: "Elux" + config.NSP + "Error"
+  Error: "Elux" + coreConfig.NSP + "Error"
 };
 exports.ActionTypes = ActionTypes;
 
@@ -54,21 +57,21 @@ function errorAction(error) {
 
 function moduleInitAction(moduleName, initState) {
   return {
-    type: "" + moduleName + config.NSP + ActionTypes.MInit,
+    type: "" + moduleName + coreConfig.NSP + ActionTypes.MInit,
     payload: [initState]
   };
 }
 
 function moduleReInitAction(moduleName, initState) {
   return {
-    type: "" + moduleName + config.NSP + ActionTypes.MReInit,
+    type: "" + moduleName + coreConfig.NSP + ActionTypes.MReInit,
     payload: [initState]
   };
 }
 
 function moduleLoadingAction(moduleName, loadingState) {
   return {
-    type: "" + moduleName + config.NSP + ActionTypes.MLoading,
+    type: "" + moduleName + coreConfig.NSP + ActionTypes.MLoading,
     payload: [loadingState]
   };
 }
@@ -117,14 +120,14 @@ function injectActions(moduleName, handlers) {
         var handler = handlers[actionNames];
 
         if (handler.__isReducer__ || handler.__isEffect__) {
-          actionNames.split(config.MSP).forEach(function (actionName) {
-            actionName = actionName.trim().replace(new RegExp("^this[" + config.NSP + "]"), "" + moduleName + config.NSP);
-            var arr = actionName.split(config.NSP);
+          actionNames.split(coreConfig.MSP).forEach(function (actionName) {
+            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
+            var arr = actionName.split(coreConfig.NSP);
 
             if (arr[1]) {
               transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
             } else {
-              transformAction(moduleName + config.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
+              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
             }
           });
         }
@@ -136,10 +139,10 @@ function injectActions(moduleName, handlers) {
 var loadings = {};
 
 function setLoading(store, item, moduleName, groupName) {
-  var key = moduleName + config.NSP + groupName;
+  var key = moduleName + coreConfig.NSP + groupName;
 
   if (!loadings[key]) {
-    loadings[key] = new _sprite.TaskCounter(config.DepthTimeOnLoading);
+    loadings[key] = new _sprite.TaskCounter(coreConfig.DepthTimeOnLoading);
     loadings[key].addListener(function (loadingState) {
       var _moduleLoadingAction;
 
@@ -244,7 +247,7 @@ function deepMergeState(target) {
     args[_key - 1] = arguments[_key];
   }
 
-  if (config.MutableData) {
+  if (coreConfig.MutableData) {
     return _sprite.deepMerge.apply(void 0, [target].concat(args));
   }
 
@@ -260,7 +263,7 @@ function mergeState(target) {
     args[_key2 - 1] = arguments[_key2];
   }
 
-  if (config.MutableData) {
+  if (coreConfig.MutableData) {
     return Object.assign.apply(Object, [target].concat(args));
   }
 
