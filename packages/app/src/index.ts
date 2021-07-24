@@ -28,6 +28,8 @@ export {
   effect,
   errorAction,
   reducer,
+  action,
+  mutation,
   setLoading,
   logger,
   isServer,

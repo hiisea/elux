@@ -21,10 +21,13 @@
     "publish": {
       "message": "chore(release): publish %s",
       "npmClient": "npm",
-      "ignoreChanges": ["**/tests/**", "**/dist/**"]
+      "ignoreChanges": [
+        "**/tests/**",
+        "**/dist/**"
+      ]
     }
   },
   "npmClient": "yarn",
   "useWorkspaces": true,
-  "version": "0.1.8"
+  "version": "0.1.9"
 }

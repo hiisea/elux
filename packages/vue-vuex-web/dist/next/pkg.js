@@ -1727,6 +1727,8 @@ function effect(loadingKey = 'app.loading.global') {
     return target.descriptor === descriptor ? target : descriptor;
   };
 }
+const mutation = reducer;
+const action = effect;
 function logger(before, after) {
   return (target, key, descriptor) => {
     if (!key && !descriptor) {
@@ -5799,4 +5801,4 @@ const createSSR = (moduleGetter, url, middlewares, appModuleName) => {
   return createBaseSSR(app, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares, appModuleName);
 };
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EmptyModuleHandlers, Link, LoadingState, RootComponent, RouteActionTypes, appConfig, clientSide, createApp, createBaseApp, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, patchActions, reducer, renderToDocument, renderToString, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };
+export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EmptyModuleHandlers, Link, LoadingState, RootComponent, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, renderToDocument, renderToString, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };

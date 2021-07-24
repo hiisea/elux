@@ -1799,6 +1799,8 @@ function effect(loadingKey) {
     return target.descriptor === descriptor ? target : descriptor;
   };
 }
+var mutation = reducer;
+var action = effect;
 function logger(before, after) {
   return function (target, key, descriptor) {
     if (!key && !descriptor) {
@@ -7144,6 +7146,7 @@ exports.EmptyModuleHandlers = EmptyModuleHandlers;
 exports.Link = Link;
 exports.RootComponent = RootComponent;
 exports.RouteActionTypes = RouteActionTypes;
+exports.action = action;
 exports.appConfig = appConfig;
 exports.clientSide = clientSide;
 exports.createApp = createApp;
@@ -7167,6 +7170,7 @@ exports.isProcessedError = isProcessedError;
 exports.isServer = isServer;
 exports.loadComponent = loadComponent;
 exports.logger = logger;
+exports.mutation = mutation;
 exports.patchActions = patchActions;
 exports.reducer = reducer;
 exports.renderToDocument = renderToDocument;
