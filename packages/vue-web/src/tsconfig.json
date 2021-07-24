@@ -2,8 +2,7 @@
   "extends": "@elux/babel-preset/tsconfig.src.json",
   "compilerOptions": {
     "rootDir": "./",
-    "declarationDir": "../types",
-    "jsx": "preserve"
+    "declarationDir": "../types"
   },
   "include": ["./"],
   "exclude": []

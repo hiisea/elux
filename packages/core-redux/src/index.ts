@@ -16,8 +16,6 @@ const reduxReducer: Reducer = (state, action) => {
   return {...state, ...action.state};
 };
 
-declare const process: any;
-
 export function storeCreator(storeOptions: ReduxOptions): ReduxStore {
   const {initState = {}, enhancers = [], middlewares} = storeOptions;
   if (middlewares) {

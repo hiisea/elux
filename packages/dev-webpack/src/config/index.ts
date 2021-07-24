@@ -90,7 +90,9 @@ export function dev(projEnvName: string, port?: number): void {
 *                                     *
 ***************************************
 `);
-      console.info(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localUrl)}`);
+      console.info(
+        `.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localUrl)} \n`
+      );
       console.info(`WebpackCache: ${chalk.blue(cache)}`);
       if (cache !== 'filesystem') {
         console.info(`${chalk.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);

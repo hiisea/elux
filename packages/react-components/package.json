@@ -16,6 +16,7 @@
   "jsnext:main": "dist/next/index.js",
   "types": "types/",
   "files": [
+    "runtime/",
     "types/",
     "dist/"
   ],

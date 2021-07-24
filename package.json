@@ -29,6 +29,7 @@
     "packages/react-redux",
     "packages/react-web",
     "packages/react-redux-web",
+    "packages/vue-components",
     "packages/vue-web",
     "packages/vue-vuex",
     "packages/vue-vuex-web",

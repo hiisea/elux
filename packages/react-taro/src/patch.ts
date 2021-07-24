@@ -4,7 +4,6 @@ import {SingleDispatcher} from '@elux/core';
 import type {RouteENV} from '@elux/route-mp';
 import {nativeUrlToNativeLocation} from '@elux/route';
 
-declare const require: any;
 declare const window: any;
 declare let Page: (options: any) => void;
 

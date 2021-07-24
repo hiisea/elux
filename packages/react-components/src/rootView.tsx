@@ -3,27 +3,25 @@ import {env, IStore} from '@elux/core';
 import {EluxContext, EluxContextComponent, reactComponentsConfig} from './base';
 import {hydrate, render} from 'react-dom';
 
-declare const require: any;
-
-export function renderToDocument(id: string, APP: ComponentType<any>, store: IStore, eluxContext: EluxContext, fromSSR: boolean): void {
+export function renderToDocument(id: string, APPView: ComponentType<any>, store: IStore, eluxContext: EluxContext, fromSSR: boolean): void {
   const renderFun = fromSSR ? hydrate : render;
   const panel = env.document.getElementById(id);
   renderFun(
     <EluxContextComponent.Provider value={eluxContext}>
       <reactComponentsConfig.Provider store={store}>
-        <APP />
+        <APPView />
       </reactComponentsConfig.Provider>
     </EluxContextComponent.Provider>,
     panel
   );
 }
-export function renderToString(id: string, APP: ComponentType<any>, store: IStore, eluxContext: EluxContext): string {
+export function renderToString(id: string, APPView: ComponentType<any>, store: IStore, eluxContext: EluxContext): Promise<string> {
   const html: string = require('react-dom/server').renderToString(
     <EluxContextComponent.Provider value={eluxContext}>
       <reactComponentsConfig.Provider store={store}>
-        <APP />
+        <APPView />
       </reactComponentsConfig.Provider>
     </EluxContextComponent.Provider>
   );
-  return html;
+  return Promise.resolve(html);
 }

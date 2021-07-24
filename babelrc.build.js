@@ -7,9 +7,9 @@ const cfg = {
 };
 const env = cfg[tag];
 
-module.exports = (presets = []) => {
+module.exports = (ui, presets = []) => {
   return {
-    presets: [['@elux', {...env, presets, rootImport: {rootPathPrefix: 'src/', rootPathSuffix: './src/'}}]],
+    presets: [['@elux', {...env, ui, presets, rootImport: {rootPathPrefix: 'src/', rootPathSuffix: './src/'}}]],
     ignore: ['**/*.d.ts'],
     comments: false,
   };

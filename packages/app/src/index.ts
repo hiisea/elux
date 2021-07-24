@@ -110,12 +110,10 @@ export interface EluxContext {
   router?: IBaseRouter<any, string>;
 }
 
-export const EluxContextKey = '__EluxContext__';
-
 export function createBaseApp<INS = {}>(
   ins: INS,
   createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>,
-  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean) => void,
+  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void,
   moduleGetter: ModuleGetter,
   middlewares: IStoreMiddleware[] = [],
   appModuleName?: string
@@ -143,7 +141,7 @@ export function createBaseApp<INS = {}>(
             return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
               routeModule.model(store);
               router.setStore(store);
-              render(id, AppView, store, {deps: {}, store, router, documentHead: ''}, !!env[ssrKey]);
+              render(id, AppView, store, {deps: {}, store, router, documentHead: ''}, !!env[ssrKey], ins);
               return store;
             });
           });
@@ -156,7 +154,7 @@ export function createBaseApp<INS = {}>(
 export function createBaseSSR<INS = {}>(
   ins: INS,
   createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>,
-  render: (id: string, component: any, store: IStore, eluxContext: EluxContext) => string,
+  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>,
   moduleGetter: ModuleGetter,
   middlewares: IStoreMiddleware[] = [],
   appModuleName?: string
@@ -183,18 +181,19 @@ export function createBaseSSR<INS = {}>(
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
               const state = store.getState();
               const eluxContext = {deps: {}, store, router, documentHead: ''};
-              const html = render(id, AppView, store, eluxContext);
-              const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-              if (match) {
-                return appMeta.SSRTPL.replace(
-                  '</head>',
-                  `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                    state,
-                    components: Object.keys(eluxContext.deps),
-                  })};</script>\r\n</head>`
-                ).replace(match[0], match[0] + html);
-              }
-              return html;
+              return render(id, AppView, store, eluxContext, ins).then((html) => {
+                const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+                if (match) {
+                  return appMeta.SSRTPL.replace(
+                    '</head>',
+                    `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                      state,
+                      components: Object.keys(eluxContext.deps),
+                    })};</script>\r\n</head>`
+                  ).replace(match[0], match[0] + html);
+                }
+                return html;
+              });
             });
           });
         },

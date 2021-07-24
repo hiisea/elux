@@ -8,7 +8,7 @@ exports.createBaseApp = createBaseApp;
 exports.createBaseSSR = createBaseSSR;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.EluxContextKey = exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
+exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -55,9 +55,6 @@ function setUserConfig(conf) {
   (0, _core.setCoreConfig)(conf);
   (0, _route.setRouteConfig)(conf);
 }
-
-var EluxContextKey = '__EluxContext__';
-exports.EluxContextKey = EluxContextKey;
 
 function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
   if (middlewares === void 0) {
@@ -115,7 +112,7 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
                 store: store,
                 router: router,
                 documentHead: ''
-              }, !!_core.env[ssrKey]);
+              }, !!_core.env[ssrKey], ins);
               return store;
             });
           });
@@ -175,17 +172,18 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
                 router: router,
                 documentHead: ''
               };
-              var html = render(id, AppView, store, eluxContext);
-              var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
+              return render(id, AppView, store, eluxContext, ins).then(function (html) {
+                var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
-              if (match) {
-                return appMeta.SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
-                  state: state,
-                  components: Object.keys(eluxContext.deps)
-                }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
-              }
+                if (match) {
+                  return appMeta.SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                    state: state,
+                    components: Object.keys(eluxContext.deps)
+                  }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
+                }
 
-              return html;
+                return html;
+              });
             });
           });
         })

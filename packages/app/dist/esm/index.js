@@ -15,7 +15,6 @@ export function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-export var EluxContextKey = '__EluxContext__';
 export function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
   if (middlewares === void 0) {
     middlewares = [];
@@ -73,7 +72,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
                 store: store,
                 router: router,
                 documentHead: ''
-              }, !!env[ssrKey]);
+              }, !!env[ssrKey], ins);
               return store;
             });
           });
@@ -133,17 +132,18 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
                 router: router,
                 documentHead: ''
               };
-              var html = render(id, AppView, store, eluxContext);
-              var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
+              return render(id, AppView, store, eluxContext, ins).then(function (html) {
+                var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
-              if (match) {
-                return appMeta.SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
-                  state: state,
-                  components: Object.keys(eluxContext.deps)
-                }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
-              }
+                if (match) {
+                  return appMeta.SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                    state: state,
+                    components: Object.keys(eluxContext.deps)
+                  }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
+                }
 
-              return html;
+                return html;
+              });
             });
           });
         })

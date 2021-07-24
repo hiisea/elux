@@ -8,3 +8,11 @@ declare namespace EluxRuntime {
     decodeBas64(str: string): string;
   }
 }
+declare interface Process {
+  env: {
+    NODE_ENV: 'development' | 'production';
+  };
+}
+declare const process: Process;
+
+declare const require: (path: string) => any;

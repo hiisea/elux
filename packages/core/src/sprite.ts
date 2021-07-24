@@ -175,8 +175,6 @@ export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
   return target;
 }
 
-declare const process: any;
-
 export function warn(str: string): void {
   if (process.env.NODE_ENV === 'development') {
     env.console.warn(str);

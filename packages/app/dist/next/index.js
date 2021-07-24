@@ -14,7 +14,6 @@ export function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-export const EluxContextKey = '__EluxContext__';
 export function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = [], appModuleName) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
@@ -55,7 +54,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
                 store,
                 router,
                 documentHead: ''
-              }, !!env[ssrKey]);
+              }, !!env[ssrKey], ins);
               return store;
             });
           });
@@ -101,17 +100,18 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
                 router,
                 documentHead: ''
               };
-              const html = render(id, AppView, store, eluxContext);
-              const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+              return render(id, AppView, store, eluxContext, ins).then(html => {
+                const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
-              if (match) {
-                return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                  state,
-                  components: Object.keys(eluxContext.deps)
-                })};</script>\r\n</head>`).replace(match[0], match[0] + html);
-              }
+                if (match) {
+                  return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                    state,
+                    components: Object.keys(eluxContext.deps)
+                  })};</script>\r\n</head>`).replace(match[0], match[0] + html);
+                }
 
-              return html;
+                return html;
+              });
             });
           });
         }

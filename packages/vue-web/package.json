@@ -16,7 +16,7 @@
   "jsnext:main": "dist/next/index.js",
   "types": "types/",
   "files": [
-    "env/",
+    "runtime/",
     "types/",
     "dist/"
   ],
@@ -29,18 +29,14 @@
     "build:ts": "tsc -P ./src --module ESNext --isolatedModules false --noEmit false --outDir ./dist/ts",
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
-  "externals": {
-    "vue": true,
-    "@vue/server-renderer": true
-  },
   "peerDependencies": {
     "vue": "^3.0.0"
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/route-browser": "^0.1.5",
-    "@vue/server-renderer": "^3.0.0",
-    "stream": "^0.0.2"
+    "@elux/app": "^0.1.5",
+    "@elux/vue-components": "^0.1.5",
+    "@elux/route-browser": "^0.1.5"
   },
   "devDependencies": {
     "vue": "^3.0.0"
