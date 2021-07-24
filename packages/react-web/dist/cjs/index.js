@@ -30,8 +30,7 @@ Object.keys(_app).forEach(function (key) {
 var _routeBrowser = require("@elux/route-browser");
 
 (0, _app.setAppConfig)({
-  loadComponent: _reactComponents.loadComponent,
-  MutableData: false
+  loadComponent: _reactComponents.loadComponent
 });
 
 function setConfig(conf) {

@@ -4,8 +4,7 @@ import { createRouter } from '@elux/route-browser';
 export * from '@elux/react-components';
 export * from '@elux/app';
 setAppConfig({
-  loadComponent,
-  MutableData: false
+  loadComponent
 });
 export function setConfig(conf) {
   setReactComponentsConfig(conf);

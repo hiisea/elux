@@ -4117,6 +4117,11 @@ async function ssrApp(baseStore, preloadModules, middlewares, appViewName = 'mai
 }
 
 const reactComponentsConfig = {
+  setPageTitle(title) {
+    return env.document.title = title;
+  },
+
+  Provider: null,
   LoadComponentOnError: ({
     message
   }) => React.createElement("div", {
@@ -5714,9 +5719,12 @@ class BaseRouter {
 }
 
 const appMeta = {
+  router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
-const appConfig = {};
+const appConfig = {
+  loadComponent: null
+};
 const setAppConfig = buildConfigSetter(appConfig);
 function setUserConfig(conf) {
   setCoreConfig(conf);
@@ -7051,8 +7059,7 @@ function createRouter(createHistory, locationTransform) {
 }
 
 setAppConfig({
-  loadComponent,
-  MutableData: false
+  loadComponent
 });
 function setConfig(conf) {
   setReactComponentsConfig(conf);

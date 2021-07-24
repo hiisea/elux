@@ -1,12 +1,15 @@
 import {ComponentType} from 'react';
-import {renderToString, renderToDocument, setReactComponentsConfig, loadComponent} from '@elux/react-components';
-import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, CreateSSR, LocationTransform, UserConfig} from '@elux/app';
+import {RootModuleFacade} from '@elux/core';
+import {renderToString, renderToDocument, setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
+import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, CreateSSR, LocationTransform, UserConfig, GetBaseAPP} from '@elux/app';
 import {createRouter} from '@elux/route-browser';
 
 export * from '@elux/react-components';
 export * from '@elux/app';
 
-setAppConfig({loadComponent, MutableData: false});
+setAppConfig({loadComponent});
+
+export type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
 
 export function setConfig(
   conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}

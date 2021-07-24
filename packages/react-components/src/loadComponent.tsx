@@ -1,12 +1,13 @@
 import React, {ComponentType, Component} from 'react';
-import {env, loadComponet, isPromise, LoadComponent as BaseLoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
+import {env, loadComponet, isPromise, LoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
 import {EluxContextComponent, EluxContext, reactComponentsConfig} from './base';
 
-export type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<
-  A,
-  {OnError?: ComponentType<{message: string}>; OnLoading?: ComponentType<{}>}
->;
-const loadComponent: LoadComponent<Record<string, any>> = (moduleName, componentName, options = {}) => {
+export interface LoadComponentOptions {
+  OnError?: ComponentType<{message: string}>;
+  OnLoading?: ComponentType<{}>;
+}
+
+const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
   class Loader extends Component<{forwardedRef: any}> {

@@ -56,7 +56,7 @@ export declare function createBaseSSR<INS = {}>(ins: INS, createRouter: (locatio
     };
 };
 export declare function patchActions(typeName: string, json?: string): void;
-export declare type GetAPP<A extends RootModuleFacade, Component> = {
+export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions> = {
     State: {
         [M in keyof A]: A[M]['state'];
     };
@@ -69,10 +69,7 @@ export declare type GetAPP<A extends RootModuleFacade, Component> = {
     GetActions<N extends keyof A>(...args: N[]): {
         [K in N]: A[K]['actions'];
     };
-    LoadComponent: LoadComponent<A, {
-        OnError?: Component;
-        OnLoading?: Component;
-    }>;
+    LoadComponent: LoadComponent<A, LoadComponentOptions>;
     Modules: RootModuleAPI<A>;
     Actions: RootModuleActions<A>;
     Pagenames: {

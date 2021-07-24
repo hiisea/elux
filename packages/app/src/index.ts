@@ -208,12 +208,12 @@ export function patchActions(typeName: string, json?: string): void {
   }
 }
 
-export type GetAPP<A extends RootModuleFacade, Component> = {
+export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions> = {
   State: {[M in keyof A]: A[M]['state']};
   RouteParams: {[M in keyof A]?: A[M]['params']};
   GetRouter: () => IBaseRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A['route']['components'], string>>;
   GetActions<N extends keyof A>(...args: N[]): {[K in N]: A[K]['actions']};
-  LoadComponent: LoadComponent<A, {OnError?: Component; OnLoading?: Component}>;
+  LoadComponent: LoadComponent<A, LoadComponentOptions>;
   Modules: RootModuleAPI<A>;
   Actions: RootModuleActions<A>;
   Pagenames: {[K in keyof A['route']['components']]: K};

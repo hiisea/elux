@@ -1,10 +1,10 @@
 import { ComponentType } from 'react';
-import { LoadComponent as BaseLoadComponent, RootModuleFacade } from '@elux/core';
-export declare type LoadComponent<A extends RootModuleFacade = {}> = BaseLoadComponent<A, {
+import { LoadComponent } from '@elux/core';
+export interface LoadComponentOptions {
     OnError?: ComponentType<{
         message: string;
     }>;
     OnLoading?: ComponentType<{}>;
-}>;
-declare const loadComponent: LoadComponent<Record<string, any>>;
+}
+declare const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions>;
 export default loadComponent;

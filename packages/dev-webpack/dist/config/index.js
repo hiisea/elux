@@ -71,11 +71,11 @@ function dev(projEnvName, port) {
 *                                     *
 ***************************************
 `);
+            console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta.underline(localUrl)}`);
             console.info(`WebpackCache: ${chalk_1.default.blue(cache)}`);
             if (cache !== 'filesystem') {
                 console.info(`${chalk_1.default.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);
             }
-            console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta.underline(localUrl)}`);
             onCompiled();
         }
     });

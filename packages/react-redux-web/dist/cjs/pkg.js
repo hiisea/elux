@@ -5085,6 +5085,10 @@ function _ssrApp() {
 }
 
 var reactComponentsConfig = {
+  setPageTitle: function setPageTitle(title) {
+    return env.document.title = title;
+  },
+  Provider: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return React__default['default'].createElement("div", {
@@ -6989,9 +6993,12 @@ var BaseRouter = function () {
 }();
 
 var appMeta = {
+  router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
-var appConfig = {};
+var appConfig = {
+  loadComponent: null
+};
 var setAppConfig = buildConfigSetter(appConfig);
 function setUserConfig(conf) {
   setCoreConfig(conf);
@@ -8385,8 +8392,7 @@ function createRouter(createHistory, locationTransform) {
 }
 
 setAppConfig({
-  loadComponent: loadComponent,
-  MutableData: false
+  loadComponent: loadComponent
 });
 function setConfig(conf) {
   setReactComponentsConfig(conf);
