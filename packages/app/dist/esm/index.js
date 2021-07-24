@@ -4,9 +4,12 @@ import { routeMiddleware, setRouteConfig, routeMeta } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
 var appMeta = {
+  router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
-export var appConfig = {};
+export var appConfig = {
+  loadComponent: null
+};
 export var setAppConfig = buildConfigSetter(appConfig);
 export function setUserConfig(conf) {
   setCoreConfig(conf);

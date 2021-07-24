@@ -2,7 +2,6 @@ import {buildConfigSetter} from '@elux/core';
 export interface RouteConfig {
   actionMaxHistory: number;
   pagesMaxHistory: number;
-
   disableNativeRoute: boolean;
   indexUrl: string;
   defaultParams: Record<string, any>;

@@ -52,13 +52,15 @@ const appMeta: {
   SSRTPL: string;
   router: IBaseRouter<any, string>;
 } = {
+  router: null as any,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
-} as any;
+};
 
 export const appConfig: {
   loadComponent: LoadComponent;
-  MutableData: boolean;
-} = {} as any;
+} = {
+  loadComponent: null as any,
+};
 export const setAppConfig = buildConfigSetter(appConfig);
 export interface UserConfig {
   actionMaxHistory?: number;

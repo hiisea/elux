@@ -10,6 +10,10 @@ var _react = _interopRequireDefault(require("react"));
 var _core = require("@elux/core");
 
 var reactComponentsConfig = {
+  setPageTitle: function setPageTitle(title) {
+    return _core.env.document.title = title;
+  },
+  Provider: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return _react.default.createElement("div", {

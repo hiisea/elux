@@ -41,9 +41,12 @@ exports.BaseModuleHandlers = _route.ModuleWithRouteHandlers;
 exports.RouteActionTypes = _route.RouteActionTypes;
 exports.createRouteModule = _route.createRouteModule;
 var appMeta = {
+  router: null,
   SSRTPL: _core.env.isServer ? _core.env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
-var appConfig = {};
+var appConfig = {
+  loadComponent: null
+};
 exports.appConfig = appConfig;
 var setAppConfig = (0, _core.buildConfigSetter)(appConfig);
 exports.setAppConfig = setAppConfig;

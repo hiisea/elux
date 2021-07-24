@@ -11,9 +11,10 @@ export const reactComponentsConfig: {
   setPageTitle(title: string) {
     return (env.document.title = title);
   },
+  Provider: null as any,
   LoadComponentOnError: ({message}: {message: string}) => <div className="g-component-error">{message}</div>,
   LoadComponentOnLoading: () => <div className="g-component-loading">loading...</div>,
-} as any;
+};
 
 export const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
 export interface EluxContext {

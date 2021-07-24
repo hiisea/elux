@@ -6,11 +6,9 @@ export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent } from
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';
 export declare const appConfig: {
     loadComponent: LoadComponent;
-    MutableData: boolean;
 };
 export declare const setAppConfig: (config: Partial<{
     loadComponent: LoadComponent;
-    MutableData: boolean;
 }>) => void;
 export interface UserConfig {
     actionMaxHistory?: number;

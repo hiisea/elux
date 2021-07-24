@@ -1,6 +1,10 @@
 import React from 'react';
-import { buildConfigSetter } from '@elux/core';
+import { env, buildConfigSetter } from '@elux/core';
 export var reactComponentsConfig = {
+  setPageTitle: function setPageTitle(title) {
+    return env.document.title = title;
+  },
+  Provider: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return React.createElement("div", {
