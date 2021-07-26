@@ -1,7 +1,6 @@
 import {ComponentType, FunctionComponent, ComponentClass} from 'react';
-import {connect, Provider, Options} from 'react-redux';
+import {connect, Options} from 'react-redux';
 import {exportView, Dispatch, EluxComponent} from '@elux/core';
-import {setReactComponentsConfig} from '@elux/react-web';
 
 export type {ReduxStore, ReduxOptions} from '@elux/core-redux';
 export {createRedux} from '@elux/core-redux';
@@ -24,5 +23,3 @@ export const connectRedux: ConnectRedux = function (...args) {
 };
 
 export {shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect} from 'react-redux';
-
-setReactComponentsConfig({Provider: Provider as any});

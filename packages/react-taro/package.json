@@ -30,20 +30,17 @@
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "peerDependencies": {
-    "@tarojs/taro": "^3.3.1",
-    "react": "^16.8.0 || ^17",
-    "react-dom": "^16.8.0 || ^17"
+    "@tarojs/taro": "^3.3.1"
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.5",
+    "@elux/app": "^0.1.5",
+    "@elux/react-components": "^0.1.5",
     "@elux/route-mp": "^0.1.5"
   },
   "devDependencies": {
     "@types/react": "~17.0.0",
-    "@types/react-dom": "~17.0.0",
-    "react": "~17.0.0",
-    "react-dom": "~17.0.0"
+    "react": "~17.0.0"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
 }

@@ -95,16 +95,24 @@ function getModule(moduleName) {
 
 function getModuleList(moduleNames) {
   if (moduleNames.length < 1) {
-    return Promise.resolve([]);
+    return [];
   }
 
-  return Promise.all(moduleNames.map(function (moduleName) {
+  var list = moduleNames.map(function (moduleName) {
     if (_basic.MetaData.moduleCaches[moduleName]) {
       return _basic.MetaData.moduleCaches[moduleName];
     }
 
     return getModule(moduleName);
-  }));
+  });
+
+  if (list.some(function (item) {
+    return (0, _sprite.isPromise)(item);
+  })) {
+    return Promise.all(list);
+  } else {
+    return list;
+  }
 }
 
 function _loadModel(moduleName, store) {

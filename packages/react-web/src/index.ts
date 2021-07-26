@@ -1,6 +1,7 @@
 import {ComponentType} from 'react';
 import {RootModuleFacade} from '@elux/core';
-import {renderToString, renderToDocument, setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
+import {setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
+import {renderToString, renderToDocument} from '@elux/react-components/stage';
 import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, CreateSSR, LocationTransform, UserConfig, GetBaseAPP} from '@elux/app';
 import {createRouter} from '@elux/route-browser';
 

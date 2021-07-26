@@ -281,15 +281,28 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
         return def[moduleName] === undefined;
       });
-      return (0, _core.getModuleList)(asyncLoadModules).then(function (modules) {
-        modules.forEach(function (module) {
-          def[module.moduleName] = module.params;
+      var modulesOrPromise = (0, _core.getModuleList)(asyncLoadModules);
+
+      if ((0, _core.isPromise)(modulesOrPromise)) {
+        return modulesOrPromise.then(function (modules) {
+          modules.forEach(function (module) {
+            def[module.moduleName] = module.params;
+          });
+          return {
+            pagename: pagename,
+            params: assignDefaultData(params)
+          };
         });
-        return {
-          pagename: pagename,
-          params: assignDefaultData(params)
-        };
+      }
+
+      var modules = modulesOrPromise;
+      modules.forEach(function (module) {
+        def[module.moduleName] = module.params;
       });
+      return {
+        pagename: pagename,
+        params: assignDefaultData(params)
+      };
     },
     eluxLocationToLocation: function eluxLocationToLocation(eluxLocation) {
       return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));

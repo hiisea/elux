@@ -68,16 +68,24 @@ export function getModule(moduleName) {
 }
 export function getModuleList(moduleNames) {
   if (moduleNames.length < 1) {
-    return Promise.resolve([]);
+    return [];
   }
 
-  return Promise.all(moduleNames.map(function (moduleName) {
+  var list = moduleNames.map(function (moduleName) {
     if (MetaData.moduleCaches[moduleName]) {
       return MetaData.moduleCaches[moduleName];
     }
 
     return getModule(moduleName);
-  }));
+  });
+
+  if (list.some(function (item) {
+    return isPromise(item);
+  })) {
+    return Promise.all(list);
+  } else {
+    return list;
+  }
 }
 
 function _loadModel(moduleName, store) {

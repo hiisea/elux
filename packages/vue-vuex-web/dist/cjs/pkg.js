@@ -2395,16 +2395,24 @@ function getModule(moduleName) {
 }
 function getModuleList(moduleNames) {
   if (moduleNames.length < 1) {
-    return Promise.resolve([]);
+    return [];
   }
 
-  return Promise.all(moduleNames.map(function (moduleName) {
+  var list = moduleNames.map(function (moduleName) {
     if (MetaData.moduleCaches[moduleName]) {
       return MetaData.moduleCaches[moduleName];
     }
 
     return getModule(moduleName);
-  }));
+  });
+
+  if (list.some(function (item) {
+    return isPromise(item);
+  })) {
+    return Promise.all(list);
+  } else {
+    return list;
+  }
 }
 
 function _loadModel(moduleName, store) {
@@ -3779,6 +3787,23 @@ function _renderApp() {
   return _renderApp.apply(this, arguments);
 }
 
+function syncApp(baseStore, middlewares, appViewName) {
+  if (appViewName === void 0) {
+    appViewName = 'main';
+  }
+
+  var moduleGetter = MetaData.moduleGetter,
+      appModuleName = MetaData.appModuleName;
+  var store = enhanceStore(baseStore, middlewares);
+  MetaData.clientStore = store;
+  var appModule = moduleGetter[appModuleName]();
+  appModule.model(store);
+  var AppView = getComponet(appModuleName, appViewName);
+  return {
+    store: store,
+    AppView: AppView
+  };
+}
 function ssrApp(_x6, _x7, _x8, _x9) {
   return _ssrApp.apply(this, arguments);
 }
@@ -4824,15 +4849,28 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
         return def[moduleName] === undefined;
       });
-      return getModuleList(asyncLoadModules).then(function (modules) {
-        modules.forEach(function (module) {
-          def[module.moduleName] = module.params;
+      var modulesOrPromise = getModuleList(asyncLoadModules);
+
+      if (isPromise(modulesOrPromise)) {
+        return modulesOrPromise.then(function (modules) {
+          modules.forEach(function (module) {
+            def[module.moduleName] = module.params;
+          });
+          return {
+            pagename: pagename,
+            params: assignDefaultData(params)
+          };
         });
-        return {
-          pagename: pagename,
-          params: assignDefaultData(params)
-        };
+      }
+
+      var modules = modulesOrPromise;
+      modules.forEach(function (module) {
+        def[module.moduleName] = module.params;
       });
+      return {
+        pagename: pagename,
+        params: assignDefaultData(params)
+      };
     },
     eluxLocationToLocation: function eluxLocationToLocation(eluxLocation) {
       return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
@@ -5135,12 +5173,14 @@ var BaseRouter = function () {
 
     _defineProperty(this, "listenerMap", {});
 
-    _defineProperty(this, "initedPromise", void 0);
+    _defineProperty(this, "initRouteState", void 0);
 
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
-    this.initedPromise = locationTransform.urlToLocation(url).then(function (location) {
+    var locationOrPromise = locationTransform.urlToLocation(url);
+
+    var callback = function callback(location) {
       var key = _this2._createKey();
 
       var routeState = _extends({}, location, {
@@ -5165,7 +5205,13 @@ var BaseRouter = function () {
         key: key
       });
       return routeState;
-    });
+    };
+
+    if (isPromise(locationOrPromise)) {
+      this.initRouteState = locationOrPromise.then(callback);
+    } else {
+      this.initRouteState = callback(locationOrPromise);
+    }
   }
 
   var _proto2 = BaseRouter.prototype;
@@ -5729,7 +5775,7 @@ function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
   if (middlewares === void 0) {
     middlewares = [];
   }
@@ -5764,11 +5810,80 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
           appMeta.router = router;
 
           var _ref3 = env[ssrKey] || {},
-              state = _ref3.state,
-              _ref3$components = _ref3.components,
-              components = _ref3$components === void 0 ? [] : _ref3$components;
+              state = _ref3.state;
 
-          return router.initedPromise.then(function (routeState) {
+          var routeState = router.initRouteState;
+
+          var initState = _extends({}, storeOptions.initState, {
+            route: routeState
+          }, state);
+
+          var baseStore = storeCreator(_extends({}, storeOptions, {
+            initState: initState
+          }));
+
+          var _syncApp = syncApp(baseStore, istoreMiddleware, viewName),
+              store = _syncApp.store,
+              AppView = _syncApp.AppView;
+
+          routeModule.model(store);
+          router.setStore(store);
+          var view = render(id, AppView, store, {
+            deps: {},
+            store: store,
+            router: router,
+            documentHead: ''
+          }, !!env[ssrKey], ins);
+          return {
+            store: store,
+            view: view
+          };
+        })
+      });
+    }
+  };
+}
+function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+  if (middlewares === void 0) {
+    middlewares = [];
+  }
+
+  defineModuleGetter(moduleGetter, appModuleName);
+  var istoreMiddleware = [routeMiddleware].concat(middlewares);
+  var routeModule = getModule('route');
+  return {
+    useStore: function useStore(_ref4) {
+      var storeOptions = _ref4.storeOptions,
+          storeCreator = _ref4.storeCreator;
+      return Object.assign(ins, {
+        render: function (_render2) {
+          function render(_x2) {
+            return _render2.apply(this, arguments);
+          }
+
+          render.toString = function () {
+            return _render2.toString();
+          };
+
+          return render;
+        }(function (_temp2) {
+          var _ref5 = _temp2 === void 0 ? {} : _temp2,
+              _ref5$id = _ref5.id,
+              id = _ref5$id === void 0 ? 'root' : _ref5$id,
+              _ref5$ssrKey = _ref5.ssrKey,
+              ssrKey = _ref5$ssrKey === void 0 ? 'eluxInitStore' : _ref5$ssrKey,
+              viewName = _ref5.viewName;
+
+          var router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
+
+          var _ref6 = env[ssrKey] || {},
+              state = _ref6.state,
+              _ref6$components = _ref6.components,
+              components = _ref6$components === void 0 ? [] : _ref6$components;
+
+          var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
+          return roterStatePromise.then(function (routeState) {
             var initState = _extends({}, storeOptions.initState, {
               route: routeState
             }, state);
@@ -5776,9 +5891,9 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref4) {
-              var store = _ref4.store,
-                  AppView = _ref4.AppView;
+            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref7) {
+              var store = _ref7.store,
+                  AppView = _ref7.AppView;
               routeModule.model(store);
               router.setStore(store);
               render(id, AppView, store, {
@@ -5804,31 +5919,32 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
   var routeModule = getModule('route');
   return {
-    useStore: function useStore(_ref5) {
-      var storeOptions = _ref5.storeOptions,
-          storeCreator = _ref5.storeCreator;
+    useStore: function useStore(_ref8) {
+      var storeOptions = _ref8.storeOptions,
+          storeCreator = _ref8.storeCreator;
       return Object.assign(ins, {
-        render: function (_render2) {
-          function render(_x2) {
-            return _render2.apply(this, arguments);
+        render: function (_render3) {
+          function render(_x3) {
+            return _render3.apply(this, arguments);
           }
 
           render.toString = function () {
-            return _render2.toString();
+            return _render3.toString();
           };
 
           return render;
-        }(function (_temp2) {
-          var _ref6 = _temp2 === void 0 ? {} : _temp2,
-              _ref6$id = _ref6.id,
-              id = _ref6$id === void 0 ? 'root' : _ref6$id,
-              _ref6$ssrKey = _ref6.ssrKey,
-              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
-              viewName = _ref6.viewName;
+        }(function (_temp3) {
+          var _ref9 = _temp3 === void 0 ? {} : _temp3,
+              _ref9$id = _ref9.id,
+              id = _ref9$id === void 0 ? 'root' : _ref9$id,
+              _ref9$ssrKey = _ref9.ssrKey,
+              ssrKey = _ref9$ssrKey === void 0 ? 'eluxInitStore' : _ref9$ssrKey,
+              viewName = _ref9.viewName;
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          return router.initedPromise.then(function (routeState) {
+          var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
+          return roterStatePromise.then(function (routeState) {
             var initState = _extends({}, storeOptions.initState, {
               route: routeState
             });
@@ -5836,9 +5952,9 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref7) {
-              var store = _ref7.store,
-                  AppView = _ref7.AppView;
+            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref10) {
+              var store = _ref10.store,
+                  AppView = _ref10.AppView;
               var state = store.getState();
               var eluxContext = {
                 deps: {},
@@ -7144,13 +7260,13 @@ exports.BaseModuleHandlers = ModuleWithRouteHandlers;
 exports.DocumentHead = DocumentHead;
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 exports.Link = Link;
-exports.RootComponent = RootComponent;
 exports.RouteActionTypes = RouteActionTypes;
 exports.action = action;
 exports.appConfig = appConfig;
 exports.clientSide = clientSide;
 exports.createApp = createApp;
 exports.createBaseApp = createBaseApp;
+exports.createBaseMP = createBaseMP;
 exports.createBaseSSR = createBaseSSR;
 exports.createLogger = createLogger;
 exports.createRouteModule = createRouteModule;
@@ -7173,8 +7289,6 @@ exports.logger = logger;
 exports.mutation = mutation;
 exports.patchActions = patchActions;
 exports.reducer = reducer;
-exports.renderToDocument = renderToDocument;
-exports.renderToString = renderToString;
 exports.serverSide = serverSide;
 exports.setAppConfig = setAppConfig;
 exports.setConfig = setConfig;

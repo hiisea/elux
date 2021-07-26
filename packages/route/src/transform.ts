@@ -1,21 +1,21 @@
-import {deepMerge, env, getModuleList, getModuleGetter} from '@elux/core';
+import {deepMerge, env, getModuleList, getModuleGetter, isPromise} from '@elux/core';
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
 import {routeConfig, routeMeta, EluxLocation, PartialLocation, Location, RootParams, NativeLocation} from './basic';
 
 export interface LocationTransform {
   eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation; // E->L
-  eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Promise<Location<P>>; // E->L
+  eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>>; // E->L
   eluxLocationToNativeLocation(eluxLocation: EluxLocation): NativeLocation; // E->N
   partialLocationToEluxLocation(partialLocation: PartialLocation): EluxLocation; // L->E
   partialLocationToNativeLocation(partialLocation: PartialLocation): NativeLocation; // L->N
   nativeLocationToEluxLocation(nativeLocation: NativeLocation): EluxLocation; // N->E
   nativeLocationToPartialLocation(nativeLocation: NativeLocation): PartialLocation; // N->L
-  nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Promise<Location<P>>; // N->L
+  nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Location<P> | Promise<Location<P>>; // N->L
   urlToEluxLocation(url: string): EluxLocation; // U->E
   urlToToPartialLocation(url: string): PartialLocation; // U->L
-  urlToLocation<P extends RootParams>(url: string): Promise<Location<P>>; // U->L
+  urlToLocation<P extends RootParams>(url: string): Location<P> | Promise<Location<P>>; // U->L
   urlToGivenLocation(url: string): NativeLocation | EluxLocation;
-  partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Promise<Location<P>>;
+  partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>>;
   partialLocationToMinData(partialLocation: PartialLocation): {pathname: string; params: Record<string, any>; pathParams: Record<string, any>};
 }
 
@@ -138,7 +138,7 @@ export function createLocationTransform(
     });
   }
   return {
-    urlToLocation<P extends RootParams>(url: string): Promise<Location<P>> {
+    urlToLocation<P extends RootParams>(url: string): Location<P> | Promise<Location<P>> {
       return this.partialLocationToLocation(this.urlToToPartialLocation(url));
     },
     urlToToPartialLocation(url) {
@@ -162,7 +162,7 @@ export function createLocationTransform(
       }
       return nativeUrlToNativeLocation(url);
     },
-    nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Promise<Location<P>> {
+    nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Location<P> | Promise<Location<P>> {
       return this.partialLocationToLocation(this.nativeLocationToPartialLocation(nativeLocation));
     },
     nativeLocationToPartialLocation(nativeLocation) {
@@ -231,18 +231,26 @@ export function createLocationTransform(
       });
       return {pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`, params};
     },
-    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Promise<Location<P>> {
+    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>> {
       const {pagename, params} = partialLocation;
       const def = routeConfig.defaultParams;
       const asyncLoadModules = Object.keys(params).filter((moduleName) => def[moduleName] === undefined);
-      return getModuleList(asyncLoadModules).then((modules) => {
-        modules.forEach((module) => {
-          def[module.moduleName] = module.params;
+      const modulesOrPromise = getModuleList(asyncLoadModules);
+      if (isPromise(modulesOrPromise)) {
+        return modulesOrPromise.then((modules) => {
+          modules.forEach((module) => {
+            def[module.moduleName] = module.params;
+          });
+          return {pagename, params: assignDefaultData(params) as P};
         });
-        return {pagename, params: assignDefaultData(params) as P};
+      }
+      const modules = modulesOrPromise;
+      modules.forEach((module) => {
+        def[module.moduleName] = module.params;
       });
+      return {pagename, params: assignDefaultData(params) as P};
     },
-    eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Promise<Location<P>> {
+    eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>> {
       return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
     },
     partialLocationToMinData(partialLocation) {

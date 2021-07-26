@@ -22,6 +22,8 @@ Object.keys(_vueComponents).forEach(function (key) {
   exports[key] = _vueComponents[key];
 });
 
+var _stage = require("@elux/vue-components/stage");
+
 var _app = require("@elux/app");
 
 Object.keys(_app).forEach(function (key) {
@@ -46,19 +48,19 @@ function setConfig(conf) {
 }
 
 var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
-  var app = (0, _vue.createApp)(_vueComponents.RootComponent);
+  var app = (0, _vue.createApp)(_stage.RootComponent);
   return (0, _app.createBaseApp)(app, function (locationTransform) {
     return (0, _routeBrowser.createRouter)('Browser', locationTransform);
-  }, _vueComponents.renderToDocument, moduleGetter, middlewares, appModuleName);
+  }, _stage.renderToDocument, moduleGetter, middlewares, appModuleName);
 };
 
 exports.createApp = createApp;
 
 var createSSR = function createSSR(moduleGetter, url, middlewares, appModuleName) {
-  var app = (0, _vue.createSSRApp)(_vueComponents.RootComponent);
+  var app = (0, _vue.createSSRApp)(_stage.RootComponent);
   return (0, _app.createBaseSSR)(app, function (locationTransform) {
     return (0, _routeBrowser.createRouter)(url, locationTransform);
-  }, _vueComponents.renderToString, moduleGetter, middlewares, appModuleName);
+  }, _stage.renderToString, moduleGetter, middlewares, appModuleName);
 };
 
 exports.createSSR = createSSR;

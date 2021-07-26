@@ -1,4 +1,4 @@
-import { IStore, LoadComponent, ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions } from '@elux/core';
+import { IStore, LoadComponent, ModuleGetter, IStoreMiddleware, StoreBuilder, BStoreOptions, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions, EluxComponent } from '@elux/core';
 import { IBaseRouter, LocationTransform } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
@@ -24,6 +24,16 @@ export interface RenderOptions {
     id?: string;
     ssrKey?: string;
 }
+export interface CreateMP<INS = {}> {
+    (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
+        useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
+            render({ id, ssrKey, viewName }?: RenderOptions): {
+                store: IStore<any> & B;
+                view: EluxComponent;
+            };
+        };
+    };
+}
 export interface CreateApp<INS = {}> {
     (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
         useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
@@ -44,6 +54,14 @@ export interface EluxContext {
     store?: IStore;
     router?: IBaseRouter<any, string>;
 }
+export declare function createBaseMP<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => any, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
+        render({ id, ssrKey, viewName }?: RenderOptions): {
+            store: IStore<any> & B;
+            view: EluxComponent;
+        };
+    };
+};
 export declare function createBaseApp<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<IStore<any> & B>;

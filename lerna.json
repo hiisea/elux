@@ -11,23 +11,21 @@
     "packages/react-redux",
     "packages/react-web",
     "packages/react-redux-web",
+    "packages/react-taro",
+    "packages/react-redux-taro",
     "packages/vue-components",
     "packages/vue-web",
     "packages/vue-vuex",
-    "packages/vue-vuex-web",
-    "packages/react-taro"
+    "packages/vue-vuex-web"
   ],
   "command": {
     "publish": {
       "message": "chore(release): publish %s",
       "npmClient": "npm",
-      "ignoreChanges": [
-        "**/tests/**",
-        "**/dist/**"
-      ]
+      "ignoreChanges": ["**/tests/**", "**/dist/**"]
     }
   },
   "npmClient": "yarn",
   "useWorkspaces": true,
-  "version": "0.1.9"
+  "version": "0.1.10"
 }

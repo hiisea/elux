@@ -1,4 +1,5 @@
-import { renderToString, renderToDocument, setReactComponentsConfig, loadComponent } from '@elux/react-components';
+import { setReactComponentsConfig, loadComponent } from '@elux/react-components';
+import { renderToString, renderToDocument } from '@elux/react-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
 import { createRouter } from '@elux/route-browser';
 export * from '@elux/react-components';

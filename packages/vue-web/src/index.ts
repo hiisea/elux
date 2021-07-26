@@ -1,7 +1,8 @@
 import {Component, createSSRApp, createApp as createVue} from 'vue';
 import type {App} from 'vue';
 import {RootModuleFacade, setCoreConfig} from '@elux/core';
-import {renderToString, renderToDocument, setVueComponentsConfig, loadComponent, LoadComponentOptions, RootComponent} from '@elux/vue-components';
+import {setVueComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/vue-components';
+import {renderToString, renderToDocument, RootComponent} from '@elux/vue-components/stage';
 import {
   createBaseApp,
   createBaseSSR,

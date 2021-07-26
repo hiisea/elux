@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.renderToDocument = exports.renderToString = exports.reactComponentsConfig = exports.setReactComponentsConfig = exports.loadComponent = exports.Link = exports.Switch = exports.Else = exports.DocumentHead = void 0;
+exports.reactComponentsConfig = exports.setReactComponentsConfig = exports.loadComponent = exports.Link = exports.Switch = exports.Else = exports.DocumentHead = void 0;
 
 var _DocumentHead = _interopRequireDefault(require("./DocumentHead"));
 
@@ -29,8 +29,3 @@ var _base = require("./base");
 
 exports.setReactComponentsConfig = _base.setReactComponentsConfig;
 exports.reactComponentsConfig = _base.reactComponentsConfig;
-
-var _rootView = require("./rootView");
-
-exports.renderToString = _rootView.renderToString;
-exports.renderToDocument = _rootView.renderToDocument;

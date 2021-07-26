@@ -94,12 +94,14 @@ export var BaseRouter = function () {
 
     _defineProperty(this, "listenerMap", {});
 
-    _defineProperty(this, "initedPromise", void 0);
+    _defineProperty(this, "initRouteState", void 0);
 
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
-    this.initedPromise = locationTransform.urlToLocation(url).then(function (location) {
+    var locationOrPromise = locationTransform.urlToLocation(url);
+
+    var callback = function callback(location) {
       var key = _this2._createKey();
 
       var routeState = _extends({}, location, {
@@ -124,7 +126,13 @@ export var BaseRouter = function () {
         key: key
       });
       return routeState;
-    });
+    };
+
+    if (isPromise(locationOrPromise)) {
+      this.initRouteState = locationOrPromise.then(callback);
+    } else {
+      this.initRouteState = callback(locationOrPromise);
+    }
   }
 
   var _proto2 = BaseRouter.prototype;

@@ -121,18 +121,21 @@ export function getModule(moduleName: string): Promise<CommonModule> | CommonMod
   MetaData.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
 }
-export function getModuleList(moduleNames: string[]): Promise<CommonModule[]> {
+export function getModuleList(moduleNames: string[]): CommonModule[] | Promise<CommonModule[]> {
   if (moduleNames.length < 1) {
-    return Promise.resolve([]);
+    return [];
   }
-  return Promise.all(
-    moduleNames.map((moduleName) => {
-      if (MetaData.moduleCaches[moduleName]) {
-        return MetaData.moduleCaches[moduleName]!;
-      }
-      return getModule(moduleName);
-    })
-  );
+  const list = moduleNames.map((moduleName) => {
+    if (MetaData.moduleCaches[moduleName]) {
+      return MetaData.moduleCaches[moduleName]!;
+    }
+    return getModule(moduleName);
+  });
+  if (list.some((item) => isPromise(item))) {
+    return Promise.all(list);
+  } else {
+    return list as CommonModule[];
+  }
 }
 export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore = MetaData.clientStore): void | Promise<void> {
   const moduleOrPromise = getModule(moduleName as string);

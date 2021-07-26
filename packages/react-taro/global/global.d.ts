@@ -14,9 +14,3 @@ declare module '@tarojs/components' {
   import {ComponentType} from 'react';
   const View: ComponentType<{className: string}>;
 }
-declare const process: {
-  env: {
-    TARO_ENV: 'weapp' | 'swan' | 'alipay' | 'h5' | 'rn' | 'tt' | 'quickapp' | 'qq' | 'jd';
-    [key: string]: any;
-  };
-};

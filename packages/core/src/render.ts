@@ -1,4 +1,4 @@
-import {MetaData, ModuleGetter, BStore, IStore, EluxComponent} from './basic';
+import {MetaData, ModuleGetter, BStore, IStore, EluxComponent, CommonModule} from './basic';
 import {getModuleList, getComponentList, getComponet} from './inject';
 import {IStoreMiddleware, enhanceStore} from './store';
 
@@ -29,6 +29,23 @@ export async function renderApp<ST extends BStore = BStore>(
   await getComponentList(preloadComponents);
   const appModule = modules[0];
   await appModule.model(store);
+  const AppView = getComponet(appModuleName, appViewName) as EluxComponent;
+  return {
+    store,
+    AppView,
+  };
+}
+
+export function syncApp<ST extends BStore = BStore>(
+  baseStore: ST,
+  middlewares?: IStoreMiddleware[],
+  appViewName = 'main'
+): {store: IStore<any> & ST; AppView: EluxComponent} {
+  const {moduleGetter, appModuleName} = MetaData;
+  const store = enhanceStore(baseStore, middlewares) as IStore<any> & ST;
+  MetaData.clientStore = store;
+  const appModule = moduleGetter[appModuleName]() as CommonModule<string>;
+  appModule.model(store);
   const AppView = getComponet(appModuleName, appViewName) as EluxComponent;
   return {
     store,

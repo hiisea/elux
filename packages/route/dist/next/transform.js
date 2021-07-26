@@ -1,4 +1,4 @@
-import { deepMerge, env, getModuleList, getModuleGetter } from '@elux/core';
+import { deepMerge, env, getModuleList, getModuleGetter, isPromise } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
 import { routeConfig, routeMeta } from './basic';
 export function assignDefaultData(data) {
@@ -247,15 +247,28 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
       } = partialLocation;
       const def = routeConfig.defaultParams;
       const asyncLoadModules = Object.keys(params).filter(moduleName => def[moduleName] === undefined);
-      return getModuleList(asyncLoadModules).then(modules => {
-        modules.forEach(module => {
-          def[module.moduleName] = module.params;
+      const modulesOrPromise = getModuleList(asyncLoadModules);
+
+      if (isPromise(modulesOrPromise)) {
+        return modulesOrPromise.then(modules => {
+          modules.forEach(module => {
+            def[module.moduleName] = module.params;
+          });
+          return {
+            pagename,
+            params: assignDefaultData(params)
+          };
         });
-        return {
-          pagename,
-          params: assignDefaultData(params)
-        };
+      }
+
+      const modules = modulesOrPromise;
+      modules.forEach(module => {
+        def[module.moduleName] = module.params;
       });
+      return {
+        pagename,
+        params: assignDefaultData(params)
+      };
     },
 
     eluxLocationToLocation(eluxLocation) {

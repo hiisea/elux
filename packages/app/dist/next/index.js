@@ -1,4 +1,4 @@
-import { env, getRootModuleAPI, buildConfigSetter, renderApp, ssrApp, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
+import { env, getRootModuleAPI, buildConfigSetter, syncApp, renderApp, ssrApp, isPromise, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
 import { routeMiddleware, setRouteConfig, routeMeta } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
@@ -13,6 +13,57 @@ export const setAppConfig = buildConfigSetter(appConfig);
 export function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
+}
+export function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [], appModuleName) {
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route');
+  return {
+    useStore({
+      storeOptions,
+      storeCreator
+    }) {
+      return Object.assign(ins, {
+        render({
+          id = 'root',
+          ssrKey = 'eluxInitStore',
+          viewName
+        } = {}) {
+          const router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
+          const {
+            state
+          } = env[ssrKey] || {};
+          const routeState = router.initRouteState;
+          const initState = { ...storeOptions.initState,
+            route: routeState,
+            ...state
+          };
+          const baseStore = storeCreator({ ...storeOptions,
+            initState
+          });
+          const {
+            store,
+            AppView
+          } = syncApp(baseStore, istoreMiddleware, viewName);
+          routeModule.model(store);
+          router.setStore(store);
+          const view = render(id, AppView, store, {
+            deps: {},
+            store,
+            router,
+            documentHead: ''
+          }, !!env[ssrKey], ins);
+          return {
+            store,
+            view
+          };
+        }
+
+      });
+    }
+
+  };
 }
 export function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = [], appModuleName) {
   defineModuleGetter(moduleGetter, appModuleName);
@@ -35,7 +86,8 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
             state,
             components = []
           } = env[ssrKey] || {};
-          return router.initedPromise.then(routeState => {
+          const roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
+          return roterStatePromise.then(routeState => {
             const initState = { ...storeOptions.initState,
               route: routeState,
               ...state
@@ -82,7 +134,8 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
         } = {}) {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          return router.initedPromise.then(routeState => {
+          const roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
+          return roterStatePromise.then(routeState => {
             const initState = { ...storeOptions.initState,
               route: routeState
             };

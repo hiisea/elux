@@ -53,7 +53,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     protected readonly listenerMap: {
         [id: string]: (data: RouteState<P>) => void | Promise<void>;
     };
-    initedPromise: Promise<RouteState<P>>;
+    initRouteState: RouteState<P> | Promise<RouteState<P>>;
     constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
     addListener(callback: (data: RouteState<P>) => void | Promise<void>): () => void;
     protected dispatch(data: RouteState<P>): Promise<void[]>;
@@ -70,7 +70,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
         nativeUrl: string;
         nativeLocation: NativeLocation;
     };
-    urlToLocation(url: string): Promise<Location<P>>;
+    urlToLocation(url: string): Location<P> | Promise<Location<P>>;
     payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
     payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
     nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
@@ -91,7 +91,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     destroy(): void;
 }
 export interface IBaseRouter<P extends RootParams, N extends string> {
-    initedPromise: Promise<RouteState<P>>;
+    initRouteState: RouteState<P> | Promise<RouteState<P>>;
     history: History;
     nativeRouter: any;
     addListener(callback: (data: RouteState<P>) => void | Promise<void>): void;
@@ -114,7 +114,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
     replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
     back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
     destroy(): void;
-    urlToLocation(url: string): Promise<Location<P>>;
+    urlToLocation(url: string): Location<P> | Promise<Location<P>>;
     payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
     payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
 }

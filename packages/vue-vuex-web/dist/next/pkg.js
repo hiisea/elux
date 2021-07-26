@@ -2290,16 +2290,22 @@ function getModule(moduleName) {
 }
 function getModuleList(moduleNames) {
   if (moduleNames.length < 1) {
-    return Promise.resolve([]);
+    return [];
   }
 
-  return Promise.all(moduleNames.map(moduleName => {
+  const list = moduleNames.map(moduleName => {
     if (MetaData.moduleCaches[moduleName]) {
       return MetaData.moduleCaches[moduleName];
     }
 
     return getModule(moduleName);
-  }));
+  });
+
+  if (list.some(item => isPromise(item))) {
+    return Promise.all(list);
+  } else {
+    return list;
+  }
 }
 
 function _loadModel(moduleName, store = MetaData.clientStore) {
@@ -2822,6 +2828,21 @@ async function renderApp(baseStore, preloadModules, preloadComponents, middlewar
   await getComponentList(preloadComponents);
   const appModule = modules[0];
   await appModule.model(store);
+  const AppView = getComponet(appModuleName, appViewName);
+  return {
+    store,
+    AppView
+  };
+}
+function syncApp(baseStore, middlewares, appViewName = 'main') {
+  const {
+    moduleGetter,
+    appModuleName
+  } = MetaData;
+  const store = enhanceStore(baseStore, middlewares);
+  MetaData.clientStore = store;
+  const appModule = moduleGetter[appModuleName]();
+  appModule.model(store);
   const AppView = getComponet(appModuleName, appViewName);
   return {
     store,
@@ -3778,15 +3799,28 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       } = partialLocation;
       const def = routeConfig.defaultParams;
       const asyncLoadModules = Object.keys(params).filter(moduleName => def[moduleName] === undefined);
-      return getModuleList(asyncLoadModules).then(modules => {
-        modules.forEach(module => {
-          def[module.moduleName] = module.params;
+      const modulesOrPromise = getModuleList(asyncLoadModules);
+
+      if (isPromise(modulesOrPromise)) {
+        return modulesOrPromise.then(modules => {
+          modules.forEach(module => {
+            def[module.moduleName] = module.params;
+          });
+          return {
+            pagename,
+            params: assignDefaultData(params)
+          };
         });
-        return {
-          pagename,
-          params: assignDefaultData(params)
-        };
+      }
+
+      const modules = modulesOrPromise;
+      modules.forEach(module => {
+        def[module.moduleName] = module.params;
       });
+      return {
+        pagename,
+        params: assignDefaultData(params)
+      };
     },
 
     eluxLocationToLocation(eluxLocation) {
@@ -4060,12 +4094,14 @@ class BaseRouter {
 
     _defineProperty(this, "listenerMap", {});
 
-    _defineProperty(this, "initedPromise", void 0);
+    _defineProperty(this, "initRouteState", void 0);
 
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
-    this.initedPromise = locationTransform.urlToLocation(url).then(location => {
+    const locationOrPromise = locationTransform.urlToLocation(url);
+
+    const callback = location => {
       const key = this._createKey();
 
       const routeState = { ...location,
@@ -4089,7 +4125,13 @@ class BaseRouter {
         key
       });
       return routeState;
-    });
+    };
+
+    if (isPromise(locationOrPromise)) {
+      this.initRouteState = locationOrPromise.then(callback);
+    } else {
+      this.initRouteState = callback(locationOrPromise);
+    }
   }
 
   addListener(callback) {
@@ -4436,6 +4478,57 @@ function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
+function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [], appModuleName) {
+  defineModuleGetter(moduleGetter, appModuleName);
+  const istoreMiddleware = [routeMiddleware, ...middlewares];
+  const routeModule = getModule('route');
+  return {
+    useStore({
+      storeOptions,
+      storeCreator
+    }) {
+      return Object.assign(ins, {
+        render({
+          id = 'root',
+          ssrKey = 'eluxInitStore',
+          viewName
+        } = {}) {
+          const router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
+          const {
+            state
+          } = env[ssrKey] || {};
+          const routeState = router.initRouteState;
+          const initState = { ...storeOptions.initState,
+            route: routeState,
+            ...state
+          };
+          const baseStore = storeCreator({ ...storeOptions,
+            initState
+          });
+          const {
+            store,
+            AppView
+          } = syncApp(baseStore, istoreMiddleware, viewName);
+          routeModule.model(store);
+          router.setStore(store);
+          const view = render(id, AppView, store, {
+            deps: {},
+            store,
+            router,
+            documentHead: ''
+          }, !!env[ssrKey], ins);
+          return {
+            store,
+            view
+          };
+        }
+
+      });
+    }
+
+  };
+}
 function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = [], appModuleName) {
   defineModuleGetter(moduleGetter, appModuleName);
   const istoreMiddleware = [routeMiddleware, ...middlewares];
@@ -4457,7 +4550,8 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
             state,
             components = []
           } = env[ssrKey] || {};
-          return router.initedPromise.then(routeState => {
+          const roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
+          return roterStatePromise.then(routeState => {
             const initState = { ...storeOptions.initState,
               route: routeState,
               ...state
@@ -4504,7 +4598,8 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
         } = {}) {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          return router.initedPromise.then(routeState => {
+          const roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
+          return roterStatePromise.then(routeState => {
             const initState = { ...storeOptions.initState,
               route: routeState
             };
@@ -5801,4 +5896,4 @@ const createSSR = (moduleGetter, url, middlewares, appModuleName) => {
   return createBaseSSR(app, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares, appModuleName);
 };
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EmptyModuleHandlers, Link, LoadingState, RootComponent, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, renderToDocument, renderToString, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };
+export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };

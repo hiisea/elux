@@ -29,11 +29,12 @@
     "packages/react-redux",
     "packages/react-web",
     "packages/react-redux-web",
+    "packages/react-taro",
+    "packages/react-redux-taro",
     "packages/vue-components",
     "packages/vue-web",
     "packages/vue-vuex",
-    "packages/vue-vuex-web",
-    "packages/react-taro"
+    "packages/vue-vuex-web"
   ],
   "scripts": {
     "commit": "git-cz",

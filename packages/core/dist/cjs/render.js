@@ -5,6 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 exports.__esModule = true;
 exports.defineModuleGetter = defineModuleGetter;
 exports.renderApp = renderApp;
+exports.syncApp = syncApp;
 exports.ssrApp = ssrApp;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
@@ -84,6 +85,24 @@ function _renderApp() {
     }, _callee);
   }));
   return _renderApp.apply(this, arguments);
+}
+
+function syncApp(baseStore, middlewares, appViewName) {
+  if (appViewName === void 0) {
+    appViewName = 'main';
+  }
+
+  var moduleGetter = _basic.MetaData.moduleGetter,
+      appModuleName = _basic.MetaData.appModuleName;
+  var store = (0, _store.enhanceStore)(baseStore, middlewares);
+  _basic.MetaData.clientStore = store;
+  var appModule = moduleGetter[appModuleName]();
+  appModule.model(store);
+  var AppView = (0, _inject.getComponet)(appModuleName, appViewName);
+  return {
+    store: store,
+    AppView: AppView
+  };
 }
 
 function ssrApp(_x6, _x7, _x8, _x9) {

@@ -18,6 +18,8 @@ Object.keys(_reactComponents).forEach(function (key) {
   exports[key] = _reactComponents[key];
 });
 
+var _stage = require("@elux/react-components/stage");
+
 var _app = require("@elux/app");
 
 Object.keys(_app).forEach(function (key) {
@@ -41,7 +43,7 @@ function setConfig(conf) {
 var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
   return (0, _app.createBaseApp)({}, function (locationTransform) {
     return (0, _routeBrowser.createRouter)('Browser', locationTransform);
-  }, _reactComponents.renderToDocument, moduleGetter, middlewares, appModuleName);
+  }, _stage.renderToDocument, moduleGetter, middlewares, appModuleName);
 };
 
 exports.createApp = createApp;
@@ -49,7 +51,7 @@ exports.createApp = createApp;
 var createSSR = function createSSR(moduleGetter, url, middlewares, appModuleName) {
   return (0, _app.createBaseSSR)({}, function (locationTransform) {
     return (0, _routeBrowser.createRouter)(url, locationTransform);
-  }, _reactComponents.renderToString, moduleGetter, middlewares, appModuleName);
+  }, _stage.renderToString, moduleGetter, middlewares, appModuleName);
 };
 
 exports.createSSR = createSSR;

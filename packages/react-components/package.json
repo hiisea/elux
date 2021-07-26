@@ -18,7 +18,8 @@
   "files": [
     "runtime/",
     "types/",
-    "dist/"
+    "dist/",
+    "stage/"
   ],
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx} --ignore-pattern **/*.d.ts",

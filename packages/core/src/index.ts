@@ -30,7 +30,7 @@ export {
   getModuleGetter,
 } from './inject';
 export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
-export {defineModuleGetter, renderApp, ssrApp} from './render';
+export {defineModuleGetter, renderApp, ssrApp, syncApp} from './render';
 export {default as env} from './env';
 export type {IStoreMiddleware, StoreBuilder} from './store';
 export type {

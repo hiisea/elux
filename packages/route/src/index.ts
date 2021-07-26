@@ -105,12 +105,13 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 
   protected readonly listenerMap: {[id: string]: (data: RouteState<P>) => void | Promise<void>} = {};
 
-  public initedPromise: Promise<RouteState<P>>;
+  public initRouteState: RouteState<P> | Promise<RouteState<P>>;
 
   // input
   constructor(url: string, public nativeRouter: BaseNativeRouter, protected locationTransform: LocationTransform) {
     nativeRouter.setRouter(this);
-    this.initedPromise = locationTransform.urlToLocation<P>(url).then((location) => {
+    const locationOrPromise = locationTransform.urlToLocation<P>(url);
+    const callback = (location: Location<P>) => {
       const key = this._createKey();
       const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key};
       this.routeState = routeState;
@@ -120,7 +121,12 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
       }
       this.history = new History({location, key});
       return routeState;
-    });
+    };
+    if (isPromise(locationOrPromise)) {
+      this.initRouteState = locationOrPromise.then(callback);
+    } else {
+      this.initRouteState = callback(locationOrPromise);
+    }
   }
 
   addListener(callback: (data: RouteState<P>) => void | Promise<void>): () => void {
@@ -187,7 +193,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return {nativeUrl, nativeLocation};
   }
 
-  urlToLocation(url: string): Promise<Location<P>> {
+  urlToLocation(url: string): Location<P> | Promise<Location<P>> {
     return this.locationTransform.urlToLocation(url);
   }
 
@@ -226,7 +232,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return {pathname: payload.pathname || this.routeState.pagename, params};
   }
 
-  private preAdditions(data: PayloadLocation<P, N> | string): Promise<Location<P>> | null {
+  private preAdditions(data: PayloadLocation<P, N> | string): Location<P> | Promise<Location<P>> | null {
     if (typeof data === 'string') {
       if (/^[\w:]*\/\//.test(data)) {
         this.nativeRouter.toOutside(data);
@@ -386,7 +392,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 }
 
 export interface IBaseRouter<P extends RootParams, N extends string> {
-  initedPromise: Promise<RouteState<P>>;
+  initRouteState: RouteState<P> | Promise<RouteState<P>>;
   history: History;
   nativeRouter: any;
   addListener(callback: (data: RouteState<P>) => void | Promise<void>): void;
@@ -406,7 +412,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
   back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
   destroy(): void;
-  urlToLocation(url: string): Promise<Location<P>>;
+  urlToLocation(url: string): Location<P> | Promise<Location<P>>;
   payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
   payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
 }

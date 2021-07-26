@@ -1,18 +1,18 @@
 import { EluxLocation, PartialLocation, Location, RootParams, NativeLocation } from './basic';
 export interface LocationTransform {
     eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation;
-    eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Promise<Location<P>>;
+    eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>>;
     eluxLocationToNativeLocation(eluxLocation: EluxLocation): NativeLocation;
     partialLocationToEluxLocation(partialLocation: PartialLocation): EluxLocation;
     partialLocationToNativeLocation(partialLocation: PartialLocation): NativeLocation;
     nativeLocationToEluxLocation(nativeLocation: NativeLocation): EluxLocation;
     nativeLocationToPartialLocation(nativeLocation: NativeLocation): PartialLocation;
-    nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Promise<Location<P>>;
+    nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Location<P> | Promise<Location<P>>;
     urlToEluxLocation(url: string): EluxLocation;
     urlToToPartialLocation(url: string): PartialLocation;
-    urlToLocation<P extends RootParams>(url: string): Promise<Location<P>>;
+    urlToLocation<P extends RootParams>(url: string): Location<P> | Promise<Location<P>>;
     urlToGivenLocation(url: string): NativeLocation | EluxLocation;
-    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Promise<Location<P>>;
+    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>>;
     partialLocationToMinData(partialLocation: PartialLocation): {
         pathname: string;
         params: Record<string, any>;

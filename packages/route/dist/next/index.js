@@ -79,12 +79,14 @@ export class BaseRouter {
 
     _defineProperty(this, "listenerMap", {});
 
-    _defineProperty(this, "initedPromise", void 0);
+    _defineProperty(this, "initRouteState", void 0);
 
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
-    this.initedPromise = locationTransform.urlToLocation(url).then(location => {
+    const locationOrPromise = locationTransform.urlToLocation(url);
+
+    const callback = location => {
       const key = this._createKey();
 
       const routeState = { ...location,
@@ -108,7 +110,13 @@ export class BaseRouter {
         key
       });
       return routeState;
-    });
+    };
+
+    if (isPromise(locationOrPromise)) {
+      this.initRouteState = locationOrPromise.then(callback);
+    } else {
+      this.initRouteState = callback(locationOrPromise);
+    }
   }
 
   addListener(callback) {
