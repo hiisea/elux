@@ -31,7 +31,7 @@ export async function renderApp(baseStore, preloadModules, preloadComponents, mi
     AppView
   };
 }
-export function syncApp(baseStore, middlewares, appViewName = 'main') {
+export function initApp(baseStore, middlewares) {
   const {
     moduleGetter,
     appModuleName
@@ -40,11 +40,7 @@ export function syncApp(baseStore, middlewares, appViewName = 'main') {
   MetaData.clientStore = store;
   const appModule = moduleGetter[appModuleName]();
   appModule.model(store);
-  const AppView = getComponet(appModuleName, appViewName);
-  return {
-    store,
-    AppView
-  };
+  return store;
 }
 export async function ssrApp(baseStore, preloadModules, middlewares, appViewName = 'main') {
   const {

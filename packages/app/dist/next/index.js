@@ -1,4 +1,4 @@
-import { env, getRootModuleAPI, buildConfigSetter, syncApp, renderApp, ssrApp, isPromise, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
+import { env, getRootModuleAPI, buildConfigSetter, initApp, renderApp, ssrApp, isPromise, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
 import { routeMiddleware, setRouteConfig, routeMeta } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers } from '@elux/core';
 export { ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule } from '@elux/route';
@@ -24,29 +24,20 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
       storeCreator
     }) {
       return Object.assign(ins, {
-        render({
-          ssrKey = 'eluxInitStore',
-          viewName
-        } = {}) {
+        render() {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          const {
-            state
-          } = env[ssrKey] || {};
           const routeState = router.initRouteState;
           const initState = { ...storeOptions.initState,
-            route: routeState,
-            ...state
+            route: routeState
           };
           const baseStore = storeCreator({ ...storeOptions,
             initState
           });
-          const {
-            store
-          } = syncApp(baseStore, istoreMiddleware, viewName);
+          const store = initApp(baseStore, istoreMiddleware);
           routeModule.model(store);
           router.setStore(store);
-          const view = render(store, {
+          const context = render(store, {
             deps: {},
             store,
             router,
@@ -54,7 +45,7 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
           }, ins);
           return {
             store,
-            view
+            context
           };
         }
 

@@ -1520,7 +1520,7 @@ async function renderApp(baseStore, preloadModules, preloadComponents, middlewar
     AppView
   };
 }
-function syncApp(baseStore, middlewares, appViewName = 'main') {
+function initApp(baseStore, middlewares) {
   const {
     moduleGetter,
     appModuleName
@@ -1529,11 +1529,7 @@ function syncApp(baseStore, middlewares, appViewName = 'main') {
   MetaData.clientStore = store;
   const appModule = moduleGetter[appModuleName]();
   appModule.model(store);
-  const AppView = getComponet(appModuleName, appViewName);
-  return {
-    store,
-    AppView
-  };
+  return store;
 }
 async function ssrApp(baseStore, preloadModules, middlewares, appViewName = 'main') {
   const {
@@ -3205,29 +3201,20 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
       storeCreator
     }) {
       return Object.assign(ins, {
-        render({
-          ssrKey = 'eluxInitStore',
-          viewName
-        } = {}) {
+        render() {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          const {
-            state
-          } = env[ssrKey] || {};
           const routeState = router.initRouteState;
           const initState = { ...storeOptions.initState,
-            route: routeState,
-            ...state
+            route: routeState
           };
           const baseStore = storeCreator({ ...storeOptions,
             initState
           });
-          const {
-            store
-          } = syncApp(baseStore, istoreMiddleware, viewName);
+          const store = initApp(baseStore, istoreMiddleware);
           routeModule.model(store);
           router.setStore(store);
-          const view = render(store, {
+          const context = render(store, {
             deps: {},
             store,
             router,
@@ -3235,7 +3222,7 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
           }, ins);
           return {
             store,
-            view
+            context
           };
         }
 

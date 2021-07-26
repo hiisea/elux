@@ -2,7 +2,7 @@ import {
   env,
   getRootModuleAPI,
   buildConfigSetter,
-  syncApp,
+  initApp,
   renderApp,
   ssrApp,
   isPromise,
@@ -19,7 +19,6 @@ import {
   RootModuleFacade,
   RootModuleAPI,
   RootModuleActions,
-  EluxComponent,
 } from '@elux/core';
 
 import {routeMiddleware, setRouteConfig, IBaseRouter, RouteModule, LocationTransform, routeMeta, RouteState} from '@elux/route';
@@ -86,13 +85,14 @@ export interface RenderOptions {
   ssrKey?: string;
 }
 
+export interface ContextWrap {}
 export interface CreateMP<INS = {}> {
   (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
     }: StoreBuilder<O, B>): INS & {
-      render({id, ssrKey, viewName}?: RenderOptions): {store: IStore<any> & B; view: EluxComponent};
+      render(): {store: IStore<any> & B; context: ContextWrap};
     };
   };
 }
@@ -138,7 +138,7 @@ export function createBaseMP<INS = {}>(
     storeOptions,
     storeCreator,
   }: StoreBuilder<O, B>): INS & {
-    render({id, ssrKey, viewName}?: RenderOptions): {store: IStore<any> & B; view: EluxComponent};
+    render(): {store: IStore<any> & B; context: ContextWrap};
   };
 } {
   defineModuleGetter(moduleGetter, appModuleName);
@@ -147,18 +147,17 @@ export function createBaseMP<INS = {}>(
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return Object.assign(ins, {
-        render({ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
+        render() {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          const {state}: {state: any; components: string[]} = env[ssrKey] || {};
           const routeState = router.initRouteState as RouteState;
-          const initState = {...storeOptions.initState, route: routeState, ...state};
+          const initState = {...storeOptions.initState, route: routeState};
           const baseStore = storeCreator({...storeOptions, initState});
-          const {store} = syncApp(baseStore, istoreMiddleware, viewName);
+          const store = initApp(baseStore, istoreMiddleware);
           routeModule.model(store);
           router.setStore(store);
-          const view = render(store, {deps: {}, store, router, documentHead: ''}, ins);
-          return {store, view};
+          const context: ContextWrap = render(store, {deps: {}, store, router, documentHead: ''}, ins);
+          return {store, context};
         },
       });
     },

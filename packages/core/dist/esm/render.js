@@ -72,22 +72,14 @@ function _renderApp() {
   return _renderApp.apply(this, arguments);
 }
 
-export function syncApp(baseStore, middlewares, appViewName) {
-  if (appViewName === void 0) {
-    appViewName = 'main';
-  }
-
+export function initApp(baseStore, middlewares) {
   var moduleGetter = MetaData.moduleGetter,
       appModuleName = MetaData.appModuleName;
   var store = enhanceStore(baseStore, middlewares);
   MetaData.clientStore = store;
   var appModule = moduleGetter[appModuleName]();
   appModule.model(store);
-  var AppView = getComponet(appModuleName, appViewName);
-  return {
-    store: store,
-    AppView: AppView
-  };
+  return store;
 }
 export function ssrApp(_x6, _x7, _x8, _x9) {
   return _ssrApp.apply(this, arguments);

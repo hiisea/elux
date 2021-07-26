@@ -2469,22 +2469,14 @@ function _renderApp() {
   return _renderApp.apply(this, arguments);
 }
 
-function syncApp(baseStore, middlewares, appViewName) {
-  if (appViewName === void 0) {
-    appViewName = 'main';
-  }
-
+function initApp(baseStore, middlewares) {
   var moduleGetter = MetaData.moduleGetter,
       appModuleName = MetaData.appModuleName;
   var store = enhanceStore(baseStore, middlewares);
   MetaData.clientStore = store;
   var appModule = moduleGetter[appModuleName]();
   appModule.model(store);
-  var AppView = getComponet(appModuleName, appViewName);
-  return {
-    store: store,
-    AppView: AppView
-  };
+  return store;
 }
 function ssrApp(_x6, _x7, _x8, _x9) {
   return _ssrApp.apply(this, arguments);
@@ -4512,7 +4504,7 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           storeCreator = _ref.storeCreator;
       return Object.assign(ins, {
         render: function (_render) {
-          function render(_x) {
+          function render() {
             return _render.apply(this, arguments);
           }
 
@@ -4521,34 +4513,22 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           };
 
           return render;
-        }(function (_temp) {
-          var _ref2 = _temp === void 0 ? {} : _temp,
-              _ref2$ssrKey = _ref2.ssrKey,
-              ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
-              viewName = _ref2.viewName;
-
+        }(function () {
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-
-          var _ref3 = env[ssrKey] || {},
-              state = _ref3.state;
-
           var routeState = router.initRouteState;
 
           var initState = _extends({}, storeOptions.initState, {
             route: routeState
-          }, state);
+          });
 
           var baseStore = storeCreator(_extends({}, storeOptions, {
             initState: initState
           }));
-
-          var _syncApp = syncApp(baseStore, istoreMiddleware, viewName),
-              store = _syncApp.store;
-
+          var store = initApp(baseStore, istoreMiddleware);
           routeModule.model(store);
           router.setStore(store);
-          var view = render(store, {
+          var context = render(store, {
             deps: {},
             store: store,
             router: router,
@@ -4556,7 +4536,7 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           }, ins);
           return {
             store: store,
-            view: view
+            context: context
           };
         })
       });
@@ -4572,12 +4552,12 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
   var routeModule = getModule('route');
   return {
-    useStore: function useStore(_ref4) {
-      var storeOptions = _ref4.storeOptions,
-          storeCreator = _ref4.storeCreator;
+    useStore: function useStore(_ref2) {
+      var storeOptions = _ref2.storeOptions,
+          storeCreator = _ref2.storeCreator;
       return Object.assign(ins, {
         render: function (_render2) {
-          function render(_x2) {
+          function render(_x) {
             return _render2.apply(this, arguments);
           }
 
@@ -4586,21 +4566,21 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
           };
 
           return render;
-        }(function (_temp2) {
-          var _ref5 = _temp2 === void 0 ? {} : _temp2,
-              _ref5$id = _ref5.id,
-              id = _ref5$id === void 0 ? 'root' : _ref5$id,
-              _ref5$ssrKey = _ref5.ssrKey,
-              ssrKey = _ref5$ssrKey === void 0 ? 'eluxInitStore' : _ref5$ssrKey,
-              viewName = _ref5.viewName;
+        }(function (_temp) {
+          var _ref3 = _temp === void 0 ? {} : _temp,
+              _ref3$id = _ref3.id,
+              id = _ref3$id === void 0 ? 'root' : _ref3$id,
+              _ref3$ssrKey = _ref3.ssrKey,
+              ssrKey = _ref3$ssrKey === void 0 ? 'eluxInitStore' : _ref3$ssrKey,
+              viewName = _ref3.viewName;
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
 
-          var _ref6 = env[ssrKey] || {},
-              state = _ref6.state,
-              _ref6$components = _ref6.components,
-              components = _ref6$components === void 0 ? [] : _ref6$components;
+          var _ref4 = env[ssrKey] || {},
+              state = _ref4.state,
+              _ref4$components = _ref4.components,
+              components = _ref4$components === void 0 ? [] : _ref4$components;
 
           var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
           return roterStatePromise.then(function (routeState) {
@@ -4611,9 +4591,9 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref7) {
-              var store = _ref7.store,
-                  AppView = _ref7.AppView;
+            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
+              var store = _ref5.store,
+                  AppView = _ref5.AppView;
               routeModule.model(store);
               router.setStore(store);
               render(id, AppView, store, {
@@ -4639,12 +4619,12 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
   var routeModule = getModule('route');
   return {
-    useStore: function useStore(_ref8) {
-      var storeOptions = _ref8.storeOptions,
-          storeCreator = _ref8.storeCreator;
+    useStore: function useStore(_ref6) {
+      var storeOptions = _ref6.storeOptions,
+          storeCreator = _ref6.storeCreator;
       return Object.assign(ins, {
         render: function (_render3) {
-          function render(_x3) {
+          function render(_x2) {
             return _render3.apply(this, arguments);
           }
 
@@ -4653,13 +4633,13 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
           };
 
           return render;
-        }(function (_temp3) {
-          var _ref9 = _temp3 === void 0 ? {} : _temp3,
-              _ref9$id = _ref9.id,
-              id = _ref9$id === void 0 ? 'root' : _ref9$id,
-              _ref9$ssrKey = _ref9.ssrKey,
-              ssrKey = _ref9$ssrKey === void 0 ? 'eluxInitStore' : _ref9$ssrKey,
-              viewName = _ref9.viewName;
+        }(function (_temp2) {
+          var _ref7 = _temp2 === void 0 ? {} : _temp2,
+              _ref7$id = _ref7.id,
+              id = _ref7$id === void 0 ? 'root' : _ref7$id,
+              _ref7$ssrKey = _ref7.ssrKey,
+              ssrKey = _ref7$ssrKey === void 0 ? 'eluxInitStore' : _ref7$ssrKey,
+              viewName = _ref7.viewName;
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
@@ -4672,9 +4652,9 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref10) {
-              var store = _ref10.store,
-                  AppView = _ref10.AppView;
+            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
+              var store = _ref8.store,
+                  AppView = _ref8.AppView;
               var state = store.getState();
               var eluxContext = {
                 deps: {},

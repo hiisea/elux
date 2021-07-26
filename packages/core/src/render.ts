@@ -36,21 +36,13 @@ export async function renderApp<ST extends BStore = BStore>(
   };
 }
 
-export function syncApp<ST extends BStore = BStore>(
-  baseStore: ST,
-  middlewares?: IStoreMiddleware[],
-  appViewName = 'main'
-): {store: IStore<any> & ST; AppView: EluxComponent} {
+export function initApp<ST extends BStore = BStore>(baseStore: ST, middlewares?: IStoreMiddleware[]): IStore<any> & ST {
   const {moduleGetter, appModuleName} = MetaData;
   const store = enhanceStore(baseStore, middlewares) as IStore<any> & ST;
   MetaData.clientStore = store;
   const appModule = moduleGetter[appModuleName]() as CommonModule<string>;
   appModule.model(store);
-  const AppView = getComponet(appModuleName, appViewName) as EluxComponent;
-  return {
-    store,
-    AppView,
-  };
+  return store;
 }
 
 export async function ssrApp<ST extends BStore = BStore>(
