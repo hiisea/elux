@@ -1,7 +1,7 @@
+import Taro from '@tarojs/taro';
 import React, { useContext, useEffect, Component as Component$3, useLayoutEffect, useMemo, useReducer, useRef, useDebugValue } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
-import Taro from '@tarojs/taro';
 
 var root;
 
@@ -2662,37 +2662,43 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 var Link = React.forwardRef(function (_ref, ref) {
-  var _onClick = _ref.onClick,
+  var onClick = _ref.onClick,
+      href = _ref.href,
+      url = _ref.url,
       replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "replace"]);
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "replace"]);
 
   var eluxContext = useContext(EluxContextComponent);
-  var target = rest.target;
 
   var props = _extends({}, rest, {
-    onClick: function onClick(event) {
-      try {
-        _onClick && _onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
+    onClick: function (_onClick) {
+      function onClick(_x) {
+        return _onClick.apply(this, arguments);
       }
 
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-        event.preventDefault();
-        replace ? eluxContext.router.replace(rest.href) : eluxContext.router.push(rest.href);
-      }
-    }
+      onClick.toString = function () {
+        return _onClick.toString();
+      };
+
+      return onClick;
+    }(function (event) {
+      event.preventDefault();
+      onClick && onClick(event);
+      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+    })
   });
 
-  return React.createElement("a", _extends({}, props, {
-    ref: ref
-  }));
+  if (href) {
+    return React.createElement("a", _extends({}, props, {
+      href: href,
+      ref: ref
+    }));
+  } else {
+    return React.createElement("div", _extends({}, props, {
+      ref: ref
+    }));
+  }
 });
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
@@ -2823,14 +2829,14 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   });
 };
 
-function renderToMP(id, APPView, store, eluxContext, fromSSR) {
+function renderToMP(store, eluxContext) {
   var Component = function Component(_ref) {
     var children = _ref.children;
     return React.createElement(EluxContextComponent.Provider, {
       value: eluxContext
     }, React.createElement(reactComponentsConfig.Provider, {
       store: store
-    }, React.createElement(APPView, null, children)));
+    }, children));
   };
 
   return Component;
@@ -4517,8 +4523,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           return render;
         }(function (_temp) {
           var _ref2 = _temp === void 0 ? {} : _temp,
-              _ref2$id = _ref2.id,
-              id = _ref2$id === void 0 ? 'root' : _ref2$id,
               _ref2$ssrKey = _ref2.ssrKey,
               ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
               viewName = _ref2.viewName;
@@ -4540,17 +4544,16 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           }));
 
           var _syncApp = syncApp(baseStore, istoreMiddleware, viewName),
-              store = _syncApp.store,
-              AppView = _syncApp.AppView;
+              store = _syncApp.store;
 
           routeModule.model(store);
           router.setStore(store);
-          var view = render(id, AppView, store, {
+          var view = render(store, {
             deps: {},
             store: store,
             router: router,
             documentHead: ''
-          }, !!env[ssrKey], ins);
+          }, ins);
           return {
             store: store,
             view: view
@@ -5048,6 +5051,13 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
+setReactComponentsConfig({
+  setPageTitle: function setPageTitle(title) {
+    return Taro.setNavigationBarTitle({
+      title: title
+    });
+  }
+});
 var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
   if (env.__taroAppConfig.tabBar) {
     env.__taroAppConfig.tabBar.list.forEach(function (_ref) {

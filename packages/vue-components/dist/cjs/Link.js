@@ -13,34 +13,38 @@ var _vue = require("vue");
 
 var _base = require("./base");
 
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 function _default(props, context) {
   var _inject = (0, _vue.inject)(_base.EluxContextKey, {
     documentHead: ''
   }),
       router = _inject.router;
 
-  var _onClick = props.onClick,
+  var onClick = props.onClick,
+      href = props.href,
+      url = props.url,
       replace = props.replace,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "replace"]);
-  var target = rest.target;
+      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "url", "replace"]);
   var newProps = (0, _extends2.default)({}, rest, {
-    onClick: function onClick(event) {
-      try {
-        _onClick && _onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
+    onClick: function (_onClick) {
+      function onClick(_x) {
+        return _onClick.apply(this, arguments);
       }
 
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-          event.preventDefault();
-          replace ? router.replace(rest.href) : router.push(rest.href);
-        }
-    }
+      onClick.toString = function () {
+        return _onClick.toString();
+      };
+
+      return onClick;
+    }(function (event) {
+      event.preventDefault();
+      onClick && onClick(event);
+      replace ? router.replace(url) : router.push(url);
+    })
   });
-  return (0, _vue.h)('a', newProps, context.slots);
+
+  if (href) {
+    return (0, _vue.h)('a', newProps, context.slots);
+  } else {
+    return (0, _vue.h)('div', newProps, context.slots);
+  }
 }

@@ -1,5 +1,7 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
 exports.__esModule = true;
 var _exportNames = {
   setConfig: true,
@@ -7,6 +9,8 @@ var _exportNames = {
 };
 exports.setConfig = setConfig;
 exports.createMP = void 0;
+
+var _taro = _interopRequireDefault(require("@tarojs/taro"));
 
 var _core = require("@elux/core");
 
@@ -42,6 +46,14 @@ function setConfig(conf) {
   (0, _reactComponents.setReactComponentsConfig)(conf);
   (0, _app.setUserConfig)(conf);
 }
+
+(0, _reactComponents.setReactComponentsConfig)({
+  setPageTitle: function setPageTitle(title) {
+    return _taro.default.setNavigationBarTitle({
+      title: title
+    });
+  }
+});
 
 var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
   if (_core.env.__taroAppConfig.tabBar) {

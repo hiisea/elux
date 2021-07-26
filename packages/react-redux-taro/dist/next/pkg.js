@@ -1,7 +1,7 @@
+import Taro from '@tarojs/taro';
 import React, { useContext, useEffect, Component as Component$3, useLayoutEffect, useMemo, useReducer, useRef, useDebugValue } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
-import Taro from '@tarojs/taro';
 
 let root;
 
@@ -1673,37 +1673,32 @@ function _extends() {
   return _extends.apply(this, arguments);
 }
 
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 var Link = React.forwardRef(({
   onClick,
+  href,
+  url,
   replace,
   ...rest
 }, ref) => {
   const eluxContext = useContext(EluxContextComponent);
-  const {
-    target
-  } = rest;
   const props = { ...rest,
     onClick: event => {
-      try {
-        onClick && onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
-      }
-
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-        event.preventDefault();
-        replace ? eluxContext.router.replace(rest.href) : eluxContext.router.push(rest.href);
-      }
+      event.preventDefault();
+      onClick && onClick(event);
+      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
     }
   };
-  return React.createElement("a", _extends({}, props, {
-    ref: ref
-  }));
+
+  if (href) {
+    return React.createElement("a", _extends({}, props, {
+      href: href,
+      ref: ref
+    }));
+  } else {
+    return React.createElement("div", _extends({}, props, {
+      ref: ref
+    }));
+  }
 });
 
 const loadComponent = (moduleName, componentName, options = {}) => {
@@ -1819,14 +1814,14 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   });
 };
 
-function renderToMP(id, APPView, store, eluxContext, fromSSR) {
+function renderToMP(store, eluxContext) {
   const Component = ({
     children
   }) => React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
   }, React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, React.createElement(APPView, null, children)));
+  }, children));
 
   return Component;
 }
@@ -3211,7 +3206,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
     }) {
       return Object.assign(ins, {
         render({
-          id = 'root',
           ssrKey = 'eluxInitStore',
           viewName
         } = {}) {
@@ -3229,17 +3223,16 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
             initState
           });
           const {
-            store,
-            AppView
+            store
           } = syncApp(baseStore, istoreMiddleware, viewName);
           routeModule.model(store);
           router.setStore(store);
-          const view = render(id, AppView, store, {
+          const view = render(store, {
             deps: {},
             store,
             router,
             documentHead: ''
-          }, !!env[ssrKey], ins);
+          }, ins);
           return {
             store,
             view
@@ -3677,6 +3670,11 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
+setReactComponentsConfig({
+  setPageTitle: title => Taro.setNavigationBarTitle({
+    title
+  })
+});
 const createMP = (moduleGetter, middlewares, appModuleName) => {
   if (env.__taroAppConfig.tabBar) {
     env.__taroAppConfig.tabBar.list.forEach(({

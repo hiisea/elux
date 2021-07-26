@@ -25,7 +25,6 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
     }) {
       return Object.assign(ins, {
         render({
-          id = 'root',
           ssrKey = 'eluxInitStore',
           viewName
         } = {}) {
@@ -43,17 +42,16 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
             initState
           });
           const {
-            store,
-            AppView
+            store
           } = syncApp(baseStore, istoreMiddleware, viewName);
           routeModule.model(store);
           router.setStore(store);
-          const view = render(id, AppView, store, {
+          const view = render(store, {
             deps: {},
             store,
             router,
             documentHead: ''
-          }, !!env[ssrKey], ins);
+          }, ins);
           return {
             store,
             view

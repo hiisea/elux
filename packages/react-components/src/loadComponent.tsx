@@ -1,5 +1,5 @@
 import React, {ComponentType, Component} from 'react';
-import {env, loadComponet, isPromise, LoadComponent, RootModuleFacade, EluxComponent} from '@elux/core';
+import {env, loadComponet, isPromise, LoadComponent, EluxComponent} from '@elux/core';
 import {EluxContextComponent, EluxContext, reactComponentsConfig} from './base';
 
 export interface LoadComponentOptions {

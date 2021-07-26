@@ -54,7 +54,7 @@ export interface EluxContext {
     store?: IStore;
     router?: IBaseRouter<any, string>;
 }
-export declare function createBaseMP<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => any, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
+export declare function createBaseMP<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (store: IStore, eluxContext: EluxContext, ins: INS) => any, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
         render({ id, ssrKey, viewName }?: RenderOptions): {
             store: IStore<any> & B;

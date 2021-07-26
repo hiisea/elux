@@ -1,5 +1,6 @@
 /// <reference path="../runtime/runtime.d.ts" />
 import {ComponentType} from 'react';
+import Taro from '@tarojs/taro';
 import {RootModuleFacade, env} from '@elux/core';
 import {setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
 import {renderToMP} from '@elux/react-components/stage';
@@ -21,6 +22,7 @@ export function setConfig(
   setUserConfig(conf);
 }
 
+setReactComponentsConfig({setPageTitle: (title) => Taro.setNavigationBarTitle({title})});
 export const createMP: CreateMP = (moduleGetter, middlewares, appModuleName) => {
   if (env.__taroAppConfig.tabBar) {
     env.__taroAppConfig.tabBar.list.forEach(({pagePath}) => {

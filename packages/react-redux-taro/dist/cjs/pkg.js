@@ -2,14 +2,14 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+var Taro = require('@tarojs/taro');
 var React = require('react');
 var reactDom = require('react-dom');
-var Taro = require('@tarojs/taro');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
-var React__default = /*#__PURE__*/_interopDefaultLegacy(React);
 var Taro__default = /*#__PURE__*/_interopDefaultLegacy(Taro);
+var React__default = /*#__PURE__*/_interopDefaultLegacy(React);
 
 var root;
 
@@ -2670,37 +2670,43 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 var Link = React__default['default'].forwardRef(function (_ref, ref) {
-  var _onClick = _ref.onClick,
+  var onClick = _ref.onClick,
+      href = _ref.href,
+      url = _ref.url,
       replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "replace"]);
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "replace"]);
 
   var eluxContext = React.useContext(EluxContextComponent);
-  var target = rest.target;
 
   var props = _extends({}, rest, {
-    onClick: function onClick(event) {
-      try {
-        _onClick && _onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
+    onClick: function (_onClick) {
+      function onClick(_x) {
+        return _onClick.apply(this, arguments);
       }
 
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-        event.preventDefault();
-        replace ? eluxContext.router.replace(rest.href) : eluxContext.router.push(rest.href);
-      }
-    }
+      onClick.toString = function () {
+        return _onClick.toString();
+      };
+
+      return onClick;
+    }(function (event) {
+      event.preventDefault();
+      onClick && onClick(event);
+      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+    })
   });
 
-  return React__default['default'].createElement("a", _extends({}, props, {
-    ref: ref
-  }));
+  if (href) {
+    return React__default['default'].createElement("a", _extends({}, props, {
+      href: href,
+      ref: ref
+    }));
+  } else {
+    return React__default['default'].createElement("div", _extends({}, props, {
+      ref: ref
+    }));
+  }
 });
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
@@ -2831,14 +2837,14 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   });
 };
 
-function renderToMP(id, APPView, store, eluxContext, fromSSR) {
+function renderToMP(store, eluxContext) {
   var Component = function Component(_ref) {
     var children = _ref.children;
     return React__default['default'].createElement(EluxContextComponent.Provider, {
       value: eluxContext
     }, React__default['default'].createElement(reactComponentsConfig.Provider, {
       store: store
-    }, React__default['default'].createElement(APPView, null, children)));
+    }, children));
   };
 
   return Component;
@@ -4525,8 +4531,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           return render;
         }(function (_temp) {
           var _ref2 = _temp === void 0 ? {} : _temp,
-              _ref2$id = _ref2.id,
-              id = _ref2$id === void 0 ? 'root' : _ref2$id,
               _ref2$ssrKey = _ref2.ssrKey,
               ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
               viewName = _ref2.viewName;
@@ -4548,17 +4552,16 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           }));
 
           var _syncApp = syncApp(baseStore, istoreMiddleware, viewName),
-              store = _syncApp.store,
-              AppView = _syncApp.AppView;
+              store = _syncApp.store;
 
           routeModule.model(store);
           router.setStore(store);
-          var view = render(id, AppView, store, {
+          var view = render(store, {
             deps: {},
             store: store,
             router: router,
             documentHead: ''
-          }, !!env[ssrKey], ins);
+          }, ins);
           return {
             store: store,
             view: view
@@ -5056,6 +5059,13 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
+setReactComponentsConfig({
+  setPageTitle: function setPageTitle(title) {
+    return Taro__default['default'].setNavigationBarTitle({
+      title: title
+    });
+  }
+});
 var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
   if (env.__taroAppConfig.tabBar) {
     env.__taroAppConfig.tabBar.list.forEach(function (_ref) {

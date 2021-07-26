@@ -2,14 +2,14 @@ import React from 'react';
 import { env } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
 import { hydrate, render } from 'react-dom';
-export function renderToMP(id, APPView, store, eluxContext, fromSSR) {
+export function renderToMP(store, eluxContext) {
   const Component = ({
     children
   }) => React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
   }, React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, React.createElement(APPView, null, children)));
+  }, children));
 
   return Component;
 }

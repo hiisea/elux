@@ -15,14 +15,14 @@ var _base = require("./base");
 
 var _reactDom = require("react-dom");
 
-function renderToMP(id, APPView, store, eluxContext, fromSSR) {
+function renderToMP(store, eluxContext) {
   var Component = function Component(_ref) {
     var children = _ref.children;
     return _react.default.createElement(_base.EluxContextComponent.Provider, {
       value: eluxContext
     }, _react.default.createElement(_base.reactComponentsConfig.Provider, {
       store: store
-    }, _react.default.createElement(APPView, null, children)));
+    }, children));
   };
 
   return Component;

@@ -2,36 +2,41 @@ import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
 import React, { useContext } from 'react';
 import { EluxContextComponent } from './base';
-
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 export default React.forwardRef(function (_ref, ref) {
-  var _onClick = _ref.onClick,
+  var onClick = _ref.onClick,
+      href = _ref.href,
+      url = _ref.url,
       replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "replace"]);
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "replace"]);
 
   var eluxContext = useContext(EluxContextComponent);
-  var target = rest.target;
 
   var props = _extends({}, rest, {
-    onClick: function onClick(event) {
-      try {
-        _onClick && _onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
+    onClick: function (_onClick) {
+      function onClick(_x) {
+        return _onClick.apply(this, arguments);
       }
 
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-          event.preventDefault();
-          replace ? eluxContext.router.replace(rest.href) : eluxContext.router.push(rest.href);
-        }
-    }
+      onClick.toString = function () {
+        return _onClick.toString();
+      };
+
+      return onClick;
+    }(function (event) {
+      event.preventDefault();
+      onClick && onClick(event);
+      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+    })
   });
 
-  return React.createElement("a", _extends({}, props, {
-    ref: ref
-  }));
+  if (href) {
+    return React.createElement("a", _extends({}, props, {
+      href: href,
+      ref: ref
+    }));
+  } else {
+    return React.createElement("div", _extends({}, props, {
+      ref: ref
+    }));
+  }
 });

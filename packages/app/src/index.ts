@@ -129,7 +129,7 @@ export interface EluxContext {
 export function createBaseMP<INS = {}>(
   ins: INS,
   createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>,
-  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => any,
+  render: (store: IStore, eluxContext: EluxContext, ins: INS) => any,
   moduleGetter: ModuleGetter,
   middlewares: IStoreMiddleware[] = [],
   appModuleName?: string
@@ -147,17 +147,17 @@ export function createBaseMP<INS = {}>(
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return Object.assign(ins, {
-        render({id = 'root', ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
+        render({ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
           const {state}: {state: any; components: string[]} = env[ssrKey] || {};
           const routeState = router.initRouteState as RouteState;
           const initState = {...storeOptions.initState, route: routeState, ...state};
           const baseStore = storeCreator({...storeOptions, initState});
-          const {store, AppView} = syncApp(baseStore, istoreMiddleware, viewName);
+          const {store} = syncApp(baseStore, istoreMiddleware, viewName);
           routeModule.model(store);
           router.setStore(store);
-          const view = render(id, AppView, store, {deps: {}, store, router, documentHead: ''}, !!env[ssrKey], ins);
+          const view = render(store, {deps: {}, store, router, documentHead: ''}, ins);
           return {store, view};
         },
       });

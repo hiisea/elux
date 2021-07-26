@@ -40,8 +40,6 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
           return render;
         }(function (_temp) {
           var _ref2 = _temp === void 0 ? {} : _temp,
-              _ref2$id = _ref2.id,
-              id = _ref2$id === void 0 ? 'root' : _ref2$id,
               _ref2$ssrKey = _ref2.ssrKey,
               ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
               viewName = _ref2.viewName;
@@ -63,17 +61,16 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
           }));
 
           var _syncApp = syncApp(baseStore, istoreMiddleware, viewName),
-              store = _syncApp.store,
-              AppView = _syncApp.AppView;
+              store = _syncApp.store;
 
           routeModule.model(store);
           router.setStore(store);
-          var view = render(id, AppView, store, {
+          var view = render(store, {
             deps: {},
             store: store,
             router: router,
             documentHead: ''
-          }, !!env[ssrKey], ins);
+          }, ins);
           return {
             store: store,
             view: view

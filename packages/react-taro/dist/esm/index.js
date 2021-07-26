@@ -1,3 +1,4 @@
+import Taro from '@tarojs/taro';
 import { env } from '@elux/core';
 import { setReactComponentsConfig, loadComponent } from '@elux/react-components';
 import { renderToMP } from '@elux/react-components/stage';
@@ -13,6 +14,13 @@ export function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
+setReactComponentsConfig({
+  setPageTitle: function setPageTitle(title) {
+    return Taro.setNavigationBarTitle({
+      title: title
+    });
+  }
+});
 export var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
   if (env.__taroAppConfig.tabBar) {
     env.__taroAppConfig.tabBar.list.forEach(function (_ref) {

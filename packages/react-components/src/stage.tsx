@@ -3,15 +3,12 @@ import {env, IStore} from '@elux/core';
 import {EluxContext, EluxContextComponent, reactComponentsConfig} from './base';
 import {hydrate, render} from 'react-dom';
 
-export function renderToMP(id: string, APPView: ComponentType<any>, store: IStore, eluxContext: EluxContext, fromSSR: boolean): ComponentType<any> {
+export function renderToMP(store: IStore, eluxContext: EluxContext): ComponentType<any> {
   const Component: React.FC = ({children}) => (
     <EluxContextComponent.Provider value={eluxContext}>
-      <reactComponentsConfig.Provider store={store}>
-        <APPView>{children}</APPView>
-      </reactComponentsConfig.Provider>
+      <reactComponentsConfig.Provider store={store}>{children}</reactComponentsConfig.Provider>
     </EluxContextComponent.Provider>
   );
-
   return Component;
 }
 
