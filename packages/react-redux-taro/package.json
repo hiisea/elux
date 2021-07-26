@@ -40,6 +40,7 @@
     "react": "^16.8.0 || ^17"
   },
   "dependencies": {
+    "regenerator-runtime": "~0.11.1",
     "@babel/runtime": "~7.12.18",
     "@elux/react-redux": "^0.1.12",
     "@elux/react-taro": "^0.1.12"
