@@ -359,8 +359,8 @@ var MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  clientStore: null,
-  moduleGetter: null
+  moduleGetter: null,
+  loadings: {}
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
@@ -405,9 +405,9 @@ function injectActions(moduleName, handlers) {
     }
   }
 }
-var loadings = {};
 function setLoading(store, item, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
+  var loadings = MetaData.loadings;
 
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -458,24 +458,22 @@ function effect(loadingKey) {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName) {
-      var before = function before(curAction, moduleName, promiseResult) {
-        if (!env.isServer) {
-          if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData.appModuleName;
-          } else if (loadingForModuleName === 'this') {
-            loadingForModuleName = moduleName;
-          }
-
-          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
+    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+      function injectLoading(curAction, promiseResult) {
+        if (loadingForModuleName === 'app') {
+          loadingForModuleName = MetaData.appModuleName;
+        } else if (loadingForModuleName === 'this') {
+          loadingForModuleName = this.moduleName;
         }
-      };
+
+        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
+      }
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
       }
 
-      fun.__decorators__.push([before, null]);
+      fun.__decorators__.push([injectLoading, null]);
     }
 
     return target.descriptor === descriptor ? target : descriptor;
@@ -1098,10 +1096,6 @@ function getModuleList(moduleNames) {
 }
 
 function _loadModel(moduleName, store) {
-  if (store === void 0) {
-    store = MetaData.clientStore;
-  }
-
   var moduleOrPromise = getModule(moduleName);
 
   if (isPromise(moduleOrPromise)) {
@@ -1425,7 +1419,11 @@ function compose$1() {
   });
 }
 
-function enhanceStore(baseStore, middlewares) {
+function enhanceStore(baseStore, middlewares, injectedModules) {
+  if (injectedModules === void 0) {
+    injectedModules = {};
+  }
+
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -1436,7 +1434,6 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
-  var injectedModules = {};
   store.injectedModules = injectedModules;
   var currentData = {
     actionName: '',
@@ -1509,7 +1506,7 @@ function enhanceStore(baseStore, middlewares) {
     if (decorators) {
       var results = [];
       decorators.forEach(function (decorator, index) {
-        results[index] = decorator[0](action, moduleName, effectResult);
+        results[index] = decorator[0].call(modelInstance, action, effectResult);
       });
       handler.__decoratorResults__ = results;
     }
@@ -1520,7 +1517,7 @@ function enhanceStore(baseStore, middlewares) {
 
         decorators.forEach(function (decorator, index) {
           if (decorator[1]) {
-            decorator[1]('Resolved', _results[index], reslove);
+            decorator[1].call(modelInstance, 'Resolved', _results[index], reslove);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -1533,7 +1530,7 @@ function enhanceStore(baseStore, middlewares) {
 
         decorators.forEach(function (decorator, index) {
           if (decorator[1]) {
-            decorator[1]('Rejected', _results2[index], error);
+            decorator[1].call(modelInstance, 'Rejected', _results2[index], error);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -2476,28 +2473,27 @@ function _renderApp() {
             });
             preloadModules.unshift(appModuleName);
             store = enhanceStore(baseStore, middlewares);
-            MetaData.clientStore = store;
-            _context.next = 8;
+            _context.next = 7;
             return getModuleList(preloadModules);
 
-          case 8:
+          case 7:
             modules = _context.sent;
-            _context.next = 11;
+            _context.next = 10;
             return getComponentList(preloadComponents);
 
-          case 11:
+          case 10:
             appModule = modules[0];
-            _context.next = 14;
+            _context.next = 13;
             return appModule.model(store);
 
-          case 14:
+          case 13:
             AppView = getComponet(appModuleName, appViewName);
             return _context.abrupt("return", {
               store: store,
               AppView: AppView
             });
 
-          case 16:
+          case 15:
           case "end":
             return _context.stop();
         }
@@ -2511,7 +2507,6 @@ function initApp(baseStore, middlewares) {
   var moduleGetter = MetaData.moduleGetter,
       appModuleName = MetaData.appModuleName;
   var store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   var appModule = moduleGetter[appModuleName]();
   appModule.model(store);
   return store;

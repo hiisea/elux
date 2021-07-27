@@ -49,7 +49,11 @@ function compose(...funcs: Function[]) {
   return funcs.reduce((a, b) => (...args: any[]) => a(b(...args)));
 }
 
-export function enhanceStore<S extends State = any>(baseStore: BStore, middlewares?: IStoreMiddleware[]): IStore<S> {
+export function enhanceStore<S extends State = any>(
+  baseStore: BStore,
+  middlewares?: IStoreMiddleware[],
+  injectedModules: {[moduleName: string]: IModuleHandlers} = {}
+): IStore<S> {
   const store: IStore<S> = baseStore as any;
   const _getState = baseStore.getState;
   const getState: GetState<S> = (moduleName?: string) => {
@@ -57,7 +61,6 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
     return moduleName ? state[moduleName] : state;
   };
   store.getState = getState;
-  const injectedModules: {[moduleName: string]: IModuleHandlers} = {};
   store.injectedModules = injectedModules;
   const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
   const update = baseStore.update;
@@ -101,7 +104,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
     if (decorators) {
       const results: any[] = [];
       decorators.forEach((decorator, index) => {
-        results[index] = decorator[0](action, moduleName, effectResult);
+        results[index] = decorator[0].call(modelInstance, action, effectResult);
       });
       handler.__decoratorResults__ = results;
     }
@@ -111,7 +114,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
           const results = handler.__decoratorResults__ || [];
           decorators.forEach((decorator, index) => {
             if (decorator[1]) {
-              decorator[1]('Resolved', results[index], reslove);
+              decorator[1].call(modelInstance, 'Resolved', results[index], reslove);
             }
           });
           handler.__decoratorResults__ = undefined;
@@ -123,7 +126,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
           const results = handler.__decoratorResults__ || [];
           decorators.forEach((decorator, index) => {
             if (decorator[1]) {
-              decorator[1]('Rejected', results[index], error);
+              decorator[1].call(modelInstance, 'Rejected', results[index], error);
             }
           });
           handler.__decoratorResults__ = undefined;

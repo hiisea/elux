@@ -88,8 +88,8 @@ var MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  clientStore: null,
-  moduleGetter: null
+  moduleGetter: null,
+  loadings: {}
 };
 exports.MetaData = MetaData;
 
@@ -136,10 +136,9 @@ function injectActions(moduleName, handlers) {
   }
 }
 
-var loadings = {};
-
 function setLoading(store, item, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
+  var loadings = MetaData.loadings;
 
   if (!loadings[key]) {
     loadings[key] = new _sprite.TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -192,24 +191,22 @@ function effect(loadingKey) {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName) {
-      var before = function before(curAction, moduleName, promiseResult) {
-        if (!_env.default.isServer) {
-          if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData.appModuleName;
-          } else if (loadingForModuleName === 'this') {
-            loadingForModuleName = moduleName;
-          }
-
-          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
+    if (loadingForModuleName && loadingForGroupName && !_env.default.isServer) {
+      function injectLoading(curAction, promiseResult) {
+        if (loadingForModuleName === 'app') {
+          loadingForModuleName = MetaData.appModuleName;
+        } else if (loadingForModuleName === 'this') {
+          loadingForModuleName = this.moduleName;
         }
-      };
+
+        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
+      }
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
       }
 
-      fun.__decorators__.push([before, null]);
+      fun.__decorators__.push([injectLoading, null]);
     }
 
     return target.descriptor === descriptor ? target : descriptor;

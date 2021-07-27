@@ -300,8 +300,8 @@ const MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  clientStore: null,
-  moduleGetter: null
+  moduleGetter: null,
+  loadings: {}
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
@@ -344,9 +344,9 @@ function injectActions(moduleName, handlers) {
     }
   }
 }
-const loadings = {};
 function setLoading(store, item, moduleName, groupName) {
   const key = moduleName + coreConfig.NSP + groupName;
+  const loadings = MetaData.loadings;
 
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -390,24 +390,22 @@ function effect(loadingKey = 'app.loading.global') {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName) {
-      const before = (curAction, moduleName, promiseResult) => {
-        if (!env.isServer) {
-          if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData.appModuleName;
-          } else if (loadingForModuleName === 'this') {
-            loadingForModuleName = moduleName;
-          }
-
-          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
+    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+      function injectLoading(curAction, promiseResult) {
+        if (loadingForModuleName === 'app') {
+          loadingForModuleName = MetaData.appModuleName;
+        } else if (loadingForModuleName === 'this') {
+          loadingForModuleName = this.moduleName;
         }
-      };
+
+        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
+      }
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
       }
 
-      fun.__decorators__.push([before, null]);
+      fun.__decorators__.push([injectLoading, null]);
     }
 
     return target.descriptor === descriptor ? target : descriptor;
@@ -994,7 +992,7 @@ function getModuleList(moduleNames) {
   }
 }
 
-function _loadModel(moduleName, store = MetaData.clientStore) {
+function _loadModel(moduleName, store) {
   const moduleOrPromise = getModule(moduleName);
 
   if (isPromise(moduleOrPromise)) {
@@ -1302,7 +1300,7 @@ function compose$1(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-function enhanceStore(baseStore, middlewares) {
+function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -1313,7 +1311,6 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
-  const injectedModules = {};
   store.injectedModules = injectedModules;
   const currentData = {
     actionName: '',
@@ -1374,7 +1371,7 @@ function enhanceStore(baseStore, middlewares) {
     if (decorators) {
       const results = [];
       decorators.forEach((decorator, index) => {
-        results[index] = decorator[0](action, moduleName, effectResult);
+        results[index] = decorator[0].call(modelInstance, action, effectResult);
       });
       handler.__decoratorResults__ = results;
     }
@@ -1384,7 +1381,7 @@ function enhanceStore(baseStore, middlewares) {
         const results = handler.__decoratorResults__ || [];
         decorators.forEach((decorator, index) => {
           if (decorator[1]) {
-            decorator[1]('Resolved', results[index], reslove);
+            decorator[1].call(modelInstance, 'Resolved', results[index], reslove);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -1396,7 +1393,7 @@ function enhanceStore(baseStore, middlewares) {
         const results = handler.__decoratorResults__ || [];
         decorators.forEach((decorator, index) => {
           if (decorator[1]) {
-            decorator[1]('Rejected', results[index], error);
+            decorator[1].call(modelInstance, 'Rejected', results[index], error);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -1509,7 +1506,6 @@ async function renderApp(baseStore, preloadModules, preloadComponents, middlewar
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
   const appModule = modules[0];
@@ -1526,7 +1522,6 @@ function initApp(baseStore, middlewares) {
     appModuleName
   } = MetaData;
   const store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   const appModule = moduleGetter[appModuleName]();
   appModule.model(store);
   return store;

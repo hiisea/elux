@@ -40,7 +40,7 @@ export interface ActionHandler {
   __isEffect__?: boolean;
   // __isHandler__?: boolean;
   __decorators__?: [
-    (action: Action, moduleName: string, effectResult: Promise<any>) => any,
+    (action: Action, effectResult: Promise<any>) => any,
     null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)
   ][];
   __decoratorResults__?: any[];
@@ -57,6 +57,7 @@ export type ActionCreatorList = Record<string, ActionCreator>;
 export type ActionCreatorMap = Record<string, ActionCreatorList>;
 
 export interface IModuleHandlers {
+  moduleName: string;
   readonly initState: any;
   store: IStore;
 }
@@ -154,7 +155,6 @@ export function isEluxComponent(data: any): data is EluxComponent {
 }
 export const MetaData: {
   facadeMap: FacadeMap;
-  clientStore: IStore;
   appModuleName: string;
   // appViewName: string;
   moduleGetter: ModuleGetter;
@@ -163,6 +163,7 @@ export const MetaData: {
   effectsMap: ActionHandlerMap;
   moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
   componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
+  loadings: Record<string, TaskCounter>;
 } = {
   appModuleName: 'stage',
   injectedModules: {},
@@ -171,8 +172,8 @@ export const MetaData: {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null as any,
-  clientStore: null as any,
   moduleGetter: null as any,
+  loadings: {},
 };
 
 function transformAction(actionName: string, handler: ActionHandler, listenerModule: string, actionHandlerMap: ActionHandlerMap) {
@@ -219,8 +220,6 @@ export function injectActions(moduleName: string, handlers: ActionHandlerList): 
   // return MetaData.facadeMap[moduleName].actions;
 }
 
-const loadings: Record<string, TaskCounter> = {};
-
 /**
  * 手动设置Loading状态，同一个key名的loading状态将自动合并
  * - 参见LoadingState
@@ -230,6 +229,7 @@ const loadings: Record<string, TaskCounter> = {};
  */
 export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T {
   const key = moduleName + coreConfig.NSP + groupName;
+  const loadings = MetaData.loadings;
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
     loadings[key].addListener((loadingState) => {
@@ -272,21 +272,20 @@ export function effect(loadingKey: string | null = 'app.loading.global'): Functi
     // fun.__actionName__ = key;
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
-    if (loadingForModuleName && loadingForGroupName) {
-      const before = (curAction: Action, moduleName: string, promiseResult: Promise<any>) => {
-        if (!env.isServer) {
-          if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData.appModuleName;
-          } else if (loadingForModuleName === 'this') {
-            loadingForModuleName = moduleName;
-          }
-          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName!, loadingForGroupName!);
+    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+      // eslint-disable-next-line no-inner-declarations
+      function injectLoading(this: IModuleHandlers, curAction: Action, promiseResult: Promise<any>) {
+        if (loadingForModuleName === 'app') {
+          loadingForModuleName = MetaData.appModuleName;
+        } else if (loadingForModuleName === 'this') {
+          loadingForModuleName = this.moduleName;
         }
-      };
+        setLoading(this.store, promiseResult, loadingForModuleName!, loadingForGroupName!);
+      }
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
       }
-      fun.__decorators__.push([before, null]);
+      fun.__decorators__.push([injectLoading, null]);
     }
     return target.descriptor === descriptor ? target : descriptor;
   };
@@ -300,7 +299,7 @@ export const action = effect;
  * @param after actionHandler执行后的钩子
  */
 export function logger(
-  before: (action: Action, moduleName: string, promiseResult: Promise<any>) => void,
+  before: (action: Action, promiseResult: Promise<any>) => void,
   after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)
 ) {
   return (target: any, key: string, descriptor: PropertyDescriptor): void => {

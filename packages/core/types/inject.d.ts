@@ -26,7 +26,7 @@ export declare function exportModule<N extends string, H extends IModuleHandlers
 };
 export declare function getModule(moduleName: string): Promise<CommonModule> | CommonModule;
 export declare function getModuleList(moduleNames: string[]): CommonModule[] | Promise<CommonModule[]>;
-export declare function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store?: IStore): void | Promise<void>;
+export declare function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore): void | Promise<void>;
 export declare function getComponet(moduleName: string, componentName: string): EluxComponent | Promise<EluxComponent>;
 export declare function getComponentList(keys: string[]): Promise<EluxComponent[]>;
 export declare function loadComponet(moduleName: string, componentName: string, store: IStore, deps: Record<string, boolean>): EluxComponent | null | Promise<EluxComponent | null>;

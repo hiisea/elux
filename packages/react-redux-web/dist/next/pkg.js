@@ -299,8 +299,8 @@ const MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  clientStore: null,
-  moduleGetter: null
+  moduleGetter: null,
+  loadings: {}
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
@@ -343,9 +343,9 @@ function injectActions(moduleName, handlers) {
     }
   }
 }
-const loadings = {};
 function setLoading(store, item, moduleName, groupName) {
   const key = moduleName + coreConfig.NSP + groupName;
+  const loadings = MetaData.loadings;
 
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -389,24 +389,22 @@ function effect(loadingKey = 'app.loading.global') {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName) {
-      const before = (curAction, moduleName, promiseResult) => {
-        if (!env.isServer) {
-          if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData.appModuleName;
-          } else if (loadingForModuleName === 'this') {
-            loadingForModuleName = moduleName;
-          }
-
-          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
+    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+      function injectLoading(curAction, promiseResult) {
+        if (loadingForModuleName === 'app') {
+          loadingForModuleName = MetaData.appModuleName;
+        } else if (loadingForModuleName === 'this') {
+          loadingForModuleName = this.moduleName;
         }
-      };
+
+        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
+      }
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
       }
 
-      fun.__decorators__.push([before, null]);
+      fun.__decorators__.push([injectLoading, null]);
     }
 
     return target.descriptor === descriptor ? target : descriptor;
@@ -993,7 +991,7 @@ function getModuleList(moduleNames) {
   }
 }
 
-function _loadModel(moduleName, store = MetaData.clientStore) {
+function _loadModel(moduleName, store) {
   const moduleOrPromise = getModule(moduleName);
 
   if (isPromise(moduleOrPromise)) {
@@ -1301,7 +1299,7 @@ function compose$1(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-function enhanceStore(baseStore, middlewares) {
+function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -1312,7 +1310,6 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
-  const injectedModules = {};
   store.injectedModules = injectedModules;
   const currentData = {
     actionName: '',
@@ -1373,7 +1370,7 @@ function enhanceStore(baseStore, middlewares) {
     if (decorators) {
       const results = [];
       decorators.forEach((decorator, index) => {
-        results[index] = decorator[0](action, moduleName, effectResult);
+        results[index] = decorator[0].call(modelInstance, action, effectResult);
       });
       handler.__decoratorResults__ = results;
     }
@@ -1383,7 +1380,7 @@ function enhanceStore(baseStore, middlewares) {
         const results = handler.__decoratorResults__ || [];
         decorators.forEach((decorator, index) => {
           if (decorator[1]) {
-            decorator[1]('Resolved', results[index], reslove);
+            decorator[1].call(modelInstance, 'Resolved', results[index], reslove);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -1395,7 +1392,7 @@ function enhanceStore(baseStore, middlewares) {
         const results = handler.__decoratorResults__ || [];
         decorators.forEach((decorator, index) => {
           if (decorator[1]) {
-            decorator[1]('Rejected', results[index], error);
+            decorator[1].call(modelInstance, 'Rejected', results[index], error);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -1508,7 +1505,6 @@ async function renderApp(baseStore, preloadModules, preloadComponents, middlewar
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
   const appModule = modules[0];
@@ -1519,20 +1515,15 @@ async function renderApp(baseStore, preloadModules, preloadComponents, middlewar
     AppView
   };
 }
-function syncApp(baseStore, middlewares, appViewName = 'main') {
+function initApp(baseStore, middlewares) {
   const {
     moduleGetter,
     appModuleName
   } = MetaData;
   const store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   const appModule = moduleGetter[appModuleName]();
   appModule.model(store);
-  const AppView = getComponet(appModuleName, appViewName);
-  return {
-    store,
-    AppView
-  };
+  return store;
 }
 async function ssrApp(baseStore, preloadModules, middlewares, appViewName = 'main') {
   const {
@@ -1672,37 +1663,32 @@ function _extends() {
   return _extends.apply(this, arguments);
 }
 
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 var Link = React.forwardRef(({
   onClick,
+  href,
+  url,
   replace,
   ...rest
 }, ref) => {
   const eluxContext = useContext(EluxContextComponent);
-  const {
-    target
-  } = rest;
   const props = { ...rest,
     onClick: event => {
-      try {
-        onClick && onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
-      }
-
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-        event.preventDefault();
-        replace ? eluxContext.router.replace(rest.href) : eluxContext.router.push(rest.href);
-      }
+      event.preventDefault();
+      onClick && onClick(event);
+      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
     }
   };
-  return React.createElement("a", _extends({}, props, {
-    ref: ref
-  }));
+
+  if (href) {
+    return React.createElement("a", _extends({}, props, {
+      href: href,
+      ref: ref
+    }));
+  } else {
+    return React.createElement("div", _extends({}, props, {
+      ref: ref
+    }));
+  }
 });
 
 const loadComponent = (moduleName, componentName, options = {}) => {
@@ -3216,39 +3202,28 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
       storeCreator
     }) {
       return Object.assign(ins, {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName
-        } = {}) {
+        render() {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          const {
-            state
-          } = env[ssrKey] || {};
           const routeState = router.initRouteState;
           const initState = { ...storeOptions.initState,
-            route: routeState,
-            ...state
+            route: routeState
           };
           const baseStore = storeCreator({ ...storeOptions,
             initState
           });
-          const {
-            store,
-            AppView
-          } = syncApp(baseStore, istoreMiddleware, viewName);
+          const store = initApp(baseStore, istoreMiddleware);
           routeModule.model(store);
           router.setStore(store);
-          const view = render(id, AppView, store, {
+          const context = render(store, {
             deps: {},
             store,
             router,
             documentHead: ''
-          }, !!env[ssrKey], ins);
+          }, ins);
           return {
             store,
-            view
+            context
           };
         }
 

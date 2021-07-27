@@ -89,10 +89,6 @@ export function getModuleList(moduleNames) {
 }
 
 function _loadModel(moduleName, store) {
-  if (store === void 0) {
-    store = MetaData.clientStore;
-  }
-
   var moduleOrPromise = getModule(moduleName);
 
   if (isPromise(moduleOrPromise)) {

@@ -137,7 +137,7 @@ export function getModuleList(moduleNames: string[]): CommonModule[] | Promise<C
     return list as CommonModule[];
   }
 }
-export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore = MetaData.clientStore): void | Promise<void> {
+export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore): void | Promise<void> {
   const moduleOrPromise = getModule(moduleName as string);
   if (isPromise(moduleOrPromise)) {
     return moduleOrPromise.then((module) => module.model(store));

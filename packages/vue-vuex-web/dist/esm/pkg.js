@@ -1673,8 +1673,8 @@ var MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  clientStore: null,
-  moduleGetter: null
+  moduleGetter: null,
+  loadings: {}
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
@@ -1719,9 +1719,9 @@ function injectActions(moduleName, handlers) {
     }
   }
 }
-var loadings = {};
 function setLoading(store, item, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
+  var loadings = MetaData.loadings;
 
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -1772,24 +1772,22 @@ function effect(loadingKey) {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName) {
-      var before = function before(curAction, moduleName, promiseResult) {
-        if (!env.isServer) {
-          if (loadingForModuleName === 'app') {
-            loadingForModuleName = MetaData.appModuleName;
-          } else if (loadingForModuleName === 'this') {
-            loadingForModuleName = moduleName;
-          }
-
-          setLoading(MetaData.clientStore, promiseResult, loadingForModuleName, loadingForGroupName);
+    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+      function injectLoading(curAction, promiseResult) {
+        if (loadingForModuleName === 'app') {
+          loadingForModuleName = MetaData.appModuleName;
+        } else if (loadingForModuleName === 'this') {
+          loadingForModuleName = this.moduleName;
         }
-      };
+
+        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
+      }
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
       }
 
-      fun.__decorators__.push([before, null]);
+      fun.__decorators__.push([injectLoading, null]);
     }
 
     return target.descriptor === descriptor ? target : descriptor;
@@ -2412,10 +2410,6 @@ function getModuleList(moduleNames) {
 }
 
 function _loadModel(moduleName, store) {
-  if (store === void 0) {
-    store = MetaData.clientStore;
-  }
-
   var moduleOrPromise = getModule(moduleName);
 
   if (isPromise(moduleOrPromise)) {
@@ -2739,7 +2733,11 @@ function compose() {
   });
 }
 
-function enhanceStore(baseStore, middlewares) {
+function enhanceStore(baseStore, middlewares, injectedModules) {
+  if (injectedModules === void 0) {
+    injectedModules = {};
+  }
+
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -2750,7 +2748,6 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
-  var injectedModules = {};
   store.injectedModules = injectedModules;
   var currentData = {
     actionName: '',
@@ -2823,7 +2820,7 @@ function enhanceStore(baseStore, middlewares) {
     if (decorators) {
       var results = [];
       decorators.forEach(function (decorator, index) {
-        results[index] = decorator[0](action, moduleName, effectResult);
+        results[index] = decorator[0].call(modelInstance, action, effectResult);
       });
       handler.__decoratorResults__ = results;
     }
@@ -2834,7 +2831,7 @@ function enhanceStore(baseStore, middlewares) {
 
         decorators.forEach(function (decorator, index) {
           if (decorator[1]) {
-            decorator[1]('Resolved', _results[index], reslove);
+            decorator[1].call(modelInstance, 'Resolved', _results[index], reslove);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -2847,7 +2844,7 @@ function enhanceStore(baseStore, middlewares) {
 
         decorators.forEach(function (decorator, index) {
           if (decorator[1]) {
-            decorator[1]('Rejected', _results2[index], error);
+            decorator[1].call(modelInstance, 'Rejected', _results2[index], error);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -3752,28 +3749,27 @@ function _renderApp() {
             });
             preloadModules.unshift(appModuleName);
             store = enhanceStore(baseStore, middlewares);
-            MetaData.clientStore = store;
-            _context.next = 8;
+            _context.next = 7;
             return getModuleList(preloadModules);
 
-          case 8:
+          case 7:
             modules = _context.sent;
-            _context.next = 11;
+            _context.next = 10;
             return getComponentList(preloadComponents);
 
-          case 11:
+          case 10:
             appModule = modules[0];
-            _context.next = 14;
+            _context.next = 13;
             return appModule.model(store);
 
-          case 14:
+          case 13:
             AppView = getComponet(appModuleName, appViewName);
             return _context.abrupt("return", {
               store: store,
               AppView: AppView
             });
 
-          case 16:
+          case 15:
           case "end":
             return _context.stop();
         }
@@ -3783,22 +3779,13 @@ function _renderApp() {
   return _renderApp.apply(this, arguments);
 }
 
-function syncApp(baseStore, middlewares, appViewName) {
-  if (appViewName === void 0) {
-    appViewName = 'main';
-  }
-
+function initApp(baseStore, middlewares) {
   var moduleGetter = MetaData.moduleGetter,
       appModuleName = MetaData.appModuleName;
   var store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   var appModule = moduleGetter[appModuleName]();
   appModule.model(store);
-  var AppView = getComponet(appModuleName, appViewName);
-  return {
-    store: store,
-    AppView: AppView
-  };
+  return store;
 }
 function ssrApp(_x6, _x7, _x8, _x9) {
   return _ssrApp.apply(this, arguments);
@@ -4006,39 +3993,41 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 function Link (props, context) {
   var _inject = inject(EluxContextKey, {
     documentHead: ''
   }),
       router = _inject.router;
 
-  var _onClick = props.onClick,
+  var onClick = props.onClick,
+      href = props.href,
+      url = props.url,
       replace = props.replace,
-      rest = _objectWithoutPropertiesLoose(props, ["onClick", "replace"]);
-
-  var target = rest.target;
+      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "replace"]);
 
   var newProps = _extends({}, rest, {
-    onClick: function onClick(event) {
-      try {
-        _onClick && _onClick(event);
-      } catch (ex) {
-        event.preventDefault();
-        throw ex;
+    onClick: function (_onClick) {
+      function onClick(_x) {
+        return _onClick.apply(this, arguments);
       }
 
-      if (!event.defaultPrevented && event.button === 0 && (!target || target === '_self') && !isModifiedEvent(event)) {
-        event.preventDefault();
-        replace ? router.replace(rest.href) : router.push(rest.href);
-      }
-    }
+      onClick.toString = function () {
+        return _onClick.toString();
+      };
+
+      return onClick;
+    }(function (event) {
+      event.preventDefault();
+      onClick && onClick(event);
+      replace ? router.replace(url) : router.push(url);
+    })
   });
 
-  return h('a', newProps, context.slots);
+  if (href) {
+    return h('a', newProps, context.slots);
+  } else {
+    return h('div', newProps, context.slots);
+  }
 }
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
@@ -5785,7 +5774,7 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           storeCreator = _ref.storeCreator;
       return Object.assign(ins, {
         render: function (_render) {
-          function render(_x) {
+          function render() {
             return _render.apply(this, arguments);
           }
 
@@ -5794,45 +5783,30 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           };
 
           return render;
-        }(function (_temp) {
-          var _ref2 = _temp === void 0 ? {} : _temp,
-              _ref2$id = _ref2.id,
-              id = _ref2$id === void 0 ? 'root' : _ref2$id,
-              _ref2$ssrKey = _ref2.ssrKey,
-              ssrKey = _ref2$ssrKey === void 0 ? 'eluxInitStore' : _ref2$ssrKey,
-              viewName = _ref2.viewName;
-
+        }(function () {
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-
-          var _ref3 = env[ssrKey] || {},
-              state = _ref3.state;
-
           var routeState = router.initRouteState;
 
           var initState = _extends({}, storeOptions.initState, {
             route: routeState
-          }, state);
+          });
 
           var baseStore = storeCreator(_extends({}, storeOptions, {
             initState: initState
           }));
-
-          var _syncApp = syncApp(baseStore, istoreMiddleware, viewName),
-              store = _syncApp.store,
-              AppView = _syncApp.AppView;
-
+          var store = initApp(baseStore, istoreMiddleware);
           routeModule.model(store);
           router.setStore(store);
-          var view = render(id, AppView, store, {
+          var context = render(store, {
             deps: {},
             store: store,
             router: router,
             documentHead: ''
-          }, !!env[ssrKey], ins);
+          }, ins);
           return {
             store: store,
-            view: view
+            context: context
           };
         })
       });
@@ -5848,12 +5822,12 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
   var routeModule = getModule('route');
   return {
-    useStore: function useStore(_ref4) {
-      var storeOptions = _ref4.storeOptions,
-          storeCreator = _ref4.storeCreator;
+    useStore: function useStore(_ref2) {
+      var storeOptions = _ref2.storeOptions,
+          storeCreator = _ref2.storeCreator;
       return Object.assign(ins, {
         render: function (_render2) {
-          function render(_x2) {
+          function render(_x) {
             return _render2.apply(this, arguments);
           }
 
@@ -5862,21 +5836,21 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
           };
 
           return render;
-        }(function (_temp2) {
-          var _ref5 = _temp2 === void 0 ? {} : _temp2,
-              _ref5$id = _ref5.id,
-              id = _ref5$id === void 0 ? 'root' : _ref5$id,
-              _ref5$ssrKey = _ref5.ssrKey,
-              ssrKey = _ref5$ssrKey === void 0 ? 'eluxInitStore' : _ref5$ssrKey,
-              viewName = _ref5.viewName;
+        }(function (_temp) {
+          var _ref3 = _temp === void 0 ? {} : _temp,
+              _ref3$id = _ref3.id,
+              id = _ref3$id === void 0 ? 'root' : _ref3$id,
+              _ref3$ssrKey = _ref3.ssrKey,
+              ssrKey = _ref3$ssrKey === void 0 ? 'eluxInitStore' : _ref3$ssrKey,
+              viewName = _ref3.viewName;
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
 
-          var _ref6 = env[ssrKey] || {},
-              state = _ref6.state,
-              _ref6$components = _ref6.components,
-              components = _ref6$components === void 0 ? [] : _ref6$components;
+          var _ref4 = env[ssrKey] || {},
+              state = _ref4.state,
+              _ref4$components = _ref4.components,
+              components = _ref4$components === void 0 ? [] : _ref4$components;
 
           var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
           return roterStatePromise.then(function (routeState) {
@@ -5887,9 +5861,9 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref7) {
-              var store = _ref7.store,
-                  AppView = _ref7.AppView;
+            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
+              var store = _ref5.store,
+                  AppView = _ref5.AppView;
               routeModule.model(store);
               router.setStore(store);
               render(id, AppView, store, {
@@ -5915,12 +5889,12 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
   var istoreMiddleware = [routeMiddleware].concat(middlewares);
   var routeModule = getModule('route');
   return {
-    useStore: function useStore(_ref8) {
-      var storeOptions = _ref8.storeOptions,
-          storeCreator = _ref8.storeCreator;
+    useStore: function useStore(_ref6) {
+      var storeOptions = _ref6.storeOptions,
+          storeCreator = _ref6.storeCreator;
       return Object.assign(ins, {
         render: function (_render3) {
-          function render(_x3) {
+          function render(_x2) {
             return _render3.apply(this, arguments);
           }
 
@@ -5929,13 +5903,13 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
           };
 
           return render;
-        }(function (_temp3) {
-          var _ref9 = _temp3 === void 0 ? {} : _temp3,
-              _ref9$id = _ref9.id,
-              id = _ref9$id === void 0 ? 'root' : _ref9$id,
-              _ref9$ssrKey = _ref9.ssrKey,
-              ssrKey = _ref9$ssrKey === void 0 ? 'eluxInitStore' : _ref9$ssrKey,
-              viewName = _ref9.viewName;
+        }(function (_temp2) {
+          var _ref7 = _temp2 === void 0 ? {} : _temp2,
+              _ref7$id = _ref7.id,
+              id = _ref7$id === void 0 ? 'root' : _ref7$id,
+              _ref7$ssrKey = _ref7.ssrKey,
+              ssrKey = _ref7$ssrKey === void 0 ? 'eluxInitStore' : _ref7$ssrKey,
+              viewName = _ref7.viewName;
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
@@ -5948,9 +5922,9 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
             }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref10) {
-              var store = _ref10.store,
-                  AppView = _ref10.AppView;
+            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
+              var store = _ref8.store,
+                  AppView = _ref8.AppView;
               var state = store.getState();
               var eluxContext = {
                 deps: {},

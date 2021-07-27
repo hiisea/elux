@@ -23,7 +23,6 @@ export async function renderApp<ST extends BStore = BStore>(
   preloadModules = preloadModules.filter((moduleName) => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares) as IStore<any> & ST;
-  MetaData.clientStore = store;
   // 防止view中瀑布式懒加载
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
@@ -39,7 +38,6 @@ export async function renderApp<ST extends BStore = BStore>(
 export function initApp<ST extends BStore = BStore>(baseStore: ST, middlewares?: IStoreMiddleware[]): IStore<any> & ST {
   const {moduleGetter, appModuleName} = MetaData;
   const store = enhanceStore(baseStore, middlewares) as IStore<any> & ST;
-  MetaData.clientStore = store;
   const appModule = moduleGetter[appModuleName]() as CommonModule<string>;
   appModule.model(store);
   return store;

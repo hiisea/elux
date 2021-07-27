@@ -20,7 +20,6 @@ export async function renderApp(baseStore, preloadModules, preloadComponents, mi
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
   const appModule = modules[0];
@@ -37,7 +36,6 @@ export function initApp(baseStore, middlewares) {
     appModuleName
   } = MetaData;
   const store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   const appModule = moduleGetter[appModuleName]();
   appModule.model(store);
   return store;

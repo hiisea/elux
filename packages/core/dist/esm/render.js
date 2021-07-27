@@ -41,28 +41,27 @@ function _renderApp() {
             });
             preloadModules.unshift(appModuleName);
             store = enhanceStore(baseStore, middlewares);
-            MetaData.clientStore = store;
-            _context.next = 8;
+            _context.next = 7;
             return getModuleList(preloadModules);
 
-          case 8:
+          case 7:
             modules = _context.sent;
-            _context.next = 11;
+            _context.next = 10;
             return getComponentList(preloadComponents);
 
-          case 11:
+          case 10:
             appModule = modules[0];
-            _context.next = 14;
+            _context.next = 13;
             return appModule.model(store);
 
-          case 14:
+          case 13:
             AppView = getComponet(appModuleName, appViewName);
             return _context.abrupt("return", {
               store: store,
               AppView: AppView
             });
 
-          case 16:
+          case 15:
           case "end":
             return _context.stop();
         }
@@ -76,7 +75,6 @@ export function initApp(baseStore, middlewares) {
   var moduleGetter = MetaData.moduleGetter,
       appModuleName = MetaData.appModuleName;
   var store = enhanceStore(baseStore, middlewares);
-  MetaData.clientStore = store;
   var appModule = moduleGetter[appModuleName]();
   appModule.model(store);
   return store;

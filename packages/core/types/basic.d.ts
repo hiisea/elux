@@ -1,4 +1,4 @@
-import { LoadingState } from './sprite';
+import { LoadingState, TaskCounter } from './sprite';
 export declare const coreConfig: {
     NSP: string;
     MSP: string;
@@ -21,7 +21,7 @@ export interface ActionHandler {
     __isReducer__?: boolean;
     __isEffect__?: boolean;
     __decorators__?: [
-        (action: Action, moduleName: string, effectResult: Promise<any>) => any,
+        (action: Action, effectResult: Promise<any>) => any,
         null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)
     ][];
     __decoratorResults__?: any[];
@@ -33,6 +33,7 @@ export declare type ActionCreator = (...args: any[]) => Action;
 export declare type ActionCreatorList = Record<string, ActionCreator>;
 export declare type ActionCreatorMap = Record<string, ActionCreatorList>;
 export interface IModuleHandlers {
+    moduleName: string;
     readonly initState: any;
     store: IStore;
 }
@@ -94,7 +95,6 @@ export interface EluxComponent {
 export declare function isEluxComponent(data: any): data is EluxComponent;
 export declare const MetaData: {
     facadeMap: FacadeMap;
-    clientStore: IStore;
     appModuleName: string;
     moduleGetter: ModuleGetter;
     injectedModules: Record<string, boolean>;
@@ -102,6 +102,7 @@ export declare const MetaData: {
     effectsMap: ActionHandlerMap;
     moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
     componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
+    loadings: Record<string, TaskCounter>;
 };
 export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
 export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;
@@ -109,6 +110,6 @@ export declare function reducer(target: any, key: string, descriptor: PropertyDe
 export declare function effect(loadingKey?: string | null): Function;
 export declare const mutation: typeof reducer;
 export declare const action: typeof effect;
-export declare function logger(before: (action: Action, moduleName: string, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
+export declare function logger(before: (action: Action, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
 export declare function deepMergeState(target?: any, ...args: any[]): any;
 export declare function mergeState(target?: any, ...args: any[]): any;

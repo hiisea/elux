@@ -116,10 +116,6 @@ function getModuleList(moduleNames) {
 }
 
 function _loadModel(moduleName, store) {
-  if (store === void 0) {
-    store = _basic.MetaData.clientStore;
-  }
-
   var moduleOrPromise = getModule(moduleName);
 
   if ((0, _sprite.isPromise)(moduleOrPromise)) {

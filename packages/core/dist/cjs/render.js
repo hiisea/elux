@@ -56,28 +56,27 @@ function _renderApp() {
             });
             preloadModules.unshift(appModuleName);
             store = (0, _store.enhanceStore)(baseStore, middlewares);
-            _basic.MetaData.clientStore = store;
-            _context.next = 8;
+            _context.next = 7;
             return (0, _inject.getModuleList)(preloadModules);
 
-          case 8:
+          case 7:
             modules = _context.sent;
-            _context.next = 11;
+            _context.next = 10;
             return (0, _inject.getComponentList)(preloadComponents);
 
-          case 11:
+          case 10:
             appModule = modules[0];
-            _context.next = 14;
+            _context.next = 13;
             return appModule.model(store);
 
-          case 14:
+          case 13:
             AppView = (0, _inject.getComponet)(appModuleName, appViewName);
             return _context.abrupt("return", {
               store: store,
               AppView: AppView
             });
 
-          case 16:
+          case 15:
           case "end":
             return _context.stop();
         }
@@ -91,7 +90,6 @@ function initApp(baseStore, middlewares) {
   var moduleGetter = _basic.MetaData.moduleGetter,
       appModuleName = _basic.MetaData.appModuleName;
   var store = (0, _store.enhanceStore)(baseStore, middlewares);
-  _basic.MetaData.clientStore = store;
   var appModule = moduleGetter[appModuleName]();
   appModule.model(store);
   return store;

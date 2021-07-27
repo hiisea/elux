@@ -36,7 +36,7 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-export function enhanceStore(baseStore, middlewares) {
+export function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -47,7 +47,6 @@ export function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
-  const injectedModules = {};
   store.injectedModules = injectedModules;
   const currentData = {
     actionName: '',
@@ -108,7 +107,7 @@ export function enhanceStore(baseStore, middlewares) {
     if (decorators) {
       const results = [];
       decorators.forEach((decorator, index) => {
-        results[index] = decorator[0](action, moduleName, effectResult);
+        results[index] = decorator[0].call(modelInstance, action, effectResult);
       });
       handler.__decoratorResults__ = results;
     }
@@ -118,7 +117,7 @@ export function enhanceStore(baseStore, middlewares) {
         const results = handler.__decoratorResults__ || [];
         decorators.forEach((decorator, index) => {
           if (decorator[1]) {
-            decorator[1]('Resolved', results[index], reslove);
+            decorator[1].call(modelInstance, 'Resolved', results[index], reslove);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -130,7 +129,7 @@ export function enhanceStore(baseStore, middlewares) {
         const results = handler.__decoratorResults__ || [];
         decorators.forEach((decorator, index) => {
           if (decorator[1]) {
-            decorator[1]('Rejected', results[index], error);
+            decorator[1].call(modelInstance, 'Rejected', results[index], error);
           }
         });
         handler.__decoratorResults__ = undefined;

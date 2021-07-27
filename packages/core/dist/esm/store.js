@@ -47,7 +47,11 @@ function compose() {
   });
 }
 
-export function enhanceStore(baseStore, middlewares) {
+export function enhanceStore(baseStore, middlewares, injectedModules) {
+  if (injectedModules === void 0) {
+    injectedModules = {};
+  }
+
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -58,7 +62,6 @@ export function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
-  var injectedModules = {};
   store.injectedModules = injectedModules;
   var currentData = {
     actionName: '',
@@ -131,7 +134,7 @@ export function enhanceStore(baseStore, middlewares) {
     if (decorators) {
       var results = [];
       decorators.forEach(function (decorator, index) {
-        results[index] = decorator[0](action, moduleName, effectResult);
+        results[index] = decorator[0].call(modelInstance, action, effectResult);
       });
       handler.__decoratorResults__ = results;
     }
@@ -142,7 +145,7 @@ export function enhanceStore(baseStore, middlewares) {
 
         decorators.forEach(function (decorator, index) {
           if (decorator[1]) {
-            decorator[1]('Resolved', _results[index], reslove);
+            decorator[1].call(modelInstance, 'Resolved', _results[index], reslove);
           }
         });
         handler.__decoratorResults__ = undefined;
@@ -155,7 +158,7 @@ export function enhanceStore(baseStore, middlewares) {
 
         decorators.forEach(function (decorator, index) {
           if (decorator[1]) {
-            decorator[1]('Rejected', _results2[index], error);
+            decorator[1].call(modelInstance, 'Rejected', _results2[index], error);
           }
         });
         handler.__decoratorResults__ = undefined;
