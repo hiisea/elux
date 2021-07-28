@@ -136,10 +136,8 @@ var BaseRouter = function () {
         });
       }
 
-      _this2.history = new _history.History({
-        location: location,
-        key: key
-      });
+      _this2.history = new _history.History();
+      new _history.HistoryRecord(location, key, _this2.history);
       return routeState;
     };
 
@@ -277,23 +275,23 @@ var BaseRouter = function () {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   };
 
-  _proto2.relaunch = function relaunch(data, internal, disableNative) {
-    if (internal === void 0) {
-      internal = false;
+  _proto2.relaunch = function relaunch(data, root, nativeCaller) {
+    if (root === void 0) {
+      root = false;
     }
 
-    if (disableNative === void 0) {
-      disableNative = _basic.routeConfig.disableNativeRoute;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    this.addTask(this._relaunch.bind(this, data, internal, disableNative));
+    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
   };
 
   _proto2._relaunch = function () {
-    var _relaunch2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee(data, internal, disableNative) {
+    var _relaunch2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee(data, root, nativeCaller) {
       var _this3 = this;
 
-      var preData, location, key, routeState, nativeData;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter;
       return _regenerator.default.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -326,35 +324,38 @@ var BaseRouter = function () {
               return this.dispatch(routeState);
 
             case 12:
-              if (!(!disableNative && !internal)) {
-                _context.next = 16;
+              notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context.next = 17;
                 break;
               }
 
-              _context.next = 15;
+              _context.next = 16;
               return this.nativeRouter.execute('relaunch', function () {
                 return _this3.locationToNativeData(routeState);
               }, key);
 
-            case 15:
+            case 16:
               nativeData = _context.sent;
 
-            case 16:
+            case 17:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
-              this.store.dispatch((0, _module.routeChangeAction)(routeState));
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().relaunch(location, key);
-              } else {
+              if (root) {
                 this.history.relaunch(location, key);
+              } else {
+                this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-            case 21:
+              this.store.dispatch((0, _module.routeChangeAction)(routeState));
+
+            case 22:
             case "end":
               return _context.stop();
           }
@@ -369,23 +370,23 @@ var BaseRouter = function () {
     return _relaunch;
   }();
 
-  _proto2.push = function push(data, internal, disableNative) {
-    if (internal === void 0) {
-      internal = false;
+  _proto2.push = function push(data, root, nativeCaller) {
+    if (root === void 0) {
+      root = false;
     }
 
-    if (disableNative === void 0) {
-      disableNative = _basic.routeConfig.disableNativeRoute;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    this.addTask(this._push.bind(this, data, internal, disableNative));
+    this.addTask(this._push.bind(this, data, root, nativeCaller));
   };
 
   _proto2._push = function () {
-    var _push2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee2(data, internal, disableNative) {
+    var _push2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee2(data, root, nativeCaller) {
       var _this4 = this;
 
-      var preData, location, key, routeState, nativeData;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter;
       return _regenerator.default.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -418,36 +419,38 @@ var BaseRouter = function () {
               return this.dispatch(routeState);
 
             case 12:
-              if (!(!disableNative && !internal)) {
-                _context2.next = 16;
+              notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context2.next = 17;
                 break;
               }
 
-              _context2.next = 15;
+              _context2.next = 16;
               return this.nativeRouter.execute('push', function () {
                 return _this4.locationToNativeData(routeState);
               }, key);
 
-            case 15:
+            case 16:
               nativeData = _context2.sent;
 
-            case 16:
-              this._nativeData = nativeData || undefined;
+            case 17:
+              this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().push(location, key);
-              } else {
+              if (root) {
                 this.history.push(location, key);
+              } else {
+                this.history.getCurrentSubHistory().push(location, key);
               }
 
               this.store.dispatch((0, _module.routeChangeAction)(routeState));
 
-            case 21:
+            case 22:
             case "end":
               return _context2.stop();
           }
@@ -462,23 +465,23 @@ var BaseRouter = function () {
     return _push;
   }();
 
-  _proto2.replace = function replace(data, internal, disableNative) {
-    if (internal === void 0) {
-      internal = false;
+  _proto2.replace = function replace(data, root, nativeCaller) {
+    if (root === void 0) {
+      root = false;
     }
 
-    if (disableNative === void 0) {
-      disableNative = _basic.routeConfig.disableNativeRoute;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    this.addTask(this._replace.bind(this, data, internal, disableNative));
+    this.addTask(this._replace.bind(this, data, root, nativeCaller));
   };
 
   _proto2._replace = function () {
-    var _replace2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee3(data, internal, disableNative) {
+    var _replace2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee3(data, root, nativeCaller) {
       var _this5 = this;
 
-      var preData, location, key, routeState, nativeData;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter;
       return _regenerator.default.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
@@ -511,36 +514,38 @@ var BaseRouter = function () {
               return this.dispatch(routeState);
 
             case 12:
-              if (!(!disableNative && !internal)) {
-                _context3.next = 16;
+              notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context3.next = 17;
                 break;
               }
 
-              _context3.next = 15;
+              _context3.next = 16;
               return this.nativeRouter.execute('replace', function () {
                 return _this5.locationToNativeData(routeState);
               }, key);
 
-            case 15:
+            case 16:
               nativeData = _context3.sent;
 
-            case 16:
-              this._nativeData = nativeData || undefined;
+            case 17:
+              this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().replace(location, key);
-              } else {
+              if (root) {
                 this.history.replace(location, key);
+              } else {
+                this.history.getCurrentSubHistory().replace(location, key);
               }
 
               this.store.dispatch((0, _module.routeChangeAction)(routeState));
 
-            case 21:
+            case 22:
             case "end":
               return _context3.stop();
           }
@@ -555,32 +560,31 @@ var BaseRouter = function () {
     return _replace;
   }();
 
-  _proto2.back = function back(n, indexUrl, internal, disableNative) {
+  _proto2.back = function back(n, root, overflowRedirect, nativeCaller) {
     if (n === void 0) {
       n = 1;
     }
 
-    if (indexUrl === void 0) {
-      indexUrl = 'index';
+    if (root === void 0) {
+      root = false;
     }
 
-    if (internal === void 0) {
-      internal = false;
+    if (overflowRedirect === void 0) {
+      overflowRedirect = true;
     }
 
-    if (disableNative === void 0) {
-      disableNative = _basic.routeConfig.disableNativeRoute;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    this.addTask(this._back.bind(this, n, indexUrl === 'index' ? _basic.routeConfig.indexUrl : indexUrl, internal, disableNative));
+    this.addTask(this._back.bind(this, n, root, overflowRedirect, nativeCaller));
   };
 
   _proto2._back = function () {
-    var _back2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee4(n, indexUrl, internal, disableNative) {
+    var _back2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee4(n, root, overflowRedirect, nativeCaller) {
       var _this6 = this;
 
-      var stack, uri, _uriToLocation, key, location, routeState, nativeData;
-
+      var historyRecord, key, pagename, routeState, nativeData, notifyNativeRouter;
       return _regenerator.default.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -589,42 +593,42 @@ var BaseRouter = function () {
                 n = 1;
               }
 
-              stack = internal ? this.history.getCurrentInternalHistory().getRecord(n - 1) : this.history.getRecord(n - 1);
+              if (!(n < 1)) {
+                _context4.next = 3;
+                break;
+              }
 
-              if (stack) {
+              return _context4.abrupt("return", undefined);
+
+            case 3:
+              historyRecord = root ? this.history.back(n, overflowRedirect) : this.history.getCurrentSubHistory().back(n, overflowRedirect);
+
+              if (historyRecord) {
                 _context4.next = 6;
                 break;
               }
 
-              if (!indexUrl) {
-                _context4.next = 5;
-                break;
-              }
-
-              return _context4.abrupt("return", this._relaunch(indexUrl || _basic.routeConfig.indexUrl, internal, disableNative));
-
-            case 5:
-              throw {
-                code: '1',
-                message: 'history not found'
-              };
+              return _context4.abrupt("return", this.relaunch(_basic.routeConfig.indexUrl, root));
 
             case 6:
-              uri = stack.uri;
-              _uriToLocation = (0, _history.uriToLocation)(uri), key = _uriToLocation.key, location = _uriToLocation.location;
-              routeState = (0, _extends2.default)({}, location, {
-                action: 'BACK',
-                key: key
-              });
-              _context4.next = 11;
+              key = historyRecord.key, pagename = historyRecord.pagename;
+              routeState = {
+                key: key,
+                pagename: pagename,
+                params: historyRecord.getParams(),
+                action: 'BACK'
+              };
+              _context4.next = 10;
               return this.store.dispatch((0, _module.testRouteChangeAction)(routeState));
 
-            case 11:
-              _context4.next = 13;
+            case 10:
+              _context4.next = 12;
               return this.dispatch(routeState);
 
-            case 13:
-              if (!(!disableNative && !internal)) {
+            case 12:
+              notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
                 _context4.next = 17;
                 break;
               }
@@ -638,23 +642,22 @@ var BaseRouter = function () {
               nativeData = _context4.sent;
 
             case 17:
-              this._nativeData = nativeData || undefined;
+              this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().back(n);
-              } else {
+              if (root) {
                 this.history.back(n);
+              } else {
+                this.history.getCurrentSubHistory().back(n);
               }
 
               this.store.dispatch((0, _module.routeChangeAction)(routeState));
-              return _context4.abrupt("return", undefined);
 
-            case 23:
+            case 22:
             case "end":
               return _context4.stop();
           }

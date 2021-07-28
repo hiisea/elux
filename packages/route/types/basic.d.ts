@@ -1,14 +1,16 @@
 export interface RouteConfig {
-    actionMaxHistory: number;
-    pagesMaxHistory: number;
-    disableNativeRoute: boolean;
+    maxHistory: number;
+    notifyNativeRouter: {
+        root: boolean;
+        internal: boolean;
+    };
     indexUrl: string;
-    defaultParams: Record<string, any>;
 }
 export declare const routeConfig: RouteConfig;
 export declare const setRouteConfig: (config: Partial<RouteConfig>) => void;
 export declare const routeMeta: {
     pagenames: Record<string, string>;
+    defaultParams: Record<string, any>;
 };
 export declare type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
 export declare type ModuleParams = Record<string, any>;

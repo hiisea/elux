@@ -1,6 +1,6 @@
 import {deepMerge, env, getModuleList, getModuleGetter, isPromise} from '@elux/core';
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
-import {routeConfig, routeMeta, EluxLocation, PartialLocation, Location, RootParams, NativeLocation} from './basic';
+import {routeMeta, EluxLocation, PartialLocation, Location, RootParams, NativeLocation} from './basic';
 
 export interface LocationTransform {
   eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation; // E->L
@@ -31,7 +31,7 @@ export type NativeLocationMap = {
   out(nativeLocation: NativeLocation): NativeLocation;
 };
 export function assignDefaultData(data: {[moduleName: string]: any}): {[moduleName: string]: any} {
-  const def = routeConfig.defaultParams;
+  const def = routeMeta.defaultParams;
   return Object.keys(data).reduce((params, moduleName) => {
     if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
@@ -233,7 +233,7 @@ export function createLocationTransform(
     },
     partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>> {
       const {pagename, params} = partialLocation;
-      const def = routeConfig.defaultParams;
+      const def = routeMeta.defaultParams;
       const asyncLoadModules = Object.keys(params).filter((moduleName) => def[moduleName] === undefined);
       const modulesOrPromise = getModuleList(asyncLoadModules);
       if (isPromise(modulesOrPromise)) {
@@ -254,7 +254,7 @@ export function createLocationTransform(
       return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
     },
     partialLocationToMinData(partialLocation) {
-      let params = excludeDefault(partialLocation.params, routeConfig.defaultParams, true);
+      let params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
       let pathParams: Record<string, any>;
       let pathname: string;
       const pagename = `/${partialLocation.pagename}/`.replace(/^\/+|\/+$/g, '/');

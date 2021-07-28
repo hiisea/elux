@@ -1,9 +1,15 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { BaseRouter, BaseNativeRouter } from '@elux/route';
+import { BaseRouter, BaseNativeRouter, setRouteConfig } from '@elux/route';
 import { createBrowserHistory, createHashHistory, createMemoryHistory } from 'history';
 import { env } from '@elux/core';
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: true
+  }
+});
 export var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
@@ -94,19 +100,19 @@ export var BrowserNativeRouter = function (_BaseNativeRouter) {
 
         if (index > -1) {
           callback = function callback() {
-            return _this.router.back(index + 1, '', false, false);
+            return _this.router.back(index + 1);
           };
         } else if (action === 'REPLACE') {
           callback = function callback() {
-            return _this.router.replace(url, false, false);
+            return _this.router.replace(url);
           };
         } else if (action === 'PUSH') {
           callback = function callback() {
-            return _this.router.push(url, false, false);
+            return _this.router.push(url);
           };
         } else {
           callback = function callback() {
-            return _this.router.relaunch(url, false, false);
+            return _this.router.relaunch(url);
           };
         }
 

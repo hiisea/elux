@@ -1,6 +1,8 @@
-import {BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter} from '@elux/route';
+import {BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter, setRouteConfig} from '@elux/route';
 import {History, createBrowserHistory, createHashHistory, createMemoryHistory, Location as HistoryLocation} from 'history';
 import {env} from '@elux/core';
+
+setRouteConfig({notifyNativeRouter: {root: true, internal: true}});
 
 type UnregisterCallback = () => void;
 
@@ -70,13 +72,13 @@ export class BrowserNativeRouter extends BaseNativeRouter {
           index = this.router.findHistoryIndexByKey(key);
         }
         if (index > -1) {
-          callback = () => this.router.back(index + 1, '', false, false);
+          callback = () => this.router.back(index + 1);
         } else if (action === 'REPLACE') {
-          callback = () => this.router.replace(url, false, false);
+          callback = () => this.router.replace(url);
         } else if (action === 'PUSH') {
-          callback = () => this.router.push(url, false, false);
+          callback = () => this.router.push(url);
         } else {
-          callback = () => this.router.relaunch(url, false, false);
+          callback = () => this.router.relaunch(url);
         }
         callback && env.setTimeout(callback, 50);
         return false;

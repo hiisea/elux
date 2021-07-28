@@ -1,7 +1,7 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { isPromise, deepMerge } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
-import { History, uriToLocation } from './history';
+import { History, HistoryRecord } from './history';
 import { testRouteChangeAction, routeChangeAction } from './module';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
@@ -105,10 +105,8 @@ export class BaseRouter {
         });
       }
 
-      this.history = new History({
-        location,
-        key
-      });
+      this.history = new History();
+      new HistoryRecord(location, key, this.history);
       return routeState;
     };
 
@@ -242,11 +240,11 @@ export class BaseRouter {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   }
 
-  relaunch(data, internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._relaunch.bind(this, data, internal, disableNative));
+  relaunch(data, root = false, nativeCaller = false) {
+    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
   }
 
-  async _relaunch(data, internal, disableNative) {
+  async _relaunch(data, root, nativeCaller) {
     const preData = await this.preAdditions(data);
 
     if (!preData) {
@@ -264,8 +262,9 @@ export class BaseRouter {
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNativeData(routeState), key);
     }
 
@@ -275,20 +274,21 @@ export class BaseRouter {
       pathname: routeState.pagename,
       params: routeState.params
     });
-    this.store.dispatch(routeChangeAction(routeState));
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().relaunch(location, key);
-    } else {
+    if (root) {
       this.history.relaunch(location, key);
+    } else {
+      this.history.getCurrentSubHistory().relaunch(location, key);
     }
+
+    this.store.dispatch(routeChangeAction(routeState));
   }
 
-  push(data, internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._push.bind(this, data, internal, disableNative));
+  push(data, root = false, nativeCaller = false) {
+    this.addTask(this._push.bind(this, data, root, nativeCaller));
   }
 
-  async _push(data, internal, disableNative) {
+  async _push(data, root, nativeCaller) {
     const preData = await this.preAdditions(data);
 
     if (!preData) {
@@ -306,32 +306,33 @@ export class BaseRouter {
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('push', () => this.locationToNativeData(routeState), key);
     }
 
-    this._nativeData = nativeData || undefined;
+    this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().push(location, key);
-    } else {
+    if (root) {
       this.history.push(location, key);
+    } else {
+      this.history.getCurrentSubHistory().push(location, key);
     }
 
     this.store.dispatch(routeChangeAction(routeState));
   }
 
-  replace(data, internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._replace.bind(this, data, internal, disableNative));
+  replace(data, root = false, nativeCaller = false) {
+    this.addTask(this._replace.bind(this, data, root, nativeCaller));
   }
 
-  async _replace(data, internal, disableNative) {
+  async _replace(data, root, nativeCaller) {
     const preData = await this.preAdditions(data);
 
     if (!preData) {
@@ -349,77 +350,76 @@ export class BaseRouter {
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('replace', () => this.locationToNativeData(routeState), key);
     }
 
-    this._nativeData = nativeData || undefined;
+    this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().replace(location, key);
-    } else {
+    if (root) {
       this.history.replace(location, key);
+    } else {
+      this.history.getCurrentSubHistory().replace(location, key);
     }
 
     this.store.dispatch(routeChangeAction(routeState));
   }
 
-  back(n = 1, indexUrl = 'index', internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._back.bind(this, n, indexUrl === 'index' ? routeConfig.indexUrl : indexUrl, internal, disableNative));
+  back(n = 1, root = false, overflowRedirect = true, nativeCaller = false) {
+    this.addTask(this._back.bind(this, n, root, overflowRedirect, nativeCaller));
   }
 
-  async _back(n = 1, indexUrl, internal, disableNative) {
-    const stack = internal ? this.history.getCurrentInternalHistory().getRecord(n - 1) : this.history.getRecord(n - 1);
-
-    if (!stack) {
-      if (indexUrl) {
-        return this._relaunch(indexUrl || routeConfig.indexUrl, internal, disableNative);
-      }
-
-      throw {
-        code: '1',
-        message: 'history not found'
-      };
+  async _back(n = 1, root, overflowRedirect, nativeCaller) {
+    if (n < 1) {
+      return undefined;
     }
 
-    const uri = stack.uri;
+    const historyRecord = root ? this.history.back(n, overflowRedirect) : this.history.getCurrentSubHistory().back(n, overflowRedirect);
+
+    if (!historyRecord) {
+      return this.relaunch(routeConfig.indexUrl, root);
+    }
+
     const {
       key,
-      location
-    } = uriToLocation(uri);
-    const routeState = { ...location,
-      action: 'BACK',
-      key
+      pagename
+    } = historyRecord;
+    const routeState = {
+      key,
+      pagename,
+      params: historyRecord.getParams(),
+      action: 'BACK'
     };
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('back', () => this.locationToNativeData(routeState), n, key);
     }
 
-    this._nativeData = nativeData || undefined;
+    this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().back(n);
-    } else {
+    if (root) {
       this.history.back(n);
+    } else {
+      this.history.getCurrentSubHistory().back(n);
     }
 
     this.store.dispatch(routeChangeAction(routeState));
-    return undefined;
   }
 
   taskComplete() {

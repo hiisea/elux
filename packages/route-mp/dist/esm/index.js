@@ -1,7 +1,13 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter } from '@elux/route';
+import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter, setRouteConfig } from '@elux/route';
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  }
+});
 export var MPNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(MPNativeRouter, _BaseNativeRouter);
 
@@ -18,7 +24,7 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
       var key = searchData ? searchData['__key__'] : '';
 
       if (action === 'POP' && !key) {
-        key = _this.router.history.getRecord(-1).key;
+        key = _this.router.history.findRecord(-1).key;
       }
 
       var nativeLocation = {
@@ -36,13 +42,13 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
         }
 
         if (index > -1) {
-          _this.router.back(index + 1, '', false, true);
+          _this.router.back(index + 1, true, true, true);
         } else if (action === 'REPLACE') {
-          _this.router.replace(nativeLocation, false, true);
+          _this.router.replace(nativeLocation, true, true);
         } else if (action === 'PUSH') {
-          _this.router.push(nativeLocation, false, true);
+          _this.router.push(nativeLocation, true, true);
         } else {
-          _this.router.relaunch(nativeLocation, false, true);
+          _this.router.relaunch(nativeLocation, true, true);
         }
       }
     });

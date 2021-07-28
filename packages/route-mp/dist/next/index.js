@@ -1,5 +1,11 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter } from '@elux/route';
+import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter, setRouteConfig } from '@elux/route';
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  }
+});
 export class MPNativeRouter extends BaseNativeRouter {
   constructor(routeENV, tabPages) {
     super();
@@ -12,7 +18,7 @@ export class MPNativeRouter extends BaseNativeRouter {
       let key = searchData ? searchData['__key__'] : '';
 
       if (action === 'POP' && !key) {
-        key = this.router.history.getRecord(-1).key;
+        key = this.router.history.findRecord(-1).key;
       }
 
       const nativeLocation = {
@@ -29,13 +35,13 @@ export class MPNativeRouter extends BaseNativeRouter {
         }
 
         if (index > -1) {
-          this.router.back(index + 1, '', false, true);
+          this.router.back(index + 1, true, true, true);
         } else if (action === 'REPLACE') {
-          this.router.replace(nativeLocation, false, true);
+          this.router.replace(nativeLocation, true, true);
         } else if (action === 'PUSH') {
-          this.router.push(nativeLocation, false, true);
+          this.router.push(nativeLocation, true, true);
         } else {
-          this.router.relaunch(nativeLocation, false, true);
+          this.router.relaunch(nativeLocation, true, true);
         }
       }
     });

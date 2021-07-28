@@ -1,22 +1,24 @@
 import {buildConfigSetter} from '@elux/core';
 export interface RouteConfig {
-  actionMaxHistory: number;
-  pagesMaxHistory: number;
-  disableNativeRoute: boolean;
+  maxHistory: number;
+  notifyNativeRouter: {
+    root: boolean;
+    internal: boolean;
+  };
   indexUrl: string;
-  defaultParams: Record<string, any>;
 }
 export const routeConfig: RouteConfig = {
-  actionMaxHistory: 10,
-  pagesMaxHistory: 10,
-  disableNativeRoute: false,
+  maxHistory: 10,
+  notifyNativeRouter: {
+    root: true,
+    internal: false,
+  },
   indexUrl: '',
-  defaultParams: {},
 };
 
 export const setRouteConfig = buildConfigSetter(routeConfig);
 
-export const routeMeta: {pagenames: Record<string, string>} = {} as any;
+export const routeMeta: {pagenames: Record<string, string>; defaultParams: Record<string, any>} = {defaultParams: {}} as any;
 
 export type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
 

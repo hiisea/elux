@@ -15,7 +15,7 @@ var _deepExtend = require("./deep-extend");
 var _basic = require("./basic");
 
 function assignDefaultData(data) {
-  var def = _basic.routeConfig.defaultParams;
+  var def = _basic.routeMeta.defaultParams;
   return Object.keys(data).reduce(function (params, moduleName) {
     if (def[moduleName]) {
       params[moduleName] = (0, _deepExtend.extendDefault)(data[moduleName], def[moduleName]);
@@ -277,7 +277,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     partialLocationToLocation: function partialLocationToLocation(partialLocation) {
       var pagename = partialLocation.pagename,
           params = partialLocation.params;
-      var def = _basic.routeConfig.defaultParams;
+      var def = _basic.routeMeta.defaultParams;
       var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
         return def[moduleName] === undefined;
       });
@@ -308,7 +308,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
     },
     partialLocationToMinData: function partialLocationToMinData(partialLocation) {
-      var params = (0, _deepExtend.excludeDefault)(partialLocation.params, _basic.routeConfig.defaultParams, true);
+      var params = (0, _deepExtend.excludeDefault)(partialLocation.params, _basic.routeMeta.defaultParams, true);
       var pathParams;
       var pathname;
       var pagename = ("/" + partialLocation.pagename + "/").replace(/^\/+|\/+$/g, '/');

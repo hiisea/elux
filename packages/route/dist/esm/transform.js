@@ -1,8 +1,8 @@
 import { deepMerge, env, getModuleList, getModuleGetter, isPromise } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
-import { routeConfig, routeMeta } from './basic';
+import { routeMeta } from './basic';
 export function assignDefaultData(data) {
-  var def = routeConfig.defaultParams;
+  var def = routeMeta.defaultParams;
   return Object.keys(data).reduce(function (params, moduleName) {
     if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
@@ -260,7 +260,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
     partialLocationToLocation: function partialLocationToLocation(partialLocation) {
       var pagename = partialLocation.pagename,
           params = partialLocation.params;
-      var def = routeConfig.defaultParams;
+      var def = routeMeta.defaultParams;
       var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
         return def[moduleName] === undefined;
       });
@@ -291,7 +291,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
       return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
     },
     partialLocationToMinData: function partialLocationToMinData(partialLocation) {
-      var params = excludeDefault(partialLocation.params, routeConfig.defaultParams, true);
+      var params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
       var pathParams;
       var pathname;
       var pagename = ("/" + partialLocation.pagename + "/").replace(/^\/+|\/+$/g, '/');

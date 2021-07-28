@@ -3,305 +3,127 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.locationToUri = locationToUri;
-exports.uriToLocation = uriToLocation;
-exports.History = void 0;
-
-var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
+exports.History = exports.HistoryRecord = void 0;
 
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
 var _basic = require("./basic");
 
-function locationToUri(location, key) {
-  var pagename = location.pagename,
-      params = location.params;
-  var query = params ? JSON.stringify(params) : '';
-  return {
-    uri: [key, pagename, query].join('|'),
-    pagename: pagename,
-    query: query,
-    key: key
-  };
-}
+var HistoryRecord = function () {
+  function HistoryRecord(location, key, history) {
+    (0, _defineProperty2.default)(this, "key", void 0);
+    (0, _defineProperty2.default)(this, "pagename", void 0);
+    (0, _defineProperty2.default)(this, "query", void 0);
+    (0, _defineProperty2.default)(this, "sub", void 0);
+    var pagename = location.pagename,
+        params = location.params;
+    this.key = key;
+    this.pagename = pagename;
+    this.query = JSON.stringify(params);
+    this.sub = new History(history, this);
 
-function isHistoryRecord(data) {
-  return data['uri'];
-}
-
-function splitUri() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
+    if (history.records.length === 0) {
+      history.records = [this];
+    }
   }
 
-  var _args$ = args[0],
-      uri = _args$ === void 0 ? '' : _args$,
-      name = args[1];
+  var _proto = HistoryRecord.prototype;
 
-  var _uri$split = uri.split('|'),
-      key = _uri$split[0],
-      pagename = _uri$split[1],
-      others = _uri$split.slice(2);
-
-  var arr = [key, pagename, others.join('|')];
-  var index = {
-    key: 0,
-    pagename: 1,
-    query: 2
+  _proto.getParams = function getParams() {
+    return JSON.parse(this.query);
   };
 
-  if (name) {
-    return arr[index[name]];
-  }
+  return HistoryRecord;
+}();
 
-  return arr;
-}
-
-function uriToLocation(uri) {
-  var _splitUri = splitUri(uri),
-      key = _splitUri[0],
-      pagename = _splitUri[1],
-      query = _splitUri[2];
-
-  var location = {
-    pagename: pagename,
-    params: JSON.parse(query)
-  };
-  return {
-    key: key,
-    location: location
-  };
-}
+exports.HistoryRecord = HistoryRecord;
 
 var History = function () {
-  function History(data, parent) {
-    (0, _defineProperty2.default)(this, "curRecord", void 0);
-    (0, _defineProperty2.default)(this, "pages", []);
-    (0, _defineProperty2.default)(this, "actions", []);
+  function History(parent, record) {
+    (0, _defineProperty2.default)(this, "records", []);
     this.parent = parent;
 
-    if (isHistoryRecord(data)) {
-      this.curRecord = data;
-    } else {
-      var _locationToUri = locationToUri(data.location, data.key),
-          _uri = _locationToUri.uri,
-          pagename = _locationToUri.pagename,
-          query = _locationToUri.query;
-
-      this.curRecord = {
-        uri: _uri,
-        pagename: pagename,
-        query: query,
-        key: data.key,
-        sub: new History({
-          uri: _uri,
-          pagename: pagename,
-          query: query,
-          key: data.key
-        }, this)
-      };
+    if (record) {
+      this.records = [record];
     }
   }
 
-  var _proto = History.prototype;
+  var _proto2 = History.prototype;
 
-  _proto.getLength = function getLength() {
-    return this.actions.length;
+  _proto2.getCurRecord = function getCurRecord() {
+    return this.records[0];
   };
 
-  _proto.getRecord = function getRecord(keyOrIndex) {
+  _proto2.getLength = function getLength() {
+    return this.records.length;
+  };
+
+  _proto2.findRecord = function findRecord(keyOrIndex) {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {
-        keyOrIndex = this.actions.length - 1;
+        keyOrIndex = this.records.length - 1;
       }
 
-      return this.actions[keyOrIndex];
+      return this.records[keyOrIndex];
     }
 
-    return this.actions.find(function (item) {
+    return this.records.find(function (item) {
       return item.key === keyOrIndex;
     });
   };
 
-  _proto.findIndex = function findIndex(key) {
-    return this.actions.findIndex(function (item) {
+  _proto2.findIndex = function findIndex(key) {
+    return this.records.findIndex(function (item) {
       return item.key === key;
     });
   };
 
-  _proto.getCurrentInternalHistory = function getCurrentInternalHistory() {
-    return this.curRecord.sub;
+  _proto2.getCurrentSubHistory = function getCurrentSubHistory() {
+    return this.getCurRecord().sub;
   };
 
-  _proto.getStack = function getStack() {
-    return this.actions;
+  _proto2.getStack = function getStack() {
+    return [].concat(this.records);
   };
 
-  _proto.getUriStack = function getUriStack() {
-    return this.actions.map(function (item) {
-      return item.uri;
-    });
+  _proto2.push = function push(location, key) {
+    var newRecord = new HistoryRecord(location, key, this);
+    var maxHistory = _basic.routeConfig.maxHistory;
+    var records = this.records;
+    records.unshift(newRecord);
+
+    if (records.length > maxHistory) {
+      records.length = maxHistory;
+    }
   };
 
-  _proto.getPageStack = function getPageStack() {
-    return this.pages;
+  _proto2.replace = function replace(location, key) {
+    var newRecord = new HistoryRecord(location, key, this);
+    this.records[0] = newRecord;
   };
 
-  _proto.push = function push(location, key) {
-    var _pages$;
+  _proto2.relaunch = function relaunch(location, key) {
+    var newRecord = new HistoryRecord(location, key, this);
+    this.records = [newRecord];
+  };
 
-    var historyRecord = this.curRecord;
-
-    var _locationToUri2 = locationToUri(location, key),
-        uri = _locationToUri2.uri,
-        pagename = _locationToUri2.pagename,
-        query = _locationToUri2.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-    var pages = [].concat(this.pages);
-    var actions = [].concat(this.actions);
-    var actionsMax = _basic.routeConfig.actionMaxHistory;
-    var pagesMax = _basic.routeConfig.pagesMaxHistory;
-    actions.unshift(historyRecord);
-
-    if (actions.length > actionsMax) {
-      actions.length = actionsMax;
+  _proto2.back = function back(delta, overflowRedirect) {
+    if (overflowRedirect === void 0) {
+      overflowRedirect = false;
     }
 
-    if (splitUri((_pages$ = pages[0]) == null ? void 0 : _pages$.uri, 'pagename') !== pagename) {
-      pages.unshift(historyRecord);
+    var records = this.records.slice(delta);
 
-      if (pages.length > pagesMax) {
-        pages.length = pagesMax;
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop());
       }
-    } else {
-      pages[0] = historyRecord;
     }
 
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = (0, _extends2.default)({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
-  };
-
-  _proto.replace = function replace(location, key) {
-    var _locationToUri3 = locationToUri(location, key),
-        uri = _locationToUri3.uri,
-        pagename = _locationToUri3.pagename,
-        query = _locationToUri3.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-
-    if (this.parent) {
-      this.parent.curRecord = (0, _extends2.default)({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
-  };
-
-  _proto.relaunch = function relaunch(location, key) {
-    var _locationToUri4 = locationToUri(location, key),
-        uri = _locationToUri4.uri,
-        pagename = _locationToUri4.pagename,
-        query = _locationToUri4.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-    this.actions = [];
-    this.pages = [];
-
-    if (this.parent) {
-      this.parent.curRecord = (0, _extends2.default)({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
-  };
-
-  _proto.back = function back(delta) {
-    var _actions$;
-
-    var historyRecord = this.getRecord(delta - 1);
-
-    if (!historyRecord) {
-      return false;
-    }
-
-    this.curRecord = historyRecord;
-    var uri = historyRecord.uri,
-        pagename = historyRecord.pagename,
-        query = historyRecord.query;
-    var pages = [].concat(this.pages);
-    var actions = [].concat(this.actions);
-    var deleteActions = actions.splice(0, delta);
-    var arr = deleteActions.reduce(function (pre, curStack) {
-      var ctag = splitUri(curStack.uri, 'pagename');
-
-      if (pre[pre.length - 1] !== ctag) {
-        pre.push(ctag);
-      }
-
-      return pre;
-    }, []);
-
-    if (arr[arr.length - 1] === splitUri((_actions$ = actions[0]) == null ? void 0 : _actions$.uri, 'pagename')) {
-      arr.pop();
-    }
-
-    pages.splice(0, arr.length);
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = (0, _extends2.default)({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
-
-    return true;
+    this.records = records;
+    return this.records[0];
   };
 
   return History;

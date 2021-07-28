@@ -6,14 +6,17 @@ exports.routeMeta = exports.setRouteConfig = exports.routeConfig = void 0;
 var _core = require("@elux/core");
 
 var routeConfig = {
-  actionMaxHistory: 10,
-  pagesMaxHistory: 10,
-  disableNativeRoute: false,
-  indexUrl: '',
-  defaultParams: {}
+  maxHistory: 10,
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  },
+  indexUrl: ''
 };
 exports.routeConfig = routeConfig;
 var setRouteConfig = (0, _core.buildConfigSetter)(routeConfig);
 exports.setRouteConfig = setRouteConfig;
-var routeMeta = {};
+var routeMeta = {
+  defaultParams: {}
+};
 exports.routeMeta = routeMeta;

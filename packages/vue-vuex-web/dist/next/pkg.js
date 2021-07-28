@@ -3093,286 +3093,124 @@ function renderToString(id, APPView, store, eluxContext, app) {
 }
 
 const routeConfig = {
-  actionMaxHistory: 10,
-  pagesMaxHistory: 10,
-  disableNativeRoute: false,
-  indexUrl: '',
-  defaultParams: {}
+  maxHistory: 10,
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  },
+  indexUrl: ''
 };
 const setRouteConfig = buildConfigSetter(routeConfig);
-const routeMeta = {};
+const routeMeta = {
+  defaultParams: {}
+};
 
-function locationToUri(location, key) {
-  const {
-    pagename,
-    params
-  } = location;
-  const query = params ? JSON.stringify(params) : '';
-  return {
-    uri: [key, pagename, query].join('|'),
-    pagename,
-    query,
-    key
-  };
-}
+class HistoryRecord {
+  constructor(location, key, history) {
+    _defineProperty(this, "key", void 0);
 
-function isHistoryRecord(data) {
-  return data['uri'];
-}
+    _defineProperty(this, "pagename", void 0);
 
-function splitUri(...args) {
-  const [uri = '', name] = args;
-  const [key, pagename, ...others] = uri.split('|');
-  const arr = [key, pagename, others.join('|')];
-  const index = {
-    key: 0,
-    pagename: 1,
-    query: 2
-  };
+    _defineProperty(this, "query", void 0);
 
-  if (name) {
-    return arr[index[name]];
+    _defineProperty(this, "sub", void 0);
+
+    const {
+      pagename,
+      params
+    } = location;
+    this.key = key;
+    this.pagename = pagename;
+    this.query = JSON.stringify(params);
+    this.sub = new History(history, this);
+
+    if (history.records.length === 0) {
+      history.records = [this];
+    }
   }
 
-  return arr;
-}
+  getParams() {
+    return JSON.parse(this.query);
+  }
 
-function uriToLocation(uri) {
-  const [key, pagename, query] = splitUri(uri);
-  const location = {
-    pagename,
-    params: JSON.parse(query)
-  };
-  return {
-    key,
-    location
-  };
 }
 class History {
-  constructor(data, parent) {
-    _defineProperty(this, "curRecord", void 0);
-
-    _defineProperty(this, "pages", []);
-
-    _defineProperty(this, "actions", []);
+  constructor(parent, record) {
+    _defineProperty(this, "records", []);
 
     this.parent = parent;
 
-    if (isHistoryRecord(data)) {
-      this.curRecord = data;
-    } else {
-      const {
-        uri,
-        pagename,
-        query
-      } = locationToUri(data.location, data.key);
-      this.curRecord = {
-        uri,
-        pagename,
-        query,
-        key: data.key,
-        sub: new History({
-          uri,
-          pagename,
-          query,
-          key: data.key
-        }, this)
-      };
+    if (record) {
+      this.records = [record];
     }
+  }
+
+  getCurRecord() {
+    return this.records[0];
   }
 
   getLength() {
-    return this.actions.length;
+    return this.records.length;
   }
 
-  getRecord(keyOrIndex) {
+  findRecord(keyOrIndex) {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {
-        keyOrIndex = this.actions.length - 1;
+        keyOrIndex = this.records.length - 1;
       }
 
-      return this.actions[keyOrIndex];
+      return this.records[keyOrIndex];
     }
 
-    return this.actions.find(item => item.key === keyOrIndex);
+    return this.records.find(item => item.key === keyOrIndex);
   }
 
   findIndex(key) {
-    return this.actions.findIndex(item => item.key === key);
+    return this.records.findIndex(item => item.key === key);
   }
 
-  getCurrentInternalHistory() {
-    return this.curRecord.sub;
+  getCurrentSubHistory() {
+    return this.getCurRecord().sub;
   }
 
   getStack() {
-    return this.actions;
-  }
-
-  getUriStack() {
-    return this.actions.map(item => item.uri);
-  }
-
-  getPageStack() {
-    return this.pages;
+    return [...this.records];
   }
 
   push(location, key) {
-    var _pages$;
+    const newRecord = new HistoryRecord(location, key, this);
+    const maxHistory = routeConfig.maxHistory;
+    const records = this.records;
+    records.unshift(newRecord);
 
-    const historyRecord = this.curRecord;
-    const {
-      uri,
-      pagename,
-      query
-    } = locationToUri(location, key);
-    this.curRecord = {
-      uri,
-      pagename,
-      query,
-      key,
-      sub: new History({
-        uri,
-        pagename,
-        query,
-        key
-      }, this)
-    };
-    const pages = [...this.pages];
-    const actions = [...this.actions];
-    const actionsMax = routeConfig.actionMaxHistory;
-    const pagesMax = routeConfig.pagesMaxHistory;
-    actions.unshift(historyRecord);
-
-    if (actions.length > actionsMax) {
-      actions.length = actionsMax;
-    }
-
-    if (splitUri((_pages$ = pages[0]) == null ? void 0 : _pages$.uri, 'pagename') !== pagename) {
-      pages.unshift(historyRecord);
-
-      if (pages.length > pagesMax) {
-        pages.length = pagesMax;
-      }
-    } else {
-      pages[0] = historyRecord;
-    }
-
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
-        pagename,
-        query
-      };
+    if (records.length > maxHistory) {
+      records.length = maxHistory;
     }
   }
 
   replace(location, key) {
-    const {
-      uri,
-      pagename,
-      query
-    } = locationToUri(location, key);
-    this.curRecord = {
-      uri,
-      pagename,
-      query,
-      key,
-      sub: new History({
-        uri,
-        pagename,
-        query,
-        key
-      }, this)
-    };
-
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
-        pagename,
-        query
-      };
-    }
+    const newRecord = new HistoryRecord(location, key, this);
+    this.records[0] = newRecord;
   }
 
   relaunch(location, key) {
-    const {
-      uri,
-      pagename,
-      query
-    } = locationToUri(location, key);
-    this.curRecord = {
-      uri,
-      pagename,
-      query,
-      key,
-      sub: new History({
-        uri,
-        pagename,
-        query,
-        key
-      }, this)
-    };
-    this.actions = [];
-    this.pages = [];
-
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
-        pagename,
-        query
-      };
-    }
+    const newRecord = new HistoryRecord(location, key, this);
+    this.records = [newRecord];
   }
 
-  back(delta) {
-    var _actions$;
+  back(delta, overflowRedirect = false) {
+    const records = this.records.slice(delta);
 
-    const historyRecord = this.getRecord(delta - 1);
-
-    if (!historyRecord) {
-      return false;
-    }
-
-    this.curRecord = historyRecord;
-    const {
-      uri,
-      pagename,
-      query
-    } = historyRecord;
-    const pages = [...this.pages];
-    const actions = [...this.actions];
-    const deleteActions = actions.splice(0, delta);
-    const arr = deleteActions.reduce((pre, curStack) => {
-      const ctag = splitUri(curStack.uri, 'pagename');
-
-      if (pre[pre.length - 1] !== ctag) {
-        pre.push(ctag);
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop());
       }
-
-      return pre;
-    }, []);
-
-    if (arr[arr.length - 1] === splitUri((_actions$ = actions[0]) == null ? void 0 : _actions$.uri, 'pagename')) {
-      arr.pop();
     }
 
-    pages.splice(0, arr.length);
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
-        pagename,
-        query
-      };
-    }
-
-    return true;
+    this.records = records;
+    return this.records[0];
   }
 
 }
@@ -3537,7 +3375,7 @@ function splitPrivate(data, deleteTopLevel) {
 }
 
 function assignDefaultData(data) {
-  const def = routeConfig.defaultParams;
+  const def = routeMeta.defaultParams;
   return Object.keys(data).reduce((params, moduleName) => {
     if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
@@ -3780,7 +3618,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
         pagename,
         params
       } = partialLocation;
-      const def = routeConfig.defaultParams;
+      const def = routeMeta.defaultParams;
       const asyncLoadModules = Object.keys(params).filter(moduleName => def[moduleName] === undefined);
       const modulesOrPromise = getModuleList(asyncLoadModules);
 
@@ -3811,7 +3649,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     },
 
     partialLocationToMinData(partialLocation) {
-      let params = excludeDefault(partialLocation.params, routeConfig.defaultParams, true);
+      let params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
       let pathParams;
       let pathname;
       const pagename = `/${partialLocation.pagename}/`.replace(/^\/+|\/+$/g, '/');
@@ -4103,10 +3941,8 @@ class BaseRouter {
         });
       }
 
-      this.history = new History({
-        location,
-        key
-      });
+      this.history = new History();
+      new HistoryRecord(location, key, this.history);
       return routeState;
     };
 
@@ -4240,11 +4076,11 @@ class BaseRouter {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   }
 
-  relaunch(data, internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._relaunch.bind(this, data, internal, disableNative));
+  relaunch(data, root = false, nativeCaller = false) {
+    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
   }
 
-  async _relaunch(data, internal, disableNative) {
+  async _relaunch(data, root, nativeCaller) {
     const preData = await this.preAdditions(data);
 
     if (!preData) {
@@ -4262,8 +4098,9 @@ class BaseRouter {
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNativeData(routeState), key);
     }
 
@@ -4273,20 +4110,21 @@ class BaseRouter {
       pathname: routeState.pagename,
       params: routeState.params
     });
-    this.store.dispatch(routeChangeAction(routeState));
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().relaunch(location, key);
-    } else {
+    if (root) {
       this.history.relaunch(location, key);
+    } else {
+      this.history.getCurrentSubHistory().relaunch(location, key);
     }
+
+    this.store.dispatch(routeChangeAction(routeState));
   }
 
-  push(data, internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._push.bind(this, data, internal, disableNative));
+  push(data, root = false, nativeCaller = false) {
+    this.addTask(this._push.bind(this, data, root, nativeCaller));
   }
 
-  async _push(data, internal, disableNative) {
+  async _push(data, root, nativeCaller) {
     const preData = await this.preAdditions(data);
 
     if (!preData) {
@@ -4304,32 +4142,33 @@ class BaseRouter {
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('push', () => this.locationToNativeData(routeState), key);
     }
 
-    this._nativeData = nativeData || undefined;
+    this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().push(location, key);
-    } else {
+    if (root) {
       this.history.push(location, key);
+    } else {
+      this.history.getCurrentSubHistory().push(location, key);
     }
 
     this.store.dispatch(routeChangeAction(routeState));
   }
 
-  replace(data, internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._replace.bind(this, data, internal, disableNative));
+  replace(data, root = false, nativeCaller = false) {
+    this.addTask(this._replace.bind(this, data, root, nativeCaller));
   }
 
-  async _replace(data, internal, disableNative) {
+  async _replace(data, root, nativeCaller) {
     const preData = await this.preAdditions(data);
 
     if (!preData) {
@@ -4347,77 +4186,76 @@ class BaseRouter {
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('replace', () => this.locationToNativeData(routeState), key);
     }
 
-    this._nativeData = nativeData || undefined;
+    this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().replace(location, key);
-    } else {
+    if (root) {
       this.history.replace(location, key);
+    } else {
+      this.history.getCurrentSubHistory().replace(location, key);
     }
 
     this.store.dispatch(routeChangeAction(routeState));
   }
 
-  back(n = 1, indexUrl = 'index', internal = false, disableNative = routeConfig.disableNativeRoute) {
-    this.addTask(this._back.bind(this, n, indexUrl === 'index' ? routeConfig.indexUrl : indexUrl, internal, disableNative));
+  back(n = 1, root = false, overflowRedirect = true, nativeCaller = false) {
+    this.addTask(this._back.bind(this, n, root, overflowRedirect, nativeCaller));
   }
 
-  async _back(n = 1, indexUrl, internal, disableNative) {
-    const stack = internal ? this.history.getCurrentInternalHistory().getRecord(n - 1) : this.history.getRecord(n - 1);
-
-    if (!stack) {
-      if (indexUrl) {
-        return this._relaunch(indexUrl || routeConfig.indexUrl, internal, disableNative);
-      }
-
-      throw {
-        code: '1',
-        message: 'history not found'
-      };
+  async _back(n = 1, root, overflowRedirect, nativeCaller) {
+    if (n < 1) {
+      return undefined;
     }
 
-    const uri = stack.uri;
+    const historyRecord = root ? this.history.back(n, overflowRedirect) : this.history.getCurrentSubHistory().back(n, overflowRedirect);
+
+    if (!historyRecord) {
+      return this.relaunch(routeConfig.indexUrl, root);
+    }
+
     const {
       key,
-      location
-    } = uriToLocation(uri);
-    const routeState = { ...location,
-      action: 'BACK',
-      key
+      pagename
+    } = historyRecord;
+    const routeState = {
+      key,
+      pagename,
+      params: historyRecord.getParams(),
+      action: 'BACK'
     };
     await this.store.dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
-    if (!disableNative && !internal) {
+    if (!nativeCaller && notifyNativeRouter) {
       nativeData = await this.nativeRouter.execute('back', () => this.locationToNativeData(routeState), n, key);
     }
 
-    this._nativeData = nativeData || undefined;
+    this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
 
-    if (internal) {
-      this.history.getCurrentInternalHistory().back(n);
-    } else {
+    if (root) {
       this.history.back(n);
+    } else {
+      this.history.getCurrentSubHistory().back(n);
     }
 
     this.store.dispatch(routeChangeAction(routeState));
-    return undefined;
   }
 
   taskComplete() {
@@ -5668,6 +5506,12 @@ function createMemoryHistory(props) {
   return history;
 }
 
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: true
+  }
+});
 class BrowserNativeRouter extends BaseNativeRouter {
   constructor(createHistory) {
     super();
@@ -5750,13 +5594,13 @@ class BrowserNativeRouter extends BaseNativeRouter {
         }
 
         if (index > -1) {
-          callback = () => this.router.back(index + 1, '', false, false);
+          callback = () => this.router.back(index + 1);
         } else if (action === 'REPLACE') {
-          callback = () => this.router.replace(url, false, false);
+          callback = () => this.router.replace(url);
         } else if (action === 'PUSH') {
-          callback = () => this.router.push(url, false, false);
+          callback = () => this.router.push(url);
         } else {
-          callback = () => this.router.relaunch(url, false, false);
+          callback = () => this.router.relaunch(url);
         }
 
         callback && env.setTimeout(callback, 50);

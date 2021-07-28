@@ -18,6 +18,13 @@ var _history = require("history");
 
 var _core = require("@elux/core");
 
+(0, _route.setRouteConfig)({
+  notifyNativeRouter: {
+    root: true,
+    internal: true
+  }
+});
+
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   (0, _inheritsLoose2.default)(BrowserNativeRouter, _BaseNativeRouter);
 
@@ -105,19 +112,19 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
         if (index > -1) {
           callback = function callback() {
-            return _this.router.back(index + 1, '', false, false);
+            return _this.router.back(index + 1);
           };
         } else if (action === 'REPLACE') {
           callback = function callback() {
-            return _this.router.replace(url, false, false);
+            return _this.router.replace(url);
           };
         } else if (action === 'PUSH') {
           callback = function callback() {
-            return _this.router.push(url, false, false);
+            return _this.router.push(url);
           };
         } else {
           callback = function callback() {
-            return _this.router.relaunch(url, false, false);
+            return _this.router.relaunch(url);
           };
         }
 

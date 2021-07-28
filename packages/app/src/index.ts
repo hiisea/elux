@@ -67,12 +67,11 @@ export const appConfig: {
 };
 export const setAppConfig = buildConfigSetter(appConfig);
 export interface UserConfig {
-  actionMaxHistory?: number;
-  pagesMaxHistory?: number;
+  maxHistory?: number;
   NSP?: string;
   MSP?: string;
   DepthTimeOnLoading?: number;
-  disableNativeRoute?: boolean;
+  indexUrl?: string;
 }
 export function setUserConfig(conf: UserConfig): void {
   setCoreConfig(conf);

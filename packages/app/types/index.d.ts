@@ -11,12 +11,11 @@ export declare const setAppConfig: (config: Partial<{
     loadComponent: LoadComponent;
 }>) => void;
 export interface UserConfig {
-    actionMaxHistory?: number;
-    pagesMaxHistory?: number;
+    maxHistory?: number;
     NSP?: string;
     MSP?: string;
     DepthTimeOnLoading?: number;
-    disableNativeRoute?: boolean;
+    indexUrl?: string;
 }
 export declare function setUserConfig(conf: UserConfig): void;
 export interface RenderOptions {

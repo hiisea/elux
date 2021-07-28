@@ -7,7 +7,10 @@ import {
   RootParams,
   LocationTransform,
   IBaseRouter,
+  setRouteConfig,
 } from '@elux/route';
+
+setRouteConfig({notifyNativeRouter: {root: true, internal: false}});
 
 type UnregisterCallback = () => void;
 interface RouteOption {
@@ -39,7 +42,7 @@ export class MPNativeRouter extends BaseNativeRouter {
     this._unlistenHistory = routeENV.onRouteChange((pathname, searchData, action) => {
       let key = searchData ? searchData['__key__'] : '';
       if (action === 'POP' && !key) {
-        key = this.router.history.getRecord(-1)!.key;
+        key = this.router.history.findRecord(-1)!.key;
       }
       const nativeLocation: NativeLocation = {pathname, searchData};
       const changed = this.onChange(key);
@@ -49,13 +52,13 @@ export class MPNativeRouter extends BaseNativeRouter {
           index = this.router.findHistoryIndexByKey(key);
         }
         if (index > -1) {
-          this.router.back(index + 1, '', false, true);
+          this.router.back(index + 1, true, true, true);
         } else if (action === 'REPLACE') {
-          this.router.replace(nativeLocation, false, true);
+          this.router.replace(nativeLocation, true, true);
         } else if (action === 'PUSH') {
-          this.router.push(nativeLocation, false, true);
+          this.router.push(nativeLocation, true, true);
         } else {
-          this.router.relaunch(nativeLocation, false, true);
+          this.router.relaunch(nativeLocation, true, true);
         }
       }
     });

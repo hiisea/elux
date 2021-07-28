@@ -1,10 +1,13 @@
 import { buildConfigSetter } from '@elux/core';
 export var routeConfig = {
-  actionMaxHistory: 10,
-  pagesMaxHistory: 10,
-  disableNativeRoute: false,
-  indexUrl: '',
-  defaultParams: {}
+  maxHistory: 10,
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  },
+  indexUrl: ''
 };
 export var setRouteConfig = buildConfigSetter(routeConfig);
-export var routeMeta = {};
+export var routeMeta = {
+  defaultParams: {}
+};
