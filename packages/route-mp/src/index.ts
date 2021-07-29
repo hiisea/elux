@@ -47,12 +47,12 @@ export class MPNativeRouter extends BaseNativeRouter {
       const nativeLocation: NativeLocation = {pathname, searchData};
       const changed = this.onChange(key);
       if (changed) {
-        let index = -1;
+        let index = 0;
         if (action === 'POP') {
           index = this.router.getHistory(true).findIndex(key);
         }
-        if (index > -1) {
-          this.router.back(index + 1, true, true, true);
+        if (index > 0) {
+          this.router.back(index, true, true, true);
         } else if (action === 'REPLACE') {
           this.router.replace(nativeLocation, true, true);
         } else if (action === 'PUSH') {

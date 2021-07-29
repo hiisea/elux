@@ -4689,14 +4689,14 @@ var MPNativeRouter = function (_BaseNativeRouter) {
       var changed = _this.onChange(key);
 
       if (changed) {
-        var index = -1;
+        var index = 0;
 
         if (action === 'POP') {
           index = _this.router.getHistory(true).findIndex(key);
         }
 
-        if (index > -1) {
-          _this.router.back(index + 1, true, true, true);
+        if (index > 0) {
+          _this.router.back(index, true, true, true);
         } else if (action === 'REPLACE') {
           _this.router.replace(nativeLocation, true, true);
         } else if (action === 'PUSH') {

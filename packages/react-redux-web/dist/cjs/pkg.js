@@ -5728,16 +5728,16 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
       var changed = _this.onChange(key);
 
       if (changed) {
-        var index = -1;
+        var index = 0;
         var callback;
 
         if (action === 'POP') {
           index = _this.router.getHistory().findIndex(key);
         }
 
-        if (index > -1) {
+        if (index > 0) {
           callback = function callback() {
-            return _this.router.back(index + 1);
+            return _this.router.back(index);
           };
         } else if (action === 'REPLACE') {
           callback = function callback() {

@@ -66,13 +66,13 @@ export class BrowserNativeRouter extends BaseNativeRouter {
       const key = this.getKey(location);
       const changed = this.onChange(key);
       if (changed) {
-        let index = -1;
+        let index = 0;
         let callback: () => void;
         if (action === 'POP') {
           index = this.router.getHistory().findIndex(key);
         }
-        if (index > -1) {
-          callback = () => this.router.back(index + 1);
+        if (index > 0) {
+          callback = () => this.router.back(index);
         } else if (action === 'REPLACE') {
           callback = () => this.router.replace(url);
         } else if (action === 'PUSH') {
