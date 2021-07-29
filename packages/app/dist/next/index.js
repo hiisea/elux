@@ -35,8 +35,8 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
             initState
           });
           const store = initApp(baseStore, istoreMiddleware);
+          router.init(store);
           routeModule.model(store);
-          router.setStore(store);
           const context = render(store, {
             deps: {},
             store,
@@ -88,8 +88,8 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
               store,
               AppView
             }) => {
+              router.init(store);
               routeModule.model(store);
-              router.setStore(store);
               render(id, AppView, store, {
                 deps: {},
                 store,

@@ -28,6 +28,11 @@ export function storeCreator(storeOptions) {
     return store.state;
   };
 
+  vuexStore.getPureState = () => {
+    const state = vuexStore.getState();
+    return JSON.parse(JSON.stringify(state));
+  };
+
   vuexStore.update = (actionName, newState, actionData) => {
     store.commit(UpdateMutationName, {
       actionName,

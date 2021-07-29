@@ -42,14 +42,14 @@ export class MPNativeRouter extends BaseNativeRouter {
     this._unlistenHistory = routeENV.onRouteChange((pathname, searchData, action) => {
       let key = searchData ? searchData['__key__'] : '';
       if (action === 'POP' && !key) {
-        key = this.router.history.findRecord(-1)!.key;
+        key = this.router.getHistory(true).findRecord(-1)!.key;
       }
       const nativeLocation: NativeLocation = {pathname, searchData};
       const changed = this.onChange(key);
       if (changed) {
         let index = -1;
         if (action === 'POP') {
-          index = this.router.findHistoryIndexByKey(key);
+          index = this.router.getHistory(true).findIndex(key);
         }
         if (index > -1) {
           this.router.back(index + 1, true, true, true);

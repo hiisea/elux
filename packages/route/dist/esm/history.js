@@ -1,31 +1,52 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import { cloneStore } from '@elux/core';
 import { routeConfig } from './basic';
 export var HistoryRecord = function () {
-  function HistoryRecord(location, key, history) {
-    _defineProperty(this, "key", void 0);
-
+  function HistoryRecord(location, key, history, store) {
     _defineProperty(this, "pagename", void 0);
 
     _defineProperty(this, "query", void 0);
 
     _defineProperty(this, "sub", void 0);
 
+    _defineProperty(this, "frozenState", '');
+
+    this.key = key;
+    this.history = history;
+    this.store = store;
     var pagename = location.pagename,
         params = location.params;
-    this.key = key;
     this.pagename = pagename;
     this.query = JSON.stringify(params);
     this.sub = new History(history, this);
-
-    if (history.records.length === 0) {
-      history.records = [this];
-    }
   }
 
   var _proto = HistoryRecord.prototype;
 
   _proto.getParams = function getParams() {
     return JSON.parse(this.query);
+  };
+
+  _proto.freeze = function freeze() {
+    if (!this.frozenState) {
+      this.frozenState = JSON.stringify(this.store.getState());
+    }
+  };
+
+  _proto.getFrozenState = function getFrozenState() {
+    if (this.frozenState) {
+      if (typeof this.frozenState === 'string') {
+        this.frozenState = JSON.parse(this.frozenState);
+      }
+
+      return this.frozenState;
+    }
+
+    return undefined;
+  };
+
+  _proto.getStore = function getStore() {
+    return this.store;
   };
 
   return HistoryRecord;
@@ -43,8 +64,8 @@ export var History = function () {
 
   var _proto2 = History.prototype;
 
-  _proto2.getCurRecord = function getCurRecord() {
-    return this.records[0];
+  _proto2.init = function init(record) {
+    this.records = [record];
   };
 
   _proto2.getLength = function getLength() {
@@ -71,18 +92,25 @@ export var History = function () {
     });
   };
 
-  _proto2.getCurrentSubHistory = function getCurrentSubHistory() {
-    return this.getCurRecord().sub;
+  _proto2.getCurrentRecord = function getCurrentRecord() {
+    return this.records[0].sub.records[0];
   };
 
-  _proto2.getStack = function getStack() {
-    return [].concat(this.records);
+  _proto2.getCurrentSubHistory = function getCurrentSubHistory() {
+    return this.records[0].sub;
   };
 
   _proto2.push = function push(location, key) {
-    var newRecord = new HistoryRecord(location, key, this);
-    var maxHistory = routeConfig.maxHistory;
     var records = this.records;
+    var store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
+    var newRecord = new HistoryRecord(location, key, this, store);
+    var maxHistory = routeConfig.maxHistory;
+    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -91,13 +119,35 @@ export var History = function () {
   };
 
   _proto2.replace = function replace(location, key) {
-    var newRecord = new HistoryRecord(location, key, this);
-    this.records[0] = newRecord;
+    var records = this.records;
+    var store = records[0].getStore();
+    var newRecord = new HistoryRecord(location, key, this, store);
+    records[0] = newRecord;
   };
 
   _proto2.relaunch = function relaunch(location, key) {
-    var newRecord = new HistoryRecord(location, key, this);
+    var records = this.records;
+    var store = records[0].getStore();
+    var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
+  };
+
+  _proto2.preBack = function preBack(delta, overflowRedirect) {
+    if (overflowRedirect === void 0) {
+      overflowRedirect = false;
+    }
+
+    var records = this.records.slice(delta);
+
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop());
+      }
+    }
+
+    return records[0];
   };
 
   _proto2.back = function back(delta, overflowRedirect) {
@@ -116,7 +166,6 @@ export var History = function () {
     }
 
     this.records = records;
-    return this.records[0];
   };
 
   return History;

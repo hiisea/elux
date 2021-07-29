@@ -1,36 +1,50 @@
+import {IStore, cloneStore} from '@elux/core';
 import {Location, routeConfig} from './basic';
 
 export class HistoryRecord {
-  key: string;
   pagename: string;
   query: string;
   sub: History;
-  constructor(location: Location, key: string, history: History) {
+  private frozenState: any = '';
+  constructor(location: Location, public readonly key: string, public readonly history: History, private store: IStore) {
     const {pagename, params} = location;
-    this.key = key;
     this.pagename = pagename;
     this.query = JSON.stringify(params);
     this.sub = new History(history, this);
-    if (history.records.length === 0) {
-      history.records = [this];
-    }
   }
   getParams(): any {
     return JSON.parse(this.query);
   }
+  freeze(): void {
+    if (!this.frozenState) {
+      this.frozenState = JSON.stringify(this.store.getState());
+    }
+  }
+  getFrozenState(): Record<string, any> | undefined {
+    if (this.frozenState) {
+      if (typeof this.frozenState === 'string') {
+        this.frozenState = JSON.parse(this.frozenState);
+      }
+      return this.frozenState;
+    }
+    return undefined;
+  }
+  getStore(): IStore {
+    return this.store;
+  }
 }
 export class History {
-  public records: HistoryRecord[] = [];
+  private records: HistoryRecord[] = [];
 
   constructor(private parent?: History, record?: HistoryRecord) {
     if (record) {
       this.records = [record];
     }
   }
-  getCurRecord(): HistoryRecord {
-    return this.records[0];
+  init(record: HistoryRecord): void {
+    this.records = [record];
   }
-  getLength(): Number {
+  getLength(): number {
     return this.records.length;
   }
   findRecord(keyOrIndex: number | string): HistoryRecord | undefined {
@@ -45,30 +59,50 @@ export class History {
   findIndex(key: string): number {
     return this.records.findIndex((item) => item.key === key);
   }
-  getCurrentSubHistory(): History {
-    return this.getCurRecord().sub;
+  getCurrentRecord(): HistoryRecord {
+    return this.records[0].sub.records[0];
   }
-  getStack(): HistoryRecord[] {
-    return [...this.records];
+  getCurrentSubHistory(): History {
+    return this.records[0].sub;
   }
   push(location: Location, key: string): void {
-    const newRecord = new HistoryRecord(location, key, this);
-    const maxHistory = routeConfig.maxHistory;
     const records = this.records;
+    let store: IStore = records[0].getStore();
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+    const newRecord = new HistoryRecord(location, key, this, store);
+    const maxHistory = routeConfig.maxHistory;
+    records[0].freeze();
     records.unshift(newRecord);
     if (records.length > maxHistory) {
       records.length = maxHistory;
     }
   }
   replace(location: Location, key: string): void {
-    const newRecord = new HistoryRecord(location, key, this);
-    this.records[0] = newRecord;
+    const records = this.records;
+    const store: IStore = records[0].getStore();
+    const newRecord = new HistoryRecord(location, key, this, store);
+    records[0] = newRecord;
   }
   relaunch(location: Location, key: string): void {
-    const newRecord = new HistoryRecord(location, key, this);
+    const records = this.records;
+    const store: IStore = records[0].getStore();
+    const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }
-  back(delta: number, overflowRedirect = false): HistoryRecord | undefined {
+  preBack(delta: number, overflowRedirect = false): HistoryRecord | undefined {
+    const records = this.records.slice(delta);
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop()!);
+      }
+    }
+    return records[0];
+  }
+  back(delta: number, overflowRedirect = false): void {
     const records = this.records.slice(delta);
     if (records.length === 0) {
       if (overflowRedirect) {
@@ -78,6 +112,5 @@ export class History {
       }
     }
     this.records = records;
-    return this.records[0];
   }
 }

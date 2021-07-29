@@ -1,6 +1,6 @@
-import {MetaData, ModuleGetter, BStore, IStore, EluxComponent, CommonModule} from './basic';
+import {MetaData, ModuleGetter, BStore, IStore, EluxComponent, CommonModule, IStoreMiddleware} from './basic';
 import {getModuleList, getComponentList, getComponet} from './inject';
-import {IStoreMiddleware, enhanceStore} from './store';
+import {enhanceStore} from './store';
 
 const defFun: any = () => undefined;
 

@@ -6,6 +6,7 @@ exports.__esModule = true;
 exports.isProcessedError = isProcessedError;
 exports.setProcessedError = setProcessedError;
 exports.getActionData = getActionData;
+exports.cloneStore = cloneStore;
 exports.enhanceStore = enhanceStore;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
@@ -65,11 +66,27 @@ function compose() {
   });
 }
 
+function cloneStore(store) {
+  var _store$clone = store.clone,
+      creator = _store$clone.creator,
+      options = _store$clone.options,
+      middlewares = _store$clone.middlewares,
+      injectedModules = _store$clone.injectedModules;
+  var initState = store.getPureState();
+  var newStore = creator((0, _extends2.default)({}, options, {
+    initState: initState
+  }));
+  return enhanceStore(newStore, middlewares, injectedModules);
+}
+
 function enhanceStore(baseStore, middlewares, injectedModules) {
   if (injectedModules === void 0) {
     injectedModules = {};
   }
 
+  var _baseStore$clone = baseStore.clone,
+      options = _baseStore$clone.options,
+      creator = _baseStore$clone.creator;
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -81,6 +98,12 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
 
   store.getState = getState;
   store.injectedModules = injectedModules;
+  store.clone = {
+    creator: creator,
+    options: options,
+    middlewares: middlewares,
+    injectedModules: injectedModules
+  };
   var currentData = {
     actionName: '',
     prevState: {}

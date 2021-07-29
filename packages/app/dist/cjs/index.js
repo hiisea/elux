@@ -93,8 +93,8 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
             initState: initState
           }));
           var store = (0, _core.initApp)(baseStore, istoreMiddleware);
+          router.init(store);
           routeModule.model(store);
-          router.setStore(store);
           var context = render(store, {
             deps: {},
             store: store,
@@ -161,8 +161,8 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
             return (0, _core.renderApp)(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
               var store = _ref5.store,
                   AppView = _ref5.AppView;
+              router.init(store);
               routeModule.model(store);
-              router.setStore(store);
               render(id, AppView, store, {
                 deps: {},
                 store: store,

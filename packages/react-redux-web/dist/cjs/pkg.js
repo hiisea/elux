@@ -1425,11 +1425,26 @@ function compose$1() {
   });
 }
 
+function cloneStore(store) {
+  var _store$clone = store.clone,
+      creator = _store$clone.creator,
+      options = _store$clone.options,
+      middlewares = _store$clone.middlewares,
+      injectedModules = _store$clone.injectedModules;
+  var initState = store.getPureState();
+  var newStore = creator(_extends({}, options, {
+    initState: initState
+  }));
+  return enhanceStore(newStore, middlewares, injectedModules);
+}
 function enhanceStore(baseStore, middlewares, injectedModules) {
   if (injectedModules === void 0) {
     injectedModules = {};
   }
 
+  var _baseStore$clone = baseStore.clone,
+      options = _baseStore$clone.options,
+      creator = _baseStore$clone.creator;
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -1441,6 +1456,12 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
 
   store.getState = getState;
   store.injectedModules = injectedModules;
+  store.clone = {
+    creator: creator,
+    options: options,
+    middlewares: middlewares,
+    injectedModules: injectedModules
+  };
   var currentData = {
     actionName: '',
     prevState: {}
@@ -2855,31 +2876,51 @@ var routeMeta = {
 };
 
 var HistoryRecord = function () {
-  function HistoryRecord(location, key, history) {
-    _defineProperty(this, "key", void 0);
-
+  function HistoryRecord(location, key, history, store) {
     _defineProperty(this, "pagename", void 0);
 
     _defineProperty(this, "query", void 0);
 
     _defineProperty(this, "sub", void 0);
 
+    _defineProperty(this, "frozenState", '');
+
+    this.key = key;
+    this.history = history;
+    this.store = store;
     var pagename = location.pagename,
         params = location.params;
-    this.key = key;
     this.pagename = pagename;
     this.query = JSON.stringify(params);
     this.sub = new History(history, this);
-
-    if (history.records.length === 0) {
-      history.records = [this];
-    }
   }
 
   var _proto = HistoryRecord.prototype;
 
   _proto.getParams = function getParams() {
     return JSON.parse(this.query);
+  };
+
+  _proto.freeze = function freeze() {
+    if (!this.frozenState) {
+      this.frozenState = JSON.stringify(this.store.getState());
+    }
+  };
+
+  _proto.getFrozenState = function getFrozenState() {
+    if (this.frozenState) {
+      if (typeof this.frozenState === 'string') {
+        this.frozenState = JSON.parse(this.frozenState);
+      }
+
+      return this.frozenState;
+    }
+
+    return undefined;
+  };
+
+  _proto.getStore = function getStore() {
+    return this.store;
   };
 
   return HistoryRecord;
@@ -2897,8 +2938,8 @@ var History = function () {
 
   var _proto2 = History.prototype;
 
-  _proto2.getCurRecord = function getCurRecord() {
-    return this.records[0];
+  _proto2.init = function init(record) {
+    this.records = [record];
   };
 
   _proto2.getLength = function getLength() {
@@ -2925,18 +2966,25 @@ var History = function () {
     });
   };
 
-  _proto2.getCurrentSubHistory = function getCurrentSubHistory() {
-    return this.getCurRecord().sub;
+  _proto2.getCurrentRecord = function getCurrentRecord() {
+    return this.records[0].sub.records[0];
   };
 
-  _proto2.getStack = function getStack() {
-    return [].concat(this.records);
+  _proto2.getCurrentSubHistory = function getCurrentSubHistory() {
+    return this.records[0].sub;
   };
 
   _proto2.push = function push(location, key) {
-    var newRecord = new HistoryRecord(location, key, this);
-    var maxHistory = routeConfig.maxHistory;
     var records = this.records;
+    var store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
+    var newRecord = new HistoryRecord(location, key, this, store);
+    var maxHistory = routeConfig.maxHistory;
+    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -2945,13 +2993,35 @@ var History = function () {
   };
 
   _proto2.replace = function replace(location, key) {
-    var newRecord = new HistoryRecord(location, key, this);
-    this.records[0] = newRecord;
+    var records = this.records;
+    var store = records[0].getStore();
+    var newRecord = new HistoryRecord(location, key, this, store);
+    records[0] = newRecord;
   };
 
   _proto2.relaunch = function relaunch(location, key) {
-    var newRecord = new HistoryRecord(location, key, this);
+    var records = this.records;
+    var store = records[0].getStore();
+    var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
+  };
+
+  _proto2.preBack = function preBack(delta, overflowRedirect) {
+    if (overflowRedirect === void 0) {
+      overflowRedirect = false;
+    }
+
+    var records = this.records.slice(delta);
+
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop());
+      }
+    }
+
+    return records[0];
   };
 
   _proto2.back = function back(delta, overflowRedirect) {
@@ -2970,7 +3040,6 @@ var History = function () {
     }
 
     this.records = records;
-    return this.records[0];
   };
 
   return History;
@@ -3716,8 +3785,6 @@ var BaseRouter = function () {
 
     _defineProperty(this, "internalUrl", void 0);
 
-    _defineProperty(this, "store", void 0);
-
     _defineProperty(this, "history", void 0);
 
     _defineProperty(this, "_lid", 0);
@@ -3729,6 +3796,7 @@ var BaseRouter = function () {
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
+    this.history = new History();
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
@@ -3751,8 +3819,6 @@ var BaseRouter = function () {
         });
       }
 
-      _this2.history = new History();
-      new HistoryRecord(location, key, _this2.history);
       return routeState;
     };
 
@@ -3815,16 +3881,25 @@ var BaseRouter = function () {
     return this._nativeData.nativeUrl;
   };
 
-  _proto2.setStore = function setStore(_store) {
-    this.store = _store;
+  _proto2.init = function init(store) {
+    var historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
+    this.history.init(historyRecord);
+  };
+
+  _proto2.getStore = function getStore() {
+    return this.history.getCurrentRecord().getStore();
   };
 
   _proto2.getCurKey = function getCurKey() {
     return this.routeState.key;
   };
 
-  _proto2.findHistoryIndexByKey = function findHistoryIndexByKey(key) {
-    return this.history.findIndex(key);
+  _proto2.getHistory = function getHistory(root) {
+    return root ? this.history : this.history.getCurrentSubHistory();
+  };
+
+  _proto2.getHistoryLength = function getHistoryLength(root) {
+    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
   };
 
   _proto2.locationToNativeData = function locationToNativeData(location) {
@@ -3932,7 +4007,7 @@ var BaseRouter = function () {
                 key: key
               });
               _context.next = 10;
-              return this.store.dispatch(testRouteChangeAction(routeState));
+              return this.getStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context.next = 12;
@@ -3968,7 +4043,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-              this.store.dispatch(routeChangeAction(routeState));
+              this.getStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -4027,7 +4102,7 @@ var BaseRouter = function () {
                 key: key
               });
               _context2.next = 10;
-              return this.store.dispatch(testRouteChangeAction(routeState));
+              return this.getStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context2.next = 12;
@@ -4063,7 +4138,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().push(location, key);
               }
 
-              this.store.dispatch(routeChangeAction(routeState));
+              this.getStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -4122,7 +4197,7 @@ var BaseRouter = function () {
                 key: key
               });
               _context3.next = 10;
-              return this.store.dispatch(testRouteChangeAction(routeState));
+              return this.getStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context3.next = 12;
@@ -4158,7 +4233,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().replace(location, key);
               }
 
-              this.store.dispatch(routeChangeAction(routeState));
+              this.getStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -4216,7 +4291,7 @@ var BaseRouter = function () {
               return _context4.abrupt("return", undefined);
 
             case 3:
-              historyRecord = root ? this.history.back(n, overflowRedirect) : this.history.getCurrentSubHistory().back(n, overflowRedirect);
+              historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
 
               if (historyRecord) {
                 _context4.next = 6;
@@ -4234,7 +4309,7 @@ var BaseRouter = function () {
                 action: 'BACK'
               };
               _context4.next = 10;
-              return this.store.dispatch(testRouteChangeAction(routeState));
+              return this.getStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context4.next = 12;
@@ -4270,7 +4345,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().back(n);
               }
 
-              this.store.dispatch(routeChangeAction(routeState));
+              this.getStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -4365,8 +4440,8 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
             initState: initState
           }));
           var store = initApp(baseStore, istoreMiddleware);
+          router.init(store);
           routeModule.model(store);
-          router.setStore(store);
           var context = render(store, {
             deps: {},
             store: store,
@@ -4433,8 +4508,8 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
             return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
               var store = _ref5.store,
                   AppView = _ref5.AppView;
+              router.init(store);
               routeModule.model(store);
-              router.setStore(store);
               render(id, AppView, store, {
                 deps: {},
                 store: store,
@@ -5657,7 +5732,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
         var callback;
 
         if (action === 'POP') {
-          index = _this.router.findHistoryIndexByKey(key);
+          index = _this.router.getHistory().findIndex(key);
         }
 
         if (index > -1) {
@@ -8899,6 +8974,7 @@ function storeCreator(storeOptions) {
   var store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose.apply(void 0, enhancers) : enhancers[0]);
   var dispatch = store.dispatch;
   var reduxStore = store;
+  reduxStore.getPureState = reduxStore.getState;
 
   reduxStore.update = function (actionName, state, actionData) {
     dispatch({
@@ -8908,6 +8984,10 @@ function storeCreator(storeOptions) {
     });
   };
 
+  reduxStore.clone = {
+    creator: storeCreator,
+    options: storeOptions
+  };
   return reduxStore;
 }
 function createRedux(storeOptions) {

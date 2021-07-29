@@ -1,4 +1,4 @@
-import { Action, IStore, BStore, BStoreOptions, IModuleHandlers, Dispatch, GetState, State } from './basic';
+import { Action, BStoreOptions, IModuleHandlers, BStore, IStore, IStoreMiddleware, State } from './basic';
 declare const errorProcessed = "__eluxProcessed__";
 export declare function isProcessedError(error: any): boolean;
 export declare function setProcessedError(error: any, processed: boolean): {
@@ -6,10 +6,7 @@ export declare function setProcessedError(error: any, processed: boolean): {
     [key: string]: any;
 };
 export declare function getActionData(action: Action): any[];
-export declare type IStoreMiddleware = (api: {
-    getState: GetState;
-    dispatch: Dispatch;
-}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
+export declare function cloneStore<T extends IStore>(store: T): T;
 export declare function enhanceStore<S extends State = any>(baseStore: BStore, middlewares?: IStoreMiddleware[], injectedModules?: {
     [moduleName: string]: IModuleHandlers;
 }): IStore<S>;

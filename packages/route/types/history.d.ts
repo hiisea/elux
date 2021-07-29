@@ -1,24 +1,32 @@
+import { IStore } from '@elux/core';
 import { Location } from './basic';
 export declare class HistoryRecord {
-    key: string;
+    readonly key: string;
+    readonly history: History;
+    private store;
     pagename: string;
     query: string;
     sub: History;
-    constructor(location: Location, key: string, history: History);
+    private frozenState;
+    constructor(location: Location, key: string, history: History, store: IStore);
     getParams(): any;
+    freeze(): void;
+    getFrozenState(): Record<string, any> | undefined;
+    getStore(): IStore;
 }
 export declare class History {
     private parent?;
-    records: HistoryRecord[];
+    private records;
     constructor(parent?: History | undefined, record?: HistoryRecord);
-    getCurRecord(): HistoryRecord;
-    getLength(): Number;
+    init(record: HistoryRecord): void;
+    getLength(): number;
     findRecord(keyOrIndex: number | string): HistoryRecord | undefined;
     findIndex(key: string): number;
+    getCurrentRecord(): HistoryRecord;
     getCurrentSubHistory(): History;
-    getStack(): HistoryRecord[];
     push(location: Location, key: string): void;
     replace(location: Location, key: string): void;
     relaunch(location: Location, key: string): void;
-    back(delta: number, overflowRedirect?: boolean): HistoryRecord | undefined;
+    preBack(delta: number, overflowRedirect?: boolean): HistoryRecord | undefined;
+    back(delta: number, overflowRedirect?: boolean): void;
 }

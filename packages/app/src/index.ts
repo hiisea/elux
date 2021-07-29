@@ -153,8 +153,8 @@ export function createBaseMP<INS = {}>(
           const initState = {...storeOptions.initState, route: routeState};
           const baseStore = storeCreator({...storeOptions, initState});
           const store = initApp(baseStore, istoreMiddleware);
+          router.init(store);
           routeModule.model(store);
-          router.setStore(store);
           const context: ContextWrap = render(store, {deps: {}, store, router, documentHead: ''}, ins);
           return {store, context};
         },
@@ -195,8 +195,8 @@ export function createBaseApp<INS = {}>(
             const initState = {...storeOptions.initState, route: routeState, ...state};
             const baseStore = storeCreator({...storeOptions, initState});
             return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
+              router.init(store);
               routeModule.model(store);
-              router.setStore(store);
               render(id, AppView, store, {deps: {}, store, router, documentHead: ''}, !!env[ssrKey], ins);
               return store;
             });

@@ -1,31 +1,52 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import { cloneStore } from '@elux/core';
 import { routeConfig } from './basic';
 export class HistoryRecord {
-  constructor(location, key, history) {
-    _defineProperty(this, "key", void 0);
-
+  constructor(location, key, history, store) {
     _defineProperty(this, "pagename", void 0);
 
     _defineProperty(this, "query", void 0);
 
     _defineProperty(this, "sub", void 0);
 
+    _defineProperty(this, "frozenState", '');
+
+    this.key = key;
+    this.history = history;
+    this.store = store;
     const {
       pagename,
       params
     } = location;
-    this.key = key;
     this.pagename = pagename;
     this.query = JSON.stringify(params);
     this.sub = new History(history, this);
-
-    if (history.records.length === 0) {
-      history.records = [this];
-    }
   }
 
   getParams() {
     return JSON.parse(this.query);
+  }
+
+  freeze() {
+    if (!this.frozenState) {
+      this.frozenState = JSON.stringify(this.store.getState());
+    }
+  }
+
+  getFrozenState() {
+    if (this.frozenState) {
+      if (typeof this.frozenState === 'string') {
+        this.frozenState = JSON.parse(this.frozenState);
+      }
+
+      return this.frozenState;
+    }
+
+    return undefined;
+  }
+
+  getStore() {
+    return this.store;
   }
 
 }
@@ -40,8 +61,8 @@ export class History {
     }
   }
 
-  getCurRecord() {
-    return this.records[0];
+  init(record) {
+    this.records = [record];
   }
 
   getLength() {
@@ -64,18 +85,25 @@ export class History {
     return this.records.findIndex(item => item.key === key);
   }
 
-  getCurrentSubHistory() {
-    return this.getCurRecord().sub;
+  getCurrentRecord() {
+    return this.records[0].sub.records[0];
   }
 
-  getStack() {
-    return [...this.records];
+  getCurrentSubHistory() {
+    return this.records[0].sub;
   }
 
   push(location, key) {
-    const newRecord = new HistoryRecord(location, key, this);
-    const maxHistory = routeConfig.maxHistory;
     const records = this.records;
+    let store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
+    const newRecord = new HistoryRecord(location, key, this, store);
+    const maxHistory = routeConfig.maxHistory;
+    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -84,13 +112,31 @@ export class History {
   }
 
   replace(location, key) {
-    const newRecord = new HistoryRecord(location, key, this);
-    this.records[0] = newRecord;
+    const records = this.records;
+    const store = records[0].getStore();
+    const newRecord = new HistoryRecord(location, key, this, store);
+    records[0] = newRecord;
   }
 
   relaunch(location, key) {
-    const newRecord = new HistoryRecord(location, key, this);
+    const records = this.records;
+    const store = records[0].getStore();
+    const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
+  }
+
+  preBack(delta, overflowRedirect = false) {
+    const records = this.records.slice(delta);
+
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop());
+      }
+    }
+
+    return records[0];
   }
 
   back(delta, overflowRedirect = false) {
@@ -105,7 +151,6 @@ export class History {
     }
 
     this.records = records;
-    return this.records[0];
   }
 
 }

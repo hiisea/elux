@@ -71,8 +71,6 @@ export class BaseRouter {
 
     _defineProperty(this, "internalUrl", void 0);
 
-    _defineProperty(this, "store", void 0);
-
     _defineProperty(this, "history", void 0);
 
     _defineProperty(this, "_lid", 0);
@@ -84,6 +82,7 @@ export class BaseRouter {
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
+    this.history = new History();
     const locationOrPromise = locationTransform.urlToLocation(url);
 
     const callback = location => {
@@ -105,8 +104,6 @@ export class BaseRouter {
         });
       }
 
-      this.history = new History();
-      new HistoryRecord(location, key, this.history);
       return routeState;
     };
 
@@ -165,16 +162,25 @@ export class BaseRouter {
     return this._nativeData.nativeUrl;
   }
 
-  setStore(_store) {
-    this.store = _store;
+  init(store) {
+    const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
+    this.history.init(historyRecord);
+  }
+
+  getStore() {
+    return this.history.getCurrentRecord().getStore();
   }
 
   getCurKey() {
     return this.routeState.key;
   }
 
-  findHistoryIndexByKey(key) {
-    return this.history.findIndex(key);
+  getHistory(root) {
+    return root ? this.history : this.history.getCurrentSubHistory();
+  }
+
+  getHistoryLength(root) {
+    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
   }
 
   locationToNativeData(location) {
@@ -259,7 +265,7 @@ export class BaseRouter {
       action: 'RELAUNCH',
       key
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -281,7 +287,7 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   push(data, root = false, nativeCaller = false) {
@@ -303,7 +309,7 @@ export class BaseRouter {
       action: 'PUSH',
       key
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -325,7 +331,7 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().push(location, key);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   replace(data, root = false, nativeCaller = false) {
@@ -347,7 +353,7 @@ export class BaseRouter {
       action: 'REPLACE',
       key
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -369,7 +375,7 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().replace(location, key);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   back(n = 1, root = false, overflowRedirect = true, nativeCaller = false) {
@@ -381,7 +387,7 @@ export class BaseRouter {
       return undefined;
     }
 
-    const historyRecord = root ? this.history.back(n, overflowRedirect) : this.history.getCurrentSubHistory().back(n, overflowRedirect);
+    const historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
 
     if (!historyRecord) {
       return this.relaunch(routeConfig.indexUrl, root);
@@ -397,7 +403,7 @@ export class BaseRouter {
       params: historyRecord.getParams(),
       action: 'BACK'
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -419,7 +425,7 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().back(n);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   taskComplete() {

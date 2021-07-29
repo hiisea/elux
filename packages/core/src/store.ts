@@ -8,11 +8,11 @@ import {
   coreConfig,
   errorAction,
   MetaData,
-  IStore,
-  BStore,
   BStoreOptions,
   IModuleHandlers,
-  Dispatch,
+  BStore,
+  IStore,
+  IStoreMiddleware,
   GetState,
   State,
 } from './basic';
@@ -35,8 +35,6 @@ export function getActionData(action: Action): any[] {
   return Array.isArray(action.payload) ? action.payload : [];
 }
 
-export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
-
 function compose(...funcs: Function[]) {
   if (funcs.length === 0) {
     return (arg: any) => arg;
@@ -49,11 +47,19 @@ function compose(...funcs: Function[]) {
   return funcs.reduce((a, b) => (...args: any[]) => a(b(...args)));
 }
 
+export function cloneStore<T extends IStore>(store: T): T {
+  const {creator, options, middlewares, injectedModules} = store.clone;
+  const initState = store.getPureState();
+  const newStore = creator({...options, initState});
+  return enhanceStore(newStore, middlewares, injectedModules) as T;
+}
+
 export function enhanceStore<S extends State = any>(
   baseStore: BStore,
   middlewares?: IStoreMiddleware[],
   injectedModules: {[moduleName: string]: IModuleHandlers} = {}
 ): IStore<S> {
+  const {options, creator} = baseStore.clone;
   const store: IStore<S> = baseStore as any;
   const _getState = baseStore.getState;
   const getState: GetState<S> = (moduleName?: string) => {
@@ -62,6 +68,12 @@ export function enhanceStore<S extends State = any>(
   };
   store.getState = getState;
   store.injectedModules = injectedModules;
+  store.clone = {
+    creator,
+    options,
+    middlewares,
+    injectedModules,
+  };
   const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
   const update = baseStore.update;
   store.getCurrentActionName = () => currentData.actionName;

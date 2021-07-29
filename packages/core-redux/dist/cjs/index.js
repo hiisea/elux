@@ -36,6 +36,7 @@ function storeCreator(storeOptions) {
   var store = (0, _redux.createStore)(reduxReducer, initState, enhancers.length > 1 ? _redux.compose.apply(void 0, enhancers) : enhancers[0]);
   var dispatch = store.dispatch;
   var reduxStore = store;
+  reduxStore.getPureState = reduxStore.getState;
 
   reduxStore.update = function (actionName, state, actionData) {
     dispatch({
@@ -45,6 +46,10 @@ function storeCreator(storeOptions) {
     });
   };
 
+  reduxStore.clone = {
+    creator: storeCreator,
+    options: storeOptions
+  };
   return reduxStore;
 }
 

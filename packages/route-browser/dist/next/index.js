@@ -86,7 +86,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
         let callback;
 
         if (action === 'POP') {
-          index = this.router.findHistoryIndexByKey(key);
+          index = this.router.getHistory().findIndex(key);
         }
 
         if (index > -1) {

@@ -160,8 +160,8 @@ export class NativeRouter extends BaseNativeRouter {
 export const nativeRouter: NativeRouter = new NativeRouter();
 
 export const router = new Router('/', nativeRouter, locationTransform);
-router.setStore({
+router.init({
   dispatch() {
     return undefined;
   },
-});
+} as any);

@@ -36,7 +36,24 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
+export function cloneStore(store) {
+  const {
+    creator,
+    options,
+    middlewares,
+    injectedModules
+  } = store.clone;
+  const initState = store.getPureState();
+  const newStore = creator({ ...options,
+    initState
+  });
+  return enhanceStore(newStore, middlewares, injectedModules);
+}
 export function enhanceStore(baseStore, middlewares, injectedModules = {}) {
+  const {
+    options,
+    creator
+  } = baseStore.clone;
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -48,6 +65,12 @@ export function enhanceStore(baseStore, middlewares, injectedModules = {}) {
 
   store.getState = getState;
   store.injectedModules = injectedModules;
+  store.clone = {
+    creator,
+    options,
+    middlewares,
+    injectedModules
+  };
   const currentData = {
     actionName: '',
     prevState: {}

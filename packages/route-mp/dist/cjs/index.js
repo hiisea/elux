@@ -35,7 +35,7 @@ var MPNativeRouter = function (_BaseNativeRouter) {
       var key = searchData ? searchData['__key__'] : '';
 
       if (action === 'POP' && !key) {
-        key = _this.router.history.findRecord(-1).key;
+        key = _this.router.getHistory(true).findRecord(-1).key;
       }
 
       var nativeLocation = {
@@ -49,7 +49,7 @@ var MPNativeRouter = function (_BaseNativeRouter) {
         var index = -1;
 
         if (action === 'POP') {
-          index = _this.router.findHistoryIndexByKey(key);
+          index = _this.router.getHistory(true).findIndex(key);
         }
 
         if (index > -1) {

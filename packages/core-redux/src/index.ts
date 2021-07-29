@@ -28,9 +28,11 @@ export function storeCreator(storeOptions: ReduxOptions): ReduxStore {
   const store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose(...enhancers) : enhancers[0]);
   const {dispatch} = store;
   const reduxStore: ReduxStore = store as any;
+  reduxStore.getPureState = reduxStore.getState;
   reduxStore.update = (actionName: string, state: any, actionData: any[]) => {
     dispatch({type: actionName, state, payload: actionData});
   };
+  reduxStore.clone = {creator: storeCreator, options: storeOptions};
   return reduxStore;
 }
 

@@ -18,7 +18,7 @@ export class MPNativeRouter extends BaseNativeRouter {
       let key = searchData ? searchData['__key__'] : '';
 
       if (action === 'POP' && !key) {
-        key = this.router.history.findRecord(-1).key;
+        key = this.router.getHistory(true).findRecord(-1).key;
       }
 
       const nativeLocation = {
@@ -31,7 +31,7 @@ export class MPNativeRouter extends BaseNativeRouter {
         let index = -1;
 
         if (action === 'POP') {
-          index = this.router.findHistoryIndexByKey(key);
+          index = this.router.getHistory(true).findIndex(key);
         }
 
         if (index > -1) {

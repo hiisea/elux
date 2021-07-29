@@ -107,7 +107,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
         var callback;
 
         if (action === 'POP') {
-          index = _this.router.findHistoryIndexByKey(key);
+          index = _this.router.getHistory().findIndex(key);
         }
 
         if (index > -1) {

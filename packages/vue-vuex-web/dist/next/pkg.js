@@ -2614,7 +2614,24 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
+function cloneStore(store) {
+  const {
+    creator,
+    options,
+    middlewares,
+    injectedModules
+  } = store.clone;
+  const initState = store.getPureState();
+  const newStore = creator({ ...options,
+    initState
+  });
+  return enhanceStore(newStore, middlewares, injectedModules);
+}
 function enhanceStore(baseStore, middlewares, injectedModules = {}) {
+  const {
+    options,
+    creator
+  } = baseStore.clone;
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -2626,6 +2643,12 @@ function enhanceStore(baseStore, middlewares, injectedModules = {}) {
 
   store.getState = getState;
   store.injectedModules = injectedModules;
+  store.clone = {
+    creator,
+    options,
+    middlewares,
+    injectedModules
+  };
   const currentData = {
     actionName: '',
     prevState: {}
@@ -2886,6 +2909,11 @@ function storeCreator(storeOptions) {
     return store.state;
   };
 
+  vuexStore.getPureState = () => {
+    const state = vuexStore.getState();
+    return JSON.parse(JSON.stringify(state));
+  };
+
   vuexStore.update = (actionName, newState, actionData) => {
     store.commit(UpdateMutationName, {
       actionName,
@@ -3106,31 +3134,51 @@ const routeMeta = {
 };
 
 class HistoryRecord {
-  constructor(location, key, history) {
-    _defineProperty(this, "key", void 0);
-
+  constructor(location, key, history, store) {
     _defineProperty(this, "pagename", void 0);
 
     _defineProperty(this, "query", void 0);
 
     _defineProperty(this, "sub", void 0);
 
+    _defineProperty(this, "frozenState", '');
+
+    this.key = key;
+    this.history = history;
+    this.store = store;
     const {
       pagename,
       params
     } = location;
-    this.key = key;
     this.pagename = pagename;
     this.query = JSON.stringify(params);
     this.sub = new History(history, this);
-
-    if (history.records.length === 0) {
-      history.records = [this];
-    }
   }
 
   getParams() {
     return JSON.parse(this.query);
+  }
+
+  freeze() {
+    if (!this.frozenState) {
+      this.frozenState = JSON.stringify(this.store.getState());
+    }
+  }
+
+  getFrozenState() {
+    if (this.frozenState) {
+      if (typeof this.frozenState === 'string') {
+        this.frozenState = JSON.parse(this.frozenState);
+      }
+
+      return this.frozenState;
+    }
+
+    return undefined;
+  }
+
+  getStore() {
+    return this.store;
   }
 
 }
@@ -3145,8 +3193,8 @@ class History {
     }
   }
 
-  getCurRecord() {
-    return this.records[0];
+  init(record) {
+    this.records = [record];
   }
 
   getLength() {
@@ -3169,18 +3217,25 @@ class History {
     return this.records.findIndex(item => item.key === key);
   }
 
-  getCurrentSubHistory() {
-    return this.getCurRecord().sub;
+  getCurrentRecord() {
+    return this.records[0].sub.records[0];
   }
 
-  getStack() {
-    return [...this.records];
+  getCurrentSubHistory() {
+    return this.records[0].sub;
   }
 
   push(location, key) {
-    const newRecord = new HistoryRecord(location, key, this);
-    const maxHistory = routeConfig.maxHistory;
     const records = this.records;
+    let store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
+    const newRecord = new HistoryRecord(location, key, this, store);
+    const maxHistory = routeConfig.maxHistory;
+    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -3189,13 +3244,31 @@ class History {
   }
 
   replace(location, key) {
-    const newRecord = new HistoryRecord(location, key, this);
-    this.records[0] = newRecord;
+    const records = this.records;
+    const store = records[0].getStore();
+    const newRecord = new HistoryRecord(location, key, this, store);
+    records[0] = newRecord;
   }
 
   relaunch(location, key) {
-    const newRecord = new HistoryRecord(location, key, this);
+    const records = this.records;
+    const store = records[0].getStore();
+    const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
+  }
+
+  preBack(delta, overflowRedirect = false) {
+    const records = this.records.slice(delta);
+
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop());
+      }
+    }
+
+    return records[0];
   }
 
   back(delta, overflowRedirect = false) {
@@ -3210,7 +3283,6 @@ class History {
     }
 
     this.records = records;
-    return this.records[0];
   }
 
 }
@@ -3907,8 +3979,6 @@ class BaseRouter {
 
     _defineProperty(this, "internalUrl", void 0);
 
-    _defineProperty(this, "store", void 0);
-
     _defineProperty(this, "history", void 0);
 
     _defineProperty(this, "_lid", 0);
@@ -3920,6 +3990,7 @@ class BaseRouter {
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
+    this.history = new History();
     const locationOrPromise = locationTransform.urlToLocation(url);
 
     const callback = location => {
@@ -3941,8 +4012,6 @@ class BaseRouter {
         });
       }
 
-      this.history = new History();
-      new HistoryRecord(location, key, this.history);
       return routeState;
     };
 
@@ -4001,16 +4070,25 @@ class BaseRouter {
     return this._nativeData.nativeUrl;
   }
 
-  setStore(_store) {
-    this.store = _store;
+  init(store) {
+    const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
+    this.history.init(historyRecord);
+  }
+
+  getStore() {
+    return this.history.getCurrentRecord().getStore();
   }
 
   getCurKey() {
     return this.routeState.key;
   }
 
-  findHistoryIndexByKey(key) {
-    return this.history.findIndex(key);
+  getHistory(root) {
+    return root ? this.history : this.history.getCurrentSubHistory();
+  }
+
+  getHistoryLength(root) {
+    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
   }
 
   locationToNativeData(location) {
@@ -4095,7 +4173,7 @@ class BaseRouter {
       action: 'RELAUNCH',
       key
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -4117,7 +4195,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   push(data, root = false, nativeCaller = false) {
@@ -4139,7 +4217,7 @@ class BaseRouter {
       action: 'PUSH',
       key
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -4161,7 +4239,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().push(location, key);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   replace(data, root = false, nativeCaller = false) {
@@ -4183,7 +4261,7 @@ class BaseRouter {
       action: 'REPLACE',
       key
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -4205,7 +4283,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().replace(location, key);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   back(n = 1, root = false, overflowRedirect = true, nativeCaller = false) {
@@ -4217,7 +4295,7 @@ class BaseRouter {
       return undefined;
     }
 
-    const historyRecord = root ? this.history.back(n, overflowRedirect) : this.history.getCurrentSubHistory().back(n, overflowRedirect);
+    const historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
 
     if (!historyRecord) {
       return this.relaunch(routeConfig.indexUrl, root);
@@ -4233,7 +4311,7 @@ class BaseRouter {
       params: historyRecord.getParams(),
       action: 'BACK'
     };
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -4255,7 +4333,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().back(n);
     }
 
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   taskComplete() {
@@ -4320,8 +4398,8 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
             initState
           });
           const store = initApp(baseStore, istoreMiddleware);
+          router.init(store);
           routeModule.model(store);
-          router.setStore(store);
           const context = render(store, {
             deps: {},
             store,
@@ -4373,8 +4451,8 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
               store,
               AppView
             }) => {
+              router.init(store);
               routeModule.model(store);
-              router.setStore(store);
               render(id, AppView, store, {
                 deps: {},
                 store,
@@ -5590,7 +5668,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
         let callback;
 
         if (action === 'POP') {
-          index = this.router.findHistoryIndexByKey(key);
+          index = this.router.getHistory().findIndex(key);
         }
 
         if (index > -1) {

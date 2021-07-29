@@ -13,7 +13,7 @@ export {
   setLoading,
   buildConfigSetter,
 } from './basic';
-export {getActionData, setProcessedError, isProcessedError} from './store';
+export {getActionData, setProcessedError, isProcessedError, cloneStore} from './store';
 export {
   CoreModuleHandlers,
   EmptyModuleHandlers,
@@ -32,7 +32,7 @@ export {
 export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
 export {defineModuleGetter, renderApp, ssrApp, initApp} from './render';
 export {default as env} from './env';
-export type {IStoreMiddleware, StoreBuilder} from './store';
+export type {StoreBuilder} from './store';
 export type {
   Action,
   EluxComponent,
@@ -45,6 +45,7 @@ export type {
   Dispatch,
   GetState,
   State,
+  IStoreMiddleware,
 } from './basic';
 
 export type {RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, LoadComponent} from './inject';

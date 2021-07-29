@@ -1,4 +1,4 @@
-import {isPromise, deepMerge} from '@elux/core';
+import {isPromise, deepMerge, IStore} from '@elux/core';
 
 import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation} from './basic';
 import {History, HistoryRecord} from './history';
@@ -11,10 +11,6 @@ export {routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHan
 export type {RouteModule} from './module';
 export type {PagenameMap, LocationTransform} from './transform';
 export type {RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation, NativeLocation} from './basic';
-
-interface Store {
-  dispatch(action: {type: string}): any;
-}
 
 export type NativeData = {nativeLocation: NativeLocation; nativeUrl: string};
 
@@ -97,9 +93,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 
   private internalUrl!: string;
 
-  protected store!: Store;
-
-  public history!: History;
+  protected history: History;
 
   private _lid = 0;
 
@@ -109,6 +103,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 
   constructor(url: string, public nativeRouter: BaseNativeRouter, protected locationTransform: LocationTransform) {
     nativeRouter.setRouter(this);
+    this.history = new History();
     const locationOrPromise = locationTransform.urlToLocation<P>(url);
     const callback = (location: Location<P>) => {
       const key = this._createKey();
@@ -118,8 +113,6 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
       if (!routeConfig.indexUrl) {
         setRouteConfig({indexUrl: this.internalUrl});
       }
-      this.history = new History();
-      new HistoryRecord(location, key, this.history);
       return routeState;
     };
     if (isPromise(locationOrPromise)) {
@@ -128,7 +121,6 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
       this.initRouteState = callback(locationOrPromise);
     }
   }
-
   addListener(callback: (data: RouteState<P>) => void | Promise<void>): () => void {
     this._lid++;
     const id = `${this._lid}`;
@@ -175,16 +167,25 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     return this._nativeData.nativeUrl;
   }
 
-  setStore(_store: Store): void {
-    this.store = _store;
+  init(store: IStore): void {
+    const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
+    this.history.init(historyRecord);
+  }
+
+  getStore(): IStore {
+    return this.history.getCurrentRecord().getStore();
   }
 
   getCurKey(): string {
     return this.routeState.key;
   }
 
-  findHistoryIndexByKey(key: string): number {
-    return this.history.findIndex(key);
+  getHistory(root?: boolean): History {
+    return root ? this.history : this.history.getCurrentSubHistory();
+  }
+
+  getHistoryLength(root?: boolean): number {
+    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
   }
 
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation} {
@@ -256,7 +257,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     const location: Location<P> = preData;
     const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key};
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -271,7 +272,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     } else {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   push(data: PayloadLocation<P, N> | string, root = false, nativeCaller = false): void {
@@ -286,7 +287,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     const location: Location<P> = preData;
     const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'PUSH', key};
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -301,7 +302,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     } else {
       this.history.getCurrentSubHistory().push(location, key);
     }
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   replace(data: PayloadLocation<P, N> | string, root = false, nativeCaller = false): void {
@@ -316,7 +317,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     const location: Location<P> = preData;
     const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'REPLACE', key};
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -331,7 +332,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     } else {
       this.history.getCurrentSubHistory().replace(location, key);
     }
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   back(n = 1, root = false, overflowRedirect = true, nativeCaller = false): void {
@@ -342,14 +343,14 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     if (n < 1) {
       return undefined;
     }
-    const historyRecord = root ? this.history.back(n, overflowRedirect) : this.history.getCurrentSubHistory().back(n, overflowRedirect);
+    const historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
     if (!historyRecord) {
       return this.relaunch(routeConfig.indexUrl, root);
     }
     const {key, pagename} = historyRecord;
 
     const routeState: RouteState<P> = {key, pagename, params: historyRecord.getParams(), action: 'BACK'};
-    await this.store.dispatch(testRouteChangeAction(routeState));
+    await this.getStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -364,7 +365,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
     } else {
       this.history.getCurrentSubHistory().back(n);
     }
-    this.store.dispatch(routeChangeAction(routeState));
+    this.getStore().dispatch(routeChangeAction(routeState));
   }
 
   private taskComplete() {
@@ -396,7 +397,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string> impleme
 
 export interface IBaseRouter<P extends RootParams, N extends string> {
   initRouteState: RouteState<P> | Promise<RouteState<P>>;
-  history: History;
+  getHistory(root?: boolean): History;
   nativeRouter: any;
   addListener(callback: (data: RouteState<P>) => void | Promise<void>): void;
   getRouteState(): RouteState<P>;
@@ -407,9 +408,8 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   getNativeUrl(): string;
   nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation};
-  setStore(_store: Store): void;
+  init(store: IStore): void;
   getCurKey(): string;
-  findHistoryIndexByKey(key: string): number;
   relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
   push(data: PayloadLocation<P, N> | string, root?: boolean): void;
   replace(data: PayloadLocation<P, N> | string, root?: boolean): void;
@@ -418,4 +418,5 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   urlToLocation(url: string): Location<P> | Promise<Location<P>>;
   payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
   payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
+  getHistoryLength(root?: boolean): number;
 }

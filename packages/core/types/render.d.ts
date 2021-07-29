@@ -1,5 +1,4 @@
-import { ModuleGetter, BStore, IStore, EluxComponent } from './basic';
-import { IStoreMiddleware } from './store';
+import { ModuleGetter, BStore, IStore, EluxComponent, IStoreMiddleware } from './basic';
 export declare function defineModuleGetter(moduleGetter: ModuleGetter, appModuleName?: string): void;
 export declare function renderApp<ST extends BStore = BStore>(baseStore: ST, preloadModules: string[], preloadComponents: string[], middlewares?: IStoreMiddleware[], appViewName?: string): Promise<{
     store: IStore<any> & ST;
