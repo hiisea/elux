@@ -18,8 +18,8 @@ program
   .command('mock-start [env]')
   .description('Start a mock server')
   .option('--watch', 'Watch for file changes')
-  .option('--dir', 'Specify the mock dir path')
-  .option('--port', 'Normalize a port into a number')
+  .option('--dir <value>', 'Specify the mock dir path')
+  .option('--port <value>', 'Normalize a port into a number')
   .action((env, options) => {
     const {port, dir} = genMockConfig(process.cwd(), env || 'local', options.port, options.dir);
     const src = path.join(dir, './src');
