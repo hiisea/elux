@@ -1,8 +1,20 @@
-import Taro from '@tarojs/taro';
-import { SingleDispatcher } from '@elux/core';
-import { nativeUrlToNativeLocation } from '@elux/route';
-export var eventBus = new SingleDispatcher();
-export var tabPages = {};
+"use strict";
+
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+exports.__esModule = true;
+exports.routeENV = exports.tabPages = exports.eventBus = void 0;
+
+var _taro = _interopRequireDefault(require("@tarojs/taro"));
+
+var _core = require("@elux/core");
+
+var _route = require("@elux/route");
+
+var eventBus = new _core.SingleDispatcher();
+exports.eventBus = eventBus;
+var tabPages = {};
+exports.tabPages = tabPages;
 
 function queryToData(query) {
   if (query === void 0) {
@@ -39,7 +51,8 @@ function patchPageOptions(pageOptions) {
   var onShow = pageOptions.onShow;
 
   pageOptions.onShow = function () {
-    var arr = Taro.getCurrentPages();
+    var arr = _taro.default.getCurrentPages();
+
     var currentPage = arr[arr.length - 1];
     var currentPagesInfo = {
       count: arr.length,
@@ -73,7 +86,8 @@ function patchPageOptions(pageOptions) {
   var onHide = pageOptions.onHide;
 
   pageOptions.onHide = function () {
-    var arr = Taro.getCurrentPages();
+    var arr = _taro.default.getCurrentPages();
+
     var currentPage = arr[arr.length - 1];
     prevPagesInfo = {
       count: arr.length,
@@ -85,7 +99,8 @@ function patchPageOptions(pageOptions) {
   var onUnload = pageOptions.onUnload;
 
   pageOptions.onUnload = function () {
-    var arr = Taro.getCurrentPages();
+    var arr = _taro.default.getCurrentPages();
+
     var currentPage = arr[arr.length - 1];
     prevPagesInfo = {
       count: arr.length,
@@ -95,19 +110,20 @@ function patchPageOptions(pageOptions) {
   };
 }
 
-export var routeENV = {
-  reLaunch: Taro.reLaunch,
-  redirectTo: Taro.redirectTo,
-  navigateTo: Taro.navigateTo,
-  navigateBack: Taro.navigateBack,
-  switchTab: Taro.switchTab,
+var routeENV = {
+  reLaunch: _taro.default.reLaunch,
+  redirectTo: _taro.default.redirectTo,
+  navigateTo: _taro.default.navigateTo,
+  navigateBack: _taro.default.navigateBack,
+  switchTab: _taro.default.switchTab,
   getLocation: function getLocation() {
-    var arr = Taro.getCurrentPages();
+    var arr = _taro.default.getCurrentPages();
+
     var path;
     var query;
 
     if (arr.length === 0) {
-      var _Taro$getLaunchOption = Taro.getLaunchOptionsSync();
+      var _Taro$getLaunchOption = _taro.default.getLaunchOptionsSync();
 
       path = _Taro$getLaunchOption.path;
       query = _Taro$getLaunchOption.query;
@@ -131,6 +147,7 @@ export var routeENV = {
     });
   }
 };
+exports.routeENV = routeENV;
 
 if (process.env.TARO_ENV === 'h5') {
   var taroRouter = require('@tarojs/router');
@@ -139,7 +156,7 @@ if (process.env.TARO_ENV === 'h5') {
     var _taroRouter$history$l = taroRouter.history.location,
         pathname = _taroRouter$history$l.pathname,
         search = _taroRouter$history$l.search;
-    var nativeLocation = nativeUrlToNativeLocation(pathname + search);
+    var nativeLocation = (0, _route.nativeUrlToNativeLocation)(pathname + search);
     return {
       pathname: nativeLocation.pathname,
       searchData: nativeLocation.searchData
@@ -147,8 +164,10 @@ if (process.env.TARO_ENV === 'h5') {
   };
 
   routeENV.onRouteChange = function (callback) {
-    var unhandle = taroRouter.history.listen(function (location, action) {
-      var nativeLocation = nativeUrlToNativeLocation([location.pathname, location.search].join(''));
+    var unhandle = taroRouter.history.listen(function (_ref) {
+      var location = _ref.location,
+          action = _ref.action;
+      var nativeLocation = (0, _route.nativeUrlToNativeLocation)([location.pathname, location.search].join(''));
       var routeAction = action;
 
       if (action !== 'POP' && tabPages[nativeLocation.pathname]) {
@@ -160,16 +179,16 @@ if (process.env.TARO_ENV === 'h5') {
     return unhandle;
   };
 
-  Taro.onUnhandledRejection = function (callback) {
+  _taro.default.onUnhandledRejection = function (callback) {
     window.addEventListener('unhandledrejection', callback, false);
   };
 
-  Taro.onError = function (callback) {
+  _taro.default.onError = function (callback) {
     window.addEventListener('error', callback, false);
   };
 } else {
-  if (!Taro.onUnhandledRejection) {
-    Taro.onUnhandledRejection = function () {
+  if (!_taro.default.onUnhandledRejection) {
+    _taro.default.onUnhandledRejection = function () {
       return undefined;
     };
   }

@@ -1,11 +1,9 @@
-/* global process, require */
 import Taro from '@tarojs/taro';
 import {SingleDispatcher} from '@elux/core';
-import type {RouteENV} from '@elux/route-mp';
+import {RouteENV} from '@elux/route-mp';
 import {nativeUrlToNativeLocation} from '@elux/route';
 
 declare const window: any;
-declare let Page: (options: any) => void;
 
 export interface PageConfig {
   dispatch?(action: {type: string}): any;
@@ -100,28 +98,6 @@ function patchPageOptions(pageOptions: PageConfig) {
 
     return onUnload?.call(this);
   };
-
-  // const onPullDownRefresh = pageOptions.onPullDownRefresh;
-  // pageOptions.onPullDownRefresh = function () {
-  //   miniProgramBus.emit({
-  //     name: 'currentPagePullDownRefresh',
-  //     context: this,
-  //     tag: (this as any).__PAGE_ID__,
-  //   });
-  //   miniProgramBus.emit({name: 'pagePullDownRefresh', context: this});
-  //   return onPullDownRefresh?.call(this);
-  // };
-
-  // const onReachBottom = pageOptions.onReachBottom;
-  // pageOptions.onReachBottom = function () {
-  //   miniProgramBus.emit({
-  //     name: 'currentPageReachBottom',
-  //     context: this,
-  //     tag: (this as any).__PAGE_ID__,
-  //   });
-  //   miniProgramBus.emit({name: 'pageReachBottom', context: this});
-  //   return onReachBottom?.call(this);
-  // };
 }
 
 export const routeENV: RouteENV = {

@@ -2887,19 +2887,6 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   });
 };
 
-function renderToMP(store, eluxContext) {
-  var Component = function Component(_ref) {
-    var children = _ref.children;
-    return React__default['default'].createElement(EluxContextComponent.Provider, {
-      value: eluxContext
-    }, React__default['default'].createElement(reactComponentsConfig.Provider, {
-      store: store
-    }, children));
-  };
-
-  return Component;
-}
-
 var routeConfig = {
   maxHistory: 10,
   notifyNativeRouter: {
@@ -4668,6 +4655,19 @@ function getApp() {
   };
 }
 
+function renderToMP(store, eluxContext) {
+  var Component = function Component(_ref) {
+    var children = _ref.children;
+    return React__default['default'].createElement(EluxContextComponent.Provider, {
+      value: eluxContext
+    }, React__default['default'].createElement(reactComponentsConfig.Provider, {
+      store: store
+    }, children));
+  };
+
+  return Component;
+}
+
 setRouteConfig({
   notifyNativeRouter: {
     root: true,
@@ -4955,7 +4955,9 @@ if (process.env.TARO_ENV === 'h5') {
   };
 
   routeENV.onRouteChange = function (callback) {
-    var unhandle = taroRouter.history.listen(function (location, action) {
+    var unhandle = taroRouter.history.listen(function (_ref) {
+      var location = _ref.location,
+          action = _ref.action;
       var nativeLocation = nativeUrlToNativeLocation([location.pathname, location.search].join(''));
       var routeAction = action;
 
@@ -4990,6 +4992,19 @@ if (process.env.TARO_ENV === 'h5') {
   };
 }
 
+var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
+  if (env.__taroAppConfig.tabBar) {
+    env.__taroAppConfig.tabBar.list.forEach(function (_ref) {
+      var pagePath = _ref.pagePath;
+      tabPages["/" + pagePath.replace(/^\/+|\/+$/g, '')] = true;
+    });
+  }
+
+  return createBaseMP({}, function (locationTransform) {
+    return createRouter(locationTransform, routeENV, tabPages);
+  }, renderToMP, moduleGetter, middlewares, appModuleName);
+};
+
 setAppConfig({
   loadComponent: loadComponent
 });
@@ -5004,18 +5019,6 @@ setReactComponentsConfig({
     });
   }
 });
-var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
-  if (env.__taroAppConfig.tabBar) {
-    env.__taroAppConfig.tabBar.list.forEach(function (_ref) {
-      var pagePath = _ref.pagePath;
-      tabPages["/" + pagePath.replace(/^\/+|\/+$/g, '')] = true;
-    });
-  }
-
-  return createBaseMP({}, function (locationTransform) {
-    return createRouter(locationTransform, routeENV, tabPages);
-  }, renderToMP, moduleGetter, middlewares, appModuleName);
-};
 
 /** @license React v16.13.1
  * react-is.production.min.js

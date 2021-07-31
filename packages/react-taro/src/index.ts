@@ -1,15 +1,12 @@
-/// <reference path="../runtime/runtime.d.ts" />
 import {ComponentType} from 'react';
 import Taro from '@tarojs/taro';
-import {RootModuleFacade, env} from '@elux/core';
+import {RootModuleFacade} from '@elux/core';
 import {setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
-import {renderToMP} from '@elux/react-components/stage';
-import {createBaseMP, setAppConfig, setUserConfig, CreateMP, LocationTransform, UserConfig, GetBaseAPP} from '@elux/app';
-import {createRouter} from '@elux/route-mp';
-import {routeENV, tabPages} from './patch';
+import {setAppConfig, setUserConfig, UserConfig, GetBaseAPP} from '@elux/app';
 
 export * from '@elux/react-components';
 export * from '@elux/app';
+export {createMP} from '@elux/taro';
 
 setAppConfig({loadComponent});
 
@@ -23,18 +20,3 @@ export function setConfig(
 }
 
 setReactComponentsConfig({setPageTitle: (title) => Taro.setNavigationBarTitle({title})});
-export const createMP: CreateMP = (moduleGetter, middlewares, appModuleName) => {
-  if (env.__taroAppConfig.tabBar) {
-    env.__taroAppConfig.tabBar.list.forEach(({pagePath}) => {
-      tabPages[`/${pagePath.replace(/^\/+|\/+$/g, '')}`] = true;
-    });
-  }
-  return createBaseMP(
-    {},
-    (locationTransform: LocationTransform) => createRouter(locationTransform, routeENV, tabPages),
-    renderToMP,
-    moduleGetter,
-    middlewares,
-    appModuleName
-  );
-};

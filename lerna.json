@@ -1,12 +1,13 @@
 {
   "packages": [
-    "packages/app",
     "packages/core",
     "packages/core-redux",
     "packages/core-vuex",
     "packages/route",
     "packages/route-browser",
     "packages/route-mp",
+    "packages/app",
+    "packages/taro",
     "packages/react-components",
     "packages/react-redux",
     "packages/react-web",
@@ -27,5 +28,5 @@
   },
   "npmClient": "yarn",
   "useWorkspaces": true,
-  "version": "0.1.19"
+  "version": "0.1.20"
 }

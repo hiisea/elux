@@ -1,5 +1,5 @@
 import { SingleDispatcher } from '@elux/core';
-import type { RouteENV } from '@elux/route-mp';
+import { RouteENV } from '@elux/route-mp';
 export interface PageConfig {
     dispatch?(action: {
         type: string;

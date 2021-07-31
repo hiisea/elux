@@ -144,7 +144,10 @@ if (process.env.TARO_ENV === 'h5') {
   };
 
   routeENV.onRouteChange = callback => {
-    const unhandle = taroRouter.history.listen((location, action) => {
+    const unhandle = taroRouter.history.listen(({
+      location,
+      action
+    }) => {
       const nativeLocation = nativeUrlToNativeLocation([location.pathname, location.search].join(''));
       let routeAction = action;
 

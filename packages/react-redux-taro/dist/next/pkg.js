@@ -1832,18 +1832,6 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   });
 };
 
-function renderToMP(store, eluxContext) {
-  const Component = ({
-    children
-  }) => React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, children));
-
-  return Component;
-}
-
 const routeConfig = {
   maxHistory: 10,
   notifyNativeRouter: {
@@ -3277,6 +3265,18 @@ function getApp() {
   };
 }
 
+function renderToMP(store, eluxContext) {
+  const Component = ({
+    children
+  }) => React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, children));
+
+  return Component;
+}
+
 setRouteConfig({
   notifyNativeRouter: {
     root: true,
@@ -3539,7 +3539,10 @@ if (process.env.TARO_ENV === 'h5') {
   };
 
   routeENV.onRouteChange = callback => {
-    const unhandle = taroRouter.history.listen((location, action) => {
+    const unhandle = taroRouter.history.listen(({
+      location,
+      action
+    }) => {
       const nativeLocation = nativeUrlToNativeLocation([location.pathname, location.search].join(''));
       let routeAction = action;
 
@@ -3572,6 +3575,18 @@ if (process.env.TARO_ENV === 'h5') {
   };
 }
 
+const createMP = (moduleGetter, middlewares, appModuleName) => {
+  if (env.__taroAppConfig.tabBar) {
+    env.__taroAppConfig.tabBar.list.forEach(({
+      pagePath
+    }) => {
+      tabPages[`/${pagePath.replace(/^\/+|\/+$/g, '')}`] = true;
+    });
+  }
+
+  return createBaseMP({}, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares, appModuleName);
+};
+
 setAppConfig({
   loadComponent
 });
@@ -3584,17 +3599,6 @@ setReactComponentsConfig({
     title
   })
 });
-const createMP = (moduleGetter, middlewares, appModuleName) => {
-  if (env.__taroAppConfig.tabBar) {
-    env.__taroAppConfig.tabBar.list.forEach(({
-      pagePath
-    }) => {
-      tabPages[`/${pagePath.replace(/^\/+|\/+$/g, '')}`] = true;
-    });
-  }
-
-  return createBaseMP({}, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares, appModuleName);
-};
 
 function createCommonjsModule(fn) {
   var module = { exports: {} };

@@ -12,3 +12,4 @@ declare interface ProcessEnv {
   PROJ_ENV: any;
   TARO_ENV: 'weapp' | 'swan' | 'alipay' | 'h5' | 'rn' | 'tt' | 'quickapp' | 'qq' | 'jd';
 }
+declare let Page: (options: any) => void;
