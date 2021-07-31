@@ -58,8 +58,8 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;
-    init(store: IStore): void;
-    getStore(): IStore;
+    init(store: IStore<any>): void;
+    getCurrentStore(): IStore<any>;
     getCurKey(): string;
     getHistory(root?: boolean): History;
     getHistoryLength(root?: boolean): number;
@@ -103,7 +103,8 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
         nativeUrl: string;
         nativeLocation: NativeLocation;
     };
-    init(store: IStore): void;
+    init(store: IStore<any>): void;
+    getCurrentStore(): IStore<any>;
     getCurKey(): string;
     relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
     push(data: PayloadLocation<P, N> | string, root?: boolean): void;

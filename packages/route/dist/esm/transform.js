@@ -13,7 +13,11 @@ export function assignDefaultData(data) {
 }
 
 function splitQuery(query) {
-  return (query || '').split('&').reduce(function (params, str) {
+  if (!query) {
+    return undefined;
+  }
+
+  return query.split('&').reduce(function (params, str) {
     var sections = str.split('=');
 
     if (sections.length > 1) {
@@ -190,7 +194,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
 
       return {
         pathname: nativeLocation.pathname,
-        params: deepMerge(searchParams, hashParams)
+        params: deepMerge(searchParams, hashParams) || {}
       };
     },
     eluxLocationToNativeLocation: function eluxLocationToNativeLocation(eluxLocation) {

@@ -26,7 +26,11 @@ function assignDefaultData(data) {
 }
 
 function splitQuery(query) {
-  return (query || '').split('&').reduce(function (params, str) {
+  if (!query) {
+    return undefined;
+  }
+
+  return query.split('&').reduce(function (params, str) {
     var sections = str.split('=');
 
     if (sections.length > 1) {
@@ -207,7 +211,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
 
       return {
         pathname: nativeLocation.pathname,
-        params: (0, _core.deepMerge)(searchParams, hashParams)
+        params: (0, _core.deepMerge)(searchParams, hashParams) || {}
       };
     },
     eluxLocationToNativeLocation: function eluxLocationToNativeLocation(eluxLocation) {

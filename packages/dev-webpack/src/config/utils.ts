@@ -41,7 +41,7 @@ interface DevServerConfig {
   [key: string]: any;
 }
 
-function getCssScopedName(srcPath: string, localName: string, mfileName: string) {
+function getCssScopedName(srcPath: string, localName: string, mfileName: string): string {
   if (mfileName.match(/[/\\]global.module.\w+?$/)) {
     return `g-${localName}`;
   }

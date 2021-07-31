@@ -143,6 +143,10 @@ function __deepMerge(optimize, target, inject) {
 }
 
 export function deepMerge(target, ...args) {
+  if (args.length === 0) {
+    return target;
+  }
+
   if (!isPlainObject(target)) {
     target = {};
   }

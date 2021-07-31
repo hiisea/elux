@@ -29,7 +29,7 @@ export class HistoryRecord {
     }
     return undefined;
   }
-  getStore(): IStore {
+  getStore(): IStore<any> {
     return this.store;
   }
 }

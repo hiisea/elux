@@ -180,6 +180,7 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
               var store = _ref8.store,
                   AppView = _ref8.AppView;
+              router.init(store);
               var state = store.getState();
               var eluxContext = {
                 deps: {},
@@ -226,6 +227,9 @@ export function getApp() {
     },
     GetRouter: function GetRouter() {
       return appMeta.router;
+    },
+    GetStore: function GetStore() {
+      return appMeta.router.getCurrentStore();
     },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,

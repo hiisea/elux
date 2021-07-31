@@ -84,6 +84,7 @@ export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions>
     GetRouter: () => IBaseRouter<{
         [M in keyof A]: A[M]['params'];
     }, Extract<keyof A['route']['components'], string>>;
+    GetStore: () => IStore<any>;
     GetActions<N extends keyof A>(...args: N[]): {
         [K in N]: A[K]['actions'];
     };
@@ -97,7 +98,8 @@ export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions>
 export declare function getApp<T extends {
     GetActions: any;
     GetRouter: any;
+    GetStore: any;
     LoadComponent: any;
     Modules: any;
     Pagenames: any;
-}>(): Pick<T, 'GetActions' | 'GetRouter' | 'LoadComponent' | 'Modules' | 'Pagenames'>;
+}>(): Pick<T, 'GetActions' | 'GetRouter' | 'GetStore' | 'LoadComponent' | 'Modules' | 'Pagenames'>;

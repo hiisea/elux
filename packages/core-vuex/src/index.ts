@@ -35,6 +35,7 @@ export function storeCreator(storeOptions: VuexOptions): VuexStore {
   vuexStore.update = (actionName: string, newState: any, actionData: any[]) => {
     store.commit(UpdateMutationName, {actionName, newState, actionData});
   };
+  vuexStore.clone = {creator: storeCreator, options: storeOptions};
   return vuexStore;
 }
 

@@ -135,6 +135,7 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
               store,
               AppView
             }) => {
+              router.init(store);
               const state = store.getState();
               const eluxContext = {
                 deps: {},
@@ -178,6 +179,7 @@ export function getApp() {
       }, {});
     },
     GetRouter: () => appMeta.router,
+    GetStore: () => appMeta.router.getCurrentStore(),
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
     Pagenames: routeMeta.pagenames

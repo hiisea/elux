@@ -187,7 +187,7 @@ export var BaseRouter = function () {
     this.history.init(historyRecord);
   };
 
-  _proto2.getStore = function getStore() {
+  _proto2.getCurrentStore = function getCurrentStore() {
     return this.history.getCurrentRecord().getStore();
   };
 
@@ -308,7 +308,7 @@ export var BaseRouter = function () {
                 key: key
               });
               _context.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context.next = 12;
@@ -344,7 +344,7 @@ export var BaseRouter = function () {
                 this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -403,7 +403,7 @@ export var BaseRouter = function () {
                 key: key
               });
               _context2.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context2.next = 12;
@@ -439,7 +439,7 @@ export var BaseRouter = function () {
                 this.history.getCurrentSubHistory().push(location, key);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -498,7 +498,7 @@ export var BaseRouter = function () {
                 key: key
               });
               _context3.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context3.next = 12;
@@ -534,7 +534,7 @@ export var BaseRouter = function () {
                 this.history.getCurrentSubHistory().replace(location, key);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -610,7 +610,7 @@ export var BaseRouter = function () {
                 action: 'BACK'
               };
               _context4.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context4.next = 12;
@@ -646,7 +646,7 @@ export var BaseRouter = function () {
                 this.history.getCurrentSubHistory().back(n);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":

@@ -12,7 +12,7 @@ export declare class HistoryRecord {
     getParams(): any;
     freeze(): void;
     getFrozenState(): Record<string, any> | undefined;
-    getStore(): IStore;
+    getStore(): IStore<any>;
 }
 export declare class History {
     private parent?;

@@ -200,6 +200,10 @@ function deepMerge(target) {
     args[_key - 1] = arguments[_key];
   }
 
+  if (args.length === 0) {
+    return target;
+  }
+
   if (!isPlainObject(target)) {
     target = {};
   }

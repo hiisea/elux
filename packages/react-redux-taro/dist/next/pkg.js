@@ -161,6 +161,10 @@ function __deepMerge(optimize, target, inject) {
 }
 
 function deepMerge(target, ...args) {
+  if (args.length === 0) {
+    return target;
+  }
+
   if (!isPlainObject$3(target)) {
     target = {};
   }
@@ -2178,7 +2182,11 @@ function assignDefaultData(data) {
 }
 
 function splitQuery(query) {
-  return (query || '').split('&').reduce((params, str) => {
+  if (!query) {
+    return undefined;
+  }
+
+  return query.split('&').reduce((params, str) => {
     const sections = str.split('=');
 
     if (sections.length > 1) {
@@ -2343,7 +2351,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
 
       return {
         pathname: nativeLocation.pathname,
-        params: deepMerge(searchParams, hashParams)
+        params: deepMerge(searchParams, hashParams) || {}
       };
     },
 
@@ -2795,7 +2803,7 @@ class BaseRouter {
     this.history.init(historyRecord);
   }
 
-  getStore() {
+  getCurrentStore() {
     return this.history.getCurrentRecord().getStore();
   }
 
@@ -2893,7 +2901,7 @@ class BaseRouter {
       action: 'RELAUNCH',
       key
     };
-    await this.getStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -2915,7 +2923,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
 
-    this.getStore().dispatch(routeChangeAction(routeState));
+    this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
   push(data, root = false, nativeCaller = false) {
@@ -2937,7 +2945,7 @@ class BaseRouter {
       action: 'PUSH',
       key
     };
-    await this.getStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -2959,7 +2967,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().push(location, key);
     }
 
-    this.getStore().dispatch(routeChangeAction(routeState));
+    this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
   replace(data, root = false, nativeCaller = false) {
@@ -2981,7 +2989,7 @@ class BaseRouter {
       action: 'REPLACE',
       key
     };
-    await this.getStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -3003,7 +3011,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().replace(location, key);
     }
 
-    this.getStore().dispatch(routeChangeAction(routeState));
+    this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
   back(n = 1, root = false, overflowRedirect = true, nativeCaller = false) {
@@ -3031,7 +3039,7 @@ class BaseRouter {
       params: historyRecord.getParams(),
       action: 'BACK'
     };
-    await this.getStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -3053,7 +3061,7 @@ class BaseRouter {
       this.history.getCurrentSubHistory().back(n);
     }
 
-    this.getStore().dispatch(routeChangeAction(routeState));
+    this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
   taskComplete() {
@@ -3218,6 +3226,7 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
               store,
               AppView
             }) => {
+              router.init(store);
               const state = store.getState();
               const eluxContext = {
                 deps: {},
@@ -3261,6 +3270,7 @@ function getApp() {
       }, {});
     },
     GetRouter: () => appMeta.router,
+    GetStore: () => appMeta.router.getCurrentStore(),
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
     Pagenames: routeMeta.pagenames

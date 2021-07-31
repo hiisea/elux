@@ -238,6 +238,7 @@ export function createBaseSSR<INS = {}>(
             const initState = {...storeOptions.initState, route: routeState};
             const baseStore = storeCreator({...storeOptions, initState});
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
+              router.init(store);
               const state = store.getState();
               const eluxContext = {deps: {}, store, router, documentHead: ''};
               return render(id, AppView, store, eluxContext, ins).then((html) => {
@@ -270,6 +271,7 @@ export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions> = {
   State: {[M in keyof A]: A[M]['state']};
   RouteParams: {[M in keyof A]?: A[M]['params']};
   GetRouter: () => IBaseRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A['route']['components'], string>>;
+  GetStore: () => IStore<any>;
   GetActions<N extends keyof A>(...args: N[]): {[K in N]: A[K]['actions']};
   LoadComponent: LoadComponent<A, LoadComponentOptions>;
   Modules: RootModuleAPI<A>;
@@ -277,9 +279,9 @@ export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions> = {
   Pagenames: {[K in keyof A['route']['components']]: K};
 };
 
-export function getApp<T extends {GetActions: any; GetRouter: any; LoadComponent: any; Modules: any; Pagenames: any}>(): Pick<
+export function getApp<T extends {GetActions: any; GetRouter: any; GetStore: any; LoadComponent: any; Modules: any; Pagenames: any}>(): Pick<
   T,
-  'GetActions' | 'GetRouter' | 'LoadComponent' | 'Modules' | 'Pagenames'
+  'GetActions' | 'GetRouter' | 'GetStore' | 'LoadComponent' | 'Modules' | 'Pagenames'
 > {
   const modules = getRootModuleAPI();
   return {
@@ -290,6 +292,7 @@ export function getApp<T extends {GetActions: any; GetRouter: any; LoadComponent
       }, {});
     },
     GetRouter: () => appMeta.router,
+    GetStore: () => appMeta.router.getCurrentStore(),
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
     Pagenames: routeMeta.pagenames,

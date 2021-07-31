@@ -41,7 +41,10 @@ export function assignDefaultData(data: {[moduleName: string]: any}): {[moduleNa
 }
 
 function splitQuery(query: string): Record<string, string> | undefined {
-  return (query || '').split('&').reduce((params, str) => {
+  if (!query) {
+    return undefined;
+  }
+  return query.split('&').reduce((params, str) => {
     const sections = str.split('=');
     if (sections.length > 1) {
       const [key, ...arr] = sections;
@@ -180,7 +183,7 @@ export function createLocationTransform(
       } catch (e) {
         env.console.error(e);
       }
-      return {pathname: nativeLocation.pathname, params: deepMerge(searchParams, hashParams)};
+      return {pathname: nativeLocation.pathname, params: deepMerge(searchParams, hashParams) || {}};
     },
     eluxLocationToNativeLocation(eluxLocation) {
       const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');

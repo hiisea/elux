@@ -1525,6 +1525,10 @@ function deepMerge(target) {
     args[_key - 1] = arguments[_key];
   }
 
+  if (args.length === 0) {
+    return target;
+  }
+
   if (!isPlainObject$1(target)) {
     target = {};
   }
@@ -3903,6 +3907,10 @@ function storeCreator(storeOptions) {
     });
   };
 
+  vuexStore.clone = {
+    creator: storeCreator,
+    options: storeOptions
+  };
   return vuexStore;
 }
 function createVuex(storeOptions) {
@@ -4486,7 +4494,11 @@ function assignDefaultData(data) {
 }
 
 function splitQuery(query) {
-  return (query || '').split('&').reduce(function (params, str) {
+  if (!query) {
+    return undefined;
+  }
+
+  return query.split('&').reduce(function (params, str) {
     var sections = str.split('=');
 
     if (sections.length > 1) {
@@ -4663,7 +4675,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
 
       return {
         pathname: nativeLocation.pathname,
-        params: deepMerge(searchParams, hashParams)
+        params: deepMerge(searchParams, hashParams) || {}
       };
     },
     eluxLocationToNativeLocation: function eluxLocationToNativeLocation(eluxLocation) {
@@ -5154,7 +5166,7 @@ var BaseRouter = function () {
     this.history.init(historyRecord);
   };
 
-  _proto2.getStore = function getStore() {
+  _proto2.getCurrentStore = function getCurrentStore() {
     return this.history.getCurrentRecord().getStore();
   };
 
@@ -5275,7 +5287,7 @@ var BaseRouter = function () {
                 key: key
               });
               _context.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context.next = 12;
@@ -5311,7 +5323,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -5370,7 +5382,7 @@ var BaseRouter = function () {
                 key: key
               });
               _context2.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context2.next = 12;
@@ -5406,7 +5418,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().push(location, key);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -5465,7 +5477,7 @@ var BaseRouter = function () {
                 key: key
               });
               _context3.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context3.next = 12;
@@ -5501,7 +5513,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().replace(location, key);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -5577,7 +5589,7 @@ var BaseRouter = function () {
                 action: 'BACK'
               };
               _context4.next = 10;
-              return this.getStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context4.next = 12;
@@ -5613,7 +5625,7 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().back(n);
               }
 
-              this.getStore().dispatch(routeChangeAction(routeState));
+              this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
             case 22:
             case "end":
@@ -5837,6 +5849,7 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
               var store = _ref8.store,
                   AppView = _ref8.AppView;
+              router.init(store);
               var state = store.getState();
               var eluxContext = {
                 deps: {},
@@ -5883,6 +5896,9 @@ function getApp() {
     },
     GetRouter: function GetRouter() {
       return appMeta.router;
+    },
+    GetStore: function GetStore() {
+      return appMeta.router.getCurrentStore();
     },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,

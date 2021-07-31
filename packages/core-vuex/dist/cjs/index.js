@@ -48,6 +48,10 @@ function storeCreator(storeOptions) {
     });
   };
 
+  vuexStore.clone = {
+    creator: storeCreator,
+    options: storeOptions
+  };
   return vuexStore;
 }
 
