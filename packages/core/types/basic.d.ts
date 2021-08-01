@@ -59,6 +59,7 @@ export interface BStore<S extends Record<string, any> = {}> {
             initState?: any;
         };
     };
+    replaceState(state: S): void;
 }
 export declare type IStoreMiddleware = (api: {
     getState: GetState;
@@ -69,6 +70,7 @@ export interface IStore<S extends State = {}> {
     getState: GetState<S>;
     getPureState(): S;
     update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
+    replaceState(state: S): void;
     injectedModules: Record<string, IModuleHandlers>;
     getCurrentActionName: () => string;
     getCurrentState: GetState<S>;
@@ -108,6 +110,7 @@ export declare const ActionTypes: {
     MInit: string;
     MReInit: string;
     Error: string;
+    Replace: string;
 };
 export declare function errorAction(error: Object): Action;
 export declare function moduleInitAction(moduleName: string, initState: any): Action;

@@ -1640,7 +1640,8 @@ var ActionTypes = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
-  Error: "Elux" + coreConfig.NSP + "Error"
+  Error: "Elux" + coreConfig.NSP + "Error",
+  Replace: "Elux" + coreConfig.NSP + "Replace"
 };
 function errorAction(error) {
   return {

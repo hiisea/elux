@@ -46,6 +46,13 @@ function storeCreator(storeOptions) {
     });
   };
 
+  reduxStore.replaceState = function (state) {
+    dispatch({
+      type: _core.ActionTypes.Replace,
+      state: state
+    });
+  };
+
   reduxStore.clone = {
     creator: storeCreator,
     options: storeOptions

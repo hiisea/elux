@@ -12,6 +12,8 @@ exports.createMP = void 0;
 
 var _taro = _interopRequireDefault(require("@tarojs/taro"));
 
+var _core = require("@elux/core");
+
 var _vueComponents = require("@elux/vue-components");
 
 Object.keys(_vueComponents).forEach(function (key) {
@@ -36,6 +38,9 @@ var _stage = require("@elux/vue-components/stage");
 
 var _routeMp = require("@elux/route-mp");
 
+(0, _core.setCoreConfig)({
+  MutableData: true
+});
 (0, _app.setAppConfig)({
   loadComponent: _vueComponents.loadComponent
 });

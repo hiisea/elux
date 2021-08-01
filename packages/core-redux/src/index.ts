@@ -1,6 +1,6 @@
 /// <reference path="../runtime/runtime.d.ts" />
 import {compose, createStore, applyMiddleware, Reducer, Unsubscribe, StoreEnhancer, Middleware} from 'redux';
-import {env, BStore, StoreBuilder} from '@elux/core';
+import {env, BStore, StoreBuilder, ActionTypes} from '@elux/core';
 
 export interface ReduxOptions {
   initState?: any;
@@ -31,6 +31,9 @@ export function storeCreator(storeOptions: ReduxOptions): ReduxStore {
   reduxStore.getPureState = reduxStore.getState;
   reduxStore.update = (actionName: string, state: any, actionData: any[]) => {
     dispatch({type: actionName, state, payload: actionData});
+  };
+  reduxStore.replaceState = (state: any) => {
+    dispatch({type: ActionTypes.Replace, state});
   };
   reduxStore.clone = {creator: storeCreator, options: storeOptions};
   return reduxStore;

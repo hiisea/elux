@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro';
+import { setCoreConfig } from '@elux/core';
 import { setVueComponentsConfig, loadComponent } from '@elux/vue-components';
 import { setAppConfig, setUserConfig, createBaseMP } from '@elux/app';
 import { routeENV, getTabPages } from '@elux/taro';
@@ -6,6 +7,9 @@ import { renderToMP } from '@elux/vue-components/stage';
 import { createRouter } from '@elux/route-mp';
 export * from '@elux/vue-components';
 export * from '@elux/app';
+setCoreConfig({
+  MutableData: true
+});
 setAppConfig({
   loadComponent
 });

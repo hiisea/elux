@@ -3,29 +3,17 @@ import type {App} from 'vue';
 import {RootModuleFacade, setCoreConfig} from '@elux/core';
 import {setVueComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/vue-components';
 import {renderToString, renderToDocument, RootComponent} from '@elux/vue-components/stage';
-import {
-  createBaseApp,
-  createBaseSSR,
-  setAppConfig,
-  setUserConfig,
-  CreateApp,
-  CreateSSR,
-  LocationTransform,
-  UserConfig,
-  GetBaseAPP,
-  RenderOptions,
-  IStore,
-} from '@elux/app';
+import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, CreateSSR, LocationTransform, UserConfig, GetBaseAPP} from '@elux/app';
 import {createRouter} from '@elux/route-browser';
 
 export * from '@elux/vue-components';
 export * from '@elux/app';
 
-declare module '@vue/runtime-core' {
-  interface App {
-    render: (options?: RenderOptions) => Promise<IStore | string>;
-  }
-}
+// declare module '@vue/runtime-core' {
+//   interface App {
+//     render: (options?: RenderOptions) => Promise<IStore | string>;
+//   }
+// }
 
 setCoreConfig({MutableData: true});
 setAppConfig({loadComponent});

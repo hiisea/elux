@@ -80,6 +80,7 @@ export interface BStore<S extends Record<string, any> = {}> {
   update: (actionName: string, state: S, actionData: any[]) => void;
   dispatch: (action: Action) => any;
   clone: {creator: (options: {initState: any}) => BStore; options: {initState?: any}};
+  replaceState(state: S): void;
 }
 
 export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
@@ -89,6 +90,7 @@ export interface IStore<S extends State = {}> {
   getState: GetState<S>;
   getPureState(): S;
   update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
+  replaceState(state: S): void;
   injectedModules: Record<string, IModuleHandlers>;
   getCurrentActionName: () => string;
   getCurrentState: GetState<S>;
@@ -133,6 +135,7 @@ export const ActionTypes = {
    * 全局捕获到错误时使用ActionType：{Error}
    */
   Error: `Elux${coreConfig.NSP}Error`,
+  Replace: `Elux${coreConfig.NSP}Replace`,
 };
 export function errorAction(error: Object): Action {
   return {

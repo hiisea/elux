@@ -1,5 +1,5 @@
 import { compose, createStore, applyMiddleware } from 'redux';
-import { env } from '@elux/core';
+import { env, ActionTypes } from '@elux/core';
 
 const reduxReducer = (state, action) => {
   return { ...state,
@@ -35,6 +35,13 @@ export function storeCreator(storeOptions) {
       type: actionName,
       state,
       payload: actionData
+    });
+  };
+
+  reduxStore.replaceState = state => {
+    dispatch({
+      type: ActionTypes.Replace,
+      state
     });
   };
 

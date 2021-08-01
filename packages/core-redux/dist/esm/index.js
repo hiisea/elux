@@ -1,6 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import { compose, createStore, applyMiddleware } from 'redux';
-import { env } from '@elux/core';
+import { env, ActionTypes } from '@elux/core';
 
 var reduxReducer = function reduxReducer(state, action) {
   return _extends({}, state, action.state);
@@ -32,6 +32,13 @@ export function storeCreator(storeOptions) {
       type: actionName,
       state: state,
       payload: actionData
+    });
+  };
+
+  reduxStore.replaceState = function (state) {
+    dispatch({
+      type: ActionTypes.Replace,
+      state: state
     });
   };
 
