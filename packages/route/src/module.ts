@@ -3,7 +3,6 @@ import {
   IStoreMiddleware,
   coreConfig,
   reducer,
-  deepMerge,
   mergeState,
   deepMergeState,
   IStore,
@@ -19,7 +18,7 @@ export class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Re
   @reducer
   public Init(initState: S): S {
     const routeParams = this.rootState.route.params[this.moduleName];
-    return routeParams ? (deepMerge({}, initState, routeParams) as any) : initState;
+    return routeParams ? (deepMergeState(initState, routeParams) as any) : initState;
   }
 
   @reducer

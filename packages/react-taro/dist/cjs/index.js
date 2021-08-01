@@ -4,8 +4,8 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 exports.__esModule = true;
 var _exportNames = {
-  createMP: true,
-  setConfig: true
+  setConfig: true,
+  createMP: true
 };
 exports.setConfig = setConfig;
 exports.createMP = void 0;
@@ -30,9 +30,12 @@ Object.keys(_app).forEach(function (key) {
   exports[key] = _app[key];
 });
 
+var _stage = require("@elux/react-components/stage");
+
+var _routeMp = require("@elux/route-mp");
+
 var _taro2 = require("@elux/taro");
 
-exports.createMP = _taro2.createMP;
 (0, _app.setAppConfig)({
   loadComponent: _reactComponents.loadComponent
 });
@@ -49,3 +52,12 @@ function setConfig(conf) {
     });
   }
 });
+
+var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
+  var tabPages = (0, _taro2.getTabPages)();
+  return (0, _app.createBaseMP)({}, function (locationTransform) {
+    return (0, _routeMp.createRouter)(locationTransform, _taro2.routeENV, tabPages);
+  }, _stage.renderToMP, moduleGetter, middlewares, appModuleName);
+};
+
+exports.createMP = createMP;

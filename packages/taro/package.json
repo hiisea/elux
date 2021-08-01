@@ -34,7 +34,6 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/app": "^0.1.19",
     "@elux/route-mp": "^0.1.19"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"

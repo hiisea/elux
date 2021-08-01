@@ -36,7 +36,7 @@
     "react-dom": true
   },
   "peerDependencies": {
-    "@tarojs/taro": "^3.3.1",
+    "@tarojs/taro": "^3.3.0",
     "react": "^16.8.0 || ^17"
   },
   "dependencies": {

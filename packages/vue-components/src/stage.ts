@@ -8,7 +8,13 @@ let StageView: Component<any>;
 export const RootComponent: Component = (props, context) => {
   return h(StageView, props, context.slots);
 };
-
+export function renderToMP(store: IStore, eluxContext: EluxContext, app: App): void {
+  app.use(store as any);
+  app.provide<EluxContext>(EluxContextKey, eluxContext);
+  if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+    env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
+  }
+}
 export function renderToDocument(id: string, APPView: Component<any>, store: IStore, eluxContext: EluxContext, fromSSR: boolean, app: App): void {
   StageView = APPView;
   app.use(store as any);

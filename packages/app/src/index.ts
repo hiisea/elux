@@ -85,12 +85,24 @@ export interface RenderOptions {
 }
 
 export interface ContextWrap {}
-export interface CreateMP<INS = {}> {
+
+export interface AttachMP<App> {
+  (app: App, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
+    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
+      storeOptions,
+      storeCreator,
+    }: StoreBuilder<O, B>): App & {
+      render(): {store: IStore<any> & B; context: ContextWrap};
+    };
+  };
+}
+
+export interface CreateMP {
   (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
-    }: StoreBuilder<O, B>): INS & {
+    }: StoreBuilder<O, B>): {
       render(): {store: IStore<any> & B; context: ContextWrap};
     };
   };

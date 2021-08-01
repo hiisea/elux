@@ -34,8 +34,10 @@
     "packages/react-redux-taro",
     "packages/vue-components",
     "packages/vue-web",
+    "packages/vue-taro",
     "packages/vue-vuex",
-    "packages/vue-vuex-web"
+    "packages/vue-vuex-web",
+    "packages/vue-vuex-taro"
   ],
   "scripts": {
     "commit": "git-cz",

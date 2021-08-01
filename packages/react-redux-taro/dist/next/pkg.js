@@ -3575,7 +3575,7 @@ if (process.env.TARO_ENV === 'h5') {
   };
 }
 
-const createMP = (moduleGetter, middlewares, appModuleName) => {
+function getTabPages() {
   if (env.__taroAppConfig.tabBar) {
     env.__taroAppConfig.tabBar.list.forEach(({
       pagePath
@@ -3584,8 +3584,8 @@ const createMP = (moduleGetter, middlewares, appModuleName) => {
     });
   }
 
-  return createBaseMP({}, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares, appModuleName);
-};
+  return tabPages;
+}
 
 setAppConfig({
   loadComponent
@@ -3599,6 +3599,10 @@ setReactComponentsConfig({
     title
   })
 });
+const createMP = (moduleGetter, middlewares, appModuleName) => {
+  const tabPages = getTabPages();
+  return createBaseMP({}, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares, appModuleName);
+};
 
 function createCommonjsModule(fn) {
   var module = { exports: {} };

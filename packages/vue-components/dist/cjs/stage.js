@@ -1,6 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
+exports.renderToMP = renderToMP;
 exports.renderToDocument = renderToDocument;
 exports.renderToString = renderToString;
 exports.RootComponent = void 0;
@@ -18,6 +19,15 @@ var RootComponent = function RootComponent(props, context) {
 };
 
 exports.RootComponent = RootComponent;
+
+function renderToMP(store, eluxContext, app) {
+  app.use(store);
+  app.provide(_base.EluxContextKey, eluxContext);
+
+  if (process.env.NODE_ENV === 'development' && _core.env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+    _core.env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
+  }
+}
 
 function renderToDocument(id, APPView, store, eluxContext, fromSSR, app) {
   StageView = APPView;

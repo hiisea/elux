@@ -29,17 +29,11 @@
     "build:ts": "tsc -P ./src --module ESNext --isolatedModules false --noEmit false --outDir ./dist/ts",
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
-  "peerDependencies": {
-    "vue": "^3.0.0"
-  },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
     "@elux/app": "^0.1.19",
     "@elux/route-browser": "^0.1.19",
     "@elux/vue-components": "^0.1.19"
-  },
-  "devDependencies": {
-    "vue": "^3.0.0"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }
