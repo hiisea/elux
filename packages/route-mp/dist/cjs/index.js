@@ -31,17 +31,14 @@ var MPNativeRouter = function (_BaseNativeRouter) {
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "_unlistenHistory", void 0);
     _this.routeENV = routeENV;
     _this.tabPages = tabPages;
-    _this._unlistenHistory = routeENV.onRouteChange(function (pathname, searchData, action) {
-      var key = searchData ? searchData['__key__'] : '';
+    _this._unlistenHistory = routeENV.onRouteChange(function (pathname, search, action) {
+      var nativeUrl = [pathname, search].filter(Boolean).join('?');
+      var arr = search.match(/__key__=(\w+)/);
+      var key = arr ? arr[1] : '';
 
       if (action === 'POP' && !key) {
         key = _this.router.getHistory(true).findRecord(-1).key;
       }
-
-      var nativeLocation = {
-        pathname: pathname,
-        searchData: searchData
-      };
 
       var changed = _this.onChange(key);
 
@@ -55,11 +52,11 @@ var MPNativeRouter = function (_BaseNativeRouter) {
         if (index > 0) {
           _this.router.back(index, true, true, true);
         } else if (action === 'REPLACE') {
-          _this.router.replace(nativeLocation, true, true);
+          _this.router.replace(nativeUrl, true, true);
         } else if (action === 'PUSH') {
-          _this.router.push(nativeLocation, true, true);
+          _this.router.push(nativeUrl, true, true);
         } else {
-          _this.router.relaunch(nativeLocation, true, true);
+          _this.router.relaunch(nativeUrl, true, true);
         }
       }
     });

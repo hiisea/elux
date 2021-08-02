@@ -10,43 +10,28 @@ var _taro = _interopRequireDefault(require("@tarojs/taro"));
 
 var _core = require("@elux/core");
 
-var _route = require("@elux/route");
-
 var eventBus = new _core.SingleDispatcher();
 exports.eventBus = eventBus;
 var tabPages = {};
 exports.tabPages = tabPages;
 
-function queryToData(query) {
-  if (query === void 0) {
-    query = {};
-  }
-
-  return Object.keys(query).reduce(function (params, key) {
-    if (!params) {
-      params = {};
-    }
-
-    params[key] = decodeURIComponent(query[key]);
-    return params;
-  }, undefined);
+function routeToPathname(route) {
+  return "/" + route.replace(/^\/+|\/+$/g, '');
 }
 
-function routeToUrl(path, query) {
+function queryTosearch(query) {
   if (query === void 0) {
     query = {};
   }
 
-  path = "/" + path.replace(/^\/+|\/+$/g, '');
   var parts = [];
   Object.keys(query).forEach(function (key) {
     parts.push(key + "=" + query[key]);
   });
-  var queryString = parts.join('&');
-  return queryString ? path + "?" + queryString : path;
+  return parts.join('&');
 }
 
-var prevPagesInfo;
+var prevPageInfo;
 
 function patchPageOptions(pageOptions) {
   var onShow = pageOptions.onShow;
@@ -55,19 +40,19 @@ function patchPageOptions(pageOptions) {
     var arr = _taro.default.getCurrentPages();
 
     var currentPage = arr[arr.length - 1];
-    var currentPagesInfo = {
+    var currentPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options)
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
     };
 
-    if (prevPagesInfo) {
+    if (prevPageInfo) {
       var _action = 'PUSH';
-      var curPathname = "/" + currentPage.route.replace(/^\/+|\/+$/g, '');
 
-      if (currentPagesInfo.count < prevPagesInfo.count) {
+      if (currentPageInfo.count < prevPageInfo.count) {
         _action = 'POP';
-      } else if (currentPagesInfo.count === prevPagesInfo.count) {
-        if (currentPagesInfo.count === 1) {
+      } else if (currentPageInfo.count === prevPageInfo.count) {
+        if (currentPageInfo.count === 1) {
           _action = 'RELAUNCH';
         } else {
           _action = 'REPLACE';
@@ -75,8 +60,8 @@ function patchPageOptions(pageOptions) {
       }
 
       eventBus.dispatch({
-        pathname: curPathname,
-        searchData: queryToData(currentPage.options),
+        pathname: currentPageInfo.pathname,
+        search: currentPageInfo.search,
         action: _action
       });
     }
@@ -90,9 +75,10 @@ function patchPageOptions(pageOptions) {
     var arr = _taro.default.getCurrentPages();
 
     var currentPage = arr[arr.length - 1];
-    prevPagesInfo = {
+    prevPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options)
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
     };
     return onHide == null ? void 0 : onHide.call(this);
   };
@@ -103,9 +89,10 @@ function patchPageOptions(pageOptions) {
     var arr = _taro.default.getCurrentPages();
 
     var currentPage = arr[arr.length - 1];
-    prevPagesInfo = {
+    prevPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options)
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
     };
     return onUnload == null ? void 0 : onUnload.call(this);
   };
@@ -135,16 +122,16 @@ var routeENV = {
     }
 
     return {
-      pathname: "/" + path.replace(/^\/+|\/+$/g, ''),
-      searchData: queryToData(query)
+      pathname: routeToPathname(path),
+      search: queryTosearch(query)
     };
   },
   onRouteChange: function onRouteChange(callback) {
     return eventBus.addListener(function (data) {
       var pathname = data.pathname,
-          searchData = data.searchData,
+          search = data.search,
           action = data.action;
-      callback(pathname, searchData, action);
+      callback(pathname, search, action);
     });
   }
 };
@@ -157,10 +144,9 @@ if (process.env.TARO_ENV === 'h5') {
     var _taroRouter$history$l = taroRouter.history.location,
         pathname = _taroRouter$history$l.pathname,
         search = _taroRouter$history$l.search;
-    var nativeLocation = (0, _route.nativeUrlToNativeLocation)(pathname + search);
     return {
-      pathname: nativeLocation.pathname,
-      searchData: nativeLocation.searchData
+      pathname: pathname,
+      search: search.replace(/^\?/, '')
     };
   };
 
@@ -168,14 +154,13 @@ if (process.env.TARO_ENV === 'h5') {
     var unhandle = taroRouter.history.listen(function (_ref) {
       var location = _ref.location,
           action = _ref.action;
-      var nativeLocation = (0, _route.nativeUrlToNativeLocation)([location.pathname, location.search].join(''));
       var routeAction = action;
 
-      if (action !== 'POP' && tabPages[nativeLocation.pathname]) {
+      if (action !== 'POP' && tabPages[location.pathname]) {
         routeAction = 'RELAUNCH';
       }
 
-      callback(nativeLocation.pathname, nativeLocation.searchData, routeAction);
+      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
     });
     return unhandle;
   };
@@ -206,7 +191,7 @@ function getTabPages() {
   if (_core.env.__taroAppConfig.tabBar) {
     _core.env.__taroAppConfig.tabBar.list.forEach(function (_ref2) {
       var pagePath = _ref2.pagePath;
-      tabPages["/" + pagePath.replace(/^\/+|\/+$/g, '')] = true;
+      tabPages[routeToPathname(pagePath)] = true;
     });
   }
 

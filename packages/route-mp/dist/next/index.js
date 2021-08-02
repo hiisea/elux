@@ -14,17 +14,15 @@ export class MPNativeRouter extends BaseNativeRouter {
 
     this.routeENV = routeENV;
     this.tabPages = tabPages;
-    this._unlistenHistory = routeENV.onRouteChange((pathname, searchData, action) => {
-      let key = searchData ? searchData['__key__'] : '';
+    this._unlistenHistory = routeENV.onRouteChange((pathname, search, action) => {
+      const nativeUrl = [pathname, search].filter(Boolean).join('?');
+      const arr = search.match(/__key__=(\w+)/);
+      let key = arr ? arr[1] : '';
 
       if (action === 'POP' && !key) {
         key = this.router.getHistory(true).findRecord(-1).key;
       }
 
-      const nativeLocation = {
-        pathname,
-        searchData
-      };
       const changed = this.onChange(key);
 
       if (changed) {
@@ -37,11 +35,11 @@ export class MPNativeRouter extends BaseNativeRouter {
         if (index > 0) {
           this.router.back(index, true, true, true);
         } else if (action === 'REPLACE') {
-          this.router.replace(nativeLocation, true, true);
+          this.router.replace(nativeUrl, true, true);
         } else if (action === 'PUSH') {
-          this.router.push(nativeLocation, true, true);
+          this.router.push(nativeUrl, true, true);
         } else {
-          this.router.relaunch(nativeLocation, true, true);
+          this.router.relaunch(nativeUrl, true, true);
         }
       }
     });

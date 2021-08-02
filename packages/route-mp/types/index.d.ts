@@ -6,10 +6,10 @@ interface NavigateBackOption {
     delta?: number;
 }
 export interface RouteENV {
-    onRouteChange(callback: (pathname: string, searchData: Record<string, string> | undefined, action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH') => void): () => void;
+    onRouteChange(callback: (pathname: string, search: string, action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH') => void): () => void;
     getLocation(): {
         pathname: string;
-        searchData: Record<string, string> | undefined;
+        search: string;
     };
     reLaunch(option: RouteOption): Promise<any>;
     redirectTo(option: RouteOption): Promise<any>;

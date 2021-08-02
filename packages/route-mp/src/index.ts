@@ -21,10 +21,8 @@ interface NavigateBackOption {
 }
 
 export interface RouteENV {
-  onRouteChange(
-    callback: (pathname: string, searchData: Record<string, string> | undefined, action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH') => void
-  ): () => void;
-  getLocation(): {pathname: string; searchData: Record<string, string> | undefined};
+  onRouteChange(callback: (pathname: string, search: string, action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH') => void): () => void;
+  getLocation(): {pathname: string; search: string};
   reLaunch(option: RouteOption): Promise<any>;
   redirectTo(option: RouteOption): Promise<any>;
   navigateTo(option: RouteOption): Promise<any>;
@@ -39,12 +37,13 @@ export class MPNativeRouter extends BaseNativeRouter {
 
   constructor(public routeENV: RouteENV, protected tabPages: Record<string, boolean>) {
     super();
-    this._unlistenHistory = routeENV.onRouteChange((pathname, searchData, action) => {
-      let key = searchData ? searchData['__key__'] : '';
+    this._unlistenHistory = routeENV.onRouteChange((pathname: string, search: string, action) => {
+      const nativeUrl = [pathname, search].filter(Boolean).join('?');
+      const arr = search.match(/__key__=(\w+)/);
+      let key = arr ? arr[1] : '';
       if (action === 'POP' && !key) {
         key = this.router.getHistory(true).findRecord(-1)!.key;
       }
-      const nativeLocation: NativeLocation = {pathname, searchData};
       const changed = this.onChange(key);
       if (changed) {
         let index = 0;
@@ -54,11 +53,11 @@ export class MPNativeRouter extends BaseNativeRouter {
         if (index > 0) {
           this.router.back(index, true, true, true);
         } else if (action === 'REPLACE') {
-          this.router.replace(nativeLocation, true, true);
+          this.router.replace(nativeUrl, true, true);
         } else if (action === 'PUSH') {
-          this.router.push(nativeLocation, true, true);
+          this.router.push(nativeUrl, true, true);
         } else {
-          this.router.relaunch(nativeLocation, true, true);
+          this.router.relaunch(nativeUrl, true, true);
         }
       }
     });

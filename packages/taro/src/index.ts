@@ -3,7 +3,6 @@
 import Taro from '@tarojs/taro';
 import {env, SingleDispatcher} from '@elux/core';
 import {RouteENV} from '@elux/route-mp';
-import {nativeUrlToNativeLocation} from '@elux/route';
 
 declare const window: any;
 
@@ -17,63 +16,53 @@ export interface PageConfig {
 
 type RouteChangeEventData = {
   pathname: string;
-  searchData?: {
-    [key: string]: string;
-  };
+  search: string;
   action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH';
 };
 
 export const eventBus = new SingleDispatcher<RouteChangeEventData>();
 export const tabPages: {[path: string]: boolean} = {};
 
-function queryToData(query: any = {}): {[key: string]: string} | undefined {
-  return Object.keys(query).reduce((params: any, key) => {
-    if (!params) {
-      params = {};
-    }
-    params[key] = decodeURIComponent(query[key]);
-    return params;
-  }, undefined);
+function routeToPathname(route: string) {
+  return `/${route.replace(/^\/+|\/+$/g, '')}`;
 }
-function routeToUrl(path: string, query: any = {}) {
-  path = `/${path.replace(/^\/+|\/+$/g, '')}`;
+function queryTosearch(query: any = {}) {
   const parts: string[] = [];
   Object.keys(query).forEach((key) => {
     parts.push(`${key}=${query[key]}`);
   });
-
-  const queryString = parts.join('&');
-  return queryString ? `${path}?${queryString}` : path;
+  return parts.join('&');
 }
-let prevPagesInfo: {
+let prevPageInfo: {
   count: number;
-  lastPageUrl: string;
+  pathname: string;
+  search: string;
 };
 function patchPageOptions(pageOptions: PageConfig) {
   const onShow = pageOptions.onShow;
   pageOptions.onShow = function () {
     const arr = Taro.getCurrentPages();
     const currentPage = arr[arr.length - 1];
-    const currentPagesInfo = {
+    const currentPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options),
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options),
     };
-    if (prevPagesInfo) {
+    if (prevPageInfo) {
       // 仅处理不能使用elux路由的原生交互：原生导航后退、原生TAB
       let action: 'POP' | 'PUSH' | 'REPLACE' | 'RELAUNCH' = 'PUSH';
-      const curPathname = `/${currentPage.route.replace(/^\/+|\/+$/g, '')}`;
-      if (currentPagesInfo.count < prevPagesInfo.count) {
+      if (currentPageInfo.count < prevPageInfo.count) {
         action = 'POP';
-      } else if (currentPagesInfo.count === prevPagesInfo.count) {
+      } else if (currentPageInfo.count === prevPageInfo.count) {
         // const prevPathname = `/${currentPage.route.replace(/^\/+|\/+$/g, '')}`;
         // tabPages[curPathname] && tabPages[prevPathname];
-        if (currentPagesInfo.count === 1) {
+        if (currentPageInfo.count === 1) {
           action = 'RELAUNCH';
         } else {
           action = 'REPLACE';
         }
       }
-      eventBus.dispatch({pathname: curPathname, searchData: queryToData(currentPage.options), action});
+      eventBus.dispatch({pathname: currentPageInfo.pathname, search: currentPageInfo.search, action});
     }
     return onShow?.call(this);
   };
@@ -82,9 +71,10 @@ function patchPageOptions(pageOptions: PageConfig) {
   pageOptions.onHide = function () {
     const arr = Taro.getCurrentPages();
     const currentPage = arr[arr.length - 1];
-    prevPagesInfo = {
+    prevPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options),
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options),
     };
     return onHide?.call(this);
   };
@@ -93,9 +83,10 @@ function patchPageOptions(pageOptions: PageConfig) {
   pageOptions.onUnload = function () {
     const arr = Taro.getCurrentPages();
     const currentPage = arr[arr.length - 1];
-    prevPagesInfo = {
+    prevPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options),
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options),
     };
 
     return onUnload?.call(this);
@@ -120,14 +111,14 @@ export const routeENV: RouteENV = {
       query = current.options;
     }
     return {
-      pathname: `/${path.replace(/^\/+|\/+$/g, '')}`,
-      searchData: queryToData(query),
+      pathname: routeToPathname(path),
+      search: queryTosearch(query),
     };
   },
   onRouteChange(callback) {
     return eventBus.addListener((data) => {
-      const {pathname, searchData, action} = data;
-      callback(pathname, searchData, action);
+      const {pathname, search, action} = data;
+      callback(pathname, search, action);
     });
   },
 };
@@ -141,17 +132,15 @@ if (process.env.TARO_ENV === 'h5') {
   } = require('@tarojs/router');
   routeENV.getLocation = () => {
     const {pathname, search} = taroRouter.history.location;
-    const nativeLocation = nativeUrlToNativeLocation(pathname + search);
-    return {pathname: nativeLocation.pathname, searchData: nativeLocation.searchData};
+    return {pathname, search: search.replace(/^\?/, '')};
   };
   routeENV.onRouteChange = (callback) => {
     const unhandle = taroRouter.history.listen(({location, action}) => {
-      const nativeLocation = nativeUrlToNativeLocation([location.pathname, location.search].join(''));
       let routeAction: 'POP' | 'PUSH' | 'REPLACE' | 'RELAUNCH' = action;
-      if (action !== 'POP' && tabPages[nativeLocation.pathname]) {
+      if (action !== 'POP' && tabPages[location.pathname]) {
         routeAction = 'RELAUNCH';
       }
-      callback(nativeLocation.pathname, nativeLocation.searchData, routeAction);
+      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
     });
     return unhandle;
   };
@@ -175,7 +164,7 @@ if (process.env.TARO_ENV === 'h5') {
 export function getTabPages(): {[path: string]: boolean} {
   if (env.__taroAppConfig.tabBar) {
     env.__taroAppConfig.tabBar.list.forEach(({pagePath}) => {
-      tabPages[`/${pagePath.replace(/^\/+|\/+$/g, '')}`] = true;
+      tabPages[routeToPathname(pagePath)] = true;
     });
   }
   return tabPages;

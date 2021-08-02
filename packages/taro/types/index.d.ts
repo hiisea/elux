@@ -12,9 +12,7 @@ export interface PageConfig {
 }
 declare type RouteChangeEventData = {
     pathname: string;
-    searchData?: {
-        [key: string]: string;
-    };
+    search: string;
     action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH';
 };
 export declare const eventBus: SingleDispatcher<RouteChangeEventData>;
