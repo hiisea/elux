@@ -1,4 +1,4 @@
-import React, {ComponentType} from 'react';
+import React, {ComponentType, useContext} from 'react';
 import {env, IStore} from '@elux/core';
 import {EluxContext, EluxContextComponent, reactComponentsConfig} from './base';
 import {hydrate, render} from 'react-dom';
@@ -34,3 +34,9 @@ export function renderToString(id: string, APPView: ComponentType<any>, store: I
   );
   return Promise.resolve(html);
 }
+
+export const Portal: React.FC<{}> = function (props) {
+  const eluxContext = useContext(EluxContextComponent);
+  const store = eluxContext.router!.getCurrentStore();
+  return <reactComponentsConfig.Provider store={store}>{props.children}</reactComponentsConfig.Provider>;
+};

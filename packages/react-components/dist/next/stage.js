@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { env } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
 import { hydrate, render } from 'react-dom';
@@ -31,3 +31,10 @@ export function renderToString(id, APPView, store, eluxContext) {
 
   return Promise.resolve(html);
 }
+export const Portal = function (props) {
+  const eluxContext = useContext(EluxContextComponent);
+  const store = eluxContext.router.getCurrentStore();
+  return React.createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, props.children);
+};

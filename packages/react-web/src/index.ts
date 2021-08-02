@@ -7,6 +7,7 @@ import {createRouter} from '@elux/route-browser';
 
 export * from '@elux/react-components';
 export * from '@elux/app';
+export {Portal} from '@elux/react-components/stage';
 
 setAppConfig({loadComponent});
 

@@ -332,7 +332,8 @@ var ActionTypes$1 = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
-  Error: "Elux" + coreConfig.NSP + "Error"
+  Error: "Elux" + coreConfig.NSP + "Error",
+  Replace: "Elux" + coreConfig.NSP + "Replace"
 };
 function errorAction(error) {
   return {
@@ -2684,8 +2685,9 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
       url = _ref.url,
+      portal = _ref.portal,
       replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "replace"]);
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "portal", "replace"]);
 
   var eluxContext = React.useContext(EluxContextComponent);
 
@@ -2703,7 +2705,7 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
     })
   });
 
@@ -2865,6 +2867,13 @@ function renderToString(id, APPView, store, eluxContext) {
 
   return Promise.resolve(html);
 }
+var Portal$1 = function Portal(props) {
+  var eluxContext = React.useContext(EluxContextComponent);
+  var store = eluxContext.router.getCurrentStore();
+  return React__default['default'].createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, props.children);
+};
 
 var routeConfig = {
   maxHistory: 10,
@@ -8996,6 +9005,13 @@ function storeCreator(storeOptions) {
     });
   };
 
+  reduxStore.replaceState = function (state) {
+    dispatch({
+      type: ActionTypes$1.Replace,
+      state: state
+    });
+  };
+
   reduxStore.clone = {
     creator: storeCreator,
     options: storeOptions
@@ -9039,6 +9055,7 @@ exports.DocumentHead = DocumentHead;
 exports.Else = Else;
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 exports.Link = Link;
+exports.Portal = Portal$1;
 exports.Provider = Provider;
 exports.RouteActionTypes = RouteActionTypes;
 exports.Switch = Switch;

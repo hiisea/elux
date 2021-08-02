@@ -21,8 +21,9 @@ var _default = _react.default.forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
       url = _ref.url,
+      portal = _ref.portal,
       replace = _ref.replace,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(_ref, ["onClick", "href", "url", "replace"]);
+      rest = (0, _objectWithoutPropertiesLoose2.default)(_ref, ["onClick", "href", "url", "portal", "replace"]);
   var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);
   var props = (0, _extends2.default)({}, rest, {
     onClick: function (_onClick) {
@@ -38,7 +39,7 @@ var _default = _react.default.forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
     })
   });
 

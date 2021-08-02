@@ -5,6 +5,7 @@ export default React.forwardRef(({
   onClick,
   href,
   url,
+  portal,
   replace,
   ...rest
 }, ref) => {
@@ -13,7 +14,7 @@ export default React.forwardRef(({
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
     }
   };
 

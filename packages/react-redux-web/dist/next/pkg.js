@@ -266,7 +266,8 @@ const ActionTypes$1 = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
-  Error: `Elux${coreConfig.NSP}Error`
+  Error: `Elux${coreConfig.NSP}Error`,
+  Replace: `Elux${coreConfig.NSP}Replace`
 };
 function errorAction(error) {
   return {
@@ -1694,6 +1695,7 @@ var Link = React.forwardRef(({
   onClick,
   href,
   url,
+  portal,
   replace,
   ...rest
 }, ref) => {
@@ -1702,7 +1704,7 @@ var Link = React.forwardRef(({
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
     }
   };
 
@@ -1849,6 +1851,13 @@ function renderToString(id, APPView, store, eluxContext) {
 
   return Promise.resolve(html);
 }
+const Portal$1 = function (props) {
+  const eluxContext = useContext(EluxContextComponent);
+  const store = eluxContext.router.getCurrentStore();
+  return React.createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, props.children);
+};
 
 const routeConfig = {
   maxHistory: 10,
@@ -7641,6 +7650,13 @@ function storeCreator(storeOptions) {
     });
   };
 
+  reduxStore.replaceState = state => {
+    dispatch({
+      type: ActionTypes$1.Replace,
+      state
+    });
+  };
+
   reduxStore.clone = {
     creator: storeCreator,
     options: storeOptions
@@ -7664,4 +7680,4 @@ setReactComponentsConfig({
   Provider: Provider
 });
 
-export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Portal$1 as Portal, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector };

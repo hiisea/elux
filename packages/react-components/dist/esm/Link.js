@@ -6,8 +6,9 @@ export default React.forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
       url = _ref.url,
+      portal = _ref.portal,
       replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "replace"]);
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "portal", "replace"]);
 
   var eluxContext = useContext(EluxContextComponent);
 
@@ -25,7 +26,7 @@ export default React.forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
     })
   });
 

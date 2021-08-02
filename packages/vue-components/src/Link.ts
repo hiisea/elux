@@ -8,18 +8,19 @@ export interface Props extends HTMLAttributes {
   onClick?(event: MouseEvent): void;
   href?: string;
   replace?: boolean;
+  portal?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function (props: Props, context: {slots: any}) {
   const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
-  const {onClick, href, url, replace, ...rest} = props;
+  const {onClick, href, url, replace, portal, ...rest} = props;
   const newProps = {
     ...rest,
     onClick: (event: MouseEvent) => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router!.replace(url) : router!.push(url);
+      replace ? router!.replace(url, portal) : router!.push(url, portal);
     },
   };
   if (href) {
