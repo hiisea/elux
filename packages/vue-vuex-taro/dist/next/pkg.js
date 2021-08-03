@@ -3123,7 +3123,8 @@ const routeConfig = {
 };
 const setRouteConfig = buildConfigSetter(routeConfig);
 const routeMeta = {
-  defaultParams: {}
+  defaultParams: {},
+  pagenames: {}
 };
 
 class HistoryRecord {
@@ -3550,10 +3551,9 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     map[fullPagename] = pagenameMap[pagename];
     return map;
   }, {});
-  routeMeta.pagenames = pagenames.reduce((obj, key) => {
-    obj[key] = key;
-    return obj;
-  }, {});
+  pagenames.forEach(key => {
+    routeMeta.pagenames[key] = key;
+  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {

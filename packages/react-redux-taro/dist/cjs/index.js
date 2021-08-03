@@ -18,5 +18,6 @@ Object.keys(_reactRedux).forEach(function (key) {
   exports[key] = _reactRedux[key];
 });
 (0, _reactTaro.setReactComponentsConfig)({
-  Provider: _reactRedux.Provider
+  Provider: _reactRedux.Provider,
+  useStore: _reactRedux.useStore
 });

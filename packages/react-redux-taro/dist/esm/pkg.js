@@ -2882,7 +2882,8 @@ var routeConfig = {
 };
 var setRouteConfig = buildConfigSetter(routeConfig);
 var routeMeta = {
-  defaultParams: {}
+  defaultParams: {},
+  pagenames: {}
 };
 
 var HistoryRecord = function () {
@@ -3344,10 +3345,9 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     map[fullPagename] = pagenameMap[pagename];
     return map;
   }, {});
-  routeMeta.pagenames = pagenames.reduce(function (obj, key) {
-    obj[key] = key;
-    return obj;
-  }, {});
+  pagenames.forEach(function (key) {
+    routeMeta.pagenames[key] = key;
+  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {
@@ -8188,7 +8188,8 @@ var connectRedux = function connectRedux() {
 };
 
 setReactComponentsConfig({
-  Provider: Provider
+  Provider: Provider,
+  useStore: useStore
 });
 
 export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector, useStore };

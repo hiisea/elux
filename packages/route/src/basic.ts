@@ -18,7 +18,7 @@ export const routeConfig: RouteConfig = {
 
 export const setRouteConfig = buildConfigSetter(routeConfig);
 
-export const routeMeta: {pagenames: Record<string, string>; defaultParams: Record<string, any>} = {defaultParams: {}} as any;
+export const routeMeta: {pagenames: Record<string, string>; defaultParams: Record<string, any>} = {defaultParams: {}, pagenames: {}};
 
 export type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
 

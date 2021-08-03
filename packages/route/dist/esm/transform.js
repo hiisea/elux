@@ -125,10 +125,9 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
     map[fullPagename] = pagenameMap[pagename];
     return map;
   }, {});
-  routeMeta.pagenames = pagenames.reduce(function (obj, key) {
-    obj[key] = key;
-    return obj;
-  }, {});
+  pagenames.forEach(function (key) {
+    routeMeta.pagenames[key] = key;
+  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {

@@ -451,7 +451,11 @@ function moduleExports({
           }),
       enableEslintPlugin && new EslintWebpackPlugin({cache: true, extensions: scriptExtensions}),
       enableStylelintPlugin && new StylelintPlugin({files: `src/**/*.{${cssExtensions.join(',')}}`}),
+      new webpack.DefinePlugin({
+        'process.env.PROJ_ENV': JSON.stringify(globalVar.client || {}),
+      }),
       new HtmlWebpackPlugin({
+        clientPublicPath: clientPublicPath,
         minify: false,
         inject: 'body',
         template: path.join(publicPath, './client/index.html'),
@@ -576,11 +580,16 @@ function moduleExports({
             },
           ].filter(Boolean),
         },
-        plugins: [isVue && new VueLoaderPlugin(), SsrPlugin.server, new webpack.ProgressPlugin()].filter(Boolean),
+        plugins: [
+          isVue && new VueLoaderPlugin(),
+          SsrPlugin.server,
+          new webpack.DefinePlugin({
+            'process.env.PROJ_ENV': JSON.stringify(globalVar.server || {}),
+          }),
+          new webpack.ProgressPlugin(),
+        ].filter(Boolean),
       }
     : {name: 'server'};
-
-  global['ENV'] = globalVar.server;
 
   const devServerConfig: DevServerConfig = {
     static: [
