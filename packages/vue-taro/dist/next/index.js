@@ -5,6 +5,7 @@ import { setAppConfig, setUserConfig, createBaseMP } from '@elux/app';
 import { routeENV, getTabPages } from '@elux/taro';
 import { renderToMP } from '@elux/vue-components/stage';
 import { createRouter } from '@elux/route-mp';
+export { routeENV } from '@elux/taro';
 export * from '@elux/vue-components';
 export * from '@elux/app';
 setCoreConfig({

@@ -1439,10 +1439,12 @@ function cloneStore(store) {
       middlewares = _store$clone.middlewares,
       injectedModules = _store$clone.injectedModules;
   var initState = store.getPureState();
-  var newStore = creator(_extends({}, options, {
+  var newBStore = creator(_extends({}, options, {
     initState: initState
   }));
-  return enhanceStore(newStore, middlewares, injectedModules);
+  var newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 function enhanceStore(baseStore, middlewares, injectedModules) {
   if (injectedModules === void 0) {
@@ -2918,7 +2920,7 @@ var HistoryRecord = function () {
     }
   };
 
-  _proto.getFrozenState = function getFrozenState() {
+  _proto.getSnapshotState = function getSnapshotState() {
     if (this.frozenState) {
       if (typeof this.frozenState === 'string') {
         this.frozenState = JSON.parse(this.frozenState);
@@ -2995,7 +2997,6 @@ var History = function () {
 
     var newRecord = new HistoryRecord(location, key, this, store);
     var maxHistory = routeConfig.maxHistory;
-    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -3013,6 +3014,11 @@ var History = function () {
   _proto2.relaunch = function relaunch(location, key) {
     var records = this.records;
     var store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };
@@ -3593,7 +3599,7 @@ var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
       key: "Init",
       value: function Init(initState) {
         var routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMerge({}, initState, routeParams) : initState;
+        return routeParams ? deepMergeState(initState, routeParams) : initState;
       }
     }, {
       kind: "method",
@@ -8200,6 +8206,7 @@ exports.mutation = mutation;
 exports.patchActions = patchActions;
 exports.reactComponentsConfig = reactComponentsConfig;
 exports.reducer = reducer;
+exports.routeENV = routeENV;
 exports.serverSide = serverSide;
 exports.setAppConfig = setAppConfig;
 exports.setConfig = setConfig;

@@ -6,7 +6,8 @@ exports.__esModule = true;
 var _exportNames = {
   Portal: true,
   setConfig: true,
-  createMP: true
+  createMP: true,
+  routeENV: true
 };
 exports.setConfig = setConfig;
 exports.createMP = exports.Portal = void 0;
@@ -39,6 +40,7 @@ var _routeMp = require("@elux/route-mp");
 
 var _taro2 = require("@elux/taro");
 
+exports.routeENV = _taro2.routeENV;
 (0, _app.setAppConfig)({
   loadComponent: _reactComponents.loadComponent
 });

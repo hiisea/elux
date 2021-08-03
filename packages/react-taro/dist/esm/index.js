@@ -4,6 +4,7 @@ import { setAppConfig, setUserConfig, createBaseMP } from '@elux/app';
 import { renderToMP } from '@elux/react-components/stage';
 import { createRouter } from '@elux/route-mp';
 import { routeENV, getTabPages } from '@elux/taro';
+export { routeENV } from '@elux/taro';
 export * from '@elux/react-components';
 export * from '@elux/app';
 export { Portal } from '@elux/react-components/stage';

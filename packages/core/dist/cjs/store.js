@@ -73,10 +73,12 @@ function cloneStore(store) {
       middlewares = _store$clone.middlewares,
       injectedModules = _store$clone.injectedModules;
   var initState = store.getPureState();
-  var newStore = creator((0, _extends2.default)({}, options, {
+  var newBStore = creator((0, _extends2.default)({}, options, {
     initState: initState
   }));
-  return enhanceStore(newStore, middlewares, injectedModules);
+  var newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 
 function enhanceStore(baseStore, middlewares, injectedModules) {

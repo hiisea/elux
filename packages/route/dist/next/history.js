@@ -33,7 +33,7 @@ export class HistoryRecord {
     }
   }
 
-  getFrozenState() {
+  getSnapshotState() {
     if (this.frozenState) {
       if (typeof this.frozenState === 'string') {
         this.frozenState = JSON.parse(this.frozenState);
@@ -103,7 +103,6 @@ export class History {
 
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;
-    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -120,7 +119,12 @@ export class History {
 
   relaunch(location, key) {
     const records = this.records;
-    const store = records[0].getStore();
+    let store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }

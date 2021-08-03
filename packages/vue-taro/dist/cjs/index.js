@@ -5,7 +5,8 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 exports.__esModule = true;
 var _exportNames = {
   setConfig: true,
-  createMP: true
+  createMP: true,
+  routeENV: true
 };
 exports.setConfig = setConfig;
 exports.createMP = void 0;
@@ -33,6 +34,8 @@ Object.keys(_app).forEach(function (key) {
 });
 
 var _taro2 = require("@elux/taro");
+
+exports.routeENV = _taro2.routeENV;
 
 var _stage = require("@elux/vue-components/stage");
 

@@ -1313,10 +1313,12 @@ function cloneStore(store) {
     injectedModules
   } = store.clone;
   const initState = store.getPureState();
-  const newStore = creator({ ...options,
+  const newBStore = creator({ ...options,
     initState
   });
-  return enhanceStore(newStore, middlewares, injectedModules);
+  const newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const {
@@ -1879,7 +1881,7 @@ class HistoryRecord {
     }
   }
 
-  getFrozenState() {
+  getSnapshotState() {
     if (this.frozenState) {
       if (typeof this.frozenState === 'string') {
         this.frozenState = JSON.parse(this.frozenState);
@@ -1949,7 +1951,6 @@ class History {
 
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;
-    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -1966,7 +1967,12 @@ class History {
 
   relaunch(location, key) {
     const records = this.records;
-    const store = records[0].getStore();
+    let store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }
@@ -2512,7 +2518,7 @@ let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
       key: "Init",
       value: function Init(initState) {
         const routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMerge({}, initState, routeParams) : initState;
+        return routeParams ? deepMergeState(initState, routeParams) : initState;
       }
     }, {
       kind: "method",
@@ -6770,4 +6776,4 @@ setReactComponentsConfig({
   Provider: Provider
 });
 
-export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Portal$1 as Portal, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Portal$1 as Portal, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector };

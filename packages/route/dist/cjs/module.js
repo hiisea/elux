@@ -50,7 +50,7 @@ var ModuleWithRouteHandlers = (0, _decorate2.default)(null, function (_initializ
       key: "Init",
       value: function Init(initState) {
         var routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? (0, _core.deepMerge)({}, initState, routeParams) : initState;
+        return routeParams ? (0, _core.deepMergeState)(initState, routeParams) : initState;
       }
     }, {
       kind: "method",

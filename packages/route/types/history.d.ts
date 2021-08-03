@@ -11,7 +11,7 @@ export declare class HistoryRecord {
     constructor(location: Location, key: string, history: History, store: IStore);
     getParams(): any;
     freeze(): void;
-    getFrozenState(): Record<string, any> | undefined;
+    getSnapshotState(): Record<string, any> | undefined;
     getStore(): IStore<any>;
 }
 export declare class History {

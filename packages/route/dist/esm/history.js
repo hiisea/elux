@@ -33,7 +33,7 @@ export var HistoryRecord = function () {
     }
   };
 
-  _proto.getFrozenState = function getFrozenState() {
+  _proto.getSnapshotState = function getSnapshotState() {
     if (this.frozenState) {
       if (typeof this.frozenState === 'string') {
         this.frozenState = JSON.parse(this.frozenState);
@@ -110,7 +110,6 @@ export var History = function () {
 
     var newRecord = new HistoryRecord(location, key, this, store);
     var maxHistory = routeConfig.maxHistory;
-    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -128,6 +127,11 @@ export var History = function () {
   _proto2.relaunch = function relaunch(location, key) {
     var records = this.records;
     var store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };

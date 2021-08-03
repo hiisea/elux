@@ -86,6 +86,7 @@ export interface BStore<S extends Record<string, any> = {}> {
 export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 
 export interface IStore<S extends State = {}> {
+  id: number;
   dispatch: Dispatch;
   getState: GetState<S>;
   getPureState(): S;

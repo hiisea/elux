@@ -2,6 +2,7 @@ import { Component, App } from 'vue';
 import { RootModuleFacade } from '@elux/core';
 import { LoadComponentOptions } from '@elux/vue-components';
 import { UserConfig, GetBaseAPP, AttachMP } from '@elux/app';
+export { routeENV } from '@elux/taro';
 export * from '@elux/vue-components';
 export * from '@elux/app';
 export declare type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;

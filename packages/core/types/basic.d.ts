@@ -66,6 +66,7 @@ export declare type IStoreMiddleware = (api: {
     dispatch: Dispatch;
 }) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 export interface IStore<S extends State = {}> {
+    id: number;
     dispatch: Dispatch;
     getState: GetState<S>;
     getPureState(): S;

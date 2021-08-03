@@ -44,10 +44,12 @@ export function cloneStore(store) {
     injectedModules
   } = store.clone;
   const initState = store.getPureState();
-  const newStore = creator({ ...options,
+  const newBStore = creator({ ...options,
     initState
   });
-  return enhanceStore(newStore, middlewares, injectedModules);
+  const newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 export function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const {

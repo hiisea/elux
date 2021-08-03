@@ -54,10 +54,12 @@ export function cloneStore(store) {
       middlewares = _store$clone.middlewares,
       injectedModules = _store$clone.injectedModules;
   var initState = store.getPureState();
-  var newStore = creator(_extends({}, options, {
+  var newBStore = creator(_extends({}, options, {
     initState: initState
   }));
-  return enhanceStore(newStore, middlewares, injectedModules);
+  var newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 export function enhanceStore(baseStore, middlewares, injectedModules) {
   if (injectedModules === void 0) {

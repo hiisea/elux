@@ -1,5 +1,5 @@
 import _decorate from "@babel/runtime/helpers/esm/decorate";
-import { CoreModuleHandlers, coreConfig, reducer, deepMerge, mergeState, deepMergeState, exportModule } from '@elux/core';
+import { CoreModuleHandlers, coreConfig, reducer, mergeState, deepMergeState, exportModule } from '@elux/core';
 import { createLocationTransform } from './transform';
 export let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModuleHandlers) {
   class ModuleWithRouteHandlers extends _CoreModuleHandlers {
@@ -19,7 +19,7 @@ export let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _Cor
       key: "Init",
       value: function Init(initState) {
         const routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMerge({}, initState, routeParams) : initState;
+        return routeParams ? deepMergeState(initState, routeParams) : initState;
       }
     }, {
       kind: "method",
