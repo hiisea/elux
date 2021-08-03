@@ -5,10 +5,6 @@ import {EluxContext, EluxContextKey, EluxStoreContextKey, EluxStoreContext} from
 
 let StageView: Component<any>;
 
-// export const RootComponent: Component = (props, context) => {
-//   return h(StageView, props, context.slots);
-// };
-
 export const Router: Component<any> = (props, context) => {
   return h(Page, props, context.slots);
 };

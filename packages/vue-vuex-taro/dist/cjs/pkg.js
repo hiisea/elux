@@ -6103,6 +6103,24 @@ function getTabPages() {
   return tabPages;
 }
 
+var StageView;
+var Page$1 = {
+  setup: function setup(props, context) {
+    var _inject = vue.inject(EluxContextKey, {
+      documentHead: ''
+    }),
+        router = _inject.router;
+
+    var store = router.getCurrentStore();
+    var storeContext = {
+      store: store
+    };
+    vue.provide(EluxStoreContextKey, storeContext);
+    return function () {
+      return vue.h(StageView, props, context.slots);
+    };
+  }
+};
 function renderToMP(store, eluxContext, app) {
   app.use(store);
   app.provide(EluxContextKey, eluxContext);
@@ -6281,6 +6299,7 @@ exports.EluxContextKey = EluxContextKey;
 exports.EluxStoreContextKey = EluxStoreContextKey;
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 exports.Link = Link;
+exports.Page = Page$1;
 exports.RouteActionTypes = RouteActionTypes;
 exports.action = action;
 exports.appConfig = appConfig;

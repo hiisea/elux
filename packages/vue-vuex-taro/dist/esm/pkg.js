@@ -1,4 +1,4 @@
-import { inject, watch, reactive, createVNode, createTextVNode, defineComponent, h, defineAsyncComponent } from 'vue';
+import { inject, watch, reactive, createVNode, createTextVNode, defineComponent, h, defineAsyncComponent, provide } from 'vue';
 import Taro from '@tarojs/taro';
 
 function getDevtoolsGlobalHook() {
@@ -6095,6 +6095,24 @@ function getTabPages() {
   return tabPages;
 }
 
+var StageView;
+var Page$1 = {
+  setup: function setup(props, context) {
+    var _inject = inject(EluxContextKey, {
+      documentHead: ''
+    }),
+        router = _inject.router;
+
+    var store = router.getCurrentStore();
+    var storeContext = {
+      store: store
+    };
+    provide(EluxStoreContextKey, storeContext);
+    return function () {
+      return h(StageView, props, context.slots);
+    };
+  }
+};
 function renderToMP(store, eluxContext, app) {
   app.use(store);
   app.provide(EluxContextKey, eluxContext);
@@ -6266,4 +6284,4 @@ var createMP = function createMP(app, moduleGetter, middlewares, appModuleName) 
   }, renderToMP, moduleGetter, middlewares, appModuleName);
 };
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EluxContextKey, EluxStoreContextKey, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createBaseApp, createBaseMP, createBaseSSR, createLogger, createMP, createRouteModule, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };
+export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EluxContextKey, EluxStoreContextKey, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, RouteActionTypes, action, appConfig, clientSide, createBaseApp, createBaseMP, createBaseSSR, createLogger, createMP, createRouteModule, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };

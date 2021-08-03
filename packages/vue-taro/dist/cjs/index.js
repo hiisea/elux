@@ -4,12 +4,13 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 exports.__esModule = true;
 var _exportNames = {
+  Page: true,
   setConfig: true,
   createMP: true,
   routeENV: true
 };
 exports.setConfig = setConfig;
-exports.createMP = void 0;
+exports.createMP = exports.Page = void 0;
 
 var _taro = _interopRequireDefault(require("@tarojs/taro"));
 
@@ -38,6 +39,8 @@ var _taro2 = require("@elux/taro");
 exports.routeENV = _taro2.routeENV;
 
 var _stage = require("@elux/vue-components/stage");
+
+exports.Page = _stage.Page;
 
 var _routeMp = require("@elux/route-mp");
 

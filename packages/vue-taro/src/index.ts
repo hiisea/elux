@@ -10,6 +10,7 @@ import {createRouter} from '@elux/route-mp';
 export {routeENV} from '@elux/taro';
 export * from '@elux/vue-components';
 export * from '@elux/app';
+export {Page} from '@elux/vue-components/stage';
 
 setCoreConfig({MutableData: true});
 setAppConfig({loadComponent});
