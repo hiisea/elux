@@ -1,6 +1,6 @@
 import { loadComponet, isPromise, env } from '@elux/core';
 import { defineAsyncComponent, h, inject } from 'vue';
-import { EluxContextKey, vueComponentsConfig } from './base';
+import { EluxContextKey, EluxStoreContextKey, vueComponentsConfig } from './base';
 
 const loadComponent = (moduleName, componentName, options = {}) => {
   const loadingComponent = options.OnLoading || vueComponentsConfig.LoadComponentOnLoading;
@@ -8,10 +8,14 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
   const component = (props, context) => {
     const {
-      deps,
-      store
+      deps
     } = inject(EluxContextKey, {
       documentHead: ''
+    });
+    const {
+      store
+    } = inject(EluxStoreContextKey, {
+      store: null
     });
     let result;
     let errorMessage = '';

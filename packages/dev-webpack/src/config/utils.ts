@@ -12,7 +12,6 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const EslintWebpackPlugin = require('eslint-webpack-plugin');
 const StylelintPlugin = require('stylelint-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 const {VueLoaderPlugin} = require('vue-loader');
@@ -457,16 +456,6 @@ function moduleExports({
         inject: 'body',
         template: path.join(publicPath, './client/index.html'),
       }),
-      new HtmlReplaceWebpackPlugin([
-        {
-          pattern: '$$ClientPublicPath$$',
-          replacement: clientPublicPath,
-        },
-        {
-          pattern: '$$ClientGlobalVar$$',
-          replacement: JSON.stringify(globalVar.client || {}),
-        },
-      ]),
       isProdModel &&
         new MiniCssExtractPlugin({
           ignoreOrder: true,

@@ -2592,6 +2592,7 @@ var reactComponentsConfig = {
     return env.document.title = title;
   },
   Provider: null,
+  useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return React__default['default'].createElement("div", {
@@ -2758,7 +2759,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   var Loader = function (_Component) {
     _inheritsLoose(Loader, _Component);
 
-    function Loader(props, context) {
+    function Loader(props) {
       var _this;
 
       _this = _Component.call(this, props) || this;
@@ -2774,8 +2775,6 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       _defineProperty(_assertThisInitialized(_this), "state", {
         ver: 0
       });
-
-      _this.context = context;
 
       _this.execute();
 
@@ -2801,15 +2800,14 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       var _this2 = this;
 
       if (!this.view && !this.loading && !this.error) {
-        var _ref = this.context || {},
-            deps = _ref.deps,
-            store = _ref.store;
-
+        var _this$props = this.props,
+            deps = _this$props.deps,
+            store = _this$props.store;
         this.loading = true;
         var result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps || {});
+          result = loadComponet(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -2842,9 +2840,11 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     };
 
     _proto.render = function render() {
-      var _this$props = this.props,
-          forwardedRef = _this$props.forwardedRef,
-          rest = _objectWithoutPropertiesLoose(_this$props, ["forwardedRef"]);
+      var _this$props2 = this.props,
+          forwardedRef = _this$props2.forwardedRef;
+          _this$props2.deps;
+          _this$props2.store;
+          var rest = _objectWithoutPropertiesLoose(_this$props2, ["forwardedRef", "deps", "store"]);
 
       if (this.view) {
         var View = this.view;
@@ -2866,10 +2866,15 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     return Loader;
   }(React.Component);
 
-  _defineProperty(Loader, "contextType", EluxContextComponent);
-
   return React__default['default'].forwardRef(function (props, ref) {
+    var _useContext = React.useContext(EluxContextComponent),
+        _useContext$deps = _useContext.deps,
+        deps = _useContext$deps === void 0 ? {} : _useContext$deps;
+
+    var store = reactComponentsConfig.useStore();
     return React__default['default'].createElement(Loader, _extends({}, props, {
+      store: store,
+      deps: deps,
       forwardedRef: ref
     }));
   });
@@ -4465,7 +4470,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           routeModule.model(store);
           var context = render(store, {
             deps: {},
-            store: store,
             router: router,
             documentHead: ''
           }, ins);
@@ -4533,7 +4537,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
-                store: store,
                 router: router,
                 documentHead: ''
               }, !!env[ssrKey], ins);
@@ -4594,7 +4597,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
               var state = store.getState();
               var eluxContext = {
                 deps: {},
-                store: store,
                 router: router,
                 documentHead: ''
               };
@@ -4647,25 +4649,23 @@ function getApp() {
   };
 }
 
-function renderToMP(store, eluxContext) {
-  var Component = function Component(_ref) {
-    var children = _ref.children;
-    return React__default['default'].createElement(EluxContextComponent.Provider, {
-      value: eluxContext
-    }, React__default['default'].createElement(reactComponentsConfig.Provider, {
-      store: store
-    }, children));
-  };
-
-  return Component;
-}
-var Portal$1 = function Portal(props) {
+var Page$1 = function Page(props) {
   var eluxContext = React.useContext(EluxContextComponent);
   var store = eluxContext.router.getCurrentStore();
   return React__default['default'].createElement(reactComponentsConfig.Provider, {
     store: store
   }, props.children);
 };
+function renderToMP(store, eluxContext) {
+  var Component = function Component(_ref) {
+    var children = _ref.children;
+    return React__default['default'].createElement(EluxContextComponent.Provider, {
+      value: eluxContext
+    }, children);
+  };
+
+  return Component;
+}
 
 setRouteConfig({
   notifyNativeRouter: {
@@ -7404,6 +7404,46 @@ function useReduxContext() {
   return contextValue;
 }
 
+/**
+ * Hook factory, which creates a `useStore` hook bound to a given context.
+ *
+ * @param {React.Context} [context=ReactReduxContext] Context passed to your `<Provider>`.
+ * @returns {Function} A `useStore` hook bound to the specified context.
+ */
+
+function createStoreHook(context) {
+  if (context === void 0) {
+    context = ReactReduxContext;
+  }
+
+  var useReduxContext$1 = context === ReactReduxContext ? useReduxContext : function () {
+    return React.useContext(context);
+  };
+  return function useStore() {
+    var _useReduxContext = useReduxContext$1(),
+        store = _useReduxContext.store;
+
+    return store;
+  };
+}
+/**
+ * A hook to access the redux store.
+ *
+ * @returns {any} the redux store
+ *
+ * @example
+ *
+ * import React from 'react'
+ * import { useStore } from 'react-redux'
+ *
+ * export const ExampleComponent = () => {
+ *   const store = useStore()
+ *   return <div>{store.getState()}</div>
+ * }
+ */
+
+var useStore = /*#__PURE__*/createStoreHook();
+
 var refEquality = function refEquality(a, b) {
   return a === b;
 };
@@ -8171,7 +8211,7 @@ exports.DocumentHead = DocumentHead;
 exports.Else = Else;
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 exports.Link = Link;
-exports.Portal = Portal$1;
+exports.Page = Page$1;
 exports.Provider = Provider;
 exports.RouteActionTypes = RouteActionTypes;
 exports.Switch = Switch;
@@ -8216,3 +8256,4 @@ exports.setReactComponentsConfig = setReactComponentsConfig;
 exports.setUserConfig = setUserConfig;
 exports.shallowEqual = shallowEqual;
 exports.useSelector = useSelector;
+exports.useStore = useStore;

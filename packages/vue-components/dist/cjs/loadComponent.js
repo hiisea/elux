@@ -21,8 +21,12 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     var _inject = (0, _vue.inject)(_base.EluxContextKey, {
       documentHead: ''
     }),
-        deps = _inject.deps,
-        store = _inject.store;
+        deps = _inject.deps;
+
+    var _inject2 = (0, _vue.inject)(_base.EluxStoreContextKey, {
+      store: null
+    }),
+        store = _inject2.store;
 
     var result;
     var errorMessage = '';

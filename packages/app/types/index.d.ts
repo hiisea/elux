@@ -62,7 +62,6 @@ export interface CreateSSR<INS = {}> {
 export interface EluxContext {
     deps?: Record<string, boolean>;
     documentHead: string;
-    store?: IStore;
     router?: IBaseRouter<any, string>;
 }
 export declare function createBaseMP<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (store: IStore, eluxContext: EluxContext, ins: INS) => any, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {

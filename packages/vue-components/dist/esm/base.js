@@ -19,3 +19,4 @@ export var vueComponentsConfig = {
 };
 export var setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 export var EluxContextKey = '__EluxContext__';
+export var EluxStoreContextKey = '__EluxStoreContext__';

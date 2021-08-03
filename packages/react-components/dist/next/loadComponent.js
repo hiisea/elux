@@ -1,6 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import React, { Component } from 'react';
+import React, { Component, useContext } from 'react';
 import { env, loadComponet, isPromise } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
 
@@ -9,7 +9,7 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
   class Loader extends Component {
-    constructor(props, context) {
+    constructor(props) {
       super(props);
 
       _defineProperty(this, "active", true);
@@ -24,7 +24,6 @@ const loadComponent = (moduleName, componentName, options = {}) => {
         ver: 0
       });
 
-      this.context = context;
       this.execute();
     }
 
@@ -44,14 +43,14 @@ const loadComponent = (moduleName, componentName, options = {}) => {
     execute() {
       if (!this.view && !this.loading && !this.error) {
         const {
-          deps
-        } = this.context || {};
-        const store = reactComponentsConfig.useStore();
+          deps,
+          store
+        } = this.props;
         this.loading = true;
         let result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps || {});
+          result = loadComponet(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -86,6 +85,8 @@ const loadComponent = (moduleName, componentName, options = {}) => {
     render() {
       const {
         forwardedRef,
+        deps,
+        store,
         ...rest
       } = this.props;
 
@@ -108,10 +109,14 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
   }
 
-  _defineProperty(Loader, "contextType", EluxContextComponent);
-
   return React.forwardRef((props, ref) => {
+    const {
+      deps = {}
+    } = useContext(EluxContextComponent);
+    const store = reactComponentsConfig.useStore();
     return React.createElement(Loader, _extends({}, props, {
+      store: store,
+      deps: deps,
       forwardedRef: ref
     }));
   });

@@ -5,6 +5,7 @@ export interface Props extends HTMLAttributes {
     onClick?(event: MouseEvent): void;
     href?: string;
     replace?: boolean;
+    portal?: boolean;
 }
 export default function (props: Props, context: {
     slots: any;

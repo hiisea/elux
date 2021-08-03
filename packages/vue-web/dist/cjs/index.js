@@ -48,7 +48,7 @@ function setConfig(conf) {
 }
 
 var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
-  var app = (0, _vue.createApp)(_stage.RootComponent);
+  var app = (0, _vue.createApp)(_stage.Router);
   return (0, _app.createBaseApp)(app, function (locationTransform) {
     return (0, _routeBrowser.createRouter)('Browser', locationTransform);
   }, _stage.renderToDocument, moduleGetter, middlewares, appModuleName);
@@ -57,7 +57,7 @@ var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
 exports.createApp = createApp;
 
 var createSSR = function createSSR(moduleGetter, url, middlewares, appModuleName) {
-  var app = (0, _vue.createSSRApp)(_stage.RootComponent);
+  var app = (0, _vue.createSSRApp)(_stage.Router);
   return (0, _app.createBaseSSR)(app, function (locationTransform) {
     return (0, _routeBrowser.createRouter)(url, locationTransform);
   }, _stage.renderToString, moduleGetter, middlewares, appModuleName);

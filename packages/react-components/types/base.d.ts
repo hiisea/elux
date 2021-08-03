@@ -26,7 +26,6 @@ export declare const setReactComponentsConfig: (config: Partial<{
 export interface EluxContext {
     deps?: Record<string, boolean>;
     documentHead: string;
-    store?: IStore;
     router?: IBaseRouter<any, string>;
 }
 export declare const EluxContextComponent: React.Context<EluxContext>;

@@ -1581,6 +1581,7 @@ const reactComponentsConfig = {
   },
 
   Provider: null,
+  useStore: null,
   LoadComponentOnError: ({
     message
   }) => React.createElement("div", {
@@ -1728,7 +1729,7 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
   class Loader extends Component$3 {
-    constructor(props, context) {
+    constructor(props) {
       super(props);
 
       _defineProperty(this, "active", true);
@@ -1743,7 +1744,6 @@ const loadComponent = (moduleName, componentName, options = {}) => {
         ver: 0
       });
 
-      this.context = context;
       this.execute();
     }
 
@@ -1765,12 +1765,12 @@ const loadComponent = (moduleName, componentName, options = {}) => {
         const {
           deps,
           store
-        } = this.context || {};
+        } = this.props;
         this.loading = true;
         let result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps || {});
+          result = loadComponet(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -1805,6 +1805,8 @@ const loadComponent = (moduleName, componentName, options = {}) => {
     render() {
       const {
         forwardedRef,
+        deps,
+        store,
         ...rest
       } = this.props;
 
@@ -1827,10 +1829,14 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
   }
 
-  _defineProperty(Loader, "contextType", EluxContextComponent);
-
   return React.forwardRef((props, ref) => {
+    const {
+      deps = {}
+    } = useContext(EluxContextComponent);
+    const store = reactComponentsConfig.useStore();
     return React.createElement(Loader, _extends({}, props, {
+      store: store,
+      deps: deps,
       forwardedRef: ref
     }));
   });
@@ -3126,7 +3132,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
           routeModule.model(store);
           const context = render(store, {
             deps: {},
-            store,
             router,
             documentHead: ''
           }, ins);
@@ -3179,7 +3184,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               }, !!env[ssrKey], ins);
@@ -3226,7 +3230,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
               const state = store.getState();
               const eluxContext = {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               };
@@ -3273,24 +3276,22 @@ function getApp() {
   };
 }
 
-function renderToMP(store, eluxContext) {
-  const Component = ({
-    children
-  }) => React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, children));
-
-  return Component;
-}
-const Portal$1 = function (props) {
+const Page$1 = function (props) {
   const eluxContext = useContext(EluxContextComponent);
   const store = eluxContext.router.getCurrentStore();
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
   }, props.children);
 };
+function renderToMP(store, eluxContext) {
+  const Component = ({
+    children
+  }) => React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, children);
+
+  return Component;
+}
 
 setRouteConfig({
   notifyNativeRouter: {
@@ -6025,6 +6026,46 @@ function useReduxContext() {
   return contextValue;
 }
 
+/**
+ * Hook factory, which creates a `useStore` hook bound to a given context.
+ *
+ * @param {React.Context} [context=ReactReduxContext] Context passed to your `<Provider>`.
+ * @returns {Function} A `useStore` hook bound to the specified context.
+ */
+
+function createStoreHook(context) {
+  if (context === void 0) {
+    context = ReactReduxContext;
+  }
+
+  var useReduxContext$1 = context === ReactReduxContext ? useReduxContext : function () {
+    return useContext(context);
+  };
+  return function useStore() {
+    var _useReduxContext = useReduxContext$1(),
+        store = _useReduxContext.store;
+
+    return store;
+  };
+}
+/**
+ * A hook to access the redux store.
+ *
+ * @returns {any} the redux store
+ *
+ * @example
+ *
+ * import React from 'react'
+ * import { useStore } from 'react-redux'
+ *
+ * export const ExampleComponent = () => {
+ *   const store = useStore()
+ *   return <div>{store.getState()}</div>
+ * }
+ */
+
+var useStore = /*#__PURE__*/createStoreHook();
+
 var refEquality = function refEquality(a, b) {
   return a === b;
 };
@@ -6776,4 +6817,4 @@ setReactComponentsConfig({
   Provider: Provider
 });
 
-export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Portal$1 as Portal, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector, useStore };

@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.EluxContextKey = exports.setVueComponentsConfig = exports.vueComponentsConfig = void 0;
+exports.EluxStoreContextKey = exports.EluxContextKey = exports.setVueComponentsConfig = exports.vueComponentsConfig = void 0;
 
 var _vue = require("vue");
 
@@ -29,3 +29,5 @@ var setVueComponentsConfig = (0, _core.buildConfigSetter)(vueComponentsConfig);
 exports.setVueComponentsConfig = setVueComponentsConfig;
 var EluxContextKey = '__EluxContext__';
 exports.EluxContextKey = EluxContextKey;
+var EluxStoreContextKey = '__EluxStoreContext__';
+exports.EluxStoreContextKey = EluxStoreContextKey;

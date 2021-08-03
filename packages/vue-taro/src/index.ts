@@ -23,12 +23,6 @@ export function setConfig(conf: UserConfig & {LoadComponentOnError?: Component<{
 
 setVueComponentsConfig({setPageTitle: (title) => Taro.setNavigationBarTitle({title})});
 
-// declare module '@vue/runtime-core' {
-//   interface App {
-//     render: () => Promise<IStore>;
-//   }
-// }
-
 export const createMP: AttachMP<App> = (app, moduleGetter, middlewares, appModuleName) => {
   const tabPages = getTabPages();
   return createBaseMP(

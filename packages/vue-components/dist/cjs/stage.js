@@ -4,7 +4,7 @@ exports.__esModule = true;
 exports.renderToMP = renderToMP;
 exports.renderToDocument = renderToDocument;
 exports.renderToString = renderToString;
-exports.RootComponent = void 0;
+exports.Page = exports.Router = void 0;
 
 var _vue = require("vue");
 
@@ -14,11 +14,29 @@ var _base = require("./base");
 
 var StageView;
 
-var RootComponent = function RootComponent(props, context) {
-  return (0, _vue.h)(StageView, props, context.slots);
+var Router = function Router(props, context) {
+  return (0, _vue.h)(Page, props, context.slots);
 };
 
-exports.RootComponent = RootComponent;
+exports.Router = Router;
+var Page = {
+  setup: function setup(props, context) {
+    var _inject = (0, _vue.inject)(_base.EluxContextKey, {
+      documentHead: ''
+    }),
+        router = _inject.router;
+
+    var store = router.getCurrentStore();
+    var storeContext = {
+      store: store
+    };
+    (0, _vue.provide)(_base.EluxStoreContextKey, storeContext);
+    return function () {
+      return (0, _vue.h)(StageView, props, context.slots);
+    };
+  }
+};
+exports.Page = Page;
 
 function renderToMP(store, eluxContext, app) {
   app.use(store);

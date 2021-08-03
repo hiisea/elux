@@ -17,3 +17,4 @@ export const vueComponentsConfig = {
 };
 export const setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 export const EluxContextKey = '__EluxContext__';
+export const EluxStoreContextKey = '__EluxStoreContext__';

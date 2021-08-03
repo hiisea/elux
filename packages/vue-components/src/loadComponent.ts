@@ -1,7 +1,7 @@
 import {loadComponet, isPromise, env} from '@elux/core';
 import type {LoadComponent, EluxComponent} from '@elux/core';
 import {defineAsyncComponent, Component, h, inject} from 'vue';
-import {EluxContext, EluxContextKey, vueComponentsConfig} from './base';
+import {EluxContext, EluxContextKey, EluxStoreContext, EluxStoreContextKey, vueComponentsConfig} from './base';
 
 export interface LoadComponentOptions {
   OnError?: Component<{message: string}>;
@@ -12,7 +12,8 @@ const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = 
   const loadingComponent = options.OnLoading || vueComponentsConfig.LoadComponentOnLoading;
   const errorComponent = options.OnError || vueComponentsConfig.LoadComponentOnError;
   const component: any = (props: any, context: any) => {
-    const {deps, store} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
+    const {deps} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
+    const {store} = inject<EluxStoreContext>(EluxStoreContextKey, {store: null as any});
     let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
     let errorMessage = '';
     try {

@@ -5,7 +5,7 @@ import { UserConfig, GetBaseAPP, CreateMP } from '@elux/app';
 export { routeENV } from '@elux/taro';
 export * from '@elux/react-components';
 export * from '@elux/app';
-export { Portal } from '@elux/react-components/stage';
+export { Page } from '@elux/react-components/stage';
 export declare type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
 export declare function setConfig(conf: UserConfig & {
     LoadComponentOnError?: ComponentType<{

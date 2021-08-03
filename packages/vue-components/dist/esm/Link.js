@@ -12,7 +12,8 @@ export default function (props, context) {
       href = props.href,
       url = props.url,
       replace = props.replace,
-      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "replace"]);
+      portal = props.portal,
+      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "replace", "portal"]);
 
   var newProps = _extends({}, rest, {
     onClick: function (_onClick) {
@@ -28,7 +29,7 @@ export default function (props, context) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url) : router.push(url);
+      replace ? router.replace(url, portal) : router.push(url, portal);
     })
   });
 

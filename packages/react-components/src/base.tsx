@@ -22,7 +22,6 @@ export const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig)
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
-  store?: IStore;
   router?: IBaseRouter<any, string>;
 }
 export const EluxContextComponent = React.createContext<EluxContext>({documentHead: ''});

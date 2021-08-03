@@ -4,13 +4,13 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 exports.__esModule = true;
 var _exportNames = {
-  Portal: true,
+  Page: true,
   setConfig: true,
   createMP: true,
   routeENV: true
 };
 exports.setConfig = setConfig;
-exports.createMP = exports.Portal = void 0;
+exports.createMP = exports.Page = void 0;
 
 var _taro = _interopRequireDefault(require("@tarojs/taro"));
 
@@ -34,7 +34,7 @@ Object.keys(_app).forEach(function (key) {
 
 var _stage = require("@elux/react-components/stage");
 
-exports.Portal = _stage.Portal;
+exports.Page = _stage.Page;
 
 var _routeMp = require("@elux/route-mp");
 

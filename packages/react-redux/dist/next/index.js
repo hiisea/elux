@@ -6,4 +6,4 @@ export const connectRedux = function (...args) {
     return exportView(connect(...args)(component));
   };
 };
-export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect } from 'react-redux';
+export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect, useStore } from 'react-redux';

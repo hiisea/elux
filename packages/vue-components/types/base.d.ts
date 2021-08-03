@@ -24,7 +24,10 @@ export declare const setVueComponentsConfig: (config: Partial<{
 export interface EluxContext {
     deps?: Record<string, boolean>;
     documentHead: string;
-    store?: IStore;
     router?: IBaseRouter<any, string>;
 }
+export interface EluxStoreContext {
+    store: IStore;
+}
 export declare const EluxContextKey = "__EluxContext__";
+export declare const EluxStoreContextKey = "__EluxStoreContext__";

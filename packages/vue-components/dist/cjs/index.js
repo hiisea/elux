@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.vueComponentsConfig = exports.setVueComponentsConfig = exports.loadComponent = exports.Link = exports.DocumentHead = void 0;
+exports.EluxStoreContextKey = exports.EluxContextKey = exports.vueComponentsConfig = exports.setVueComponentsConfig = exports.loadComponent = exports.Link = exports.DocumentHead = void 0;
 
 var _DocumentHead = _interopRequireDefault(require("./DocumentHead"));
 
@@ -21,3 +21,5 @@ var _base = require("./base");
 
 exports.setVueComponentsConfig = _base.setVueComponentsConfig;
 exports.vueComponentsConfig = _base.vueComponentsConfig;
+exports.EluxContextKey = _base.EluxContextKey;
+exports.EluxStoreContextKey = _base.EluxStoreContextKey;

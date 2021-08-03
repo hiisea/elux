@@ -11,13 +11,14 @@ export default function (props, context) {
     href,
     url,
     replace,
+    portal,
     ...rest
   } = props;
   const newProps = { ...rest,
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url) : router.push(url);
+      replace ? router.replace(url, portal) : router.push(url, portal);
     }
   };
 

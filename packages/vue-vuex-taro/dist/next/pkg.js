@@ -2960,6 +2960,7 @@ const vueComponentsConfig = {
 };
 const setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 const EluxContextKey = '__EluxContext__';
+const EluxStoreContextKey = '__EluxStoreContext__';
 
 let clientTimer = 0;
 
@@ -3047,13 +3048,14 @@ function Link (props, context) {
     href,
     url,
     replace,
+    portal,
     ...rest
   } = props;
   const newProps = { ...rest,
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url) : router.push(url);
+      replace ? router.replace(url, portal) : router.push(url, portal);
     }
   };
 
@@ -3070,10 +3072,14 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
   const component = (props, context) => {
     const {
-      deps,
-      store
+      deps
     } = inject(EluxContextKey, {
       documentHead: ''
+    });
+    const {
+      store
+    } = inject(EluxStoreContextKey, {
+      store: null
     });
     let result;
     let errorMessage = '';
@@ -4397,7 +4403,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
           routeModule.model(store);
           const context = render(store, {
             deps: {},
-            store,
             router,
             documentHead: ''
           }, ins);
@@ -4450,7 +4455,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               }, !!env[ssrKey], ins);
@@ -4497,7 +4501,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
               const state = store.getState();
               const eluxContext = {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               };
@@ -4872,4 +4875,4 @@ const createMP = (app, moduleGetter, middlewares, appModuleName) => {
   return createBaseMP(app, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares, appModuleName);
 };
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createBaseApp, createBaseMP, createBaseSSR, createLogger, createMP, createRouteModule, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };
+export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EluxContextKey, EluxStoreContextKey, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createBaseApp, createBaseMP, createBaseSSR, createLogger, createMP, createRouteModule, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };

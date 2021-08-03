@@ -23,7 +23,8 @@ function _default(props, context) {
       href = props.href,
       url = props.url,
       replace = props.replace,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "url", "replace"]);
+      portal = props.portal,
+      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "url", "replace", "portal"]);
   var newProps = (0, _extends2.default)({}, rest, {
     onClick: function (_onClick) {
       function onClick(_x) {
@@ -38,7 +39,7 @@ function _default(props, context) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url) : router.push(url);
+      replace ? router.replace(url, portal) : router.push(url, portal);
     })
   });
 

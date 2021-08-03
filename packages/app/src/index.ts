@@ -133,7 +133,6 @@ export interface CreateSSR<INS = {}> {
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
-  store?: IStore;
   router?: IBaseRouter<any, string>;
 }
 
@@ -167,7 +166,7 @@ export function createBaseMP<INS = {}>(
           const store = initApp(baseStore, istoreMiddleware);
           router.init(store);
           routeModule.model(store);
-          const context: ContextWrap = render(store, {deps: {}, store, router, documentHead: ''}, ins);
+          const context: ContextWrap = render(store, {deps: {}, router, documentHead: ''}, ins);
           return {store, context};
         },
       });
@@ -209,7 +208,7 @@ export function createBaseApp<INS = {}>(
             return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
               router.init(store);
               routeModule.model(store);
-              render(id, AppView, store, {deps: {}, store, router, documentHead: ''}, !!env[ssrKey], ins);
+              render(id, AppView, store, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
               return store;
             });
           });
@@ -252,7 +251,7 @@ export function createBaseSSR<INS = {}>(
             return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
               router.init(store);
               const state = store.getState();
-              const eluxContext = {deps: {}, store, router, documentHead: ''};
+              const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
               return render(id, AppView, store, eluxContext, ins).then((html) => {
                 const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
                 if (match) {
@@ -260,7 +259,7 @@ export function createBaseSSR<INS = {}>(
                     '</head>',
                     `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                       state,
-                      components: Object.keys(eluxContext.deps),
+                      components: Object.keys(eluxContext.deps!),
                     })};</script>\r\n</head>`
                   ).replace(match[0], match[0] + html);
                 }

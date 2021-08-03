@@ -1312,10 +1312,12 @@ function cloneStore(store) {
     injectedModules
   } = store.clone;
   const initState = store.getPureState();
-  const newStore = creator({ ...options,
+  const newBStore = creator({ ...options,
     initState
   });
-  return enhanceStore(newStore, middlewares, injectedModules);
+  const newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const {
@@ -1578,6 +1580,7 @@ const reactComponentsConfig = {
   },
 
   Provider: null,
+  useStore: null,
   LoadComponentOnError: ({
     message
   }) => React.createElement("div", {
@@ -1725,7 +1728,7 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
   class Loader extends Component$3 {
-    constructor(props, context) {
+    constructor(props) {
       super(props);
 
       _defineProperty(this, "active", true);
@@ -1740,7 +1743,6 @@ const loadComponent = (moduleName, componentName, options = {}) => {
         ver: 0
       });
 
-      this.context = context;
       this.execute();
     }
 
@@ -1762,12 +1764,12 @@ const loadComponent = (moduleName, componentName, options = {}) => {
         const {
           deps,
           store
-        } = this.context || {};
+        } = this.props;
         this.loading = true;
         let result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps || {});
+          result = loadComponet(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -1802,6 +1804,8 @@ const loadComponent = (moduleName, componentName, options = {}) => {
     render() {
       const {
         forwardedRef,
+        deps,
+        store,
         ...rest
       } = this.props;
 
@@ -1824,40 +1828,43 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
   }
 
-  _defineProperty(Loader, "contextType", EluxContextComponent);
-
   return React.forwardRef((props, ref) => {
+    const {
+      deps = {}
+    } = useContext(EluxContextComponent);
+    const store = reactComponentsConfig.useStore();
     return React.createElement(Loader, _extends({}, props, {
+      store: store,
+      deps: deps,
       forwardedRef: ref
     }));
   });
 };
 
-function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
-  const renderFun = fromSSR ? hydrate : render;
-  const panel = env.document.getElementById(id);
-  renderFun(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement(APPView, null))), panel);
-}
-function renderToString(id, APPView, store, eluxContext) {
-  const html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement(APPView, null))));
-
-  return Promise.resolve(html);
-}
-const Portal$1 = function (props) {
+const Router$1 = props => {
+  return React.createElement(Page, null, props.children);
+};
+const Page = function (props) {
   const eluxContext = useContext(EluxContextComponent);
   const store = eluxContext.router.getCurrentStore();
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
   }, props.children);
 };
+function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
+  const renderFun = fromSSR ? hydrate : render;
+  const panel = env.document.getElementById(id);
+  renderFun(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Router$1, null, React.createElement(APPView, null))), panel);
+}
+function renderToString(id, APPView, store, eluxContext) {
+  const html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Router$1, null, React.createElement(APPView, null))));
+
+  return Promise.resolve(html);
+}
 
 const routeConfig = {
   maxHistory: 10,
@@ -1904,7 +1911,7 @@ class HistoryRecord {
     }
   }
 
-  getFrozenState() {
+  getSnapshotState() {
     if (this.frozenState) {
       if (typeof this.frozenState === 'string') {
         this.frozenState = JSON.parse(this.frozenState);
@@ -1974,7 +1981,6 @@ class History {
 
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;
-    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -1991,7 +1997,12 @@ class History {
 
   relaunch(location, key) {
     const records = this.records;
-    const store = records[0].getStore();
+    let store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }
@@ -2537,7 +2548,7 @@ let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
       key: "Init",
       value: function Init(initState) {
         const routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMerge({}, initState, routeParams) : initState;
+        return routeParams ? deepMergeState(initState, routeParams) : initState;
       }
     }, {
       kind: "method",
@@ -3145,7 +3156,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
           routeModule.model(store);
           const context = render(store, {
             deps: {},
-            store,
             router,
             documentHead: ''
           }, ins);
@@ -3198,7 +3208,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               }, !!env[ssrKey], ins);
@@ -3245,7 +3254,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
               const state = store.getState();
               const eluxContext = {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               };
@@ -6929,6 +6937,46 @@ function useReduxContext() {
   return contextValue;
 }
 
+/**
+ * Hook factory, which creates a `useStore` hook bound to a given context.
+ *
+ * @param {React.Context} [context=ReactReduxContext] Context passed to your `<Provider>`.
+ * @returns {Function} A `useStore` hook bound to the specified context.
+ */
+
+function createStoreHook(context) {
+  if (context === void 0) {
+    context = ReactReduxContext;
+  }
+
+  var useReduxContext$1 = context === ReactReduxContext ? useReduxContext : function () {
+    return useContext(context);
+  };
+  return function useStore() {
+    var _useReduxContext = useReduxContext$1(),
+        store = _useReduxContext.store;
+
+    return store;
+  };
+}
+/**
+ * A hook to access the redux store.
+ *
+ * @returns {any} the redux store
+ *
+ * @example
+ *
+ * import React from 'react'
+ * import { useStore } from 'react-redux'
+ *
+ * export const ExampleComponent = () => {
+ *   const store = useStore()
+ *   return <div>{store.getState()}</div>
+ * }
+ */
+
+var useStore = /*#__PURE__*/createStoreHook();
+
 var refEquality = function refEquality(a, b) {
   return a === b;
 };
@@ -7677,7 +7725,8 @@ const connectRedux = function (...args) {
 };
 
 setReactComponentsConfig({
-  Provider: Provider
+  Provider: Provider,
+  useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Portal$1 as Portal, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector, useStore };

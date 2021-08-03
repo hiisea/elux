@@ -1,4 +1,4 @@
-import { inject, watch, reactive, createVNode, createTextVNode, defineComponent, h, defineAsyncComponent, createApp as createApp$1, createSSRApp } from 'vue';
+import { inject, watch, reactive, createVNode, createTextVNode, defineComponent, h, defineAsyncComponent, provide, createApp as createApp$1, createSSRApp } from 'vue';
 
 function getDevtoolsGlobalHook() {
   return getTarget().__VUE_DEVTOOLS_GLOBAL_HOOK__;
@@ -2627,10 +2627,12 @@ function cloneStore(store) {
     injectedModules
   } = store.clone;
   const initState = store.getPureState();
-  const newStore = creator({ ...options,
+  const newBStore = creator({ ...options,
     initState
   });
-  return enhanceStore(newStore, middlewares, injectedModules);
+  const newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const {
@@ -2957,6 +2959,7 @@ const vueComponentsConfig = {
 };
 const setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 const EluxContextKey = '__EluxContext__';
+const EluxStoreContextKey = '__EluxStoreContext__';
 
 let clientTimer = 0;
 
@@ -3044,13 +3047,14 @@ function Link (props, context) {
     href,
     url,
     replace,
+    portal,
     ...rest
   } = props;
   const newProps = { ...rest,
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url) : router.push(url);
+      replace ? router.replace(url, portal) : router.push(url, portal);
     }
   };
 
@@ -3067,10 +3071,14 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
   const component = (props, context) => {
     const {
-      deps,
-      store
+      deps
     } = inject(EluxContextKey, {
       documentHead: ''
+    });
+    const {
+      store
+    } = inject(EluxStoreContextKey, {
+      store: null
     });
     let result;
     let errorMessage = '';
@@ -3105,8 +3113,24 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 };
 
 let StageView;
-const RootComponent = (props, context) => {
-  return h(StageView, props, context.slots);
+const Router$1 = (props, context) => {
+  return h(Page, props, context.slots);
+};
+const Page = {
+  setup(props, context) {
+    const {
+      router
+    } = inject(EluxContextKey, {
+      documentHead: ''
+    });
+    const store = router.getCurrentStore();
+    const storeContext = {
+      store
+    };
+    provide(EluxStoreContextKey, storeContext);
+    return () => h(StageView, props, context.slots);
+  }
+
 };
 function renderToDocument(id, APPView, store, eluxContext, fromSSR, app) {
   StageView = APPView;
@@ -3174,7 +3198,7 @@ class HistoryRecord {
     }
   }
 
-  getFrozenState() {
+  getSnapshotState() {
     if (this.frozenState) {
       if (typeof this.frozenState === 'string') {
         this.frozenState = JSON.parse(this.frozenState);
@@ -3244,7 +3268,6 @@ class History {
 
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;
-    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -3261,7 +3284,12 @@ class History {
 
   relaunch(location, key) {
     const records = this.records;
-    const store = records[0].getStore();
+    let store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }
@@ -3807,7 +3835,7 @@ let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
       key: "Init",
       value: function Init(initState) {
         const routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMerge({}, initState, routeParams) : initState;
+        return routeParams ? deepMergeState(initState, routeParams) : initState;
       }
     }, {
       kind: "method",
@@ -4415,7 +4443,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
           routeModule.model(store);
           const context = render(store, {
             deps: {},
-            store,
             router,
             documentHead: ''
           }, ins);
@@ -4468,7 +4495,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               }, !!env[ssrKey], ins);
@@ -4515,7 +4541,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
               const state = store.getState();
               const eluxContext = {
                 deps: {},
-                store,
                 router,
                 documentHead: ''
               };
@@ -5797,12 +5822,12 @@ function setConfig(conf) {
   setUserConfig(conf);
 }
 const createApp = (moduleGetter, middlewares, appModuleName) => {
-  const app = createApp$1(RootComponent);
+  const app = createApp$1(Router$1);
   return createBaseApp(app, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares, appModuleName);
 };
 const createSSR = (moduleGetter, url, middlewares, appModuleName) => {
-  const app = createSSRApp(RootComponent);
+  const app = createSSRApp(Router$1);
   return createBaseSSR(app, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares, appModuleName);
 };
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };
+export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EluxContextKey, EluxStoreContextKey, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };

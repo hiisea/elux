@@ -1,9 +1,25 @@
-import { h } from 'vue';
+import { h, provide, inject } from 'vue';
 import { env } from '@elux/core';
-import { EluxContextKey } from './base';
+import { EluxContextKey, EluxStoreContextKey } from './base';
 let StageView;
-export const RootComponent = (props, context) => {
-  return h(StageView, props, context.slots);
+export const Router = (props, context) => {
+  return h(Page, props, context.slots);
+};
+export const Page = {
+  setup(props, context) {
+    const {
+      router
+    } = inject(EluxContextKey, {
+      documentHead: ''
+    });
+    const store = router.getCurrentStore();
+    const storeContext = {
+      store
+    };
+    provide(EluxStoreContextKey, storeContext);
+    return () => h(StageView, props, context.slots);
+  }
+
 };
 export function renderToMP(store, eluxContext, app) {
   app.use(store);

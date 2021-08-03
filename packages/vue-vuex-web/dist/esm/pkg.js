@@ -1,4 +1,4 @@
-import { inject, watch, reactive, createVNode, createTextVNode, defineComponent, h, defineAsyncComponent, createApp as createApp$1, createSSRApp } from 'vue';
+import { inject, watch, reactive, createVNode, createTextVNode, defineComponent, h, defineAsyncComponent, provide, createApp as createApp$1, createSSRApp } from 'vue';
 
 function getDevtoolsGlobalHook() {
   return getTarget().__VUE_DEVTOOLS_GLOBAL_HOOK__;
@@ -2745,10 +2745,12 @@ function cloneStore(store) {
       middlewares = _store$clone.middlewares,
       injectedModules = _store$clone.injectedModules;
   var initState = store.getPureState();
-  var newStore = creator(_extends({}, options, {
+  var newBStore = creator(_extends({}, options, {
     initState: initState
   }));
-  return enhanceStore(newStore, middlewares, injectedModules);
+  var newIStore = enhanceStore(newBStore, middlewares, injectedModules);
+  newIStore.id = (store.id || 0) + 1;
+  return newIStore;
 }
 function enhanceStore(baseStore, middlewares, injectedModules) {
   if (injectedModules === void 0) {
@@ -3944,6 +3946,7 @@ var vueComponentsConfig = {
 };
 var setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 var EluxContextKey = '__EluxContext__';
+var EluxStoreContextKey = '__EluxStoreContext__';
 
 var clientTimer = 0;
 
@@ -4038,7 +4041,8 @@ function Link (props, context) {
       href = props.href,
       url = props.url,
       replace = props.replace,
-      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "replace"]);
+      portal = props.portal,
+      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "replace", "portal"]);
 
   var newProps = _extends({}, rest, {
     onClick: function (_onClick) {
@@ -4054,7 +4058,7 @@ function Link (props, context) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url) : router.push(url);
+      replace ? router.replace(url, portal) : router.push(url, portal);
     })
   });
 
@@ -4077,8 +4081,12 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     var _inject = inject(EluxContextKey, {
       documentHead: ''
     }),
-        deps = _inject.deps,
-        store = _inject.store;
+        deps = _inject.deps;
+
+    var _inject2 = inject(EluxStoreContextKey, {
+      store: null
+    }),
+        store = _inject2.store;
 
     var result;
     var errorMessage = '';
@@ -4115,8 +4123,25 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 };
 
 var StageView;
-var RootComponent = function RootComponent(props, context) {
-  return h(StageView, props, context.slots);
+var Router$1 = function Router(props, context) {
+  return h(Page, props, context.slots);
+};
+var Page = {
+  setup: function setup(props, context) {
+    var _inject = inject(EluxContextKey, {
+      documentHead: ''
+    }),
+        router = _inject.router;
+
+    var store = router.getCurrentStore();
+    var storeContext = {
+      store: store
+    };
+    provide(EluxStoreContextKey, storeContext);
+    return function () {
+      return h(StageView, props, context.slots);
+    };
+  }
 };
 function renderToDocument(id, APPView, store, eluxContext, fromSSR, app) {
   StageView = APPView;
@@ -4184,7 +4209,7 @@ var HistoryRecord = function () {
     }
   };
 
-  _proto.getFrozenState = function getFrozenState() {
+  _proto.getSnapshotState = function getSnapshotState() {
     if (this.frozenState) {
       if (typeof this.frozenState === 'string') {
         this.frozenState = JSON.parse(this.frozenState);
@@ -4261,7 +4286,6 @@ var History = function () {
 
     var newRecord = new HistoryRecord(location, key, this, store);
     var maxHistory = routeConfig.maxHistory;
-    records[0].freeze();
     records.unshift(newRecord);
 
     if (records.length > maxHistory) {
@@ -4279,6 +4303,11 @@ var History = function () {
   _proto2.relaunch = function relaunch(location, key) {
     var records = this.records;
     var store = records[0].getStore();
+
+    if (!this.parent) {
+      store = cloneStore(store);
+    }
+
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };
@@ -4859,7 +4888,7 @@ var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
       key: "Init",
       value: function Init(initState) {
         var routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMerge({}, initState, routeParams) : initState;
+        return routeParams ? deepMergeState(initState, routeParams) : initState;
       }
     }, {
       kind: "method",
@@ -5725,7 +5754,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           routeModule.model(store);
           var context = render(store, {
             deps: {},
-            store: store,
             router: router,
             documentHead: ''
           }, ins);
@@ -5793,7 +5821,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
-                store: store,
                 router: router,
                 documentHead: ''
               }, !!env[ssrKey], ins);
@@ -5854,7 +5881,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
               var state = store.getState();
               var eluxContext = {
                 deps: {},
-                store: store,
                 router: router,
                 documentHead: ''
               };
@@ -7148,16 +7174,16 @@ function setConfig(conf) {
   setUserConfig(conf);
 }
 var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
-  var app = createApp$1(RootComponent);
+  var app = createApp$1(Router$1);
   return createBaseApp(app, function (locationTransform) {
     return createRouter('Browser', locationTransform);
   }, renderToDocument, moduleGetter, middlewares, appModuleName);
 };
 var createSSR = function createSSR(moduleGetter, url, middlewares, appModuleName) {
-  var app = createSSRApp(RootComponent);
+  var app = createSSRApp(Router$1);
   return createBaseSSR(app, function (locationTransform) {
     return createRouter(url, locationTransform);
   }, renderToString, moduleGetter, middlewares, appModuleName);
 };
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };
+export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EluxContextKey, EluxStoreContextKey, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };

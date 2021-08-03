@@ -97,7 +97,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
           routeModule.model(store);
           var context = render(store, {
             deps: {},
-            store: store,
             router: router,
             documentHead: ''
           }, ins);
@@ -165,7 +164,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
-                store: store,
                 router: router,
                 documentHead: ''
               }, !!_core.env[ssrKey], ins);
@@ -226,7 +224,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
               var state = store.getState();
               var eluxContext = {
                 deps: {},
-                store: store,
                 router: router,
                 documentHead: ''
               };

@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.Provider = exports.createSelectorHook = exports.useSelector = exports.batch = exports.connectAdvanced = exports.shallowEqual = exports.connectRedux = exports.createRedux = void 0;
+exports.useStore = exports.Provider = exports.createSelectorHook = exports.useSelector = exports.batch = exports.connectAdvanced = exports.shallowEqual = exports.connectRedux = exports.createRedux = void 0;
 
 var _reactRedux = require("react-redux");
 
@@ -12,6 +12,7 @@ exports.batch = _reactRedux.batch;
 exports.useSelector = _reactRedux.useSelector;
 exports.createSelectorHook = _reactRedux.createSelectorHook;
 exports.Provider = _reactRedux.Provider;
+exports.useStore = _reactRedux.useStore;
 
 var _core = require("@elux/core");
 

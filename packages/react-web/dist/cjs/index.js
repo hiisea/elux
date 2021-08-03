@@ -2,13 +2,13 @@
 
 exports.__esModule = true;
 var _exportNames = {
-  Portal: true,
+  Page: true,
   setConfig: true,
   createApp: true,
   createSSR: true
 };
 exports.setConfig = setConfig;
-exports.createSSR = exports.createApp = exports.Portal = void 0;
+exports.createSSR = exports.createApp = exports.Page = void 0;
 
 var _reactComponents = require("@elux/react-components");
 
@@ -21,7 +21,7 @@ Object.keys(_reactComponents).forEach(function (key) {
 
 var _stage = require("@elux/react-components/stage");
 
-exports.Portal = _stage.Portal;
+exports.Page = _stage.Page;
 
 var _app = require("@elux/app");
 

@@ -20,7 +20,10 @@ export const setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
-  store?: IStore;
   router?: IBaseRouter<any, string>;
 }
+export interface EluxStoreContext {
+  store: IStore;
+}
 export const EluxContextKey = '__EluxContext__';
+export const EluxStoreContextKey = '__EluxStoreContext__';
