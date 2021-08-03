@@ -1,6 +1,6 @@
 {
   "name": "@elux/taro",
-  "version": "0.1.23",
+  "version": "0.1.36",
   "description": "The practice of taro",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/taro",
   "author": "hiisea <hiisea@qq.com>",
@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/route-mp": "^0.1.23"
+    "@elux/route-mp": "^0.1.36"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
 }
