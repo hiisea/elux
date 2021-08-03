@@ -5,6 +5,7 @@ export var reactComponentsConfig = {
     return env.document.title = title;
   },
   Provider: null,
+  useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return React.createElement("div", {

@@ -44,9 +44,9 @@ const loadComponent = (moduleName, componentName, options = {}) => {
     execute() {
       if (!this.view && !this.loading && !this.error) {
         const {
-          deps,
-          store
+          deps
         } = this.context || {};
+        const store = reactComponentsConfig.useStore();
         this.loading = true;
         let result;
 

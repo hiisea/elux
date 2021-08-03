@@ -74,8 +74,9 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 
       if (!this.view && !this.loading && !this.error) {
         var _ref = this.context || {},
-            deps = _ref.deps,
-            store = _ref.store;
+            deps = _ref.deps;
+
+        var store = _base.reactComponentsConfig.useStore();
 
         this.loading = true;
         var result;

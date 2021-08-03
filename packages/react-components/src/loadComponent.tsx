@@ -45,7 +45,8 @@ const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = 
 
     execute() {
       if (!this.view && !this.loading && !this.error) {
-        const {deps, store} = this.context || {};
+        const {deps} = this.context || {};
+        const store = reactComponentsConfig.useStore();
         this.loading = true;
         let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
         try {

@@ -6,6 +6,7 @@ export const reactComponentsConfig = {
   },
 
   Provider: null,
+  useStore: null,
   LoadComponentOnError: ({
     message
   }) => React.createElement("div", {
