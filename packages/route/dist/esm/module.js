@@ -50,22 +50,22 @@ export var RouteActionTypes = {
   RouteChange: "route" + coreConfig.NSP + "RouteChange",
   TestRouteChange: "route" + coreConfig.NSP + "TestRouteChange"
 };
-export function testRouteChangeAction(routeState) {
+export function testRouteChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
-export function routeParamsAction(moduleName, params, action) {
+export function routeParamsAction(moduleName, params, action, prevRootState) {
   return {
     type: "" + moduleName + coreConfig.NSP + RouteActionTypes.MRouteParams,
-    payload: [params, action]
+    payload: [params, action, prevRootState]
   };
 }
-export function routeChangeAction(routeState) {
+export function routeChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.RouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
 export var routeMiddleware = function routeMiddleware(_ref) {
@@ -75,7 +75,9 @@ export var routeMiddleware = function routeMiddleware(_ref) {
     return function (action) {
       if (action.type === RouteActionTypes.RouteChange) {
         var result = next(action);
-        var routeState = action.payload[0];
+        var _ref2 = action.payload,
+            routeState = _ref2[0],
+            prevRootState = _ref2[1];
         var rootRouteParams = routeState.params;
         var rootState = getState();
         Object.keys(rootRouteParams).forEach(function (moduleName) {
@@ -83,7 +85,7 @@ export var routeMiddleware = function routeMiddleware(_ref) {
 
           if (routeParams && Object.keys(routeParams).length > 0) {
             if (rootState[moduleName]) {
-              dispatch(routeParamsAction(moduleName, routeParams, routeState.action));
+              dispatch(routeParamsAction(moduleName, routeParams, routeState.action, prevRootState));
             }
           }
         });

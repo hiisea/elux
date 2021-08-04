@@ -36,22 +36,22 @@ export const RouteActionTypes = {
   RouteChange: `route${coreConfig.NSP}RouteChange`,
   TestRouteChange: `route${coreConfig.NSP}TestRouteChange`
 };
-export function testRouteChangeAction(routeState) {
+export function testRouteChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
-export function routeParamsAction(moduleName, params, action) {
+export function routeParamsAction(moduleName, params, action, prevRootState) {
   return {
     type: `${moduleName}${coreConfig.NSP}${RouteActionTypes.MRouteParams}`,
-    payload: [params, action]
+    payload: [params, action, prevRootState]
   };
 }
-export function routeChangeAction(routeState) {
+export function routeChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.RouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
 export const routeMiddleware = ({
@@ -60,7 +60,7 @@ export const routeMiddleware = ({
 }) => next => action => {
   if (action.type === RouteActionTypes.RouteChange) {
     const result = next(action);
-    const routeState = action.payload[0];
+    const [routeState, prevRootState] = action.payload;
     const rootRouteParams = routeState.params;
     const rootState = getState();
     Object.keys(rootRouteParams).forEach(moduleName => {
@@ -68,7 +68,7 @@ export const routeMiddleware = ({
 
       if (routeParams && Object.keys(routeParams).length > 0) {
         if (rootState[moduleName]) {
-          dispatch(routeParamsAction(moduleName, routeParams, routeState.action));
+          dispatch(routeParamsAction(moduleName, routeParams, routeState.action, prevRootState));
         }
       }
     });

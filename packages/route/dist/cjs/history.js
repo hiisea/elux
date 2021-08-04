@@ -80,6 +80,16 @@ var History = function () {
     return this.records.length;
   };
 
+  _proto2.getPages = function getPages() {
+    return this.records.map(function (_ref) {
+      var pagename = _ref.pagename;
+      return {
+        pagename: pagename,
+        page: _basic.routeMeta.pages[pagename]
+      };
+    });
+  };
+
   _proto2.findRecord = function findRecord(keyOrIndex) {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {

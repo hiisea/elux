@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, Component as Component$3, useLayoutEffect, useMemo, useReducer, useRef, useDebugValue } from 'react';
+import React, { useContext, useEffect, Component as Component$3, useState, useLayoutEffect, useMemo, useReducer, useRef, useDebugValue } from 'react';
 import { hydrate, render, unstable_batchedUpdates } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
@@ -1842,14 +1842,38 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 };
 
 const Router$1 = props => {
-  return React.createElement(Page, null, props.children);
+  const eluxContext = useContext(EluxContextComponent);
+  const router = eluxContext.router;
+  const [pages, setPages] = useState(router.getHistory(true).getPages());
+  useEffect(() => {
+    return router.addListener(({
+      routeState,
+      root
+    }) => {
+      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
+        const newPages = router.getHistory(true).getPages();
+        setPages(newPages);
+      }
+    });
+  }, [router]);
+  const nodes = pages.map(item => {
+    const page = React.createElement(item.page, {
+      key: item.pagename
+    }) || React.createElement(Page, {
+      key: item.pagename
+    }, props.children);
+    return page;
+  });
+  return React.createElement(React.Fragment, null, nodes);
 };
 const Page = function (props) {
   const eluxContext = useContext(EluxContextComponent);
   const store = eluxContext.router.getCurrentStore();
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, props.children);
+  }, React.createElement("div", {
+    className: "elux-page"
+  }, props.children));
 };
 function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
   const renderFun = fromSSR ? hydrate : render;
@@ -1877,7 +1901,8 @@ const routeConfig = {
 const setRouteConfig = buildConfigSetter(routeConfig);
 const routeMeta = {
   defaultParams: {},
-  pagenames: {}
+  pagenames: {},
+  pages: {}
 };
 
 class HistoryRecord {
@@ -1946,6 +1971,17 @@ class History {
 
   getLength() {
     return this.records.length;
+  }
+
+  getPages() {
+    return this.records.map(({
+      pagename
+    }) => {
+      return {
+        pagename,
+        page: routeMeta.pages[pagename]
+      };
+    });
   }
 
   findRecord(keyOrIndex) {
@@ -2301,12 +2337,19 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
   let pagenames = Object.keys(pagenameMap);
   pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
     const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
+    const {
+      argsToParams,
+      paramsToArgs,
+      page
+    } = pagenameMap[pagename];
+    map[fullPagename] = {
+      argsToParams,
+      paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pagenames[pagename] = page;
     return map;
   }, {});
-  pagenames.forEach(key => {
-    routeMeta.pagenames[key] = key;
-  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {
@@ -2565,22 +2608,22 @@ const RouteActionTypes = {
   RouteChange: `route${coreConfig.NSP}RouteChange`,
   TestRouteChange: `route${coreConfig.NSP}TestRouteChange`
 };
-function testRouteChangeAction(routeState) {
+function testRouteChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
-function routeParamsAction(moduleName, params, action) {
+function routeParamsAction(moduleName, params, action, prevRootState) {
   return {
     type: `${moduleName}${coreConfig.NSP}${RouteActionTypes.MRouteParams}`,
-    payload: [params, action]
+    payload: [params, action, prevRootState]
   };
 }
-function routeChangeAction(routeState) {
+function routeChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.RouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
 const routeMiddleware = ({
@@ -2589,7 +2632,7 @@ const routeMiddleware = ({
 }) => next => action => {
   if (action.type === RouteActionTypes.RouteChange) {
     const result = next(action);
-    const routeState = action.payload[0];
+    const [routeState, prevRootState] = action.payload;
     const rootRouteParams = routeState.params;
     const rootState = getState();
     Object.keys(rootRouteParams).forEach(moduleName => {
@@ -2597,7 +2640,7 @@ const routeMiddleware = ({
 
       if (routeParams && Object.keys(routeParams).length > 0) {
         if (rootState[moduleName]) {
-          dispatch(routeParamsAction(moduleName, routeParams, routeState.action));
+          dispatch(routeParamsAction(moduleName, routeParams, routeState.action, prevRootState));
         }
       }
     });
@@ -2719,8 +2762,10 @@ class BaseNativeRouter {
   }
 
 }
-class BaseRouter {
+class BaseRouter extends SingleDispatcher {
   constructor(url, nativeRouter, locationTransform) {
+    super();
+
     _defineProperty(this, "_tid", 0);
 
     _defineProperty(this, "curTask", void 0);
@@ -2734,10 +2779,6 @@ class BaseRouter {
     _defineProperty(this, "internalUrl", void 0);
 
     _defineProperty(this, "history", void 0);
-
-    _defineProperty(this, "_lid", 0);
-
-    _defineProperty(this, "listenerMap", {});
 
     _defineProperty(this, "initRouteState", void 0);
 
@@ -2774,22 +2815,6 @@ class BaseRouter {
     } else {
       this.initRouteState = callback(locationOrPromise);
     }
-  }
-
-  addListener(callback) {
-    this._lid++;
-    const id = `${this._lid}`;
-    const listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return () => {
-      delete listenerMap[id];
-    };
-  }
-
-  dispatch(data) {
-    const listenerMap = this.listenerMap;
-    const arr = Object.keys(listenerMap).map(id => listenerMap[id](data));
-    return Promise.all(arr);
   }
 
   getRouteState() {
@@ -2928,7 +2953,6 @@ class BaseRouter {
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -2949,6 +2973,10 @@ class BaseRouter {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
 
+    this.dispatch({
+      routeState,
+      root
+    });
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
@@ -2972,7 +3000,6 @@ class BaseRouter {
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -2993,6 +3020,10 @@ class BaseRouter {
       this.history.getCurrentSubHistory().push(location, key);
     }
 
+    this.dispatch({
+      routeState,
+      root
+    });
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
@@ -3016,7 +3047,6 @@ class BaseRouter {
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3037,36 +3067,43 @@ class BaseRouter {
       this.history.getCurrentSubHistory().replace(location, key);
     }
 
+    this.dispatch({
+      routeState,
+      root
+    });
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
-  back(n = 1, root = false, overflowRedirect = true, nativeCaller = false) {
-    this.addTask(this._back.bind(this, n, root, overflowRedirect, nativeCaller));
+  back(n = 1, root = false, options, nativeCaller = false) {
+    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
   }
 
-  async _back(n = 1, root, overflowRedirect, nativeCaller) {
+  async _back(n = 1, root, options, nativeCaller) {
     if (n < 1) {
       return undefined;
     }
 
-    const historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
+    const didOverflowRedirect = !!options.overflowRedirect;
+    const overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
+    const historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
 
     if (!historyRecord) {
-      return this.relaunch(routeConfig.indexUrl, root);
+      return this.relaunch(overflowRedirectUrl, root);
     }
 
     const {
       key,
       pagename
     } = historyRecord;
+    const params = deepMerge(historyRecord.getParams(), options.payload);
     const routeState = {
       key,
       pagename,
-      params: historyRecord.getParams(),
+      params,
       action: 'BACK'
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
+    const prevRootState = this.getCurrentStore().getState();
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState, prevRootState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3087,7 +3124,11 @@ class BaseRouter {
       this.history.getCurrentSubHistory().back(n);
     }
 
-    this.getCurrentStore().dispatch(routeChangeAction(routeState));
+    this.dispatch({
+      routeState,
+      root
+    });
+    this.getCurrentStore().dispatch(routeChangeAction(routeState, prevRootState));
   }
 
   taskComplete() {

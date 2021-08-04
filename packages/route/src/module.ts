@@ -31,35 +31,35 @@ export const RouteActionTypes = {
   RouteChange: `route${coreConfig.NSP}RouteChange`,
   TestRouteChange: `route${coreConfig.NSP}TestRouteChange`,
 };
-export function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
+export function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>, prevRootState?: Record<string, any>): Action {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState],
+    payload: [routeState, prevRootState],
   };
 }
-export function routeParamsAction(moduleName: string, params: any, action: HistoryAction): Action {
+export function routeParamsAction(moduleName: string, params: any, action: HistoryAction, prevRootState?: Record<string, any>): Action {
   return {
     type: `${moduleName}${coreConfig.NSP}${RouteActionTypes.MRouteParams}`,
-    payload: [params, action],
+    payload: [params, action, prevRootState],
   };
 }
-export function routeChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
+export function routeChangeAction<P extends RootParams>(routeState: RouteState<P>, prevRootState?: Record<string, any>): Action {
   return {
     type: RouteActionTypes.RouteChange,
-    payload: [routeState],
+    payload: [routeState, prevRootState],
   };
 }
 export const routeMiddleware: IStoreMiddleware = ({dispatch, getState}) => (next) => (action) => {
   if (action.type === RouteActionTypes.RouteChange) {
     const result = next(action);
-    const routeState: RouteState<any> = action.payload![0];
+    const [routeState, prevRootState] = action.payload as [RouteState<any>, Record<string, any>];
     const rootRouteParams = routeState.params;
     const rootState = getState();
     Object.keys(rootRouteParams).forEach((moduleName) => {
       const routeParams = rootRouteParams[moduleName];
       if (routeParams && Object.keys(routeParams).length > 0) {
         if (rootState[moduleName]) {
-          dispatch(routeParamsAction(moduleName, routeParams, routeState.action));
+          dispatch(routeParamsAction(moduleName, routeParams, routeState.action, prevRootState));
         }
       }
     });

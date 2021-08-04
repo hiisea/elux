@@ -139,12 +139,18 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     return b.length - a.length;
   }).reduce(function (map, pagename) {
     var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
+    var _pagenameMap$pagename = pagenameMap[pagename],
+        argsToParams = _pagenameMap$pagename.argsToParams,
+        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        page = _pagenameMap$pagename.page;
+    map[fullPagename] = {
+      argsToParams: argsToParams,
+      paramsToArgs: paramsToArgs
+    };
+    _basic.routeMeta.pagenames[pagename] = pagename;
+    _basic.routeMeta.pagenames[pagename] = page;
     return map;
   }, {});
-  pagenames.forEach(function (key) {
-    _basic.routeMeta.pagenames[key] = key;
-  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {

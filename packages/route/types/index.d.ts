@@ -1,4 +1,4 @@
-import { IStore } from '@elux/core';
+import { IStore, SingleDispatcher } from '@elux/core';
 import { PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation } from './basic';
 import { History } from './history';
 import { LocationTransform } from './transform';
@@ -34,7 +34,10 @@ export declare abstract class BaseNativeRouter {
     setRouter(router: BaseRouter<any, string>): void;
     execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined>;
 }
-export declare abstract class BaseRouter<P extends RootParams, N extends string> implements IBaseRouter<P, N> {
+export declare abstract class BaseRouter<P extends RootParams, N extends string> extends SingleDispatcher<{
+    routeState: RouteState<P>;
+    root: boolean;
+}> implements IBaseRouter<P, N> {
     nativeRouter: BaseNativeRouter;
     protected locationTransform: LocationTransform;
     private _tid;
@@ -44,14 +47,8 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     private routeState;
     private internalUrl;
     protected history: History;
-    private _lid;
-    protected readonly listenerMap: {
-        [id: string]: (data: RouteState<P>) => void | Promise<void>;
-    };
     initRouteState: RouteState<P> | Promise<RouteState<P>>;
     constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
-    addListener(callback: (data: RouteState<P>) => void | Promise<void>): () => void;
-    protected dispatch(data: RouteState<P>): Promise<void[]>;
     getRouteState(): RouteState<P>;
     getPagename(): string;
     getParams(): Partial<P>;
@@ -80,7 +77,10 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     private _push;
     replace(data: PayloadLocation<P, N> | string, root?: boolean, nativeCaller?: boolean): void;
     private _replace;
-    back(n?: number, root?: boolean, overflowRedirect?: boolean, nativeCaller?: boolean): void;
+    back(n?: number, root?: boolean, options?: {
+        overflowRedirect?: boolean | string;
+        payload?: any;
+    }, nativeCaller?: boolean): void;
     private _back;
     private taskComplete;
     private executeTask;
@@ -91,7 +91,10 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
     initRouteState: RouteState<P> | Promise<RouteState<P>>;
     getHistory(root?: boolean): History;
     nativeRouter: any;
-    addListener(callback: (data: RouteState<P>) => void | Promise<void>): void;
+    addListener(callback: (data: {
+        routeState: RouteState<P>;
+        root: boolean;
+    }) => void | Promise<void>): void;
     getRouteState(): RouteState<P>;
     getPagename(): string;
     getParams(): Partial<P>;
@@ -109,7 +112,10 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
     relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
     push(data: PayloadLocation<P, N> | string, root?: boolean): void;
     replace(data: PayloadLocation<P, N> | string, root?: boolean): void;
-    back(n?: number, root?: boolean, overflowRedirect?: boolean): void;
+    back(n?: number, root?: boolean, options?: {
+        overflowRedirect?: boolean | string;
+        payload?: any;
+    }): void;
     destroy(): void;
     urlToLocation(url: string): Location<P> | Promise<Location<P>>;
     payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;

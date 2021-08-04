@@ -4,6 +4,7 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     'react/display-name': 'off',
     'react/prop-types': 'off',
+    'react-hooks/exhaustive-deps': 'warn',
   },
   settings: {
     react: {

@@ -105,12 +105,19 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
   let pagenames = Object.keys(pagenameMap);
   pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
     const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
+    const {
+      argsToParams,
+      paramsToArgs,
+      page
+    } = pagenameMap[pagename];
+    map[fullPagename] = {
+      argsToParams,
+      paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pagenames[pagename] = page;
     return map;
   }, {});
-  pagenames.forEach(key => {
-    routeMeta.pagenames[key] = key;
-  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {

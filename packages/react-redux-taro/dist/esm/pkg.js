@@ -2883,7 +2883,8 @@ var routeConfig = {
 var setRouteConfig = buildConfigSetter(routeConfig);
 var routeMeta = {
   defaultParams: {},
-  pagenames: {}
+  pagenames: {},
+  pages: {}
 };
 
 var HistoryRecord = function () {
@@ -2955,6 +2956,16 @@ var History = function () {
 
   _proto2.getLength = function getLength() {
     return this.records.length;
+  };
+
+  _proto2.getPages = function getPages() {
+    return this.records.map(function (_ref) {
+      var pagename = _ref.pagename;
+      return {
+        pagename: pagename,
+        page: routeMeta.pages[pagename]
+      };
+    });
   };
 
   _proto2.findRecord = function findRecord(keyOrIndex) {
@@ -3342,12 +3353,18 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     return b.length - a.length;
   }).reduce(function (map, pagename) {
     var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
+    var _pagenameMap$pagename = pagenameMap[pagename],
+        argsToParams = _pagenameMap$pagename.argsToParams,
+        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        page = _pagenameMap$pagename.page;
+    map[fullPagename] = {
+      argsToParams: argsToParams,
+      paramsToArgs: paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pagenames[pagename] = page;
     return map;
   }, {});
-  pagenames.forEach(function (key) {
-    routeMeta.pagenames[key] = key;
-  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {
@@ -3613,22 +3630,22 @@ var RouteActionTypes = {
   RouteChange: "route" + coreConfig.NSP + "RouteChange",
   TestRouteChange: "route" + coreConfig.NSP + "TestRouteChange"
 };
-function testRouteChangeAction(routeState) {
+function testRouteChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
-function routeParamsAction(moduleName, params, action) {
+function routeParamsAction(moduleName, params, action, prevRootState) {
   return {
     type: "" + moduleName + coreConfig.NSP + RouteActionTypes.MRouteParams,
-    payload: [params, action]
+    payload: [params, action, prevRootState]
   };
 }
-function routeChangeAction(routeState) {
+function routeChangeAction(routeState, prevRootState) {
   return {
     type: RouteActionTypes.RouteChange,
-    payload: [routeState]
+    payload: [routeState, prevRootState]
   };
 }
 var routeMiddleware = function routeMiddleware(_ref) {
@@ -3638,7 +3655,9 @@ var routeMiddleware = function routeMiddleware(_ref) {
     return function (action) {
       if (action.type === RouteActionTypes.RouteChange) {
         var result = next(action);
-        var routeState = action.payload[0];
+        var _ref2 = action.payload,
+            routeState = _ref2[0],
+            prevRootState = _ref2[1];
         var rootRouteParams = routeState.params;
         var rootState = getState();
         Object.keys(rootRouteParams).forEach(function (moduleName) {
@@ -3646,7 +3665,7 @@ var routeMiddleware = function routeMiddleware(_ref) {
 
           if (routeParams && Object.keys(routeParams).length > 0) {
             if (rootState[moduleName]) {
-              dispatch(routeParamsAction(moduleName, routeParams, routeState.action));
+              dispatch(routeParamsAction(moduleName, routeParams, routeState.action, prevRootState));
             }
           }
         });
@@ -3787,34 +3806,34 @@ var BaseNativeRouter = function () {
 
   return BaseNativeRouter;
 }();
-var BaseRouter = function () {
+var BaseRouter = function (_SingleDispatcher) {
+  _inheritsLoose(BaseRouter, _SingleDispatcher);
+
   function BaseRouter(url, nativeRouter, locationTransform) {
-    var _this2 = this;
+    var _this2;
 
-    _defineProperty(this, "_tid", 0);
+    _this2 = _SingleDispatcher.call(this) || this;
 
-    _defineProperty(this, "curTask", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_tid", 0);
 
-    _defineProperty(this, "taskList", []);
+    _defineProperty(_assertThisInitialized(_this2), "curTask", void 0);
 
-    _defineProperty(this, "_nativeData", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "taskList", []);
 
-    _defineProperty(this, "routeState", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_nativeData", void 0);
 
-    _defineProperty(this, "internalUrl", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
 
-    _defineProperty(this, "history", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "internalUrl", void 0);
 
-    _defineProperty(this, "_lid", 0);
+    _defineProperty(_assertThisInitialized(_this2), "history", void 0);
 
-    _defineProperty(this, "listenerMap", {});
+    _defineProperty(_assertThisInitialized(_this2), "initRouteState", void 0);
 
-    _defineProperty(this, "initRouteState", void 0);
-
-    this.nativeRouter = nativeRouter;
-    this.locationTransform = locationTransform;
-    nativeRouter.setRouter(this);
-    this.history = new History();
+    _this2.nativeRouter = nativeRouter;
+    _this2.locationTransform = locationTransform;
+    nativeRouter.setRouter(_assertThisInitialized(_this2));
+    _this2.history = new History();
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
@@ -3841,31 +3860,15 @@ var BaseRouter = function () {
     };
 
     if (isPromise(locationOrPromise)) {
-      this.initRouteState = locationOrPromise.then(callback);
+      _this2.initRouteState = locationOrPromise.then(callback);
     } else {
-      this.initRouteState = callback(locationOrPromise);
+      _this2.initRouteState = callback(locationOrPromise);
     }
+
+    return _this2;
   }
 
   var _proto2 = BaseRouter.prototype;
-
-  _proto2.addListener = function addListener(callback) {
-    this._lid++;
-    var id = "" + this._lid;
-    var listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
-  };
-
-  _proto2.dispatch = function dispatch(data) {
-    var listenerMap = this.listenerMap;
-    var arr = Object.keys(listenerMap).map(function (id) {
-      return listenerMap[id](data);
-    });
-    return Promise.all(arr);
-  };
 
   _proto2.getRouteState = function getRouteState() {
     return this.routeState;
@@ -4028,26 +4031,22 @@ var BaseRouter = function () {
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
-              _context.next = 12;
-              return this.dispatch(routeState);
-
-            case 12:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context.next = 17;
+                _context.next = 15;
                 break;
               }
 
-              _context.next = 16;
+              _context.next = 14;
               return this.nativeRouter.execute('relaunch', function () {
                 return _this3.locationToNativeData(routeState);
               }, key);
 
-            case 16:
+            case 14:
               nativeData = _context.sent;
 
-            case 17:
+            case 15:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -4061,9 +4060,13 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
+              this.dispatch({
+                routeState: routeState,
+                root: root
+              });
               this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
-            case 22:
+            case 21:
             case "end":
               return _context.stop();
           }
@@ -4123,26 +4126,22 @@ var BaseRouter = function () {
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
-              _context2.next = 12;
-              return this.dispatch(routeState);
-
-            case 12:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context2.next = 17;
+                _context2.next = 15;
                 break;
               }
 
-              _context2.next = 16;
+              _context2.next = 14;
               return this.nativeRouter.execute('push', function () {
                 return _this4.locationToNativeData(routeState);
               }, key);
 
-            case 16:
+            case 14:
               nativeData = _context2.sent;
 
-            case 17:
+            case 15:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -4156,9 +4155,13 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().push(location, key);
               }
 
+              this.dispatch({
+                routeState: routeState,
+                root: root
+              });
               this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
-            case 22:
+            case 21:
             case "end":
               return _context2.stop();
           }
@@ -4218,26 +4221,22 @@ var BaseRouter = function () {
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
-              _context3.next = 12;
-              return this.dispatch(routeState);
-
-            case 12:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context3.next = 17;
+                _context3.next = 15;
                 break;
               }
 
-              _context3.next = 16;
+              _context3.next = 14;
               return this.nativeRouter.execute('replace', function () {
                 return _this5.locationToNativeData(routeState);
               }, key);
 
-            case 16:
+            case 14:
               nativeData = _context3.sent;
 
-            case 17:
+            case 15:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -4251,9 +4250,13 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().replace(location, key);
               }
 
+              this.dispatch({
+                routeState: routeState,
+                root: root
+              });
               this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
-            case 22:
+            case 21:
             case "end":
               return _context3.stop();
           }
@@ -4268,7 +4271,7 @@ var BaseRouter = function () {
     return _replace;
   }();
 
-  _proto2.back = function back(n, root, overflowRedirect, nativeCaller) {
+  _proto2.back = function back(n, root, options, nativeCaller) {
     if (n === void 0) {
       n = 1;
     }
@@ -4277,22 +4280,18 @@ var BaseRouter = function () {
       root = false;
     }
 
-    if (overflowRedirect === void 0) {
-      overflowRedirect = true;
-    }
-
     if (nativeCaller === void 0) {
       nativeCaller = false;
     }
 
-    this.addTask(this._back.bind(this, n, root, overflowRedirect, nativeCaller));
+    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
   };
 
   _proto2._back = function () {
-    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, root, overflowRedirect, nativeCaller) {
+    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, root, options, nativeCaller) {
       var _this6 = this;
 
-      var historyRecord, key, pagename, routeState, nativeData, notifyNativeRouter;
+      var didOverflowRedirect, overflowRedirectUrl, historyRecord, key, pagename, params, routeState, prevRootState, nativeData, notifyNativeRouter;
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -4309,47 +4308,47 @@ var BaseRouter = function () {
               return _context4.abrupt("return", undefined);
 
             case 3:
-              historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
+              didOverflowRedirect = !!options.overflowRedirect;
+              overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
+              historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
 
               if (historyRecord) {
-                _context4.next = 6;
+                _context4.next = 8;
                 break;
               }
 
-              return _context4.abrupt("return", this.relaunch(routeConfig.indexUrl, root));
+              return _context4.abrupt("return", this.relaunch(overflowRedirectUrl, root));
 
-            case 6:
+            case 8:
               key = historyRecord.key, pagename = historyRecord.pagename;
+              params = deepMerge(historyRecord.getParams(), options.payload);
               routeState = {
                 key: key,
                 pagename: pagename,
-                params: historyRecord.getParams(),
+                params: params,
                 action: 'BACK'
               };
-              _context4.next = 10;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              prevRootState = this.getCurrentStore().getState();
+              _context4.next = 14;
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState, prevRootState));
 
-            case 10:
-              _context4.next = 12;
-              return this.dispatch(routeState);
-
-            case 12:
+            case 14:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context4.next = 17;
+                _context4.next = 19;
                 break;
               }
 
-              _context4.next = 16;
+              _context4.next = 18;
               return this.nativeRouter.execute('back', function () {
                 return _this6.locationToNativeData(routeState);
               }, n, key);
 
-            case 16:
+            case 18:
               nativeData = _context4.sent;
 
-            case 17:
+            case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -4363,9 +4362,13 @@ var BaseRouter = function () {
                 this.history.getCurrentSubHistory().back(n);
               }
 
-              this.getCurrentStore().dispatch(routeChangeAction(routeState));
+              this.dispatch({
+                routeState: routeState,
+                root: root
+              });
+              this.getCurrentStore().dispatch(routeChangeAction(routeState, prevRootState));
 
-            case 22:
+            case 25:
             case "end":
               return _context4.stop();
           }
@@ -4408,7 +4411,7 @@ var BaseRouter = function () {
   };
 
   return BaseRouter;
-}();
+}(SingleDispatcher);
 
 var appMeta = {
   router: null,
@@ -4646,11 +4649,13 @@ var Page$1 = function Page(props) {
   var store = eluxContext.router.getCurrentStore();
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, props.children);
+  }, React.createElement("div", {
+    className: "elux-page"
+  }, props.children));
 };
 function renderToMP(store, eluxContext) {
-  var Component = function Component(_ref) {
-    var children = _ref.children;
+  var Component = function Component(_ref2) {
+    var children = _ref2.children;
     return React.createElement(EluxContextComponent.Provider, {
       value: eluxContext
     }, children);

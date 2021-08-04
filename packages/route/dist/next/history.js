@@ -1,6 +1,6 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { cloneStore } from '@elux/core';
-import { routeConfig } from './basic';
+import { routeConfig, routeMeta } from './basic';
 export class HistoryRecord {
   constructor(location, key, history, store) {
     _defineProperty(this, "pagename", void 0);
@@ -67,6 +67,17 @@ export class History {
 
   getLength() {
     return this.records.length;
+  }
+
+  getPages() {
+    return this.records.map(({
+      pagename
+    }) => {
+      return {
+        pagename,
+        page: routeMeta.pages[pagename]
+      };
+    });
   }
 
   findRecord(keyOrIndex) {

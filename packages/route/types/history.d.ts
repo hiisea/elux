@@ -20,6 +20,10 @@ export declare class History {
     constructor(parent?: History | undefined, record?: HistoryRecord);
     init(record: HistoryRecord): void;
     getLength(): number;
+    getPages(): {
+        pagename: string;
+        page?: any;
+    }[];
     findRecord(keyOrIndex: number | string): HistoryRecord | undefined;
     findIndex(key: string): number;
     getCurrentRecord(): HistoryRecord;

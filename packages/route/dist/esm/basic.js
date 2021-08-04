@@ -10,5 +10,6 @@ export var routeConfig = {
 export var setRouteConfig = buildConfigSetter(routeConfig);
 export var routeMeta = {
   defaultParams: {},
-  pagenames: {}
+  pagenames: {},
+  pages: {}
 };

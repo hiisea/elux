@@ -23,6 +23,7 @@ export interface PagenameMap {
   [pageName: string]: {
     argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
     paramsToArgs: Function; // TODO vue下类型推导出错？paramsToArgs(params: Record<string, any>): Array<any>;
+    page?: any;
   };
 }
 
@@ -123,12 +124,12 @@ export function createLocationTransform(
     .sort((a, b) => b.length - a.length)
     .reduce((map, pagename) => {
       const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-      map[fullPagename] = pagenameMap[pagename];
+      const {argsToParams, paramsToArgs, page} = pagenameMap[pagename];
+      map[fullPagename] = {argsToParams, paramsToArgs};
+      routeMeta.pagenames[pagename] = pagename;
+      routeMeta.pagenames[pagename] = page;
       return map;
     }, {});
-  pagenames.forEach((key) => {
-    routeMeta.pagenames[key] = key;
-  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr: any[]): Array<string | undefined> {

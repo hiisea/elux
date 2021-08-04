@@ -1,6 +1,6 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { cloneStore } from '@elux/core';
-import { routeConfig } from './basic';
+import { routeConfig, routeMeta } from './basic';
 export var HistoryRecord = function () {
   function HistoryRecord(location, key, history, store) {
     _defineProperty(this, "pagename", void 0);
@@ -70,6 +70,16 @@ export var History = function () {
 
   _proto2.getLength = function getLength() {
     return this.records.length;
+  };
+
+  _proto2.getPages = function getPages() {
+    return this.records.map(function (_ref) {
+      var pagename = _ref.pagename;
+      return {
+        pagename: pagename,
+        page: routeMeta.pages[pagename]
+      };
+    });
   };
 
   _proto2.findRecord = function findRecord(keyOrIndex) {

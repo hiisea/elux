@@ -18,6 +18,7 @@ var setRouteConfig = (0, _core.buildConfigSetter)(routeConfig);
 exports.setRouteConfig = setRouteConfig;
 var routeMeta = {
   defaultParams: {},
-  pagenames: {}
+  pagenames: {},
+  pages: {}
 };
 exports.routeMeta = routeMeta;

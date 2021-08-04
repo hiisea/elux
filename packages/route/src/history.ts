@@ -1,5 +1,5 @@
 import {IStore, cloneStore} from '@elux/core';
-import {Location, routeConfig} from './basic';
+import {Location, routeConfig, routeMeta} from './basic';
 
 export class HistoryRecord {
   pagename: string;
@@ -46,6 +46,11 @@ export class History {
   }
   getLength(): number {
     return this.records.length;
+  }
+  getPages(): {pagename: string; page?: any}[] {
+    return this.records.map(({pagename}) => {
+      return {pagename, page: routeMeta.pages[pagename]};
+    });
   }
   findRecord(keyOrIndex: number | string): HistoryRecord | undefined {
     if (typeof keyOrIndex === 'number') {

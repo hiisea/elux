@@ -122,12 +122,18 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
     return b.length - a.length;
   }).reduce(function (map, pagename) {
     var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
+    var _pagenameMap$pagename = pagenameMap[pagename],
+        argsToParams = _pagenameMap$pagename.argsToParams,
+        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        page = _pagenameMap$pagename.page;
+    map[fullPagename] = {
+      argsToParams: argsToParams,
+      paramsToArgs: paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pagenames[pagename] = page;
     return map;
   }, {});
-  pagenames.forEach(function (key) {
-    routeMeta.pagenames[key] = key;
-  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {

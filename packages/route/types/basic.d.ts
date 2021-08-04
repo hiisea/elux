@@ -11,6 +11,7 @@ export declare const setRouteConfig: (config: Partial<RouteConfig>) => void;
 export declare const routeMeta: {
     pagenames: Record<string, string>;
     defaultParams: Record<string, any>;
+    pages: Record<string, any>;
 };
 export declare type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
 export declare type ModuleParams = Record<string, any>;

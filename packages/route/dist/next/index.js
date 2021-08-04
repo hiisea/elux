@@ -1,5 +1,5 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge } from '@elux/core';
+import { isPromise, deepMerge, SingleDispatcher } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
 import { History, HistoryRecord } from './history';
 import { testRouteChangeAction, routeChangeAction } from './module';
@@ -57,8 +57,10 @@ export class BaseNativeRouter {
   }
 
 }
-export class BaseRouter {
+export class BaseRouter extends SingleDispatcher {
   constructor(url, nativeRouter, locationTransform) {
+    super();
+
     _defineProperty(this, "_tid", 0);
 
     _defineProperty(this, "curTask", void 0);
@@ -72,10 +74,6 @@ export class BaseRouter {
     _defineProperty(this, "internalUrl", void 0);
 
     _defineProperty(this, "history", void 0);
-
-    _defineProperty(this, "_lid", 0);
-
-    _defineProperty(this, "listenerMap", {});
 
     _defineProperty(this, "initRouteState", void 0);
 
@@ -112,22 +110,6 @@ export class BaseRouter {
     } else {
       this.initRouteState = callback(locationOrPromise);
     }
-  }
-
-  addListener(callback) {
-    this._lid++;
-    const id = `${this._lid}`;
-    const listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return () => {
-      delete listenerMap[id];
-    };
-  }
-
-  dispatch(data) {
-    const listenerMap = this.listenerMap;
-    const arr = Object.keys(listenerMap).map(id => listenerMap[id](data));
-    return Promise.all(arr);
   }
 
   getRouteState() {
@@ -266,7 +248,6 @@ export class BaseRouter {
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -287,6 +268,10 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
 
+    this.dispatch({
+      routeState,
+      root
+    });
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
@@ -310,7 +295,6 @@ export class BaseRouter {
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -331,6 +315,10 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().push(location, key);
     }
 
+    this.dispatch({
+      routeState,
+      root
+    });
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
@@ -354,7 +342,6 @@ export class BaseRouter {
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -375,36 +362,43 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().replace(location, key);
     }
 
+    this.dispatch({
+      routeState,
+      root
+    });
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
-  back(n = 1, root = false, overflowRedirect = true, nativeCaller = false) {
-    this.addTask(this._back.bind(this, n, root, overflowRedirect, nativeCaller));
+  back(n = 1, root = false, options, nativeCaller = false) {
+    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
   }
 
-  async _back(n = 1, root, overflowRedirect, nativeCaller) {
+  async _back(n = 1, root, options, nativeCaller) {
     if (n < 1) {
       return undefined;
     }
 
-    const historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
+    const didOverflowRedirect = !!options.overflowRedirect;
+    const overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
+    const historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
 
     if (!historyRecord) {
-      return this.relaunch(routeConfig.indexUrl, root);
+      return this.relaunch(overflowRedirectUrl, root);
     }
 
     const {
       key,
       pagename
     } = historyRecord;
+    const params = deepMerge(historyRecord.getParams(), options.payload);
     const routeState = {
       key,
       pagename,
-      params: historyRecord.getParams(),
+      params,
       action: 'BACK'
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.dispatch(routeState);
+    const prevRootState = this.getCurrentStore().getState();
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState, prevRootState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -425,7 +419,11 @@ export class BaseRouter {
       this.history.getCurrentSubHistory().back(n);
     }
 
-    this.getCurrentStore().dispatch(routeChangeAction(routeState));
+    this.dispatch({
+      routeState,
+      root
+    });
+    this.getCurrentStore().dispatch(routeChangeAction(routeState, prevRootState));
   }
 
   taskComplete() {

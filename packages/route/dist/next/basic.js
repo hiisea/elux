@@ -10,5 +10,6 @@ export const routeConfig = {
 export const setRouteConfig = buildConfigSetter(routeConfig);
 export const routeMeta = {
   defaultParams: {},
-  pagenames: {}
+  pagenames: {},
+  pages: {}
 };

@@ -23,6 +23,7 @@ export interface PagenameMap {
     [pageName: string]: {
         argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
         paramsToArgs: Function;
+        page?: any;
     };
 }
 export declare type NativeLocationMap = {

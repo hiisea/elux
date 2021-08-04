@@ -10,9 +10,9 @@ export declare const RouteActionTypes: {
     RouteChange: string;
     TestRouteChange: string;
 };
-export declare function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
-export declare function routeParamsAction(moduleName: string, params: any, action: HistoryAction): Action;
-export declare function routeChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
+export declare function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>, prevRootState?: Record<string, any>): Action;
+export declare function routeParamsAction(moduleName: string, params: any, action: HistoryAction, prevRootState?: Record<string, any>): Action;
+export declare function routeChangeAction<P extends RootParams>(routeState: RouteState<P>, prevRootState?: Record<string, any>): Action;
 export declare const routeMiddleware: IStoreMiddleware;
 export declare type RouteModule = CommonModule & {
     locationTransform: LocationTransform;
