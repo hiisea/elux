@@ -1,41 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { env } from '@elux/core';
-import { EluxContextComponent, reactComponentsConfig } from './base';
+import React from 'react';
 import { hydrate, render } from 'react-dom';
-export const Router = props => {
-  const eluxContext = useContext(EluxContextComponent);
-  const router = eluxContext.router;
-  const [pages, setPages] = useState(router.getHistory(true).getPages());
-  useEffect(() => {
-    return router.addListener(({
-      routeState,
-      root
-    }) => {
-      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
-        const newPages = router.getHistory(true).getPages();
-        setPages(newPages);
-      }
-    });
-  }, [router]);
-  const nodes = pages.map(item => {
-    const page = React.createElement(item.page, {
-      key: item.pagename
-    }) || React.createElement(Page, {
-      key: item.pagename
-    }, props.children);
-    return page;
-  });
-  return React.createElement(React.Fragment, null, nodes);
-};
-export const Page = function (props) {
-  const eluxContext = useContext(EluxContextComponent);
-  const store = eluxContext.router.getCurrentStore();
-  return React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement("div", {
-    className: "elux-page"
-  }, props.children));
-};
+import { env } from '@elux/core';
+import { EluxContextComponent } from './base';
+import { Router } from './Router';
 export function renderToMP(store, eluxContext) {
   const Component = ({
     children

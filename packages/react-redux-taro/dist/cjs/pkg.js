@@ -2712,11 +2712,13 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
       url = _ref.url,
-      portal = _ref.portal,
-      replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "portal", "replace"]);
+      root = _ref.root,
+      _ref$action = _ref.action,
+      action = _ref$action === void 0 ? 'push' : _ref$action,
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "root", "action"]);
 
   var eluxContext = React.useContext(EluxContextComponent);
+  var router = eluxContext.router;
 
   var props = _extends({}, rest, {
     onClick: function (_onClick) {
@@ -2732,7 +2734,7 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
+      router[action](url, root);
     })
   });
 
@@ -2747,6 +2749,52 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
     }));
   }
 });
+
+var Router$1 = function Router(props) {
+  var eluxContext = React.useContext(EluxContextComponent);
+  var router = eluxContext.router;
+
+  var _useState = React.useState(router.getHistory(true).getPages()),
+      pages = _useState[0],
+      setPages = _useState[1];
+
+  var containerRef = React.useRef(null);
+  React.useEffect(function () {
+    return router.addListener(function (_ref) {
+      var routeState = _ref.routeState,
+          root = _ref.root;
+
+      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
+        var newPages = router.getHistory(true).getPages();
+        setPages(newPages);
+      }
+    });
+  }, [router]);
+  React.useEffect(function () {
+    containerRef.current.className = 'elux-app';
+  });
+  var nodes = pages.reverse().map(function (item) {
+    var page = item.page ? React__default['default'].createElement(item.page, {
+      key: item.key
+    }) : React__default['default'].createElement(Page$1, {
+      key: item.key
+    }, props.children);
+    return page;
+  });
+  return React__default['default'].createElement("div", {
+    ref: containerRef,
+    className: "elux-app elux-enter"
+  }, nodes);
+};
+var Page$1 = function Page(props) {
+  var eluxContext = React.useContext(EluxContextComponent);
+  var store = eluxContext.router.getCurrentStore();
+  return React__default['default'].createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, React__default['default'].createElement("div", {
+    className: "elux-page"
+  }, props.children));
+};
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
@@ -2968,10 +3016,12 @@ var History = function () {
 
   _proto2.getPages = function getPages() {
     return this.records.map(function (_ref) {
-      var pagename = _ref.pagename;
+      var pagename = _ref.pagename,
+          key = _ref.key;
       return {
         pagename: pagename,
-        page: routeMeta.pages[pagename]
+        page: routeMeta.pages[pagename],
+        key: key
       };
     });
   };
@@ -3031,11 +3081,6 @@ var History = function () {
   _proto2.relaunch = function relaunch(location, key) {
     var records = this.records;
     var store = records[0].getStore();
-
-    if (!this.parent) {
-      store = cloneStore(store);
-    }
-
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };
@@ -3370,7 +3415,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       paramsToArgs: paramsToArgs
     };
     routeMeta.pagenames[pagename] = pagename;
-    routeMeta.pagenames[pagename] = page;
+    routeMeta.pages[pagename] = page;
     return map;
   }, {});
   pagenames = Object.keys(pagenameMap);
@@ -4652,18 +4697,9 @@ function getApp() {
   };
 }
 
-var Page$1 = function Page(props) {
-  var eluxContext = React.useContext(EluxContextComponent);
-  var store = eluxContext.router.getCurrentStore();
-  return React__default['default'].createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React__default['default'].createElement("div", {
-    className: "elux-page"
-  }, props.children));
-};
 function renderToMP(store, eluxContext) {
-  var Component = function Component(_ref2) {
-    var children = _ref2.children;
+  var Component = function Component(_ref) {
+    var children = _ref.children;
     return React__default['default'].createElement(EluxContextComponent.Provider, {
       value: eluxContext
     }, children);
@@ -8220,6 +8256,7 @@ exports.Link = Link;
 exports.Page = Page$1;
 exports.Provider = Provider;
 exports.RouteActionTypes = RouteActionTypes;
+exports.Router = Router$1;
 exports.Switch = Switch;
 exports.action = action;
 exports.appConfig = appConfig;

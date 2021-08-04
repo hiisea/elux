@@ -5,16 +5,17 @@ export default React.forwardRef(({
   onClick,
   href,
   url,
-  portal,
-  replace,
+  root,
+  action = 'push',
   ...rest
 }, ref) => {
   const eluxContext = useContext(EluxContextComponent);
+  const router = eluxContext.router;
   const props = { ...rest,
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
+      router[action](url, root);
     }
   };
 

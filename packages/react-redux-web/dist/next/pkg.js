@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, Component as Component$3, useState, useLayoutEffect, useMemo, useReducer, useRef, useDebugValue } from 'react';
+import React, { useContext, useEffect, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
 import { hydrate, render, unstable_batchedUpdates } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
@@ -1698,16 +1698,17 @@ var Link = React.forwardRef(({
   onClick,
   href,
   url,
-  portal,
-  replace,
+  root,
+  action = 'push',
   ...rest
 }, ref) => {
   const eluxContext = useContext(EluxContextComponent);
+  const router = eluxContext.router;
   const props = { ...rest,
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
+      router[action](url, root);
     }
   };
 
@@ -1722,6 +1723,48 @@ var Link = React.forwardRef(({
     }));
   }
 });
+
+const Router$1 = props => {
+  const eluxContext = useContext(EluxContextComponent);
+  const router = eluxContext.router;
+  const [pages, setPages] = useState(router.getHistory(true).getPages());
+  const containerRef = useRef(null);
+  useEffect(() => {
+    return router.addListener(({
+      routeState,
+      root
+    }) => {
+      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
+        const newPages = router.getHistory(true).getPages();
+        setPages(newPages);
+      }
+    });
+  }, [router]);
+  useEffect(() => {
+    containerRef.current.className = 'elux-app';
+  });
+  const nodes = pages.reverse().map(item => {
+    const page = item.page ? React.createElement(item.page, {
+      key: item.key
+    }) : React.createElement(Page, {
+      key: item.key
+    }, props.children);
+    return page;
+  });
+  return React.createElement("div", {
+    ref: containerRef,
+    className: "elux-app elux-enter"
+  }, nodes);
+};
+const Page = function (props) {
+  const eluxContext = useContext(EluxContextComponent);
+  const store = eluxContext.router.getCurrentStore();
+  return React.createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, React.createElement("div", {
+    className: "elux-page"
+  }, props.children));
+};
 
 const loadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
@@ -1841,40 +1884,6 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   });
 };
 
-const Router$1 = props => {
-  const eluxContext = useContext(EluxContextComponent);
-  const router = eluxContext.router;
-  const [pages, setPages] = useState(router.getHistory(true).getPages());
-  useEffect(() => {
-    return router.addListener(({
-      routeState,
-      root
-    }) => {
-      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
-        const newPages = router.getHistory(true).getPages();
-        setPages(newPages);
-      }
-    });
-  }, [router]);
-  const nodes = pages.map(item => {
-    const page = React.createElement(item.page, {
-      key: item.pagename
-    }) || React.createElement(Page, {
-      key: item.pagename
-    }, props.children);
-    return page;
-  });
-  return React.createElement(React.Fragment, null, nodes);
-};
-const Page = function (props) {
-  const eluxContext = useContext(EluxContextComponent);
-  const store = eluxContext.router.getCurrentStore();
-  return React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement("div", {
-    className: "elux-page"
-  }, props.children));
-};
 function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
   const renderFun = fromSSR ? hydrate : render;
   const panel = env.document.getElementById(id);
@@ -1975,11 +1984,13 @@ class History {
 
   getPages() {
     return this.records.map(({
-      pagename
+      pagename,
+      key
     }) => {
       return {
         pagename,
-        page: routeMeta.pages[pagename]
+        page: routeMeta.pages[pagename],
+        key
       };
     });
   }
@@ -2034,12 +2045,7 @@ class History {
 
   relaunch(location, key) {
     const records = this.records;
-    let store = records[0].getStore();
-
-    if (!this.parent) {
-      store = cloneStore(store);
-    }
-
+    const store = records[0].getStore();
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }
@@ -2347,7 +2353,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       paramsToArgs
     };
     routeMeta.pagenames[pagename] = pagename;
-    routeMeta.pagenames[pagename] = page;
+    routeMeta.pages[pagename] = page;
     return map;
   }, {});
   pagenames = Object.keys(pagenameMap);
@@ -7770,4 +7776,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector, useStore };

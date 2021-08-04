@@ -6,3 +6,6 @@ declare namespace EluxRuntime {
     };
   }
 }
+interface HTMLDivElement {
+  className?: string;
+}

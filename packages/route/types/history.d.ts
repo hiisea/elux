@@ -22,6 +22,7 @@ export declare class History {
     getLength(): number;
     getPages(): {
         pagename: string;
+        key: string;
         page?: any;
     }[];
     findRecord(keyOrIndex: number | string): HistoryRecord | undefined;

@@ -82,10 +82,12 @@ var History = function () {
 
   _proto2.getPages = function getPages() {
     return this.records.map(function (_ref) {
-      var pagename = _ref.pagename;
+      var pagename = _ref.pagename,
+          key = _ref.key;
       return {
         pagename: pagename,
-        page: _basic.routeMeta.pages[pagename]
+        page: _basic.routeMeta.pages[pagename],
+        key: key
       };
     });
   };
@@ -145,11 +147,6 @@ var History = function () {
   _proto2.relaunch = function relaunch(location, key) {
     var records = this.records;
     var store = records[0].getStore();
-
-    if (!this.parent) {
-      store = (0, _core.cloneStore)(store);
-    }
-
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };

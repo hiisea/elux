@@ -9,7 +9,6 @@ import {routeENV, getTabPages} from '@elux/taro';
 export {routeENV} from '@elux/taro';
 export * from '@elux/react-components';
 export * from '@elux/app';
-export {Page} from '@elux/react-components/stage';
 
 setAppConfig({loadComponent});
 

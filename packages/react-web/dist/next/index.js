@@ -4,7 +4,6 @@ import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux
 import { createRouter } from '@elux/route-browser';
 export * from '@elux/react-components';
 export * from '@elux/app';
-export { Page } from '@elux/react-components/stage';
 setAppConfig({
   loadComponent
 });

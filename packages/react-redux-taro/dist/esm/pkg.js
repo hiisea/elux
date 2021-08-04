@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro';
-import React, { useContext, useEffect, Component as Component$3, useLayoutEffect, useMemo, useReducer, useRef, useDebugValue } from 'react';
+import React, { useContext, useEffect, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
@@ -2704,11 +2704,13 @@ var Link = React.forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
       url = _ref.url,
-      portal = _ref.portal,
-      replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "portal", "replace"]);
+      root = _ref.root,
+      _ref$action = _ref.action,
+      action = _ref$action === void 0 ? 'push' : _ref$action,
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "root", "action"]);
 
   var eluxContext = useContext(EluxContextComponent);
+  var router = eluxContext.router;
 
   var props = _extends({}, rest, {
     onClick: function (_onClick) {
@@ -2724,7 +2726,7 @@ var Link = React.forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url, portal) : eluxContext.router.push(url, portal);
+      router[action](url, root);
     })
   });
 
@@ -2739,6 +2741,52 @@ var Link = React.forwardRef(function (_ref, ref) {
     }));
   }
 });
+
+var Router$1 = function Router(props) {
+  var eluxContext = useContext(EluxContextComponent);
+  var router = eluxContext.router;
+
+  var _useState = useState(router.getHistory(true).getPages()),
+      pages = _useState[0],
+      setPages = _useState[1];
+
+  var containerRef = useRef(null);
+  useEffect(function () {
+    return router.addListener(function (_ref) {
+      var routeState = _ref.routeState,
+          root = _ref.root;
+
+      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
+        var newPages = router.getHistory(true).getPages();
+        setPages(newPages);
+      }
+    });
+  }, [router]);
+  useEffect(function () {
+    containerRef.current.className = 'elux-app';
+  });
+  var nodes = pages.reverse().map(function (item) {
+    var page = item.page ? React.createElement(item.page, {
+      key: item.key
+    }) : React.createElement(Page$1, {
+      key: item.key
+    }, props.children);
+    return page;
+  });
+  return React.createElement("div", {
+    ref: containerRef,
+    className: "elux-app elux-enter"
+  }, nodes);
+};
+var Page$1 = function Page(props) {
+  var eluxContext = useContext(EluxContextComponent);
+  var store = eluxContext.router.getCurrentStore();
+  return React.createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, React.createElement("div", {
+    className: "elux-page"
+  }, props.children));
+};
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
@@ -2960,10 +3008,12 @@ var History = function () {
 
   _proto2.getPages = function getPages() {
     return this.records.map(function (_ref) {
-      var pagename = _ref.pagename;
+      var pagename = _ref.pagename,
+          key = _ref.key;
       return {
         pagename: pagename,
-        page: routeMeta.pages[pagename]
+        page: routeMeta.pages[pagename],
+        key: key
       };
     });
   };
@@ -3023,11 +3073,6 @@ var History = function () {
   _proto2.relaunch = function relaunch(location, key) {
     var records = this.records;
     var store = records[0].getStore();
-
-    if (!this.parent) {
-      store = cloneStore(store);
-    }
-
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };
@@ -3362,7 +3407,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       paramsToArgs: paramsToArgs
     };
     routeMeta.pagenames[pagename] = pagename;
-    routeMeta.pagenames[pagename] = page;
+    routeMeta.pages[pagename] = page;
     return map;
   }, {});
   pagenames = Object.keys(pagenameMap);
@@ -4644,18 +4689,9 @@ function getApp() {
   };
 }
 
-var Page$1 = function Page(props) {
-  var eluxContext = useContext(EluxContextComponent);
-  var store = eluxContext.router.getCurrentStore();
-  return React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement("div", {
-    className: "elux-page"
-  }, props.children));
-};
 function renderToMP(store, eluxContext) {
-  var Component = function Component(_ref2) {
-    var children = _ref2.children;
+  var Component = function Component(_ref) {
+    var children = _ref.children;
     return React.createElement(EluxContextComponent.Provider, {
       value: eluxContext
     }, children);
@@ -8197,4 +8233,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useSelector, useStore };

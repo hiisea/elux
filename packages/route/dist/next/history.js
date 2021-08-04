@@ -71,11 +71,13 @@ export class History {
 
   getPages() {
     return this.records.map(({
-      pagename
+      pagename,
+      key
     }) => {
       return {
         pagename,
-        page: routeMeta.pages[pagename]
+        page: routeMeta.pages[pagename],
+        key
       };
     });
   }
@@ -130,12 +132,7 @@ export class History {
 
   relaunch(location, key) {
     const records = this.records;
-    let store = records[0].getStore();
-
-    if (!this.parent) {
-      store = cloneStore(store);
-    }
-
+    const store = records[0].getStore();
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }

@@ -47,9 +47,9 @@ export class History {
   getLength(): number {
     return this.records.length;
   }
-  getPages(): {pagename: string; page?: any}[] {
-    return this.records.map(({pagename}) => {
-      return {pagename, page: routeMeta.pages[pagename]};
+  getPages(): {pagename: string; key: string; page?: any}[] {
+    return this.records.map(({pagename, key}) => {
+      return {pagename, page: routeMeta.pages[pagename], key};
     });
   }
   findRecord(keyOrIndex: number | string): HistoryRecord | undefined {
@@ -92,11 +92,11 @@ export class History {
   }
   relaunch(location: Location, key: string): void {
     const records = this.records;
-    let store: IStore = records[0].getStore();
-    //TODO Taro’s bug
-    if (!this.parent) {
-      store = cloneStore(store);
-    }
+    const store: IStore = records[0].getStore();
+    // //TODO Taro’s bug
+    // if (!this.parent) {
+    //   store = cloneStore(store);
+    // }
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }

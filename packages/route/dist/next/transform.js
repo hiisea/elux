@@ -115,7 +115,7 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
       paramsToArgs
     };
     routeMeta.pagenames[pagename] = pagename;
-    routeMeta.pagenames[pagename] = page;
+    routeMeta.pages[pagename] = page;
     return map;
   }, {});
   pagenames = Object.keys(pagenameMap);

@@ -5,18 +5,19 @@ export interface Props extends React.HTMLAttributes<HTMLDivElement> {
   url: string;
   onClick?(event: React.MouseEvent): void;
   href?: string;
-  replace?: boolean;
-  portal?: boolean;
+  action?: 'push' | 'replace' | 'relaunch';
+  root?: boolean;
 }
 
-export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, href, url, portal, replace, ...rest}, ref) => {
+export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, href, url, root, action = 'push', ...rest}, ref) => {
   const eluxContext = useContext(EluxContextComponent);
+  const router = eluxContext.router!;
   const props = {
     ...rest,
     onClick: (event: React.MouseEvent) => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router!.replace(url, portal) : eluxContext.router!.push(url, portal);
+      router[action](url, root);
     },
   };
   if (href) {
