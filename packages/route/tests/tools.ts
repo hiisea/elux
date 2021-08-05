@@ -48,8 +48,8 @@ const defaultArticleRouteParams: ArticleRouteParams = {
 };
 
 class ModuleHandlers extends CoreModuleHandlers {
-  constructor(moduleName: string) {
-    super(moduleName, {});
+  constructor(moduleName: string, context: any) {
+    super(moduleName, {}, context);
   }
 }
 

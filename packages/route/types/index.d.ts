@@ -1,4 +1,4 @@
-import { IStore, SingleDispatcher } from '@elux/core';
+import { IStore, ICoreRouter, SingleDispatcher, IModuleHandlers } from '@elux/core';
 import { PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation } from './basic';
 import { History } from './history';
 import { LocationTransform } from './transform';
@@ -48,6 +48,9 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     private internalUrl;
     protected history: History;
     initRouteState: RouteState<P> | Promise<RouteState<P>>;
+    readonly injectedModules: {
+        [moduleName: string]: IModuleHandlers;
+    };
     constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
     getRouteState(): RouteState<P>;
     getPagename(): string;
@@ -55,8 +58,8 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;
-    init(store: IStore<any>): void;
-    getCurrentStore(): IStore<any>;
+    init(store: IStore): void;
+    getCurrentStore(): IStore;
     getCurKey(): string;
     getHistory(root?: boolean): History;
     getHistoryLength(root?: boolean): number;
@@ -87,7 +90,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     private addTask;
     destroy(): void;
 }
-export interface IBaseRouter<P extends RootParams, N extends string> {
+export interface IBaseRouter<P extends RootParams, N extends string> extends ICoreRouter {
     initRouteState: RouteState<P> | Promise<RouteState<P>>;
     getHistory(root?: boolean): History;
     nativeRouter: any;
@@ -106,8 +109,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
         nativeUrl: string;
         nativeLocation: NativeLocation;
     };
-    init(store: IStore<any>): void;
-    getCurrentStore(): IStore<any>;
+    getCurrentStore(): IStore;
     getCurKey(): string;
     relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
     push(data: PayloadLocation<P, N> | string, root?: boolean): void;

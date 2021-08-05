@@ -1,23 +1,17 @@
 import {getComponet, ModuleGetter, defineModuleGetter, renderApp, BStore, BStoreOptions, IStore, IStoreMiddleware, StoreBuilder} from '@elux/core';
 import {createRedux} from 'src/index';
-import {messages} from './utils';
+import {messages, router} from './utils';
 import {App, moduleGetter} from './modules';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createAppWithRedux(
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  moduleGetter: ModuleGetter,
-  middlewares?: IStoreMiddleware[],
-  appModuleName?: string,
-  appViewName?: string
-) {
+export function createAppWithRedux(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string, appViewName?: string) {
   defineModuleGetter(moduleGetter, appModuleName);
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return {
         render() {
-          const baseStore = storeCreator(storeOptions);
-          return renderApp(baseStore, [], [], middlewares, appViewName);
+          const baseStore = storeCreator(storeOptions, router);
+          return renderApp(router, baseStore, [], [], middlewares, appViewName);
         },
       };
     },

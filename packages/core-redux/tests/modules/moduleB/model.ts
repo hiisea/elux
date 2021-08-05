@@ -7,8 +7,8 @@ export interface State {
 
 // 定义本模块的Handlers
 export class ModuleHandlers extends CoreModuleHandlers<State, {}> {
-  constructor(moduleName: string) {
-    super(moduleName, {count: 0});
+  constructor(moduleName: string, context: any) {
+    super(moduleName, context, {count: 0});
   }
 
   @reducer

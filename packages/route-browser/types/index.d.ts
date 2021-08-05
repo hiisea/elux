@@ -1,5 +1,8 @@
 import { BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter } from '@elux/route';
 import { History } from 'history';
+export declare function setBrowserRouteConfig({ enableMultiPage }: {
+    enableMultiPage?: boolean;
+}): void;
 export declare class BrowserNativeRouter extends BaseNativeRouter {
     private _unlistenHistory;
     protected router: Router<any, string>;

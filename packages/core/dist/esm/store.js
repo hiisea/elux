@@ -47,28 +47,19 @@ function compose() {
   });
 }
 
-export function cloneStore(store) {
-  var _store$clone = store.clone,
-      creator = _store$clone.creator,
-      options = _store$clone.options,
-      middlewares = _store$clone.middlewares,
-      injectedModules = _store$clone.injectedModules;
+export function forkStore(store) {
+  var _store$baseFork = store.baseFork,
+      creator = _store$baseFork.creator,
+      options = _store$baseFork.options;
+  var middlewares = store.fork.middlewares;
   var initState = store.getPureState();
   var newBStore = creator(_extends({}, options, {
     initState: initState
-  }));
-  var newIStore = enhanceStore(newBStore, middlewares, injectedModules);
-  newIStore.id = (store.id || 0) + 1;
+  }), store.router, store.id + 1);
+  var newIStore = enhanceStore(newBStore, middlewares);
   return newIStore;
 }
-export function enhanceStore(baseStore, middlewares, injectedModules) {
-  if (injectedModules === void 0) {
-    injectedModules = {};
-  }
-
-  var _baseStore$clone = baseStore.clone,
-      options = _baseStore$clone.options,
-      creator = _baseStore$clone.creator;
+export function enhanceStore(baseStore, middlewares) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -79,12 +70,8 @@ export function enhanceStore(baseStore, middlewares, injectedModules) {
   };
 
   store.getState = getState;
-  store.injectedModules = injectedModules;
-  store.clone = {
-    creator: creator,
-    options: options,
-    middlewares: middlewares,
-    injectedModules: injectedModules
+  store.fork = {
+    middlewares: middlewares
   };
   var currentData = {
     actionName: '',
@@ -134,7 +121,7 @@ export function enhanceStore(baseStore, middlewares, injectedModules) {
         }
 
         if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-          if (!injectedModules[moduleName]) {
+          if (!store.router.injectedModules[moduleName]) {
             var result = loadModel(moduleName, store);
 
             if (isPromise(result)) {
@@ -236,7 +223,7 @@ export function enhanceStore(baseStore, middlewares, injectedModules) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = injectedModules[moduleName];
+            var modelInstance = store.router.injectedModules[moduleName];
             var result = handler.apply(modelInstance, actionData);
 
             if (result) {
@@ -251,7 +238,7 @@ export function enhanceStore(baseStore, middlewares, injectedModules) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = injectedModules[moduleName];
+            var modelInstance = store.router.injectedModules[moduleName];
             Object.assign(currentData, prevData);
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }

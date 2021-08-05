@@ -13,7 +13,7 @@ export {
   setLoading,
   buildConfigSetter,
 } from './basic';
-export {getActionData, setProcessedError, isProcessedError, cloneStore} from './store';
+export {getActionData, setProcessedError, isProcessedError, forkStore} from './store';
 export {
   CoreModuleHandlers,
   EmptyModuleHandlers,
@@ -38,6 +38,7 @@ export type {
   EluxComponent,
   CommonModule,
   ModuleGetter,
+  ICoreRouter,
   IStore,
   BStore,
   BStoreOptions,

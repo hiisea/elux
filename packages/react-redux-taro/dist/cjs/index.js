@@ -17,6 +17,12 @@ Object.keys(_reactRedux).forEach(function (key) {
   if (key in exports && exports[key] === _reactRedux[key]) return;
   exports[key] = _reactRedux[key];
 });
+
+var _app = require("@elux/app");
+
+(0, _app.setAppConfig)({
+  useStore: _reactRedux.useStore
+});
 (0, _reactTaro.setReactComponentsConfig)({
   Provider: _reactRedux.Provider,
   useStore: _reactRedux.useStore

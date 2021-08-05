@@ -96,6 +96,8 @@ export var BaseRouter = function (_SingleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "initRouteState", void 0);
 
+    _defineProperty(_assertThisInitialized(_this2), "injectedModules", {});
+
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
     nativeRouter.setRouter(_assertThisInitialized(_this2));

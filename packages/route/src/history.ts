@@ -1,4 +1,4 @@
-import {IStore, cloneStore} from '@elux/core';
+import {IStore, forkStore} from '@elux/core';
 import {Location, routeConfig, routeMeta} from './basic';
 
 export class HistoryRecord {
@@ -29,7 +29,7 @@ export class HistoryRecord {
     }
     return undefined;
   }
-  getStore(): IStore<any> {
+  getStore(): IStore {
     return this.store;
   }
 }
@@ -74,7 +74,7 @@ export class History {
     const records = this.records;
     let store: IStore = records[0].getStore();
     if (!this.parent) {
-      store = cloneStore(store);
+      store = forkStore(store);
     }
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;
@@ -95,7 +95,7 @@ export class History {
     const store: IStore = records[0].getStore();
     // //TODO Taro’s bug
     // if (!this.parent) {
-    //   store = cloneStore(store);
+    //   store = forkStore(store);
     // }
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];

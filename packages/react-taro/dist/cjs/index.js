@@ -39,7 +39,8 @@ var _taro2 = require("@elux/taro");
 
 exports.routeENV = _taro2.routeENV;
 (0, _app.setAppConfig)({
-  loadComponent: _reactComponents.loadComponent
+  loadComponent: _reactComponents.loadComponent,
+  useRouter: _reactComponents.useRouter
 });
 
 function setConfig(conf) {

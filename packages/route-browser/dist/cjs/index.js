@@ -3,6 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
+exports.setBrowserRouteConfig = setBrowserRouteConfig;
 exports.createRouter = createRouter;
 exports.Router = exports.BrowserNativeRouter = void 0;
 
@@ -24,6 +25,26 @@ var _core = require("@elux/core");
     internal: true
   }
 });
+
+function setBrowserRouteConfig(_ref) {
+  var enableMultiPage = _ref.enableMultiPage;
+
+  if (enableMultiPage) {
+    (0, _route.setRouteConfig)({
+      notifyNativeRouter: {
+        root: true,
+        internal: false
+      }
+    });
+  } else {
+    (0, _route.setRouteConfig)({
+      notifyNativeRouter: {
+        root: false,
+        internal: true
+      }
+    });
+  }
+}
 
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   (0, _inheritsLoose2.default)(BrowserNativeRouter, _BaseNativeRouter);
@@ -112,19 +133,19 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
         if (index > 0) {
           callback = function callback() {
-            return _this.router.back(index);
+            return _this.router.back(index, _route.routeConfig.notifyNativeRouter.root);
           };
         } else if (action === 'REPLACE') {
           callback = function callback() {
-            return _this.router.replace(url);
+            return _this.router.replace(url, _route.routeConfig.notifyNativeRouter.root);
           };
         } else if (action === 'PUSH') {
           callback = function callback() {
-            return _this.router.push(url);
+            return _this.router.push(url, _route.routeConfig.notifyNativeRouter.root);
           };
         } else {
           callback = function callback() {
-            return _this.router.relaunch(url);
+            return _this.router.relaunch(url, _route.routeConfig.notifyNativeRouter.root);
           };
         }
 

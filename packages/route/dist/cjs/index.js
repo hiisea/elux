@@ -116,6 +116,7 @@ var BaseRouter = function (_SingleDispatcher) {
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "internalUrl", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "history", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "initRouteState", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "injectedModules", {});
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
     nativeRouter.setRouter((0, _assertThisInitialized2.default)(_this2));

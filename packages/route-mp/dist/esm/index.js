@@ -1,7 +1,7 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter, setRouteConfig } from '@elux/route';
+import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter, setRouteConfig, routeConfig } from '@elux/route';
 setRouteConfig({
   notifyNativeRouter: {
     root: true,
@@ -39,13 +39,15 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
         }
 
         if (index > 0) {
-          _this.router.back(index, true, true, true);
+          _this.router.back(index, routeConfig.notifyNativeRouter.root, {
+            overflowRedirect: true
+          }, true);
         } else if (action === 'REPLACE') {
-          _this.router.replace(nativeUrl, true, true);
+          _this.router.replace(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         } else if (action === 'PUSH') {
-          _this.router.push(nativeUrl, true, true);
+          _this.router.push(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         } else {
-          _this.router.relaunch(nativeUrl, true, true);
+          _this.router.relaunch(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         }
       }
     });

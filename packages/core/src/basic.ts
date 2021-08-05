@@ -57,9 +57,9 @@ export type ActionCreatorList = Record<string, ActionCreator>;
 export type ActionCreatorMap = Record<string, ActionCreatorList>;
 
 export interface IModuleHandlers {
-  moduleName: string;
+  readonly moduleName: string;
   readonly initState: any;
-  store: IStore;
+  readonly router: ICoreRouter;
 }
 
 export type Dispatch = (action: Action) => void | Promise<void>;
@@ -74,33 +74,31 @@ export interface BStoreOptions {
   initState?: Record<string, any>;
 }
 
-export interface BStore<S extends Record<string, any> = {}> {
-  getState(): S;
-  getPureState(): S;
-  update: (actionName: string, state: S, actionData: any[]) => void;
-  dispatch: (action: Action) => any;
-  clone: {creator: (options: {initState: any}) => BStore; options: {initState?: any}};
-  replaceState(state: S): void;
-}
-
-export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
-
-export interface IStore<S extends State = {}> {
-  id: number;
+export interface BStore<S extends State = any> {
+  readonly id: number;
+  readonly router: ICoreRouter;
+  readonly baseFork: {creator: (options: {initState: any}, router: ICoreRouter, id?: number) => BStore; options: {initState?: any}};
   dispatch: Dispatch;
   getState: GetState<S>;
   getPureState(): S;
   update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
   replaceState(state: S): void;
-  injectedModules: Record<string, IModuleHandlers>;
+}
+
+export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
+
+export interface IStore<S extends State = any> extends BStore<S> {
   getCurrentActionName: () => string;
   getCurrentState: GetState<S>;
-  clone: {
-    creator: (options: {initState: any}) => BStore;
-    options: {initState?: any};
+  readonly fork: {
     middlewares?: IStoreMiddleware[];
-    injectedModules: {[moduleName: string]: IModuleHandlers};
   };
+}
+
+export interface ICoreRouter {
+  init(store: IStore): void;
+  getCurrentStore(): IStore;
+  readonly injectedModules: {[moduleName: string]: IModuleHandlers};
 }
 
 export interface CommonModule<ModuleName extends string = string> {
@@ -295,7 +293,7 @@ export function effect(loadingKey: string | null = 'app.loading.global'): Functi
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
-        setLoading(this.store, promiseResult, loadingForModuleName!, loadingForGroupName!);
+        setLoading(this.router.getCurrentStore(), promiseResult, loadingForModuleName!, loadingForGroupName!);
       }
       if (!fun.__decorators__) {
         fun.__decorators__ = [];

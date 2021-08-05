@@ -5,7 +5,7 @@ import {IBaseRouter} from '@elux/route';
 export const reactComponentsConfig: {
   setPageTitle(title: string): void;
   Provider: ComponentType<{store: IStore}>;
-  useStore(): IStore<any>;
+  useStore(): IStore;
   LoadComponentOnError: ComponentType<{message: string}>;
   LoadComponentOnLoading: ComponentType<{}>;
 } = {

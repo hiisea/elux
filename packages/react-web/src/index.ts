@@ -1,22 +1,23 @@
 import {ComponentType} from 'react';
 import {RootModuleFacade} from '@elux/core';
-import {setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
+import {setReactComponentsConfig, loadComponent, LoadComponentOptions, useRouter} from '@elux/react-components';
 import {renderToString, renderToDocument} from '@elux/react-components/stage';
 import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, CreateSSR, LocationTransform, UserConfig, GetBaseAPP} from '@elux/app';
-import {createRouter} from '@elux/route-browser';
+import {createRouter, setBrowserRouteConfig} from '@elux/route-browser';
 
 export * from '@elux/react-components';
 export * from '@elux/app';
 
-setAppConfig({loadComponent});
+setAppConfig({loadComponent, useRouter});
 
 export type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
 
 export function setConfig(
-  conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
+  conf: UserConfig & {enableMultiPage?: boolean; LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
 ): void {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
+  setBrowserRouteConfig(conf);
 }
 
 export const createApp: CreateApp = (moduleGetter, middlewares, appModuleName) => {

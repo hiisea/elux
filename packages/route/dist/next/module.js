@@ -80,8 +80,11 @@ export const routeMiddleware = ({
 
 let RouteModuleHandlers = _decorate(null, function (_initialize2) {
   class RouteModuleHandlers {
-    constructor() {
+    constructor(moduleName, router) {
       _initialize2(this);
+
+      this.moduleName = moduleName;
+      this.router = router;
     }
 
   }
@@ -91,24 +94,16 @@ let RouteModuleHandlers = _decorate(null, function (_initialize2) {
     d: [{
       kind: "field",
       key: "initState",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "moduleName",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "actions",
-      value: void 0
+
+      value() {
+        return {};
+      }
+
     }, {
       kind: "get",
       key: "state",
       value: function state() {
-        return this.store.getState(this.moduleName);
+        return this.router.getCurrentStore().getState(this.moduleName);
       }
     }, {
       kind: "method",

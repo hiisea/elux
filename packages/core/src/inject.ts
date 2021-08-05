@@ -9,6 +9,7 @@ import {
   MetaData,
   ModuleGetter,
   FacadeMap,
+  ICoreRouter,
   IStore,
   coreConfig,
   reducer,
@@ -53,7 +54,7 @@ export function exportModule<
 >(
   moduleName: N,
   ModuleHandles: {
-    new (moduleName: string): H;
+    new (moduleName: string, context: ICoreRouter): H;
   },
   params: P,
   components: CS
@@ -75,10 +76,10 @@ export function exportModule<
     }
   });
   const model = (store: IStore) => {
-    if (!store.injectedModules[moduleName]) {
-      const moduleHandles = new ModuleHandles(moduleName);
-      store.injectedModules[moduleName] = moduleHandles;
-      moduleHandles.store = store;
+    const router = store.router;
+    if (!router.injectedModules[moduleName]) {
+      const moduleHandles = new ModuleHandles(moduleName, router);
+      router.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
       const initState = moduleHandles.initState;
       const preModuleState = store.getState(moduleName);
@@ -199,7 +200,8 @@ export function loadComponet(
 ): EluxComponent | null | Promise<EluxComponent | null> {
   const promiseOrComponent = getComponet(moduleName, componentName);
   const callback = (component: EluxComponent) => {
-    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+    const router = store.router;
+    if (component.__elux_component__ === 'view' && !router.injectedModules[moduleName]) {
       if (env.isServer) {
         return null;
       }
@@ -223,7 +225,7 @@ export function getCachedModules(): Record<string, undefined | CommonModule | Pr
 }
 
 export class EmptyModuleHandlers implements IModuleHandlers {
-  store!: IStore;
+  router!: ICoreRouter;
 
   initState: any;
 
@@ -237,10 +239,11 @@ export class EmptyModuleHandlers implements IModuleHandlers {
  * 所有ModuleHandlers必须继承此基类
  */
 export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
-  store!: IStore<R>;
+  constructor(public readonly moduleName: string, public readonly router: ICoreRouter, public readonly initState: S) {}
 
-  constructor(public readonly moduleName: string, public readonly initState: S) {}
-
+  protected getCurrentStore(): IStore<R> {
+    return this.router.getCurrentStore() as any;
+  }
   protected get actions(): ActionsThis<this> {
     return MetaData.facadeMap[this.moduleName].actions as any;
   }
@@ -250,34 +253,34 @@ export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Re
   }
 
   protected get state(): S {
-    return this.store.getState(this.moduleName) as S;
+    return this.getCurrentStore().getState(this.moduleName) as S;
   }
 
   protected get rootState(): R {
-    return this.store.getState() as R;
+    return this.getCurrentStore().getState();
   }
 
   protected getCurrentActionName(): string {
-    return this.store.getCurrentActionName();
+    return this.getCurrentStore().getCurrentActionName();
   }
 
   protected get currentRootState(): R {
-    return this.store.getCurrentState();
+    return this.getCurrentStore().getCurrentState();
   }
 
   protected get currentState(): S {
-    return this.store.getCurrentState(this.moduleName) as S;
+    return this.getCurrentStore().getCurrentState(this.moduleName) as S;
   }
 
   protected dispatch(action: Action): void | Promise<void> {
-    return this.store.dispatch(action);
+    return this.getCurrentStore().dispatch(action);
   }
 
   /**
    * 动态加载并初始化其他模块的model
    */
   protected loadModel(moduleName: string): void | Promise<void> {
-    return loadModel(moduleName, this.store);
+    return loadModel(moduleName, this.getCurrentStore());
   }
 
   @reducer

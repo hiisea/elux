@@ -8,7 +8,7 @@ const updateMutation = (state, {
 };
 
 const UpdateMutationName = 'update';
-export function storeCreator(storeOptions) {
+export function storeCreator(storeOptions, router, id = 0) {
   const {
     initState = {},
     plugins,
@@ -22,7 +22,11 @@ export function storeCreator(storeOptions) {
     plugins,
     devtools
   });
-  const vuexStore = store;
+  const vuexStore = Object.assign(store, {
+    id,
+    router,
+    baseFork: {}
+  });
 
   vuexStore.getState = () => {
     return store.state;
@@ -41,10 +45,8 @@ export function storeCreator(storeOptions) {
     });
   };
 
-  vuexStore.clone = {
-    creator: storeCreator,
-    options: storeOptions
-  };
+  vuexStore.baseFork.creator = storeCreator;
+  vuexStore.baseFork.options = storeOptions;
   return vuexStore;
 }
 export function createVuex(storeOptions = {}) {

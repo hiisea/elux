@@ -1,7 +1,7 @@
 import {Component, createSSRApp, createApp as createVue} from 'vue';
 import type {App} from 'vue';
 import {RootModuleFacade, setCoreConfig} from '@elux/core';
-import {setVueComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/vue-components';
+import {setVueComponentsConfig, loadComponent, LoadComponentOptions, useRouter} from '@elux/vue-components';
 import {renderToString, renderToDocument, Router} from '@elux/vue-components/stage';
 import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, CreateSSR, LocationTransform, UserConfig, GetBaseAPP} from '@elux/app';
 import {createRouter} from '@elux/route-browser';
@@ -10,7 +10,7 @@ export * from '@elux/vue-components';
 export * from '@elux/app';
 
 setCoreConfig({MutableData: true});
-setAppConfig({loadComponent});
+setAppConfig({loadComponent, useRouter});
 
 export type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
 

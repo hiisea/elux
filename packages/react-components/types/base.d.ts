@@ -6,7 +6,7 @@ export declare const reactComponentsConfig: {
     Provider: ComponentType<{
         store: IStore;
     }>;
-    useStore(): IStore<any>;
+    useStore(): IStore;
     LoadComponentOnError: ComponentType<{
         message: string;
     }>;
@@ -17,7 +17,7 @@ export declare const setReactComponentsConfig: (config: Partial<{
     Provider: ComponentType<{
         store: IStore;
     }>;
-    useStore(): IStore<any>;
+    useStore(): IStore;
     LoadComponentOnError: ComponentType<{
         message: string;
     }>;

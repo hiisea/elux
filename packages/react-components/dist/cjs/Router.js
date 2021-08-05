@@ -1,9 +1,12 @@
 "use strict";
 
 exports.__esModule = true;
+exports.useRouter = useRouter;
 exports.Page = exports.Router = void 0;
 
 var _react = _interopRequireWildcard(require("react"));
+
+var _core = require("@elux/core");
 
 var _base = require("./base");
 
@@ -32,7 +35,13 @@ var Router = function Router(props) {
     });
   }, [router]);
   (0, _react.useEffect)(function () {
-    containerRef.current.className = 'elux-app';
+    _core.env.setTimeout(function () {
+      containerRef.current.className = 'elux-app elux-change';
+    }, 0);
+
+    _core.env.setTimeout(function () {
+      containerRef.current.className = 'elux-app';
+    }, 1000);
   });
   var nodes = pages.reverse().map(function (item) {
     var page = item.page ? _react.default.createElement(item.page, {
@@ -44,13 +53,12 @@ var Router = function Router(props) {
   });
   return _react.default.createElement("div", {
     ref: containerRef,
-    className: "elux-app elux-enter"
+    className: 'elux-app elux-enter ' + Date.now()
   }, nodes);
 };
 
 exports.Router = Router;
-
-var Page = function Page(props) {
+var Page = (0, _react.memo)(function (props) {
   var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);
   var store = eluxContext.router.getCurrentStore();
   return _react.default.createElement(_base.reactComponentsConfig.Provider, {
@@ -58,6 +66,11 @@ var Page = function Page(props) {
   }, _react.default.createElement("div", {
     className: "elux-page"
   }, props.children));
-};
-
+});
 exports.Page = Page;
+
+function useRouter() {
+  var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);
+  var router = eluxContext.router;
+  return router;
+}

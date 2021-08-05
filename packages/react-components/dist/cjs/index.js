@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.reactComponentsConfig = exports.setReactComponentsConfig = exports.Router = exports.Page = exports.loadComponent = exports.Link = exports.Switch = exports.Else = exports.DocumentHead = void 0;
+exports.reactComponentsConfig = exports.setReactComponentsConfig = exports.useRouter = exports.Router = exports.Page = exports.loadComponent = exports.Link = exports.Switch = exports.Else = exports.DocumentHead = void 0;
 
 var _DocumentHead = _interopRequireDefault(require("./DocumentHead"));
 
@@ -25,6 +25,7 @@ var _Router = require("./Router");
 
 exports.Page = _Router.Page;
 exports.Router = _Router.Router;
+exports.useRouter = _Router.useRouter;
 
 var _loadComponent = _interopRequireDefault(require("./loadComponent"));
 

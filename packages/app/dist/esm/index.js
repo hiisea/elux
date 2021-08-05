@@ -8,7 +8,9 @@ var appMeta = {
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
 export var appConfig = {
-  loadComponent: null
+  loadComponent: null,
+  useRouter: null,
+  useStore: null
 };
 export var setAppConfig = buildConfigSetter(appConfig);
 export function setUserConfig(conf) {
@@ -49,9 +51,8 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
 
           var baseStore = storeCreator(_extends({}, storeOptions, {
             initState: initState
-          }));
-          var store = initApp(baseStore, istoreMiddleware);
-          router.init(store);
+          }), router);
+          var store = initApp(router, baseStore, istoreMiddleware);
           routeModule.model(store);
           var context = render(store, {
             deps: {},
@@ -114,11 +115,10 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
 
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
-            }));
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
+            }), router);
+            return renderApp(router, baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
               var store = _ref5.store,
                   AppView = _ref5.AppView;
-              router.init(store);
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
@@ -174,11 +174,10 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
 
             var baseStore = storeCreator(_extends({}, storeOptions, {
               initState: initState
-            }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
+            }), router);
+            return ssrApp(router, baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
               var store = _ref8.store,
                   AppView = _ref8.AppView;
-              router.init(store);
               var state = store.getState();
               var eluxContext = {
                 deps: {},
@@ -222,11 +221,13 @@ export function getApp() {
         return prev;
       }, {});
     },
+    useRouter: appConfig.useRouter,
+    useStore: appConfig.useStore,
+    getRouter: function getRouter(moduleHandler) {
+      return moduleHandler.router;
+    },
     GetRouter: function GetRouter() {
       return appMeta.router;
-    },
-    GetStore: function GetStore() {
-      return appMeta.router.getCurrentStore();
     },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,

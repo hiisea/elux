@@ -1,7 +1,7 @@
 import {ComponentType} from 'react';
 import Taro from '@tarojs/taro';
 import {RootModuleFacade} from '@elux/core';
-import {setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
+import {setReactComponentsConfig, loadComponent, LoadComponentOptions, useRouter} from '@elux/react-components';
 import {setAppConfig, setUserConfig, UserConfig, GetBaseAPP, createBaseMP, CreateMP, LocationTransform} from '@elux/app';
 import {renderToMP} from '@elux/react-components/stage';
 import {createRouter} from '@elux/route-mp';
@@ -10,7 +10,7 @@ export {routeENV} from '@elux/taro';
 export * from '@elux/react-components';
 export * from '@elux/app';
 
-setAppConfig({loadComponent});
+setAppConfig({loadComponent, useRouter});
 
 export type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
 

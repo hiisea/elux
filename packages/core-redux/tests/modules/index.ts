@@ -9,5 +9,6 @@ export const moduleGetter = {
   moduleB: () => moduleB,
   moduleC: () => moduleC,
 };
+
 type Facade = RootModuleFacade<typeof moduleGetter>;
 export const App = getRootModuleAPI<Facade>();

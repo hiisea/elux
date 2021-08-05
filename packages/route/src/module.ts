@@ -5,11 +5,11 @@ import {
   reducer,
   mergeState,
   deepMergeState,
-  IStore,
   Action,
   CommonModule,
   IModuleHandlers,
   exportModule,
+  ICoreRouter,
 } from '@elux/core';
 import {createLocationTransform, LocationTransform, PagenameMap, NativeLocationMap} from './transform';
 import {RootParams, RouteState, HistoryAction} from './basic';
@@ -73,16 +73,12 @@ interface IRouteModuleHandlers extends IModuleHandlers {
 }
 
 class RouteModuleHandlers implements IRouteModuleHandlers {
-  initState!: RouteState;
+  initState: RouteState = {} as any;
 
-  moduleName!: string;
-
-  store!: IStore<any>;
-
-  actions!: {};
+  constructor(public readonly moduleName: string, public readonly router: ICoreRouter) {}
 
   protected get state(): RouteState {
-    return this.store.getState(this.moduleName) as RouteState;
+    return this.router.getCurrentStore().getState(this.moduleName) as RouteState;
   }
 
   @reducer
@@ -108,7 +104,7 @@ export function createRouteModule<G extends PagenameMap>(
   notfoundPagename = '/404',
   paramsKey = '_'
 ) {
-  const handlers: {new (): IRouteModuleHandlers} = RouteModuleHandlers;
+  const handlers: {new (moduleName: string, context: ICoreRouter): IRouteModuleHandlers} = RouteModuleHandlers;
   const locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
   const routeModule = exportModule('route', handlers, {}, {} as {[k in keyof G]: any});
   return {...routeModule, locationTransform};

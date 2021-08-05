@@ -8,6 +8,7 @@ import {
   LocationTransform,
   IBaseRouter,
   setRouteConfig,
+  routeConfig,
 } from '@elux/route';
 
 setRouteConfig({notifyNativeRouter: {root: true, internal: false}});
@@ -51,13 +52,13 @@ export class MPNativeRouter extends BaseNativeRouter {
           index = this.router.getHistory(true).findIndex(key);
         }
         if (index > 0) {
-          this.router.back(index, true, true, true);
+          this.router.back(index, routeConfig.notifyNativeRouter.root, {overflowRedirect: true}, true);
         } else if (action === 'REPLACE') {
-          this.router.replace(nativeUrl, true, true);
+          this.router.replace(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         } else if (action === 'PUSH') {
-          this.router.push(nativeUrl, true, true);
+          this.router.push(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         } else {
-          this.router.relaunch(nativeUrl, true, true);
+          this.router.relaunch(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         }
       }
     });

@@ -98,8 +98,11 @@ export var routeMiddleware = function routeMiddleware(_ref) {
 };
 
 var RouteModuleHandlers = _decorate(null, function (_initialize2) {
-  var RouteModuleHandlers = function RouteModuleHandlers() {
+  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, router) {
     _initialize2(this);
+
+    this.moduleName = moduleName;
+    this.router = router;
   };
 
   return {
@@ -107,24 +110,14 @@ var RouteModuleHandlers = _decorate(null, function (_initialize2) {
     d: [{
       kind: "field",
       key: "initState",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "moduleName",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "actions",
-      value: void 0
+      value: function value() {
+        return {};
+      }
     }, {
       kind: "get",
       key: "state",
       value: function state() {
-        return this.store.getState(this.moduleName);
+        return this.router.getCurrentStore().getState(this.moduleName);
       }
     }, {
       kind: "method",

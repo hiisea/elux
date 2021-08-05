@@ -77,6 +77,8 @@ export class BaseRouter extends SingleDispatcher {
 
     _defineProperty(this, "initRouteState", void 0);
 
+    _defineProperty(this, "injectedModules", {});
+
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);

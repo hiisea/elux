@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState, useRef, memo } from 'react';
+import { env } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
 export const Router = props => {
   const eluxContext = useContext(EluxContextComponent);
@@ -17,7 +18,12 @@ export const Router = props => {
     });
   }, [router]);
   useEffect(() => {
-    containerRef.current.className = 'elux-app';
+    env.setTimeout(() => {
+      containerRef.current.className = 'elux-app elux-change';
+    }, 0);
+    env.setTimeout(() => {
+      containerRef.current.className = 'elux-app';
+    }, 1000);
   });
   const nodes = pages.reverse().map(item => {
     const page = item.page ? React.createElement(item.page, {
@@ -29,10 +35,10 @@ export const Router = props => {
   });
   return React.createElement("div", {
     ref: containerRef,
-    className: "elux-app elux-enter"
+    className: 'elux-app elux-enter ' + Date.now()
   }, nodes);
 };
-export const Page = function (props) {
+export const Page = memo(function (props) {
   const eluxContext = useContext(EluxContextComponent);
   const store = eluxContext.router.getCurrentStore();
   return React.createElement(reactComponentsConfig.Provider, {
@@ -40,4 +46,9 @@ export const Page = function (props) {
   }, React.createElement("div", {
     className: "elux-page"
   }, props.children));
-};
+});
+export function useRouter() {
+  const eluxContext = useContext(EluxContextComponent);
+  const router = eluxContext.router;
+  return router;
+}

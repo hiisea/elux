@@ -1,7 +1,7 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { BaseRouter, BaseNativeRouter, setRouteConfig } from '@elux/route';
+import { BaseRouter, BaseNativeRouter, setRouteConfig, routeConfig } from '@elux/route';
 import { createBrowserHistory, createHashHistory, createMemoryHistory } from 'history';
 import { env } from '@elux/core';
 setRouteConfig({
@@ -10,6 +10,25 @@ setRouteConfig({
     internal: true
   }
 });
+export function setBrowserRouteConfig(_ref) {
+  var enableMultiPage = _ref.enableMultiPage;
+
+  if (enableMultiPage) {
+    setRouteConfig({
+      notifyNativeRouter: {
+        root: true,
+        internal: false
+      }
+    });
+  } else {
+    setRouteConfig({
+      notifyNativeRouter: {
+        root: false,
+        internal: true
+      }
+    });
+  }
+}
 export var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
@@ -100,19 +119,19 @@ export var BrowserNativeRouter = function (_BaseNativeRouter) {
 
         if (index > 0) {
           callback = function callback() {
-            return _this.router.back(index);
+            return _this.router.back(index, routeConfig.notifyNativeRouter.root);
           };
         } else if (action === 'REPLACE') {
           callback = function callback() {
-            return _this.router.replace(url);
+            return _this.router.replace(url, routeConfig.notifyNativeRouter.root);
           };
         } else if (action === 'PUSH') {
           callback = function callback() {
-            return _this.router.push(url);
+            return _this.router.push(url, routeConfig.notifyNativeRouter.root);
           };
         } else {
           callback = function callback() {
-            return _this.router.relaunch(url);
+            return _this.router.relaunch(url, routeConfig.notifyNativeRouter.root);
           };
         }
 

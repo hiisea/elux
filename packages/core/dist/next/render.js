@@ -12,7 +12,7 @@ export function defineModuleGetter(moduleGetter, appModuleName = 'stage') {
     throw `${appModuleName} could not be found in moduleGetter`;
   }
 }
-export async function renderApp(baseStore, preloadModules, preloadComponents, middlewares, appViewName = 'main') {
+export async function renderApp(router, baseStore, preloadModules, preloadComponents, middlewares, appViewName = 'main') {
   const {
     moduleGetter,
     appModuleName
@@ -20,6 +20,7 @@ export async function renderApp(baseStore, preloadModules, preloadComponents, mi
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
+  router.init(store);
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
   const appModule = modules[0];
@@ -30,17 +31,18 @@ export async function renderApp(baseStore, preloadModules, preloadComponents, mi
     AppView
   };
 }
-export function initApp(baseStore, middlewares) {
+export function initApp(router, baseStore, middlewares) {
   const {
     moduleGetter,
     appModuleName
   } = MetaData;
   const store = enhanceStore(baseStore, middlewares);
+  router.init(store);
   const appModule = moduleGetter[appModuleName]();
   appModule.model(store);
   return store;
 }
-export async function ssrApp(baseStore, preloadModules, middlewares, appViewName = 'main') {
+export async function ssrApp(router, baseStore, preloadModules, middlewares, appViewName = 'main') {
   const {
     moduleGetter,
     appModuleName
@@ -48,6 +50,7 @@ export async function ssrApp(baseStore, preloadModules, middlewares, appViewName
   preloadModules = preloadModules.filter(moduleName => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
   const store = enhanceStore(baseStore, middlewares);
+  router.init(store);
   const [appModule, ...otherModules] = await getModuleList(preloadModules);
   await appModule.model(store);
   await Promise.all(otherModules.map(module => module.model(store)));

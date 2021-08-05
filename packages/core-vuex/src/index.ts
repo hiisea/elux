@@ -1,7 +1,7 @@
 import {Plugin, MutationPayload, SubscribeOptions, Mutation, Store} from 'vuex';
 import {WatchOptions} from 'vue';
 import {mergeState} from '@elux/core';
-import type {BStore, StoreBuilder} from '@elux/core';
+import type {BStore, ICoreRouter, StoreBuilder} from '@elux/core';
 
 export interface VuexOptions {
   initState?: any;
@@ -21,10 +21,10 @@ const updateMutation: Mutation<any> = (state, {newState}) => {
 
 const UpdateMutationName = 'update';
 
-export function storeCreator(storeOptions: VuexOptions): VuexStore {
+export function storeCreator(storeOptions: VuexOptions, router: ICoreRouter, id = 0): VuexStore {
   const {initState = {}, plugins, devtools = true} = storeOptions;
   const store = new Store({state: initState, mutations: {[UpdateMutationName]: updateMutation}, plugins, devtools});
-  const vuexStore: VuexStore = store as any;
+  const vuexStore: VuexStore = Object.assign(store, {id, router, baseFork: {}}) as any;
   vuexStore.getState = () => {
     return store.state;
   };
@@ -35,7 +35,8 @@ export function storeCreator(storeOptions: VuexOptions): VuexStore {
   vuexStore.update = (actionName: string, newState: any, actionData: any[]) => {
     store.commit(UpdateMutationName, {actionName, newState, actionData});
   };
-  vuexStore.clone = {creator: storeCreator, options: storeOptions};
+  vuexStore.baseFork.creator = storeCreator;
+  vuexStore.baseFork.options = storeOptions;
   return vuexStore;
 }
 

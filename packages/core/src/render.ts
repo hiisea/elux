@@ -1,4 +1,4 @@
-import {MetaData, ModuleGetter, BStore, IStore, EluxComponent, CommonModule, IStoreMiddleware} from './basic';
+import {MetaData, ModuleGetter, BStore, IStore, EluxComponent, CommonModule, IStoreMiddleware, ICoreRouter} from './basic';
 import {getModuleList, getComponentList, getComponet} from './inject';
 import {enhanceStore} from './store';
 
@@ -13,16 +13,18 @@ export function defineModuleGetter(moduleGetter: ModuleGetter, appModuleName = '
 }
 
 export async function renderApp<ST extends BStore = BStore>(
+  router: ICoreRouter,
   baseStore: ST,
   preloadModules: string[],
   preloadComponents: string[],
   middlewares?: IStoreMiddleware[],
   appViewName = 'main'
-): Promise<{store: IStore<any> & ST; AppView: EluxComponent}> {
+): Promise<{store: IStore & ST; AppView: EluxComponent}> {
   const {moduleGetter, appModuleName} = MetaData;
   preloadModules = preloadModules.filter((moduleName) => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
-  const store = enhanceStore(baseStore, middlewares) as IStore<any> & ST;
+  const store = enhanceStore(baseStore, middlewares) as IStore & ST;
+  router.init(store);
   // 防止view中瀑布式懒加载
   const modules = await getModuleList(preloadModules);
   await getComponentList(preloadComponents);
@@ -35,24 +37,27 @@ export async function renderApp<ST extends BStore = BStore>(
   };
 }
 
-export function initApp<ST extends BStore = BStore>(baseStore: ST, middlewares?: IStoreMiddleware[]): IStore<any> & ST {
+export function initApp<ST extends BStore = BStore>(router: ICoreRouter, baseStore: ST, middlewares?: IStoreMiddleware[]): IStore & ST {
   const {moduleGetter, appModuleName} = MetaData;
-  const store = enhanceStore(baseStore, middlewares) as IStore<any> & ST;
+  const store = enhanceStore(baseStore, middlewares) as IStore & ST;
+  router.init(store);
   const appModule = moduleGetter[appModuleName]() as CommonModule<string>;
   appModule.model(store);
   return store;
 }
 
 export async function ssrApp<ST extends BStore = BStore>(
+  router: ICoreRouter,
   baseStore: ST,
   preloadModules: string[],
   middlewares?: IStoreMiddleware[],
   appViewName = 'main'
-): Promise<{store: IStore<any> & ST; AppView: EluxComponent}> {
+): Promise<{store: IStore & ST; AppView: EluxComponent}> {
   const {moduleGetter, appModuleName} = MetaData;
   preloadModules = preloadModules.filter((moduleName) => moduleGetter[moduleName] && moduleName !== appModuleName);
   preloadModules.unshift(appModuleName);
-  const store = enhanceStore(baseStore, middlewares) as IStore<any> & ST;
+  const store = enhanceStore(baseStore, middlewares) as IStore & ST;
+  router.init(store);
   const [appModule, ...otherModules] = await getModuleList(preloadModules);
   await appModule.model(store);
   await Promise.all(otherModules.map((module) => module.model(store)));

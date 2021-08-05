@@ -1,6 +1,6 @@
 /// <reference path="../runtime/runtime.d.ts" />
 import {compose, createStore, applyMiddleware, Reducer, Unsubscribe, StoreEnhancer, Middleware} from 'redux';
-import {env, BStore, StoreBuilder, ActionTypes} from '@elux/core';
+import {env, BStore, ICoreRouter, StoreBuilder, ActionTypes} from '@elux/core';
 
 export interface ReduxOptions {
   initState?: any;
@@ -16,7 +16,7 @@ const reduxReducer: Reducer = (state, action) => {
   return {...state, ...action.state};
 };
 
-export function storeCreator(storeOptions: ReduxOptions): ReduxStore {
+export function storeCreator(storeOptions: ReduxOptions, router: ICoreRouter, id = 0): ReduxStore {
   const {initState = {}, enhancers = [], middlewares} = storeOptions;
   if (middlewares) {
     const middlewareEnhancer = applyMiddleware(...middlewares);
@@ -27,7 +27,7 @@ export function storeCreator(storeOptions: ReduxOptions): ReduxStore {
   }
   const store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose(...enhancers) : enhancers[0]);
   const {dispatch} = store;
-  const reduxStore: ReduxStore = store as any;
+  const reduxStore: ReduxStore = Object.assign(store, {id, router, baseFork: {}}) as any;
   reduxStore.getPureState = reduxStore.getState;
   reduxStore.update = (actionName: string, state: any, actionData: any[]) => {
     dispatch({type: actionName, state, payload: actionData});
@@ -35,7 +35,8 @@ export function storeCreator(storeOptions: ReduxOptions): ReduxStore {
   reduxStore.replaceState = (state: any) => {
     dispatch({type: ActionTypes.Replace, state});
   };
-  reduxStore.clone = {creator: storeCreator, options: storeOptions};
+  reduxStore.baseFork.creator = storeCreator;
+  reduxStore.baseFork.options = storeOptions;
   return reduxStore;
 }
 

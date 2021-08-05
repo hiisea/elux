@@ -11,7 +11,7 @@ const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = 
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
-  class Loader extends Component<{store: IStore<any>; deps: Record<string, boolean>; forwardedRef: any}> {
+  class Loader extends Component<{store: IStore; deps: Record<string, boolean>; forwardedRef: any}> {
     private active = true;
 
     private loading = false;

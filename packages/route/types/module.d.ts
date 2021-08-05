@@ -1,4 +1,4 @@
-import { CoreModuleHandlers, IStoreMiddleware, IStore, Action, CommonModule } from '@elux/core';
+import { CoreModuleHandlers, IStoreMiddleware, Action, CommonModule } from '@elux/core';
 import { LocationTransform, PagenameMap, NativeLocationMap } from './transform';
 import { RootParams, RouteState, HistoryAction } from './basic';
 export declare class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Record<string, any>> extends CoreModuleHandlers<S, R> {
@@ -20,7 +20,7 @@ export declare type RouteModule = CommonModule & {
 export declare function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeLocationMap?: NativeLocationMap, notfoundPagename?: string, paramsKey?: string): {
     locationTransform: LocationTransform;
     moduleName: "route";
-    model: (store: IStore<{}>) => void | Promise<void>;
+    model: (store: import("@elux/core").IStore<any>) => void | Promise<void>;
     state: RouteState<any>;
     params: {};
     actions: {};

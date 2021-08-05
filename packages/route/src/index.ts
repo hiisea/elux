@@ -1,4 +1,4 @@
-import {isPromise, deepMerge, IStore, SingleDispatcher} from '@elux/core';
+import {isPromise, deepMerge, IStore, ICoreRouter, SingleDispatcher, IModuleHandlers} from '@elux/core';
 
 import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation} from './basic';
 import {History, HistoryRecord} from './history';
@@ -99,6 +99,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
 
   public initRouteState: RouteState<P> | Promise<RouteState<P>>;
 
+  public readonly injectedModules: {[moduleName: string]: IModuleHandlers} = {};
+
   constructor(url: string, public nativeRouter: BaseNativeRouter, protected locationTransform: LocationTransform) {
     super();
     nativeRouter.setRouter(this);
@@ -151,12 +153,12 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     return this._nativeData.nativeUrl;
   }
 
-  init(store: IStore<any>): void {
+  init(store: IStore): void {
     const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
     this.history.init(historyRecord);
   }
 
-  getCurrentStore(): IStore<any> {
+  getCurrentStore(): IStore {
     return this.history.getCurrentRecord().getStore();
   }
 
@@ -382,7 +384,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
   }
 }
 
-export interface IBaseRouter<P extends RootParams, N extends string> {
+export interface IBaseRouter<P extends RootParams, N extends string> extends ICoreRouter {
   initRouteState: RouteState<P> | Promise<RouteState<P>>;
   getHistory(root?: boolean): History;
   nativeRouter: any;
@@ -395,8 +397,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> {
   getNativeUrl(): string;
   nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation};
-  init(store: IStore<any>): void;
-  getCurrentStore(): IStore<any>;
+  getCurrentStore(): IStore;
   getCurKey(): string;
   relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
   push(data: PayloadLocation<P, N> | string, root?: boolean): void;

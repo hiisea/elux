@@ -1,4 +1,5 @@
 import React, {useContext, useEffect, useState, useRef, memo} from 'react';
+import {ICoreRouter, env} from '@elux/core';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
 export const Router: React.FC = (props) => {
@@ -15,14 +16,19 @@ export const Router: React.FC = (props) => {
     });
   }, [router]);
   useEffect(() => {
-    containerRef.current!.className = 'elux-app';
+    env.setTimeout(() => {
+      containerRef.current!.className = 'elux-app elux-change';
+    }, 0);
+    env.setTimeout(() => {
+      containerRef.current!.className = 'elux-app';
+    }, 1000);
   });
   const nodes = pages.reverse().map((item) => {
     const page = item.page ? <item.page key={item.key} /> : <Page key={item.key}>{props.children}</Page>;
     return page;
   });
   return (
-    <div ref={containerRef} className="elux-app elux-enter">
+    <div ref={containerRef} className={'elux-app elux-enter ' + Date.now()}>
       {nodes}
     </div>
   );
@@ -37,3 +43,9 @@ export const Page: React.FC<{}> = memo(function (props) {
     </reactComponentsConfig.Provider>
   );
 });
+
+export function useRouter(): ICoreRouter {
+  const eluxContext = useContext(EluxContextComponent);
+  const router = eluxContext.router!;
+  return router;
+}

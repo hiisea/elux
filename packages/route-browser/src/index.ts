@@ -1,8 +1,16 @@
-import {BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter, setRouteConfig} from '@elux/route';
+import {BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter, setRouteConfig, routeConfig} from '@elux/route';
 import {History, createBrowserHistory, createHashHistory, createMemoryHistory, Location as HistoryLocation} from 'history';
 import {env} from '@elux/core';
 
 setRouteConfig({notifyNativeRouter: {root: true, internal: true}});
+
+export function setBrowserRouteConfig({enableMultiPage}: {enableMultiPage?: boolean}): void {
+  if (enableMultiPage) {
+    setRouteConfig({notifyNativeRouter: {root: true, internal: false}});
+  } else {
+    setRouteConfig({notifyNativeRouter: {root: false, internal: true}});
+  }
+}
 
 type UnregisterCallback = () => void;
 
@@ -72,13 +80,13 @@ export class BrowserNativeRouter extends BaseNativeRouter {
           index = this.router.getHistory().findIndex(key);
         }
         if (index > 0) {
-          callback = () => this.router.back(index);
+          callback = () => this.router.back(index, routeConfig.notifyNativeRouter.root);
         } else if (action === 'REPLACE') {
-          callback = () => this.router.replace(url);
+          callback = () => this.router.replace(url, routeConfig.notifyNativeRouter.root);
         } else if (action === 'PUSH') {
-          callback = () => this.router.push(url);
+          callback = () => this.router.push(url, routeConfig.notifyNativeRouter.root);
         } else {
-          callback = () => this.router.relaunch(url);
+          callback = () => this.router.relaunch(url, routeConfig.notifyNativeRouter.root);
         }
         callback && env.setTimeout(callback, 50);
         return false;

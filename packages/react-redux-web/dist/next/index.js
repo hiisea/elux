@@ -1,5 +1,9 @@
 import { setReactComponentsConfig } from '@elux/react-web';
 import { Provider, useStore } from '@elux/react-redux';
+import { setAppConfig } from '@elux/app';
+setAppConfig({
+  useStore: useStore
+});
 setReactComponentsConfig({
   Provider: Provider,
   useStore: useStore

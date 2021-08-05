@@ -147,42 +147,40 @@ export function deepMerge(target, ...args) {
     return target;
   }
 
+  args = args.filter(item => isPlainObject(item) && Object.keys(item).length);
+
+  if (args.length === 0) {
+    return target;
+  }
+
   if (!isPlainObject(target)) {
     target = {};
   }
 
-  args = args.filter(item => isPlainObject(item) && Object.keys(item).length);
-
-  if (args.length < 1) {
-    return target;
-  }
-
   args.forEach(function (inject, index) {
-    if (isPlainObject(inject)) {
-      let lastArg = false;
-      let last2Arg = null;
+    let lastArg = false;
+    let last2Arg = null;
 
-      if (index === args.length - 1) {
-        lastArg = true;
-      } else if (index === args.length - 2) {
-        last2Arg = args[index + 1];
-      }
-
-      Object.keys(inject).forEach(function (key) {
-        const src = target[key];
-        const val = inject[key];
-
-        if (isPlainObject(val)) {
-          if (isPlainObject(src)) {
-            target[key] = __deepMerge(lastArg, src, val);
-          } else {
-            target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
-          }
-        } else {
-          target[key] = val;
-        }
-      });
+    if (index === args.length - 1) {
+      lastArg = true;
+    } else if (index === args.length - 2) {
+      last2Arg = args[index + 1];
     }
+
+    Object.keys(inject).forEach(function (key) {
+      const src = target[key];
+      const val = inject[key];
+
+      if (isPlainObject(val)) {
+        if (isPlainObject(src)) {
+          target[key] = __deepMerge(lastArg, src, val);
+        } else {
+          target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
+        }
+      } else {
+        target[key] = val;
+      }
+    });
   });
   return target;
 }

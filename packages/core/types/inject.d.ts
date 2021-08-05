@@ -1,4 +1,4 @@
-import { Action, EluxComponent, IModuleHandlers, CommonModule, ModuleGetter, IStore } from './basic';
+import { Action, EluxComponent, IModuleHandlers, CommonModule, ModuleGetter, ICoreRouter, IStore } from './basic';
 declare type Handler<F> = F extends (...args: infer P) => any ? (...args: P) => {
     type: string;
 } : never;
@@ -15,7 +15,7 @@ declare type ActionsThis<T> = {
 };
 export declare function getModuleGetter(): ModuleGetter;
 export declare function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>>(moduleName: N, ModuleHandles: {
-    new (moduleName: string): H;
+    new (moduleName: string, context: ICoreRouter): H;
 }, params: P, components: CS): {
     moduleName: N;
     model: (store: IStore) => void | Promise<void>;
@@ -33,15 +33,16 @@ export declare function loadComponet(moduleName: string, componentName: string, 
 export declare function getCachedModules(): Record<string, undefined | CommonModule | Promise<CommonModule>>;
 export declare class EmptyModuleHandlers implements IModuleHandlers {
     readonly moduleName: string;
-    store: IStore;
+    router: ICoreRouter;
     initState: any;
     constructor(moduleName: string);
 }
 export declare class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
     readonly moduleName: string;
+    readonly router: ICoreRouter;
     readonly initState: S;
-    store: IStore<R>;
-    constructor(moduleName: string, initState: S);
+    constructor(moduleName: string, router: ICoreRouter, initState: S);
+    protected getCurrentStore(): IStore<R>;
     protected get actions(): ActionsThis<this>;
     protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {
         [K in keyof T]: Handler<T[K]>;

@@ -125,7 +125,7 @@ var History = function () {
     var store = records[0].getStore();
 
     if (!this.parent) {
-      store = (0, _core.cloneStore)(store);
+      store = (0, _core.forkStore)(store);
     }
 
     var newRecord = new HistoryRecord(location, key, this, store);

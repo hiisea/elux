@@ -50,13 +50,15 @@ var MPNativeRouter = function (_BaseNativeRouter) {
         }
 
         if (index > 0) {
-          _this.router.back(index, true, true, true);
+          _this.router.back(index, _route.routeConfig.notifyNativeRouter.root, {
+            overflowRedirect: true
+          }, true);
         } else if (action === 'REPLACE') {
-          _this.router.replace(nativeUrl, true, true);
+          _this.router.replace(nativeUrl, _route.routeConfig.notifyNativeRouter.root, true);
         } else if (action === 'PUSH') {
-          _this.router.push(nativeUrl, true, true);
+          _this.router.push(nativeUrl, _route.routeConfig.notifyNativeRouter.root, true);
         } else {
-          _this.router.relaunch(nativeUrl, true, true);
+          _this.router.relaunch(nativeUrl, _route.routeConfig.notifyNativeRouter.root, true);
         }
       }
     });

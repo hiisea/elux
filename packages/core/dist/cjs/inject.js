@@ -41,10 +41,11 @@ function exportModule(moduleName, ModuleHandles, params, components) {
   });
 
   var model = function model(store) {
-    if (!store.injectedModules[moduleName]) {
-      var moduleHandles = new ModuleHandles(moduleName);
-      store.injectedModules[moduleName] = moduleHandles;
-      moduleHandles.store = store;
+    var router = store.router;
+
+    if (!router.injectedModules[moduleName]) {
+      var moduleHandles = new ModuleHandles(moduleName, router);
+      router.injectedModules[moduleName] = moduleHandles;
       (0, _basic.injectActions)(moduleName, moduleHandles);
       var _initState = moduleHandles.initState;
       var preModuleState = store.getState(moduleName);
@@ -186,7 +187,9 @@ function loadComponet(moduleName, componentName, store, deps) {
   var promiseOrComponent = getComponet(moduleName, componentName);
 
   var callback = function callback(component) {
-    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+    var router = store.router;
+
+    if (component.__elux_component__ === 'view' && !router.injectedModules[moduleName]) {
       if (_env.default.isServer) {
         return null;
       }
@@ -215,7 +218,7 @@ function getCachedModules() {
 }
 
 var EmptyModuleHandlers = function EmptyModuleHandlers(moduleName) {
-  (0, _defineProperty2.default)(this, "store", void 0);
+  (0, _defineProperty2.default)(this, "router", void 0);
   (0, _defineProperty2.default)(this, "initState", void 0);
   this.moduleName = moduleName;
   this.initState = {};
@@ -223,19 +226,22 @@ var EmptyModuleHandlers = function EmptyModuleHandlers(moduleName) {
 
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
-  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, initState) {
+  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, router, initState) {
     _initialize(this);
 
     this.moduleName = moduleName;
+    this.router = router;
     this.initState = initState;
   };
 
   return {
     F: CoreModuleHandlers,
     d: [{
-      kind: "field",
-      key: "store",
-      value: void 0
+      kind: "method",
+      key: "getCurrentStore",
+      value: function getCurrentStore() {
+        return this.router.getCurrentStore();
+      }
     }, {
       kind: "get",
       key: "actions",
@@ -252,43 +258,43 @@ var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
       kind: "get",
       key: "state",
       value: function state() {
-        return this.store.getState(this.moduleName);
+        return this.getCurrentStore().getState(this.moduleName);
       }
     }, {
       kind: "get",
       key: "rootState",
       value: function rootState() {
-        return this.store.getState();
+        return this.getCurrentStore().getState();
       }
     }, {
       kind: "method",
       key: "getCurrentActionName",
       value: function getCurrentActionName() {
-        return this.store.getCurrentActionName();
+        return this.getCurrentStore().getCurrentActionName();
       }
     }, {
       kind: "get",
       key: "currentRootState",
       value: function currentRootState() {
-        return this.store.getCurrentState();
+        return this.getCurrentStore().getCurrentState();
       }
     }, {
       kind: "get",
       key: "currentState",
       value: function currentState() {
-        return this.store.getCurrentState(this.moduleName);
+        return this.getCurrentStore().getCurrentState(this.moduleName);
       }
     }, {
       kind: "method",
       key: "dispatch",
       value: function dispatch(action) {
-        return this.store.dispatch(action);
+        return this.getCurrentStore().dispatch(action);
       }
     }, {
       kind: "method",
       key: "loadModel",
       value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
+        return _loadModel(moduleName, this.getCurrentStore());
       }
     }, {
       kind: "method",

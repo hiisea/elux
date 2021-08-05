@@ -16,7 +16,11 @@ var reduxReducer = function reduxReducer(state, action) {
   return (0, _extends2.default)({}, state, action.state);
 };
 
-function storeCreator(storeOptions) {
+function storeCreator(storeOptions, router, id) {
+  if (id === void 0) {
+    id = 0;
+  }
+
   var _storeOptions$initSta = storeOptions.initState,
       initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta,
       _storeOptions$enhance = storeOptions.enhancers,
@@ -35,7 +39,11 @@ function storeCreator(storeOptions) {
 
   var store = (0, _redux.createStore)(reduxReducer, initState, enhancers.length > 1 ? _redux.compose.apply(void 0, enhancers) : enhancers[0]);
   var dispatch = store.dispatch;
-  var reduxStore = store;
+  var reduxStore = Object.assign(store, {
+    id: id,
+    router: router,
+    baseFork: {}
+  });
   reduxStore.getPureState = reduxStore.getState;
 
   reduxStore.update = function (actionName, state, actionData) {
@@ -53,10 +61,8 @@ function storeCreator(storeOptions) {
     });
   };
 
-  reduxStore.clone = {
-    creator: storeCreator,
-    options: storeOptions
-  };
+  reduxStore.baseFork.creator = storeCreator;
+  reduxStore.baseFork.options = storeOptions;
   return reduxStore;
 }
 

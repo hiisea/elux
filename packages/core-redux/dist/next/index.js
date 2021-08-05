@@ -7,7 +7,7 @@ const reduxReducer = (state, action) => {
   };
 };
 
-export function storeCreator(storeOptions) {
+export function storeCreator(storeOptions, router, id = 0) {
   const {
     initState = {},
     enhancers = [],
@@ -27,7 +27,11 @@ export function storeCreator(storeOptions) {
   const {
     dispatch
   } = store;
-  const reduxStore = store;
+  const reduxStore = Object.assign(store, {
+    id,
+    router,
+    baseFork: {}
+  });
   reduxStore.getPureState = reduxStore.getState;
 
   reduxStore.update = (actionName, state, actionData) => {
@@ -45,10 +49,8 @@ export function storeCreator(storeOptions) {
     });
   };
 
-  reduxStore.clone = {
-    creator: storeCreator,
-    options: storeOptions
-  };
+  reduxStore.baseFork.creator = storeCreator;
+  reduxStore.baseFork.options = storeOptions;
   return reduxStore;
 }
 export function createRedux(storeOptions = {}) {

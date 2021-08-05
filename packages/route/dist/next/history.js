@@ -1,5 +1,5 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { cloneStore } from '@elux/core';
+import { forkStore } from '@elux/core';
 import { routeConfig, routeMeta } from './basic';
 export class HistoryRecord {
   constructor(location, key, history, store) {
@@ -111,7 +111,7 @@ export class History {
     let store = records[0].getStore();
 
     if (!this.parent) {
-      store = cloneStore(store);
+      store = forkStore(store);
     }
 
     const newRecord = new HistoryRecord(location, key, this, store);

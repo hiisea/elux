@@ -7,7 +7,9 @@ const appMeta = {
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
 export const appConfig = {
-  loadComponent: null
+  loadComponent: null,
+  useRouter: null,
+  useStore: null
 };
 export const setAppConfig = buildConfigSetter(appConfig);
 export function setUserConfig(conf) {
@@ -33,9 +35,8 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
           };
           const baseStore = storeCreator({ ...storeOptions,
             initState
-          });
-          const store = initApp(baseStore, istoreMiddleware);
-          router.init(store);
+          }, router);
+          const store = initApp(router, baseStore, istoreMiddleware);
           routeModule.model(store);
           const context = render(store, {
             deps: {},
@@ -82,12 +83,11 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
             };
             const baseStore = storeCreator({ ...storeOptions,
               initState
-            });
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({
+            }, router);
+            return renderApp(router, baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({
               store,
               AppView
             }) => {
-              router.init(store);
               routeModule.model(store);
               render(id, AppView, store, {
                 deps: {},
@@ -128,12 +128,11 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
             };
             const baseStore = storeCreator({ ...storeOptions,
               initState
-            });
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({
+            }, router);
+            return ssrApp(router, baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({
               store,
               AppView
             }) => {
-              router.init(store);
               const state = store.getState();
               const eluxContext = {
                 deps: {},
@@ -175,8 +174,10 @@ export function getApp() {
         return prev;
       }, {});
     },
+    useRouter: appConfig.useRouter,
+    useStore: appConfig.useStore,
+    getRouter: moduleHandler => moduleHandler.router,
     GetRouter: () => appMeta.router,
-    GetStore: () => appMeta.router.getCurrentStore(),
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
     Pagenames: routeMeta.pagenames
