@@ -16,11 +16,10 @@ export function exportModule(moduleName, ModuleHandles, params, components) {
   });
 
   var model = function model(store) {
-    var router = store.router;
-
-    if (!router.injectedModules[moduleName]) {
-      var moduleHandles = new ModuleHandles(moduleName, router);
-      router.injectedModules[moduleName] = moduleHandles;
+    if (!store.injectedModules[moduleName]) {
+      var _router = store.router;
+      var moduleHandles = new ModuleHandles(moduleName, _router);
+      store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       var _initState = moduleHandles.initState;
       var preModuleState = store.getState(moduleName);
@@ -159,9 +158,7 @@ export function loadComponet(moduleName, componentName, store, deps) {
   var promiseOrComponent = getComponet(moduleName, componentName);
 
   var callback = function callback(component) {
-    var router = store.router;
-
-    if (component.__elux_component__ === 'view' && !router.injectedModules[moduleName]) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
       if (env.isServer) {
         return null;
       }

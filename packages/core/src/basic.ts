@@ -90,7 +90,9 @@ export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) =
 export interface IStore<S extends State = any> extends BStore<S> {
   getCurrentActionName: () => string;
   getCurrentState: GetState<S>;
+  injectedModules: {[moduleName: string]: IModuleHandlers};
   readonly fork: {
+    injectedModules: {[moduleName: string]: IModuleHandlers};
     middlewares?: IStoreMiddleware[];
   };
 }
@@ -98,7 +100,6 @@ export interface IStore<S extends State = any> extends BStore<S> {
 export interface ICoreRouter {
   init(store: IStore): void;
   getCurrentStore(): IStore;
-  readonly injectedModules: {[moduleName: string]: IModuleHandlers};
 }
 
 export interface CommonModule<ModuleName extends string = string> {

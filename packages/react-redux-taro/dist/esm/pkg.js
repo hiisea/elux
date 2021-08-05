@@ -1026,11 +1026,10 @@ function exportModule(moduleName, ModuleHandles, params, components) {
   });
 
   var model = function model(store) {
-    var router = store.router;
-
-    if (!router.injectedModules[moduleName]) {
-      var moduleHandles = new ModuleHandles(moduleName, router);
-      router.injectedModules[moduleName] = moduleHandles;
+    if (!store.injectedModules[moduleName]) {
+      var _router = store.router;
+      var moduleHandles = new ModuleHandles(moduleName, _router);
+      store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       var _initState = moduleHandles.initState;
       var preModuleState = store.getState(moduleName);
@@ -1167,9 +1166,7 @@ function loadComponet(moduleName, componentName, store, deps) {
   var promiseOrComponent = getComponet(moduleName, componentName);
 
   var callback = function callback(component) {
-    var router = store.router;
-
-    if (component.__elux_component__ === 'view' && !router.injectedModules[moduleName]) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
       if (env.isServer) {
         return null;
       }
@@ -1432,15 +1429,21 @@ function forkStore(store) {
   var _store$baseFork = store.baseFork,
       creator = _store$baseFork.creator,
       options = _store$baseFork.options;
-  var middlewares = store.fork.middlewares;
+  var _store$fork = store.fork,
+      middlewares = _store$fork.middlewares,
+      injectedModules = _store$fork.injectedModules;
   var initState = store.getPureState();
   var newBStore = creator(_extends({}, options, {
     initState: initState
   }), store.router, store.id + 1);
-  var newIStore = enhanceStore(newBStore, middlewares);
+  var newIStore = enhanceStore(newBStore, middlewares, _extends({}, injectedModules));
   return newIStore;
 }
-function enhanceStore(baseStore, middlewares) {
+function enhanceStore(baseStore, middlewares, injectedModules) {
+  if (injectedModules === void 0) {
+    injectedModules = {};
+  }
+
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -1451,6 +1454,7 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
+  store.injectedModules = injectedModules;
   store.fork = {
     middlewares: middlewares
   };
@@ -1502,7 +1506,7 @@ function enhanceStore(baseStore, middlewares) {
         }
 
         if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-          if (!store.router.injectedModules[moduleName]) {
+          if (!injectedModules[moduleName]) {
             var result = _loadModel(moduleName, store);
 
             if (isPromise(result)) {
@@ -1604,7 +1608,7 @@ function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = store.router.injectedModules[moduleName];
+            var modelInstance = injectedModules[moduleName];
             var result = handler.apply(modelInstance, actionData);
 
             if (result) {
@@ -1619,7 +1623,7 @@ function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = store.router.injectedModules[moduleName];
+            var modelInstance = injectedModules[moduleName];
             Object.assign(currentData, prevData);
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
@@ -2745,6 +2749,11 @@ var Router$1 = function Router(props) {
       setPages = _useState[1];
 
   var containerRef = useRef(null);
+
+  var _useState2 = useState('PUSH'),
+      action = _useState2[0],
+      setAction = _useState2[1];
+
   useEffect(function () {
     return router.addListener(function (_ref) {
       var routeState = _ref.routeState,
@@ -2752,6 +2761,7 @@ var Router$1 = function Router(props) {
 
       if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
         var newPages = router.getHistory(true).getPages();
+        setAction(routeState.action);
         setPages(newPages);
       }
     });
@@ -2774,7 +2784,7 @@ var Router$1 = function Router(props) {
   });
   return React.createElement("div", {
     ref: containerRef,
-    className: 'elux-app elux-enter ' + Date.now()
+    className: "elux-app elux-" + action + " " + Date.now()
   }, nodes);
 };
 var Page$1 = memo(function (props) {

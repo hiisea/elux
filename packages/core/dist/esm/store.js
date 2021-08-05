@@ -51,15 +51,21 @@ export function forkStore(store) {
   var _store$baseFork = store.baseFork,
       creator = _store$baseFork.creator,
       options = _store$baseFork.options;
-  var middlewares = store.fork.middlewares;
+  var _store$fork = store.fork,
+      middlewares = _store$fork.middlewares,
+      injectedModules = _store$fork.injectedModules;
   var initState = store.getPureState();
   var newBStore = creator(_extends({}, options, {
     initState: initState
   }), store.router, store.id + 1);
-  var newIStore = enhanceStore(newBStore, middlewares);
+  var newIStore = enhanceStore(newBStore, middlewares, _extends({}, injectedModules));
   return newIStore;
 }
-export function enhanceStore(baseStore, middlewares) {
+export function enhanceStore(baseStore, middlewares, injectedModules) {
+  if (injectedModules === void 0) {
+    injectedModules = {};
+  }
+
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -70,6 +76,7 @@ export function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
+  store.injectedModules = injectedModules;
   store.fork = {
     middlewares: middlewares
   };
@@ -121,7 +128,7 @@ export function enhanceStore(baseStore, middlewares) {
         }
 
         if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-          if (!store.router.injectedModules[moduleName]) {
+          if (!injectedModules[moduleName]) {
             var result = loadModel(moduleName, store);
 
             if (isPromise(result)) {
@@ -223,7 +230,7 @@ export function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = store.router.injectedModules[moduleName];
+            var modelInstance = injectedModules[moduleName];
             var result = handler.apply(modelInstance, actionData);
 
             if (result) {
@@ -238,7 +245,7 @@ export function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = store.router.injectedModules[moduleName];
+            var modelInstance = injectedModules[moduleName];
             Object.assign(currentData, prevData);
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }

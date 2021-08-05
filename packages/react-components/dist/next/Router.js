@@ -6,6 +6,7 @@ export const Router = props => {
   const router = eluxContext.router;
   const [pages, setPages] = useState(router.getHistory(true).getPages());
   const containerRef = useRef(null);
+  const [action, setAction] = useState('PUSH');
   useEffect(() => {
     return router.addListener(({
       routeState,
@@ -13,6 +14,7 @@ export const Router = props => {
     }) => {
       if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
         const newPages = router.getHistory(true).getPages();
+        setAction(routeState.action);
         setPages(newPages);
       }
     });
@@ -35,7 +37,7 @@ export const Router = props => {
   });
   return React.createElement("div", {
     ref: containerRef,
-    className: 'elux-app elux-enter ' + Date.now()
+    className: `elux-app elux-${action} ${Date.now()}`
   }, nodes);
 };
 export const Page = memo(function (props) {

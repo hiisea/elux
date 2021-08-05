@@ -42,16 +42,18 @@ export function forkStore(store) {
     options
   } = store.baseFork;
   const {
-    middlewares
+    middlewares,
+    injectedModules
   } = store.fork;
   const initState = store.getPureState();
   const newBStore = creator({ ...options,
     initState
   }, store.router, store.id + 1);
-  const newIStore = enhanceStore(newBStore, middlewares);
+  const newIStore = enhanceStore(newBStore, middlewares, { ...injectedModules
+  });
   return newIStore;
 }
-export function enhanceStore(baseStore, middlewares) {
+export function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -62,6 +64,7 @@ export function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
+  store.injectedModules = injectedModules;
   store.fork = {
     middlewares
   };
@@ -105,7 +108,7 @@ export function enhanceStore(baseStore, middlewares) {
     }
 
     if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!store.router.injectedModules[moduleName]) {
+      if (!injectedModules[moduleName]) {
         const result = loadModel(moduleName, store);
 
         if (isPromise(result)) {
@@ -198,7 +201,7 @@ export function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
-            const modelInstance = store.router.injectedModules[moduleName];
+            const modelInstance = injectedModules[moduleName];
             const result = handler.apply(modelInstance, actionData);
 
             if (result) {
@@ -213,7 +216,7 @@ export function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
-            const modelInstance = store.router.injectedModules[moduleName];
+            const modelInstance = injectedModules[moduleName];
             Object.assign(currentData, prevData);
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }

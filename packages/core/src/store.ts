@@ -50,14 +50,18 @@ function compose(...funcs: Function[]) {
 
 export function forkStore<T extends IStore>(store: T): T {
   const {creator, options} = store.baseFork;
-  const {middlewares} = store.fork;
+  const {middlewares, injectedModules} = store.fork;
   const initState = store.getPureState();
   const newBStore = creator({...options, initState}, store.router, store.id + 1);
-  const newIStore = enhanceStore(newBStore, middlewares) as T;
+  const newIStore = enhanceStore(newBStore, middlewares, {...injectedModules}) as T;
   return newIStore;
 }
 
-export function enhanceStore<S extends State = any>(baseStore: BStore, middlewares?: IStoreMiddleware[]): IStore<S> {
+export function enhanceStore<S extends State = any>(
+  baseStore: BStore,
+  middlewares?: IStoreMiddleware[],
+  injectedModules: {[moduleName: string]: IModuleHandlers} = {}
+): IStore<S> {
   const store: IStore<S> = baseStore as any;
   const _getState = baseStore.getState;
   const getState: GetState<S> = (moduleName?: string) => {
@@ -65,6 +69,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
     return moduleName ? state[moduleName] : state;
   };
   store.getState = getState;
+  store.injectedModules = injectedModules;
   (store as any).fork = {
     middlewares,
   };
@@ -95,7 +100,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
       return undefined;
     }
     if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!store.router.injectedModules[moduleName]) {
+      if (!injectedModules[moduleName]) {
         const result: void | Promise<void> = loadModel(moduleName, store);
         if (isPromise(result)) {
           return result.then(() => next(action));
@@ -177,7 +182,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
-            const modelInstance = store.router.injectedModules[moduleName];
+            const modelInstance = injectedModules[moduleName];
             const result = handler.apply(modelInstance, actionData);
             if (result) {
               newState[moduleName] = result;
@@ -191,7 +196,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, middlewar
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
-            const modelInstance = store.router.injectedModules[moduleName];
+            const modelInstance = injectedModules[moduleName];
             Object.assign(currentData, prevData);
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }

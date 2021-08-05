@@ -923,11 +923,10 @@ function exportModule(moduleName, ModuleHandles, params, components) {
   });
 
   const model = store => {
-    const router = store.router;
-
-    if (!router.injectedModules[moduleName]) {
+    if (!store.injectedModules[moduleName]) {
+      const router = store.router;
       const moduleHandles = new ModuleHandles(moduleName, router);
-      router.injectedModules[moduleName] = moduleHandles;
+      store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       const initState = moduleHandles.initState;
       const preModuleState = store.getState(moduleName);
@@ -1059,9 +1058,7 @@ function loadComponet(moduleName, componentName, store, deps) {
   const promiseOrComponent = getComponet(moduleName, componentName);
 
   const callback = component => {
-    const router = store.router;
-
-    if (component.__elux_component__ === 'view' && !router.injectedModules[moduleName]) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
       if (env.isServer) {
         return null;
       }
@@ -1314,16 +1311,18 @@ function forkStore(store) {
     options
   } = store.baseFork;
   const {
-    middlewares
+    middlewares,
+    injectedModules
   } = store.fork;
   const initState = store.getPureState();
   const newBStore = creator({ ...options,
     initState
   }, store.router, store.id + 1);
-  const newIStore = enhanceStore(newBStore, middlewares);
+  const newIStore = enhanceStore(newBStore, middlewares, { ...injectedModules
+  });
   return newIStore;
 }
-function enhanceStore(baseStore, middlewares) {
+function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -1334,6 +1333,7 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
+  store.injectedModules = injectedModules;
   store.fork = {
     middlewares
   };
@@ -1377,7 +1377,7 @@ function enhanceStore(baseStore, middlewares) {
     }
 
     if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!store.router.injectedModules[moduleName]) {
+      if (!injectedModules[moduleName]) {
         const result = _loadModel(moduleName, store);
 
         if (isPromise(result)) {
@@ -1470,7 +1470,7 @@ function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
-            const modelInstance = store.router.injectedModules[moduleName];
+            const modelInstance = injectedModules[moduleName];
             const result = handler.apply(modelInstance, actionData);
 
             if (result) {
@@ -1485,7 +1485,7 @@ function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
-            const modelInstance = store.router.injectedModules[moduleName];
+            const modelInstance = injectedModules[moduleName];
             Object.assign(currentData, prevData);
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
@@ -1728,6 +1728,7 @@ const Router$1 = props => {
   const router = eluxContext.router;
   const [pages, setPages] = useState(router.getHistory(true).getPages());
   const containerRef = useRef(null);
+  const [action, setAction] = useState('PUSH');
   useEffect(() => {
     return router.addListener(({
       routeState,
@@ -1735,6 +1736,7 @@ const Router$1 = props => {
     }) => {
       if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
         const newPages = router.getHistory(true).getPages();
+        setAction(routeState.action);
         setPages(newPages);
       }
     });
@@ -1757,7 +1759,7 @@ const Router$1 = props => {
   });
   return React.createElement("div", {
     ref: containerRef,
-    className: 'elux-app elux-enter ' + Date.now()
+    className: `elux-app elux-${action} ${Date.now()}`
   }, nodes);
 };
 const Page = memo(function (props) {

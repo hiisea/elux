@@ -70,16 +70,22 @@ function forkStore(store) {
   var _store$baseFork = store.baseFork,
       creator = _store$baseFork.creator,
       options = _store$baseFork.options;
-  var middlewares = store.fork.middlewares;
+  var _store$fork = store.fork,
+      middlewares = _store$fork.middlewares,
+      injectedModules = _store$fork.injectedModules;
   var initState = store.getPureState();
   var newBStore = creator((0, _extends2.default)({}, options, {
     initState: initState
   }), store.router, store.id + 1);
-  var newIStore = enhanceStore(newBStore, middlewares);
+  var newIStore = enhanceStore(newBStore, middlewares, (0, _extends2.default)({}, injectedModules));
   return newIStore;
 }
 
-function enhanceStore(baseStore, middlewares) {
+function enhanceStore(baseStore, middlewares, injectedModules) {
+  if (injectedModules === void 0) {
+    injectedModules = {};
+  }
+
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -90,6 +96,7 @@ function enhanceStore(baseStore, middlewares) {
   };
 
   store.getState = getState;
+  store.injectedModules = injectedModules;
   store.fork = {
     middlewares: middlewares
   };
@@ -141,7 +148,7 @@ function enhanceStore(baseStore, middlewares) {
         }
 
         if (moduleName && actionName && _basic.MetaData.moduleGetter[moduleName]) {
-          if (!store.router.injectedModules[moduleName]) {
+          if (!injectedModules[moduleName]) {
             var result = (0, _inject.loadModel)(moduleName, store);
 
             if ((0, _sprite.isPromise)(result)) {
@@ -241,7 +248,7 @@ function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = store.router.injectedModules[moduleName];
+            var modelInstance = injectedModules[moduleName];
             var result = handler.apply(modelInstance, actionData);
 
             if (result) {
@@ -256,7 +263,7 @@ function enhanceStore(baseStore, middlewares) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
-            var modelInstance = store.router.injectedModules[moduleName];
+            var modelInstance = injectedModules[moduleName];
             Object.assign(currentData, prevData);
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }

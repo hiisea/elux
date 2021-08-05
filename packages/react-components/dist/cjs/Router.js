@@ -23,6 +23,11 @@ var Router = function Router(props) {
       setPages = _useState[1];
 
   var containerRef = (0, _react.useRef)(null);
+
+  var _useState2 = (0, _react.useState)('PUSH'),
+      action = _useState2[0],
+      setAction = _useState2[1];
+
   (0, _react.useEffect)(function () {
     return router.addListener(function (_ref) {
       var routeState = _ref.routeState,
@@ -30,6 +35,7 @@ var Router = function Router(props) {
 
       if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
         var newPages = router.getHistory(true).getPages();
+        setAction(routeState.action);
         setPages(newPages);
       }
     });
@@ -53,7 +59,7 @@ var Router = function Router(props) {
   });
   return _react.default.createElement("div", {
     ref: containerRef,
-    className: 'elux-app elux-enter ' + Date.now()
+    className: "elux-app elux-" + action + " " + Date.now()
   }, nodes);
 };
 

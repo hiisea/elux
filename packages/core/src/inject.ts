@@ -76,10 +76,10 @@ export function exportModule<
     }
   });
   const model = (store: IStore) => {
-    const router = store.router;
-    if (!router.injectedModules[moduleName]) {
+    if (!store.injectedModules[moduleName]) {
+      const router = store.router;
       const moduleHandles = new ModuleHandles(moduleName, router);
-      router.injectedModules[moduleName] = moduleHandles;
+      store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
       const initState = moduleHandles.initState;
       const preModuleState = store.getState(moduleName);
@@ -200,8 +200,7 @@ export function loadComponet(
 ): EluxComponent | null | Promise<EluxComponent | null> {
   const promiseOrComponent = getComponet(moduleName, componentName);
   const callback = (component: EluxComponent) => {
-    const router = store.router;
-    if (component.__elux_component__ === 'view' && !router.injectedModules[moduleName]) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
       if (env.isServer) {
         return null;
       }
