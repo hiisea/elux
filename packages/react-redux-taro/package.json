@@ -1,6 +1,6 @@
 {
   "name": "@elux/react-redux-taro",
-  "version": "0.1.36",
+  "version": "0.1.45",
   "description": "The practice of elux on react-redux-taro",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/react-redux-taro",
   "author": "hiisea <hiisea@qq.com>",
@@ -41,8 +41,8 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/react-redux": "^0.1.36",
-    "@elux/react-taro": "^0.1.36",
+    "@elux/react-redux": "^0.1.45",
+    "@elux/react-taro": "^0.1.45",
     "regenerator-runtime": "~0.11.1"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"

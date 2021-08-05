@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-vuex-taro",
-  "version": "0.1.36",
+  "version": "0.1.45",
   "description": "The practice of elux on vue-vuex-taro",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-vuex-taro",
   "author": "hiisea <hiisea@qq.com>",
@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core-vuex": "^0.1.36",
-    "@elux/vue-taro": "^0.1.36",
+    "@elux/core-vuex": "^0.1.45",
+    "@elux/vue-taro": "^0.1.45",
     "regenerator-runtime": "~0.11.1"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"

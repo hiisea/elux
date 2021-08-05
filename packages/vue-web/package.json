@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-web",
-  "version": "0.1.36",
+  "version": "0.1.45",
   "description": "The practice of elux on vue + web",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-web",
   "author": "hiisea <hiisea@qq.com>",
@@ -31,9 +31,9 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/app": "^0.1.36",
-    "@elux/route-browser": "^0.1.36",
-    "@elux/vue-components": "^0.1.36"
+    "@elux/app": "^0.1.45",
+    "@elux/route-browser": "^0.1.45",
+    "@elux/vue-components": "^0.1.45"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }
