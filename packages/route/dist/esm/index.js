@@ -4,10 +4,10 @@ import _extends from "@babel/runtime/helpers/esm/extends";
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge, SingleDispatcher } from '@elux/core';
+import { isPromise, deepMerge, MultipleDispatcher } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
 import { History, HistoryRecord } from './history';
-import { testRouteChangeAction, routeChangeAction } from './module';
+import { beforeRouteChangeAction, routeChangeAction } from './module';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl as _nativeLocationToNativeUrl } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
@@ -72,13 +72,13 @@ export var BaseNativeRouter = function () {
 
   return BaseNativeRouter;
 }();
-export var BaseRouter = function (_SingleDispatcher) {
-  _inheritsLoose(BaseRouter, _SingleDispatcher);
+export var BaseRouter = function (_MultipleDispatcher) {
+  _inheritsLoose(BaseRouter, _MultipleDispatcher);
 
   function BaseRouter(url, nativeRouter, locationTransform) {
     var _this2;
 
-    _this2 = _SingleDispatcher.call(this) || this;
+    _this2 = _MultipleDispatcher.call(this) || this;
 
     _defineProperty(_assertThisInitialized(_this2), "_tid", 0);
 
@@ -295,26 +295,30 @@ export var BaseRouter = function (_SingleDispatcher) {
                 action: 'RELAUNCH',
                 key: key
               });
-              _context.next = 10;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              this.dispatch('test', {
+                routeState: routeState,
+                root: root
+              });
+              _context.next = 11;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 10:
+            case 11:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context.next = 15;
+                _context.next = 16;
                 break;
               }
 
-              _context.next = 14;
+              _context.next = 15;
               return this.nativeRouter.execute('relaunch', function () {
                 return _this3.locationToNativeData(routeState);
               }, key);
 
-            case 14:
+            case 15:
               nativeData = _context.sent;
 
-            case 15:
+            case 16:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -328,13 +332,13 @@ export var BaseRouter = function (_SingleDispatcher) {
                 this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-              this.dispatch({
+              this.dispatch('change', {
                 routeState: routeState,
                 root: root
               });
               this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
-            case 21:
+            case 22:
             case "end":
               return _context.stop();
           }
@@ -390,26 +394,30 @@ export var BaseRouter = function (_SingleDispatcher) {
                 action: 'PUSH',
                 key: key
               });
-              _context2.next = 10;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              this.dispatch('test', {
+                routeState: routeState,
+                root: root
+              });
+              _context2.next = 11;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 10:
+            case 11:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context2.next = 15;
+                _context2.next = 16;
                 break;
               }
 
-              _context2.next = 14;
+              _context2.next = 15;
               return this.nativeRouter.execute('push', function () {
                 return _this4.locationToNativeData(routeState);
               }, key);
 
-            case 14:
+            case 15:
               nativeData = _context2.sent;
 
-            case 15:
+            case 16:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -423,13 +431,13 @@ export var BaseRouter = function (_SingleDispatcher) {
                 this.history.getCurrentSubHistory().push(location, key);
               }
 
-              this.dispatch({
+              this.dispatch('change', {
                 routeState: routeState,
                 root: root
               });
               this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
-            case 21:
+            case 22:
             case "end":
               return _context2.stop();
           }
@@ -485,26 +493,30 @@ export var BaseRouter = function (_SingleDispatcher) {
                 action: 'REPLACE',
                 key: key
               });
-              _context3.next = 10;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              this.dispatch('test', {
+                routeState: routeState,
+                root: root
+              });
+              _context3.next = 11;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 10:
+            case 11:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context3.next = 15;
+                _context3.next = 16;
                 break;
               }
 
-              _context3.next = 14;
+              _context3.next = 15;
               return this.nativeRouter.execute('replace', function () {
                 return _this5.locationToNativeData(routeState);
               }, key);
 
-            case 14:
+            case 15:
               nativeData = _context3.sent;
 
-            case 15:
+            case 16:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -518,13 +530,13 @@ export var BaseRouter = function (_SingleDispatcher) {
                 this.history.getCurrentSubHistory().replace(location, key);
               }
 
-              this.dispatch({
+              this.dispatch('change', {
                 routeState: routeState,
                 root: root
               });
               this.getCurrentStore().dispatch(routeChangeAction(routeState));
 
-            case 21:
+            case 22:
             case "end":
               return _context3.stop();
           }
@@ -597,26 +609,30 @@ export var BaseRouter = function (_SingleDispatcher) {
                 action: 'BACK'
               };
               prevRootState = this.getCurrentStore().getState();
-              _context4.next = 14;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState, prevRootState));
+              this.dispatch('test', {
+                routeState: routeState,
+                root: root
+              });
+              _context4.next = 15;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 14:
+            case 15:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context4.next = 19;
+                _context4.next = 20;
                 break;
               }
 
-              _context4.next = 18;
+              _context4.next = 19;
               return this.nativeRouter.execute('back', function () {
                 return _this6.locationToNativeData(routeState);
               }, n, key);
 
-            case 18:
+            case 19:
               nativeData = _context4.sent;
 
-            case 19:
+            case 20:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -630,13 +646,13 @@ export var BaseRouter = function (_SingleDispatcher) {
                 this.history.getCurrentSubHistory().back(n);
               }
 
-              this.dispatch({
+              this.dispatch('change', {
                 routeState: routeState,
                 root: root
               });
               this.getCurrentStore().dispatch(routeChangeAction(routeState, prevRootState));
 
-            case 25:
+            case 26:
             case "end":
               return _context4.stop();
           }
@@ -679,4 +695,4 @@ export var BaseRouter = function (_SingleDispatcher) {
   };
 
   return BaseRouter;
-}(SingleDispatcher);
+}(MultipleDispatcher);

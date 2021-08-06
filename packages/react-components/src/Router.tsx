@@ -5,32 +5,36 @@ import {EluxContextComponent, reactComponentsConfig} from './base';
 export const Router: React.FC = (props) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router!;
-  const [pages, setPages] = useState(router.getHistory(true).getPages());
+  const [classname, setClassname] = useState('elux-app');
+  const pages = [...router.getHistory(true).getPages()].reverse();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [action, setAction] = useState<'PUSH' | 'BACK'>('PUSH');
+
   useEffect(() => {
-    return router.addListener(({routeState, root}) => {
-      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
-        const newPages = router.getHistory(true).getPages();
-        setAction(routeState.action);
-        setPages(newPages);
+    return router.addListener('change', ({routeState, root}) => {
+      if (root) {
+        if (routeState.action === 'PUSH') {
+          setClassname('elux-app elux-animation elux-change');
+          env.setTimeout(() => {
+            containerRef.current!.className = 'elux-app elux-animation';
+          }, 0);
+          env.setTimeout(() => {
+            containerRef.current!.className = 'elux-app';
+          }, 1000);
+        } else if (routeState.action === 'BACK') {
+          containerRef.current!.className = 'elux-app elux-animation elux-change';
+          env.setTimeout(() => {
+            setClassname('elux-app');
+          }, 1000);
+        }
       }
     });
   }, [router]);
-  useEffect(() => {
-    env.setTimeout(() => {
-      containerRef.current!.className = 'elux-app elux-change';
-    }, 0);
-    env.setTimeout(() => {
-      containerRef.current!.className = 'elux-app';
-    }, 1000);
-  });
-  const nodes = pages.reverse().map((item) => {
+  const nodes = pages.map((item) => {
     const page = item.page ? <item.page key={item.key} /> : <Page key={item.key}>{props.children}</Page>;
     return page;
   });
   return (
-    <div ref={containerRef} className={`elux-app elux-${action} ${Date.now()}`}>
+    <div ref={containerRef} className={classname}>
       {nodes}
     </div>
   );

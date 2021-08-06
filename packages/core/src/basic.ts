@@ -77,7 +77,7 @@ export interface BStoreOptions {
 export interface BStore<S extends State = any> {
   readonly id: number;
   readonly router: ICoreRouter;
-  readonly baseFork: {creator: (options: {initState: any}, router: ICoreRouter, id?: number) => BStore; options: {initState?: any}};
+  baseFork: {creator: (options: {initState: any}, router: ICoreRouter, id?: number) => BStore; options: {initState?: any}};
   dispatch: Dispatch;
   getState: GetState<S>;
   getPureState(): S;
@@ -91,7 +91,7 @@ export interface IStore<S extends State = any> extends BStore<S> {
   getCurrentActionName: () => string;
   getCurrentState: GetState<S>;
   injectedModules: {[moduleName: string]: IModuleHandlers};
-  readonly fork: {
+  fork: {
     injectedModules: {[moduleName: string]: IModuleHandlers};
     middlewares?: IStoreMiddleware[];
   };
@@ -241,14 +241,14 @@ export function injectActions(moduleName: string, handlers: ActionHandlerList): 
  * @param moduleName moduleName+groupName合起来作为该加载项的key
  * @param groupName moduleName+groupName合起来作为该加载项的key
  */
-export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T {
+export function setLoading<T extends Promise<any>>(router: ICoreRouter, item: T, moduleName: string, groupName: string): T {
   const key = moduleName + coreConfig.NSP + groupName;
   const loadings = MetaData.loadings;
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
     loadings[key].addListener((loadingState) => {
       const action = moduleLoadingAction(moduleName, {[groupName]: loadingState});
-      store.dispatch(action);
+      router.getCurrentStore().dispatch(action);
     });
   }
   loadings[key].addItem(item);
@@ -294,7 +294,7 @@ export function effect(loadingKey: string | null = 'app.loading.global'): Functi
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
-        setLoading(this.router.getCurrentStore(), promiseResult, loadingForModuleName!, loadingForGroupName!);
+        setLoading(this.router, promiseResult, loadingForModuleName!, loadingForGroupName!);
       }
       if (!fun.__decorators__) {
         fun.__decorators__ = [];

@@ -35,8 +35,7 @@ export function storeCreator(storeOptions: ReduxOptions, router: ICoreRouter, id
   reduxStore.replaceState = (state: any) => {
     dispatch({type: ActionTypes.Replace, state});
   };
-  reduxStore.baseFork.creator = storeCreator;
-  reduxStore.baseFork.options = storeOptions;
+  reduxStore.baseFork = {creator: storeCreator, options: storeOptions};
   return reduxStore;
 }
 

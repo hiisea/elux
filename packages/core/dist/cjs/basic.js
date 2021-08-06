@@ -137,7 +137,7 @@ function injectActions(moduleName, handlers) {
   }
 }
 
-function setLoading(store, item, moduleName, groupName) {
+function setLoading(router, item, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
   var loadings = MetaData.loadings;
 
@@ -147,7 +147,7 @@ function setLoading(store, item, moduleName, groupName) {
       var _moduleLoadingAction;
 
       var action = moduleLoadingAction(moduleName, (_moduleLoadingAction = {}, _moduleLoadingAction[groupName] = loadingState, _moduleLoadingAction));
-      store.dispatch(action);
+      router.getCurrentStore().dispatch(action);
     });
   }
 
@@ -200,7 +200,7 @@ function effect(loadingKey) {
           loadingForModuleName = this.moduleName;
         }
 
-        setLoading(this.router.getCurrentStore(), promiseResult, loadingForModuleName, loadingForGroupName);
+        setLoading(this.router, promiseResult, loadingForModuleName, loadingForGroupName);
       }
 
       if (!fun.__decorators__) {

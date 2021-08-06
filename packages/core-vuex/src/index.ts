@@ -35,8 +35,7 @@ export function storeCreator(storeOptions: VuexOptions, router: ICoreRouter, id 
   vuexStore.update = (actionName: string, newState: any, actionData: any[]) => {
     store.commit(UpdateMutationName, {actionName, newState, actionData});
   };
-  vuexStore.baseFork.creator = storeCreator;
-  vuexStore.baseFork.options = storeOptions;
+  vuexStore.baseFork = {creator: storeCreator, options: storeOptions};
   return vuexStore;
 }
 

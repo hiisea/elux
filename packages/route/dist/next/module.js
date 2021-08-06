@@ -36,10 +36,10 @@ export const RouteActionTypes = {
   RouteChange: `route${coreConfig.NSP}RouteChange`,
   TestRouteChange: `route${coreConfig.NSP}TestRouteChange`
 };
-export function testRouteChangeAction(routeState, prevRootState) {
+export function beforeRouteChangeAction(routeState) {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState, prevRootState]
+    payload: [routeState]
   };
 }
 export function routeParamsAction(moduleName, params, action, prevRootState) {

@@ -78,6 +78,7 @@ export function enhanceStore(baseStore, middlewares, injectedModules) {
   store.getState = getState;
   store.injectedModules = injectedModules;
   store.fork = {
+    injectedModules: injectedModules,
     middlewares: middlewares
   };
   var currentData = {

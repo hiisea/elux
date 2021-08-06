@@ -56,8 +56,10 @@ function storeCreator(storeOptions, router, id) {
     });
   };
 
-  vuexStore.baseFork.creator = storeCreator;
-  vuexStore.baseFork.options = storeOptions;
+  vuexStore.baseFork = {
+    creator: storeCreator,
+    options: storeOptions
+  };
   return vuexStore;
 }
 

@@ -4,30 +4,33 @@ import { EluxContextComponent, reactComponentsConfig } from './base';
 export const Router = props => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router;
-  const [pages, setPages] = useState(router.getHistory(true).getPages());
+  const [classname, setClassname] = useState('elux-app');
+  const pages = [...router.getHistory(true).getPages()].reverse();
   const containerRef = useRef(null);
-  const [action, setAction] = useState('PUSH');
   useEffect(() => {
-    return router.addListener(({
+    return router.addListener('change', ({
       routeState,
       root
     }) => {
-      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
-        const newPages = router.getHistory(true).getPages();
-        setAction(routeState.action);
-        setPages(newPages);
+      if (root) {
+        if (routeState.action === 'PUSH') {
+          setClassname('elux-app elux-animation elux-change');
+          env.setTimeout(() => {
+            containerRef.current.className = 'elux-app elux-animation';
+          }, 0);
+          env.setTimeout(() => {
+            containerRef.current.className = 'elux-app';
+          }, 1000);
+        } else if (routeState.action === 'BACK') {
+          containerRef.current.className = 'elux-app elux-animation elux-change';
+          env.setTimeout(() => {
+            setClassname('elux-app');
+          }, 1000);
+        }
       }
     });
   }, [router]);
-  useEffect(() => {
-    env.setTimeout(() => {
-      containerRef.current.className = 'elux-app elux-change';
-    }, 0);
-    env.setTimeout(() => {
-      containerRef.current.className = 'elux-app';
-    }, 1000);
-  });
-  const nodes = pages.reverse().map(item => {
+  const nodes = pages.map(item => {
     const page = item.page ? React.createElement(item.page, {
       key: item.key
     }) : React.createElement(Page, {
@@ -37,7 +40,7 @@ export const Router = props => {
   });
   return React.createElement("div", {
     ref: containerRef,
-    className: `elux-app elux-${action} ${Date.now()}`
+    className: classname
   }, nodes);
 };
 export const Page = memo(function (props) {

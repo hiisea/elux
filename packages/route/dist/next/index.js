@@ -1,8 +1,8 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge, SingleDispatcher } from '@elux/core';
+import { isPromise, deepMerge, MultipleDispatcher } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
 import { History, HistoryRecord } from './history';
-import { testRouteChangeAction, routeChangeAction } from './module';
+import { beforeRouteChangeAction, routeChangeAction } from './module';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
@@ -57,7 +57,7 @@ export class BaseNativeRouter {
   }
 
 }
-export class BaseRouter extends SingleDispatcher {
+export class BaseRouter extends MultipleDispatcher {
   constructor(url, nativeRouter, locationTransform) {
     super();
 
@@ -249,7 +249,11 @@ export class BaseRouter extends SingleDispatcher {
       action: 'RELAUNCH',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -270,7 +274,7 @@ export class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });
@@ -296,7 +300,11 @@ export class BaseRouter extends SingleDispatcher {
       action: 'PUSH',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -317,7 +325,7 @@ export class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().push(location, key);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });
@@ -343,7 +351,11 @@ export class BaseRouter extends SingleDispatcher {
       action: 'REPLACE',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -364,7 +376,7 @@ export class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().replace(location, key);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });
@@ -400,7 +412,11 @@ export class BaseRouter extends SingleDispatcher {
       action: 'BACK'
     };
     const prevRootState = this.getCurrentStore().getState();
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState, prevRootState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -421,7 +437,7 @@ export class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().back(n);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });

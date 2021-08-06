@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.testRouteChangeAction = testRouteChangeAction;
+exports.beforeRouteChangeAction = beforeRouteChangeAction;
 exports.routeParamsAction = routeParamsAction;
 exports.routeChangeAction = routeChangeAction;
 exports.createRouteModule = createRouteModule;
@@ -70,10 +70,10 @@ var RouteActionTypes = {
 };
 exports.RouteActionTypes = RouteActionTypes;
 
-function testRouteChangeAction(routeState, prevRootState) {
+function beforeRouteChangeAction(routeState) {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState, prevRootState]
+    payload: [routeState]
   };
 }
 

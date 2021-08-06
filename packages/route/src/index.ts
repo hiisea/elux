@@ -1,8 +1,8 @@
-import {isPromise, deepMerge, IStore, ICoreRouter, SingleDispatcher, IModuleHandlers} from '@elux/core';
+import {isPromise, deepMerge, IStore, ICoreRouter, MultipleDispatcher, IModuleHandlers} from '@elux/core';
 
 import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation} from './basic';
 import {History, HistoryRecord} from './history';
-import {testRouteChangeAction, routeChangeAction} from './module';
+import {beforeRouteChangeAction, routeChangeAction} from './module';
 import {eluxLocationToEluxUrl, nativeLocationToNativeUrl, LocationTransform} from './transform';
 
 export {setRouteConfig, routeConfig, routeMeta} from './basic';
@@ -81,7 +81,7 @@ export abstract class BaseNativeRouter {
 }
 
 export abstract class BaseRouter<P extends RootParams, N extends string>
-  extends SingleDispatcher<{routeState: RouteState<P>; root: boolean}>
+  extends MultipleDispatcher<{test: {routeState: RouteState<P>; root: boolean}; change: {routeState: RouteState<P>; root: boolean}}>
   implements IBaseRouter<P, N> {
   private _tid = 0;
 
@@ -243,7 +243,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     const location: Location<P> = preData;
     const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key};
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {routeState, root});
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -257,7 +258,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     } else {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
-    this.dispatch({routeState, root});
+    this.dispatch('change', {routeState, root});
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
@@ -273,7 +274,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     const location: Location<P> = preData;
     const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'PUSH', key};
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {routeState, root});
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -287,7 +289,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     } else {
       this.history.getCurrentSubHistory().push(location, key);
     }
-    this.dispatch({routeState, root});
+    this.dispatch('change', {routeState, root});
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
@@ -303,7 +305,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     const location: Location<P> = preData;
     const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'REPLACE', key};
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {routeState, root});
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -317,7 +320,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     } else {
       this.history.getCurrentSubHistory().replace(location, key);
     }
-    this.dispatch({routeState, root});
+    this.dispatch('change', {routeState, root});
     this.getCurrentStore().dispatch(routeChangeAction(routeState));
   }
 
@@ -339,7 +342,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     const params = deepMerge(historyRecord.getParams(), options.payload);
     const routeState: RouteState<P> = {key, pagename, params, action: 'BACK'};
     const prevRootState = this.getCurrentStore().getState();
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState, prevRootState));
+    this.dispatch('test', {routeState, root});
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -353,7 +357,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     } else {
       this.history.getCurrentSubHistory().back(n);
     }
-    this.dispatch({routeState, root});
+    this.dispatch('change', {routeState, root});
     this.getCurrentStore().dispatch(routeChangeAction(routeState, prevRootState));
   }
 
@@ -388,7 +392,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
   initRouteState: RouteState<P> | Promise<RouteState<P>>;
   getHistory(root?: boolean): History;
   nativeRouter: any;
-  addListener(callback: (data: {routeState: RouteState<P>; root: boolean}) => void | Promise<void>): void;
+  addListener(name: 'test' | 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void): void;
   getRouteState(): RouteState<P>;
   getPagename(): string;
   getParams(): Partial<P>;

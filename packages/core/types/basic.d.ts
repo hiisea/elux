@@ -49,7 +49,7 @@ export interface BStoreOptions {
 export interface BStore<S extends State = any> {
     readonly id: number;
     readonly router: ICoreRouter;
-    readonly baseFork: {
+    baseFork: {
         creator: (options: {
             initState: any;
         }, router: ICoreRouter, id?: number) => BStore;
@@ -73,7 +73,7 @@ export interface IStore<S extends State = any> extends BStore<S> {
     injectedModules: {
         [moduleName: string]: IModuleHandlers;
     };
-    readonly fork: {
+    fork: {
         injectedModules: {
             [moduleName: string]: IModuleHandlers;
         };
@@ -131,7 +131,7 @@ export declare const MetaData: {
     loadings: Record<string, TaskCounter>;
 };
 export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
-export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;
+export declare function setLoading<T extends Promise<any>>(router: ICoreRouter, item: T, moduleName: string, groupName: string): T;
 export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
 export declare function effect(loadingKey?: string | null): Function;
 export declare const mutation: typeof reducer;

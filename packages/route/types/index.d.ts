@@ -1,4 +1,4 @@
-import { IStore, ICoreRouter, SingleDispatcher, IModuleHandlers } from '@elux/core';
+import { IStore, ICoreRouter, MultipleDispatcher, IModuleHandlers } from '@elux/core';
 import { PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation } from './basic';
 import { History } from './history';
 import { LocationTransform } from './transform';
@@ -34,9 +34,15 @@ export declare abstract class BaseNativeRouter {
     setRouter(router: BaseRouter<any, string>): void;
     execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined>;
 }
-export declare abstract class BaseRouter<P extends RootParams, N extends string> extends SingleDispatcher<{
-    routeState: RouteState<P>;
-    root: boolean;
+export declare abstract class BaseRouter<P extends RootParams, N extends string> extends MultipleDispatcher<{
+    test: {
+        routeState: RouteState<P>;
+        root: boolean;
+    };
+    change: {
+        routeState: RouteState<P>;
+        root: boolean;
+    };
 }> implements IBaseRouter<P, N> {
     nativeRouter: BaseNativeRouter;
     protected locationTransform: LocationTransform;
@@ -94,10 +100,10 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
     initRouteState: RouteState<P> | Promise<RouteState<P>>;
     getHistory(root?: boolean): History;
     nativeRouter: any;
-    addListener(callback: (data: {
+    addListener(name: 'test' | 'change', callback: (data: {
         routeState: RouteState<P>;
         root: boolean;
-    }) => void | Promise<void>): void;
+    }) => void): void;
     getRouteState(): RouteState<P>;
     getPagename(): string;
     getParams(): Partial<P>;

@@ -70,7 +70,8 @@ export function enhanceStore<S extends State = any>(
   };
   store.getState = getState;
   store.injectedModules = injectedModules;
-  (store as any).fork = {
+  store.fork = {
+    injectedModules,
     middlewares,
   };
   const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};

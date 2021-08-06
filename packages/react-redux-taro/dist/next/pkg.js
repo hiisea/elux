@@ -84,6 +84,39 @@ class SingleDispatcher {
   }
 
 }
+class MultipleDispatcher {
+  constructor() {
+    _defineProperty(this, "listenerId", 0);
+
+    _defineProperty(this, "listenerMap", {});
+  }
+
+  addListener(name, callback) {
+    this.listenerId++;
+    const id = `${this.listenerId}`;
+
+    if (!this.listenerMap[name]) {
+      this.listenerMap[name] = {};
+    }
+
+    const listenerMap = this.listenerMap[name];
+    listenerMap[id] = callback;
+    return () => {
+      delete listenerMap[id];
+    };
+  }
+
+  dispatch(name, data) {
+    const listenerMap = this.listenerMap[name];
+
+    if (listenerMap) {
+      Object.keys(listenerMap).forEach(id => {
+        listenerMap[id](data);
+      });
+    }
+  }
+
+}
 class TaskCounter extends SingleDispatcher {
   constructor(deferSecond) {
     super();
@@ -347,7 +380,7 @@ function injectActions(moduleName, handlers) {
     }
   }
 }
-function setLoading(store, item, moduleName, groupName) {
+function setLoading(router, item, moduleName, groupName) {
   const key = moduleName + coreConfig.NSP + groupName;
   const loadings = MetaData.loadings;
 
@@ -357,7 +390,7 @@ function setLoading(store, item, moduleName, groupName) {
       const action = moduleLoadingAction(moduleName, {
         [groupName]: loadingState
       });
-      store.dispatch(action);
+      router.getCurrentStore().dispatch(action);
     });
   }
 
@@ -401,7 +434,7 @@ function effect(loadingKey = 'app.loading.global') {
           loadingForModuleName = this.moduleName;
         }
 
-        setLoading(this.router.getCurrentStore(), promiseResult, loadingForModuleName, loadingForGroupName);
+        setLoading(this.router, promiseResult, loadingForModuleName, loadingForGroupName);
       }
 
       if (!fun.__decorators__) {
@@ -1336,6 +1369,7 @@ function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   store.getState = getState;
   store.injectedModules = injectedModules;
   store.fork = {
+    injectedModules,
     middlewares
   };
   const currentData = {
@@ -1727,30 +1761,33 @@ var Link = React.forwardRef(({
 const Router$1 = props => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router;
-  const [pages, setPages] = useState(router.getHistory(true).getPages());
+  const [classname, setClassname] = useState('elux-app');
+  const pages = [...router.getHistory(true).getPages()].reverse();
   const containerRef = useRef(null);
-  const [action, setAction] = useState('PUSH');
   useEffect(() => {
-    return router.addListener(({
+    return router.addListener('change', ({
       routeState,
       root
     }) => {
-      if (root && (routeState.action === 'PUSH' || routeState.action === 'BACK')) {
-        const newPages = router.getHistory(true).getPages();
-        setAction(routeState.action);
-        setPages(newPages);
+      if (root) {
+        if (routeState.action === 'PUSH') {
+          setClassname('elux-app elux-animation elux-change');
+          env.setTimeout(() => {
+            containerRef.current.className = 'elux-app elux-animation';
+          }, 0);
+          env.setTimeout(() => {
+            containerRef.current.className = 'elux-app';
+          }, 1000);
+        } else if (routeState.action === 'BACK') {
+          containerRef.current.className = 'elux-app elux-animation elux-change';
+          env.setTimeout(() => {
+            setClassname('elux-app');
+          }, 1000);
+        }
       }
     });
   }, [router]);
-  useEffect(() => {
-    env.setTimeout(() => {
-      containerRef.current.className = 'elux-app elux-change';
-    }, 0);
-    env.setTimeout(() => {
-      containerRef.current.className = 'elux-app';
-    }, 1000);
-  });
-  const nodes = pages.reverse().map(item => {
+  const nodes = pages.map(item => {
     const page = item.page ? React.createElement(item.page, {
       key: item.key
     }) : React.createElement(Page$1, {
@@ -1760,7 +1797,7 @@ const Router$1 = props => {
   });
   return React.createElement("div", {
     ref: containerRef,
-    className: `elux-app elux-${action} ${Date.now()}`
+    className: classname
   }, nodes);
 };
 const Page$1 = memo(function (props) {
@@ -2611,10 +2648,10 @@ const RouteActionTypes = {
   RouteChange: `route${coreConfig.NSP}RouteChange`,
   TestRouteChange: `route${coreConfig.NSP}TestRouteChange`
 };
-function testRouteChangeAction(routeState, prevRootState) {
+function beforeRouteChangeAction(routeState) {
   return {
     type: RouteActionTypes.TestRouteChange,
-    payload: [routeState, prevRootState]
+    payload: [routeState]
   };
 }
 function routeParamsAction(moduleName, params, action, prevRootState) {
@@ -2760,7 +2797,7 @@ class BaseNativeRouter {
   }
 
 }
-class BaseRouter extends SingleDispatcher {
+class BaseRouter extends MultipleDispatcher {
   constructor(url, nativeRouter, locationTransform) {
     super();
 
@@ -2952,7 +2989,11 @@ class BaseRouter extends SingleDispatcher {
       action: 'RELAUNCH',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -2973,7 +3014,7 @@ class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().relaunch(location, key);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });
@@ -2999,7 +3040,11 @@ class BaseRouter extends SingleDispatcher {
       action: 'PUSH',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3020,7 +3065,7 @@ class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().push(location, key);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });
@@ -3046,7 +3091,11 @@ class BaseRouter extends SingleDispatcher {
       action: 'REPLACE',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3067,7 +3116,7 @@ class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().replace(location, key);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });
@@ -3103,7 +3152,11 @@ class BaseRouter extends SingleDispatcher {
       action: 'BACK'
     };
     const prevRootState = this.getCurrentStore().getState();
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState, prevRootState));
+    this.dispatch('test', {
+      routeState,
+      root
+    });
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3124,7 +3177,7 @@ class BaseRouter extends SingleDispatcher {
       this.history.getCurrentSubHistory().back(n);
     }
 
-    this.dispatch({
+    this.dispatch('change', {
       routeState,
       root
     });
@@ -6860,8 +6913,10 @@ function storeCreator(storeOptions, router, id = 0) {
     });
   };
 
-  reduxStore.baseFork.creator = storeCreator;
-  reduxStore.baseFork.options = storeOptions;
+  reduxStore.baseFork = {
+    creator: storeCreator,
+    options: storeOptions
+  };
   return reduxStore;
 }
 function createRedux(storeOptions = {}) {

@@ -98,7 +98,7 @@ export function injectActions(moduleName, handlers) {
     }
   }
 }
-export function setLoading(store, item, moduleName, groupName) {
+export function setLoading(router, item, moduleName, groupName) {
   const key = moduleName + coreConfig.NSP + groupName;
   const loadings = MetaData.loadings;
 
@@ -108,7 +108,7 @@ export function setLoading(store, item, moduleName, groupName) {
       const action = moduleLoadingAction(moduleName, {
         [groupName]: loadingState
       });
-      store.dispatch(action);
+      router.getCurrentStore().dispatch(action);
     });
   }
 
@@ -152,7 +152,7 @@ export function effect(loadingKey = 'app.loading.global') {
           loadingForModuleName = this.moduleName;
         }
 
-        setLoading(this.router.getCurrentStore(), promiseResult, loadingForModuleName, loadingForGroupName);
+        setLoading(this.router, promiseResult, loadingForModuleName, loadingForGroupName);
       }
 
       if (!fun.__decorators__) {

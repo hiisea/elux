@@ -49,8 +49,10 @@ export function storeCreator(storeOptions, router, id = 0) {
     });
   };
 
-  reduxStore.baseFork.creator = storeCreator;
-  reduxStore.baseFork.options = storeOptions;
+  reduxStore.baseFork = {
+    creator: storeCreator,
+    options: storeOptions
+  };
   return reduxStore;
 }
 export function createRedux(storeOptions = {}) {
