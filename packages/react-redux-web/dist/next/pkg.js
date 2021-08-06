@@ -2660,11 +2660,11 @@ let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModule
 const RouteActionTypes = {
   MRouteParams: 'RouteParams',
   RouteChange: `route${coreConfig.NSP}RouteChange`,
-  TestRouteChange: `route${coreConfig.NSP}TestRouteChange`
+  BeforeRouteChange: `route${coreConfig.NSP}BeforeRouteChange`
 };
 function beforeRouteChangeAction(routeState) {
   return {
-    type: RouteActionTypes.TestRouteChange,
+    type: RouteActionTypes.BeforeRouteChange,
     payload: [routeState]
   };
 }
@@ -2685,7 +2685,6 @@ const routeMiddleware = ({
   getState
 }) => next => action => {
   if (action.type === RouteActionTypes.RouteChange) {
-    const result = next(action);
     const [routeState, prevRootState] = action.payload;
     const rootRouteParams = routeState.params;
     const rootState = getState();
@@ -2698,7 +2697,6 @@ const routeMiddleware = ({
         }
       }
     });
-    return result;
   }
 
   return next(action);

@@ -8,7 +8,7 @@ export declare class ModuleWithRouteHandlers<S extends Record<string, any>, R ex
 export declare const RouteActionTypes: {
     MRouteParams: string;
     RouteChange: string;
-    TestRouteChange: string;
+    BeforeRouteChange: string;
 };
 export declare function beforeRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
 export declare function routeParamsAction(moduleName: string, params: any, action: HistoryAction, prevRootState?: Record<string, any>): Action;

@@ -66,13 +66,13 @@ exports.ModuleWithRouteHandlers = ModuleWithRouteHandlers;
 var RouteActionTypes = {
   MRouteParams: 'RouteParams',
   RouteChange: "route" + _core.coreConfig.NSP + "RouteChange",
-  TestRouteChange: "route" + _core.coreConfig.NSP + "TestRouteChange"
+  BeforeRouteChange: "route" + _core.coreConfig.NSP + "BeforeRouteChange"
 };
 exports.RouteActionTypes = RouteActionTypes;
 
 function beforeRouteChangeAction(routeState) {
   return {
-    type: RouteActionTypes.TestRouteChange,
+    type: RouteActionTypes.BeforeRouteChange,
     payload: [routeState]
   };
 }
@@ -97,7 +97,6 @@ var routeMiddleware = function routeMiddleware(_ref) {
   return function (next) {
     return function (action) {
       if (action.type === RouteActionTypes.RouteChange) {
-        var result = next(action);
         var _ref2 = action.payload,
             routeState = _ref2[0],
             prevRootState = _ref2[1];
@@ -112,7 +111,6 @@ var routeMiddleware = function routeMiddleware(_ref) {
             }
           }
         });
-        return result;
       }
 
       return next(action);

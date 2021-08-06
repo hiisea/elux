@@ -34,11 +34,11 @@ export let ModuleWithRouteHandlers = _decorate(null, function (_initialize, _Cor
 export const RouteActionTypes = {
   MRouteParams: 'RouteParams',
   RouteChange: `route${coreConfig.NSP}RouteChange`,
-  TestRouteChange: `route${coreConfig.NSP}TestRouteChange`
+  BeforeRouteChange: `route${coreConfig.NSP}BeforeRouteChange`
 };
 export function beforeRouteChangeAction(routeState) {
   return {
-    type: RouteActionTypes.TestRouteChange,
+    type: RouteActionTypes.BeforeRouteChange,
     payload: [routeState]
   };
 }
@@ -59,7 +59,6 @@ export const routeMiddleware = ({
   getState
 }) => next => action => {
   if (action.type === RouteActionTypes.RouteChange) {
-    const result = next(action);
     const [routeState, prevRootState] = action.payload;
     const rootRouteParams = routeState.params;
     const rootState = getState();
@@ -72,7 +71,6 @@ export const routeMiddleware = ({
         }
       }
     });
-    return result;
   }
 
   return next(action);

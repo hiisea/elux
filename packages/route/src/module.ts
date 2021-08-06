@@ -29,11 +29,11 @@ export class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Re
 export const RouteActionTypes = {
   MRouteParams: 'RouteParams',
   RouteChange: `route${coreConfig.NSP}RouteChange`,
-  TestRouteChange: `route${coreConfig.NSP}TestRouteChange`,
+  BeforeRouteChange: `route${coreConfig.NSP}BeforeRouteChange`,
 };
 export function beforeRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
   return {
-    type: RouteActionTypes.TestRouteChange,
+    type: RouteActionTypes.BeforeRouteChange,
     payload: [routeState],
   };
 }
@@ -51,7 +51,6 @@ export function routeChangeAction<P extends RootParams>(routeState: RouteState<P
 }
 export const routeMiddleware: IStoreMiddleware = ({dispatch, getState}) => (next) => (action) => {
   if (action.type === RouteActionTypes.RouteChange) {
-    const result = next(action);
     const [routeState, prevRootState] = action.payload as [RouteState<any>, Record<string, any>];
     const rootRouteParams = routeState.params;
     const rootState = getState();
@@ -63,7 +62,6 @@ export const routeMiddleware: IStoreMiddleware = ({dispatch, getState}) => (next
         }
       }
     });
-    return result;
   }
   return next(action);
 };
