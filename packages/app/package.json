@@ -1,6 +1,6 @@
 {
   "name": "@elux/app",
-  "version": "0.1.45",
+  "version": "0.1.47",
   "description": "",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/app",
   "author": "hiisea <hiisea@qq.com>",
@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/route": "^0.1.45"
+    "@elux/route": "^0.1.47"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }
