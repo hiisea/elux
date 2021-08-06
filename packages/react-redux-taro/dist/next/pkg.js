@@ -1771,7 +1771,7 @@ const Router$1 = props => {
     }) => {
       if (root) {
         if (routeState.action === 'PUSH') {
-          setClassname('elux-app elux-animation elux-change');
+          setClassname('elux-app elux-animation elux-change ' + Date.now());
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation';
           }, 0);
@@ -1781,7 +1781,7 @@ const Router$1 = props => {
         } else if (routeState.action === 'BACK') {
           containerRef.current.className = 'elux-app elux-animation elux-change';
           env.setTimeout(() => {
-            setClassname('elux-app');
+            setClassname('elux-app ' + Date.now());
           }, 1000);
         }
       }

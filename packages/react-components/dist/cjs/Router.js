@@ -31,7 +31,7 @@ var Router = function Router(props) {
 
       if (root) {
         if (routeState.action === 'PUSH') {
-          setClassname('elux-app elux-animation elux-change');
+          setClassname('elux-app elux-animation elux-change ' + Date.now());
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation';
@@ -44,7 +44,7 @@ var Router = function Router(props) {
           containerRef.current.className = 'elux-app elux-animation elux-change';
 
           _core.env.setTimeout(function () {
-            setClassname('elux-app');
+            setClassname('elux-app ' + Date.now());
           }, 1000);
         }
       }
