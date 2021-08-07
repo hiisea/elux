@@ -1,139 +1,69 @@
-import _regeneratorRuntime from "@babel/runtime/regenerator";
-import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
+import _extends from "@babel/runtime/helpers/esm/extends";
 import { MetaData } from './basic';
-import { getModuleList, getComponentList, getComponet } from './inject';
+import { getModuleList, getComponentList, getComponet, getModule } from './inject';
 import { enhanceStore } from './store';
-
-var defFun = function defFun() {
-  return undefined;
-};
-
-export function defineModuleGetter(moduleGetter, appModuleName) {
+export function defineModuleGetter(moduleGetter, appModuleName, routeModuleName) {
   if (appModuleName === void 0) {
     appModuleName = 'stage';
   }
 
+  if (routeModuleName === void 0) {
+    routeModuleName = 'route';
+  }
+
   MetaData.appModuleName = appModuleName;
+  MetaData.routeModuleName = routeModuleName;
   MetaData.moduleGetter = moduleGetter;
 
   if (!moduleGetter[appModuleName]) {
-    throw appModuleName + " could not be found in moduleGetter";
+    throw appModuleName + " module not found in moduleGetter";
+  }
+
+  if (!moduleGetter[routeModuleName]) {
+    throw routeModuleName + " module not found in moduleGetter";
   }
 }
-export function renderApp(_x, _x2, _x3, _x4, _x5, _x6) {
-  return _renderApp.apply(this, arguments);
-}
+export function forkStore(originalStore, initState) {
+  var _originalStore$baseFo = originalStore.baseFork,
+      creator = _originalStore$baseFo.creator,
+      options = _originalStore$baseFo.options,
+      middlewares = originalStore.fork.middlewares,
+      router = originalStore.router,
+      id = originalStore.id;
+  var baseStore = creator(_extends({}, options, {
+    initState: initState
+  }), router, id + 1);
 
-function _renderApp() {
-  _renderApp = _asyncToGenerator(_regeneratorRuntime.mark(function _callee(router, baseStore, preloadModules, preloadComponents, middlewares, appViewName) {
-    var moduleGetter, appModuleName, store, modules, appModule, AppView;
-    return _regeneratorRuntime.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            if (appViewName === void 0) {
-              appViewName = 'main';
-            }
+  var _renderApp = renderApp(router, baseStore, middlewares),
+      store = _renderApp.store;
 
-            moduleGetter = MetaData.moduleGetter, appModuleName = MetaData.appModuleName;
-            preloadModules = preloadModules.filter(function (moduleName) {
-              return moduleGetter[moduleName] && moduleName !== appModuleName;
-            });
-            preloadModules.unshift(appModuleName);
-            store = enhanceStore(baseStore, middlewares);
-            router.init(store);
-            _context.next = 8;
-            return getModuleList(preloadModules);
-
-          case 8:
-            modules = _context.sent;
-            _context.next = 11;
-            return getComponentList(preloadComponents);
-
-          case 11:
-            appModule = modules[0];
-            _context.next = 14;
-            return appModule.model(store);
-
-          case 14:
-            AppView = getComponet(appModuleName, appViewName);
-            return _context.abrupt("return", {
-              store: store,
-              AppView: AppView
-            });
-
-          case 16:
-          case "end":
-            return _context.stop();
-        }
-      }
-    }, _callee);
-  }));
-  return _renderApp.apply(this, arguments);
-}
-
-export function initApp(router, baseStore, middlewares) {
-  var moduleGetter = MetaData.moduleGetter,
-      appModuleName = MetaData.appModuleName;
-  var store = enhanceStore(baseStore, middlewares);
-  router.init(store);
-  var appModule = moduleGetter[appModuleName]();
-  appModule.model(store);
   return store;
 }
-export function ssrApp(_x7, _x8, _x9, _x10, _x11) {
-  return _ssrApp.apply(this, arguments);
-}
+export function renderApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+  if (preloadComponents === void 0) {
+    preloadComponents = [];
+  }
 
-function _ssrApp() {
-  _ssrApp = _asyncToGenerator(_regeneratorRuntime.mark(function _callee2(router, baseStore, preloadModules, middlewares, appViewName) {
-    var moduleGetter, appModuleName, store, _yield$getModuleList, appModule, otherModules, AppView;
-
-    return _regeneratorRuntime.wrap(function _callee2$(_context2) {
-      while (1) {
-        switch (_context2.prev = _context2.next) {
-          case 0:
-            if (appViewName === void 0) {
-              appViewName = 'main';
-            }
-
-            moduleGetter = MetaData.moduleGetter, appModuleName = MetaData.appModuleName;
-            preloadModules = preloadModules.filter(function (moduleName) {
-              return moduleGetter[moduleName] && moduleName !== appModuleName;
-            });
-            preloadModules.unshift(appModuleName);
-            store = enhanceStore(baseStore, middlewares);
-            router.init(store);
-            _context2.next = 8;
-            return getModuleList(preloadModules);
-
-          case 8:
-            _yield$getModuleList = _context2.sent;
-            appModule = _yield$getModuleList[0];
-            otherModules = _yield$getModuleList.slice(1);
-            _context2.next = 13;
-            return appModule.model(store);
-
-          case 13:
-            _context2.next = 15;
-            return Promise.all(otherModules.map(function (module) {
-              return module.model(store);
-            }));
-
-          case 15:
-            store.dispatch = defFun;
-            AppView = getComponet(appModuleName, appViewName);
-            return _context2.abrupt("return", {
-              store: store,
-              AppView: AppView
-            });
-
-          case 18:
-          case "end":
-            return _context2.stop();
-        }
-      }
-    }, _callee2);
-  }));
-  return _ssrApp.apply(this, arguments);
+  var store = enhanceStore(baseStore, middlewares);
+  store.id === 0 && router.init(store);
+  var moduleGetter = MetaData.moduleGetter,
+      appModuleName = MetaData.appModuleName;
+  var routeModuleName = MetaData.routeModuleName;
+  var appModule = getModule(appModuleName);
+  var routeModule = getModule(routeModuleName);
+  var AppView = appViewName ? getComponet(appModuleName, appViewName) : {
+    __elux_component__: 'view'
+  };
+  var preloadModules = [].concat(Object.keys(baseStore.getState()), Object.keys(router.getParams()));
+  preloadModules = preloadModules.filter(function (moduleName) {
+    return moduleGetter[moduleName] && moduleName !== appModuleName && moduleName !== routeModuleName;
+  });
+  var promiseList = [routeModule.model(store), appModule.model(store)];
+  promiseList.concat(getModuleList(preloadModules), getComponentList(preloadComponents));
+  var setup = Promise.all(promiseList);
+  return {
+    store: store,
+    AppView: AppView,
+    setup: setup
+  };
 }

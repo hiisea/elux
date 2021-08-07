@@ -8,7 +8,6 @@ import {
   coreConfig,
   errorAction,
   MetaData,
-  BStoreOptions,
   IModuleHandlers,
   BStore,
   IStore,
@@ -48,20 +47,7 @@ function compose(...funcs: Function[]) {
   return funcs.reduce((a, b) => (...args: any[]) => a(b(...args)));
 }
 
-export function forkStore<T extends IStore>(store: T): T {
-  const {creator, options} = store.baseFork;
-  const {middlewares, injectedModules} = store.fork;
-  const initState = store.getPureState();
-  const newBStore = creator({...options, initState}, store.router, store.id + 1);
-  const newIStore = enhanceStore(newBStore, middlewares, {...injectedModules}) as T;
-  return newIStore;
-}
-
-export function enhanceStore<S extends State = any>(
-  baseStore: BStore,
-  middlewares?: IStoreMiddleware[],
-  injectedModules: {[moduleName: string]: IModuleHandlers} = {}
-): IStore<S> {
+export function enhanceStore<S extends State = any>(baseStore: BStore, middlewares?: IStoreMiddleware[]): IStore<S> {
   const store: IStore<S> = baseStore as any;
   const _getState = baseStore.getState;
   const getState: GetState<S> = (moduleName?: string) => {
@@ -69,10 +55,18 @@ export function enhanceStore<S extends State = any>(
     return moduleName ? state[moduleName] : state;
   };
   store.getState = getState;
-  store.injectedModules = injectedModules;
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  const injectedModules = store.injectedModules;
   store.fork = {
-    injectedModules,
     middlewares,
+  };
+  const _destroy = baseStore.destroy;
+  store.destroy = () => {
+    _destroy();
+    Object.keys(injectedModules).forEach((moduleName) => {
+      injectedModules[moduleName].destroy();
+    });
   };
   const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
   const update = baseStore.update;
@@ -81,6 +75,7 @@ export function enhanceStore<S extends State = any>(
     const state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
   };
+
   let dispatch = (action: Action) => {
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
   };
@@ -219,7 +214,7 @@ export function enhanceStore<S extends State = any>(
   return store;
 }
 
-export interface StoreBuilder<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore> {
+export interface StoreBuilder<O extends Record<string, any>, B extends BStore = BStore> {
   storeOptions: O;
   storeCreator: (options: O, router: ICoreRouter, id?: number) => B;
 }

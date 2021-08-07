@@ -3,8 +3,10 @@ import {getRootModuleAPI, RootModuleFacade} from '@elux/core';
 import moduleA from './moduleA';
 import moduleB from './moduleB';
 import moduleC from './moduleC';
+import {routerModule} from '../utils';
 
 export const moduleGetter = {
+  route: () => routerModule,
   moduleA: () => moduleA,
   moduleB: () => moduleB,
   moduleC: () => moduleC,

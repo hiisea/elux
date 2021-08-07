@@ -28,7 +28,10 @@ export function storeCreator(storeOptions, router, id) {
   var vuexStore = Object.assign(store, {
     id: id,
     router: router,
-    baseFork: {}
+    baseFork: {
+      creator: storeCreator,
+      options: storeOptions
+    }
   });
 
   vuexStore.getState = function () {
@@ -48,10 +51,10 @@ export function storeCreator(storeOptions, router, id) {
     });
   };
 
-  vuexStore.baseFork = {
-    creator: storeCreator,
-    options: storeOptions
+  vuexStore.destroy = function () {
+    return;
   };
+
   return vuexStore;
 }
 export function createVuex(storeOptions) {

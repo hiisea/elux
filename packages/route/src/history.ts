@@ -1,12 +1,11 @@
 import {IStore, forkStore} from '@elux/core';
-import {Location, routeConfig, routeMeta} from './basic';
+import {Location, routeConfig, routeMeta, RouteState} from './basic';
 
 export class HistoryRecord {
   pagename: string;
   query: string;
   sub: History;
-  private frozenState: any = '';
-  constructor(location: Location, public readonly key: string, public readonly history: History, private store: IStore) {
+  constructor(location: Location, public readonly key: string, public readonly history: History, public readonly store: IStore) {
     const {pagename, params} = location;
     this.pagename = pagename;
     this.query = JSON.stringify(params);
@@ -14,23 +13,6 @@ export class HistoryRecord {
   }
   getParams(): any {
     return JSON.parse(this.query);
-  }
-  freeze(): void {
-    if (!this.frozenState) {
-      this.frozenState = JSON.stringify(this.store.getState());
-    }
-  }
-  getSnapshotState(): Record<string, any> | undefined {
-    if (this.frozenState) {
-      if (typeof this.frozenState === 'string') {
-        this.frozenState = JSON.parse(this.frozenState);
-      }
-      return this.frozenState;
-    }
-    return undefined;
-  }
-  getStore(): IStore {
-    return this.store;
   }
 }
 export class History {
@@ -70,33 +52,41 @@ export class History {
   getCurrentSubHistory(): History {
     return this.records[0].sub;
   }
-  push(location: Location, key: string): void {
+  push(location: Location, key: string, routeState: RouteState): void {
     const records = this.records;
-    let store: IStore = records[0].getStore();
+    let store: IStore = records[0].store;
     if (!this.parent) {
-      store = forkStore(store);
+      const state = store.getState();
+      const cloneData = Object.keys(routeState.params).reduce((data, moduleName) => {
+        data[moduleName] = state[moduleName];
+        return data;
+      }, {});
+      const prevState = JSON.parse(JSON.stringify(cloneData));
+      Object.keys(prevState).forEach((moduleName) => {
+        delete prevState[moduleName].loading;
+      });
+      prevState.route = routeState;
+      store = forkStore(store, prevState);
     }
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;
-    //records[0].freeze();
     records.unshift(newRecord);
-    if (records.length > maxHistory) {
-      records.length = maxHistory;
+    const delList = records.splice(maxHistory);
+    if (!this.parent) {
+      delList.forEach((item) => {
+        item.store.destroy();
+      });
     }
   }
   replace(location: Location, key: string): void {
     const records = this.records;
-    const store: IStore = records[0].getStore();
+    const store: IStore = records[0].store;
     const newRecord = new HistoryRecord(location, key, this, store);
     records[0] = newRecord;
   }
   relaunch(location: Location, key: string): void {
     const records = this.records;
-    const store: IStore = records[0].getStore();
-    // //TODO Taro’s bug
-    // if (!this.parent) {
-    //   store = forkStore(store);
-    // }
+    const store: IStore = records[0].store;
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }
@@ -112,14 +102,15 @@ export class History {
     return records[0];
   }
   back(delta: number, overflowRedirect = false): void {
-    const records = this.records.slice(delta);
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
-      } else {
-        records.push(this.records.pop()!);
-      }
+    const delList = this.records.splice(0, delta);
+    if (this.records.length === 0) {
+      const last = delList.pop()!;
+      this.records.push(last);
     }
-    this.records = records;
+    if (!this.parent) {
+      delList.forEach((item) => {
+        item.store.destroy();
+      });
+    }
   }
 }

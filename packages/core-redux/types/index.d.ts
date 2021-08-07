@@ -1,8 +1,7 @@
 /// <reference path="../runtime/runtime.d.ts" />
 import { Unsubscribe, StoreEnhancer, Middleware } from 'redux';
-import { BStore, ICoreRouter, StoreBuilder } from '@elux/core';
-export interface ReduxOptions {
-    initState?: any;
+import { BStore, ICoreRouter, StoreBuilder, BStoreOptions } from '@elux/core';
+export interface ReduxOptions extends BStoreOptions {
     enhancers?: StoreEnhancer[];
     middlewares?: Middleware[];
 }

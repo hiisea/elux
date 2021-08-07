@@ -16,7 +16,6 @@ var HistoryRecord = function () {
     (0, _defineProperty2.default)(this, "pagename", void 0);
     (0, _defineProperty2.default)(this, "query", void 0);
     (0, _defineProperty2.default)(this, "sub", void 0);
-    (0, _defineProperty2.default)(this, "frozenState", '');
     this.key = key;
     this.history = history;
     this.store = store;
@@ -31,28 +30,6 @@ var HistoryRecord = function () {
 
   _proto.getParams = function getParams() {
     return JSON.parse(this.query);
-  };
-
-  _proto.freeze = function freeze() {
-    if (!this.frozenState) {
-      this.frozenState = JSON.stringify(this.store.getState());
-    }
-  };
-
-  _proto.getSnapshotState = function getSnapshotState() {
-    if (this.frozenState) {
-      if (typeof this.frozenState === 'string') {
-        this.frozenState = JSON.parse(this.frozenState);
-      }
-
-      return this.frozenState;
-    }
-
-    return undefined;
-  };
-
-  _proto.getStore = function getStore() {
-    return this.store;
   };
 
   return HistoryRecord;
@@ -120,33 +97,46 @@ var History = function () {
     return this.records[0].sub;
   };
 
-  _proto2.push = function push(location, key) {
+  _proto2.push = function push(location, key, routeState) {
     var records = this.records;
-    var store = records[0].getStore();
+    var store = records[0].store;
 
     if (!this.parent) {
-      store = (0, _core.forkStore)(store);
+      var state = store.getState();
+      var cloneData = Object.keys(routeState.params).reduce(function (data, moduleName) {
+        data[moduleName] = state[moduleName];
+        return data;
+      }, {});
+      var prevState = JSON.parse(JSON.stringify(cloneData));
+      Object.keys(prevState).forEach(function (moduleName) {
+        delete prevState[moduleName].loading;
+      });
+      prevState.route = routeState;
+      store = (0, _core.forkStore)(store, prevState);
     }
 
     var newRecord = new HistoryRecord(location, key, this, store);
     var maxHistory = _basic.routeConfig.maxHistory;
     records.unshift(newRecord);
+    var delList = records.splice(maxHistory);
 
-    if (records.length > maxHistory) {
-      records.length = maxHistory;
+    if (!this.parent) {
+      delList.forEach(function (item) {
+        item.store.destroy();
+      });
     }
   };
 
   _proto2.replace = function replace(location, key) {
     var records = this.records;
-    var store = records[0].getStore();
+    var store = records[0].store;
     var newRecord = new HistoryRecord(location, key, this, store);
     records[0] = newRecord;
   };
 
   _proto2.relaunch = function relaunch(location, key) {
     var records = this.records;
-    var store = records[0].getStore();
+    var store = records[0].store;
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };
@@ -174,17 +164,18 @@ var History = function () {
       overflowRedirect = false;
     }
 
-    var records = this.records.slice(delta);
+    var delList = this.records.splice(0, delta);
 
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
-      } else {
-        records.push(this.records.pop());
-      }
+    if (this.records.length === 0) {
+      var last = delList.pop();
+      this.records.push(last);
     }
 
-    this.records = records;
+    if (!this.parent) {
+      delList.forEach(function (item) {
+        item.store.destroy();
+      });
+    }
   };
 
   return History;

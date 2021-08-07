@@ -1,39 +1,22 @@
-import {
-  CoreModuleHandlers,
-  IStoreMiddleware,
-  coreConfig,
-  reducer,
-  mergeState,
-  deepMergeState,
-  Action,
-  CommonModule,
-  IModuleHandlers,
-  exportModule,
-  ICoreRouter,
-} from '@elux/core';
+import {IStoreMiddleware, coreConfig, reducer, mergeState, Action, CommonModule, IModuleHandlers, exportModule, IStore} from '@elux/core';
 import {createLocationTransform, LocationTransform, PagenameMap, NativeLocationMap} from './transform';
 import {RootParams, RouteState, HistoryAction} from './basic';
 
-export class ModuleWithRouteHandlers<S extends Record<string, any>, R extends Record<string, any>> extends CoreModuleHandlers<S, R> {
-  @reducer
-  public Init(initState: S): S {
-    const routeParams = this.rootState.route.params[this.moduleName];
-    return routeParams ? (deepMergeState(initState, routeParams) as any) : initState;
-  }
-
-  @reducer
-  public RouteParams(payload: Partial<S>): S {
-    return deepMergeState(this.state, payload) as S;
-  }
-}
 export const RouteActionTypes = {
   MRouteParams: 'RouteParams',
   RouteChange: `route${coreConfig.NSP}RouteChange`,
+  TestRouteChange: `route${coreConfig.NSP}TestRouteChange`,
   BeforeRouteChange: `route${coreConfig.NSP}BeforeRouteChange`,
 };
 export function beforeRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
   return {
     type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState],
+  };
+}
+export function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action {
+  return {
+    type: RouteActionTypes.TestRouteChange,
     payload: [routeState],
   };
 }
@@ -73,10 +56,14 @@ interface IRouteModuleHandlers extends IModuleHandlers {
 class RouteModuleHandlers implements IRouteModuleHandlers {
   initState: RouteState = {} as any;
 
-  constructor(public readonly moduleName: string, public readonly router: ICoreRouter) {}
+  constructor(public readonly moduleName: string, public readonly store: IStore) {}
+
+  destroy(): void {
+    return;
+  }
 
   protected get state(): RouteState {
-    return this.router.getCurrentStore().getState(this.moduleName) as RouteState;
+    return this.store.getState(this.moduleName) as RouteState;
   }
 
   @reducer
@@ -102,7 +89,7 @@ export function createRouteModule<G extends PagenameMap>(
   notfoundPagename = '/404',
   paramsKey = '_'
 ) {
-  const handlers: {new (moduleName: string, context: ICoreRouter): IRouteModuleHandlers} = RouteModuleHandlers;
+  const handlers: {new (moduleName: string, store: IStore): IRouteModuleHandlers} = RouteModuleHandlers;
   const locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
   const routeModule = exportModule('route', handlers, {}, {} as {[k in keyof G]: any});
   return {...routeModule, locationTransform};

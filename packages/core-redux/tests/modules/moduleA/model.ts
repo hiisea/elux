@@ -1,4 +1,4 @@
-import {ActionTypes, CoreModuleHandlers, reducer, effect} from '@elux/core';
+import {ActionTypes, CoreModuleHandlers, reducer, effect, IStore} from '@elux/core';
 import {messages} from '../../utils';
 
 export interface State {
@@ -7,8 +7,8 @@ export interface State {
 
 // 定义本模块的Handlers
 export class ModuleHandlers extends CoreModuleHandlers<State, {}> {
-  constructor(moduleName: string, context: any) {
-    super(moduleName, context, {count: 0});
+  constructor(moduleName: string, store: IStore) {
+    super(moduleName, store, {count: 0});
   }
 
   @reducer

@@ -4,16 +4,13 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 exports.__esModule = true;
 exports.beforeRouteChangeAction = beforeRouteChangeAction;
+exports.testRouteChangeAction = testRouteChangeAction;
 exports.routeParamsAction = routeParamsAction;
 exports.routeChangeAction = routeChangeAction;
 exports.createRouteModule = createRouteModule;
-exports.routeMiddleware = exports.RouteActionTypes = exports.ModuleWithRouteHandlers = void 0;
+exports.routeMiddleware = exports.RouteActionTypes = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
-
-var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/assertThisInitialized"));
-
-var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/inheritsLoose"));
 
 var _decorate2 = _interopRequireDefault(require("@babel/runtime/helpers/decorate"));
 
@@ -21,51 +18,10 @@ var _core = require("@elux/core");
 
 var _transform = require("./transform");
 
-var ModuleWithRouteHandlers = (0, _decorate2.default)(null, function (_initialize, _CoreModuleHandlers) {
-  var ModuleWithRouteHandlers = function (_CoreModuleHandlers2) {
-    (0, _inheritsLoose2.default)(ModuleWithRouteHandlers, _CoreModuleHandlers2);
-
-    function ModuleWithRouteHandlers() {
-      var _this;
-
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      _this = _CoreModuleHandlers2.call.apply(_CoreModuleHandlers2, [this].concat(args)) || this;
-
-      _initialize((0, _assertThisInitialized2.default)(_this));
-
-      return _this;
-    }
-
-    return ModuleWithRouteHandlers;
-  }(_CoreModuleHandlers);
-
-  return {
-    F: ModuleWithRouteHandlers,
-    d: [{
-      kind: "method",
-      decorators: [_core.reducer],
-      key: "Init",
-      value: function Init(initState) {
-        var routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? (0, _core.deepMergeState)(initState, routeParams) : initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [_core.reducer],
-      key: "RouteParams",
-      value: function RouteParams(payload) {
-        return (0, _core.deepMergeState)(this.state, payload);
-      }
-    }]
-  };
-}, _core.CoreModuleHandlers);
-exports.ModuleWithRouteHandlers = ModuleWithRouteHandlers;
 var RouteActionTypes = {
   MRouteParams: 'RouteParams',
   RouteChange: "route" + _core.coreConfig.NSP + "RouteChange",
+  TestRouteChange: "route" + _core.coreConfig.NSP + "TestRouteChange",
   BeforeRouteChange: "route" + _core.coreConfig.NSP + "BeforeRouteChange"
 };
 exports.RouteActionTypes = RouteActionTypes;
@@ -73,6 +29,13 @@ exports.RouteActionTypes = RouteActionTypes;
 function beforeRouteChangeAction(routeState) {
   return {
     type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+
+function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
     payload: [routeState]
   };
 }
@@ -119,12 +82,12 @@ var routeMiddleware = function routeMiddleware(_ref) {
 };
 
 exports.routeMiddleware = routeMiddleware;
-var RouteModuleHandlers = (0, _decorate2.default)(null, function (_initialize2) {
-  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, router) {
-    _initialize2(this);
+var RouteModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
+  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store) {
+    _initialize(this);
 
     this.moduleName = moduleName;
-    this.router = router;
+    this.store = store;
   };
 
   return {
@@ -136,10 +99,16 @@ var RouteModuleHandlers = (0, _decorate2.default)(null, function (_initialize2) 
         return {};
       }
     }, {
+      kind: "method",
+      key: "destroy",
+      value: function destroy() {
+        return;
+      }
+    }, {
       kind: "get",
       key: "state",
       value: function state() {
-        return this.router.getCurrentStore().getState(this.moduleName);
+        return this.store.getState(this.moduleName);
       }
     }, {
       kind: "method",

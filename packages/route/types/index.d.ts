@@ -4,7 +4,7 @@ import { History } from './history';
 import { LocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
-export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
+export { routeMiddleware, createRouteModule, RouteActionTypes } from './module';
 export type { RouteModule } from './module';
 export type { PagenameMap, LocationTransform } from './transform';
 export type { RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation, NativeLocation } from './basic';

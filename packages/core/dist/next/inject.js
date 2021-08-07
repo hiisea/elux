@@ -1,7 +1,8 @@
 import _decorate from "@babel/runtime/helpers/esm/decorate";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { isPromise } from './sprite';
-import { isEluxComponent, injectActions, MetaData, coreConfig, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
+import { isEluxComponent, injectActions, MetaData, coreConfig, reducer, mergeState, moduleInitAction, deepMergeState } from './basic';
+import { deepMerge } from './sprite';
 import env from './env';
 export function getModuleGetter() {
   return MetaData.moduleGetter;
@@ -17,18 +18,19 @@ export function exportModule(moduleName, ModuleHandles, params, components) {
 
   const model = store => {
     if (!store.injectedModules[moduleName]) {
-      const router = store.router;
-      const moduleHandles = new ModuleHandles(moduleName, router);
-      store.injectedModules[moduleName] = moduleHandles;
-      injectActions(moduleName, moduleHandles);
-      const initState = moduleHandles.initState;
+      let setup = '';
       const preModuleState = store.getState(moduleName);
+      const routeParams = store.router.getParams();
 
-      if (preModuleState) {
-        return store.dispatch(moduleReInitAction(moduleName, initState));
+      if (preModuleState && Object.keys(preModuleState).length > 0) {
+        setup = store.id > 0 ? 'afterFork' : 'afterSSR';
       }
 
-      return store.dispatch(moduleInitAction(moduleName, initState));
+      const moduleHandles = new ModuleHandles(moduleName, store, preModuleState, setup);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      const initState = deepMerge(moduleHandles.initState, routeParams[moduleName]);
+      return store.dispatch(moduleInitAction(moduleName, initState, setup));
     }
 
     return undefined;
@@ -180,23 +182,25 @@ export function getCachedModules() {
   return MetaData.moduleCaches;
 }
 export class EmptyModuleHandlers {
-  constructor(moduleName) {
-    _defineProperty(this, "router", void 0);
-
-    _defineProperty(this, "initState", void 0);
+  constructor(moduleName, store) {
+    _defineProperty(this, "initState", {});
 
     this.moduleName = moduleName;
-    this.initState = {};
+    this.store = store;
+  }
+
+  destroy() {
+    return;
   }
 
 }
 export let CoreModuleHandlers = _decorate(null, function (_initialize) {
   class CoreModuleHandlers {
-    constructor(moduleName, router, initState) {
+    constructor(moduleName, store, initState) {
       _initialize(this);
 
       this.moduleName = moduleName;
-      this.router = router;
+      this.store = store;
       this.initState = initState;
     }
 
@@ -206,9 +210,9 @@ export let CoreModuleHandlers = _decorate(null, function (_initialize) {
     F: CoreModuleHandlers,
     d: [{
       kind: "method",
-      key: "getCurrentStore",
-      value: function getCurrentStore() {
-        return this.router.getCurrentStore();
+      key: "destroy",
+      value: function destroy() {
+        return;
       }
     }, {
       kind: "get",
@@ -226,43 +230,43 @@ export let CoreModuleHandlers = _decorate(null, function (_initialize) {
       kind: "get",
       key: "state",
       value: function state() {
-        return this.getCurrentStore().getState(this.moduleName);
+        return this.store.getState(this.moduleName);
       }
     }, {
       kind: "get",
       key: "rootState",
       value: function rootState() {
-        return this.getCurrentStore().getState();
+        return this.store.getState();
       }
     }, {
       kind: "method",
       key: "getCurrentActionName",
       value: function getCurrentActionName() {
-        return this.getCurrentStore().getCurrentActionName();
+        return this.store.getCurrentActionName();
       }
     }, {
       kind: "get",
       key: "currentRootState",
       value: function currentRootState() {
-        return this.getCurrentStore().getCurrentState();
+        return this.store.getCurrentState();
       }
     }, {
       kind: "get",
       key: "currentState",
       value: function currentState() {
-        return this.getCurrentStore().getCurrentState(this.moduleName);
+        return this.store.getCurrentState(this.moduleName);
       }
     }, {
       kind: "method",
       key: "dispatch",
       value: function dispatch(action) {
-        return this.getCurrentStore().dispatch(action);
+        return this.store.dispatch(action);
       }
     }, {
       kind: "method",
       key: "loadModel",
       value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.getCurrentStore());
+        return _loadModel(moduleName, this.store);
       }
     }, {
       kind: "method",
@@ -270,6 +274,13 @@ export let CoreModuleHandlers = _decorate(null, function (_initialize) {
       key: "Init",
       value: function Init(initState) {
         return initState;
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: "RouteParams",
+      value: function RouteParams(payload) {
+        return deepMergeState(this.state, payload);
       }
     }, {
       kind: "method",

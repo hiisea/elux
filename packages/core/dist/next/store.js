@@ -36,24 +36,7 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-export function forkStore(store) {
-  const {
-    creator,
-    options
-  } = store.baseFork;
-  const {
-    middlewares,
-    injectedModules
-  } = store.fork;
-  const initState = store.getPureState();
-  const newBStore = creator({ ...options,
-    initState
-  }, store.router, store.id + 1);
-  const newIStore = enhanceStore(newBStore, middlewares, { ...injectedModules
-  });
-  return newIStore;
-}
-export function enhanceStore(baseStore, middlewares, injectedModules = {}) {
+export function enhanceStore(baseStore, middlewares) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -64,11 +47,22 @@ export function enhanceStore(baseStore, middlewares, injectedModules = {}) {
   };
 
   store.getState = getState;
-  store.injectedModules = injectedModules;
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  const injectedModules = store.injectedModules;
   store.fork = {
-    injectedModules,
     middlewares
   };
+  const _destroy = baseStore.destroy;
+
+  store.destroy = () => {
+    _destroy();
+
+    Object.keys(injectedModules).forEach(moduleName => {
+      injectedModules[moduleName].destroy();
+    });
+  };
+
   const currentData = {
     actionName: '',
     prevState: {}

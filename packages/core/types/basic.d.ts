@@ -35,7 +35,8 @@ export declare type ActionCreatorMap = Record<string, ActionCreatorList>;
 export interface IModuleHandlers {
     readonly moduleName: string;
     readonly initState: any;
-    readonly router: ICoreRouter;
+    readonly store: IStore;
+    destroy(): void;
 }
 export declare type Dispatch = (action: Action) => void | Promise<void>;
 export declare type State = Record<string, Record<string, any>>;
@@ -44,24 +45,20 @@ export interface GetState<S extends State = {}> {
     (moduleName: string): Record<string, any> | undefined;
 }
 export interface BStoreOptions {
-    initState?: Record<string, any>;
+    initState?: any;
 }
 export interface BStore<S extends State = any> {
     readonly id: number;
     readonly router: ICoreRouter;
     baseFork: {
-        creator: (options: {
-            initState: any;
-        }, router: ICoreRouter, id?: number) => BStore;
-        options: {
-            initState?: any;
-        };
+        creator: (options: BStoreOptions, router: ICoreRouter, id?: number) => BStore;
+        options: BStoreOptions;
     };
     dispatch: Dispatch;
     getState: GetState<S>;
-    getPureState(): S;
     update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
     replaceState(state: S): void;
+    destroy(): void;
 }
 export declare type IStoreMiddleware = (api: {
     getState: GetState;
@@ -73,16 +70,15 @@ export interface IStore<S extends State = any> extends BStore<S> {
     injectedModules: {
         [moduleName: string]: IModuleHandlers;
     };
+    loadingGroups: Record<string, TaskCounter>;
     fork: {
-        injectedModules: {
-            [moduleName: string]: IModuleHandlers;
-        };
         middlewares?: IStoreMiddleware[];
     };
 }
 export interface ICoreRouter {
     init(store: IStore): void;
     getCurrentStore(): IStore;
+    getParams(): any;
 }
 export interface CommonModule<ModuleName extends string = string> {
     moduleName: ModuleName;
@@ -102,6 +98,7 @@ export declare type FacadeMap = Record<string, {
     actions: ActionCreatorList;
     actionNames: Record<string, string>;
 }>;
+export declare type ModuleSetup = 'afterSSR' | 'afterFork' | '';
 export declare const ActionTypes: {
     MLoading: string;
     MInit: string;
@@ -110,8 +107,7 @@ export declare const ActionTypes: {
     Replace: string;
 };
 export declare function errorAction(error: Object): Action;
-export declare function moduleInitAction(moduleName: string, initState: any): Action;
-export declare function moduleReInitAction(moduleName: string, initState: any): Action;
+export declare function moduleInitAction(moduleName: string, initState: any, setup: ModuleSetup): Action;
 export declare function moduleLoadingAction(moduleName: string, loadingState: {
     [group: string]: LoadingState;
 }): Action;
@@ -122,16 +118,16 @@ export declare function isEluxComponent(data: any): data is EluxComponent;
 export declare const MetaData: {
     facadeMap: FacadeMap;
     appModuleName: string;
+    routeModuleName: string;
     moduleGetter: ModuleGetter;
     injectedModules: Record<string, boolean>;
     reducersMap: ActionHandlerMap;
     effectsMap: ActionHandlerMap;
     moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
     componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
-    loadings: Record<string, TaskCounter>;
 };
 export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
-export declare function setLoading<T extends Promise<any>>(router: ICoreRouter, item: T, moduleName: string, groupName: string): T;
+export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;
 export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
 export declare function effect(loadingKey?: string | null): Function;
 export declare const mutation: typeof reducer;

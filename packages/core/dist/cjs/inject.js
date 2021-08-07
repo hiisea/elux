@@ -42,18 +42,21 @@ function exportModule(moduleName, ModuleHandles, params, components) {
 
   var model = function model(store) {
     if (!store.injectedModules[moduleName]) {
-      var _router = store.router;
-      var moduleHandles = new ModuleHandles(moduleName, _router);
-      store.injectedModules[moduleName] = moduleHandles;
-      (0, _basic.injectActions)(moduleName, moduleHandles);
-      var _initState = moduleHandles.initState;
+      var _setup = '';
       var preModuleState = store.getState(moduleName);
+      var routeParams = store.router.getParams();
 
-      if (preModuleState) {
-        return store.dispatch((0, _basic.moduleReInitAction)(moduleName, _initState));
+      if (preModuleState && Object.keys(preModuleState).length > 0) {
+        _setup = store.id > 0 ? 'afterFork' : 'afterSSR';
       }
 
-      return store.dispatch((0, _basic.moduleInitAction)(moduleName, _initState));
+      var moduleHandles = new ModuleHandles(moduleName, store, preModuleState, _setup);
+      store.injectedModules[moduleName] = moduleHandles;
+      (0, _basic.injectActions)(moduleName, moduleHandles);
+
+      var _initState = (0, _sprite.deepMerge)(moduleHandles.initState, routeParams[moduleName]);
+
+      return store.dispatch((0, _basic.moduleInitAction)(moduleName, _initState, _setup));
     }
 
     return undefined;
@@ -214,20 +217,29 @@ function getCachedModules() {
   return _basic.MetaData.moduleCaches;
 }
 
-var EmptyModuleHandlers = function EmptyModuleHandlers(moduleName) {
-  (0, _defineProperty2.default)(this, "router", void 0);
-  (0, _defineProperty2.default)(this, "initState", void 0);
-  this.moduleName = moduleName;
-  this.initState = {};
-};
+var EmptyModuleHandlers = function () {
+  function EmptyModuleHandlers(moduleName, store) {
+    (0, _defineProperty2.default)(this, "initState", {});
+    this.moduleName = moduleName;
+    this.store = store;
+  }
+
+  var _proto = EmptyModuleHandlers.prototype;
+
+  _proto.destroy = function destroy() {
+    return;
+  };
+
+  return EmptyModuleHandlers;
+}();
 
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
-  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, router, initState) {
+  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, store, initState) {
     _initialize(this);
 
     this.moduleName = moduleName;
-    this.router = router;
+    this.store = store;
     this.initState = initState;
   };
 
@@ -235,9 +247,9 @@ var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
     F: CoreModuleHandlers,
     d: [{
       kind: "method",
-      key: "getCurrentStore",
-      value: function getCurrentStore() {
-        return this.router.getCurrentStore();
+      key: "destroy",
+      value: function destroy() {
+        return;
       }
     }, {
       kind: "get",
@@ -255,43 +267,43 @@ var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
       kind: "get",
       key: "state",
       value: function state() {
-        return this.getCurrentStore().getState(this.moduleName);
+        return this.store.getState(this.moduleName);
       }
     }, {
       kind: "get",
       key: "rootState",
       value: function rootState() {
-        return this.getCurrentStore().getState();
+        return this.store.getState();
       }
     }, {
       kind: "method",
       key: "getCurrentActionName",
       value: function getCurrentActionName() {
-        return this.getCurrentStore().getCurrentActionName();
+        return this.store.getCurrentActionName();
       }
     }, {
       kind: "get",
       key: "currentRootState",
       value: function currentRootState() {
-        return this.getCurrentStore().getCurrentState();
+        return this.store.getCurrentState();
       }
     }, {
       kind: "get",
       key: "currentState",
       value: function currentState() {
-        return this.getCurrentStore().getCurrentState(this.moduleName);
+        return this.store.getCurrentState(this.moduleName);
       }
     }, {
       kind: "method",
       key: "dispatch",
       value: function dispatch(action) {
-        return this.getCurrentStore().dispatch(action);
+        return this.store.dispatch(action);
       }
     }, {
       kind: "method",
       key: "loadModel",
       value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.getCurrentStore());
+        return _loadModel(moduleName, this.store);
       }
     }, {
       kind: "method",
@@ -299,6 +311,13 @@ var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
       key: "Init",
       value: function Init(initState) {
         return initState;
+      }
+    }, {
+      kind: "method",
+      decorators: [_basic.reducer],
+      key: "RouteParams",
+      value: function RouteParams(payload) {
+        return (0, _basic.deepMergeState)(this.state, payload);
       }
     }, {
       kind: "method",

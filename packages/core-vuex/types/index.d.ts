@@ -1,8 +1,7 @@
 import { Plugin, MutationPayload, SubscribeOptions } from 'vuex';
 import { WatchOptions } from 'vue';
-import type { BStore, ICoreRouter, StoreBuilder } from '@elux/core';
-export interface VuexOptions {
-    initState?: any;
+import { BStore, ICoreRouter, StoreBuilder, BStoreOptions } from '@elux/core';
+export interface VuexOptions extends BStoreOptions {
     plugins?: Plugin<any>[];
     devtools?: boolean;
 }

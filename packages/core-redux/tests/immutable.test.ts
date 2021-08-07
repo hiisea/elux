@@ -4,14 +4,14 @@ import {messages, router} from './utils';
 import {App, moduleGetter} from './modules';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createAppWithRedux(moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string, appViewName?: string) {
+export function createAppWithRedux(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[], appModuleName: string, appViewName: string) {
   defineModuleGetter(moduleGetter, appModuleName);
   return {
     useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
       return {
         render() {
           const baseStore = storeCreator(storeOptions, router);
-          return renderApp(router, baseStore, [], [], middlewares, appViewName);
+          return renderApp(router, baseStore, middlewares, appViewName);
         },
       };
     },
@@ -28,18 +28,16 @@ describe('init', () => {
   };
 
   beforeAll(() => {
-    return createAppWithRedux(moduleGetter, [storeMiddlewares], 'moduleA', 'Main')
+    const {store, AppView} = createAppWithRedux(moduleGetter, [storeMiddlewares], 'moduleA', 'Main')
       .useStore(
         createRedux({
           enhancers: [],
           initState: {thirdParty: 123},
         })
       )
-      .render()
-      .then(({store, AppView}) => {
-        mockStore = store;
-        (AppView as any)();
-      });
+      .render();
+    mockStore = store;
+    (AppView as any)();
   });
   beforeEach(() => {
     actionLogs.length = 0;

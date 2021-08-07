@@ -6,7 +6,6 @@ exports.__esModule = true;
 exports.isProcessedError = isProcessedError;
 exports.setProcessedError = setProcessedError;
 exports.getActionData = getActionData;
-exports.forkStore = forkStore;
 exports.enhanceStore = enhanceStore;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
@@ -66,26 +65,7 @@ function compose() {
   });
 }
 
-function forkStore(store) {
-  var _store$baseFork = store.baseFork,
-      creator = _store$baseFork.creator,
-      options = _store$baseFork.options;
-  var _store$fork = store.fork,
-      middlewares = _store$fork.middlewares,
-      injectedModules = _store$fork.injectedModules;
-  var initState = store.getPureState();
-  var newBStore = creator((0, _extends2.default)({}, options, {
-    initState: initState
-  }), store.router, store.id + 1);
-  var newIStore = enhanceStore(newBStore, middlewares, (0, _extends2.default)({}, injectedModules));
-  return newIStore;
-}
-
-function enhanceStore(baseStore, middlewares, injectedModules) {
-  if (injectedModules === void 0) {
-    injectedModules = {};
-  }
-
+function enhanceStore(baseStore, middlewares) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -96,11 +76,22 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
   };
 
   store.getState = getState;
-  store.injectedModules = injectedModules;
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  var injectedModules = store.injectedModules;
   store.fork = {
-    injectedModules: injectedModules,
     middlewares: middlewares
   };
+  var _destroy = baseStore.destroy;
+
+  store.destroy = function () {
+    _destroy();
+
+    Object.keys(injectedModules).forEach(function (moduleName) {
+      injectedModules[moduleName].destroy();
+    });
+  };
+
   var currentData = {
     actionName: '',
     prevState: {}

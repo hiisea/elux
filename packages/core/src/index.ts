@@ -13,7 +13,7 @@ export {
   setLoading,
   buildConfigSetter,
 } from './basic';
-export {getActionData, setProcessedError, isProcessedError, forkStore} from './store';
+export {getActionData, setProcessedError, isProcessedError} from './store';
 export {
   CoreModuleHandlers,
   EmptyModuleHandlers,
@@ -30,7 +30,7 @@ export {
   getModuleGetter,
 } from './inject';
 export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
-export {defineModuleGetter, renderApp, ssrApp, initApp} from './render';
+export {defineModuleGetter, renderApp, forkStore} from './render';
 export {default as env} from './env';
 export type {StoreBuilder} from './store';
 export type {
@@ -38,6 +38,7 @@ export type {
   EluxComponent,
   CommonModule,
   ModuleGetter,
+  ModuleSetup,
   ICoreRouter,
   IStore,
   BStore,

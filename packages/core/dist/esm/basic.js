@@ -27,16 +27,10 @@ export function errorAction(error) {
     payload: [error]
   };
 }
-export function moduleInitAction(moduleName, initState) {
+export function moduleInitAction(moduleName, initState, setup) {
   return {
     type: "" + moduleName + coreConfig.NSP + ActionTypes.MInit,
-    payload: [initState]
-  };
-}
-export function moduleReInitAction(moduleName, initState) {
-  return {
-    type: "" + moduleName + coreConfig.NSP + ActionTypes.MReInit,
-    payload: [initState]
+    payload: [initState, setup]
   };
 }
 export function moduleLoadingAction(moduleName, loadingState) {
@@ -49,15 +43,15 @@ export function isEluxComponent(data) {
   return data['__elux_component__'];
 }
 export var MetaData = {
-  appModuleName: 'stage',
+  appModuleName: '',
+  routeModuleName: '',
   injectedModules: {},
   reducersMap: {},
   effectsMap: {},
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  moduleGetter: null,
-  loadings: {}
+  moduleGetter: null
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
@@ -102,9 +96,9 @@ export function injectActions(moduleName, handlers) {
     }
   }
 }
-export function setLoading(router, item, moduleName, groupName) {
+export function setLoading(store, item, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
-  var loadings = MetaData.loadings;
+  var loadings = store.loadingGroups;
 
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -112,7 +106,7 @@ export function setLoading(router, item, moduleName, groupName) {
       var _moduleLoadingAction;
 
       var action = moduleLoadingAction(moduleName, (_moduleLoadingAction = {}, _moduleLoadingAction[groupName] = loadingState, _moduleLoadingAction));
-      router.getCurrentStore().dispatch(action);
+      store.dispatch(action);
     });
   }
 
@@ -163,7 +157,7 @@ export function effect(loadingKey) {
           loadingForModuleName = this.moduleName;
         }
 
-        setLoading(this.router, promiseResult, loadingForModuleName, loadingForGroupName);
+        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
       }
 
       if (!fun.__decorators__) {

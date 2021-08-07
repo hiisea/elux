@@ -59,7 +59,8 @@ export type ActionCreatorMap = Record<string, ActionCreatorList>;
 export interface IModuleHandlers {
   readonly moduleName: string;
   readonly initState: any;
-  readonly router: ICoreRouter;
+  readonly store: IStore;
+  destroy(): void;
 }
 
 export type Dispatch = (action: Action) => void | Promise<void>;
@@ -70,19 +71,20 @@ export interface GetState<S extends State = {}> {
   (): S;
   (moduleName: string): Record<string, any> | undefined;
 }
+
 export interface BStoreOptions {
-  initState?: Record<string, any>;
+  initState?: any;
 }
 
 export interface BStore<S extends State = any> {
   readonly id: number;
   readonly router: ICoreRouter;
-  baseFork: {creator: (options: {initState: any}, router: ICoreRouter, id?: number) => BStore; options: {initState?: any}};
+  baseFork: {creator: (options: BStoreOptions, router: ICoreRouter, id?: number) => BStore; options: BStoreOptions};
   dispatch: Dispatch;
   getState: GetState<S>;
-  getPureState(): S;
   update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
   replaceState(state: S): void;
+  destroy(): void;
 }
 
 export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
@@ -91,8 +93,8 @@ export interface IStore<S extends State = any> extends BStore<S> {
   getCurrentActionName: () => string;
   getCurrentState: GetState<S>;
   injectedModules: {[moduleName: string]: IModuleHandlers};
+  loadingGroups: Record<string, TaskCounter>;
   fork: {
-    injectedModules: {[moduleName: string]: IModuleHandlers};
     middlewares?: IStoreMiddleware[];
   };
 }
@@ -100,6 +102,7 @@ export interface IStore<S extends State = any> extends BStore<S> {
 export interface ICoreRouter {
   init(store: IStore): void;
   getCurrentStore(): IStore;
+  getParams(): any;
 }
 
 export interface CommonModule<ModuleName extends string = string> {
@@ -114,6 +117,8 @@ export interface CommonModule<ModuleName extends string = string> {
 export type ModuleGetter = Record<string, () => CommonModule | Promise<{default: CommonModule}>>;
 
 export type FacadeMap = Record<string, {name: string; actions: ActionCreatorList; actionNames: Record<string, string>}>;
+
+export type ModuleSetup = 'afterSSR' | 'afterFork' | '';
 
 /**
  * 框架内置的几个ActionTypes
@@ -143,16 +148,10 @@ export function errorAction(error: Object): Action {
     payload: [error],
   };
 }
-export function moduleInitAction(moduleName: string, initState: any): Action {
+export function moduleInitAction(moduleName: string, initState: any, setup: ModuleSetup): Action {
   return {
     type: `${moduleName}${coreConfig.NSP}${ActionTypes.MInit}`,
-    payload: [initState],
-  };
-}
-export function moduleReInitAction(moduleName: string, initState: any): Action {
-  return {
-    type: `${moduleName}${coreConfig.NSP}${ActionTypes.MReInit}`,
-    payload: [initState],
+    payload: [initState, setup],
   };
 }
 export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}): Action {
@@ -170,16 +169,16 @@ export function isEluxComponent(data: any): data is EluxComponent {
 export const MetaData: {
   facadeMap: FacadeMap;
   appModuleName: string;
-  // appViewName: string;
+  routeModuleName: string;
   moduleGetter: ModuleGetter;
   injectedModules: Record<string, boolean>;
   reducersMap: ActionHandlerMap;
   effectsMap: ActionHandlerMap;
   moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
   componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
-  loadings: Record<string, TaskCounter>;
 } = {
-  appModuleName: 'stage',
+  appModuleName: '',
+  routeModuleName: '',
   injectedModules: {},
   reducersMap: {},
   effectsMap: {},
@@ -187,7 +186,6 @@ export const MetaData: {
   componentCaches: {},
   facadeMap: null as any,
   moduleGetter: null as any,
-  loadings: {},
 };
 
 function transformAction(actionName: string, handler: ActionHandler, listenerModule: string, actionHandlerMap: ActionHandlerMap) {
@@ -241,14 +239,14 @@ export function injectActions(moduleName: string, handlers: ActionHandlerList): 
  * @param moduleName moduleName+groupName合起来作为该加载项的key
  * @param groupName moduleName+groupName合起来作为该加载项的key
  */
-export function setLoading<T extends Promise<any>>(router: ICoreRouter, item: T, moduleName: string, groupName: string): T {
+export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T {
   const key = moduleName + coreConfig.NSP + groupName;
-  const loadings = MetaData.loadings;
+  const loadings = store.loadingGroups;
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
     loadings[key].addListener((loadingState) => {
       const action = moduleLoadingAction(moduleName, {[groupName]: loadingState});
-      router.getCurrentStore().dispatch(action);
+      store.dispatch(action);
     });
   }
   loadings[key].addItem(item);
@@ -294,7 +292,7 @@ export function effect(loadingKey: string | null = 'app.loading.global'): Functi
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
-        setLoading(this.router, promiseResult, loadingForModuleName!, loadingForGroupName!);
+        setLoading(this.store, promiseResult, loadingForModuleName!, loadingForGroupName!);
       }
       if (!fun.__decorators__) {
         fun.__decorators__ = [];

@@ -9,8 +9,6 @@ export class HistoryRecord {
 
     _defineProperty(this, "sub", void 0);
 
-    _defineProperty(this, "frozenState", '');
-
     this.key = key;
     this.history = history;
     this.store = store;
@@ -25,28 +23,6 @@ export class HistoryRecord {
 
   getParams() {
     return JSON.parse(this.query);
-  }
-
-  freeze() {
-    if (!this.frozenState) {
-      this.frozenState = JSON.stringify(this.store.getState());
-    }
-  }
-
-  getSnapshotState() {
-    if (this.frozenState) {
-      if (typeof this.frozenState === 'string') {
-        this.frozenState = JSON.parse(this.frozenState);
-      }
-
-      return this.frozenState;
-    }
-
-    return undefined;
-  }
-
-  getStore() {
-    return this.store;
   }
 
 }
@@ -106,33 +82,46 @@ export class History {
     return this.records[0].sub;
   }
 
-  push(location, key) {
+  push(location, key, routeState) {
     const records = this.records;
-    let store = records[0].getStore();
+    let store = records[0].store;
 
     if (!this.parent) {
-      store = forkStore(store);
+      const state = store.getState();
+      const cloneData = Object.keys(routeState.params).reduce((data, moduleName) => {
+        data[moduleName] = state[moduleName];
+        return data;
+      }, {});
+      const prevState = JSON.parse(JSON.stringify(cloneData));
+      Object.keys(prevState).forEach(moduleName => {
+        delete prevState[moduleName].loading;
+      });
+      prevState.route = routeState;
+      store = forkStore(store, prevState);
     }
 
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;
     records.unshift(newRecord);
+    const delList = records.splice(maxHistory);
 
-    if (records.length > maxHistory) {
-      records.length = maxHistory;
+    if (!this.parent) {
+      delList.forEach(item => {
+        item.store.destroy();
+      });
     }
   }
 
   replace(location, key) {
     const records = this.records;
-    const store = records[0].getStore();
+    const store = records[0].store;
     const newRecord = new HistoryRecord(location, key, this, store);
     records[0] = newRecord;
   }
 
   relaunch(location, key) {
     const records = this.records;
-    const store = records[0].getStore();
+    const store = records[0].store;
     const newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   }
@@ -152,17 +141,18 @@ export class History {
   }
 
   back(delta, overflowRedirect = false) {
-    const records = this.records.slice(delta);
+    const delList = this.records.splice(0, delta);
 
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
-      } else {
-        records.push(this.records.pop());
-      }
+    if (this.records.length === 0) {
+      const last = delList.pop();
+      this.records.push(last);
     }
 
-    this.records = records;
+    if (!this.parent) {
+      delList.forEach(item => {
+        item.store.destroy();
+      });
+    }
   }
 
 }

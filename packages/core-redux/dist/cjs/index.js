@@ -34,7 +34,9 @@ function storeCreator(storeOptions, router, id) {
   }
 
   if (process.env.NODE_ENV === 'development' && _core.env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(_core.env.__REDUX_DEVTOOLS_EXTENSION__(_core.env.__REDUX_DEVTOOLS_EXTENSION__OPTIONS));
+    enhancers.push(_core.env.__REDUX_DEVTOOLS_EXTENSION__({
+      name: 'elux'
+    }));
   }
 
   var store = (0, _redux.createStore)(reduxReducer, initState, enhancers.length > 1 ? _redux.compose.apply(void 0, enhancers) : enhancers[0]);
@@ -42,9 +44,11 @@ function storeCreator(storeOptions, router, id) {
   var reduxStore = Object.assign(store, {
     id: id,
     router: router,
-    baseFork: {}
+    baseFork: {
+      creator: storeCreator,
+      options: storeOptions
+    }
   });
-  reduxStore.getPureState = reduxStore.getState;
 
   reduxStore.update = function (actionName, state, actionData) {
     dispatch({
@@ -61,10 +65,10 @@ function storeCreator(storeOptions, router, id) {
     });
   };
 
-  reduxStore.baseFork = {
-    creator: storeCreator,
-    options: storeOptions
+  reduxStore.destroy = function () {
+    return;
   };
+
   return reduxStore;
 }
 

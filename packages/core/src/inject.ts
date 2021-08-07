@@ -9,14 +9,15 @@ import {
   MetaData,
   ModuleGetter,
   FacadeMap,
-  ICoreRouter,
   IStore,
   coreConfig,
   reducer,
   mergeState,
   moduleInitAction,
-  moduleReInitAction,
+  ModuleSetup,
+  deepMergeState,
 } from './basic';
+import {deepMerge} from './sprite';
 import env from './env';
 
 type Handler<F> = F extends (...args: infer P) => any
@@ -54,7 +55,7 @@ export function exportModule<
 >(
   moduleName: N,
   ModuleHandles: {
-    new (moduleName: string, context: ICoreRouter): H;
+    new (moduleName: string, store: IStore, preState: any, setup: ModuleSetup): H;
   },
   params: P,
   components: CS
@@ -77,16 +78,17 @@ export function exportModule<
   });
   const model = (store: IStore) => {
     if (!store.injectedModules[moduleName]) {
-      const router = store.router;
-      const moduleHandles = new ModuleHandles(moduleName, router);
+      let setup: ModuleSetup = '';
+      const preModuleState = store.getState(moduleName);
+      const routeParams = store.router.getParams();
+      if (preModuleState && Object.keys(preModuleState).length > 0) {
+        setup = store.id > 0 ? 'afterFork' : 'afterSSR';
+      }
+      const moduleHandles = new ModuleHandles(moduleName, store, preModuleState, setup);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
-      const initState = moduleHandles.initState;
-      const preModuleState = store.getState(moduleName);
-      if (preModuleState) {
-        return store.dispatch(moduleReInitAction(moduleName, initState));
-      }
-      return store.dispatch(moduleInitAction(moduleName, initState));
+      const initState = deepMerge(moduleHandles.initState, routeParams[moduleName]);
+      return store.dispatch(moduleInitAction(moduleName, initState, setup));
     }
     return undefined;
   };
@@ -224,12 +226,11 @@ export function getCachedModules(): Record<string, undefined | CommonModule | Pr
 }
 
 export class EmptyModuleHandlers implements IModuleHandlers {
-  router!: ICoreRouter;
+  initState: any = {};
 
-  initState: any;
-
-  constructor(public readonly moduleName: string) {
-    this.initState = {};
+  constructor(public readonly moduleName: string, public readonly store: IStore) {}
+  destroy(): void {
+    return;
   }
 }
 
@@ -238,11 +239,12 @@ export class EmptyModuleHandlers implements IModuleHandlers {
  * 所有ModuleHandlers必须继承此基类
  */
 export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
-  constructor(public readonly moduleName: string, public readonly router: ICoreRouter, public readonly initState: S) {}
+  constructor(public readonly moduleName: string, public store: IStore, public readonly initState: S) {}
 
-  protected getCurrentStore(): IStore<R> {
-    return this.router.getCurrentStore() as any;
+  destroy(): void {
+    return;
   }
+
   protected get actions(): ActionsThis<this> {
     return MetaData.facadeMap[this.moduleName].actions as any;
   }
@@ -252,39 +254,41 @@ export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Re
   }
 
   protected get state(): S {
-    return this.getCurrentStore().getState(this.moduleName) as S;
+    return this.store.getState(this.moduleName) as S;
   }
 
   protected get rootState(): R {
-    return this.getCurrentStore().getState();
+    return this.store.getState();
   }
 
   protected getCurrentActionName(): string {
-    return this.getCurrentStore().getCurrentActionName();
+    return this.store.getCurrentActionName();
   }
 
   protected get currentRootState(): R {
-    return this.getCurrentStore().getCurrentState();
+    return this.store.getCurrentState();
   }
 
   protected get currentState(): S {
-    return this.getCurrentStore().getCurrentState(this.moduleName) as S;
+    return this.store.getCurrentState(this.moduleName) as S;
   }
 
   protected dispatch(action: Action): void | Promise<void> {
-    return this.getCurrentStore().dispatch(action);
+    return this.store.dispatch(action);
   }
 
-  /**
-   * 动态加载并初始化其他模块的model
-   */
   protected loadModel(moduleName: string): void | Promise<void> {
-    return loadModel(moduleName, this.getCurrentStore());
+    return loadModel(moduleName, this.store);
   }
 
   @reducer
   public Init(initState: S): S {
     return initState;
+  }
+
+  @reducer
+  public RouteParams(payload: Partial<S>): S {
+    return deepMergeState(this.state, payload) as S;
   }
 
   @reducer

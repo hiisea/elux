@@ -47,25 +47,7 @@ function compose() {
   });
 }
 
-export function forkStore(store) {
-  var _store$baseFork = store.baseFork,
-      creator = _store$baseFork.creator,
-      options = _store$baseFork.options;
-  var _store$fork = store.fork,
-      middlewares = _store$fork.middlewares,
-      injectedModules = _store$fork.injectedModules;
-  var initState = store.getPureState();
-  var newBStore = creator(_extends({}, options, {
-    initState: initState
-  }), store.router, store.id + 1);
-  var newIStore = enhanceStore(newBStore, middlewares, _extends({}, injectedModules));
-  return newIStore;
-}
-export function enhanceStore(baseStore, middlewares, injectedModules) {
-  if (injectedModules === void 0) {
-    injectedModules = {};
-  }
-
+export function enhanceStore(baseStore, middlewares) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -76,11 +58,22 @@ export function enhanceStore(baseStore, middlewares, injectedModules) {
   };
 
   store.getState = getState;
-  store.injectedModules = injectedModules;
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  var injectedModules = store.injectedModules;
   store.fork = {
-    injectedModules: injectedModules,
     middlewares: middlewares
   };
+  var _destroy = baseStore.destroy;
+
+  store.destroy = function () {
+    _destroy();
+
+    Object.keys(injectedModules).forEach(function (moduleName) {
+      injectedModules[moduleName].destroy();
+    });
+  };
+
   var currentData = {
     actionName: '',
     prevState: {}

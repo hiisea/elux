@@ -1,58 +1,22 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
-import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _decorate from "@babel/runtime/helpers/esm/decorate";
-import { CoreModuleHandlers, coreConfig, reducer, mergeState, deepMergeState, exportModule } from '@elux/core';
+import { coreConfig, reducer, mergeState, exportModule } from '@elux/core';
 import { createLocationTransform } from './transform';
-export var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModuleHandlers) {
-  var ModuleWithRouteHandlers = function (_CoreModuleHandlers2) {
-    _inheritsLoose(ModuleWithRouteHandlers, _CoreModuleHandlers2);
-
-    function ModuleWithRouteHandlers() {
-      var _this;
-
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      _this = _CoreModuleHandlers2.call.apply(_CoreModuleHandlers2, [this].concat(args)) || this;
-
-      _initialize(_assertThisInitialized(_this));
-
-      return _this;
-    }
-
-    return ModuleWithRouteHandlers;
-  }(_CoreModuleHandlers);
-
-  return {
-    F: ModuleWithRouteHandlers,
-    d: [{
-      kind: "method",
-      decorators: [reducer],
-      key: "Init",
-      value: function Init(initState) {
-        var routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMergeState(initState, routeParams) : initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "RouteParams",
-      value: function RouteParams(payload) {
-        return deepMergeState(this.state, payload);
-      }
-    }]
-  };
-}, CoreModuleHandlers);
 export var RouteActionTypes = {
   MRouteParams: 'RouteParams',
   RouteChange: "route" + coreConfig.NSP + "RouteChange",
+  TestRouteChange: "route" + coreConfig.NSP + "TestRouteChange",
   BeforeRouteChange: "route" + coreConfig.NSP + "BeforeRouteChange"
 };
 export function beforeRouteChangeAction(routeState) {
   return {
     type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+export function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
     payload: [routeState]
   };
 }
@@ -95,12 +59,12 @@ export var routeMiddleware = function routeMiddleware(_ref) {
   };
 };
 
-var RouteModuleHandlers = _decorate(null, function (_initialize2) {
-  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, router) {
-    _initialize2(this);
+var RouteModuleHandlers = _decorate(null, function (_initialize) {
+  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store) {
+    _initialize(this);
 
     this.moduleName = moduleName;
-    this.router = router;
+    this.store = store;
   };
 
   return {
@@ -112,10 +76,16 @@ var RouteModuleHandlers = _decorate(null, function (_initialize2) {
         return {};
       }
     }, {
+      kind: "method",
+      key: "destroy",
+      value: function destroy() {
+        return;
+      }
+    }, {
       kind: "get",
       key: "state",
       value: function state() {
-        return this.router.getCurrentStore().getState(this.moduleName);
+        return this.store.getState(this.moduleName);
       }
     }, {
       kind: "method",
