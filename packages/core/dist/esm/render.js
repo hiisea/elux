@@ -34,16 +34,17 @@ export function forkStore(originalStore, initState) {
     initState: initState
   }), router, id + 1);
 
-  var _renderApp = renderApp(router, baseStore, middlewares),
-      store = _renderApp.store;
+  var _initApp = initApp(router, baseStore, middlewares),
+      store = _initApp.store;
 
   return store;
 }
-export function renderApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+export function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
+  MetaData.currentRouter = router;
   var store = enhanceStore(baseStore, middlewares);
   store.id === 0 && router.init(store);
   var moduleGetter = MetaData.moduleGetter,

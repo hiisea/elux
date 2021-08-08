@@ -331,7 +331,8 @@ const MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  moduleGetter: null
+  moduleGetter: null,
+  currentRouter: null
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
@@ -1308,6 +1309,48 @@ function exportView(component) {
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;
 }
+function modelHotReplacement(moduleName, ModuleHandles) {
+  const model = store => {
+    if (!store.injectedModules[moduleName]) {
+      let setup = '';
+      const preModuleState = store.getState(moduleName);
+      const routeParams = store.router.getParams();
+
+      if (preModuleState && Object.keys(preModuleState).length > 0) {
+        setup = store.id > 0 ? 'afterFork' : 'afterSSR';
+      }
+
+      const moduleHandles = new ModuleHandles(moduleName, store, preModuleState, setup);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      const initState = deepMerge(moduleHandles.initState, routeParams[moduleName]);
+      return store.dispatch(moduleInitAction(moduleName, initState, setup));
+    }
+
+    return undefined;
+  };
+
+  const moduleCache = MetaData.moduleCaches[moduleName];
+
+  if (moduleCache && moduleCache['model']) {
+    moduleCache.model = model;
+  }
+
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, ModuleHandles);
+  }
+
+  const stores = MetaData.currentRouter.getStoreList();
+  stores.forEach(store => {
+    if (store.injectedModules[moduleName]) {
+      const ins = new ModuleHandles(moduleName, store);
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log(`[HMR] @medux Updated model: ${moduleName}`);
+}
 
 const errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
@@ -1576,10 +1619,11 @@ function forkStore(originalStore, initState) {
   }, router, id + 1);
   const {
     store
-  } = renderApp(router, baseStore, middlewares);
+  } = initApp(router, baseStore, middlewares);
   return store;
 }
-function renderApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
+  MetaData.currentRouter = router;
   const store = enhanceStore(baseStore, middlewares);
   store.id === 0 && router.init(store);
   const {
@@ -1998,6 +2042,14 @@ class History {
         page: routeMeta.pages[pagename],
         key
       };
+    });
+  }
+
+  getStores() {
+    return this.records.map(({
+      store
+    }) => {
+      return store;
     });
   }
 
@@ -2862,6 +2914,10 @@ class BaseRouter extends MultipleDispatcher {
     return this.history.getCurrentRecord().store;
   }
 
+  getStoreList() {
+    return this.history.getStores();
+  }
+
   getCurKey() {
     return this.routeState.key;
   }
@@ -3204,7 +3260,7 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [],
           }, router);
           const {
             store
-          } = renderApp(router, baseStore, storeMiddleware);
+          } = initApp(router, baseStore, storeMiddleware);
           const context = render(store, {
             deps: {},
             router,
@@ -3254,7 +3310,7 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
               store,
               AppView,
               setup
-            } = renderApp(router, baseStore, storeMiddleware, viewName, components);
+            } = initApp(router, baseStore, storeMiddleware, viewName, components);
             return setup.then(() => {
               render(id, AppView, store, {
                 deps: {},
@@ -3300,7 +3356,7 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
               store,
               AppView,
               setup
-            } = renderApp(router, baseStore, storeMiddleware, viewName);
+            } = initApp(router, baseStore, storeMiddleware, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {
@@ -6841,10 +6897,8 @@ function storeCreator(storeOptions, router, id = 0) {
     enhancers.push(middlewareEnhancer);
   }
 
-  if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__({
-      name: 'elux'
-    }));
+  if (id === 0 && process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__());
   }
 
   const store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose(...enhancers) : enhancers[0]);
@@ -6902,4 +6956,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };

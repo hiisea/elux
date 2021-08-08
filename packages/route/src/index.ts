@@ -161,7 +161,9 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
   getCurrentStore(): IStore {
     return this.history.getCurrentRecord().store;
   }
-
+  getStoreList(): IStore[] {
+    return this.history.getStores();
+  }
   getCurKey(): string {
     return this.routeState.key;
   }

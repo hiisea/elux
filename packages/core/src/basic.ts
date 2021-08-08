@@ -102,6 +102,7 @@ export interface IStore<S extends State = any> extends BStore<S> {
 export interface ICoreRouter {
   init(store: IStore): void;
   getCurrentStore(): IStore;
+  getStoreList(): IStore[];
   getParams(): any;
 }
 
@@ -176,6 +177,7 @@ export const MetaData: {
   effectsMap: ActionHandlerMap;
   moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
   componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
+  currentRouter: ICoreRouter;
 } = {
   appModuleName: '',
   routeModuleName: '',
@@ -186,6 +188,7 @@ export const MetaData: {
   componentCaches: {},
   facadeMap: null as any,
   moduleGetter: null as any,
+  currentRouter: null as any,
 };
 
 function transformAction(actionName: string, handler: ActionHandler, listenerModule: string, actionHandlerMap: ActionHandlerMap) {

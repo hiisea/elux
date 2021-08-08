@@ -28,9 +28,10 @@ export {
   exportComponent,
   getComponet,
   getModuleGetter,
+  modelHotReplacement,
 } from './inject';
 export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
-export {defineModuleGetter, renderApp, forkStore} from './render';
+export {defineModuleGetter, initApp, forkStore} from './render';
 export {default as env} from './env';
 export type {StoreBuilder} from './store';
 export type {

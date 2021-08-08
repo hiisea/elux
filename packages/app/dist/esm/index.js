@@ -1,7 +1,7 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import { env, getRootModuleAPI, buildConfigSetter, renderApp, isPromise, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
+import { env, getRootModuleAPI, buildConfigSetter, initApp, isPromise, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
 import { routeMiddleware, setRouteConfig, routeMeta } from '@elux/route';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
 export { RouteActionTypes, createRouteModule } from '@elux/route';
 var appMeta = {
   router: null,
@@ -51,8 +51,8 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
             initState: initState
           }), router);
 
-          var _renderApp = renderApp(router, baseStore, storeMiddleware),
-              store = _renderApp.store;
+          var _initApp = initApp(router, baseStore, storeMiddleware),
+              store = _initApp.store;
 
           var context = render(store, {
             deps: {},
@@ -118,10 +118,10 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
               initState: initState
             }), router);
 
-            var _renderApp2 = renderApp(router, baseStore, storeMiddleware, viewName, components),
-                store = _renderApp2.store,
-                AppView = _renderApp2.AppView,
-                setup = _renderApp2.setup;
+            var _initApp2 = initApp(router, baseStore, storeMiddleware, viewName, components),
+                store = _initApp2.store,
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
 
             return setup.then(function () {
               render(id, AppView, store, {
@@ -180,10 +180,10 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
               initState: initState
             }), router);
 
-            var _renderApp3 = renderApp(router, baseStore, storeMiddleware, viewName),
-                store = _renderApp3.store,
-                AppView = _renderApp3.AppView,
-                setup = _renderApp3.setup;
+            var _initApp3 = initApp(router, baseStore, storeMiddleware, viewName),
+                store = _initApp3.store,
+                AppView = _initApp3.AppView,
+                setup = _initApp3.setup;
 
             return setup.then(function () {
               var state = store.getState();

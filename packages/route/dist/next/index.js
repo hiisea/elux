@@ -155,6 +155,10 @@ export class BaseRouter extends MultipleDispatcher {
     return this.history.getCurrentRecord().store;
   }
 
+  getStoreList() {
+    return this.history.getStores();
+  }
+
   getCurKey() {
     return this.routeState.key;
   }

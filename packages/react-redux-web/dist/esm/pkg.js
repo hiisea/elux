@@ -392,7 +392,8 @@ var MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  moduleGetter: null
+  moduleGetter: null,
+  currentRouter: null
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
@@ -1427,6 +1428,50 @@ function exportView(component) {
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;
 }
+function modelHotReplacement(moduleName, ModuleHandles) {
+  var model = function model(store) {
+    if (!store.injectedModules[moduleName]) {
+      var _setup2 = '';
+      var preModuleState = store.getState(moduleName);
+      var routeParams = store.router.getParams();
+
+      if (preModuleState && Object.keys(preModuleState).length > 0) {
+        _setup2 = store.id > 0 ? 'afterFork' : 'afterSSR';
+      }
+
+      var moduleHandles = new ModuleHandles(moduleName, store, preModuleState, _setup2);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+
+      var _initState2 = deepMerge(moduleHandles.initState, routeParams[moduleName]);
+
+      return store.dispatch(moduleInitAction(moduleName, _initState2, _setup2));
+    }
+
+    return undefined;
+  };
+
+  var moduleCache = MetaData.moduleCaches[moduleName];
+
+  if (moduleCache && moduleCache['model']) {
+    moduleCache.model = model;
+  }
+
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, ModuleHandles);
+  }
+
+  var stores = MetaData.currentRouter.getStoreList();
+  stores.forEach(function (store) {
+    if (store.injectedModules[moduleName]) {
+      var ins = new ModuleHandles(moduleName, store);
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log("[HMR] @medux Updated model: " + moduleName);
+}
 
 var errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
@@ -1726,16 +1771,17 @@ function forkStore(originalStore, initState) {
     initState: initState
   }), router, id + 1);
 
-  var _renderApp = renderApp(router, baseStore, middlewares),
-      store = _renderApp.store;
+  var _initApp = initApp(router, baseStore, middlewares),
+      store = _initApp.store;
 
   return store;
 }
-function renderApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
+  MetaData.currentRouter = router;
   var store = enhanceStore(baseStore, middlewares);
   store.id === 0 && router.init(store);
   var moduleGetter = MetaData.moduleGetter,
@@ -2973,6 +3019,13 @@ var History = function () {
     });
   };
 
+  _proto2.getStores = function getStores() {
+    return this.records.map(function (_ref2) {
+      var store = _ref2.store;
+      return store;
+    });
+  };
+
   _proto2.findRecord = function findRecord(keyOrIndex) {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {
@@ -3887,6 +3940,10 @@ var BaseRouter = function (_MultipleDispatcher) {
     return this.history.getCurrentRecord().store;
   };
 
+  _proto2.getStoreList = function getStoreList() {
+    return this.history.getStores();
+  };
+
   _proto2.getCurKey = function getCurKey() {
     return this.routeState.key;
   };
@@ -4453,8 +4510,8 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
             initState: initState
           }), router);
 
-          var _renderApp = renderApp(router, baseStore, storeMiddleware),
-              store = _renderApp.store;
+          var _initApp = initApp(router, baseStore, storeMiddleware),
+              store = _initApp.store;
 
           var context = render(store, {
             deps: {},
@@ -4520,10 +4577,10 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
               initState: initState
             }), router);
 
-            var _renderApp2 = renderApp(router, baseStore, storeMiddleware, viewName, components),
-                store = _renderApp2.store,
-                AppView = _renderApp2.AppView,
-                setup = _renderApp2.setup;
+            var _initApp2 = initApp(router, baseStore, storeMiddleware, viewName, components),
+                store = _initApp2.store,
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
 
             return setup.then(function () {
               render(id, AppView, store, {
@@ -4582,10 +4639,10 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
               initState: initState
             }), router);
 
-            var _renderApp3 = renderApp(router, baseStore, storeMiddleware, viewName),
-                store = _renderApp3.store,
-                AppView = _renderApp3.AppView,
-                setup = _renderApp3.setup;
+            var _initApp3 = initApp(router, baseStore, storeMiddleware, viewName),
+                store = _initApp3.store,
+                AppView = _initApp3.AppView,
+                setup = _initApp3.setup;
 
             return setup.then(function () {
               var state = store.getState();
@@ -9055,10 +9112,8 @@ function storeCreator(storeOptions, router, id) {
     enhancers.push(middlewareEnhancer);
   }
 
-  if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__({
-      name: 'elux'
-    }));
+  if (id === 0 && process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__());
   }
 
   var store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose.apply(void 0, enhancers) : enhancers[0]);
@@ -9122,4 +9177,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };

@@ -66,6 +66,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     getNativeUrl(): string;
     init(store: IStore): void;
     getCurrentStore(): IStore;
+    getStoreList(): IStore[];
     getCurKey(): string;
     getHistory(root?: boolean): History;
     getHistoryLength(root?: boolean): number;

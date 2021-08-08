@@ -22,6 +22,9 @@ export class Router implements ICoreRouter {
   getParams(): Record<string, any> {
     return {};
   }
+  getStoreList(): IStore[] {
+    return [this.store];
+  }
 }
 
 export const router = new Router();

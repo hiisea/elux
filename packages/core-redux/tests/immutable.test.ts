@@ -1,4 +1,4 @@
-import {getComponet, ModuleGetter, defineModuleGetter, renderApp, BStore, BStoreOptions, IStore, IStoreMiddleware, StoreBuilder} from '@elux/core';
+import {getComponet, ModuleGetter, defineModuleGetter, initApp, BStore, BStoreOptions, IStore, IStoreMiddleware, StoreBuilder} from '@elux/core';
 import {createRedux} from 'src/index';
 import {messages, router} from './utils';
 import {App, moduleGetter} from './modules';
@@ -11,7 +11,7 @@ export function createAppWithRedux(moduleGetter: ModuleGetter, middlewares: ISto
       return {
         render() {
           const baseStore = storeCreator(storeOptions, router);
-          return renderApp(router, baseStore, middlewares, appViewName);
+          return initApp(router, baseStore, middlewares, appViewName);
         },
       };
     },

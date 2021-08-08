@@ -31,10 +31,11 @@ export function forkStore(originalStore, initState) {
   }, router, id + 1);
   const {
     store
-  } = renderApp(router, baseStore, middlewares);
+  } = initApp(router, baseStore, middlewares);
   return store;
 }
-export function renderApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
+export function initApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
+  MetaData.currentRouter = router;
   const store = enhanceStore(baseStore, middlewares);
   store.id === 0 && router.init(store);
   const {

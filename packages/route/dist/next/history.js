@@ -58,6 +58,14 @@ export class History {
     });
   }
 
+  getStores() {
+    return this.records.map(({
+      store
+    }) => {
+      return store;
+    });
+  }
+
   findRecord(keyOrIndex) {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {

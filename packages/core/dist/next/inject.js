@@ -379,3 +379,45 @@ export function exportView(component) {
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;
 }
+export function modelHotReplacement(moduleName, ModuleHandles) {
+  const model = store => {
+    if (!store.injectedModules[moduleName]) {
+      let setup = '';
+      const preModuleState = store.getState(moduleName);
+      const routeParams = store.router.getParams();
+
+      if (preModuleState && Object.keys(preModuleState).length > 0) {
+        setup = store.id > 0 ? 'afterFork' : 'afterSSR';
+      }
+
+      const moduleHandles = new ModuleHandles(moduleName, store, preModuleState, setup);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      const initState = deepMerge(moduleHandles.initState, routeParams[moduleName]);
+      return store.dispatch(moduleInitAction(moduleName, initState, setup));
+    }
+
+    return undefined;
+  };
+
+  const moduleCache = MetaData.moduleCaches[moduleName];
+
+  if (moduleCache && moduleCache['model']) {
+    moduleCache.model = model;
+  }
+
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, ModuleHandles);
+  }
+
+  const stores = MetaData.currentRouter.getStoreList();
+  stores.forEach(store => {
+    if (store.injectedModules[moduleName]) {
+      const ins = new ModuleHandles(moduleName, store);
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log(`[HMR] @medux Updated model: ${moduleName}`);
+}

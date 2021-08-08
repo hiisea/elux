@@ -1,6 +1,6 @@
-import { env, getRootModuleAPI, buildConfigSetter, renderApp, isPromise, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
+import { env, getRootModuleAPI, buildConfigSetter, initApp, isPromise, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
 import { routeMiddleware, setRouteConfig, routeMeta } from '@elux/route';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
 export { RouteActionTypes, createRouteModule } from '@elux/route';
 const appMeta = {
   router: null,
@@ -38,7 +38,7 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
           }, router);
           const {
             store
-          } = renderApp(router, baseStore, storeMiddleware);
+          } = initApp(router, baseStore, storeMiddleware);
           const context = render(store, {
             deps: {},
             router,
@@ -88,7 +88,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
               store,
               AppView,
               setup
-            } = renderApp(router, baseStore, storeMiddleware, viewName, components);
+            } = initApp(router, baseStore, storeMiddleware, viewName, components);
             return setup.then(() => {
               render(id, AppView, store, {
                 deps: {},
@@ -134,7 +134,7 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
               store,
               AppView,
               setup
-            } = renderApp(router, baseStore, storeMiddleware, viewName);
+            } = initApp(router, baseStore, storeMiddleware, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {

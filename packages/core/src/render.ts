@@ -22,17 +22,18 @@ export function forkStore<T extends IStore>(originalStore: T, initState: Record<
     id,
   } = originalStore;
   const baseStore = creator({...options, initState}, router, id + 1);
-  const {store} = renderApp(router, baseStore, middlewares);
+  const {store} = initApp(router, baseStore, middlewares);
   return store as T;
 }
 
-export function renderApp<ST extends BStore = BStore>(
+export function initApp<ST extends BStore = BStore>(
   router: ICoreRouter,
   baseStore: ST,
   middlewares?: IStoreMiddleware[],
   appViewName?: string,
   preloadComponents: string[] = []
 ): {store: IStore & ST; AppView: EluxComponent; setup: Promise<void>} {
+  MetaData.currentRouter = router;
   const store = enhanceStore(baseStore, middlewares) as IStore & ST;
   store.id === 0 && router.init(store);
   const {moduleGetter, appModuleName} = MetaData;

@@ -49,7 +49,8 @@ export const MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  moduleGetter: null
+  moduleGetter: null,
+  currentRouter: null
 };
 
 function transformAction(actionName, handler, listenerModule, actionHandlerMap) {

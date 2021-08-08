@@ -82,7 +82,8 @@ var MetaData = {
   moduleCaches: {},
   componentCaches: {},
   facadeMap: null,
-  moduleGetter: null
+  moduleGetter: null,
+  currentRouter: null
 };
 exports.MetaData = MetaData;
 

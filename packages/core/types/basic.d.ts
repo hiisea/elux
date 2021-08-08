@@ -78,6 +78,7 @@ export interface IStore<S extends State = any> extends BStore<S> {
 export interface ICoreRouter {
     init(store: IStore): void;
     getCurrentStore(): IStore;
+    getStoreList(): IStore[];
     getParams(): any;
 }
 export interface CommonModule<ModuleName extends string = string> {
@@ -125,6 +126,7 @@ export declare const MetaData: {
     effectsMap: ActionHandlerMap;
     moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
     componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
+    currentRouter: ICoreRouter;
 };
 export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
 export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;

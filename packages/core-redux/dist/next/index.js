@@ -19,10 +19,8 @@ export function storeCreator(storeOptions, router, id = 0) {
     enhancers.push(middlewareEnhancer);
   }
 
-  if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__({
-      name: 'elux'
-    }));
+  if (id === 0 && process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__());
   }
 
   const store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose(...enhancers) : enhancers[0]);

@@ -5,7 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 exports.__esModule = true;
 exports.defineModuleGetter = defineModuleGetter;
 exports.forkStore = forkStore;
-exports.renderApp = renderApp;
+exports.initApp = initApp;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -48,17 +48,18 @@ function forkStore(originalStore, initState) {
     initState: initState
   }), router, id + 1);
 
-  var _renderApp = renderApp(router, baseStore, middlewares),
-      store = _renderApp.store;
+  var _initApp = initApp(router, baseStore, middlewares),
+      store = _initApp.store;
 
   return store;
 }
 
-function renderApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
+  _basic.MetaData.currentRouter = router;
   var store = (0, _store.enhanceStore)(baseStore, middlewares);
   store.id === 0 && router.init(store);
   var moduleGetter = _basic.MetaData.moduleGetter,

@@ -101,4 +101,7 @@ export declare function getRootModuleAPI<T extends RootModuleFacade = any>(data?
 export declare function exportComponent<T>(component: T): T & EluxComponent;
 export declare function exportView<T>(component: T): T & EluxComponent;
 export declare type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(moduleName: M, componentName: V, options?: O) => A[M]['components'][V];
+export declare function modelHotReplacement(moduleName: string, ModuleHandles: {
+    new (moduleName: string, store: IStore, preState?: any, setup?: ModuleSetup): CoreModuleHandlers;
+}): void;
 export {};

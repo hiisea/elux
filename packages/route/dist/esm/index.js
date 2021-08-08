@@ -179,6 +179,10 @@ export var BaseRouter = function (_MultipleDispatcher) {
     return this.history.getCurrentRecord().store;
   };
 
+  _proto2.getStoreList = function getStoreList() {
+    return this.history.getStores();
+  };
+
   _proto2.getCurKey = function getCurKey() {
     return this.routeState.key;
   };

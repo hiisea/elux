@@ -38,11 +38,6 @@ export function storeCreator(storeOptions, router, id) {
     return store.state;
   };
 
-  vuexStore.getPureState = function () {
-    var state = vuexStore.getState();
-    return JSON.parse(JSON.stringify(state));
-  };
-
   vuexStore.update = function (actionName, newState, actionData) {
     store.commit(UpdateMutationName, {
       actionName: actionName,

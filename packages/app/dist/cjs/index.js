@@ -9,7 +9,7 @@ exports.createBaseApp = createBaseApp;
 exports.createBaseSSR = createBaseSSR;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.mutation = exports.action = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
+exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.modelHotReplacement = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.mutation = exports.action = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -36,6 +36,7 @@ exports.setProcessedError = _core.setProcessedError;
 exports.delayPromise = _core.delayPromise;
 exports.exportView = _core.exportView;
 exports.exportComponent = _core.exportComponent;
+exports.modelHotReplacement = _core.modelHotReplacement;
 exports.EmptyModuleHandlers = _core.EmptyModuleHandlers;
 exports.BaseModuleHandlers = _core.CoreModuleHandlers;
 
@@ -95,8 +96,8 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
             initState: initState
           }), router);
 
-          var _renderApp = (0, _core.renderApp)(router, baseStore, storeMiddleware),
-              store = _renderApp.store;
+          var _initApp = (0, _core.initApp)(router, baseStore, storeMiddleware),
+              store = _initApp.store;
 
           var context = render(store, {
             deps: {},
@@ -162,10 +163,10 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
               initState: initState
             }), router);
 
-            var _renderApp2 = (0, _core.renderApp)(router, baseStore, storeMiddleware, viewName, components),
-                store = _renderApp2.store,
-                AppView = _renderApp2.AppView,
-                setup = _renderApp2.setup;
+            var _initApp2 = (0, _core.initApp)(router, baseStore, storeMiddleware, viewName, components),
+                store = _initApp2.store,
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
 
             return setup.then(function () {
               render(id, AppView, store, {
@@ -225,10 +226,10 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
               initState: initState
             }), router);
 
-            var _renderApp3 = (0, _core.renderApp)(router, baseStore, storeMiddleware, viewName),
-                store = _renderApp3.store,
-                AppView = _renderApp3.AppView,
-                setup = _renderApp3.setup;
+            var _initApp3 = (0, _core.initApp)(router, baseStore, storeMiddleware, viewName),
+                store = _initApp3.store,
+                AppView = _initApp3.AppView,
+                setup = _initApp3.setup;
 
             return setup.then(function () {
               var state = store.getState();

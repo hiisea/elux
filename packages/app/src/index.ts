@@ -2,7 +2,7 @@ import {
   env,
   getRootModuleAPI,
   buildConfigSetter,
-  renderApp,
+  initApp,
   isPromise,
   defineModuleGetter,
   setCoreConfig,
@@ -43,6 +43,7 @@ export {
   delayPromise,
   exportView,
   exportComponent,
+  modelHotReplacement,
   EmptyModuleHandlers,
   CoreModuleHandlers as BaseModuleHandlers,
 } from '@elux/core';
@@ -166,7 +167,7 @@ export function createBaseMP<INS = {}>(
           const routeState = router.initRouteState as RouteState;
           const initState = {route: routeState};
           const baseStore = storeCreator({...storeOptions, initState}, router);
-          const {store} = renderApp(router, baseStore, storeMiddleware);
+          const {store} = initApp(router, baseStore, storeMiddleware);
           const context: ContextWrap = render(store, {deps: {}, router, documentHead: ''}, ins);
           return {store, context};
         },
@@ -206,7 +207,7 @@ export function createBaseApp<INS = {}>(
           return roterStatePromise.then((routeState) => {
             const initState = {...state, route: routeState};
             const baseStore = storeCreator({...storeOptions, initState}, router);
-            const {store, AppView, setup} = renderApp(router, baseStore, storeMiddleware, viewName, components);
+            const {store, AppView, setup} = initApp(router, baseStore, storeMiddleware, viewName, components);
             return setup.then(() => {
               render(id, AppView, store, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
               return store;
@@ -248,7 +249,7 @@ export function createBaseSSR<INS = {}>(
           return roterStatePromise.then((routeState) => {
             const initState = {route: routeState};
             const baseStore = storeCreator({...storeOptions, initState}, router);
-            const {store, AppView, setup} = renderApp(router, baseStore, storeMiddleware, viewName);
+            const {store, AppView, setup} = initApp(router, baseStore, storeMiddleware, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};

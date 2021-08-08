@@ -60,6 +60,13 @@ export var History = function () {
     });
   };
 
+  _proto2.getStores = function getStores() {
+    return this.records.map(function (_ref2) {
+      var store = _ref2.store;
+      return store;
+    });
+  };
+
   _proto2.findRecord = function findRecord(keyOrIndex) {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {

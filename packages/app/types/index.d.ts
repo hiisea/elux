@@ -1,6 +1,6 @@
 import { IStore, LoadComponent, ModuleGetter, IStoreMiddleware, StoreBuilder, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions, ICoreRouter } from '@elux/core';
 import { IBaseRouter, LocationTransform } from '@elux/route';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers, } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers, } from '@elux/core';
 export { RouteActionTypes, createRouteModule } from '@elux/route';
 export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent, ModuleSetup } from '@elux/core';
 export type { RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial } from '@elux/route';

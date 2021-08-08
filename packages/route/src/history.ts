@@ -34,6 +34,11 @@ export class History {
       return {pagename, page: routeMeta.pages[pagename], key};
     });
   }
+  getStores(): IStore[] {
+    return this.records.map(({store}) => {
+      return store;
+    });
+  }
   findRecord(keyOrIndex: number | string): HistoryRecord | undefined {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {

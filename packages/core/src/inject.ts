@@ -405,3 +405,44 @@ export type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends
   componentName: V,
   options?: O
 ) => A[M]['components'][V];
+
+export function modelHotReplacement(
+  moduleName: string,
+  ModuleHandles: {new (moduleName: string, store: IStore, preState?: any, setup?: ModuleSetup): CoreModuleHandlers}
+): void {
+  // reducersMap: ActionHandlerMap;
+  // effectsMap: ActionHandlerMap;
+  const model = (store: IStore) => {
+    if (!store.injectedModules[moduleName]) {
+      let setup: ModuleSetup = '';
+      const preModuleState = store.getState(moduleName);
+      const routeParams = store.router.getParams();
+      if (preModuleState && Object.keys(preModuleState).length > 0) {
+        setup = store.id > 0 ? 'afterFork' : 'afterSSR';
+      }
+      const moduleHandles = new ModuleHandles(moduleName, store, preModuleState, setup);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles as any);
+      const initState = deepMerge(moduleHandles.initState, routeParams[moduleName]);
+      return store.dispatch(moduleInitAction(moduleName, initState, setup));
+    }
+    return undefined;
+  };
+  const moduleCache = MetaData.moduleCaches[moduleName];
+  if (moduleCache && moduleCache['model']) {
+    (moduleCache as CommonModule).model = model;
+  }
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, ModuleHandles as any);
+  }
+  const stores = MetaData.currentRouter.getStoreList();
+  stores.forEach((store) => {
+    if (store.injectedModules[moduleName]) {
+      const ins = new ModuleHandles(moduleName, store);
+      (ins as any).initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log(`[HMR] @medux Updated model: ${moduleName}`);
+}

@@ -21,6 +21,7 @@ export declare class History {
         key: string;
         page?: any;
     }[];
+    getStores(): IStore[];
     findRecord(keyOrIndex: number | string): HistoryRecord | undefined;
     findIndex(key: string): number;
     getCurrentRecord(): HistoryRecord;
