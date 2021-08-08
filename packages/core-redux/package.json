@@ -1,6 +1,6 @@
 {
   "name": "@elux/core-redux",
-  "version": "0.1.47",
+  "version": "0.1.56",
   "description": "",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/core-redux",
   "author": "hiisea <hiisea@qq.com>",
@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.47",
+    "@elux/core": "^0.1.56",
     "redux": "^4.1.0"
   },
   "devDependencies": {

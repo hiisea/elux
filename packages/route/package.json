@@ -1,6 +1,6 @@
 {
   "name": "@elux/route",
-  "version": "0.1.47",
+  "version": "0.1.56",
   "description": "",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route",
   "author": "hiisea <hiisea@qq.com>",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.47"
+    "@elux/core": "^0.1.56"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }
