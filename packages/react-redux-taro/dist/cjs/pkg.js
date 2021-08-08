@@ -1468,7 +1468,7 @@ function modelHotReplacement(moduleName, ModuleHandles) {
 
   if (MetaData.injectedModules[moduleName]) {
     MetaData.injectedModules[moduleName] = false;
-    injectActions(moduleName, ModuleHandles);
+    injectActions(moduleName, new ModuleHandles(moduleName, {}));
   }
 
   var stores = MetaData.currentRouter.getStoreList();

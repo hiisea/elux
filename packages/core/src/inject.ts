@@ -434,13 +434,13 @@ export function modelHotReplacement(
   }
   if (MetaData.injectedModules[moduleName]) {
     MetaData.injectedModules[moduleName] = false;
-    injectActions(moduleName, ModuleHandles as any);
+    injectActions(moduleName, new ModuleHandles(moduleName, {} as any) as any);
   }
   const stores = MetaData.currentRouter.getStoreList();
   stores.forEach((store) => {
     if (store.injectedModules[moduleName]) {
-      const ins = new ModuleHandles(moduleName, store);
-      (ins as any).initState = store.injectedModules[moduleName].initState;
+      const ins = new ModuleHandles(moduleName, store) as any;
+      ins.initState = store.injectedModules[moduleName].initState;
       store.injectedModules[moduleName] = ins;
     }
   });
