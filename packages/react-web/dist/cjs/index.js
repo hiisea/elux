@@ -42,18 +42,18 @@ function setConfig(conf) {
   (0, _routeBrowser.setBrowserRouteConfig)(conf);
 }
 
-var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
+var createApp = function createApp(moduleGetter, middlewares) {
   return (0, _app.createBaseApp)({}, function (locationTransform) {
     return (0, _routeBrowser.createRouter)('Browser', locationTransform);
-  }, _stage.renderToDocument, moduleGetter, middlewares, appModuleName);
+  }, _stage.renderToDocument, moduleGetter, middlewares);
 };
 
 exports.createApp = createApp;
 
-var createSSR = function createSSR(moduleGetter, url, middlewares, appModuleName) {
+var createSSR = function createSSR(moduleGetter, url, middlewares) {
   return (0, _app.createBaseSSR)({}, function (locationTransform) {
     return (0, _routeBrowser.createRouter)(url, locationTransform);
-  }, _stage.renderToString, moduleGetter, middlewares, appModuleName);
+  }, _stage.renderToString, moduleGetter, middlewares);
 };
 
 exports.createSSR = createSSR;

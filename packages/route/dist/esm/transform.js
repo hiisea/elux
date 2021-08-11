@@ -1,4 +1,4 @@
-import { deepMerge, env, getModuleList, getModuleGetter, isPromise } from '@elux/core';
+import { deepMerge, env, getModuleList, moduleExists, isPromise } from '@elux/core';
 import { extendDefault, excludeDefault, splitPrivate } from './deep-extend';
 import { routeMeta } from './basic';
 export function assignDefaultData(data) {
@@ -255,9 +255,9 @@ export function createLocationTransform(pagenameMap, nativeLocationMap, notfound
       }
 
       var params = deepMerge({}, pathParams, eluxLocation.params);
-      var moduleGetter = getModuleGetter();
+      var modules = moduleExists();
       Object.keys(params).forEach(function (moduleName) {
-        if (!moduleGetter[moduleName]) {
+        if (!modules[moduleName]) {
           delete params[moduleName];
         }
       });

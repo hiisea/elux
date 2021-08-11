@@ -1,26 +1,18 @@
-import {IStore, ICoreRouter, exportModule} from '@elux/core';
+import {IStore, ICoreRouter, exportModule, RouteModuleHandlers} from '@elux/core';
 
 export const messages: any[] = [];
 
-class RouteModuleHandler {
-  initState = {};
-  constructor(public moduleName: string, public store: IStore) {}
-  destroy() {
-    return;
-  }
-}
-
-export const routerModule = exportModule('route', RouteModuleHandler, {}, {});
+export const routerModule = exportModule('route', RouteModuleHandlers, {}, {});
 export class Router implements ICoreRouter {
+  name = 'route';
   store!: IStore;
-  init(store: IStore): void {
+  latestState = {};
+  routeState = {action: '', params: {}};
+  startup(store: IStore): void {
     this.store = store;
   }
   getCurrentStore(): IStore {
     return this.store;
-  }
-  getParams(): Record<string, any> {
-    return {};
   }
   getStoreList(): IStore[] {
     return [this.store];

@@ -13,9 +13,9 @@ export function setConfig(conf) {
   setUserConfig(conf);
   setBrowserRouteConfig(conf);
 }
-export const createApp = (moduleGetter, middlewares, appModuleName) => {
-  return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares, appModuleName);
+export const createApp = (moduleGetter, middlewares) => {
+  return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares);
 };
-export const createSSR = (moduleGetter, url, middlewares, appModuleName) => {
-  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares, appModuleName);
+export const createSSR = (moduleGetter, url, middlewares) => {
+  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares);
 };

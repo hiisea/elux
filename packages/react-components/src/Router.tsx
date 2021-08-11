@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useState, useRef, memo} from 'react';
-import {ICoreRouter, env} from '@elux/core';
+import {ICoreRouter, env, IStore} from '@elux/core';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
 export const Router: React.FC = (props) => {
@@ -25,12 +25,21 @@ export const Router: React.FC = (props) => {
           env.setTimeout(() => {
             setClassname('elux-app ' + Date.now());
           }, 1000);
+        } else if (routeState.action === 'RELAUNCH') {
+          setClassname('elux-app ' + Date.now());
         }
       }
     });
   }, [router]);
   const nodes = pages.map((item) => {
-    const page = item.page ? <item.page key={item.key} /> : <Page key={item.key}>{props.children}</Page>;
+    const store = item.store;
+    const page = item.page ? (
+      <item.page key={store.id} store={store} />
+    ) : (
+      <Page key={store.id} store={store}>
+        {props.children}
+      </Page>
+    );
     return page;
   });
   return (
@@ -40,12 +49,10 @@ export const Router: React.FC = (props) => {
   );
 };
 
-export const Page: React.FC<{}> = memo(function (props) {
-  const eluxContext = useContext(EluxContextComponent);
-  const store = eluxContext.router!.getCurrentStore();
+export const Page: React.FC<{store: IStore}> = memo(function ({store, children}) {
   return (
     <reactComponentsConfig.Provider store={store}>
-      <div className="elux-page">{props.children}</div>
+      <div className="elux-page">{children}</div>
     </reactComponentsConfig.Provider>
   );
 });

@@ -13,21 +13,23 @@ export class ModuleHandlers extends CoreModuleHandlers<State, {}> {
 
   @reducer
   public add(): State {
-    messages.push(['moduleA/add', JSON.stringify(this.rootState)]);
-    return {...this.state, count: this.state.count + 1};
+    messages.push(['moduleA/add', JSON.stringify(this.getRootState())]);
+    const state = this.getState();
+    return {...state, count: state.count + 1};
   }
 
   @reducer
   public add2(): State {
-    const prevState = this.currentRootState;
-    messages.push(['moduleA/add2', JSON.stringify(this.rootState), JSON.stringify(prevState)]);
-    this.state.count += 1;
-    return this.state;
+    const prevState = this.getCurrentRootState();
+    messages.push(['moduleA/add2', JSON.stringify(this.getRootState()), JSON.stringify(prevState)]);
+    const state = this.getState();
+    state.count += 1;
+    return state;
   }
 
   @reducer
   public simple(): State {
-    return this.state;
+    return this.getState();
   }
 
   @reducer

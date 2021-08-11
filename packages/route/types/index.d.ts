@@ -1,11 +1,9 @@
-import { IStore, ICoreRouter, MultipleDispatcher, IModuleHandlers } from '@elux/core';
+import { IStore, ICoreRouter, IModuleHandlers, CommonModule, MultipleDispatcher, Action } from '@elux/core';
 import { PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation } from './basic';
 import { History } from './history';
-import { LocationTransform } from './transform';
+import { LocationTransform, NativeLocationMap, PagenameMap } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
-export { routeMiddleware, createRouteModule, RouteActionTypes } from './module';
-export type { RouteModule } from './module';
 export type { PagenameMap, LocationTransform } from './transform';
 export type { RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation, NativeLocation } from './basic';
 export declare type NativeData = {
@@ -35,10 +33,6 @@ export declare abstract class BaseNativeRouter {
     execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined>;
 }
 export declare abstract class BaseRouter<P extends RootParams, N extends string> extends MultipleDispatcher<{
-    test: {
-        routeState: RouteState<P>;
-        root: boolean;
-    };
     change: {
         routeState: RouteState<P>;
         root: boolean;
@@ -50,24 +44,22 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     private curTask?;
     private taskList;
     private _nativeData;
-    private routeState;
     private internalUrl;
-    protected history: History;
-    initRouteState: RouteState<P> | Promise<RouteState<P>>;
+    routeState: RouteState<P>;
+    readonly name: string;
+    initialize: Promise<RouteState<P>>;
     readonly injectedModules: {
         [moduleName: string]: IModuleHandlers;
     };
+    readonly history: History;
+    latestState: Record<string, any>;
     constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
-    getRouteState(): RouteState<P>;
-    getPagename(): string;
-    getParams(): Partial<P>;
+    startup(store: IStore): void;
+    getCurrentStore(): IStore;
+    getStoreList(): IStore[];
     getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;
-    init(store: IStore): void;
-    getCurrentStore(): IStore;
-    getStoreList(): IStore[];
-    getCurKey(): string;
     getHistory(root?: boolean): History;
     getHistoryLength(root?: boolean): number;
     locationToNativeData(location: PartialLocation): {
@@ -98,16 +90,14 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     destroy(): void;
 }
 export interface IBaseRouter<P extends RootParams, N extends string> extends ICoreRouter {
-    initRouteState: RouteState<P> | Promise<RouteState<P>>;
+    routeState: RouteState<P>;
+    initialize: Promise<RouteState<P>>;
     getHistory(root?: boolean): History;
     nativeRouter: any;
-    addListener(name: 'test' | 'change', callback: (data: {
+    addListener(name: 'change', callback: (data: {
         routeState: RouteState<P>;
         root: boolean;
     }) => void): void;
-    getRouteState(): RouteState<P>;
-    getPagename(): string;
-    getParams(): Partial<P>;
     getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;
@@ -117,7 +107,6 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
         nativeLocation: NativeLocation;
     };
     getCurrentStore(): IStore;
-    getCurKey(): string;
     relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
     push(data: PayloadLocation<P, N> | string, root?: boolean): void;
     replace(data: PayloadLocation<P, N> | string, root?: boolean): void;
@@ -131,3 +120,25 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
     payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
     getHistoryLength(root?: boolean): number;
 }
+export declare const RouteActionTypes: {
+    TestRouteChange: string;
+    BeforeRouteChange: string;
+};
+export declare function beforeRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
+export declare function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
+export declare type RouteModule = CommonModule & {
+    locationTransform: LocationTransform;
+};
+export declare function createRouteModule<N extends string, G extends PagenameMap>(moduleName: N, pagenameMap: G, nativeLocationMap?: NativeLocationMap, notfoundPagename?: string, paramsKey?: string): {
+    locationTransform: LocationTransform;
+    moduleName: N;
+    model: (store: IStore<any>) => void | Promise<void>;
+    state: RouteState<any>;
+    params: {};
+    actions: {
+        destroy: () => {
+            type: string;
+        };
+    };
+    components: { [k in keyof G]: any; };
+};

@@ -23,14 +23,13 @@ export function setConfig(
 
 setReactComponentsConfig({setPageTitle: (title) => Taro.setNavigationBarTitle({title})});
 
-export const createMP: CreateMP = (moduleGetter, middlewares, appModuleName) => {
+export const createMP: CreateMP = (moduleGetter, middlewares) => {
   const tabPages = getTabPages();
   return createBaseMP(
     {},
     (locationTransform: LocationTransform) => createRouter(locationTransform, routeENV, tabPages),
     renderToMP,
     moduleGetter,
-    middlewares,
-    appModuleName
+    middlewares
   );
 };

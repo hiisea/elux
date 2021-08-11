@@ -1,42 +1,35 @@
 import {IStore, forkStore} from '@elux/core';
-import {Location, routeConfig, routeMeta, RouteState} from './basic';
+import {Location, routeConfig, routeMeta} from './basic';
 
 export class HistoryRecord {
-  pagename: string;
-  query: string;
-  sub: History;
+  public readonly pagename: string;
+  public readonly params: Record<string, any>;
+  public readonly sub: History;
   constructor(location: Location, public readonly key: string, public readonly history: History, public readonly store: IStore) {
     const {pagename, params} = location;
     this.pagename = pagename;
-    this.query = JSON.stringify(params);
-    this.sub = new History(history, this);
-  }
-  getParams(): any {
-    return JSON.parse(this.query);
+    this.params = params;
+    //this.query = JSON.stringify(params);
+    this.sub = new History(history);
+    this.sub.startup(this);
   }
 }
 export class History {
   private records: HistoryRecord[] = [];
 
-  constructor(private parent?: History, record?: HistoryRecord) {
-    if (record) {
-      this.records = [record];
-    }
-  }
-  init(record: HistoryRecord): void {
+  constructor(private parent: History | null) {}
+  startup(record: HistoryRecord): void {
     this.records = [record];
+  }
+  getRecords(): HistoryRecord[] {
+    return [...this.records];
   }
   getLength(): number {
     return this.records.length;
   }
-  getPages(): {pagename: string; key: string; page?: any}[] {
-    return this.records.map(({pagename, key}) => {
-      return {pagename, page: routeMeta.pages[pagename], key};
-    });
-  }
-  getStores(): IStore[] {
-    return this.records.map(({store}) => {
-      return store;
+  getPages(): {pagename: string; store: IStore; page?: any}[] {
+    return this.records.map(({pagename, store}) => {
+      return {pagename, store, page: routeMeta.pages[pagename]};
     });
   }
   findRecord(keyOrIndex: number | string): HistoryRecord | undefined {
@@ -57,21 +50,11 @@ export class History {
   getCurrentSubHistory(): History {
     return this.records[0].sub;
   }
-  push(location: Location, key: string, routeState: RouteState): void {
+  push(location: Location, key: string): void {
     const records = this.records;
     let store: IStore = records[0].store;
     if (!this.parent) {
-      const state = store.getState();
-      const cloneData = Object.keys(routeState.params).reduce((data, moduleName) => {
-        data[moduleName] = state[moduleName];
-        return data;
-      }, {});
-      const prevState = JSON.parse(JSON.stringify(cloneData));
-      Object.keys(prevState).forEach((moduleName) => {
-        delete prevState[moduleName].loading;
-      });
-      prevState.route = routeState;
-      store = forkStore(store, prevState);
+      store = forkStore(store);
     }
     const newRecord = new HistoryRecord(location, key, this, store);
     const maxHistory = routeConfig.maxHistory;

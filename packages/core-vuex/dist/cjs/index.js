@@ -15,7 +15,7 @@ var updateMutation = function updateMutation(state, _ref) {
 
 var UpdateMutationName = 'update';
 
-function storeCreator(storeOptions, router, id) {
+function storeCreator(storeOptions, id) {
   var _mutations;
 
   if (id === void 0) {
@@ -33,14 +33,12 @@ function storeCreator(storeOptions, router, id) {
     plugins: plugins,
     devtools: devtools
   });
-  var vuexStore = Object.assign(store, {
-    id: id,
-    router: router,
-    baseFork: {
-      creator: storeCreator,
-      options: storeOptions
-    }
-  });
+  var vuexStore = store;
+  vuexStore.id = id;
+  vuexStore.builder = {
+    storeCreator: storeCreator,
+    storeOptions: storeOptions
+  };
 
   vuexStore.getState = function () {
     return store.state;

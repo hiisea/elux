@@ -30,7 +30,7 @@ export declare class TaskCounter extends SingleDispatcher<LoadingState> {
     addItem(promise: Promise<any>, note?: string): Promise<any>;
     private completeItem;
 }
-export declare function isPlainObject(obj: any): Boolean;
+export declare function deepClone<T>(data: T): T;
 export declare function deepMerge(target: {
     [key: string]: any;
 }, ...args: any[]): any;

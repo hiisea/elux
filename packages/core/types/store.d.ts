@@ -6,9 +6,5 @@ export declare function setProcessedError(error: any, processed: boolean): {
     [key: string]: any;
 };
 export declare function getActionData(action: Action): any[];
-export declare function enhanceStore<S extends State = any>(baseStore: BStore, middlewares?: IStoreMiddleware[]): IStore<S>;
-export interface StoreBuilder<O extends Record<string, any>, B extends BStore = BStore> {
-    storeOptions: O;
-    storeCreator: (options: O, router: ICoreRouter, id?: number) => B;
-}
+export declare function enhanceStore<S extends State = any>(baseStore: BStore, router: ICoreRouter, middlewares?: IStoreMiddleware[]): IStore<S>;
 export {};

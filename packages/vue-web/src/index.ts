@@ -19,25 +19,23 @@ export function setConfig(conf: UserConfig & {LoadComponentOnError?: Component<{
   setUserConfig(conf);
 }
 
-export const createApp: CreateApp<App> = (moduleGetter, middlewares, appModuleName) => {
+export const createApp: CreateApp<App> = (moduleGetter, middlewares) => {
   const app = createVue(Router);
   return createBaseApp(
     app,
     (locationTransform: LocationTransform) => createRouter('Browser', locationTransform),
     renderToDocument,
     moduleGetter,
-    middlewares,
-    appModuleName
+    middlewares
   );
 };
-export const createSSR: CreateSSR<App> = (moduleGetter, url, middlewares, appModuleName) => {
+export const createSSR: CreateSSR<App> = (moduleGetter, url, middlewares) => {
   const app = createSSRApp(Router);
   return createBaseSSR(
     app,
     (locationTransform: LocationTransform) => createRouter(url, locationTransform),
     renderToString,
     moduleGetter,
-    middlewares,
-    appModuleName
+    middlewares
   );
 };

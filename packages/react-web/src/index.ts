@@ -10,7 +10,7 @@ export * from '@elux/app';
 
 setAppConfig({loadComponent, useRouter});
 
-export type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
+export type GetApp<A extends RootModuleFacade, R extends string = 'route'> = GetBaseAPP<A, LoadComponentOptions, R>;
 
 export function setConfig(
   conf: UserConfig & {enableMultiPage?: boolean; LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
@@ -20,23 +20,15 @@ export function setConfig(
   setBrowserRouteConfig(conf);
 }
 
-export const createApp: CreateApp = (moduleGetter, middlewares, appModuleName) => {
+export const createApp: CreateApp = (moduleGetter, middlewares) => {
   return createBaseApp(
     {},
     (locationTransform: LocationTransform) => createRouter('Browser', locationTransform),
     renderToDocument,
     moduleGetter,
-    middlewares,
-    appModuleName
+    middlewares
   );
 };
-export const createSSR: CreateSSR = (moduleGetter, url, middlewares, appModuleName) => {
-  return createBaseSSR(
-    {},
-    (locationTransform: LocationTransform) => createRouter(url, locationTransform),
-    renderToString,
-    moduleGetter,
-    middlewares,
-    appModuleName
-  );
+export const createSSR: CreateSSR = (moduleGetter, url, middlewares) => {
+  return createBaseSSR({}, (locationTransform: LocationTransform) => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares);
 };

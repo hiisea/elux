@@ -56,11 +56,11 @@ function setConfig(conf) {
   }
 });
 
-var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
+var createMP = function createMP(moduleGetter, middlewares) {
   var tabPages = (0, _taro2.getTabPages)();
   return (0, _app.createBaseMP)({}, function (locationTransform) {
     return (0, _routeMp.createRouter)(locationTransform, _taro2.routeENV, tabPages);
-  }, _stage.renderToMP, moduleGetter, middlewares, appModuleName);
+  }, _stage.renderToMP, moduleGetter, middlewares);
 };
 
 exports.createMP = createMP;

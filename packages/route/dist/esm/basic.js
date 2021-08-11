@@ -1,5 +1,6 @@
 import { buildConfigSetter } from '@elux/core';
 export var routeConfig = {
+  RouteModuleName: 'route',
   maxHistory: 10,
   notifyNativeRouter: {
     root: true,

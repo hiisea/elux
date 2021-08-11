@@ -5,7 +5,7 @@ export class HistoryRecord {
   constructor(location, key, history, store) {
     _defineProperty(this, "pagename", void 0);
 
-    _defineProperty(this, "query", void 0);
+    _defineProperty(this, "params", void 0);
 
     _defineProperty(this, "sub", void 0);
 
@@ -17,28 +17,25 @@ export class HistoryRecord {
       params
     } = location;
     this.pagename = pagename;
-    this.query = JSON.stringify(params);
-    this.sub = new History(history, this);
-  }
-
-  getParams() {
-    return JSON.parse(this.query);
+    this.params = params;
+    this.sub = new History(history);
+    this.sub.startup(this);
   }
 
 }
 export class History {
-  constructor(parent, record) {
+  constructor(parent) {
     _defineProperty(this, "records", []);
 
     this.parent = parent;
-
-    if (record) {
-      this.records = [record];
-    }
   }
 
-  init(record) {
+  startup(record) {
     this.records = [record];
+  }
+
+  getRecords() {
+    return [...this.records];
   }
 
   getLength() {
@@ -48,21 +45,13 @@ export class History {
   getPages() {
     return this.records.map(({
       pagename,
-      key
+      store
     }) => {
       return {
         pagename,
-        page: routeMeta.pages[pagename],
-        key
+        store,
+        page: routeMeta.pages[pagename]
       };
-    });
-  }
-
-  getStores() {
-    return this.records.map(({
-      store
-    }) => {
-      return store;
     });
   }
 
@@ -90,22 +79,12 @@ export class History {
     return this.records[0].sub;
   }
 
-  push(location, key, routeState) {
+  push(location, key) {
     const records = this.records;
     let store = records[0].store;
 
     if (!this.parent) {
-      const state = store.getState();
-      const cloneData = Object.keys(routeState.params).reduce((data, moduleName) => {
-        data[moduleName] = state[moduleName];
-        return data;
-      }, {});
-      const prevState = JSON.parse(JSON.stringify(cloneData));
-      Object.keys(prevState).forEach(moduleName => {
-        delete prevState[moduleName].loading;
-      });
-      prevState.route = routeState;
-      store = forkStore(store, prevState);
+      store = forkStore(store);
     }
 
     const newRecord = new HistoryRecord(location, key, this, store);

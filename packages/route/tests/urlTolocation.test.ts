@@ -11,7 +11,7 @@ describe('init', () => {
       searchData: undefined,
       hashData: undefined,
     });
-    expect(router.getRouteState()).toEqual({
+    expect(router.routeState).toEqual({
       pagename: '/admin/member',
       params: {
         admin: {},

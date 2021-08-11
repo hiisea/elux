@@ -96,7 +96,7 @@ const pagenameMap: PagenameMap = {
 
 export type Pagename = keyof typeof pagenameMap;
 
-const routeModule = createRouteModule(pagenameMap, {
+const routeModule = createRouteModule('route', pagenameMap, {
   in(nativeLocation) {
     let pathname = nativeLocation.pathname;
     if (pathname === '/' || pathname === '/admin2') {
@@ -109,20 +109,13 @@ const routeModule = createRouteModule(pagenameMap, {
     return {...nativeLocation, pathname: pathname.replace('/member', '/member2')};
   },
 });
-defineModuleGetter(
-  {
-    route: () => routeModule,
-    admin: () => exportModule('admin', ModuleHandlers, {}, {}),
-    member: () => exportModule('member', ModuleHandlers, defaultMemberRouteParams, {}),
-    article: () => exportModule('article', ModuleHandlers, defaultArticleRouteParams, {}),
-  },
-  'admin'
-);
-export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> {
-  destroy(): void {
-    return undefined;
-  }
-}
+defineModuleGetter({
+  route: () => routeModule,
+  admin: () => exportModule('admin', ModuleHandlers, {}, {}),
+  member: () => exportModule('member', ModuleHandlers, defaultMemberRouteParams, {}),
+  article: () => exportModule('article', ModuleHandlers, defaultArticleRouteParams, {}),
+});
+export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> {}
 
 export class NativeRouter extends BaseNativeRouter {
   protected push(getNativeData: () => NativeData, key: string): NativeData {
@@ -159,9 +152,10 @@ export class NativeRouter extends BaseNativeRouter {
 }
 export const nativeRouter: NativeRouter = new NativeRouter();
 
-export const router = new Router('/', nativeRouter, routeModule.locationTransform);
-router.init({
+const store = {
   dispatch() {
     return undefined;
   },
-} as any);
+} as any;
+export const router = new Router('/', nativeRouter, routeModule.locationTransform);
+router.startup(store);

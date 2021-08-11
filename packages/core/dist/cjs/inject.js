@@ -3,11 +3,11 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.getModuleGetter = getModuleGetter;
 exports.exportModule = exportModule;
+exports.modelHotReplacement = modelHotReplacement;
 exports.getModule = getModule;
 exports.getModuleList = getModuleList;
-exports.loadModel = _loadModel;
+exports.loadModel = loadModel;
 exports.getComponet = getComponet;
 exports.getComponentList = getComponentList;
 exports.loadComponet = loadComponet;
@@ -15,24 +15,18 @@ exports.getCachedModules = getCachedModules;
 exports.getRootModuleAPI = getRootModuleAPI;
 exports.exportComponent = exportComponent;
 exports.exportView = exportView;
-exports.modelHotReplacement = modelHotReplacement;
-exports.CoreModuleHandlers = exports.EmptyModuleHandlers = void 0;
-
-var _decorate2 = _interopRequireDefault(require("@babel/runtime/helpers/decorate"));
-
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
+exports.injectActions = injectActions;
+exports.defineModuleGetter = defineModuleGetter;
 
 var _sprite = require("./sprite");
 
 var _basic = require("./basic");
 
+var _actions = require("./actions");
+
 var _env = _interopRequireDefault(require("./env"));
 
-function getModuleGetter() {
-  return _basic.MetaData.moduleGetter;
-}
-
-function exportModule(moduleName, ModuleHandles, params, components) {
+function exportModule(moduleName, ModuleHandlers, params, components) {
   Object.keys(components).forEach(function (key) {
     var component = components[key];
 
@@ -43,21 +37,11 @@ function exportModule(moduleName, ModuleHandles, params, components) {
 
   var model = function model(store) {
     if (!store.injectedModules[moduleName]) {
-      var _setup = '';
-      var preModuleState = store.getState(moduleName);
-      var routeParams = store.router.getParams();
-
-      if (preModuleState && Object.keys(preModuleState).length > 0) {
-        _setup = store.id > 0 ? 'afterFork' : 'afterSSR';
-      }
-
-      var moduleHandles = new ModuleHandles(moduleName, store, preModuleState, _setup);
+      var _latestState = store.router.latestState;
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState);
       store.injectedModules[moduleName] = moduleHandles;
-      (0, _basic.injectActions)(moduleName, moduleHandles);
-
-      var _initState = (0, _sprite.deepMerge)(moduleHandles.initState, routeParams[moduleName]);
-
-      return store.dispatch((0, _basic.moduleInitAction)(moduleName, _initState, _setup));
+      injectActions(moduleName, moduleHandles);
+      return store.dispatch((0, _actions.moduleInitAction)(moduleName, moduleHandles.initState));
     }
 
     return undefined;
@@ -71,6 +55,45 @@ function exportModule(moduleName, ModuleHandles, params, components) {
     params: params,
     actions: undefined
   };
+}
+
+function modelHotReplacement(moduleName, ModuleHandlers) {
+  var model = function model(store) {
+    if (!store.injectedModules[moduleName]) {
+      var _latestState2 = store.router.latestState;
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      return store.dispatch((0, _actions.moduleInitAction)(moduleName, moduleHandles.initState));
+    }
+
+    return undefined;
+  };
+
+  var moduleCache = _basic.MetaData.moduleCaches[moduleName];
+
+  if (moduleCache && moduleCache['model']) {
+    moduleCache.model = model;
+  }
+
+  var store = _basic.MetaData.currentRouter.getCurrentStore();
+
+  if (_basic.MetaData.injectedModules[moduleName]) {
+    _basic.MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}), true);
+  }
+
+  var stores = _basic.MetaData.currentRouter.getStoreList();
+
+  stores.forEach(function (store) {
+    if (store.injectedModules[moduleName]) {
+      var ins = new ModuleHandlers(moduleName, store, {});
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+
+  _env.default.console.log("[HMR] @medux Updated model: " + moduleName);
 }
 
 function getModule(moduleName) {
@@ -119,7 +142,7 @@ function getModuleList(moduleNames) {
   }
 }
 
-function _loadModel(moduleName, store) {
+function loadModel(moduleName, store) {
   var moduleOrPromise = getModule(moduleName);
 
   if ((0, _sprite.isPromise)(moduleOrPromise)) {
@@ -218,130 +241,6 @@ function getCachedModules() {
   return _basic.MetaData.moduleCaches;
 }
 
-var EmptyModuleHandlers = function () {
-  function EmptyModuleHandlers(moduleName, store) {
-    (0, _defineProperty2.default)(this, "initState", {});
-    this.moduleName = moduleName;
-    this.store = store;
-  }
-
-  var _proto = EmptyModuleHandlers.prototype;
-
-  _proto.destroy = function destroy() {
-    return;
-  };
-
-  return EmptyModuleHandlers;
-}();
-
-exports.EmptyModuleHandlers = EmptyModuleHandlers;
-var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize) {
-  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, store, initState) {
-    _initialize(this);
-
-    this.moduleName = moduleName;
-    this.store = store;
-    this.initState = initState;
-  };
-
-  return {
-    F: CoreModuleHandlers,
-    d: [{
-      kind: "method",
-      key: "destroy",
-      value: function destroy() {
-        return;
-      }
-    }, {
-      kind: "get",
-      key: "actions",
-      value: function actions() {
-        return _basic.MetaData.facadeMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "method",
-      key: "getPrivateActions",
-      value: function getPrivateActions(actionsMap) {
-        return _basic.MetaData.facadeMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "get",
-      key: "state",
-      value: function state() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "get",
-      key: "rootState",
-      value: function rootState() {
-        return this.store.getState();
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentActionName",
-      value: function getCurrentActionName() {
-        return this.store.getCurrentActionName();
-      }
-    }, {
-      kind: "get",
-      key: "currentRootState",
-      value: function currentRootState() {
-        return this.store.getCurrentState();
-      }
-    }, {
-      kind: "get",
-      key: "currentState",
-      value: function currentState() {
-        return this.store.getCurrentState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "dispatch",
-      value: function dispatch(action) {
-        return this.store.dispatch(action);
-      }
-    }, {
-      kind: "method",
-      key: "loadModel",
-      value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
-      }
-    }, {
-      kind: "method",
-      decorators: [_basic.reducer],
-      key: "Init",
-      value: function Init(initState) {
-        return initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [_basic.reducer],
-      key: "RouteParams",
-      value: function RouteParams(payload) {
-        return (0, _basic.deepMergeState)(this.state, payload);
-      }
-    }, {
-      kind: "method",
-      decorators: [_basic.reducer],
-      key: "Update",
-      value: function Update(payload, key) {
-        return (0, _basic.mergeState)(this.state, payload);
-      }
-    }, {
-      kind: "method",
-      decorators: [_basic.reducer],
-      key: "Loading",
-      value: function Loading(payload) {
-        var loading = (0, _basic.mergeState)(this.state.loading, payload);
-        return (0, _basic.mergeState)(this.state, {
-          loading: loading
-        });
-      }
-    }]
-  };
-});
-exports.CoreModuleHandlers = CoreModuleHandlers;
-
 function getRootModuleAPI(data) {
   if (!_basic.MetaData.facadeMap) {
     if (data) {
@@ -430,49 +329,53 @@ function exportView(component) {
   return eluxComponent;
 }
 
-function modelHotReplacement(moduleName, ModuleHandles) {
-  var model = function model(store) {
-    if (!store.injectedModules[moduleName]) {
-      var _setup2 = '';
-      var preModuleState = store.getState(moduleName);
-      var routeParams = store.router.getParams();
-
-      if (preModuleState && Object.keys(preModuleState).length > 0) {
-        _setup2 = store.id > 0 ? 'afterFork' : 'afterSSR';
-      }
-
-      var moduleHandles = new ModuleHandles(moduleName, store, preModuleState, _setup2);
-      store.injectedModules[moduleName] = moduleHandles;
-      (0, _basic.injectActions)(moduleName, moduleHandles);
-
-      var _initState2 = (0, _sprite.deepMerge)(moduleHandles.initState, routeParams[moduleName]);
-
-      return store.dispatch((0, _basic.moduleInitAction)(moduleName, _initState2, _setup2));
-    }
-
-    return undefined;
-  };
-
-  var moduleCache = _basic.MetaData.moduleCaches[moduleName];
-
-  if (moduleCache && moduleCache['model']) {
-    moduleCache.model = model;
+function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
   }
 
-  if (_basic.MetaData.injectedModules[moduleName]) {
-    _basic.MetaData.injectedModules[moduleName] = false;
-    (0, _basic.injectActions)(moduleName, new ModuleHandles(moduleName, {}));
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    (0, _sprite.warn)("Action duplicate : " + actionName + ".");
   }
 
-  var stores = _basic.MetaData.currentRouter.getStoreList();
+  actionHandlerMap[actionName][listenerModule] = handler;
+}
 
-  stores.forEach(function (store) {
-    if (store.injectedModules[moduleName]) {
-      var ins = new ModuleHandles(moduleName, store);
-      ins.initState = store.injectedModules[moduleName].initState;
-      store.injectedModules[moduleName] = ins;
+function injectActions(moduleName, handlers, hmr) {
+  var injectedModules = _basic.MetaData.injectedModules;
+
+  if (injectedModules[moduleName]) {
+    return;
+  }
+
+  injectedModules[moduleName] = true;
+
+  for (var actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      (function () {
+        var handler = handlers[actionNames];
+
+        if (handler.__isReducer__ || handler.__isEffect__) {
+          actionNames.split(_basic.coreConfig.MSP).forEach(function (actionName) {
+            actionName = actionName.trim().replace(new RegExp("^this[" + _basic.coreConfig.NSP + "]"), "" + moduleName + _basic.coreConfig.NSP);
+            var arr = actionName.split(_basic.coreConfig.NSP);
+
+            if (arr[1]) {
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? _basic.MetaData.effectsMap : _basic.MetaData.reducersMap, hmr);
+            } else {
+              transformAction(moduleName + _basic.coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? _basic.MetaData.effectsMap : _basic.MetaData.reducersMap, hmr);
+            }
+          });
+        }
+      })();
     }
-  });
+  }
+}
 
-  _env.default.console.log("[HMR] @medux Updated model: " + moduleName);
+function defineModuleGetter(moduleGetter) {
+  _basic.MetaData.moduleGetter = moduleGetter;
+  _basic.MetaData.moduleExists = Object.keys(moduleGetter).reduce(function (data, moduleName) {
+    data[moduleName] = true;
+    return data;
+  }, {});
 }

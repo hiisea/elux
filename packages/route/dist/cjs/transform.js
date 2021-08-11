@@ -272,9 +272,9 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       }
 
       var params = (0, _core.deepMerge)({}, pathParams, eluxLocation.params);
-      var moduleGetter = (0, _core.getModuleGetter)();
+      var modules = (0, _core.moduleExists)();
       Object.keys(params).forEach(function (moduleName) {
-        if (!moduleGetter[moduleName]) {
+        if (!modules[moduleName]) {
           delete params[moduleName];
         }
       });

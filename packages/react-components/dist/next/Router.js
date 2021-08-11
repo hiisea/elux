@@ -26,15 +26,20 @@ export const Router = props => {
           env.setTimeout(() => {
             setClassname('elux-app ' + Date.now());
           }, 1000);
+        } else if (routeState.action === 'RELAUNCH') {
+          setClassname('elux-app ' + Date.now());
         }
       }
     });
   }, [router]);
   const nodes = pages.map(item => {
+    const store = item.store;
     const page = item.page ? React.createElement(item.page, {
-      key: item.key
+      key: store.id,
+      store: store
     }) : React.createElement(Page, {
-      key: item.key
+      key: store.id,
+      store: store
     }, props.children);
     return page;
   });
@@ -43,14 +48,15 @@ export const Router = props => {
     className: classname
   }, nodes);
 };
-export const Page = memo(function (props) {
-  const eluxContext = useContext(EluxContextComponent);
-  const store = eluxContext.router.getCurrentStore();
+export const Page = memo(function ({
+  store,
+  children
+}) {
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
   }, React.createElement("div", {
     className: "elux-page"
-  }, props.children));
+  }, children));
 });
 export function useRouter() {
   const eluxContext = useContext(EluxContextComponent);

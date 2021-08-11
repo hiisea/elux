@@ -148,7 +148,11 @@ export var TaskCounter = function (_SingleDispatcher) {
 
   return TaskCounter;
 }(SingleDispatcher);
-export function isPlainObject(obj) {
+export function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function isObject(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -157,8 +161,8 @@ function __deepMerge(optimize, target, inject) {
     var src = target[key];
     var val = inject[key];
 
-    if (isPlainObject(val)) {
-      if (isPlainObject(src)) {
+    if (isObject(val)) {
+      if (isObject(src)) {
         target[key] = __deepMerge(optimize, src, val);
       } else {
         target[key] = optimize ? val : __deepMerge(optimize, {}, val);
@@ -175,19 +179,15 @@ export function deepMerge(target) {
     args[_key - 1] = arguments[_key];
   }
 
-  if (args.length === 0) {
-    return target;
-  }
-
   args = args.filter(function (item) {
-    return isPlainObject(item) && Object.keys(item).length;
+    return isObject(item) && Object.keys(item).length;
   });
 
   if (args.length === 0) {
     return target;
   }
 
-  if (!isPlainObject(target)) {
+  if (!isObject(target)) {
     target = {};
   }
 
@@ -205,8 +205,8 @@ export function deepMerge(target) {
       var src = target[key];
       var val = inject[key];
 
-      if (isPlainObject(val)) {
-        if (isPlainObject(src)) {
+      if (isObject(val)) {
+        if (isObject(src)) {
           target[key] = __deepMerge(lastArg, src, val);
         } else {
           target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);

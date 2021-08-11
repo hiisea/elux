@@ -22,9 +22,9 @@ setReactComponentsConfig({
     });
   }
 });
-export var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
+export var createMP = function createMP(moduleGetter, middlewares) {
   var tabPages = getTabPages();
   return createBaseMP({}, function (locationTransform) {
     return createRouter(locationTransform, routeENV, tabPages);
-  }, renderToMP, moduleGetter, middlewares, appModuleName);
+  }, renderToMP, moduleGetter, middlewares);
 };

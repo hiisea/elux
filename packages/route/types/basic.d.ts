@@ -1,4 +1,5 @@
 export interface RouteConfig {
+    RouteModuleName: string;
     maxHistory: number;
     notifyNativeRouter: {
         root: boolean;
@@ -14,8 +15,7 @@ export declare const routeMeta: {
     pages: Record<string, any>;
 };
 export declare type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
-export declare type ModuleParams = Record<string, any>;
-export declare type RootParams = Record<string, ModuleParams>;
+export declare type RootParams = Record<string, any>;
 export interface Location<P extends RootParams = {}> {
     pagename: string;
     params: Partial<P>;
@@ -25,7 +25,7 @@ export interface PayloadLocation<P extends RootParams = {}, N extends string = s
     params?: DeepPartial<P>;
     extendParams?: DeepPartial<P> | 'current';
 }
-export declare type RouteState<P extends RootParams = {}> = Location<P> & {
+export declare type RouteState<P extends RootParams = any> = Location<P> & {
     action: HistoryAction;
     key: string;
 };

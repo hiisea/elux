@@ -1,16 +1,19 @@
-import env from './env';
-import {LoadingState, TaskCounter, deepMerge, warn} from './sprite';
+import {TaskCounter, deepMerge} from './sprite';
 
 export const coreConfig: {
   NSP: string;
   MSP: string;
   MutableData: boolean;
   DepthTimeOnLoading: number;
+  AppModuleName: string;
+  RouteModuleName: string;
 } = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
+  RouteModuleName: 'route',
+  AppModuleName: 'stage',
 };
 export function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void {
   return (config) =>
@@ -56,9 +59,9 @@ export type ActionCreatorList = Record<string, ActionCreator>;
 
 export type ActionCreatorMap = Record<string, ActionCreatorList>;
 
-export interface IModuleHandlers {
+export interface IModuleHandlers<S = any> {
   readonly moduleName: string;
-  readonly initState: any;
+  readonly initState: S;
   readonly store: IStore;
   destroy(): void;
 }
@@ -72,38 +75,51 @@ export interface GetState<S extends State = {}> {
   (moduleName: string): Record<string, any> | undefined;
 }
 
-export interface BStoreOptions {
-  initState?: any;
+export interface StoreOptions {
+  initState?: Record<string, any>;
+}
+export interface StoreBuilder<O extends StoreOptions = StoreOptions, B extends BStore = BStore> {
+  storeOptions: O;
+  storeCreator: (options: O, id?: number) => B;
 }
 
 export interface BStore<S extends State = any> {
-  readonly id: number;
-  readonly router: ICoreRouter;
-  baseFork: {creator: (options: BStoreOptions, router: ICoreRouter, id?: number) => BStore; options: BStoreOptions};
+  id: number;
+  builder: StoreBuilder;
   dispatch: Dispatch;
   getState: GetState<S>;
   update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
-  replaceState(state: S): void;
   destroy(): void;
 }
 
-export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
+export type IStoreMiddleware = (api: {
+  store: IStore;
+  getState: GetState;
+  dispatch: Dispatch;
+}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 
 export interface IStore<S extends State = any> extends BStore<S> {
+  router: ICoreRouter;
   getCurrentActionName: () => string;
   getCurrentState: GetState<S>;
   injectedModules: {[moduleName: string]: IModuleHandlers};
   loadingGroups: Record<string, TaskCounter>;
-  fork: {
+  options: {
     middlewares?: IStoreMiddleware[];
   };
 }
 
+export interface ICoreRouteState {
+  action: string;
+  params: any;
+}
 export interface ICoreRouter {
-  init(store: IStore): void;
+  routeState: ICoreRouteState;
+  startup(store: IStore): void;
   getCurrentStore(): IStore;
   getStoreList(): IStore[];
-  getParams(): any;
+  readonly name: string;
+  latestState: Record<string, any>;
 }
 
 export interface CommonModule<ModuleName extends string = string> {
@@ -119,48 +135,6 @@ export type ModuleGetter = Record<string, () => CommonModule | Promise<{default:
 
 export type FacadeMap = Record<string, {name: string; actions: ActionCreatorList; actionNames: Record<string, string>}>;
 
-export type ModuleSetup = 'afterSSR' | 'afterFork' | '';
-
-/**
- * 框架内置的几个ActionTypes
- */
-export const ActionTypes = {
-  /**
-   * 为模块注入加载状态时使用ActionType：{moduleName}.{MLoading}
-   */
-  MLoading: 'Loading',
-  /**
-   * 模块初始化时使用ActionType：{moduleName}.{MInit}
-   */
-  MInit: 'Init',
-  /**
-   * 模块初始化时使用ActionType：{moduleName}.{MReInit}
-   */
-  MReInit: 'ReInit',
-  /**
-   * 全局捕获到错误时使用ActionType：{Error}
-   */
-  Error: `Elux${coreConfig.NSP}Error`,
-  Replace: `Elux${coreConfig.NSP}Replace`,
-};
-export function errorAction(error: Object): Action {
-  return {
-    type: ActionTypes.Error,
-    payload: [error],
-  };
-}
-export function moduleInitAction(moduleName: string, initState: any, setup: ModuleSetup): Action {
-  return {
-    type: `${moduleName}${coreConfig.NSP}${ActionTypes.MInit}`,
-    payload: [initState, setup],
-  };
-}
-export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}): Action {
-  return {
-    type: `${moduleName}${coreConfig.NSP}${ActionTypes.MLoading}`,
-    payload: [loadingState],
-  };
-}
 export interface EluxComponent {
   __elux_component__: 'view' | 'component';
 }
@@ -169,9 +143,8 @@ export function isEluxComponent(data: any): data is EluxComponent {
 }
 export const MetaData: {
   facadeMap: FacadeMap;
-  appModuleName: string;
-  routeModuleName: string;
   moduleGetter: ModuleGetter;
+  moduleExists: Record<string, boolean>;
   injectedModules: Record<string, boolean>;
   reducersMap: ActionHandlerMap;
   effectsMap: ActionHandlerMap;
@@ -179,8 +152,6 @@ export const MetaData: {
   componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
   currentRouter: ICoreRouter;
 } = {
-  appModuleName: '',
-  routeModuleName: '',
   injectedModules: {},
   reducersMap: {},
   effectsMap: {},
@@ -188,147 +159,14 @@ export const MetaData: {
   componentCaches: {},
   facadeMap: null as any,
   moduleGetter: null as any,
+  moduleExists: null as any,
   currentRouter: null as any,
 };
 
-function transformAction(actionName: string, handler: ActionHandler, listenerModule: string, actionHandlerMap: ActionHandlerMap) {
-  if (!actionHandlerMap[actionName]) {
-    actionHandlerMap[actionName] = {};
-  }
-  if (actionHandlerMap[actionName][listenerModule]) {
-    warn(`Action duplicate or conflict : ${actionName}.`);
-  }
-  actionHandlerMap[actionName][listenerModule] = handler;
+export function moduleExists(): Record<string, boolean> {
+  return MetaData.moduleExists;
 }
 
-export function injectActions(moduleName: string, handlers: ActionHandlerList): void {
-  const injectedModules = MetaData.injectedModules;
-  if (injectedModules[moduleName]) {
-    return;
-  }
-  injectedModules[moduleName] = true;
-  // eslint-disable-next-line no-restricted-syntax
-  for (const actionNames in handlers) {
-    if (typeof handlers[actionNames] === 'function') {
-      const handler = handlers[actionNames];
-      if (handler.__isReducer__ || handler.__isEffect__) {
-        actionNames.split(coreConfig.MSP).forEach((actionName) => {
-          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
-          const arr = actionName.split(coreConfig.NSP);
-          if (arr[1]) {
-            // handler.__isHandler__ = true;
-            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
-          } else {
-            // handler.__isHandler__ = false;
-            transformAction(
-              moduleName + coreConfig.NSP + actionName,
-              handler,
-              moduleName,
-              handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap
-            );
-            // addModuleActionCreatorList(moduleName, actionName);
-          }
-        });
-      }
-    }
-  }
-  // return MetaData.facadeMap[moduleName].actions;
-}
-
-/**
- * 手动设置Loading状态，同一个key名的loading状态将自动合并
- * - 参见LoadingState
- * @param item 一个Promise加载项
- * @param moduleName moduleName+groupName合起来作为该加载项的key
- * @param groupName moduleName+groupName合起来作为该加载项的key
- */
-export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T {
-  const key = moduleName + coreConfig.NSP + groupName;
-  const loadings = store.loadingGroups;
-  if (!loadings[key]) {
-    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
-    loadings[key].addListener((loadingState) => {
-      const action = moduleLoadingAction(moduleName, {[groupName]: loadingState});
-      store.dispatch(action);
-    });
-  }
-  loadings[key].addItem(item);
-  return item;
-}
-
-export function reducer(target: any, key: string, descriptor: PropertyDescriptor): any {
-  if (!key && !descriptor) {
-    key = target.key;
-    descriptor = target.descriptor;
-  }
-  const fun = descriptor.value as ActionHandler;
-  // fun.__actionName__ = key;
-  fun.__isReducer__ = true;
-  descriptor.enumerable = true;
-  return target.descriptor === descriptor ? target : descriptor;
-}
-/**
- * 一个类方法的装饰器，用来指示该方法为一个effectHandler
- * - effectHandler必须通过dispatch Action来触发
- * @param loadingKey 注入加载状态到state，如果为null表示不注入加载状态，默认为'app.loading.global'
- */
-export function effect(loadingKey: string | null = 'app.loading.global'): Function {
-  let loadingForModuleName: string | undefined;
-  let loadingForGroupName: string | undefined;
-  if (loadingKey !== null) {
-    [loadingForModuleName, , loadingForGroupName] = loadingKey.split('.');
-  }
-  return (target: any, key: string, descriptor: PropertyDescriptor) => {
-    if (!key && !descriptor) {
-      key = target.key;
-      descriptor = target.descriptor;
-    }
-    const fun = descriptor.value as ActionHandler;
-    // fun.__actionName__ = key;
-    fun.__isEffect__ = true;
-    descriptor.enumerable = true;
-    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
-      // eslint-disable-next-line no-inner-declarations
-      function injectLoading(this: IModuleHandlers, curAction: Action, promiseResult: Promise<any>) {
-        if (loadingForModuleName === 'app') {
-          loadingForModuleName = MetaData.appModuleName;
-        } else if (loadingForModuleName === 'this') {
-          loadingForModuleName = this.moduleName;
-        }
-        setLoading(this.store, promiseResult, loadingForModuleName!, loadingForGroupName!);
-      }
-      if (!fun.__decorators__) {
-        fun.__decorators__ = [];
-      }
-      fun.__decorators__.push([injectLoading, null]);
-    }
-    return target.descriptor === descriptor ? target : descriptor;
-  };
-}
-export const mutation = reducer;
-export const action = effect;
-/**
- * 一个类方法的装饰器，用来向effect中注入before和after的钩子
- * - 注意不管该handler是否执行成功，前后钩子都会强制执行
- * @param before actionHandler执行前的钩子
- * @param after actionHandler执行后的钩子
- */
-export function logger(
-  before: (action: Action, promiseResult: Promise<any>) => void,
-  after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)
-) {
-  return (target: any, key: string, descriptor: PropertyDescriptor): void => {
-    if (!key && !descriptor) {
-      key = target.key;
-      descriptor = target.descriptor;
-    }
-    const fun: ActionHandler = descriptor.value;
-    if (!fun.__decorators__) {
-      fun.__decorators__ = [];
-    }
-    fun.__decorators__.push([before, after]);
-  };
-}
 export function deepMergeState(target: any = {}, ...args: any[]): any {
   if (coreConfig.MutableData) {
     return deepMerge(target, ...args);
@@ -342,10 +180,3 @@ export function mergeState(target: any = {}, ...args: any[]): any {
   }
   return Object.assign({}, target, ...args);
 }
-
-// export function snapshotState(target: any) {
-//   if (coreConfig.MutableData) {
-//     return JSON.parse(JSON.stringify(target));
-//   }
-//   return target;
-// }

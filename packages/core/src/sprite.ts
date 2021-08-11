@@ -119,7 +119,11 @@ export class TaskCounter extends SingleDispatcher<LoadingState> {
   }
 }
 
-export function isPlainObject(obj: any): Boolean {
+export function deepClone<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function isObject(obj: any): Boolean {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -127,8 +131,8 @@ function __deepMerge(optimize: boolean | null, target: {[key: string]: any}, inj
   Object.keys(inject).forEach(function (key) {
     const src = target[key];
     const val = inject[key];
-    if (isPlainObject(val)) {
-      if (isPlainObject(src)) {
+    if (isObject(val)) {
+      if (isObject(src)) {
         target[key] = __deepMerge(optimize, src, val);
       } else {
         target[key] = optimize ? val : __deepMerge(optimize, {}, val);
@@ -141,14 +145,11 @@ function __deepMerge(optimize: boolean | null, target: {[key: string]: any}, inj
 }
 
 export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
+  args = args.filter((item) => isObject(item) && Object.keys(item).length);
   if (args.length === 0) {
     return target;
   }
-  args = args.filter((item) => isPlainObject(item) && Object.keys(item).length);
-  if (args.length === 0) {
-    return target;
-  }
-  if (!isPlainObject(target)) {
+  if (!isObject(target)) {
     target = {};
   }
   args.forEach(function (inject, index) {
@@ -162,8 +163,8 @@ export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
     Object.keys(inject).forEach(function (key) {
       const src = target[key];
       const val = inject[key];
-      if (isPlainObject(val)) {
-        if (isPlainObject(src)) {
+      if (isObject(val)) {
+        if (isObject(src)) {
           target[key] = __deepMerge(lastArg, src, val);
         } else {
           target[key] = lastArg || (last2Arg && !last2Arg[key]) ? val : __deepMerge(lastArg, {}, val);

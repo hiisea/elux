@@ -1,5 +1,5 @@
-import { Action, EluxComponent, IModuleHandlers, CommonModule, ModuleGetter, IStore, ModuleSetup } from './basic';
-declare type Handler<F> = F extends (...args: infer P) => any ? (...args: P) => {
+import { EluxComponent, IModuleHandlers, CommonModule, ModuleGetter, IStore, ActionHandlerList } from './basic';
+export declare type Handler<F> = F extends (...args: infer P) => any ? (...args: P) => {
     type: string;
 } : never;
 declare type Actions<T> = Pick<{
@@ -7,16 +7,10 @@ declare type Actions<T> = Pick<{
 }, {
     [K in keyof T]: T[K] extends Function ? K : never;
 }[keyof T]>;
-declare type HandlerThis<T> = T extends (...args: infer P) => any ? (...args: P) => {
-    type: string;
-} : undefined;
-declare type ActionsThis<T> = {
-    [K in keyof T]: HandlerThis<T[K]>;
-};
-export declare function getModuleGetter(): ModuleGetter;
-export declare function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>>(moduleName: N, ModuleHandles: {
-    new (moduleName: string, store: IStore, preState: any, setup: ModuleSetup): H;
-}, params: P, components: CS): {
+export interface IModuleHandlersClass<H = IModuleHandlers> {
+    new (moduleName: string, store: IStore, latestState: any): H;
+}
+export declare function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>>(moduleName: N, ModuleHandlers: IModuleHandlersClass<H>, params: P, components: CS): {
     moduleName: N;
     model: (store: IStore) => void | Promise<void>;
     state: H['initState'];
@@ -24,6 +18,7 @@ export declare function exportModule<N extends string, H extends IModuleHandlers
     actions: Actions<H>;
     components: CS;
 };
+export declare function modelHotReplacement(moduleName: string, ModuleHandlers: IModuleHandlersClass): void;
 export declare function getModule(moduleName: string): Promise<CommonModule> | CommonModule;
 export declare function getModuleList(moduleNames: string[]): CommonModule[] | Promise<CommonModule[]>;
 export declare function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore): void | Promise<void>;
@@ -31,35 +26,6 @@ export declare function getComponet(moduleName: string, componentName: string): 
 export declare function getComponentList(keys: string[]): Promise<EluxComponent[]>;
 export declare function loadComponet(moduleName: string, componentName: string, store: IStore, deps: Record<string, boolean>): EluxComponent | null | Promise<EluxComponent | null>;
 export declare function getCachedModules(): Record<string, undefined | CommonModule | Promise<CommonModule>>;
-export declare class EmptyModuleHandlers implements IModuleHandlers {
-    readonly moduleName: string;
-    readonly store: IStore;
-    initState: any;
-    constructor(moduleName: string, store: IStore);
-    destroy(): void;
-}
-export declare class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
-    readonly moduleName: string;
-    store: IStore;
-    readonly initState: S;
-    constructor(moduleName: string, store: IStore, initState: S);
-    destroy(): void;
-    protected get actions(): ActionsThis<this>;
-    protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {
-        [K in keyof T]: Handler<T[K]>;
-    };
-    protected get state(): S;
-    protected get rootState(): R;
-    protected getCurrentActionName(): string;
-    protected get currentRootState(): R;
-    protected get currentState(): S;
-    protected dispatch(action: Action): void | Promise<void>;
-    protected loadModel(moduleName: string): void | Promise<void>;
-    Init(initState: S): S;
-    RouteParams(payload: Partial<S>): S;
-    Update(payload: Partial<S>, key: string): S;
-    Loading(payload: Record<string, string>): S;
-}
 declare type GetPromiseComponent<T> = T extends () => Promise<{
     default: infer R;
 }> ? R : T;
@@ -101,7 +67,6 @@ export declare function getRootModuleAPI<T extends RootModuleFacade = any>(data?
 export declare function exportComponent<T>(component: T): T & EluxComponent;
 export declare function exportView<T>(component: T): T & EluxComponent;
 export declare type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(moduleName: M, componentName: V, options?: O) => A[M]['components'][V];
-export declare function modelHotReplacement(moduleName: string, ModuleHandles: {
-    new (moduleName: string, store: IStore, preState?: any, setup?: ModuleSetup): CoreModuleHandlers;
-}): void;
+export declare function injectActions(moduleName: string, handlers: ActionHandlerList, hmr?: boolean): void;
+export declare function defineModuleGetter(moduleGetter: ModuleGetter): void;
 export {};

@@ -11,72 +11,56 @@ var _core = require("@elux/core");
 
 var _basic = require("./basic");
 
-var HistoryRecord = function () {
-  function HistoryRecord(location, key, history, store) {
-    (0, _defineProperty2.default)(this, "pagename", void 0);
-    (0, _defineProperty2.default)(this, "query", void 0);
-    (0, _defineProperty2.default)(this, "sub", void 0);
-    this.key = key;
-    this.history = history;
-    this.store = store;
-    var pagename = location.pagename,
-        params = location.params;
-    this.pagename = pagename;
-    this.query = JSON.stringify(params);
-    this.sub = new History(history, this);
-  }
-
-  var _proto = HistoryRecord.prototype;
-
-  _proto.getParams = function getParams() {
-    return JSON.parse(this.query);
-  };
-
-  return HistoryRecord;
-}();
+var HistoryRecord = function HistoryRecord(location, key, history, store) {
+  (0, _defineProperty2.default)(this, "pagename", void 0);
+  (0, _defineProperty2.default)(this, "params", void 0);
+  (0, _defineProperty2.default)(this, "sub", void 0);
+  this.key = key;
+  this.history = history;
+  this.store = store;
+  var pagename = location.pagename,
+      params = location.params;
+  this.pagename = pagename;
+  this.params = params;
+  this.sub = new History(history);
+  this.sub.startup(this);
+};
 
 exports.HistoryRecord = HistoryRecord;
 
 var History = function () {
-  function History(parent, record) {
+  function History(parent) {
     (0, _defineProperty2.default)(this, "records", []);
     this.parent = parent;
-
-    if (record) {
-      this.records = [record];
-    }
   }
 
-  var _proto2 = History.prototype;
+  var _proto = History.prototype;
 
-  _proto2.init = function init(record) {
+  _proto.startup = function startup(record) {
     this.records = [record];
   };
 
-  _proto2.getLength = function getLength() {
+  _proto.getRecords = function getRecords() {
+    return [].concat(this.records);
+  };
+
+  _proto.getLength = function getLength() {
     return this.records.length;
   };
 
-  _proto2.getPages = function getPages() {
+  _proto.getPages = function getPages() {
     return this.records.map(function (_ref) {
       var pagename = _ref.pagename,
-          key = _ref.key;
+          store = _ref.store;
       return {
         pagename: pagename,
-        page: _basic.routeMeta.pages[pagename],
-        key: key
+        store: store,
+        page: _basic.routeMeta.pages[pagename]
       };
     });
   };
 
-  _proto2.getStores = function getStores() {
-    return this.records.map(function (_ref2) {
-      var store = _ref2.store;
-      return store;
-    });
-  };
-
-  _proto2.findRecord = function findRecord(keyOrIndex) {
+  _proto.findRecord = function findRecord(keyOrIndex) {
     if (typeof keyOrIndex === 'number') {
       if (keyOrIndex === -1) {
         keyOrIndex = this.records.length - 1;
@@ -90,36 +74,26 @@ var History = function () {
     });
   };
 
-  _proto2.findIndex = function findIndex(key) {
+  _proto.findIndex = function findIndex(key) {
     return this.records.findIndex(function (item) {
       return item.key === key;
     });
   };
 
-  _proto2.getCurrentRecord = function getCurrentRecord() {
+  _proto.getCurrentRecord = function getCurrentRecord() {
     return this.records[0].sub.records[0];
   };
 
-  _proto2.getCurrentSubHistory = function getCurrentSubHistory() {
+  _proto.getCurrentSubHistory = function getCurrentSubHistory() {
     return this.records[0].sub;
   };
 
-  _proto2.push = function push(location, key, routeState) {
+  _proto.push = function push(location, key) {
     var records = this.records;
     var store = records[0].store;
 
     if (!this.parent) {
-      var state = store.getState();
-      var cloneData = Object.keys(routeState.params).reduce(function (data, moduleName) {
-        data[moduleName] = state[moduleName];
-        return data;
-      }, {});
-      var prevState = JSON.parse(JSON.stringify(cloneData));
-      Object.keys(prevState).forEach(function (moduleName) {
-        delete prevState[moduleName].loading;
-      });
-      prevState.route = routeState;
-      store = (0, _core.forkStore)(store, prevState);
+      store = (0, _core.forkStore)(store);
     }
 
     var newRecord = new HistoryRecord(location, key, this, store);
@@ -134,21 +108,21 @@ var History = function () {
     }
   };
 
-  _proto2.replace = function replace(location, key) {
+  _proto.replace = function replace(location, key) {
     var records = this.records;
     var store = records[0].store;
     var newRecord = new HistoryRecord(location, key, this, store);
     records[0] = newRecord;
   };
 
-  _proto2.relaunch = function relaunch(location, key) {
+  _proto.relaunch = function relaunch(location, key) {
     var records = this.records;
     var store = records[0].store;
     var newRecord = new HistoryRecord(location, key, this, store);
     this.records = [newRecord];
   };
 
-  _proto2.preBack = function preBack(delta, overflowRedirect) {
+  _proto.preBack = function preBack(delta, overflowRedirect) {
     if (overflowRedirect === void 0) {
       overflowRedirect = false;
     }
@@ -166,7 +140,7 @@ var History = function () {
     return records[0];
   };
 
-  _proto2.back = function back(delta, overflowRedirect) {
+  _proto.back = function back(delta, overflowRedirect) {
     if (overflowRedirect === void 0) {
       overflowRedirect = false;
     }

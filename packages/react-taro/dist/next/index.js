@@ -20,7 +20,7 @@ setReactComponentsConfig({
     title
   })
 });
-export const createMP = (moduleGetter, middlewares, appModuleName) => {
+export const createMP = (moduleGetter, middlewares) => {
   const tabPages = getTabPages();
-  return createBaseMP({}, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares, appModuleName);
+  return createBaseMP({}, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares);
 };

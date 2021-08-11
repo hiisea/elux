@@ -6,6 +6,7 @@ exports.routeMeta = exports.setRouteConfig = exports.routeConfig = void 0;
 var _core = require("@elux/core");
 
 var routeConfig = {
+  RouteModuleName: 'route',
   maxHistory: 10,
   notifyNativeRouter: {
     root: true,

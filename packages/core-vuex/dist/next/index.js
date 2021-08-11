@@ -8,7 +8,7 @@ const updateMutation = (state, {
 };
 
 const UpdateMutationName = 'update';
-export function storeCreator(storeOptions, router, id = 0) {
+export function storeCreator(storeOptions, id = 0) {
   const {
     initState = {},
     plugins,
@@ -22,14 +22,12 @@ export function storeCreator(storeOptions, router, id = 0) {
     plugins,
     devtools
   });
-  const vuexStore = Object.assign(store, {
-    id,
-    router,
-    baseFork: {
-      creator: storeCreator,
-      options: storeOptions
-    }
-  });
+  const vuexStore = store;
+  vuexStore.id = id;
+  vuexStore.builder = {
+    storeCreator,
+    storeOptions
+  };
 
   vuexStore.getState = () => {
     return store.state;

@@ -3,7 +3,10 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.BaseRouter = exports.BaseNativeRouter = exports.RouteActionTypes = exports.createRouteModule = exports.routeMiddleware = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.createLocationTransform = exports.routeMeta = void 0;
+exports.beforeRouteChangeAction = beforeRouteChangeAction;
+exports.testRouteChangeAction = testRouteChangeAction;
+exports.createRouteModule = createRouteModule;
+exports.RouteActionTypes = exports.BaseRouter = exports.BaseNativeRouter = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.routeMeta = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -27,12 +30,6 @@ exports.routeMeta = _basic.routeMeta;
 
 var _history = require("./history");
 
-var _module = require("./module");
-
-exports.routeMiddleware = _module.routeMiddleware;
-exports.createRouteModule = _module.createRouteModule;
-exports.RouteActionTypes = _module.RouteActionTypes;
-
 var _transform = require("./transform");
 
 exports.createLocationTransform = _transform.createLocationTransform;
@@ -55,7 +52,7 @@ var BaseNativeRouter = function () {
       return false;
     }
 
-    return key !== this.router.getCurKey();
+    return key !== this.router.routeState.key;
   };
 
   _proto.setRouter = function setRouter(router) {
@@ -111,18 +108,21 @@ var BaseRouter = function (_MultipleDispatcher) {
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "curTask", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "taskList", []);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_nativeData", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "routeState", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "internalUrl", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "history", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "initRouteState", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "routeState", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "name", _basic.routeConfig.RouteModuleName);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "initialize", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "injectedModules", {});
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "history", new _history.History(null));
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "latestState", {});
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
     nativeRouter.setRouter((0, _assertThisInitialized2.default)(_this2));
-    _this2.history = new _history.History();
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
+      var _this2$latestState;
+
       var key = _this2._createKey();
 
       var routeState = (0, _extends2.default)({}, location, {
@@ -141,13 +141,14 @@ var BaseRouter = function (_MultipleDispatcher) {
         });
       }
 
+      _this2.latestState = (_this2$latestState = {}, _this2$latestState[_this2.name] = routeState, _this2$latestState);
       return routeState;
     };
 
     if ((0, _core.isPromise)(locationOrPromise)) {
-      _this2.initRouteState = locationOrPromise.then(callback);
+      _this2.initialize = locationOrPromise.then(callback);
     } else {
-      _this2.initRouteState = callback(locationOrPromise);
+      _this2.initialize = Promise.resolve(callback(locationOrPromise));
     }
 
     return _this2;
@@ -155,16 +156,20 @@ var BaseRouter = function (_MultipleDispatcher) {
 
   var _proto2 = BaseRouter.prototype;
 
-  _proto2.getRouteState = function getRouteState() {
-    return this.routeState;
+  _proto2.startup = function startup(store) {
+    var historyRecord = new _history.HistoryRecord(this.routeState, this.routeState.key, this.history, store);
+    this.history.startup(historyRecord);
   };
 
-  _proto2.getPagename = function getPagename() {
-    return this.routeState.pagename;
+  _proto2.getCurrentStore = function getCurrentStore() {
+    return this.history.getCurrentRecord().store;
   };
 
-  _proto2.getParams = function getParams() {
-    return this.routeState.params;
+  _proto2.getStoreList = function getStoreList() {
+    return this.history.getRecords().map(function (_ref) {
+      var store = _ref.store;
+      return store;
+    });
   };
 
   _proto2.getInternalUrl = function getInternalUrl() {
@@ -185,23 +190,6 @@ var BaseRouter = function (_MultipleDispatcher) {
     }
 
     return this._nativeData.nativeUrl;
-  };
-
-  _proto2.init = function init(store) {
-    var historyRecord = new _history.HistoryRecord(this.routeState, this.routeState.key, this.history, store);
-    this.history.init(historyRecord);
-  };
-
-  _proto2.getCurrentStore = function getCurrentStore() {
-    return this.history.getCurrentRecord().store;
-  };
-
-  _proto2.getStoreList = function getStoreList() {
-    return this.history.getStores();
-  };
-
-  _proto2.getCurKey = function getCurKey() {
-    return this.routeState.key;
   };
 
   _proto2.getHistory = function getHistory(root) {
@@ -291,7 +279,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     var _relaunch2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee(data, root, nativeCaller) {
       var _this3 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regenerator.default.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -317,11 +305,11 @@ var BaseRouter = function (_MultipleDispatcher) {
                 key: key
               });
               _context.next = 10;
-              return this.getCurrentStore().dispatch((0, _module.testRouteChangeAction)(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context.next = 12;
-              return this.getCurrentStore().dispatch((0, _module.beforeRouteChangeAction)(routeState));
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -353,13 +341,14 @@ var BaseRouter = function (_MultipleDispatcher) {
                 this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-              this.getCurrentStore().dispatch((0, _module.routeChangeAction)(routeState));
+              cloneState = (0, _core.deepClone)(routeState);
+              this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
               this.dispatch('change', {
-                routeState: routeState,
+                routeState: cloneState,
                 root: root
               });
 
-            case 23:
+            case 24:
             case "end":
               return _context.stop();
           }
@@ -390,7 +379,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     var _push2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee2(data, root, nativeCaller) {
       var _this4 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regenerator.default.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -416,11 +405,11 @@ var BaseRouter = function (_MultipleDispatcher) {
                 key: key
               });
               _context2.next = 10;
-              return this.getCurrentStore().dispatch((0, _module.testRouteChangeAction)(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context2.next = 12;
-              return this.getCurrentStore().dispatch((0, _module.beforeRouteChangeAction)(routeState));
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -447,18 +436,19 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
 
               if (root) {
-                this.history.push(location, key, routeState);
+                this.history.push(location, key);
               } else {
-                this.history.getCurrentSubHistory().push(location, key, routeState);
+                this.history.getCurrentSubHistory().push(location, key);
               }
 
-              !root && this.getCurrentStore().dispatch((0, _module.routeChangeAction)(routeState));
+              cloneState = (0, _core.deepClone)(routeState);
+              this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
               this.dispatch('change', {
-                routeState: routeState,
+                routeState: cloneState,
                 root: root
               });
 
-            case 23:
+            case 24:
             case "end":
               return _context2.stop();
           }
@@ -489,7 +479,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     var _replace2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee3(data, root, nativeCaller) {
       var _this5 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regenerator.default.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
@@ -515,11 +505,11 @@ var BaseRouter = function (_MultipleDispatcher) {
                 key: key
               });
               _context3.next = 10;
-              return this.getCurrentStore().dispatch((0, _module.testRouteChangeAction)(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context3.next = 12;
-              return this.getCurrentStore().dispatch((0, _module.beforeRouteChangeAction)(routeState));
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -551,13 +541,14 @@ var BaseRouter = function (_MultipleDispatcher) {
                 this.history.getCurrentSubHistory().replace(location, key);
               }
 
-              this.getCurrentStore().dispatch((0, _module.routeChangeAction)(routeState));
+              cloneState = (0, _core.deepClone)(routeState);
+              this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
               this.dispatch('change', {
-                routeState: routeState,
+                routeState: cloneState,
                 root: root
               });
 
-            case 23:
+            case 24:
             case "end":
               return _context3.stop();
           }
@@ -592,7 +583,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     var _back2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee4(n, root, options, nativeCaller) {
       var _this6 = this;
 
-      var didOverflowRedirect, overflowRedirectUrl, historyRecord, key, pagename, params, routeState, prevRootState, nativeData, notifyNativeRouter;
+      var didOverflowRedirect, overflowRedirectUrl, historyRecord, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regenerator.default.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -622,38 +613,37 @@ var BaseRouter = function (_MultipleDispatcher) {
 
             case 8:
               key = historyRecord.key, pagename = historyRecord.pagename;
-              params = (0, _core.deepMerge)(historyRecord.getParams(), options.payload);
+              params = (0, _core.deepMerge)({}, historyRecord.params, options.payload);
               routeState = {
                 key: key,
                 pagename: pagename,
                 params: params,
                 action: 'BACK'
               };
-              prevRootState = this.getCurrentStore().getState();
-              _context4.next = 14;
-              return this.getCurrentStore().dispatch((0, _module.testRouteChangeAction)(routeState));
+              _context4.next = 13;
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
-            case 14:
-              _context4.next = 16;
-              return this.getCurrentStore().dispatch((0, _module.beforeRouteChangeAction)(routeState));
+            case 13:
+              _context4.next = 15;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 16:
+            case 15:
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context4.next = 21;
+                _context4.next = 20;
                 break;
               }
 
-              _context4.next = 20;
+              _context4.next = 19;
               return this.nativeRouter.execute('back', function () {
                 return _this6.locationToNativeData(routeState);
               }, n, key);
 
-            case 20:
+            case 19:
               nativeData = _context4.sent;
 
-            case 21:
+            case 20:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
@@ -667,7 +657,8 @@ var BaseRouter = function (_MultipleDispatcher) {
                 this.history.getCurrentSubHistory().back(n);
               }
 
-              this.getCurrentStore().dispatch((0, _module.routeChangeAction)(routeState, prevRootState));
+              cloneState = (0, _core.deepClone)(routeState);
+              this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
               this.dispatch('change', {
                 routeState: routeState,
                 root: root
@@ -719,3 +710,51 @@ var BaseRouter = function (_MultipleDispatcher) {
 }(_core.MultipleDispatcher);
 
 exports.BaseRouter = BaseRouter;
+var RouteActionTypes = {
+  TestRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "TestRouteChange",
+  BeforeRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "BeforeRouteChange"
+};
+exports.RouteActionTypes = RouteActionTypes;
+
+function beforeRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+
+function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
+    payload: [routeState]
+  };
+}
+
+var defaultNativeLocationMap = {
+  in: function _in(nativeLocation) {
+    return nativeLocation;
+  },
+  out: function out(nativeLocation) {
+    return nativeLocation;
+  }
+};
+
+function createRouteModule(moduleName, pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
+  if (nativeLocationMap === void 0) {
+    nativeLocationMap = defaultNativeLocationMap;
+  }
+
+  if (notfoundPagename === void 0) {
+    notfoundPagename = '/404';
+  }
+
+  if (paramsKey === void 0) {
+    paramsKey = '_';
+  }
+
+  var locationTransform = (0, _transform.createLocationTransform)(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
+  var routeModule = (0, _core.exportModule)(moduleName, _core.RouteModuleHandlers, {}, {});
+  return (0, _extends2.default)({}, routeModule, {
+    locationTransform: locationTransform
+  });
+}

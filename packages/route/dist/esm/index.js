@@ -4,14 +4,12 @@ import _extends from "@babel/runtime/helpers/esm/extends";
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge, MultipleDispatcher } from '@elux/core';
+import { isPromise, deepMerge, routeChangeAction, coreConfig, exportModule, deepClone, MultipleDispatcher, RouteModuleHandlers } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
 import { History, HistoryRecord } from './history';
-import { beforeRouteChangeAction, testRouteChangeAction, routeChangeAction } from './module';
-import { eluxLocationToEluxUrl, nativeLocationToNativeUrl as _nativeLocationToNativeUrl } from './transform';
+import { eluxLocationToEluxUrl, nativeLocationToNativeUrl as _nativeLocationToNativeUrl, createLocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
-export { routeMiddleware, createRouteModule, RouteActionTypes } from './module';
 export var BaseNativeRouter = function () {
   function BaseNativeRouter() {
     _defineProperty(this, "curTask", void 0);
@@ -30,7 +28,7 @@ export var BaseNativeRouter = function () {
       return false;
     }
 
-    return key !== this.router.getCurKey();
+    return key !== this.router.routeState.key;
   };
 
   _proto.setRouter = function setRouter(router) {
@@ -88,23 +86,28 @@ export var BaseRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "_nativeData", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
-
     _defineProperty(_assertThisInitialized(_this2), "internalUrl", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "history", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "initRouteState", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "name", routeConfig.RouteModuleName);
+
+    _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
 
     _defineProperty(_assertThisInitialized(_this2), "injectedModules", {});
+
+    _defineProperty(_assertThisInitialized(_this2), "history", new History(null));
+
+    _defineProperty(_assertThisInitialized(_this2), "latestState", {});
 
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
     nativeRouter.setRouter(_assertThisInitialized(_this2));
-    _this2.history = new History();
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
+      var _this2$latestState;
+
       var key = _this2._createKey();
 
       var routeState = _extends({}, location, {
@@ -124,13 +127,14 @@ export var BaseRouter = function (_MultipleDispatcher) {
         });
       }
 
+      _this2.latestState = (_this2$latestState = {}, _this2$latestState[_this2.name] = routeState, _this2$latestState);
       return routeState;
     };
 
     if (isPromise(locationOrPromise)) {
-      _this2.initRouteState = locationOrPromise.then(callback);
+      _this2.initialize = locationOrPromise.then(callback);
     } else {
-      _this2.initRouteState = callback(locationOrPromise);
+      _this2.initialize = Promise.resolve(callback(locationOrPromise));
     }
 
     return _this2;
@@ -138,16 +142,20 @@ export var BaseRouter = function (_MultipleDispatcher) {
 
   var _proto2 = BaseRouter.prototype;
 
-  _proto2.getRouteState = function getRouteState() {
-    return this.routeState;
+  _proto2.startup = function startup(store) {
+    var historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
+    this.history.startup(historyRecord);
   };
 
-  _proto2.getPagename = function getPagename() {
-    return this.routeState.pagename;
+  _proto2.getCurrentStore = function getCurrentStore() {
+    return this.history.getCurrentRecord().store;
   };
 
-  _proto2.getParams = function getParams() {
-    return this.routeState.params;
+  _proto2.getStoreList = function getStoreList() {
+    return this.history.getRecords().map(function (_ref) {
+      var store = _ref.store;
+      return store;
+    });
   };
 
   _proto2.getInternalUrl = function getInternalUrl() {
@@ -168,23 +176,6 @@ export var BaseRouter = function (_MultipleDispatcher) {
     }
 
     return this._nativeData.nativeUrl;
-  };
-
-  _proto2.init = function init(store) {
-    var historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
-    this.history.init(historyRecord);
-  };
-
-  _proto2.getCurrentStore = function getCurrentStore() {
-    return this.history.getCurrentRecord().store;
-  };
-
-  _proto2.getStoreList = function getStoreList() {
-    return this.history.getStores();
-  };
-
-  _proto2.getCurKey = function getCurKey() {
-    return this.routeState.key;
   };
 
   _proto2.getHistory = function getHistory(root) {
@@ -274,7 +265,7 @@ export var BaseRouter = function (_MultipleDispatcher) {
     var _relaunch2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee(data, root, nativeCaller) {
       var _this3 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -336,13 +327,14 @@ export var BaseRouter = function (_MultipleDispatcher) {
                 this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-              this.getCurrentStore().dispatch(routeChangeAction(routeState));
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
               this.dispatch('change', {
-                routeState: routeState,
+                routeState: cloneState,
                 root: root
               });
 
-            case 23:
+            case 24:
             case "end":
               return _context.stop();
           }
@@ -373,7 +365,7 @@ export var BaseRouter = function (_MultipleDispatcher) {
     var _push2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee2(data, root, nativeCaller) {
       var _this4 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regeneratorRuntime.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -430,18 +422,19 @@ export var BaseRouter = function (_MultipleDispatcher) {
               });
 
               if (root) {
-                this.history.push(location, key, routeState);
+                this.history.push(location, key);
               } else {
-                this.history.getCurrentSubHistory().push(location, key, routeState);
+                this.history.getCurrentSubHistory().push(location, key);
               }
 
-              !root && this.getCurrentStore().dispatch(routeChangeAction(routeState));
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
               this.dispatch('change', {
-                routeState: routeState,
+                routeState: cloneState,
                 root: root
               });
 
-            case 23:
+            case 24:
             case "end":
               return _context2.stop();
           }
@@ -472,7 +465,7 @@ export var BaseRouter = function (_MultipleDispatcher) {
     var _replace2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee3(data, root, nativeCaller) {
       var _this5 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regeneratorRuntime.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
@@ -534,13 +527,14 @@ export var BaseRouter = function (_MultipleDispatcher) {
                 this.history.getCurrentSubHistory().replace(location, key);
               }
 
-              this.getCurrentStore().dispatch(routeChangeAction(routeState));
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
               this.dispatch('change', {
-                routeState: routeState,
+                routeState: cloneState,
                 root: root
               });
 
-            case 23:
+            case 24:
             case "end":
               return _context3.stop();
           }
@@ -575,7 +569,7 @@ export var BaseRouter = function (_MultipleDispatcher) {
     var _back2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee4(n, root, options, nativeCaller) {
       var _this6 = this;
 
-      var didOverflowRedirect, overflowRedirectUrl, historyRecord, key, pagename, params, routeState, prevRootState, nativeData, notifyNativeRouter;
+      var didOverflowRedirect, overflowRedirectUrl, historyRecord, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regeneratorRuntime.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -605,38 +599,37 @@ export var BaseRouter = function (_MultipleDispatcher) {
 
             case 8:
               key = historyRecord.key, pagename = historyRecord.pagename;
-              params = deepMerge(historyRecord.getParams(), options.payload);
+              params = deepMerge({}, historyRecord.params, options.payload);
               routeState = {
                 key: key,
                 pagename: pagename,
                 params: params,
                 action: 'BACK'
               };
-              prevRootState = this.getCurrentStore().getState();
-              _context4.next = 14;
+              _context4.next = 13;
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
-            case 14:
-              _context4.next = 16;
+            case 13:
+              _context4.next = 15;
               return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 16:
+            case 15:
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context4.next = 21;
+                _context4.next = 20;
                 break;
               }
 
-              _context4.next = 20;
+              _context4.next = 19;
               return this.nativeRouter.execute('back', function () {
                 return _this6.locationToNativeData(routeState);
               }, n, key);
 
-            case 20:
+            case 19:
               nativeData = _context4.sent;
 
-            case 21:
+            case 20:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
@@ -650,7 +643,8 @@ export var BaseRouter = function (_MultipleDispatcher) {
                 this.history.getCurrentSubHistory().back(n);
               }
 
-              this.getCurrentStore().dispatch(routeChangeAction(routeState, prevRootState));
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
               this.dispatch('change', {
                 routeState: routeState,
                 root: root
@@ -700,3 +694,46 @@ export var BaseRouter = function (_MultipleDispatcher) {
 
   return BaseRouter;
 }(MultipleDispatcher);
+export var RouteActionTypes = {
+  TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",
+  BeforeRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "BeforeRouteChange"
+};
+export function beforeRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+export function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
+    payload: [routeState]
+  };
+}
+var defaultNativeLocationMap = {
+  in: function _in(nativeLocation) {
+    return nativeLocation;
+  },
+  out: function out(nativeLocation) {
+    return nativeLocation;
+  }
+};
+export function createRouteModule(moduleName, pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
+  if (nativeLocationMap === void 0) {
+    nativeLocationMap = defaultNativeLocationMap;
+  }
+
+  if (notfoundPagename === void 0) {
+    notfoundPagename = '/404';
+  }
+
+  if (paramsKey === void 0) {
+    paramsKey = '_';
+  }
+
+  var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
+  var routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
+  return _extends({}, routeModule, {
+    locationTransform: locationTransform
+  });
+}

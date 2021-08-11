@@ -1,8 +1,10 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import env from './env';
 import { isPromise } from './sprite';
-import { ActionTypes, coreConfig, errorAction, MetaData } from './basic';
+import { coreConfig, MetaData } from './basic';
+import { ActionTypes, errorAction } from './actions';
 import { loadModel } from './inject';
+import { routeMiddleware } from './router';
 var errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error) {
   return error && !!error[errorProcessed];
@@ -47,7 +49,7 @@ function compose() {
   });
 }
 
-export function enhanceStore(baseStore, middlewares) {
+export function enhanceStore(baseStore, router, middlewares) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -57,11 +59,12 @@ export function enhanceStore(baseStore, middlewares) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.router = router;
   store.getState = getState;
   store.loadingGroups = {};
   store.injectedModules = {};
   var injectedModules = store.injectedModules;
-  store.fork = {
+  store.options = {
     middlewares: middlewares
   };
   var _destroy = baseStore.destroy;
@@ -78,7 +81,13 @@ export function enhanceStore(baseStore, middlewares) {
     actionName: '',
     prevState: {}
   };
-  var update = baseStore.update;
+  var _update = baseStore.update;
+
+  baseStore.update = function (actionName, state, actionData) {
+    _update(actionName, state, actionData);
+
+    router.latestState = _extends({}, router.latestState, state);
+  };
 
   store.getCurrentActionName = function () {
     return currentData.actionName;
@@ -94,6 +103,7 @@ export function enhanceStore(baseStore, middlewares) {
   };
 
   var middlewareAPI = {
+    store: store,
     getState: getState,
     dispatch: function dispatch(action) {
       return _dispatch2(action);
@@ -201,7 +211,7 @@ export function enhanceStore(baseStore, middlewares) {
     if (handlerModuleNames.length > 0) {
       var orderList = [];
       handlerModuleNames.forEach(function (moduleName) {
-        if (moduleName === MetaData.appModuleName) {
+        if (moduleName === coreConfig.AppModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -232,7 +242,7 @@ export function enhanceStore(baseStore, middlewares) {
             }
           }
         });
-        update(actionName, newState, actionData);
+        store.update(actionName, newState, actionData);
       } else {
         var result = [];
         orderList.forEach(function (moduleName) {
@@ -260,8 +270,7 @@ export function enhanceStore(baseStore, middlewares) {
     return respondHandler(action, false, prevData);
   }
 
-  var arr = middlewares ? [preMiddleware].concat(middlewares) : [preMiddleware];
-  var chain = arr.map(function (middleware) {
+  var chain = [preMiddleware, routeMiddleware].concat(middlewares || []).map(function (middleware) {
     return middleware(middlewareAPI);
   });
   _dispatch2 = compose.apply(void 0, chain)(_dispatch);

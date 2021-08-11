@@ -1,32 +1,31 @@
 import { IStore } from '@elux/core';
-import { Location, RouteState } from './basic';
+import { Location } from './basic';
 export declare class HistoryRecord {
     readonly key: string;
     readonly history: History;
     readonly store: IStore;
-    pagename: string;
-    query: string;
-    sub: History;
+    readonly pagename: string;
+    readonly params: Record<string, any>;
+    readonly sub: History;
     constructor(location: Location, key: string, history: History, store: IStore);
-    getParams(): any;
 }
 export declare class History {
-    private parent?;
+    private parent;
     private records;
-    constructor(parent?: History | undefined, record?: HistoryRecord);
-    init(record: HistoryRecord): void;
+    constructor(parent: History | null);
+    startup(record: HistoryRecord): void;
+    getRecords(): HistoryRecord[];
     getLength(): number;
     getPages(): {
         pagename: string;
-        key: string;
+        store: IStore;
         page?: any;
     }[];
-    getStores(): IStore[];
     findRecord(keyOrIndex: number | string): HistoryRecord | undefined;
     findIndex(key: string): number;
     getCurrentRecord(): HistoryRecord;
     getCurrentSubHistory(): History;
-    push(location: Location, key: string, routeState: RouteState): void;
+    push(location: Location, key: string): void;
     replace(location: Location, key: string): void;
     relaunch(location: Location, key: string): void;
     preBack(delta: number, overflowRedirect?: boolean): HistoryRecord | undefined;

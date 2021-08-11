@@ -1,5 +1,6 @@
 import {buildConfigSetter} from '@elux/core';
 export interface RouteConfig {
+  RouteModuleName: string;
   maxHistory: number;
   notifyNativeRouter: {
     root: boolean;
@@ -8,6 +9,7 @@ export interface RouteConfig {
   indexUrl: string;
 }
 export const routeConfig: RouteConfig = {
+  RouteModuleName: 'route',
   maxHistory: 10,
   notifyNativeRouter: {
     root: true,
@@ -26,8 +28,7 @@ export const routeMeta: {pagenames: Record<string, string>; defaultParams: Recor
 
 export type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
 
-export type ModuleParams = Record<string, any>;
-export type RootParams = Record<string, ModuleParams>;
+export type RootParams = Record<string, any>;
 
 export interface Location<P extends RootParams = {}> {
   pagename: string;
@@ -39,7 +40,7 @@ export interface PayloadLocation<P extends RootParams = {}, N extends string = s
   extendParams?: DeepPartial<P> | 'current';
 }
 
-export type RouteState<P extends RootParams = {}> = Location<P> & {
+export type RouteState<P extends RootParams = any> = Location<P> & {
   action: HistoryAction;
   key: string;
 };

@@ -24,14 +24,13 @@ export function setConfig(conf: UserConfig & {LoadComponentOnError?: Component<{
 
 setVueComponentsConfig({setPageTitle: (title) => Taro.setNavigationBarTitle({title})});
 
-export const createMP: AttachMP<App> = (app, moduleGetter, middlewares, appModuleName) => {
+export const createMP: AttachMP<App> = (app, moduleGetter, middlewares) => {
   const tabPages = getTabPages();
   return createBaseMP(
     app,
     (locationTransform: LocationTransform) => createRouter(locationTransform, routeENV, tabPages),
     renderToMP,
     moduleGetter,
-    middlewares,
-    appModuleName
+    middlewares
   );
 };

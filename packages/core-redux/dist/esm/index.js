@@ -1,12 +1,12 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import { compose, createStore, applyMiddleware } from 'redux';
-import { env, ActionTypes } from '@elux/core';
+import { env } from '@elux/core';
 
 var reduxReducer = function reduxReducer(state, action) {
   return _extends({}, state, action.state);
 };
 
-export function storeCreator(storeOptions, router, id) {
+export function storeCreator(storeOptions, id) {
   if (id === void 0) {
     id = 0;
   }
@@ -28,27 +28,18 @@ export function storeCreator(storeOptions, router, id) {
 
   var store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose.apply(void 0, enhancers) : enhancers[0]);
   var dispatch = store.dispatch;
-  var reduxStore = Object.assign(store, {
-    id: id,
-    router: router,
-    baseFork: {
-      creator: storeCreator,
-      options: storeOptions
-    }
-  });
+  var reduxStore = store;
+  reduxStore.id = id;
+  reduxStore.builder = {
+    storeCreator: storeCreator,
+    storeOptions: storeOptions
+  };
 
   reduxStore.update = function (actionName, state, actionData) {
     dispatch({
       type: actionName,
       state: state,
       payload: actionData
-    });
-  };
-
-  reduxStore.replaceState = function (state) {
-    dispatch({
-      type: ActionTypes.Replace,
-      state: state
     });
   };
 

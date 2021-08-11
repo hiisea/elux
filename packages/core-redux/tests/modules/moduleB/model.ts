@@ -13,33 +13,35 @@ export class ModuleHandlers extends CoreModuleHandlers<State, {}> {
 
   @reducer
   public add(): State {
-    return {...this.state, count: this.state.count + 1};
+    const state = this.getState();
+    return {...state, count: state.count + 1};
   }
 
   @reducer
   public add2(): State {
-    this.state.count += 1;
-    return this.state;
+    const state = this.getState();
+    state.count += 1;
+    return state;
   }
 
   @effect()
   protected async triggerError(): Promise<void> {
-    const prevState = this.currentRootState;
+    const prevState = this.getCurrentRootState();
     this.dispatch(this.actions.add());
-    messages.push(['moduleB/moduleA.add', JSON.stringify(this.rootState), JSON.stringify(prevState)]);
+    messages.push(['moduleB/moduleA.add', JSON.stringify(this.getRootState()), JSON.stringify(prevState)]);
   }
 
   @effect()
   protected async ['moduleA.add'](): Promise<void> {
-    const prevState = this.currentRootState;
+    const prevState = this.getCurrentRootState();
     this.dispatch(this.actions.add());
-    messages.push(['moduleB/moduleA.add', JSON.stringify(this.rootState), JSON.stringify(prevState)]);
+    messages.push(['moduleB/moduleA.add', JSON.stringify(this.getRootState()), JSON.stringify(prevState)]);
   }
 
   @effect()
   protected async ['moduleA.add2'](): Promise<void> {
-    const prevState = this.currentRootState;
+    const prevState = this.getCurrentRootState();
     this.dispatch(this.actions.add2());
-    messages.push(['moduleB/moduleA.add2', JSON.stringify(this.rootState), JSON.stringify(prevState)]);
+    messages.push(['moduleB/moduleA.add2', JSON.stringify(this.getRootState()), JSON.stringify(prevState)]);
   }
 }

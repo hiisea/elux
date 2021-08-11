@@ -1,5 +1,5 @@
 import { compose, createStore, applyMiddleware } from 'redux';
-import { env, ActionTypes } from '@elux/core';
+import { env } from '@elux/core';
 
 const reduxReducer = (state, action) => {
   return { ...state,
@@ -7,7 +7,7 @@ const reduxReducer = (state, action) => {
   };
 };
 
-export function storeCreator(storeOptions, router, id = 0) {
+export function storeCreator(storeOptions, id = 0) {
   const {
     initState = {},
     enhancers = [],
@@ -27,27 +27,18 @@ export function storeCreator(storeOptions, router, id = 0) {
   const {
     dispatch
   } = store;
-  const reduxStore = Object.assign(store, {
-    id,
-    router,
-    baseFork: {
-      creator: storeCreator,
-      options: storeOptions
-    }
-  });
+  const reduxStore = store;
+  reduxStore.id = id;
+  reduxStore.builder = {
+    storeCreator,
+    storeOptions
+  };
 
   reduxStore.update = (actionName, state, actionData) => {
     dispatch({
       type: actionName,
       state,
       payload: actionData
-    });
-  };
-
-  reduxStore.replaceState = state => {
-    dispatch({
-      type: ActionTypes.Replace,
-      state
     });
   };
 

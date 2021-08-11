@@ -1,5 +1,7 @@
 import React from 'react';
-import { ICoreRouter } from '@elux/core';
+import { ICoreRouter, IStore } from '@elux/core';
 export declare const Router: React.FC;
-export declare const Page: React.FC<{}>;
+export declare const Page: React.FC<{
+    store: IStore;
+}>;
 export declare function useRouter(): ICoreRouter;

@@ -1,7 +1,9 @@
 import env from './env';
 import { isPromise } from './sprite';
-import { ActionTypes, coreConfig, errorAction, MetaData } from './basic';
+import { coreConfig, MetaData } from './basic';
+import { ActionTypes, errorAction } from './actions';
 import { loadModel } from './inject';
+import { routeMiddleware } from './router';
 const errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error) {
   return error && !!error[errorProcessed];
@@ -36,7 +38,7 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-export function enhanceStore(baseStore, middlewares) {
+export function enhanceStore(baseStore, router, middlewares) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -46,11 +48,12 @@ export function enhanceStore(baseStore, middlewares) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.router = router;
   store.getState = getState;
   store.loadingGroups = {};
   store.injectedModules = {};
   const injectedModules = store.injectedModules;
-  store.fork = {
+  store.options = {
     middlewares
   };
   const _destroy = baseStore.destroy;
@@ -67,7 +70,15 @@ export function enhanceStore(baseStore, middlewares) {
     actionName: '',
     prevState: {}
   };
-  const update = baseStore.update;
+  const _update = baseStore.update;
+
+  baseStore.update = (actionName, state, actionData) => {
+    _update(actionName, state, actionData);
+
+    router.latestState = { ...router.latestState,
+      ...state
+    };
+  };
 
   store.getCurrentActionName = () => currentData.actionName;
 
@@ -81,6 +92,7 @@ export function enhanceStore(baseStore, middlewares) {
   };
 
   const middlewareAPI = {
+    store,
     getState,
     dispatch: action => dispatch(action)
   };
@@ -173,7 +185,7 @@ export function enhanceStore(baseStore, middlewares) {
     if (handlerModuleNames.length > 0) {
       const orderList = [];
       handlerModuleNames.forEach(moduleName => {
-        if (moduleName === MetaData.appModuleName) {
+        if (moduleName === coreConfig.AppModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -204,7 +216,7 @@ export function enhanceStore(baseStore, middlewares) {
             }
           }
         });
-        update(actionName, newState, actionData);
+        store.update(actionName, newState, actionData);
       } else {
         const result = [];
         orderList.forEach(moduleName => {
@@ -232,8 +244,7 @@ export function enhanceStore(baseStore, middlewares) {
     return respondHandler(action, false, prevData);
   }
 
-  const arr = middlewares ? [preMiddleware, ...middlewares] : [preMiddleware];
-  const chain = arr.map(middleware => middleware(middlewareAPI));
+  const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map(middleware => middleware(middlewareAPI));
   dispatch = compose(...chain)(_dispatch);
   store.dispatch = dispatch;
   return store;
