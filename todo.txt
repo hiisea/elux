@@ -1,1 +1,0 @@
-RouteParams Action改为自己监听RouteChange后派发
