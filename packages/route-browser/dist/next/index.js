@@ -1,5 +1,5 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { BaseRouter, BaseNativeRouter, setRouteConfig, routeConfig } from '@elux/route';
+import { BaseRouter, BaseNativeRouter, setRouteConfig } from '@elux/route';
 import { createBrowserHistory, createHashHistory, createMemoryHistory } from 'history';
 import { env } from '@elux/core';
 setRouteConfig({
@@ -35,8 +35,6 @@ export class BrowserNativeRouter extends BaseNativeRouter {
 
     _defineProperty(this, "history", void 0);
 
-    _defineProperty(this, "serverSide", false);
-
     if (createHistory === 'Hash') {
       this.history = createHashHistory();
     } else if (createHistory === 'Memory') {
@@ -44,7 +42,6 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     } else if (createHistory === 'Browser') {
       this.history = createBrowserHistory();
     } else {
-      this.serverSide = true;
       const [pathname, search = ''] = createHistory.split('?');
       this.history = {
         action: 'PUSH',
@@ -91,34 +88,14 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     }
 
     this._unlistenHistory = this.history.block((location, action) => {
-      const {
-        pathname = '',
-        search = '',
-        hash = ''
-      } = location;
-      const url = [pathname, search, hash].join('');
       const key = this.getKey(location);
       const changed = this.onChange(key);
 
       if (changed) {
-        let index = 0;
-        let callback;
-
         if (action === 'POP') {
-          index = this.router.getHistory().findIndex(key);
+          env.setTimeout(() => this.router.back(1), 100);
         }
 
-        if (index > 0) {
-          callback = () => this.router.back(index, routeConfig.notifyNativeRouter.root);
-        } else if (action === 'REPLACE') {
-          callback = () => this.router.replace(url, routeConfig.notifyNativeRouter.root);
-        } else if (action === 'PUSH') {
-          callback = () => this.router.push(url, routeConfig.notifyNativeRouter.root);
-        } else {
-          callback = () => this.router.relaunch(url, routeConfig.notifyNativeRouter.root);
-        }
-
-        callback && env.setTimeout(callback, 50);
         return false;
       }
 
@@ -148,7 +125,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   push(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
       this.history.push(nativeData.nativeUrl, key);
       return nativeData;
@@ -158,7 +135,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   replace(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
       this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
@@ -168,9 +145,9 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   relaunch(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+      this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -178,9 +155,9 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   back(getNativeData, n, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.go(-n);
+      this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
     }
 

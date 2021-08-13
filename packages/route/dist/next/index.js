@@ -1,7 +1,7 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge, routeChangeAction, coreConfig, exportModule, deepClone, MultipleDispatcher, RouteModuleHandlers } from '@elux/core';
+import { isPromise, deepMerge, routeChangeAction, coreConfig, exportModule, deepClone, MultipleDispatcher, RouteModuleHandlers, env } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
-import { History, HistoryRecord } from './history';
+import { RootStack, HistoryStack, HistoryRecord } from './history';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl, createLocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
@@ -59,8 +59,6 @@ export class BaseRouter extends MultipleDispatcher {
   constructor(url, nativeRouter, locationTransform) {
     super();
 
-    _defineProperty(this, "_tid", 0);
-
     _defineProperty(this, "curTask", void 0);
 
     _defineProperty(this, "taskList", []);
@@ -77,7 +75,7 @@ export class BaseRouter extends MultipleDispatcher {
 
     _defineProperty(this, "injectedModules", {});
 
-    _defineProperty(this, "history", new History(null));
+    _defineProperty(this, "rootStack", new RootStack());
 
     _defineProperty(this, "latestState", {});
 
@@ -87,11 +85,9 @@ export class BaseRouter extends MultipleDispatcher {
     const locationOrPromise = locationTransform.urlToLocation(url);
 
     const callback = location => {
-      const key = this._createKey();
-
       const routeState = { ...location,
         action: 'RELAUNCH',
-        key
+        key: ''
       };
       this.routeState = routeState;
       this.internalUrl = eluxLocationToEluxUrl({
@@ -119,16 +115,23 @@ export class BaseRouter extends MultipleDispatcher {
   }
 
   startup(store) {
-    const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
-    this.history.startup(historyRecord);
+    const historyStack = new HistoryStack(this.rootStack, store);
+    const historyRecord = new HistoryRecord(this.routeState, historyStack);
+    historyStack.startup(historyRecord);
+    this.rootStack.startup(historyStack);
+    this.routeState.key = historyRecord.getKey();
+  }
+
+  getCurrentPages() {
+    return this.rootStack.getCurrentPages();
   }
 
   getCurrentStore() {
-    return this.history.getCurrentRecord().store;
+    return this.rootStack.getCurrentItem().store;
   }
 
   getStoreList() {
-    return this.history.getRecords().map(({
+    return this.rootStack.getItems().map(({
       store
     }) => store);
   }
@@ -153,12 +156,8 @@ export class BaseRouter extends MultipleDispatcher {
     return this._nativeData.nativeUrl;
   }
 
-  getHistory(root) {
-    return root ? this.history : this.history.getCurrentSubHistory();
-  }
-
   getHistoryLength(root) {
-    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
+    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
 
   locationToNativeData(location) {
@@ -189,9 +188,8 @@ export class BaseRouter extends MultipleDispatcher {
     return nativeLocationToNativeUrl(nativeLocation);
   }
 
-  _createKey() {
-    this._tid++;
-    return `${this._tid}`;
+  findRecordByKey(key) {
+    return this.rootStack.findRecordByKey(key);
   }
 
   payloadToEluxLocation(payload) {
@@ -235,16 +233,22 @@ export class BaseRouter extends MultipleDispatcher {
       return;
     }
 
+    let key = '';
     const location = preData;
-
-    const key = this._createKey();
-
     const routeState = { ...location,
       action: 'RELAUNCH',
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.relaunch(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().relaunch(location).getKey();
+    }
+
+    routeState.key = key;
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -258,13 +262,6 @@ export class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.relaunch(location, key);
-    } else {
-      this.history.getCurrentSubHistory().relaunch(location, key);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {
@@ -284,16 +281,22 @@ export class BaseRouter extends MultipleDispatcher {
       return;
     }
 
+    let key = '';
     const location = preData;
-
-    const key = this._createKey();
-
     const routeState = { ...location,
       action: 'PUSH',
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.push(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().push(location).getKey();
+    }
+
+    routeState.key = key;
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -307,13 +310,6 @@ export class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.push(location, key);
-    } else {
-      this.history.getCurrentSubHistory().push(location, key);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {
@@ -334,15 +330,21 @@ export class BaseRouter extends MultipleDispatcher {
     }
 
     const location = preData;
-
-    const key = this._createKey();
-
+    let key = '';
     const routeState = { ...location,
       action: 'REPLACE',
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.replace(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().replace(location).getKey();
+    }
+
+    routeState.key = key;
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -356,13 +358,6 @@ export class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.replace(location, key);
-    } else {
-      this.history.getCurrentSubHistory().replace(location, key);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {
@@ -377,22 +372,24 @@ export class BaseRouter extends MultipleDispatcher {
 
   async _back(n = 1, root, options, nativeCaller) {
     if (n < 1) {
-      return undefined;
-    }
-
-    const didOverflowRedirect = !!options.overflowRedirect;
-    const overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
-    const historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
-
-    if (!historyRecord) {
-      return this.relaunch(overflowRedirectUrl, root);
+      return;
     }
 
     const {
-      key,
-      pagename
-    } = historyRecord;
-    const params = deepMerge({}, historyRecord.params, options.payload);
+      record,
+      overflow,
+      steps
+    } = this.rootStack.testBack(n, root);
+
+    if (overflow) {
+      const url = options.overflowRedirect || routeConfig.indexUrl;
+      env.setTimeout(() => this.relaunch(url, root), 0);
+      return;
+    }
+
+    const key = record.getKey();
+    const pagename = record.pagename;
+    const params = deepMerge({}, record.params, options.payload);
     const routeState = {
       key,
       pagename,
@@ -401,6 +398,8 @@ export class BaseRouter extends MultipleDispatcher {
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    this.rootStack.back(steps[0]);
+    this.rootStack.getCurrentItem().back(steps[1]);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -414,13 +413,6 @@ export class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.back(n);
-    } else {
-      this.history.getCurrentSubHistory().back(n);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {

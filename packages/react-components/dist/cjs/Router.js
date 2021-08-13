@@ -18,11 +18,17 @@ var Router = function Router(props) {
   var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);
   var router = eluxContext.router;
 
-  var _useState = (0, _react.useState)('elux-app'),
-      classname = _useState[0],
-      setClassname = _useState[1];
+  var _useState = (0, _react.useState)({
+    classname: 'elux-app',
+    pages: router.getCurrentPages().reverse()
+  }),
+      data = _useState[0],
+      setData = _useState[1];
 
-  var pages = [].concat(router.getHistory(true).getPages()).reverse();
+  var classname = data.classname,
+      pages = data.pages;
+  var pagesRef = (0, _react.useRef)(pages);
+  pagesRef.current = pages;
   var containerRef = (0, _react.useRef)(null);
   (0, _react.useEffect)(function () {
     return router.addListener('change', function (_ref) {
@@ -30,24 +36,42 @@ var Router = function Router(props) {
           root = _ref.root;
 
       if (root) {
+        var _pages = router.getCurrentPages().reverse();
+
         if (routeState.action === 'PUSH') {
-          setClassname('elux-app elux-animation elux-change ' + Date.now());
+          setData({
+            classname: 'elux-app elux-animation elux-change',
+            pages: _pages
+          });
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 0);
+          }, 300);
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app';
           }, 1000);
         } else if (routeState.action === 'BACK') {
-          containerRef.current.className = 'elux-app elux-animation elux-change';
+          setData({
+            classname: 'elux-app',
+            pages: [].concat(_pages, [pagesRef.current[pagesRef.current.length - 1]])
+          });
 
           _core.env.setTimeout(function () {
-            setClassname('elux-app ' + Date.now());
+            containerRef.current.className = 'elux-app elux-animation elux-change';
+          }, 300);
+
+          _core.env.setTimeout(function () {
+            setData({
+              classname: 'elux-app',
+              pages: _pages
+            });
           }, 1000);
         } else if (routeState.action === 'RELAUNCH') {
-          setClassname('elux-app ' + Date.now());
+          setData({
+            classname: 'elux-app',
+            pages: _pages
+          });
         }
       }
     });

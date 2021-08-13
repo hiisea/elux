@@ -1881,8 +1881,16 @@ var Link = React.forwardRef(({
 const Router$1 = props => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router;
-  const [classname, setClassname] = useState('elux-app');
-  const pages = [...router.getHistory(true).getPages()].reverse();
+  const [data, setData] = useState({
+    classname: 'elux-app',
+    pages: router.getCurrentPages().reverse()
+  });
+  const {
+    classname,
+    pages
+  } = data;
+  const pagesRef = useRef(pages);
+  pagesRef.current = pages;
   const containerRef = useRef(null);
   useEffect(() => {
     return router.addListener('change', ({
@@ -1890,21 +1898,38 @@ const Router$1 = props => {
       root
     }) => {
       if (root) {
+        const pages = router.getCurrentPages().reverse();
+
         if (routeState.action === 'PUSH') {
-          setClassname('elux-app elux-animation elux-change ' + Date.now());
+          setData({
+            classname: 'elux-app elux-animation elux-change',
+            pages
+          });
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 0);
+          }, 300);
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app';
           }, 1000);
         } else if (routeState.action === 'BACK') {
-          containerRef.current.className = 'elux-app elux-animation elux-change';
+          setData({
+            classname: 'elux-app',
+            pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]
+          });
           env.setTimeout(() => {
-            setClassname('elux-app ' + Date.now());
+            containerRef.current.className = 'elux-app elux-animation elux-change';
+          }, 300);
+          env.setTimeout(() => {
+            setData({
+              classname: 'elux-app',
+              pages
+            });
           }, 1000);
         } else if (routeState.action === 'RELAUNCH') {
-          setClassname('elux-app ' + Date.now());
+          setData({
+            classname: 'elux-app',
+            pages
+          });
         }
       }
     });
@@ -2090,40 +2115,22 @@ const routeMeta = {
   pages: {}
 };
 
-class HistoryRecord {
-  constructor(location, key, history, store) {
-    _defineProperty(this, "pagename", void 0);
-
-    _defineProperty(this, "params", void 0);
-
-    _defineProperty(this, "sub", void 0);
-
-    this.key = key;
-    this.history = history;
-    this.store = store;
-    const {
-      pagename,
-      params
-    } = location;
-    this.pagename = pagename;
-    this.params = params;
-    this.sub = new History(history);
-    this.sub.startup(this);
-  }
-
-}
-class History {
-  constructor(parent) {
+class RouteStack {
+  constructor(limit) {
     _defineProperty(this, "records", []);
 
-    this.parent = parent;
+    this.limit = limit;
   }
 
   startup(record) {
     this.records = [record];
   }
 
-  getRecords() {
+  getCurrentItem() {
+    return this.records[0];
+  }
+
+  getItems() {
     return [...this.records];
   }
 
@@ -2131,11 +2138,148 @@ class History {
     return this.records.length;
   }
 
-  getPages() {
-    return this.records.map(({
+  getRecordAt(n) {
+    if (n < 0) {
+      return this.records[this.records.length + n];
+    } else {
+      return this.records[n];
+    }
+  }
+
+  _push(item) {
+    const records = this.records;
+    records.unshift(item);
+    const delItem = records.splice(this.limit)[0];
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _replace(item) {
+    const records = this.records;
+    const delItem = records[0];
+    records[0] = item;
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _relaunch(item) {
+    const delList = this.records;
+    this.records = [item];
+    delList.forEach(delItem => {
+      if (delItem !== item && delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  }
+
+  back(delta) {
+    const delList = this.records.splice(0, delta);
+
+    if (this.records.length === 0) {
+      const last = delList.pop();
+      this.records.push(last);
+    }
+
+    delList.forEach(delItem => {
+      if (delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  }
+
+}
+
+class HistoryRecord {
+  constructor(location, historyStack) {
+    _defineProperty(this, "destroy", void 0);
+
+    _defineProperty(this, "pagename", void 0);
+
+    _defineProperty(this, "params", void 0);
+
+    _defineProperty(this, "recordKey", void 0);
+
+    this.historyStack = historyStack;
+    this.recordKey = ++HistoryRecord.id + '';
+    const {
       pagename,
-      store
-    }) => {
+      params
+    } = location;
+    this.pagename = pagename;
+    this.params = params;
+  }
+
+  getKey() {
+    return [this.historyStack.stackkey, this.recordKey].join('-');
+  }
+
+}
+
+_defineProperty(HistoryRecord, "id", 0);
+
+class HistoryStack extends RouteStack {
+  constructor(rootStack, store) {
+    super(20);
+
+    _defineProperty(this, "stackkey", void 0);
+
+    this.rootStack = rootStack;
+    this.store = store;
+    this.stackkey = ++HistoryStack.id + '';
+  }
+
+  push(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._push(newRecord);
+
+    return newRecord;
+  }
+
+  replace(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._replace(newRecord);
+
+    return newRecord;
+  }
+
+  relaunch(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._relaunch(newRecord);
+
+    return newRecord;
+  }
+
+  findRecordByKey(recordKey) {
+    return this.records.find(item => item.recordKey === recordKey);
+  }
+
+  destroy() {
+    this.store.destroy();
+  }
+
+}
+
+_defineProperty(HistoryStack, "id", 0);
+
+class RootStack extends RouteStack {
+  constructor() {
+    super(10);
+  }
+
+  getCurrentPages() {
+    return this.records.map(item => {
+      const store = item.store;
+      const record = item.getCurrentItem();
+      const {
+        pagename
+      } = record;
       return {
         pagename,
         store,
@@ -2144,91 +2288,97 @@ class History {
     });
   }
 
-  findRecord(keyOrIndex) {
-    if (typeof keyOrIndex === 'number') {
-      if (keyOrIndex === -1) {
-        keyOrIndex = this.records.length - 1;
-      }
+  push(location) {
+    const curHistory = this.getCurrentItem();
+    const store = forkStore(curHistory.store);
+    const newHistory = new HistoryStack(this, store);
+    const newRecord = new HistoryRecord(location, newHistory);
+    newHistory.startup(newRecord);
 
-      return this.records[keyOrIndex];
-    }
+    this._push(newHistory);
 
-    return this.records.find(item => item.key === keyOrIndex);
+    return newRecord;
   }
 
-  findIndex(key) {
-    return this.records.findIndex(item => item.key === key);
+  replace(location) {
+    const curHistory = this.getCurrentItem();
+    return curHistory.relaunch(location);
   }
 
-  getCurrentRecord() {
-    return this.records[0].sub.records[0];
+  relaunch(location) {
+    const curHistory = this.getCurrentItem();
+    const newRecord = curHistory.relaunch(location);
+
+    this._relaunch(curHistory);
+
+    return newRecord;
   }
 
-  getCurrentSubHistory() {
-    return this.records[0].sub;
-  }
+  countBack(delta) {
+    const historyStacks = this.records;
+    const backSteps = [0, 0];
 
-  push(location, key) {
-    const records = this.records;
-    let store = records[0].store;
+    for (let i = 0, k = historyStacks.length; i < k; i++) {
+      const historyStack = historyStacks[i];
+      const recordNum = historyStack.getLength();
+      delta = delta - recordNum;
 
-    if (!this.parent) {
-      store = forkStore(store);
-    }
-
-    const newRecord = new HistoryRecord(location, key, this, store);
-    const maxHistory = routeConfig.maxHistory;
-    records.unshift(newRecord);
-    const delList = records.splice(maxHistory);
-
-    if (!this.parent) {
-      delList.forEach(item => {
-        item.store.destroy();
-      });
-    }
-  }
-
-  replace(location, key) {
-    const records = this.records;
-    const store = records[0].store;
-    const newRecord = new HistoryRecord(location, key, this, store);
-    records[0] = newRecord;
-  }
-
-  relaunch(location, key) {
-    const records = this.records;
-    const store = records[0].store;
-    const newRecord = new HistoryRecord(location, key, this, store);
-    this.records = [newRecord];
-  }
-
-  preBack(delta, overflowRedirect = false) {
-    const records = this.records.slice(delta);
-
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
       } else {
-        records.push(this.records.pop());
+        backSteps[1] = recordNum + delta;
+        break;
       }
     }
 
-    return records[0];
+    return backSteps;
   }
 
-  back(delta, overflowRedirect = false) {
-    const delList = this.records.splice(0, delta);
+  testBack(delta, rootOnly) {
+    let overflow = false;
+    let record;
+    const steps = [0, 0];
 
-    if (this.records.length === 0) {
-      const last = delList.pop();
-      this.records.push(last);
+    if (rootOnly) {
+      if (delta < this.records.length) {
+        record = this.getRecordAt(delta).getCurrentItem();
+        steps[0] = delta;
+      } else {
+        record = this.getRecordAt(-1).getCurrentItem();
+        overflow = true;
+      }
+    } else {
+      const [rootDelta, recordDelta] = this.countBack(delta);
+
+      if (rootDelta < this.records.length) {
+        record = this.getRecordAt(rootDelta).getRecordAt(recordDelta);
+        steps[0] = rootDelta;
+        steps[1] = recordDelta;
+      } else {
+        record = this.getRecordAt(-1).getRecordAt(-1);
+        overflow = true;
+      }
     }
 
-    if (!this.parent) {
-      delList.forEach(item => {
-        item.store.destroy();
-      });
+    return {
+      record,
+      overflow,
+      steps
+    };
+  }
+
+  findRecordByKey(key) {
+    const arr = key.split('-');
+    const historyStack = this.records.find(item => item.stackkey === arr[0]);
+
+    if (historyStack) {
+      return historyStack.findRecordByKey(arr[1]);
     }
+
+    return undefined;
   }
 
 }
@@ -2786,8 +2936,6 @@ class BaseRouter extends MultipleDispatcher {
   constructor(url, nativeRouter, locationTransform) {
     super();
 
-    _defineProperty(this, "_tid", 0);
-
     _defineProperty(this, "curTask", void 0);
 
     _defineProperty(this, "taskList", []);
@@ -2804,7 +2952,7 @@ class BaseRouter extends MultipleDispatcher {
 
     _defineProperty(this, "injectedModules", {});
 
-    _defineProperty(this, "history", new History(null));
+    _defineProperty(this, "rootStack", new RootStack());
 
     _defineProperty(this, "latestState", {});
 
@@ -2814,11 +2962,9 @@ class BaseRouter extends MultipleDispatcher {
     const locationOrPromise = locationTransform.urlToLocation(url);
 
     const callback = location => {
-      const key = this._createKey();
-
       const routeState = { ...location,
         action: 'RELAUNCH',
-        key
+        key: ''
       };
       this.routeState = routeState;
       this.internalUrl = eluxLocationToEluxUrl({
@@ -2846,16 +2992,23 @@ class BaseRouter extends MultipleDispatcher {
   }
 
   startup(store) {
-    const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
-    this.history.startup(historyRecord);
+    const historyStack = new HistoryStack(this.rootStack, store);
+    const historyRecord = new HistoryRecord(this.routeState, historyStack);
+    historyStack.startup(historyRecord);
+    this.rootStack.startup(historyStack);
+    this.routeState.key = historyRecord.getKey();
+  }
+
+  getCurrentPages() {
+    return this.rootStack.getCurrentPages();
   }
 
   getCurrentStore() {
-    return this.history.getCurrentRecord().store;
+    return this.rootStack.getCurrentItem().store;
   }
 
   getStoreList() {
-    return this.history.getRecords().map(({
+    return this.rootStack.getItems().map(({
       store
     }) => store);
   }
@@ -2880,12 +3033,8 @@ class BaseRouter extends MultipleDispatcher {
     return this._nativeData.nativeUrl;
   }
 
-  getHistory(root) {
-    return root ? this.history : this.history.getCurrentSubHistory();
-  }
-
   getHistoryLength(root) {
-    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
+    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
 
   locationToNativeData(location) {
@@ -2916,9 +3065,8 @@ class BaseRouter extends MultipleDispatcher {
     return nativeLocationToNativeUrl(nativeLocation);
   }
 
-  _createKey() {
-    this._tid++;
-    return `${this._tid}`;
+  findRecordByKey(key) {
+    return this.rootStack.findRecordByKey(key);
   }
 
   payloadToEluxLocation(payload) {
@@ -2962,16 +3110,22 @@ class BaseRouter extends MultipleDispatcher {
       return;
     }
 
+    let key = '';
     const location = preData;
-
-    const key = this._createKey();
-
     const routeState = { ...location,
       action: 'RELAUNCH',
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.relaunch(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().relaunch(location).getKey();
+    }
+
+    routeState.key = key;
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -2985,13 +3139,6 @@ class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.relaunch(location, key);
-    } else {
-      this.history.getCurrentSubHistory().relaunch(location, key);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {
@@ -3011,16 +3158,22 @@ class BaseRouter extends MultipleDispatcher {
       return;
     }
 
+    let key = '';
     const location = preData;
-
-    const key = this._createKey();
-
     const routeState = { ...location,
       action: 'PUSH',
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.push(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().push(location).getKey();
+    }
+
+    routeState.key = key;
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3034,13 +3187,6 @@ class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.push(location, key);
-    } else {
-      this.history.getCurrentSubHistory().push(location, key);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {
@@ -3061,15 +3207,21 @@ class BaseRouter extends MultipleDispatcher {
     }
 
     const location = preData;
-
-    const key = this._createKey();
-
+    let key = '';
     const routeState = { ...location,
       action: 'REPLACE',
       key
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.replace(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().replace(location).getKey();
+    }
+
+    routeState.key = key;
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3083,13 +3235,6 @@ class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.replace(location, key);
-    } else {
-      this.history.getCurrentSubHistory().replace(location, key);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {
@@ -3104,22 +3249,24 @@ class BaseRouter extends MultipleDispatcher {
 
   async _back(n = 1, root, options, nativeCaller) {
     if (n < 1) {
-      return undefined;
-    }
-
-    const didOverflowRedirect = !!options.overflowRedirect;
-    const overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
-    const historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
-
-    if (!historyRecord) {
-      return this.relaunch(overflowRedirectUrl, root);
+      return;
     }
 
     const {
-      key,
-      pagename
-    } = historyRecord;
-    const params = deepMerge({}, historyRecord.params, options.payload);
+      record,
+      overflow,
+      steps
+    } = this.rootStack.testBack(n, root);
+
+    if (overflow) {
+      const url = options.overflowRedirect || routeConfig.indexUrl;
+      env.setTimeout(() => this.relaunch(url, root), 0);
+      return;
+    }
+
+    const key = record.getKey();
+    const pagename = record.pagename;
+    const params = deepMerge({}, record.params, options.payload);
     const routeState = {
       key,
       pagename,
@@ -3128,6 +3275,8 @@ class BaseRouter extends MultipleDispatcher {
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    this.rootStack.back(steps[0]);
+    this.rootStack.getCurrentItem().back(steps[1]);
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3141,13 +3290,6 @@ class BaseRouter extends MultipleDispatcher {
       pathname: routeState.pagename,
       params: routeState.params
     });
-
-    if (root) {
-      this.history.back(n);
-    } else {
-      this.history.getCurrentSubHistory().back(n);
-    }
-
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {
@@ -4438,8 +4580,6 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
     _defineProperty(this, "history", void 0);
 
-    _defineProperty(this, "serverSide", false);
-
     if (createHistory === 'Hash') {
       this.history = createHashHistory();
     } else if (createHistory === 'Memory') {
@@ -4447,7 +4587,6 @@ class BrowserNativeRouter extends BaseNativeRouter {
     } else if (createHistory === 'Browser') {
       this.history = createBrowserHistory();
     } else {
-      this.serverSide = true;
       const [pathname, search = ''] = createHistory.split('?');
       this.history = {
         action: 'PUSH',
@@ -4494,34 +4633,14 @@ class BrowserNativeRouter extends BaseNativeRouter {
     }
 
     this._unlistenHistory = this.history.block((location, action) => {
-      const {
-        pathname = '',
-        search = '',
-        hash = ''
-      } = location;
-      const url = [pathname, search, hash].join('');
       const key = this.getKey(location);
       const changed = this.onChange(key);
 
       if (changed) {
-        let index = 0;
-        let callback;
-
         if (action === 'POP') {
-          index = this.router.getHistory().findIndex(key);
+          env.setTimeout(() => this.router.back(1), 100);
         }
 
-        if (index > 0) {
-          callback = () => this.router.back(index, routeConfig.notifyNativeRouter.root);
-        } else if (action === 'REPLACE') {
-          callback = () => this.router.replace(url, routeConfig.notifyNativeRouter.root);
-        } else if (action === 'PUSH') {
-          callback = () => this.router.push(url, routeConfig.notifyNativeRouter.root);
-        } else {
-          callback = () => this.router.relaunch(url, routeConfig.notifyNativeRouter.root);
-        }
-
-        callback && env.setTimeout(callback, 50);
         return false;
       }
 
@@ -4551,7 +4670,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   push(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
       this.history.push(nativeData.nativeUrl, key);
       return nativeData;
@@ -4561,7 +4680,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   replace(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
       this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
@@ -4571,9 +4690,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   relaunch(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+      this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -4581,9 +4700,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   back(getNativeData, n, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.go(-n);
+      this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
     }
 

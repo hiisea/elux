@@ -1,4 +1,4 @@
-import {BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter, setRouteConfig, routeConfig} from '@elux/route';
+import {BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter, setRouteConfig} from '@elux/route';
 import {History, createBrowserHistory, createHashHistory, createMemoryHistory, Location as HistoryLocation} from 'history';
 import {env} from '@elux/core';
 
@@ -21,8 +21,6 @@ export class BrowserNativeRouter extends BaseNativeRouter {
 
   public history: History<never>;
 
-  private serverSide = false;
-
   constructor(createHistory: 'Browser' | 'Hash' | 'Memory' | string) {
     super();
     if (createHistory === 'Hash') {
@@ -32,7 +30,6 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     } else if (createHistory === 'Browser') {
       this.history = createBrowserHistory();
     } else {
-      this.serverSide = true;
       const [pathname, search = ''] = createHistory.split('?');
       this.history = {
         action: 'PUSH',
@@ -68,33 +65,44 @@ export class BrowserNativeRouter extends BaseNativeRouter {
         } as any,
       };
     }
+    //   this._unlistenHistory = this.history.block((location, action) => {
+    //     const {pathname = '', search = '', hash = ''} = location;
+    //     const url = [pathname, search, hash].join('');
+    //     const key = this.getKey(location);
+    //     const changed = this.onChange(key);
+    //     if (changed) {
+    //       let index = 0;
+    //       let callback: () => void;
+    //       if (action === 'POP') {
+    //         index = this.router.getHistory(routeConfig.notifyNativeRouter.root).findIndex(key);
+    //       }
+    //       if (index > 0) {
+    //         callback = () => this.router.back(index, routeConfig.notifyNativeRouter.root);
+    //       } else if (action === 'REPLACE') {
+    //         callback = () => this.router.replace(url, routeConfig.notifyNativeRouter.root);
+    //       } else if (action === 'PUSH') {
+    //         callback = () => this.router.push(url, routeConfig.notifyNativeRouter.root);
+    //       } else {
+    //         callback = () => this.router.relaunch(url, routeConfig.notifyNativeRouter.root);
+    //       }
+    //       callback && env.setTimeout(callback, 50);
+    //       return false;
+    //     }
+    //     return undefined;
+    //   });
+    // }
     this._unlistenHistory = this.history.block((location, action) => {
-      const {pathname = '', search = '', hash = ''} = location;
-      const url = [pathname, search, hash].join('');
       const key = this.getKey(location);
       const changed = this.onChange(key);
       if (changed) {
-        let index = 0;
-        let callback: () => void;
         if (action === 'POP') {
-          index = this.router.getHistory().findIndex(key);
+          env.setTimeout(() => this.router.back(1), 100);
         }
-        if (index > 0) {
-          callback = () => this.router.back(index, routeConfig.notifyNativeRouter.root);
-        } else if (action === 'REPLACE') {
-          callback = () => this.router.replace(url, routeConfig.notifyNativeRouter.root);
-        } else if (action === 'PUSH') {
-          callback = () => this.router.push(url, routeConfig.notifyNativeRouter.root);
-        } else {
-          callback = () => this.router.relaunch(url, routeConfig.notifyNativeRouter.root);
-        }
-        callback && env.setTimeout(callback, 50);
         return false;
       }
       return undefined;
     });
   }
-
   getUrl(): string {
     const {pathname = '', search = '', hash = ''} = this.history.location;
     return [pathname, search, hash].join('');
@@ -113,7 +121,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   protected push(getNativeData: () => NativeData, key: string): NativeData | undefined {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
       this.history.push(nativeData.nativeUrl, key as any);
       return nativeData;
@@ -122,7 +130,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   protected replace(getNativeData: () => NativeData, key: string): NativeData | undefined {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
       this.history.replace(nativeData.nativeUrl, key as any);
       return nativeData;
@@ -131,20 +139,21 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   protected relaunch(getNativeData: () => NativeData, key: string): NativeData | undefined {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key as any);
+      this.history.replace(nativeData.nativeUrl, key as any);
       return nativeData;
     }
     return undefined;
   }
 
-  // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
+  // 只有当native不处理时返回undefined，否则必须返回NativeData，返回undefined会导致不依赖onChange来关闭task
   // history.go会触发onChange，所以必须返回NativeData
   protected back(getNativeData: () => NativeData, n: number, key: string): NativeData | undefined {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.go(-n);
+      // this.history.go(-n);
+      this.history.replace(nativeData.nativeUrl, key as any);
       return nativeData;
     }
     return undefined;

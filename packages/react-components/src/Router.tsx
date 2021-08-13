@@ -5,28 +5,41 @@ import {EluxContextComponent, reactComponentsConfig} from './base';
 export const Router: React.FC = (props) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router!;
-  const [classname, setClassname] = useState('elux-app');
-  const pages = [...router.getHistory(true).getPages()].reverse();
+  const [data, setData] = useState<{
+    classname: string;
+    pages: {
+      pagename: string;
+      store: IStore<any>;
+      page?: any;
+    }[];
+  }>({classname: 'elux-app', pages: router.getCurrentPages().reverse()});
+  const {classname, pages} = data;
+  const pagesRef = useRef(pages);
+  pagesRef.current = pages;
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return router.addListener('change', ({routeState, root}) => {
       if (root) {
+        const pages = router.getCurrentPages().reverse();
         if (routeState.action === 'PUSH') {
-          setClassname('elux-app elux-animation elux-change ' + Date.now());
+          setData({classname: 'elux-app elux-animation elux-change', pages});
           env.setTimeout(() => {
             containerRef.current!.className = 'elux-app elux-animation';
-          }, 0);
+          }, 300);
           env.setTimeout(() => {
             containerRef.current!.className = 'elux-app';
           }, 1000);
         } else if (routeState.action === 'BACK') {
-          containerRef.current!.className = 'elux-app elux-animation elux-change';
+          setData({classname: 'elux-app', pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]});
           env.setTimeout(() => {
-            setClassname('elux-app ' + Date.now());
+            containerRef.current!.className = 'elux-app elux-animation elux-change';
+          }, 300);
+          env.setTimeout(() => {
+            setData({classname: 'elux-app', pages});
           }, 1000);
         } else if (routeState.action === 'RELAUNCH') {
-          setClassname('elux-app ' + Date.now());
+          setData({classname: 'elux-app', pages});
         }
       }
     });

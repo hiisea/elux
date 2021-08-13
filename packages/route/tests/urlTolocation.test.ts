@@ -24,7 +24,7 @@ describe('init', () => {
           _itemVerPre: 0,
         },
       },
-      key: '1',
+      key: '1-1',
       action: 'RELAUNCH',
     });
   });

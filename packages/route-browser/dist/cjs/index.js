@@ -55,7 +55,6 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     _this = _BaseNativeRouter.call(this) || this;
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "_unlistenHistory", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "history", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "serverSide", false);
 
     if (createHistory === 'Hash') {
       _this.history = (0, _history.createHashHistory)();
@@ -64,8 +63,6 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     } else if (createHistory === 'Browser') {
       _this.history = (0, _history.createBrowserHistory)();
     } else {
-      _this.serverSide = true;
-
       var _createHistory$split = createHistory.split('?'),
           pathname = _createHistory$split[0],
           _createHistory$split$ = _createHistory$split[1],
@@ -111,45 +108,17 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     }
 
     _this._unlistenHistory = _this.history.block(function (location, action) {
-      var _location$pathname = location.pathname,
-          pathname = _location$pathname === void 0 ? '' : _location$pathname,
-          _location$search = location.search,
-          search = _location$search === void 0 ? '' : _location$search,
-          _location$hash = location.hash,
-          hash = _location$hash === void 0 ? '' : _location$hash;
-      var url = [pathname, search, hash].join('');
-
       var key = _this.getKey(location);
 
       var changed = _this.onChange(key);
 
       if (changed) {
-        var index = 0;
-        var callback;
-
         if (action === 'POP') {
-          index = _this.router.getHistory().findIndex(key);
+          _core.env.setTimeout(function () {
+            return _this.router.back(1);
+          }, 100);
         }
 
-        if (index > 0) {
-          callback = function callback() {
-            return _this.router.back(index, _route.routeConfig.notifyNativeRouter.root);
-          };
-        } else if (action === 'REPLACE') {
-          callback = function callback() {
-            return _this.router.replace(url, _route.routeConfig.notifyNativeRouter.root);
-          };
-        } else if (action === 'PUSH') {
-          callback = function callback() {
-            return _this.router.push(url, _route.routeConfig.notifyNativeRouter.root);
-          };
-        } else {
-          callback = function callback() {
-            return _this.router.relaunch(url, _route.routeConfig.notifyNativeRouter.root);
-          };
-        }
-
-        callback && _core.env.setTimeout(callback, 50);
         return false;
       }
 
@@ -184,7 +153,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.push = function push(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!_core.env.isServer) {
       var nativeData = getNativeData();
       this.history.push(nativeData.nativeUrl, key);
       return nativeData;
@@ -194,7 +163,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.replace = function replace(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!_core.env.isServer) {
       var nativeData = getNativeData();
       this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
@@ -204,9 +173,9 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.relaunch = function relaunch(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!_core.env.isServer) {
       var nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+      this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -214,9 +183,9 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.back = function back(getNativeData, n, key) {
-    if (!this.serverSide) {
+    if (!_core.env.isServer) {
       var nativeData = getNativeData();
-      this.history.go(-n);
+      this.history.replace(nativeData.nativeUrl, key);
       return nativeData;
     }
 

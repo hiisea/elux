@@ -1,40 +1,23 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { forkStore } from '@elux/core';
-import { routeConfig, routeMeta } from './basic';
-export class HistoryRecord {
-  constructor(location, key, history, store) {
-    _defineProperty(this, "pagename", void 0);
+import { routeMeta } from './basic';
 
-    _defineProperty(this, "params", void 0);
-
-    _defineProperty(this, "sub", void 0);
-
-    this.key = key;
-    this.history = history;
-    this.store = store;
-    const {
-      pagename,
-      params
-    } = location;
-    this.pagename = pagename;
-    this.params = params;
-    this.sub = new History(history);
-    this.sub.startup(this);
-  }
-
-}
-export class History {
-  constructor(parent) {
+class RouteStack {
+  constructor(limit) {
     _defineProperty(this, "records", []);
 
-    this.parent = parent;
+    this.limit = limit;
   }
 
   startup(record) {
     this.records = [record];
   }
 
-  getRecords() {
+  getCurrentItem() {
+    return this.records[0];
+  }
+
+  getItems() {
     return [...this.records];
   }
 
@@ -42,11 +25,148 @@ export class History {
     return this.records.length;
   }
 
-  getPages() {
-    return this.records.map(({
+  getRecordAt(n) {
+    if (n < 0) {
+      return this.records[this.records.length + n];
+    } else {
+      return this.records[n];
+    }
+  }
+
+  _push(item) {
+    const records = this.records;
+    records.unshift(item);
+    const delItem = records.splice(this.limit)[0];
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _replace(item) {
+    const records = this.records;
+    const delItem = records[0];
+    records[0] = item;
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _relaunch(item) {
+    const delList = this.records;
+    this.records = [item];
+    delList.forEach(delItem => {
+      if (delItem !== item && delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  }
+
+  back(delta) {
+    const delList = this.records.splice(0, delta);
+
+    if (this.records.length === 0) {
+      const last = delList.pop();
+      this.records.push(last);
+    }
+
+    delList.forEach(delItem => {
+      if (delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  }
+
+}
+
+export class HistoryRecord {
+  constructor(location, historyStack) {
+    _defineProperty(this, "destroy", void 0);
+
+    _defineProperty(this, "pagename", void 0);
+
+    _defineProperty(this, "params", void 0);
+
+    _defineProperty(this, "recordKey", void 0);
+
+    this.historyStack = historyStack;
+    this.recordKey = ++HistoryRecord.id + '';
+    const {
       pagename,
-      store
-    }) => {
+      params
+    } = location;
+    this.pagename = pagename;
+    this.params = params;
+  }
+
+  getKey() {
+    return [this.historyStack.stackkey, this.recordKey].join('-');
+  }
+
+}
+
+_defineProperty(HistoryRecord, "id", 0);
+
+export class HistoryStack extends RouteStack {
+  constructor(rootStack, store) {
+    super(20);
+
+    _defineProperty(this, "stackkey", void 0);
+
+    this.rootStack = rootStack;
+    this.store = store;
+    this.stackkey = ++HistoryStack.id + '';
+  }
+
+  push(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._push(newRecord);
+
+    return newRecord;
+  }
+
+  replace(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._replace(newRecord);
+
+    return newRecord;
+  }
+
+  relaunch(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._relaunch(newRecord);
+
+    return newRecord;
+  }
+
+  findRecordByKey(recordKey) {
+    return this.records.find(item => item.recordKey === recordKey);
+  }
+
+  destroy() {
+    this.store.destroy();
+  }
+
+}
+
+_defineProperty(HistoryStack, "id", 0);
+
+export class RootStack extends RouteStack {
+  constructor() {
+    super(10);
+  }
+
+  getCurrentPages() {
+    return this.records.map(item => {
+      const store = item.store;
+      const record = item.getCurrentItem();
+      const {
+        pagename
+      } = record;
       return {
         pagename,
         store,
@@ -55,91 +175,97 @@ export class History {
     });
   }
 
-  findRecord(keyOrIndex) {
-    if (typeof keyOrIndex === 'number') {
-      if (keyOrIndex === -1) {
-        keyOrIndex = this.records.length - 1;
-      }
+  push(location) {
+    const curHistory = this.getCurrentItem();
+    const store = forkStore(curHistory.store);
+    const newHistory = new HistoryStack(this, store);
+    const newRecord = new HistoryRecord(location, newHistory);
+    newHistory.startup(newRecord);
 
-      return this.records[keyOrIndex];
-    }
+    this._push(newHistory);
 
-    return this.records.find(item => item.key === keyOrIndex);
+    return newRecord;
   }
 
-  findIndex(key) {
-    return this.records.findIndex(item => item.key === key);
+  replace(location) {
+    const curHistory = this.getCurrentItem();
+    return curHistory.relaunch(location);
   }
 
-  getCurrentRecord() {
-    return this.records[0].sub.records[0];
+  relaunch(location) {
+    const curHistory = this.getCurrentItem();
+    const newRecord = curHistory.relaunch(location);
+
+    this._relaunch(curHistory);
+
+    return newRecord;
   }
 
-  getCurrentSubHistory() {
-    return this.records[0].sub;
-  }
+  countBack(delta) {
+    const historyStacks = this.records;
+    const backSteps = [0, 0];
 
-  push(location, key) {
-    const records = this.records;
-    let store = records[0].store;
+    for (let i = 0, k = historyStacks.length; i < k; i++) {
+      const historyStack = historyStacks[i];
+      const recordNum = historyStack.getLength();
+      delta = delta - recordNum;
 
-    if (!this.parent) {
-      store = forkStore(store);
-    }
-
-    const newRecord = new HistoryRecord(location, key, this, store);
-    const maxHistory = routeConfig.maxHistory;
-    records.unshift(newRecord);
-    const delList = records.splice(maxHistory);
-
-    if (!this.parent) {
-      delList.forEach(item => {
-        item.store.destroy();
-      });
-    }
-  }
-
-  replace(location, key) {
-    const records = this.records;
-    const store = records[0].store;
-    const newRecord = new HistoryRecord(location, key, this, store);
-    records[0] = newRecord;
-  }
-
-  relaunch(location, key) {
-    const records = this.records;
-    const store = records[0].store;
-    const newRecord = new HistoryRecord(location, key, this, store);
-    this.records = [newRecord];
-  }
-
-  preBack(delta, overflowRedirect = false) {
-    const records = this.records.slice(delta);
-
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
       } else {
-        records.push(this.records.pop());
+        backSteps[1] = recordNum + delta;
+        break;
       }
     }
 
-    return records[0];
+    return backSteps;
   }
 
-  back(delta, overflowRedirect = false) {
-    const delList = this.records.splice(0, delta);
+  testBack(delta, rootOnly) {
+    let overflow = false;
+    let record;
+    const steps = [0, 0];
 
-    if (this.records.length === 0) {
-      const last = delList.pop();
-      this.records.push(last);
+    if (rootOnly) {
+      if (delta < this.records.length) {
+        record = this.getRecordAt(delta).getCurrentItem();
+        steps[0] = delta;
+      } else {
+        record = this.getRecordAt(-1).getCurrentItem();
+        overflow = true;
+      }
+    } else {
+      const [rootDelta, recordDelta] = this.countBack(delta);
+
+      if (rootDelta < this.records.length) {
+        record = this.getRecordAt(rootDelta).getRecordAt(recordDelta);
+        steps[0] = rootDelta;
+        steps[1] = recordDelta;
+      } else {
+        record = this.getRecordAt(-1).getRecordAt(-1);
+        overflow = true;
+      }
     }
 
-    if (!this.parent) {
-      delList.forEach(item => {
-        item.store.destroy();
-      });
+    return {
+      record,
+      overflow,
+      steps
+    };
+  }
+
+  findRecordByKey(key) {
+    const arr = key.split('-');
+    const historyStack = this.records.find(item => item.stackkey === arr[0]);
+
+    if (historyStack) {
+      return historyStack.findRecordByKey(arr[1]);
     }
+
+    return undefined;
   }
 
 }

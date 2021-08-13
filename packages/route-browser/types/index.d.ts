@@ -7,7 +7,6 @@ export declare class BrowserNativeRouter extends BaseNativeRouter {
     private _unlistenHistory;
     protected router: Router<any, string>;
     history: History<never>;
-    private serverSide;
     constructor(createHistory: 'Browser' | 'Hash' | 'Memory' | string);
     getUrl(): string;
     private getKey;

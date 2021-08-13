@@ -1,6 +1,6 @@
 import { IStore, ICoreRouter, IModuleHandlers, CommonModule, MultipleDispatcher, Action } from '@elux/core';
 import { PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation } from './basic';
-import { History } from './history';
+import { RootStack, HistoryRecord } from './history';
 import { LocationTransform, NativeLocationMap, PagenameMap } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
@@ -40,7 +40,6 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
 }> implements IBaseRouter<P, N> {
     nativeRouter: BaseNativeRouter;
     protected locationTransform: LocationTransform;
-    private _tid;
     private curTask?;
     private taskList;
     private _nativeData;
@@ -51,16 +50,20 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     readonly injectedModules: {
         [moduleName: string]: IModuleHandlers;
     };
-    readonly history: History;
+    readonly rootStack: RootStack;
     latestState: Record<string, any>;
     constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
     startup(store: IStore): void;
+    getCurrentPages(): {
+        pagename: string;
+        store: IStore;
+        page?: any;
+    }[];
     getCurrentStore(): IStore;
     getStoreList(): IStore[];
     getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;
-    getHistory(root?: boolean): History;
     getHistoryLength(root?: boolean): number;
     locationToNativeData(location: PartialLocation): {
         nativeUrl: string;
@@ -70,7 +73,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
     payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
     nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
-    private _createKey;
+    findRecordByKey(key: string): HistoryRecord | undefined;
     private payloadToEluxLocation;
     private preAdditions;
     relaunch(data: PayloadLocation<P, N> | string, root?: boolean, nativeCaller?: boolean): void;
@@ -80,7 +83,7 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     replace(data: PayloadLocation<P, N> | string, root?: boolean, nativeCaller?: boolean): void;
     private _replace;
     back(n?: number, root?: boolean, options?: {
-        overflowRedirect?: boolean | string;
+        overflowRedirect?: string;
         payload?: any;
     }, nativeCaller?: boolean): void;
     private _back;
@@ -92,7 +95,6 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
 export interface IBaseRouter<P extends RootParams, N extends string> extends ICoreRouter {
     routeState: RouteState<P>;
     initialize: Promise<RouteState<P>>;
-    getHistory(root?: boolean): History;
     nativeRouter: any;
     addListener(name: 'change', callback: (data: {
         routeState: RouteState<P>;
@@ -107,11 +109,17 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
         nativeLocation: NativeLocation;
     };
     getCurrentStore(): IStore;
+    getCurrentPages(): {
+        pagename: string;
+        store: IStore;
+        page?: any;
+    }[];
+    findRecordByKey(key: string): HistoryRecord | undefined;
     relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
     push(data: PayloadLocation<P, N> | string, root?: boolean): void;
     replace(data: PayloadLocation<P, N> | string, root?: boolean): void;
     back(n?: number, root?: boolean, options?: {
-        overflowRedirect?: boolean | string;
+        overflowRedirect?: string;
         payload?: any;
     }): void;
     destroy(): void;

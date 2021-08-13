@@ -13,10 +13,11 @@ import {
   Action,
   RouteModuleHandlers,
   IRouteModuleHandlersClass,
+  env,
 } from '@elux/core';
 
 import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation} from './basic';
-import {History, HistoryRecord} from './history';
+import {RootStack, HistoryStack, HistoryRecord} from './history';
 
 import {
   eluxLocationToEluxUrl,
@@ -104,8 +105,6 @@ export abstract class BaseNativeRouter {
 export abstract class BaseRouter<P extends RootParams, N extends string>
   extends MultipleDispatcher<{change: {routeState: RouteState<P>; root: boolean}}>
   implements IBaseRouter<P, N> {
-  private _tid = 0;
-
   private curTask?: () => Promise<void>;
 
   private taskList: Array<() => Promise<void>> = [];
@@ -122,7 +121,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
 
   public readonly injectedModules: {[moduleName: string]: IModuleHandlers} = {};
 
-  public readonly history: History = new History(null);
+  public readonly rootStack: RootStack = new RootStack();
 
   public latestState: Record<string, any> = {};
 
@@ -131,8 +130,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     nativeRouter.setRouter(this);
     const locationOrPromise = locationTransform.urlToLocation<P>(url);
     const callback = (location: Location<P>) => {
-      const key = this._createKey();
-      const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key};
+      const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key: ''};
       this.routeState = routeState;
       this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
       if (!routeConfig.indexUrl) {
@@ -148,14 +146,20 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     }
   }
   startup(store: IStore): void {
-    const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
-    this.history.startup(historyRecord);
+    const historyStack = new HistoryStack(this.rootStack, store);
+    const historyRecord = new HistoryRecord(this.routeState, historyStack);
+    historyStack.startup(historyRecord);
+    this.rootStack.startup(historyStack);
+    this.routeState.key = historyRecord.getKey();
+  }
+  getCurrentPages(): {pagename: string; store: IStore; page?: any}[] {
+    return this.rootStack.getCurrentPages();
   }
   getCurrentStore(): IStore {
-    return this.history.getCurrentRecord().store;
+    return this.rootStack.getCurrentItem().store;
   }
   getStoreList(): IStore[] {
-    return this.history.getRecords().map(({store}) => store);
+    return this.rootStack.getItems().map(({store}) => store);
   }
   getInternalUrl(): string {
     return this.internalUrl;
@@ -172,11 +176,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     }
     return this._nativeData.nativeUrl;
   }
-  getHistory(root?: boolean): History {
-    return root ? this.history : this.history.getCurrentSubHistory();
-  }
   getHistoryLength(root?: boolean): number {
-    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
+    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation} {
     const nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
@@ -198,9 +199,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
   nativeLocationToNativeUrl(nativeLocation: NativeLocation): string {
     return nativeLocationToNativeUrl(nativeLocation);
   }
-  private _createKey() {
-    this._tid++;
-    return `${this._tid}`;
+  findRecordByKey(key: string): HistoryRecord | undefined {
+    return this.rootStack.findRecordByKey(key);
   }
   private payloadToEluxLocation(payload: {
     pathname?: string;
@@ -237,11 +237,17 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     if (!preData) {
       return;
     }
+    let key = '';
     const location: Location<P> = preData;
-    const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key};
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    if (root) {
+      key = this.rootStack.relaunch(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().relaunch(location).getKey();
+    }
+    routeState.key = key;
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -250,11 +256,6 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
-    if (root) {
-      this.history.relaunch(location, key);
-    } else {
-      this.history.getCurrentSubHistory().relaunch(location, key);
-    }
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {routeState: cloneState, root});
@@ -269,11 +270,17 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     if (!preData) {
       return;
     }
+    let key = '';
     const location: Location<P> = preData;
-    const key = this._createKey();
     const routeState: RouteState<P> = {...location, action: 'PUSH', key};
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    if (root) {
+      key = this.rootStack.push(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().push(location).getKey();
+    }
+    routeState.key = key;
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -282,11 +289,6 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
-    if (root) {
-      this.history.push(location, key);
-    } else {
-      this.history.getCurrentSubHistory().push(location, key);
-    }
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {routeState: cloneState, root});
@@ -302,10 +304,16 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
       return;
     }
     const location: Location<P> = preData;
-    const key = this._createKey();
+    let key = '';
     const routeState: RouteState<P> = {...location, action: 'REPLACE', key};
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    if (root) {
+      key = this.rootStack.replace(location).getKey();
+    } else {
+      key = this.rootStack.getCurrentItem().replace(location).getKey();
+    }
+    routeState.key = key;
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -314,36 +322,34 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
-    if (root) {
-      this.history.replace(location, key);
-    } else {
-      this.history.getCurrentSubHistory().replace(location, key);
-    }
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {routeState: cloneState, root});
   }
 
-  back(n = 1, root = false, options?: {overflowRedirect?: boolean | string; payload?: any}, nativeCaller = false): void {
+  back(n = 1, root = false, options?: {overflowRedirect?: string; payload?: any}, nativeCaller = false): void {
     this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
   }
 
-  private async _back(n = 1, root: boolean, options: {overflowRedirect?: boolean | string; payload?: any}, nativeCaller: boolean) {
+  private async _back(n = 1, root: boolean, options: {overflowRedirect?: string; payload?: any}, nativeCaller: boolean) {
     if (n < 1) {
-      return undefined;
+      return;
     }
-    const didOverflowRedirect = !!options.overflowRedirect;
-    const overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
-    const historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
-    if (!historyRecord) {
-      return this.relaunch(overflowRedirectUrl, root);
+    const {record, overflow, steps} = this.rootStack.testBack(n, root);
+    if (overflow) {
+      const url = options.overflowRedirect || routeConfig.indexUrl;
+      env.setTimeout(() => this.relaunch(url, root), 0);
+      return;
     }
-    const {key, pagename} = historyRecord;
-    const params = deepMerge({}, historyRecord.params, options.payload);
+    const key = record.getKey();
+    const pagename = record.pagename;
+    const params = deepMerge({}, record.params, options.payload);
     const routeState: RouteState<P> = {key, pagename, params, action: 'BACK'};
     //const prevRootState = this.getCurrentStore().getState();
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    this.rootStack.back(steps[0]);
+    this.rootStack.getCurrentItem().back(steps[1]);
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -352,11 +358,6 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this._nativeData = nativeData;
     this.routeState = routeState;
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
-    if (root) {
-      this.history.back(n);
-    } else {
-      this.history.getCurrentSubHistory().back(n);
-    }
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     this.dispatch('change', {routeState, root});
@@ -392,7 +393,6 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
 export interface IBaseRouter<P extends RootParams, N extends string> extends ICoreRouter {
   routeState: RouteState<P>;
   initialize: Promise<RouteState<P>>;
-  getHistory(root?: boolean): History;
   nativeRouter: any;
   addListener(name: 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void): void;
   getInternalUrl(): string;
@@ -401,10 +401,12 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
   nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation};
   getCurrentStore(): IStore;
+  getCurrentPages(): {pagename: string; store: IStore; page?: any}[];
+  findRecordByKey(key: string): HistoryRecord | undefined;
   relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
   push(data: PayloadLocation<P, N> | string, root?: boolean): void;
   replace(data: PayloadLocation<P, N> | string, root?: boolean): void;
-  back(n?: number, root?: boolean, options?: {overflowRedirect?: boolean | string; payload?: any}): void;
+  back(n?: number, root?: boolean, options?: {overflowRedirect?: string; payload?: any}): void;
   destroy(): void;
   urlToLocation(url: string): Location<P> | Promise<Location<P>>;
   payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
