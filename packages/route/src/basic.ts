@@ -15,7 +15,7 @@ export const routeConfig: RouteConfig = {
     root: true,
     internal: false,
   },
-  indexUrl: '',
+  indexUrl: '/',
 };
 
 export const setRouteConfig = buildConfigSetter(routeConfig);

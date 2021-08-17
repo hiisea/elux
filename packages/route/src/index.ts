@@ -258,7 +258,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {routeState: cloneState, root});
+    await this.dispatch('change', {routeState: cloneState, root});
   }
 
   push(data: PayloadLocation<P, N> | string, root = false, nativeCaller = false): void {
@@ -291,7 +291,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {routeState: cloneState, root});
+    await this.dispatch('change', {routeState: cloneState, root});
   }
 
   replace(data: PayloadLocation<P, N> | string, root = false, nativeCaller = false): void {
@@ -324,7 +324,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {routeState: cloneState, root});
+    await this.dispatch('change', {routeState: cloneState, root});
   }
 
   back(n = 1, root = false, options?: {overflowRedirect?: string; payload?: any}, nativeCaller = false): void {
@@ -348,8 +348,13 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     //const prevRootState = this.getCurrentStore().getState();
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    this.rootStack.back(steps[0]);
-    this.rootStack.getCurrentItem().back(steps[1]);
+    if (steps[0]) {
+      root = true;
+      this.rootStack.back(steps[0]);
+    }
+    if (steps[1]) {
+      this.rootStack.getCurrentItem().back(steps[1]);
+    }
     let nativeData: NativeData | undefined;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
@@ -360,7 +365,7 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
     this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {routeState, root});
+    await this.dispatch('change', {routeState, root});
   }
 
   private taskComplete() {
@@ -379,7 +384,8 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
 
   private addTask(task: () => Promise<any>) {
     if (this.curTask) {
-      this.taskList.push(task);
+      return;
+      //this.taskList.push(task);
     } else {
       this.executeTask(task);
     }
@@ -394,7 +400,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
   routeState: RouteState<P>;
   initialize: Promise<RouteState<P>>;
   nativeRouter: any;
-  addListener(name: 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void): void;
+  addListener(name: 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void | Promise<void>): void;
   getInternalUrl(): string;
   getNativeLocation(): NativeLocation;
   getNativeUrl(): string;

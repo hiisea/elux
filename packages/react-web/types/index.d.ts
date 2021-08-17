@@ -6,7 +6,6 @@ export * from '@elux/react-components';
 export * from '@elux/app';
 export declare type GetApp<A extends RootModuleFacade, R extends string = 'route'> = GetBaseAPP<A, LoadComponentOptions, R>;
 export declare function setConfig(conf: UserConfig & {
-    enableMultiPage?: boolean;
     LoadComponentOnError?: ComponentType<{
         message: string;
     }>;

@@ -59,9 +59,17 @@ export class MultipleDispatcher {
     const listenerMap = this.listenerMap[name];
 
     if (listenerMap) {
-      Object.keys(listenerMap).forEach(id => {
-        listenerMap[id](data);
+      let hasPromise = false;
+      const arr = Object.keys(listenerMap).map(id => {
+        const result = listenerMap[id](data);
+
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   }
 

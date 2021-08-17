@@ -144,9 +144,17 @@ var MultipleDispatcher = function () {
     var listenerMap = this.listenerMap[name];
 
     if (listenerMap) {
-      Object.keys(listenerMap).forEach(function (id) {
-        listenerMap[id](data);
+      var hasPromise = false;
+      var arr = Object.keys(listenerMap).map(function (id) {
+        var result = listenerMap[id](data);
+
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   };
 
@@ -2057,38 +2065,53 @@ var Router$1 = function Router(props) {
       if (root) {
         var _pages = router.getCurrentPages().reverse();
 
+        var completeCallback;
+
         if (routeState.action === 'PUSH') {
+          var completePromise = new Promise(function (resolve) {
+            completeCallback = resolve;
+          });
           setData({
-            classname: 'elux-app elux-animation elux-change',
+            classname: 'elux-app elux-animation elux-change ' + Date.now(),
             pages: _pages
           });
           env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 300);
+          }, 200);
           env.setTimeout(function () {
             containerRef.current.className = 'elux-app';
-          }, 1000);
+            completeCallback();
+          }, 500);
+          return completePromise;
         } else if (routeState.action === 'BACK') {
+          var _completePromise = new Promise(function (resolve) {
+            completeCallback = resolve;
+          });
+
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages: [].concat(_pages, [pagesRef.current[pagesRef.current.length - 1]])
           });
           env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation elux-change';
-          }, 300);
+          }, 200);
           env.setTimeout(function () {
             setData({
-              classname: 'elux-app',
+              classname: 'elux-app ' + Date.now(),
               pages: _pages
             });
-          }, 1000);
+            completeCallback();
+          }, 500);
+          return _completePromise;
         } else if (routeState.action === 'RELAUNCH') {
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages: _pages
           });
         }
       }
+
+      return;
     });
   }, [router]);
   var nodes = pages.map(function (item) {
@@ -3044,7 +3067,7 @@ var routeConfig = {
     root: true,
     internal: false
   },
-  indexUrl: ''
+  indexUrl: '/'
 };
 var setRouteConfig = buildConfigSetter(routeConfig);
 var routeMeta = {
@@ -4174,12 +4197,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = deepClone(routeState);
               this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              this.dispatch('change', {
+              _context.next = 26;
+              return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 25:
+            case 26:
             case "end":
               return _context.stop();
           }
@@ -4274,12 +4298,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = deepClone(routeState);
               this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              this.dispatch('change', {
+              _context2.next = 26;
+              return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 25:
+            case 26:
             case "end":
               return _context2.stop();
           }
@@ -4374,12 +4399,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = deepClone(routeState);
               this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              this.dispatch('change', {
+              _context3.next = 26;
+              return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 25:
+            case 26:
             case "end":
               return _context3.stop();
           }
@@ -4463,8 +4489,15 @@ var BaseRouter = function (_MultipleDispatcher) {
               return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 16:
-              this.rootStack.back(steps[0]);
-              this.rootStack.getCurrentItem().back(steps[1]);
+              if (steps[0]) {
+                root = true;
+                this.rootStack.back(steps[0]);
+              }
+
+              if (steps[1]) {
+                this.rootStack.getCurrentItem().back(steps[1]);
+              }
+
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
@@ -4489,12 +4522,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = deepClone(routeState);
               this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              this.dispatch('change', {
+              _context4.next = 30;
+              return this.dispatch('change', {
                 routeState: routeState,
                 root: root
               });
 
-            case 29:
+            case 30:
             case "end":
               return _context4.stop();
           }
@@ -4526,7 +4560,7 @@ var BaseRouter = function (_MultipleDispatcher) {
 
   _proto2.addTask = function addTask(task) {
     if (this.curTask) {
-      this.taskList.push(task);
+      return;
     } else {
       this.executeTask(task);
     }
@@ -5824,25 +5858,6 @@ setRouteConfig({
     internal: true
   }
 });
-function setBrowserRouteConfig(_ref) {
-  var enableMultiPage = _ref.enableMultiPage;
-
-  if (enableMultiPage) {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: true,
-        internal: false
-      }
-    });
-  } else {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: false,
-        internal: true
-      }
-    });
-  }
-}
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
@@ -5907,17 +5922,43 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     }
 
     _this._unlistenHistory = _this.history.block(function (location, action) {
+      if (action === 'POP') {
+        env.setTimeout(function () {
+          return _this.router.back(1);
+        }, 100);
+        return false;
+      }
+
       var key = _this.getKey(location);
 
       var changed = _this.onChange(key);
 
       if (changed) {
-        if (action === 'POP') {
-          env.setTimeout(function () {
-            return _this.router.back(1);
-          }, 100);
+        var _location$pathname = location.pathname,
+            _pathname = _location$pathname === void 0 ? '' : _location$pathname,
+            _location$search = location.search,
+            _search = _location$search === void 0 ? '' : _location$search,
+            _location$hash = location.hash,
+            hash = _location$hash === void 0 ? '' : _location$hash;
+
+        var url = [_pathname, _search, hash].join('');
+        var callback;
+
+        if (action === 'REPLACE') {
+          callback = function callback() {
+            return _this.router.replace(url);
+          };
+        } else if (action === 'PUSH') {
+          callback = function callback() {
+            return _this.router.push(url);
+          };
+        } else {
+          callback = function callback() {
+            return _this.router.relaunch(url);
+          };
         }
 
+        env.setTimeout(callback, 100);
         return false;
       }
 
@@ -5964,7 +6005,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.replace = function replace(getNativeData, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -5974,7 +6015,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.relaunch = function relaunch(getNativeData, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -6023,7 +6064,6 @@ setAppConfig({
 function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
-  setBrowserRouteConfig(conf);
 }
 var createApp = function createApp(moduleGetter, middlewares) {
   return createBaseApp({}, function (locationTransform) {

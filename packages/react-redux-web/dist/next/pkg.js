@@ -109,9 +109,17 @@ class MultipleDispatcher {
     const listenerMap = this.listenerMap[name];
 
     if (listenerMap) {
-      Object.keys(listenerMap).forEach(id => {
-        listenerMap[id](data);
+      let hasPromise = false;
+      const arr = Object.keys(listenerMap).map(id => {
+        const result = listenerMap[id](data);
+
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   }
 
@@ -1899,39 +1907,52 @@ const Router$1 = props => {
     }) => {
       if (root) {
         const pages = router.getCurrentPages().reverse();
+        let completeCallback;
 
         if (routeState.action === 'PUSH') {
+          const completePromise = new Promise(resolve => {
+            completeCallback = resolve;
+          });
           setData({
-            classname: 'elux-app elux-animation elux-change',
+            classname: 'elux-app elux-animation elux-change ' + Date.now(),
             pages
           });
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 300);
+          }, 200);
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app';
-          }, 1000);
+            completeCallback();
+          }, 500);
+          return completePromise;
         } else if (routeState.action === 'BACK') {
+          const completePromise = new Promise(resolve => {
+            completeCallback = resolve;
+          });
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]
           });
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation elux-change';
-          }, 300);
+          }, 200);
           env.setTimeout(() => {
             setData({
-              classname: 'elux-app',
+              classname: 'elux-app ' + Date.now(),
               pages
             });
-          }, 1000);
+            completeCallback();
+          }, 500);
+          return completePromise;
         } else if (routeState.action === 'RELAUNCH') {
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages
           });
         }
       }
+
+      return;
     });
   }, [router]);
   const nodes = pages.map(item => {
@@ -2106,7 +2127,7 @@ const routeConfig = {
     root: true,
     internal: false
   },
-  indexUrl: ''
+  indexUrl: '/'
 };
 const setRouteConfig = buildConfigSetter(routeConfig);
 const routeMeta = {
@@ -3141,7 +3162,7 @@ class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState: cloneState,
       root
     });
@@ -3189,7 +3210,7 @@ class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState: cloneState,
       root
     });
@@ -3237,7 +3258,7 @@ class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState: cloneState,
       root
     });
@@ -3275,8 +3296,16 @@ class BaseRouter extends MultipleDispatcher {
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    this.rootStack.back(steps[0]);
-    this.rootStack.getCurrentItem().back(steps[1]);
+
+    if (steps[0]) {
+      root = true;
+      this.rootStack.back(steps[0]);
+    }
+
+    if (steps[1]) {
+      this.rootStack.getCurrentItem().back(steps[1]);
+    }
+
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -3292,7 +3321,7 @@ class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState,
       root
     });
@@ -3315,7 +3344,7 @@ class BaseRouter extends MultipleDispatcher {
 
   addTask(task) {
     if (this.curTask) {
-      this.taskList.push(task);
+      return;
     } else {
       this.executeTask(task);
     }
@@ -4553,25 +4582,6 @@ setRouteConfig({
     internal: true
   }
 });
-function setBrowserRouteConfig({
-  enableMultiPage
-}) {
-  if (enableMultiPage) {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: true,
-        internal: false
-      }
-    });
-  } else {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: false,
-        internal: true
-      }
-    });
-  }
-}
 class BrowserNativeRouter extends BaseNativeRouter {
   constructor(createHistory) {
     super();
@@ -4633,14 +4643,32 @@ class BrowserNativeRouter extends BaseNativeRouter {
     }
 
     this._unlistenHistory = this.history.block((location, action) => {
+      if (action === 'POP') {
+        env.setTimeout(() => this.router.back(1), 100);
+        return false;
+      }
+
       const key = this.getKey(location);
       const changed = this.onChange(key);
 
       if (changed) {
-        if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1), 100);
+        const {
+          pathname = '',
+          search = '',
+          hash = ''
+        } = location;
+        const url = [pathname, search, hash].join('');
+        let callback;
+
+        if (action === 'REPLACE') {
+          callback = () => this.router.replace(url);
+        } else if (action === 'PUSH') {
+          callback = () => this.router.push(url);
+        } else {
+          callback = () => this.router.relaunch(url);
         }
 
+        env.setTimeout(callback, 100);
         return false;
       }
 
@@ -4682,7 +4710,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   replace(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -4692,7 +4720,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   relaunch(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -4737,7 +4765,6 @@ setAppConfig({
 function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
-  setBrowserRouteConfig(conf);
 }
 const createApp = (moduleGetter, middlewares) => {
   return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares);

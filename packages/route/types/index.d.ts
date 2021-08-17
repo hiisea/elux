@@ -99,7 +99,7 @@ export interface IBaseRouter<P extends RootParams, N extends string> extends ICo
     addListener(name: 'change', callback: (data: {
         routeState: RouteState<P>;
         root: boolean;
-    }) => void): void;
+    }) => void | Promise<void>): void;
     getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;

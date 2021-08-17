@@ -6,7 +6,7 @@ export var routeConfig = {
     root: true,
     internal: false
   },
-  indexUrl: ''
+  indexUrl: '/'
 };
 export var setRouteConfig = buildConfigSetter(routeConfig);
 export var routeMeta = {

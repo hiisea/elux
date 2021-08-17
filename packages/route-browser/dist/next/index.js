@@ -8,25 +8,6 @@ setRouteConfig({
     internal: true
   }
 });
-export function setBrowserRouteConfig({
-  enableMultiPage
-}) {
-  if (enableMultiPage) {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: true,
-        internal: false
-      }
-    });
-  } else {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: false,
-        internal: true
-      }
-    });
-  }
-}
 export class BrowserNativeRouter extends BaseNativeRouter {
   constructor(createHistory) {
     super();
@@ -88,14 +69,32 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     }
 
     this._unlistenHistory = this.history.block((location, action) => {
+      if (action === 'POP') {
+        env.setTimeout(() => this.router.back(1), 100);
+        return false;
+      }
+
       const key = this.getKey(location);
       const changed = this.onChange(key);
 
       if (changed) {
-        if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1), 100);
+        const {
+          pathname = '',
+          search = '',
+          hash = ''
+        } = location;
+        const url = [pathname, search, hash].join('');
+        let callback;
+
+        if (action === 'REPLACE') {
+          callback = () => this.router.replace(url);
+        } else if (action === 'PUSH') {
+          callback = () => this.router.push(url);
+        } else {
+          callback = () => this.router.relaunch(url);
         }
 
+        env.setTimeout(callback, 100);
         return false;
       }
 
@@ -137,7 +136,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   replace(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -147,7 +146,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   relaunch(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 

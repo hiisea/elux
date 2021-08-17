@@ -264,7 +264,7 @@ export class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState: cloneState,
       root
     });
@@ -312,7 +312,7 @@ export class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState: cloneState,
       root
     });
@@ -360,7 +360,7 @@ export class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState: cloneState,
       root
     });
@@ -398,8 +398,16 @@ export class BaseRouter extends MultipleDispatcher {
     };
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    this.rootStack.back(steps[0]);
-    this.rootStack.getCurrentItem().back(steps[1]);
+
+    if (steps[0]) {
+      root = true;
+      this.rootStack.back(steps[0]);
+    }
+
+    if (steps[1]) {
+      this.rootStack.getCurrentItem().back(steps[1]);
+    }
+
     let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
@@ -415,7 +423,7 @@ export class BaseRouter extends MultipleDispatcher {
     });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
+    await this.dispatch('change', {
       routeState,
       root
     });
@@ -438,7 +446,7 @@ export class BaseRouter extends MultipleDispatcher {
 
   addTask(task) {
     if (this.curTask) {
-      this.taskList.push(task);
+      return;
     } else {
       this.executeTask(task);
     }

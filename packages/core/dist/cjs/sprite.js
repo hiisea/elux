@@ -87,9 +87,17 @@ var MultipleDispatcher = function () {
     var listenerMap = this.listenerMap[name];
 
     if (listenerMap) {
-      Object.keys(listenerMap).forEach(function (id) {
-        listenerMap[id](data);
+      var hasPromise = false;
+      var arr = Object.keys(listenerMap).map(function (id) {
+        var result = listenerMap[id](data);
+
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   };
 

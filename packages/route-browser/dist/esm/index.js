@@ -10,25 +10,6 @@ setRouteConfig({
     internal: true
   }
 });
-export function setBrowserRouteConfig(_ref) {
-  var enableMultiPage = _ref.enableMultiPage;
-
-  if (enableMultiPage) {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: true,
-        internal: false
-      }
-    });
-  } else {
-    setRouteConfig({
-      notifyNativeRouter: {
-        root: false,
-        internal: true
-      }
-    });
-  }
-}
 export var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
@@ -93,17 +74,43 @@ export var BrowserNativeRouter = function (_BaseNativeRouter) {
     }
 
     _this._unlistenHistory = _this.history.block(function (location, action) {
+      if (action === 'POP') {
+        env.setTimeout(function () {
+          return _this.router.back(1);
+        }, 100);
+        return false;
+      }
+
       var key = _this.getKey(location);
 
       var changed = _this.onChange(key);
 
       if (changed) {
-        if (action === 'POP') {
-          env.setTimeout(function () {
-            return _this.router.back(1);
-          }, 100);
+        var _location$pathname = location.pathname,
+            _pathname = _location$pathname === void 0 ? '' : _location$pathname,
+            _location$search = location.search,
+            _search = _location$search === void 0 ? '' : _location$search,
+            _location$hash = location.hash,
+            hash = _location$hash === void 0 ? '' : _location$hash;
+
+        var url = [_pathname, _search, hash].join('');
+        var callback;
+
+        if (action === 'REPLACE') {
+          callback = function callback() {
+            return _this.router.replace(url);
+          };
+        } else if (action === 'PUSH') {
+          callback = function callback() {
+            return _this.router.push(url);
+          };
+        } else {
+          callback = function callback() {
+            return _this.router.relaunch(url);
+          };
         }
 
+        env.setTimeout(callback, 100);
         return false;
       }
 
@@ -150,7 +157,7 @@ export var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.replace = function replace(getNativeData, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 
@@ -160,7 +167,7 @@ export var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.relaunch = function relaunch(getNativeData, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+      this.history.push(nativeData.nativeUrl, key);
       return nativeData;
     }
 

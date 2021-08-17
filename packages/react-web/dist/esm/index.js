@@ -1,7 +1,7 @@
 import { setReactComponentsConfig, loadComponent, useRouter } from '@elux/react-components';
 import { renderToString, renderToDocument } from '@elux/react-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
-import { createRouter, setBrowserRouteConfig } from '@elux/route-browser';
+import { createRouter } from '@elux/route-browser';
 export * from '@elux/react-components';
 export * from '@elux/app';
 setAppConfig({
@@ -11,7 +11,6 @@ setAppConfig({
 export function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
-  setBrowserRouteConfig(conf);
 }
 export var createApp = function createApp(moduleGetter, middlewares) {
   return createBaseApp({}, function (locationTransform) {

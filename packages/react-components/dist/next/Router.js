@@ -22,39 +22,52 @@ export const Router = props => {
     }) => {
       if (root) {
         const pages = router.getCurrentPages().reverse();
+        let completeCallback;
 
         if (routeState.action === 'PUSH') {
+          const completePromise = new Promise(resolve => {
+            completeCallback = resolve;
+          });
           setData({
-            classname: 'elux-app elux-animation elux-change',
+            classname: 'elux-app elux-animation elux-change ' + Date.now(),
             pages
           });
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 300);
+          }, 200);
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app';
-          }, 1000);
+            completeCallback();
+          }, 500);
+          return completePromise;
         } else if (routeState.action === 'BACK') {
+          const completePromise = new Promise(resolve => {
+            completeCallback = resolve;
+          });
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]
           });
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation elux-change';
-          }, 300);
+          }, 200);
           env.setTimeout(() => {
             setData({
-              classname: 'elux-app',
+              classname: 'elux-app ' + Date.now(),
               pages
             });
-          }, 1000);
+            completeCallback();
+          }, 500);
+          return completePromise;
         } else if (routeState.action === 'RELAUNCH') {
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages
           });
         }
       }
+
+      return;
     });
   }, [router]);
   const nodes = pages.map(item => {

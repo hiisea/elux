@@ -39,7 +39,6 @@ var _routeBrowser = require("@elux/route-browser");
 function setConfig(conf) {
   (0, _reactComponents.setReactComponentsConfig)(conf);
   (0, _app.setUserConfig)(conf);
-  (0, _routeBrowser.setBrowserRouteConfig)(conf);
 }
 
 var createApp = function createApp(moduleGetter, middlewares) {

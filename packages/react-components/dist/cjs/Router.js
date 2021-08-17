@@ -38,42 +38,59 @@ var Router = function Router(props) {
       if (root) {
         var _pages = router.getCurrentPages().reverse();
 
+        var completeCallback;
+
         if (routeState.action === 'PUSH') {
+          var completePromise = new Promise(function (resolve) {
+            completeCallback = resolve;
+          });
           setData({
-            classname: 'elux-app elux-animation elux-change',
+            classname: 'elux-app elux-animation elux-change ' + Date.now(),
             pages: _pages
           });
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 300);
+          }, 200);
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app';
-          }, 1000);
+            completeCallback();
+          }, 500);
+
+          return completePromise;
         } else if (routeState.action === 'BACK') {
+          var _completePromise = new Promise(function (resolve) {
+            completeCallback = resolve;
+          });
+
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages: [].concat(_pages, [pagesRef.current[pagesRef.current.length - 1]])
           });
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation elux-change';
-          }, 300);
+          }, 200);
 
           _core.env.setTimeout(function () {
             setData({
-              classname: 'elux-app',
+              classname: 'elux-app ' + Date.now(),
               pages: _pages
             });
-          }, 1000);
+            completeCallback();
+          }, 500);
+
+          return _completePromise;
         } else if (routeState.action === 'RELAUNCH') {
           setData({
-            classname: 'elux-app',
+            classname: 'elux-app ' + Date.now(),
             pages: _pages
           });
         }
       }
+
+      return;
     });
   }, [router]);
   var nodes = pages.map(function (item) {

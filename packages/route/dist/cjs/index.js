@@ -342,12 +342,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = (0, _core.deepClone)(routeState);
               this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
-              this.dispatch('change', {
+              _context.next = 26;
+              return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 25:
+            case 26:
             case "end":
               return _context.stop();
           }
@@ -442,12 +443,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = (0, _core.deepClone)(routeState);
               this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
-              this.dispatch('change', {
+              _context2.next = 26;
+              return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 25:
+            case 26:
             case "end":
               return _context2.stop();
           }
@@ -542,12 +544,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = (0, _core.deepClone)(routeState);
               this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
-              this.dispatch('change', {
+              _context3.next = 26;
+              return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 25:
+            case 26:
             case "end":
               return _context3.stop();
           }
@@ -633,8 +636,15 @@ var BaseRouter = function (_MultipleDispatcher) {
               return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 16:
-              this.rootStack.back(steps[0]);
-              this.rootStack.getCurrentItem().back(steps[1]);
+              if (steps[0]) {
+                root = true;
+                this.rootStack.back(steps[0]);
+              }
+
+              if (steps[1]) {
+                this.rootStack.getCurrentItem().back(steps[1]);
+              }
+
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
@@ -659,12 +669,13 @@ var BaseRouter = function (_MultipleDispatcher) {
               });
               cloneState = (0, _core.deepClone)(routeState);
               this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
-              this.dispatch('change', {
+              _context4.next = 30;
+              return this.dispatch('change', {
                 routeState: routeState,
                 root: root
               });
 
-            case 29:
+            case 30:
             case "end":
               return _context4.stop();
           }
@@ -696,7 +707,7 @@ var BaseRouter = function (_MultipleDispatcher) {
 
   _proto2.addTask = function addTask(task) {
     if (this.curTask) {
-      this.taskList.push(task);
+      return;
     } else {
       this.executeTask(task);
     }

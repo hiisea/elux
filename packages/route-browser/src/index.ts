@@ -4,13 +4,13 @@ import {env} from '@elux/core';
 
 setRouteConfig({notifyNativeRouter: {root: true, internal: true}});
 
-export function setBrowserRouteConfig({enableMultiPage}: {enableMultiPage?: boolean}): void {
-  if (enableMultiPage) {
-    setRouteConfig({notifyNativeRouter: {root: true, internal: false}});
-  } else {
-    setRouteConfig({notifyNativeRouter: {root: false, internal: true}});
-  }
-}
+// export function setBrowserRouteConfig({enableMultiPage}: {enableMultiPage?: boolean}): void {
+//   if (enableMultiPage) {
+//     setRouteConfig({notifyNativeRouter: {root: true, internal: false}});
+//   } else {
+//     setRouteConfig({notifyNativeRouter: {root: false, internal: true}});
+//   }
+// }
 
 type UnregisterCallback = () => void;
 
@@ -92,12 +92,24 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     //   });
     // }
     this._unlistenHistory = this.history.block((location, action) => {
+      if (action === 'POP') {
+        env.setTimeout(() => this.router.back(1), 100);
+        return false;
+      }
       const key = this.getKey(location);
       const changed = this.onChange(key);
       if (changed) {
-        if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1), 100);
+        const {pathname = '', search = '', hash = ''} = location;
+        const url = [pathname, search, hash].join('');
+        let callback: () => void;
+        if (action === 'REPLACE') {
+          callback = () => this.router.replace(url);
+        } else if (action === 'PUSH') {
+          callback = () => this.router.push(url);
+        } else {
+          callback = () => this.router.relaunch(url);
         }
+        env.setTimeout(callback, 100);
         return false;
       }
       return undefined;
@@ -132,7 +144,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   protected replace(getNativeData: () => NativeData, key: string): NativeData | undefined {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key as any);
+      this.history.push(nativeData.nativeUrl, key as any);
       return nativeData;
     }
     return undefined;
@@ -141,7 +153,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   protected relaunch(getNativeData: () => NativeData, key: string): NativeData | undefined {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key as any);
+      this.history.push(nativeData.nativeUrl, key as any);
       return nativeData;
     }
     return undefined;

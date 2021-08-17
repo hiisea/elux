@@ -46,10 +46,10 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
   protected listenerId = 0;
 
   protected listenerMap: {
-    [N in keyof T]?: {[id: string]: (data: T[N]) => void};
+    [N in keyof T]?: {[id: string]: (data: T[N]) => void | Promise<void>};
   } = {};
 
-  addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void): () => void {
+  addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void | Promise<void>): () => void {
     this.listenerId++;
     const id = `${this.listenerId}`;
     if (!this.listenerMap[name]) {
@@ -64,14 +64,20 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
     };
   }
 
-  dispatch<N extends keyof T>(name: N, data: T[N]): void {
+  dispatch<N extends keyof T>(name: N, data: T[N]): void | Promise<void[]> {
     const listenerMap = this.listenerMap[name] as {
-      [id: string]: (data: T[N]) => void;
+      [id: string]: (data: T[N]) => void | Promise<void>;
     };
     if (listenerMap) {
-      Object.keys(listenerMap).forEach((id) => {
-        listenerMap[id](data);
+      let hasPromise = false;
+      const arr = Object.keys(listenerMap).map((id) => {
+        const result = listenerMap[id](data);
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   }
 }

@@ -22,26 +22,38 @@ export const Router: React.FC = (props) => {
     return router.addListener('change', ({routeState, root}) => {
       if (root) {
         const pages = router.getCurrentPages().reverse();
+        let completeCallback: () => void;
         if (routeState.action === 'PUSH') {
-          setData({classname: 'elux-app elux-animation elux-change', pages});
+          const completePromise = new Promise<void>((resolve) => {
+            completeCallback = resolve;
+          });
+          setData({classname: 'elux-app elux-animation elux-change ' + Date.now(), pages});
           env.setTimeout(() => {
             containerRef.current!.className = 'elux-app elux-animation';
-          }, 300);
+          }, 200);
           env.setTimeout(() => {
             containerRef.current!.className = 'elux-app';
-          }, 1000);
+            completeCallback();
+          }, 500);
+          return completePromise;
         } else if (routeState.action === 'BACK') {
-          setData({classname: 'elux-app', pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]});
+          const completePromise = new Promise<void>((resolve) => {
+            completeCallback = resolve;
+          });
+          setData({classname: 'elux-app ' + Date.now(), pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]});
           env.setTimeout(() => {
             containerRef.current!.className = 'elux-app elux-animation elux-change';
-          }, 300);
+          }, 200);
           env.setTimeout(() => {
-            setData({classname: 'elux-app', pages});
-          }, 1000);
+            setData({classname: 'elux-app ' + Date.now(), pages});
+            completeCallback();
+          }, 500);
+          return completePromise;
         } else if (routeState.action === 'RELAUNCH') {
-          setData({classname: 'elux-app', pages});
+          setData({classname: 'elux-app ' + Date.now(), pages});
         }
       }
+      return;
     });
   }, [router]);
   const nodes = pages.map((item) => {
