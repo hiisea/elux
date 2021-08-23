@@ -122,7 +122,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
     }
   };
 }
-export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
+export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, request, response) {
   if (middlewares === void 0) {
     middlewares = [];
   }
@@ -157,7 +157,7 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
           appMeta.router = router;
           var baseStore = storeCreator(storeOptions);
           return router.initialize.then(function () {
-            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
+            var _initApp3 = initApp(router, baseStore, middlewares, viewName, undefined, request, response),
                 store = _initApp3.store,
                 AppView = _initApp3.AppView,
                 setup = _initApp3.setup;

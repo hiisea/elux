@@ -15,6 +15,6 @@ export function setConfig(conf) {
 export const createApp = (moduleGetter, middlewares) => {
   return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares);
 };
-export const createSSR = (moduleGetter, url, middlewares) => {
-  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares);
+export const createSSR = (moduleGetter, request, response, middlewares) => {
+  return createBaseSSR({}, locationTransform => createRouter(request.url, locationTransform), renderToString, moduleGetter, middlewares, request, response);
 };

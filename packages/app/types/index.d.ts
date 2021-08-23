@@ -59,7 +59,9 @@ export interface CreateApp<INS = {}> {
     };
 }
 export interface CreateSSR<INS = {}> {
-    (moduleGetter: ModuleGetter, url: string, middlewares?: IStoreMiddleware[]): {
+    (moduleGetter: ModuleGetter, request: {
+        url: string;
+    }, response: any, middlewares?: IStoreMiddleware[]): {
         useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
             render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
         };
@@ -83,13 +85,13 @@ export declare function createBaseApp<INS = {}>(ins: INS, createRouter: (locatio
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<IStore & B>;
     };
 };
-export declare function createBaseSSR<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+export declare function createBaseSSR<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>, moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] | undefined, request: unknown, response: unknown): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(storeBuilder: StoreBuilder<O, B>): INS & {
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
     };
 };
 export declare function patchActions(typeName: string, json?: string): void;
-export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route'> = {
+export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', Req = unknown, Res = unknown> = {
     State: {
         [M in keyof A]: A[M]['state'];
     };
@@ -101,7 +103,7 @@ export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions,
     }>;
     Router: IBaseRouter<{
         [M in keyof A]: A[M]['params'];
-    }, Extract<keyof A[R]['components'], string>>;
+    }, Extract<keyof A[R]['components'], string>, Req, Res>;
     GetActions<N extends keyof A>(...args: N[]): {
         [K in N]: A[K]['actions'];
     };

@@ -7,11 +7,13 @@ export function initApp<ST extends BStore = BStore>(
   baseStore: ST,
   middlewares?: IStoreMiddleware[],
   appViewName?: string,
-  preloadComponents: string[] = []
+  preloadComponents: string[] = [],
+  request?: unknown,
+  response?: unknown
 ): {store: IStore & ST; AppView: EluxComponent; setup: Promise<void>} {
   MetaData.currentRouter = router;
   const store = enhanceStore(baseStore, router, middlewares) as IStore & ST;
-  router.startup(store);
+  router.startup(store, request, response);
   const {AppModuleName, RouteModuleName} = coreConfig;
   const {moduleGetter} = MetaData;
   const appModule = getModule(AppModuleName) as CommonModule;

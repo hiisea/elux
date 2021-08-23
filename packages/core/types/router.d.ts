@@ -28,6 +28,7 @@ export declare class CoreModuleHandlers<S extends Record<string, any> = {}, R ex
     readonly initState: S;
     constructor(moduleName: string, store: IStore, initState: S);
     protected get actions(): ActionsThis<this>;
+    protected getLatestState(): R;
     protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {
         [K in keyof T]: Handler<T[K]>;
     };

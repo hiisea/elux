@@ -54,7 +54,7 @@ export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, Pag
 
 const appMeta: {
   SSRTPL: string;
-  router: IBaseRouter<any, string>;
+  router: IBaseRouter;
 } = {
   router: null as any,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
@@ -126,7 +126,14 @@ export interface CreateApp<INS = {}> {
 }
 
 export interface CreateSSR<INS = {}> {
-  (moduleGetter: ModuleGetter, url: string, middlewares?: IStoreMiddleware[]): {
+  (
+    moduleGetter: ModuleGetter,
+    request: {
+      url: string;
+    },
+    response: any,
+    middlewares?: IStoreMiddleware[]
+  ): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
@@ -216,7 +223,9 @@ export function createBaseSSR<INS = {}>(
   createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>,
   render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>,
   moduleGetter: ModuleGetter,
-  middlewares: IStoreMiddleware[] = []
+  middlewares: IStoreMiddleware[] = [],
+  request: unknown,
+  response: unknown
 ): {
   useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
     storeBuilder: StoreBuilder<O, B>
@@ -235,7 +244,7 @@ export function createBaseSSR<INS = {}>(
           appMeta.router = router;
           const baseStore = storeCreator(storeOptions);
           return router.initialize.then(() => {
-            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName);
+            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName, undefined, request, response);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
@@ -265,11 +274,11 @@ export function patchActions(typeName: string, json?: string): void {
   }
 }
 
-export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route'> = {
+export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', Req = unknown, Res = unknown> = {
   State: {[M in keyof A]: A[M]['state']};
   RouteParams: {[M in keyof A]?: A[M]['params']};
   RouteState: RouteState<{[M in keyof A]?: A[M]['params']}>;
-  Router: IBaseRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A[R]['components'], string>>;
+  Router: IBaseRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A[R]['components'], string>, Req, Res>;
   GetActions<N extends keyof A>(...args: N[]): {[K in N]: A[K]['actions']};
   LoadComponent: LoadComponent<A, LoadComponentOptions>;
   Modules: RootModuleAPI<A>;

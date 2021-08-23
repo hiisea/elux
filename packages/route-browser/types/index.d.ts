@@ -1,8 +1,7 @@
-import { BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, IBaseRouter } from '@elux/route';
+import { BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform } from '@elux/route';
 import { History } from 'history';
 export declare class BrowserNativeRouter extends BaseNativeRouter {
     private _unlistenHistory;
-    protected router: Router<any, string>;
     history: History<never>;
     constructor(createHistory: 'Browser' | 'Hash' | 'Memory' | string);
     getUrl(): string;
@@ -16,11 +15,8 @@ export declare class BrowserNativeRouter extends BaseNativeRouter {
     toOutside(url: string): void;
     destroy(): void;
 }
-export declare class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> implements IRouter<P, N> {
+export declare class Router<P extends RootParams, N extends string, Req = unknown, Res = unknown> extends BaseRouter<P, N, Req, Res> {
     nativeRouter: BrowserNativeRouter;
     constructor(browserNativeRouter: BrowserNativeRouter, locationTransform: LocationTransform);
 }
 export declare function createRouter<P extends RootParams, N extends string>(createHistory: 'Browser' | 'Hash' | 'Memory' | string, locationTransform: LocationTransform): Router<P, N>;
-export interface IRouter<P extends RootParams, N extends string> extends IBaseRouter<P, N> {
-    nativeRouter: BrowserNativeRouter;
-}

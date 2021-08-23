@@ -95,7 +95,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
 
   };
 }
-export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []) {
+export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = [], request, response) {
   defineModuleGetter(moduleGetter);
   const routeModule = getModule(routeConfig.RouteModuleName);
   return {
@@ -117,7 +117,7 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName);
+            } = initApp(router, baseStore, middlewares, viewName, undefined, request, response);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {

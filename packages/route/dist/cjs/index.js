@@ -40,7 +40,7 @@ var BaseNativeRouter = function () {
   function BaseNativeRouter() {
     (0, _defineProperty2.default)(this, "curTask", void 0);
     (0, _defineProperty2.default)(this, "taskList", []);
-    (0, _defineProperty2.default)(this, "router", null);
+    (0, _defineProperty2.default)(this, "router", void 0);
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -114,6 +114,8 @@ var BaseRouter = function (_MultipleDispatcher) {
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "injectedModules", {});
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "rootStack", new _history.RootStack());
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "latestState", {});
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "request", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "response", void 0);
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
     nativeRouter.setRouter((0, _assertThisInitialized2.default)(_this2));
@@ -153,7 +155,9 @@ var BaseRouter = function (_MultipleDispatcher) {
 
   var _proto2 = BaseRouter.prototype;
 
-  _proto2.startup = function startup(store) {
+  _proto2.startup = function startup(store, request, response) {
+    this.request = request;
+    this.response = response;
     var historyStack = new _history.HistoryStack(this.rootStack, store);
     var historyRecord = new _history.HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);

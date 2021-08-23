@@ -49,10 +49,10 @@ var createApp = function createApp(moduleGetter, middlewares) {
 
 exports.createApp = createApp;
 
-var createSSR = function createSSR(moduleGetter, url, middlewares) {
+var createSSR = function createSSR(moduleGetter, request, response, middlewares) {
   return (0, _app.createBaseSSR)({}, function (locationTransform) {
-    return (0, _routeBrowser.createRouter)(url, locationTransform);
-  }, _stage.renderToString, moduleGetter, middlewares);
+    return (0, _routeBrowser.createRouter)(request.url, locationTransform);
+  }, _stage.renderToString, moduleGetter, middlewares, request, response);
 };
 
 exports.createSSR = createSSR;

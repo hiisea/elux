@@ -16,7 +16,7 @@ export var BaseNativeRouter = function () {
 
     _defineProperty(this, "taskList", []);
 
-    _defineProperty(this, "router", null);
+    _defineProperty(this, "router", void 0);
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -98,6 +98,10 @@ export var BaseRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "latestState", {});
 
+    _defineProperty(_assertThisInitialized(_this2), "request", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "response", void 0);
+
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
     nativeRouter.setRouter(_assertThisInitialized(_this2));
@@ -138,7 +142,9 @@ export var BaseRouter = function (_MultipleDispatcher) {
 
   var _proto2 = BaseRouter.prototype;
 
-  _proto2.startup = function startup(store) {
+  _proto2.startup = function startup(store, request, response) {
+    this.request = request;
+    this.response = response;
     var historyStack = new HistoryStack(this.rootStack, store);
     var historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);

@@ -21,7 +21,7 @@ interface NativeRouterTask {
 export declare abstract class BaseNativeRouter {
     protected curTask?: NativeRouterTask;
     protected taskList: RouterTask[];
-    protected router: BaseRouter<any, string>;
+    protected router: BaseRouter;
     protected abstract push(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
     protected abstract replace(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
     protected abstract relaunch(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
@@ -29,15 +29,15 @@ export declare abstract class BaseNativeRouter {
     abstract toOutside(url: string): void;
     abstract destroy(): void;
     protected onChange(key: string): boolean;
-    setRouter(router: BaseRouter<any, string>): void;
+    setRouter(router: BaseRouter): void;
     execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined>;
 }
-export declare abstract class BaseRouter<P extends RootParams, N extends string> extends MultipleDispatcher<{
+export declare abstract class BaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown> extends MultipleDispatcher<{
     change: {
         routeState: RouteState<P>;
         root: boolean;
     };
-}> implements IBaseRouter<P, N> {
+}> implements IBaseRouter<P, N, Req, Res> {
     nativeRouter: BaseNativeRouter;
     protected locationTransform: LocationTransform;
     private curTask?;
@@ -52,8 +52,10 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     };
     readonly rootStack: RootStack;
     latestState: Record<string, any>;
+    request: Req | undefined;
+    response: Res | undefined;
     constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
-    startup(store: IStore): void;
+    startup(store: IStore, request?: Req, response?: Res): void;
     getCurrentPages(): {
         pagename: string;
         store: IStore;
@@ -92,7 +94,9 @@ export declare abstract class BaseRouter<P extends RootParams, N extends string>
     private addTask;
     destroy(): void;
 }
-export interface IBaseRouter<P extends RootParams, N extends string> extends ICoreRouter {
+export interface IBaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown> extends ICoreRouter {
+    request?: Req;
+    response?: Res;
     routeState: RouteState<P>;
     initialize: Promise<RouteState<P>>;
     nativeRouter: any;

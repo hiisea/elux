@@ -2,14 +2,14 @@ import _extends from "@babel/runtime/helpers/esm/extends";
 import { MetaData, coreConfig } from './basic';
 import { getModule, getComponet, getModuleList, getComponentList } from './inject';
 import { enhanceStore } from './store';
-export function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+export function initApp(router, baseStore, middlewares, appViewName, preloadComponents, request, response) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   MetaData.currentRouter = router;
   var store = enhanceStore(baseStore, router, middlewares);
-  router.startup(store);
+  router.startup(store, request, response);
   var AppModuleName = coreConfig.AppModuleName,
       RouteModuleName = coreConfig.RouteModuleName;
   var moduleGetter = MetaData.moduleGetter;

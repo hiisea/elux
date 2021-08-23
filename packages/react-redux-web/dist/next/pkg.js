@@ -1347,6 +1347,12 @@ let CoreModuleHandlers = _decorate(null, function (_initialize2) {
       }
     }, {
       kind: "method",
+      key: "getLatestState",
+      value: function getLatestState() {
+        return this.store.router.latestState;
+      }
+    }, {
+      kind: "method",
       key: "getPrivateActions",
       value: function getPrivateActions(actionsMap) {
         return MetaData.facadeMap[this.moduleName].actions;
@@ -1674,10 +1680,10 @@ function enhanceStore(baseStore, router, middlewares) {
   return store;
 }
 
-function initApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents = [], request, response) {
   MetaData.currentRouter = router;
   const store = enhanceStore(baseStore, router, middlewares);
-  router.startup(store);
+  router.startup(store, request, response);
   const {
     AppModuleName,
     RouteModuleName
@@ -2909,7 +2915,7 @@ class BaseNativeRouter {
 
     _defineProperty(this, "taskList", []);
 
-    _defineProperty(this, "router", null);
+    _defineProperty(this, "router", void 0);
   }
 
   onChange(key) {
@@ -2977,6 +2983,10 @@ class BaseRouter extends MultipleDispatcher {
 
     _defineProperty(this, "latestState", {});
 
+    _defineProperty(this, "request", void 0);
+
+    _defineProperty(this, "response", void 0);
+
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
@@ -3012,7 +3022,9 @@ class BaseRouter extends MultipleDispatcher {
     }
   }
 
-  startup(store) {
+  startup(store, request, response) {
+    this.request = request;
+    this.response = response;
     const historyStack = new HistoryStack(this.rootStack, store);
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -3482,7 +3494,7 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
 
   };
 }
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []) {
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = [], request, response) {
   defineModuleGetter(moduleGetter);
   const routeModule = getModule(routeConfig.RouteModuleName);
   return {
@@ -3504,7 +3516,7 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName);
+            } = initApp(router, baseStore, middlewares, viewName, undefined, request, response);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {
@@ -4769,8 +4781,8 @@ function setConfig(conf) {
 const createApp = (moduleGetter, middlewares) => {
   return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares);
 };
-const createSSR = (moduleGetter, url, middlewares) => {
-  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares);
+const createSSR = (moduleGetter, request, response, middlewares) => {
+  return createBaseSSR({}, locationTransform => createRouter(request.url, locationTransform), renderToString, moduleGetter, middlewares, request, response);
 };
 
 function createCommonjsModule(fn) {

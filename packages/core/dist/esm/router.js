@@ -103,6 +103,12 @@ export var CoreModuleHandlers = _decorate(null, function (_initialize2) {
       }
     }, {
       kind: "method",
+      key: "getLatestState",
+      value: function getLatestState() {
+        return this.store.router.latestState;
+      }
+    }, {
+      kind: "method",
       key: "getPrivateActions",
       value: function getPrivateActions(actionsMap) {
         return MetaData.facadeMap[this.moduleName].actions;

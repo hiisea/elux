@@ -1469,6 +1469,12 @@ var CoreModuleHandlers = _decorate(null, function (_initialize2) {
       }
     }, {
       kind: "method",
+      key: "getLatestState",
+      value: function getLatestState() {
+        return this.store.router.latestState;
+      }
+    }, {
+      kind: "method",
       key: "getPrivateActions",
       value: function getPrivateActions(actionsMap) {
         return MetaData.facadeMap[this.moduleName].actions;
@@ -1823,14 +1829,14 @@ function enhanceStore(baseStore, router, middlewares) {
   return store;
 }
 
-function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents, request, response) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   MetaData.currentRouter = router;
   var store = enhanceStore(baseStore, router, middlewares);
-  router.startup(store);
+  router.startup(store, request, response);
   var AppModuleName = coreConfig.AppModuleName,
       RouteModuleName = coreConfig.RouteModuleName;
   var moduleGetter = MetaData.moduleGetter;
@@ -3886,7 +3892,7 @@ var BaseNativeRouter = function () {
 
     _defineProperty(this, "taskList", []);
 
-    _defineProperty(this, "router", null);
+    _defineProperty(this, "router", void 0);
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -3968,6 +3974,10 @@ var BaseRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "latestState", {});
 
+    _defineProperty(_assertThisInitialized(_this2), "request", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "response", void 0);
+
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
     nativeRouter.setRouter(_assertThisInitialized(_this2));
@@ -4008,7 +4018,9 @@ var BaseRouter = function (_MultipleDispatcher) {
 
   var _proto2 = BaseRouter.prototype;
 
-  _proto2.startup = function startup(store) {
+  _proto2.startup = function startup(store, request, response) {
+    this.request = request;
+    this.response = response;
     var historyStack = new HistoryStack(this.rootStack, store);
     var historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -4735,7 +4747,7 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
     }
   };
 }
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, request, response) {
   if (middlewares === void 0) {
     middlewares = [];
   }
@@ -4770,7 +4782,7 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
           appMeta.router = router;
           var baseStore = storeCreator(storeOptions);
           return router.initialize.then(function () {
-            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
+            var _initApp3 = initApp(router, baseStore, middlewares, viewName, undefined, request, response),
                 store = _initApp3.store,
                 AppView = _initApp3.AppView,
                 setup = _initApp3.setup;
@@ -6070,10 +6082,10 @@ var createApp = function createApp(moduleGetter, middlewares) {
     return createRouter('Browser', locationTransform);
   }, renderToDocument, moduleGetter, middlewares);
 };
-var createSSR = function createSSR(moduleGetter, url, middlewares) {
+var createSSR = function createSSR(moduleGetter, request, response, middlewares) {
   return createBaseSSR({}, function (locationTransform) {
-    return createRouter(url, locationTransform);
-  }, renderToString, moduleGetter, middlewares);
+    return createRouter(request.url, locationTransform);
+  }, renderToString, moduleGetter, middlewares, request, response);
 };
 
 /** @license React v16.13.1

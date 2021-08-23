@@ -11,7 +11,7 @@ export class BaseNativeRouter {
 
     _defineProperty(this, "taskList", []);
 
-    _defineProperty(this, "router", null);
+    _defineProperty(this, "router", void 0);
   }
 
   onChange(key) {
@@ -79,6 +79,10 @@ export class BaseRouter extends MultipleDispatcher {
 
     _defineProperty(this, "latestState", {});
 
+    _defineProperty(this, "request", void 0);
+
+    _defineProperty(this, "response", void 0);
+
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
     nativeRouter.setRouter(this);
@@ -114,7 +118,9 @@ export class BaseRouter extends MultipleDispatcher {
     }
   }
 
-  startup(store) {
+  startup(store, request, response) {
+    this.request = request;
+    this.response = response;
     const historyStack = new HistoryStack(this.rootStack, store);
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);

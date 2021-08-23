@@ -49,7 +49,7 @@ export abstract class BaseNativeRouter {
 
   protected taskList: RouterTask[] = [];
 
-  protected router: BaseRouter<any, string> = null as any;
+  protected router!: BaseRouter;
 
   // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
 
@@ -74,7 +74,7 @@ export abstract class BaseNativeRouter {
     return key !== this.router.routeState.key;
   }
 
-  setRouter(router: BaseRouter<any, string>): void {
+  setRouter(router: BaseRouter): void {
     this.router = router;
   }
 
@@ -102,9 +102,9 @@ export abstract class BaseNativeRouter {
   }
 }
 
-export abstract class BaseRouter<P extends RootParams, N extends string>
+export abstract class BaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown>
   extends MultipleDispatcher<{change: {routeState: RouteState<P>; root: boolean}}>
-  implements IBaseRouter<P, N> {
+  implements IBaseRouter<P, N, Req, Res> {
   private curTask?: () => Promise<void>;
 
   private taskList: Array<() => Promise<void>> = [];
@@ -124,6 +124,10 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
   public readonly rootStack: RootStack = new RootStack();
 
   public latestState: Record<string, any> = {};
+
+  public request: Req | undefined;
+
+  public response: Res | undefined;
 
   constructor(url: string, public nativeRouter: BaseNativeRouter, protected locationTransform: LocationTransform) {
     super();
@@ -145,7 +149,9 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
       this.initialize = Promise.resolve(callback(locationOrPromise));
     }
   }
-  startup(store: IStore): void {
+  startup(store: IStore, request?: Req, response?: Res): void {
+    this.request = request;
+    this.response = response;
     const historyStack = new HistoryStack(this.rootStack, store);
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -396,7 +402,9 @@ export abstract class BaseRouter<P extends RootParams, N extends string>
   }
 }
 
-export interface IBaseRouter<P extends RootParams, N extends string> extends ICoreRouter {
+export interface IBaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown> extends ICoreRouter {
+  request?: Req;
+  response?: Res;
   routeState: RouteState<P>;
   initialize: Promise<RouteState<P>>;
   nativeRouter: any;

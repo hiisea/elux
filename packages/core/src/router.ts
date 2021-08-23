@@ -71,6 +71,9 @@ export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Re
     return MetaData.facadeMap[this.moduleName].actions as any;
   }
 
+  protected getLatestState(): R {
+    return this.store.router.latestState as R;
+  }
   protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {[K in keyof T]: Handler<T[K]>} {
     return MetaData.facadeMap[this.moduleName].actions as any;
   }

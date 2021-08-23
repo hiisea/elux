@@ -4,7 +4,7 @@ import { LoadComponentOptions } from '@elux/react-components';
 import { CreateApp, CreateSSR, UserConfig, GetBaseAPP } from '@elux/app';
 export * from '@elux/react-components';
 export * from '@elux/app';
-export declare type GetApp<A extends RootModuleFacade, R extends string = 'route'> = GetBaseAPP<A, LoadComponentOptions, R>;
+export declare type GetApp<A extends RootModuleFacade, R extends string = 'route', Req = unknown, Res = unknown> = GetBaseAPP<A, LoadComponentOptions, R, Req, Res>;
 export declare function setConfig(conf: UserConfig & {
     LoadComponentOnError?: ComponentType<{
         message: string;

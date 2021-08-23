@@ -17,8 +17,8 @@ export var createApp = function createApp(moduleGetter, middlewares) {
     return createRouter('Browser', locationTransform);
   }, renderToDocument, moduleGetter, middlewares);
 };
-export var createSSR = function createSSR(moduleGetter, url, middlewares) {
+export var createSSR = function createSSR(moduleGetter, request, response, middlewares) {
   return createBaseSSR({}, function (locationTransform) {
-    return createRouter(url, locationTransform);
-  }, renderToString, moduleGetter, middlewares);
+    return createRouter(request.url, locationTransform);
+  }, renderToString, moduleGetter, middlewares, request, response);
 };

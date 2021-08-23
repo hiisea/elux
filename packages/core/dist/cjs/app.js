@@ -14,14 +14,14 @@ var _inject = require("./inject");
 
 var _store = require("./store");
 
-function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents, request, response) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   _basic.MetaData.currentRouter = router;
   var store = (0, _store.enhanceStore)(baseStore, router, middlewares);
-  router.startup(store);
+  router.startup(store, request, response);
   var AppModuleName = _basic.coreConfig.AppModuleName,
       RouteModuleName = _basic.coreConfig.RouteModuleName;
   var moduleGetter = _basic.MetaData.moduleGetter;

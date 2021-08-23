@@ -6,7 +6,6 @@ import {
   NativeData,
   RootParams,
   LocationTransform,
-  IBaseRouter,
   setRouteConfig,
   routeConfig,
 } from '@elux/route';
@@ -112,7 +111,7 @@ export class MPNativeRouter extends BaseNativeRouter {
   }
 }
 
-export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> implements IRouter<P, N> {
+export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> {
   public declare nativeRouter: MPNativeRouter;
 
   constructor(mpNativeRouter: MPNativeRouter, locationTransform: LocationTransform) {
@@ -128,8 +127,4 @@ export function createRouter<P extends RootParams, N extends string>(
   const mpNativeRouter = new MPNativeRouter(routeENV, tabPages);
   const router = new Router<P, N>(mpNativeRouter, locationTransform);
   return router;
-}
-
-export interface IRouter<P extends RootParams, N extends string> extends IBaseRouter<P, N> {
-  nativeRouter: MPNativeRouter;
 }
