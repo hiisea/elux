@@ -5,13 +5,13 @@ import { RootStack, HistoryStack, HistoryRecord } from './history';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl, createLocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
-export class BaseNativeRouter {
+export class NativeRouter {
   constructor() {
     _defineProperty(this, "curTask", void 0);
 
     _defineProperty(this, "taskList", []);
 
-    _defineProperty(this, "router", void 0);
+    _defineProperty(this, "eluxRouter", void 0);
   }
 
   onChange(key) {
@@ -21,11 +21,11 @@ export class BaseNativeRouter {
       return false;
     }
 
-    return key !== this.router.routeState.key;
+    return key !== this.eluxRouter.routeState.key;
   }
 
-  setRouter(router) {
-    this.router = router;
+  setEluxRouter(router) {
+    this.eluxRouter = router;
   }
 
   execute(method, getNativeData, ...args) {
@@ -55,7 +55,7 @@ export class BaseNativeRouter {
   }
 
 }
-export class BaseRouter extends MultipleDispatcher {
+export class EluxRouter extends MultipleDispatcher {
   constructor(url, nativeRouter, locationTransform) {
     super();
 
@@ -79,13 +79,11 @@ export class BaseRouter extends MultipleDispatcher {
 
     _defineProperty(this, "latestState", {});
 
-    _defineProperty(this, "request", void 0);
-
-    _defineProperty(this, "response", void 0);
+    _defineProperty(this, "native", void 0);
 
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
-    nativeRouter.setRouter(this);
+    nativeRouter.setEluxRouter(this);
     const locationOrPromise = locationTransform.urlToLocation(url);
 
     const callback = location => {
@@ -118,9 +116,8 @@ export class BaseRouter extends MultipleDispatcher {
     }
   }
 
-  startup(store, request, response) {
-    this.request = request;
-    this.response = response;
+  startup(store, native) {
+    this.native = native;
     const historyStack = new HistoryStack(this.rootStack, store);
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -450,9 +447,13 @@ export class BaseRouter extends MultipleDispatcher {
     task().finally(this.taskComplete.bind(this));
   }
 
-  addTask(task) {
+  addTask(task, nonblocking) {
     if (this.curTask) {
-      return;
+      if (nonblocking) {
+        this.taskList.push(task);
+      } else {
+        return;
+      }
     } else {
       this.executeTask(task);
     }

@@ -257,10 +257,11 @@ function getApp() {
     },
     useRouter: appConfig.useRouter,
     useStore: appConfig.useStore,
-    getRouter: function getRouter(moduleHandler) {
-      return moduleHandler.router;
-    },
     GetRouter: function GetRouter() {
+      if (_core.env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
+      }
+
       return appMeta.router;
     },
     LoadComponent: appConfig.loadComponent,

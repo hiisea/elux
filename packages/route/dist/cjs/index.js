@@ -6,7 +6,7 @@ exports.__esModule = true;
 exports.beforeRouteChangeAction = beforeRouteChangeAction;
 exports.testRouteChangeAction = testRouteChangeAction;
 exports.createRouteModule = createRouteModule;
-exports.RouteActionTypes = exports.BaseRouter = exports.BaseNativeRouter = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.routeMeta = void 0;
+exports.RouteActionTypes = exports.EluxRouter = exports.NativeRouter = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.routeMeta = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -36,14 +36,14 @@ exports.createLocationTransform = _transform.createLocationTransform;
 exports.nativeUrlToNativeLocation = _transform.nativeUrlToNativeLocation;
 exports.nativeLocationToNativeUrl = _transform.nativeLocationToNativeUrl;
 
-var BaseNativeRouter = function () {
-  function BaseNativeRouter() {
+var NativeRouter = function () {
+  function NativeRouter() {
     (0, _defineProperty2.default)(this, "curTask", void 0);
     (0, _defineProperty2.default)(this, "taskList", []);
-    (0, _defineProperty2.default)(this, "router", void 0);
+    (0, _defineProperty2.default)(this, "eluxRouter", void 0);
   }
 
-  var _proto = BaseNativeRouter.prototype;
+  var _proto = NativeRouter.prototype;
 
   _proto.onChange = function onChange(key) {
     if (this.curTask) {
@@ -52,11 +52,11 @@ var BaseNativeRouter = function () {
       return false;
     }
 
-    return key !== this.router.routeState.key;
+    return key !== this.eluxRouter.routeState.key;
   };
 
-  _proto.setRouter = function setRouter(router) {
-    this.router = router;
+  _proto.setEluxRouter = function setEluxRouter(router) {
+    this.eluxRouter = router;
   };
 
   _proto.execute = function execute(method, getNativeData) {
@@ -92,15 +92,15 @@ var BaseNativeRouter = function () {
     });
   };
 
-  return BaseNativeRouter;
+  return NativeRouter;
 }();
 
-exports.BaseNativeRouter = BaseNativeRouter;
+exports.NativeRouter = NativeRouter;
 
-var BaseRouter = function (_MultipleDispatcher) {
-  (0, _inheritsLoose2.default)(BaseRouter, _MultipleDispatcher);
+var EluxRouter = function (_MultipleDispatcher) {
+  (0, _inheritsLoose2.default)(EluxRouter, _MultipleDispatcher);
 
-  function BaseRouter(url, nativeRouter, locationTransform) {
+  function EluxRouter(url, nativeRouter, locationTransform) {
     var _this2;
 
     _this2 = _MultipleDispatcher.call(this) || this;
@@ -114,11 +114,10 @@ var BaseRouter = function (_MultipleDispatcher) {
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "injectedModules", {});
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "rootStack", new _history.RootStack());
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "latestState", {});
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "request", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "response", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "native", void 0);
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
-    nativeRouter.setRouter((0, _assertThisInitialized2.default)(_this2));
+    nativeRouter.setEluxRouter((0, _assertThisInitialized2.default)(_this2));
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
@@ -153,11 +152,10 @@ var BaseRouter = function (_MultipleDispatcher) {
     return _this2;
   }
 
-  var _proto2 = BaseRouter.prototype;
+  var _proto2 = EluxRouter.prototype;
 
-  _proto2.startup = function startup(store, request, response) {
-    this.request = request;
-    this.response = response;
+  _proto2.startup = function startup(store, native) {
+    this.native = native;
     var historyStack = new _history.HistoryStack(this.rootStack, store);
     var historyRecord = new _history.HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -709,9 +707,13 @@ var BaseRouter = function (_MultipleDispatcher) {
     task().finally(this.taskComplete.bind(this));
   };
 
-  _proto2.addTask = function addTask(task) {
+  _proto2.addTask = function addTask(task, nonblocking) {
     if (this.curTask) {
-      return;
+      if (nonblocking) {
+        this.taskList.push(task);
+      } else {
+        return;
+      }
     } else {
       this.executeTask(task);
     }
@@ -721,10 +723,10 @@ var BaseRouter = function (_MultipleDispatcher) {
     this.nativeRouter.destroy();
   };
 
-  return BaseRouter;
+  return EluxRouter;
 }(_core.MultipleDispatcher);
 
-exports.BaseRouter = BaseRouter;
+exports.EluxRouter = EluxRouter;
 var RouteActionTypes = {
   TestRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "TestRouteChange",
   BeforeRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "BeforeRouteChange"

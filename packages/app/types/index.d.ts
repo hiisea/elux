@@ -125,7 +125,4 @@ export declare function getApp<T extends {
     GetRouter: () => T['Router'];
     useRouter: () => T['Router'];
     useStore: () => IStore<T['State']>;
-    getRouter: (moduleHandler: {
-        router: ICoreRouter;
-    }) => T['Router'];
 };

@@ -44,12 +44,12 @@ interface NativeRouterTask {
   reject: () => void;
   nativeData: undefined | NativeData;
 }
-export abstract class BaseNativeRouter {
+export abstract class NativeRouter {
   protected curTask?: NativeRouterTask;
 
   protected taskList: RouterTask[] = [];
 
-  protected router!: BaseRouter;
+  protected eluxRouter!: EluxRouter;
 
   // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
 
@@ -71,11 +71,11 @@ export abstract class BaseNativeRouter {
       this.curTask = undefined;
       return false;
     }
-    return key !== this.router.routeState.key;
+    return key !== this.eluxRouter.routeState.key;
   }
 
-  setRouter(router: BaseRouter): void {
-    this.router = router;
+  setEluxRouter(router: EluxRouter): void {
+    this.eluxRouter = router;
   }
 
   execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined> {
@@ -102,9 +102,9 @@ export abstract class BaseNativeRouter {
   }
 }
 
-export abstract class BaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown>
+export abstract class EluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown>
   extends MultipleDispatcher<{change: {routeState: RouteState<P>; root: boolean}}>
-  implements IBaseRouter<P, N, Req, Res> {
+  implements IEluxRouter<P, N, NT> {
   private curTask?: () => Promise<void>;
 
   private taskList: Array<() => Promise<void>> = [];
@@ -125,13 +125,11 @@ export abstract class BaseRouter<P extends RootParams = {}, N extends string = s
 
   public latestState: Record<string, any> = {};
 
-  public request: Req | undefined;
+  public native!: NT;
 
-  public response: Res | undefined;
-
-  constructor(url: string, public nativeRouter: BaseNativeRouter, protected locationTransform: LocationTransform) {
+  constructor(url: string, public nativeRouter: NativeRouter, protected locationTransform: LocationTransform) {
     super();
-    nativeRouter.setRouter(this);
+    nativeRouter.setEluxRouter(this);
     const locationOrPromise = locationTransform.urlToLocation<P>(url);
     const callback = (location: Location<P>) => {
       const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key: ''};
@@ -149,9 +147,8 @@ export abstract class BaseRouter<P extends RootParams = {}, N extends string = s
       this.initialize = Promise.resolve(callback(locationOrPromise));
     }
   }
-  startup(store: IStore, request?: Req, response?: Res): void {
-    this.request = request;
-    this.response = response;
+  startup(store: IStore, native: NT): void {
+    this.native = native;
     const historyStack = new HistoryStack(this.rootStack, store);
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -388,10 +385,13 @@ export abstract class BaseRouter<P extends RootParams = {}, N extends string = s
     task().finally(this.taskComplete.bind(this));
   }
 
-  private addTask(task: () => Promise<any>) {
+  private addTask(task: () => Promise<any>, nonblocking?: boolean): void {
     if (this.curTask) {
-      return;
-      //this.taskList.push(task);
+      if (nonblocking) {
+        this.taskList.push(task);
+      } else {
+        return;
+      }
     } else {
       this.executeTask(task);
     }
@@ -402,19 +402,14 @@ export abstract class BaseRouter<P extends RootParams = {}, N extends string = s
   }
 }
 
-export interface IBaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown> extends ICoreRouter {
-  request?: Req;
-  response?: Res;
-  routeState: RouteState<P>;
+export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>, NT> {
   initialize: Promise<RouteState<P>>;
-  nativeRouter: any;
   addListener(name: 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void | Promise<void>): void;
   getInternalUrl(): string;
   getNativeLocation(): NativeLocation;
   getNativeUrl(): string;
   nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation};
-  getCurrentStore(): IStore;
   getCurrentPages(): {pagename: string; store: IStore; page?: any}[];
   findRecordByKey(key: string): HistoryRecord | undefined;
   relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;

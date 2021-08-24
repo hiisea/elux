@@ -101,6 +101,12 @@ export let CoreModuleHandlers = _decorate(null, function (_initialize2) {
         return MetaData.facadeMap[this.moduleName].actions;
       }
     }, {
+      kind: "get",
+      key: "router",
+      value: function router() {
+        return this.store.router;
+      }
+    }, {
       kind: "method",
       key: "getLatestState",
       value: function getLatestState() {

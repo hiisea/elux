@@ -1346,6 +1346,12 @@ let CoreModuleHandlers = _decorate(null, function (_initialize2) {
         return MetaData.facadeMap[this.moduleName].actions;
       }
     }, {
+      kind: "get",
+      key: "router",
+      value: function router() {
+        return this.store.router;
+      }
+    }, {
       kind: "method",
       key: "getLatestState",
       value: function getLatestState() {
@@ -3561,8 +3567,13 @@ function getApp() {
     },
     useRouter: appConfig.useRouter,
     useStore: appConfig.useStore,
-    getRouter: moduleHandler => moduleHandler.router,
-    GetRouter: () => appMeta.router,
+    GetRouter: () => {
+      if (env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
+      }
+
+      return appMeta.router;
+    },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
     Pagenames: routeMeta.pagenames

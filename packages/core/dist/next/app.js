@@ -1,10 +1,10 @@
 import { MetaData, coreConfig } from './basic';
 import { getModule, getComponet, getModuleList, getComponentList } from './inject';
 import { enhanceStore } from './store';
-export function initApp(router, baseStore, middlewares, appViewName, preloadComponents = [], request, response) {
+export function initApp(natvieData, router, baseStore, middlewares, appViewName, preloadComponents = []) {
   MetaData.currentRouter = router;
   const store = enhanceStore(baseStore, router, middlewares);
-  router.startup(store, request, response);
+  router.startup(store, natvieData);
   const {
     AppModuleName,
     RouteModuleName

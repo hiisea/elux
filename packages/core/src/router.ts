@@ -1,4 +1,4 @@
-import {IStore, IModuleHandlers, mergeState, Action, MetaData, IStoreMiddleware, ICoreRouteState, coreConfig} from './basic';
+import {IStore, IModuleHandlers, mergeState, Action, MetaData, IStoreMiddleware, ICoreRouteState, coreConfig, ICoreRouter} from './basic';
 import {reducer, ActionTypes, moduleRouteChangeAction} from './actions';
 import {loadModel, Handler, IModuleHandlersClass} from './inject';
 
@@ -64,11 +64,16 @@ type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
  * ModuleHandlers基类
  * 所有ModuleHandlers必须继承此基类
  */
-export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
+export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}, U extends ICoreRouter = ICoreRouter>
+  implements IModuleHandlers {
   constructor(public readonly moduleName: string, public store: IStore, public readonly initState: S) {}
 
   protected get actions(): ActionsThis<this> {
     return MetaData.facadeMap[this.moduleName].actions as any;
+  }
+
+  protected get router(): U {
+    return this.store.router as U;
   }
 
   protected getLatestState(): R {

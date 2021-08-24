@@ -162,8 +162,13 @@ export function getApp() {
     },
     useRouter: appConfig.useRouter,
     useStore: appConfig.useStore,
-    getRouter: moduleHandler => moduleHandler.router,
-    GetRouter: () => appMeta.router,
+    GetRouter: () => {
+      if (env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
+      }
+
+      return appMeta.router;
+    },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
     Pagenames: routeMeta.pagenames

@@ -10,16 +10,16 @@ import { RootStack, HistoryStack, HistoryRecord } from './history';
 import { eluxLocationToEluxUrl, nativeLocationToNativeUrl as _nativeLocationToNativeUrl, createLocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
-export var BaseNativeRouter = function () {
-  function BaseNativeRouter() {
+export var NativeRouter = function () {
+  function NativeRouter() {
     _defineProperty(this, "curTask", void 0);
 
     _defineProperty(this, "taskList", []);
 
-    _defineProperty(this, "router", void 0);
+    _defineProperty(this, "eluxRouter", void 0);
   }
 
-  var _proto = BaseNativeRouter.prototype;
+  var _proto = NativeRouter.prototype;
 
   _proto.onChange = function onChange(key) {
     if (this.curTask) {
@@ -28,11 +28,11 @@ export var BaseNativeRouter = function () {
       return false;
     }
 
-    return key !== this.router.routeState.key;
+    return key !== this.eluxRouter.routeState.key;
   };
 
-  _proto.setRouter = function setRouter(router) {
-    this.router = router;
+  _proto.setEluxRouter = function setEluxRouter(router) {
+    this.eluxRouter = router;
   };
 
   _proto.execute = function execute(method, getNativeData) {
@@ -68,12 +68,12 @@ export var BaseNativeRouter = function () {
     });
   };
 
-  return BaseNativeRouter;
+  return NativeRouter;
 }();
-export var BaseRouter = function (_MultipleDispatcher) {
-  _inheritsLoose(BaseRouter, _MultipleDispatcher);
+export var EluxRouter = function (_MultipleDispatcher) {
+  _inheritsLoose(EluxRouter, _MultipleDispatcher);
 
-  function BaseRouter(url, nativeRouter, locationTransform) {
+  function EluxRouter(url, nativeRouter, locationTransform) {
     var _this2;
 
     _this2 = _MultipleDispatcher.call(this) || this;
@@ -98,13 +98,11 @@ export var BaseRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "latestState", {});
 
-    _defineProperty(_assertThisInitialized(_this2), "request", void 0);
-
-    _defineProperty(_assertThisInitialized(_this2), "response", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "native", void 0);
 
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
-    nativeRouter.setRouter(_assertThisInitialized(_this2));
+    nativeRouter.setEluxRouter(_assertThisInitialized(_this2));
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
@@ -140,11 +138,10 @@ export var BaseRouter = function (_MultipleDispatcher) {
     return _this2;
   }
 
-  var _proto2 = BaseRouter.prototype;
+  var _proto2 = EluxRouter.prototype;
 
-  _proto2.startup = function startup(store, request, response) {
-    this.request = request;
-    this.response = response;
+  _proto2.startup = function startup(store, native) {
+    this.native = native;
     var historyStack = new HistoryStack(this.rootStack, store);
     var historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -694,9 +691,13 @@ export var BaseRouter = function (_MultipleDispatcher) {
     task().finally(this.taskComplete.bind(this));
   };
 
-  _proto2.addTask = function addTask(task) {
+  _proto2.addTask = function addTask(task, nonblocking) {
     if (this.curTask) {
-      return;
+      if (nonblocking) {
+        this.taskList.push(task);
+      } else {
+        return;
+      }
     } else {
       this.executeTask(task);
     }
@@ -706,7 +707,7 @@ export var BaseRouter = function (_MultipleDispatcher) {
     this.nativeRouter.destroy();
   };
 
-  return BaseRouter;
+  return EluxRouter;
 }(MultipleDispatcher);
 export var RouteActionTypes = {
   TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",

@@ -84,9 +84,10 @@ export interface ICoreRouteState {
     action: string;
     params: any;
 }
-export interface ICoreRouter {
-    routeState: ICoreRouteState;
-    startup(store: IStore, request?: unknown, response?: unknown): void;
+export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState, NT = unknown> {
+    native: NT;
+    routeState: ST;
+    startup(store: IStore, natvieData: NT): void;
     getCurrentStore(): IStore;
     getStoreList(): IStore[];
     readonly name: string;

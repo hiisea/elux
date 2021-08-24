@@ -18,10 +18,10 @@ interface NativeRouterTask {
     reject: () => void;
     nativeData: undefined | NativeData;
 }
-export declare abstract class BaseNativeRouter {
+export declare abstract class NativeRouter {
     protected curTask?: NativeRouterTask;
     protected taskList: RouterTask[];
-    protected router: BaseRouter;
+    protected eluxRouter: EluxRouter;
     protected abstract push(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
     protected abstract replace(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
     protected abstract relaunch(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
@@ -29,16 +29,16 @@ export declare abstract class BaseNativeRouter {
     abstract toOutside(url: string): void;
     abstract destroy(): void;
     protected onChange(key: string): boolean;
-    setRouter(router: BaseRouter): void;
+    setEluxRouter(router: EluxRouter): void;
     execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined>;
 }
-export declare abstract class BaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown> extends MultipleDispatcher<{
+export declare abstract class EluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends MultipleDispatcher<{
     change: {
         routeState: RouteState<P>;
         root: boolean;
     };
-}> implements IBaseRouter<P, N, Req, Res> {
-    nativeRouter: BaseNativeRouter;
+}> implements IEluxRouter<P, N, NT> {
+    nativeRouter: NativeRouter;
     protected locationTransform: LocationTransform;
     private curTask?;
     private taskList;
@@ -52,10 +52,9 @@ export declare abstract class BaseRouter<P extends RootParams = {}, N extends st
     };
     readonly rootStack: RootStack;
     latestState: Record<string, any>;
-    request: Req | undefined;
-    response: Res | undefined;
-    constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
-    startup(store: IStore, request?: Req, response?: Res): void;
+    native: NT;
+    constructor(url: string, nativeRouter: NativeRouter, locationTransform: LocationTransform);
+    startup(store: IStore, native: NT): void;
     getCurrentPages(): {
         pagename: string;
         store: IStore;
@@ -94,12 +93,8 @@ export declare abstract class BaseRouter<P extends RootParams = {}, N extends st
     private addTask;
     destroy(): void;
 }
-export interface IBaseRouter<P extends RootParams = {}, N extends string = string, Req = unknown, Res = unknown> extends ICoreRouter {
-    request?: Req;
-    response?: Res;
-    routeState: RouteState<P>;
+export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>, NT> {
     initialize: Promise<RouteState<P>>;
-    nativeRouter: any;
     addListener(name: 'change', callback: (data: {
         routeState: RouteState<P>;
         root: boolean;
@@ -112,7 +107,6 @@ export interface IBaseRouter<P extends RootParams = {}, N extends string = strin
         nativeUrl: string;
         nativeLocation: NativeLocation;
     };
-    getCurrentStore(): IStore;
     getCurrentPages(): {
         pagename: string;
         store: IStore;

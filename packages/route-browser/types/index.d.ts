@@ -1,6 +1,6 @@
-import { BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform } from '@elux/route';
+import { EluxRouter, NativeRouter, NativeData, RootParams, LocationTransform } from '@elux/route';
 import { History } from 'history';
-export declare class BrowserNativeRouter extends BaseNativeRouter {
+export declare class BrowserNativeRouter extends NativeRouter {
     private _unlistenHistory;
     history: History<never>;
     constructor(createHistory: 'Browser' | 'Hash' | 'Memory' | string);
@@ -15,7 +15,7 @@ export declare class BrowserNativeRouter extends BaseNativeRouter {
     toOutside(url: string): void;
     destroy(): void;
 }
-export declare class Router<P extends RootParams, N extends string, Req = unknown, Res = unknown> extends BaseRouter<P, N, Req, Res> {
+export declare class Router<P extends RootParams, N extends string, NT = unknown> extends EluxRouter<P, N, NT> {
     nativeRouter: BrowserNativeRouter;
     constructor(browserNativeRouter: BrowserNativeRouter, locationTransform: LocationTransform);
 }

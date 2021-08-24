@@ -25,13 +25,13 @@ var _core = require("@elux/core");
   }
 });
 
-var BrowserNativeRouter = function (_BaseNativeRouter) {
-  (0, _inheritsLoose2.default)(BrowserNativeRouter, _BaseNativeRouter);
+var BrowserNativeRouter = function (_NativeRouter) {
+  (0, _inheritsLoose2.default)(BrowserNativeRouter, _NativeRouter);
 
   function BrowserNativeRouter(createHistory) {
     var _this;
 
-    _this = _BaseNativeRouter.call(this) || this;
+    _this = _NativeRouter.call(this) || this;
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "_unlistenHistory", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "history", void 0);
 
@@ -89,7 +89,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     _this._unlistenHistory = _this.history.block(function (location, action) {
       if (action === 'POP') {
         _core.env.setTimeout(function () {
-          return _this.router.back(1);
+          return _this.eluxRouter.back(1);
         }, 100);
 
         return false;
@@ -112,15 +112,15 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
         if (action === 'REPLACE') {
           callback = function callback() {
-            return _this.router.replace(url);
+            return _this.eluxRouter.replace(url);
           };
         } else if (action === 'PUSH') {
           callback = function callback() {
-            return _this.router.push(url);
+            return _this.eluxRouter.push(url);
           };
         } else {
           callback = function callback() {
-            return _this.router.relaunch(url);
+            return _this.eluxRouter.relaunch(url);
           };
         }
 
@@ -208,19 +208,19 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   return BrowserNativeRouter;
-}(_route.BaseNativeRouter);
+}(_route.NativeRouter);
 
 exports.BrowserNativeRouter = BrowserNativeRouter;
 
-var Router = function (_BaseRouter) {
-  (0, _inheritsLoose2.default)(Router, _BaseRouter);
+var Router = function (_EluxRouter) {
+  (0, _inheritsLoose2.default)(Router, _EluxRouter);
 
   function Router(browserNativeRouter, locationTransform) {
-    return _BaseRouter.call(this, browserNativeRouter.getUrl(), browserNativeRouter, locationTransform) || this;
+    return _EluxRouter.call(this, browserNativeRouter.getUrl(), browserNativeRouter, locationTransform) || this;
   }
 
   return Router;
-}(_route.BaseRouter);
+}(_route.EluxRouter);
 
 exports.Router = Router;
 

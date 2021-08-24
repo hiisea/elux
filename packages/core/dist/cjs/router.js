@@ -119,6 +119,12 @@ var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize2) {
         return _basic.MetaData.facadeMap[this.moduleName].actions;
       }
     }, {
+      kind: "get",
+      key: "router",
+      value: function router() {
+        return this.store.router;
+      }
+    }, {
       kind: "method",
       key: "getLatestState",
       value: function getLatestState() {

@@ -1,4 +1,4 @@
-import {BaseRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform, setRouteConfig} from '@elux/route';
+import {EluxRouter, NativeRouter, NativeData, RootParams, LocationTransform, setRouteConfig} from '@elux/route';
 import {History, createBrowserHistory, createHashHistory, createMemoryHistory, Location as HistoryLocation} from 'history';
 import {env} from '@elux/core';
 
@@ -14,7 +14,7 @@ setRouteConfig({notifyNativeRouter: {root: true, internal: true}});
 
 type UnregisterCallback = () => void;
 
-export class BrowserNativeRouter extends BaseNativeRouter {
+export class BrowserNativeRouter extends NativeRouter {
   private _unlistenHistory: UnregisterCallback;
 
   public history: History<never>;
@@ -91,7 +91,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     // }
     this._unlistenHistory = this.history.block((location, action) => {
       if (action === 'POP') {
-        env.setTimeout(() => this.router.back(1), 100);
+        env.setTimeout(() => this.eluxRouter.back(1), 100);
         return false;
       }
       const key = this.getKey(location);
@@ -101,11 +101,11 @@ export class BrowserNativeRouter extends BaseNativeRouter {
         const url = [pathname, search, hash].join('');
         let callback: () => void;
         if (action === 'REPLACE') {
-          callback = () => this.router.replace(url);
+          callback = () => this.eluxRouter.replace(url);
         } else if (action === 'PUSH') {
-          callback = () => this.router.push(url);
+          callback = () => this.eluxRouter.push(url);
         } else {
-          callback = () => this.router.relaunch(url);
+          callback = () => this.eluxRouter.relaunch(url);
         }
         env.setTimeout(callback, 100);
         return false;
@@ -178,7 +178,7 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 }
 
-export class Router<P extends RootParams, N extends string, Req = unknown, Res = unknown> extends BaseRouter<P, N, Req, Res> {
+export class Router<P extends RootParams, N extends string, NT = unknown> extends EluxRouter<P, N, NT> {
   public declare nativeRouter: BrowserNativeRouter;
 
   constructor(browserNativeRouter: BrowserNativeRouter, locationTransform: LocationTransform) {
