@@ -1,6 +1,6 @@
 import React, {ComponentType} from 'react';
 import {env, IStore, buildConfigSetter} from '@elux/core';
-import {IBaseRouter} from '@elux/route';
+import {IEluxRouter} from '@elux/route';
 
 export const reactComponentsConfig: {
   setPageTitle(title: string): void;
@@ -22,6 +22,6 @@ export const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig)
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
-  router?: IBaseRouter<any, string>;
+  router?: IEluxRouter;
 }
 export const EluxContextComponent = React.createContext<EluxContext>({documentHead: ''});

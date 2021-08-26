@@ -573,7 +573,10 @@ function exportModule(moduleName, ModuleHandlers, params, components) {
   var model = function model(store) {
     if (!store.injectedModules[moduleName]) {
       var _latestState = store.router.latestState;
-      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState);
+
+      var _preState = store.getState();
+
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState, _preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -595,7 +598,10 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
   var model = function model(store) {
     if (!store.injectedModules[moduleName]) {
       var _latestState2 = store.router.latestState;
-      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2);
+
+      var _preState2 = store.getState();
+
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2, _preState2);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -614,13 +620,13 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
 
   if (MetaData.injectedModules[moduleName]) {
     MetaData.injectedModules[moduleName] = false;
-    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}), true);
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}), true);
   }
 
   var stores = MetaData.currentRouter.getStoreList();
   stores.forEach(function (store) {
     if (store.injectedModules[moduleName]) {
-      var ins = new ModuleHandlers(moduleName, store, {});
+      var ins = new ModuleHandlers(moduleName, store, {}, {});
       ins.initState = store.injectedModules[moduleName].initState;
       store.injectedModules[moduleName] = ins;
     }
@@ -1406,12 +1412,12 @@ var EmptyModuleHandlers = function () {
   return EmptyModuleHandlers;
 }();
 var RouteModuleHandlers = _decorate(null, function (_initialize) {
-  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store, latestState) {
+  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store, latestState, preState) {
     _initialize(this);
 
     this.moduleName = moduleName;
     this.store = store;
-    this.initState = latestState[moduleName];
+    this.initState = preState[moduleName];
   };
 
   return {
@@ -1828,14 +1834,14 @@ function enhanceStore(baseStore, router, middlewares) {
   return store;
 }
 
-function initApp(router, baseStore, middlewares, appViewName, preloadComponents, request, response) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   MetaData.currentRouter = router;
   var store = enhanceStore(baseStore, router, middlewares);
-  router.startup(store, request, response);
+  router.startup(store);
   var AppModuleName = coreConfig.AppModuleName,
       RouteModuleName = coreConfig.RouteModuleName;
   var moduleGetter = MetaData.moduleGetter;
@@ -1851,35 +1857,52 @@ function initApp(router, baseStore, middlewares, appViewName, preloadComponents,
 
     return data;
   }, {});
-  var setup = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  var results = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  var setup;
+
+  if (env.isServer) {
+    setup = results.then(function (_ref) {
+      var modules = _ref[0];
+      return Promise.all(modules.map(function (mod) {
+        return mod.model(store);
+      }));
+    });
+  } else {
+    setup = results;
+  }
+
   return {
     store: store,
     AppView: AppView,
     setup: setup
   };
 }
+function reinitApp(store) {
+  var moduleGetter = MetaData.moduleGetter;
+  var preloadModules = Object.keys(store.router.routeState.params).filter(function (moduleName) {
+    return moduleGetter[moduleName] && moduleName !== AppModuleName;
+  });
+  var AppModuleName = coreConfig.AppModuleName,
+      RouteModuleName = coreConfig.RouteModuleName;
+  var appModule = getModule(AppModuleName);
+  var routeModule = getModule(RouteModuleName);
+  return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]).then(function () {
+    return undefined;
+  });
+}
 var ForkStoreId = 0;
-function forkStore(originalStore) {
+function forkStore(originalStore, routeState) {
+  var _initState;
+
   var _originalStore$builde = originalStore.builder,
       storeCreator = _originalStore$builde.storeCreator,
       storeOptions = _originalStore$builde.storeOptions,
       middlewares = originalStore.options.middlewares,
       router = originalStore.router;
-  var moduleGetter = MetaData.moduleGetter;
   var baseStore = storeCreator(_extends({}, storeOptions, {
-    initState: undefined
+    initState: (_initState = {}, _initState[coreConfig.RouteModuleName] = routeState, _initState)
   }), ++ForkStoreId);
   var store = enhanceStore(baseStore, router, middlewares);
-  var AppModuleName = coreConfig.AppModuleName,
-      RouteModuleName = coreConfig.RouteModuleName;
-  var appModule = getModule(AppModuleName);
-  var routeModule = getModule(RouteModuleName);
-  var preloadModules = Object.keys(router.routeState.params).filter(function (moduleName) {
-    return moduleGetter[moduleName] && moduleName !== AppModuleName;
-  });
-  getModuleList(preloadModules);
-  routeModule.model(store);
-  appModule.model(store);
   return store;
 }
 
@@ -1923,6 +1946,15 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
+var recoverLock = false;
+
+function recoverClientHead(eluxContext, documentHead) {
+  if (!recoverLock) {
+    recoverLock = true;
+    setClientHead(eluxContext, documentHead);
+  }
+}
+
 var Component$2 = function Component(_ref) {
   var _ref$title = _ref.title,
       title = _ref$title === void 0 ? '' : _ref$title,
@@ -1946,8 +1978,9 @@ var Component$2 = function Component(_ref) {
   useEffect(function () {
     var raw = eluxContext.documentHead;
     setClientHead(eluxContext, html);
+    recoverLock = false;
     return function () {
-      return setClientHead(eluxContext, raw);
+      return recoverClientHead(eluxContext, raw);
     };
   }, [eluxContext, html]);
   return null;
@@ -2046,7 +2079,7 @@ var Link = React.forwardRef(function (_ref, ref) {
   }
 });
 
-var Router$1 = function Router(props) {
+var Router = function Router(props) {
   var eluxContext = useContext(EluxContextComponent);
   var router = eluxContext.router;
 
@@ -2287,12 +2320,12 @@ function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
   var panel = env.document.getElementById(id);
   renderFun(React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
-  }, React.createElement(Router$1, null, React.createElement(APPView, null))), panel);
+  }, React.createElement(Router, null, React.createElement(APPView, null))), panel);
 }
 function renderToString(id, APPView, store, eluxContext) {
   var html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
-  }, React.createElement(Router$1, null, React.createElement(APPView, null))));
+  }, React.createElement(Router, null, React.createElement(APPView, null))));
 
   return Promise.resolve(html);
 }
@@ -3173,7 +3206,7 @@ var HistoryRecord = function () {
     _defineProperty(this, "recordKey", void 0);
 
     this.historyStack = historyStack;
-    this.recordKey = ++HistoryRecord.id + '';
+    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
     var pagename = location.pagename,
         params = location.params;
     this.pagename = pagename;
@@ -3203,30 +3236,30 @@ var HistoryStack = function (_RouteStack) {
 
     _this.rootStack = rootStack;
     _this.store = store;
-    _this.stackkey = ++HistoryStack.id + '';
+    _this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
     return _this;
   }
 
   var _proto3 = HistoryStack.prototype;
 
-  _proto3.push = function push(location) {
-    var newRecord = new HistoryRecord(location, this);
+  _proto3.push = function push(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
 
     this._push(newRecord);
 
     return newRecord;
   };
 
-  _proto3.replace = function replace(location) {
-    var newRecord = new HistoryRecord(location, this);
+  _proto3.replace = function replace(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
 
     this._replace(newRecord);
 
     return newRecord;
   };
 
-  _proto3.relaunch = function relaunch(location) {
-    var newRecord = new HistoryRecord(location, this);
+  _proto3.relaunch = function relaunch(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
 
     this._relaunch(newRecord);
 
@@ -3270,11 +3303,11 @@ var RootStack = function (_RouteStack2) {
     });
   };
 
-  _proto4.push = function push(location) {
+  _proto4.push = function push(routeState) {
     var curHistory = this.getCurrentItem();
-    var store = forkStore(curHistory.store);
+    var store = forkStore(curHistory.store, routeState);
     var newHistory = new HistoryStack(this, store);
-    var newRecord = new HistoryRecord(location, newHistory);
+    var newRecord = new HistoryRecord(routeState, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -3282,14 +3315,14 @@ var RootStack = function (_RouteStack2) {
     return newRecord;
   };
 
-  _proto4.replace = function replace(location) {
+  _proto4.replace = function replace(routeState) {
     var curHistory = this.getCurrentItem();
-    return curHistory.relaunch(location);
+    return curHistory.relaunch(routeState);
   };
 
-  _proto4.relaunch = function relaunch(location) {
+  _proto4.relaunch = function relaunch(routeState) {
     var curHistory = this.getCurrentItem();
-    var newRecord = curHistory.relaunch(location);
+    var newRecord = curHistory.relaunch(routeState);
 
     this._relaunch(curHistory);
 
@@ -3889,9 +3922,7 @@ var BaseNativeRouter = function () {
   function BaseNativeRouter() {
     _defineProperty(this, "curTask", void 0);
 
-    _defineProperty(this, "taskList", []);
-
-    _defineProperty(this, "router", void 0);
+    _defineProperty(this, "eluxRouter", void 0);
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -3903,11 +3934,11 @@ var BaseNativeRouter = function () {
       return false;
     }
 
-    return key !== this.router.routeState.key;
+    return key !== this.eluxRouter.routeState.key;
   };
 
-  _proto.setRouter = function setRouter(router) {
-    this.router = router;
+  _proto.startup = function startup(router) {
+    this.eluxRouter = router;
   };
 
   _proto.execute = function execute(method, getNativeData) {
@@ -3945,21 +3976,21 @@ var BaseNativeRouter = function () {
 
   return BaseNativeRouter;
 }();
-var BaseRouter = function (_MultipleDispatcher) {
-  _inheritsLoose(BaseRouter, _MultipleDispatcher);
+var BaseEluxRouter = function (_MultipleDispatcher) {
+  _inheritsLoose(BaseEluxRouter, _MultipleDispatcher);
 
-  function BaseRouter(url, nativeRouter, locationTransform) {
+  function BaseEluxRouter(url, nativeRouter, locationTransform, nativeData) {
     var _this2;
 
     _this2 = _MultipleDispatcher.call(this) || this;
 
-    _defineProperty(_assertThisInitialized(_this2), "curTask", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_curTask", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "taskList", []);
+    _defineProperty(_assertThisInitialized(_this2), "_taskList", []);
 
     _defineProperty(_assertThisInitialized(_this2), "_nativeData", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "internalUrl", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_internalUrl", void 0);
 
     _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
 
@@ -3973,36 +4004,40 @@ var BaseRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "latestState", {});
 
-    _defineProperty(_assertThisInitialized(_this2), "request", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_taskComplete", function () {
+      var task = _this2._taskList.shift();
 
-    _defineProperty(_assertThisInitialized(_this2), "response", void 0);
+      if (task) {
+        _this2.executeTask(task);
+      } else {
+        _this2._curTask = undefined;
+      }
+    });
 
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
-    nativeRouter.setRouter(_assertThisInitialized(_this2));
+    _this2.nativeData = nativeData;
+    nativeRouter.startup(_assertThisInitialized(_this2));
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
-      var _this2$latestState;
-
       var routeState = _extends({}, location, {
         action: 'RELAUNCH',
         key: ''
       });
 
       _this2.routeState = routeState;
-      _this2.internalUrl = eluxLocationToEluxUrl({
+      _this2._internalUrl = eluxLocationToEluxUrl({
         pathname: routeState.pagename,
         params: routeState.params
       });
 
       if (!routeConfig.indexUrl) {
         setRouteConfig({
-          indexUrl: _this2.internalUrl
+          indexUrl: _this2._internalUrl
         });
       }
 
-      _this2.latestState = (_this2$latestState = {}, _this2$latestState[_this2.name] = routeState, _this2$latestState);
       return routeState;
     };
 
@@ -4015,11 +4050,9 @@ var BaseRouter = function (_MultipleDispatcher) {
     return _this2;
   }
 
-  var _proto2 = BaseRouter.prototype;
+  var _proto2 = BaseEluxRouter.prototype;
 
-  _proto2.startup = function startup(store, request, response) {
-    this.request = request;
-    this.response = response;
+  _proto2.startup = function startup(store) {
     var historyStack = new HistoryStack(this.rootStack, store);
     var historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -4043,7 +4076,7 @@ var BaseRouter = function (_MultipleDispatcher) {
   };
 
   _proto2.getInternalUrl = function getInternalUrl() {
-    return this.internalUrl;
+    return this._internalUrl;
   };
 
   _proto2.getNativeLocation = function getNativeLocation() {
@@ -4128,7 +4161,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   };
 
-  _proto2.relaunch = function relaunch(data, root, nativeCaller) {
+  _proto2.relaunch = function relaunch(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -4137,7 +4170,7 @@ var BaseRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
+    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._relaunch = function () {
@@ -4178,9 +4211,9 @@ var BaseRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.relaunch(location).getKey();
+                key = this.rootStack.relaunch(routeState).getKey();
               } else {
-                key = this.rootStack.getCurrentItem().relaunch(location).getKey();
+                key = this.rootStack.getCurrentItem().relaunch(routeState).getKey();
               }
 
               routeState.key = key;
@@ -4202,7 +4235,7 @@ var BaseRouter = function (_MultipleDispatcher) {
             case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
@@ -4229,7 +4262,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     return _relaunch;
   }();
 
-  _proto2.push = function push(data, root, nativeCaller) {
+  _proto2.push = function push(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -4238,7 +4271,7 @@ var BaseRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._push.bind(this, data, root, nativeCaller));
+    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._push = function () {
@@ -4279,9 +4312,9 @@ var BaseRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.push(location).getKey();
+                key = this.rootStack.push(routeState).getKey();
               } else {
-                key = this.rootStack.getCurrentItem().push(location).getKey();
+                key = this.rootStack.getCurrentItem().push(routeState).getKey();
               }
 
               routeState.key = key;
@@ -4303,19 +4336,35 @@ var BaseRouter = function (_MultipleDispatcher) {
             case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
               cloneState = deepClone(routeState);
-              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+
+              if (!root) {
+                _context2.next = 28;
+                break;
+              }
+
               _context2.next = 26;
+              return reinitApp(this.getCurrentStore());
+
+            case 26:
+              _context2.next = 29;
+              break;
+
+            case 28:
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+
+            case 29:
+              _context2.next = 31;
               return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 26:
+            case 31:
             case "end":
               return _context2.stop();
           }
@@ -4330,7 +4379,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     return _push;
   }();
 
-  _proto2.replace = function replace(data, root, nativeCaller) {
+  _proto2.replace = function replace(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -4339,7 +4388,7 @@ var BaseRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._replace.bind(this, data, root, nativeCaller));
+    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._replace = function () {
@@ -4380,9 +4429,9 @@ var BaseRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.replace(location).getKey();
+                key = this.rootStack.replace(routeState).getKey();
               } else {
-                key = this.rootStack.getCurrentItem().replace(location).getKey();
+                key = this.rootStack.getCurrentItem().replace(routeState).getKey();
               }
 
               routeState.key = key;
@@ -4404,7 +4453,7 @@ var BaseRouter = function (_MultipleDispatcher) {
             case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
@@ -4431,7 +4480,7 @@ var BaseRouter = function (_MultipleDispatcher) {
     return _replace;
   }();
 
-  _proto2.back = function back(n, root, options, nativeCaller) {
+  _proto2.back = function back(n, root, options, nonblocking, nativeCaller) {
     if (n === void 0) {
       n = 1;
     }
@@ -4444,7 +4493,7 @@ var BaseRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
+    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
   };
 
   _proto2._back = function () {
@@ -4527,7 +4576,7 @@ var BaseRouter = function (_MultipleDispatcher) {
             case 23:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
@@ -4554,34 +4603,40 @@ var BaseRouter = function (_MultipleDispatcher) {
     return _back;
   }();
 
-  _proto2.taskComplete = function taskComplete() {
-    var task = this.taskList.shift();
-
-    if (task) {
-      this.executeTask(task);
-    } else {
-      this.curTask = undefined;
-    }
-  };
-
   _proto2.executeTask = function executeTask(task) {
-    this.curTask = task;
-    task().finally(this.taskComplete.bind(this));
+    this._curTask = task;
+    task().finally(this._taskComplete);
   };
 
-  _proto2.addTask = function addTask(task) {
-    if (this.curTask) {
+  _proto2.addTask = function addTask(execute, nonblocking) {
+    var _this7 = this;
+
+    if (env.isServer) {
       return;
-    } else {
-      this.executeTask(task);
     }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise(function (resolve, reject) {
+      var task = function task() {
+        return execute().then(resolve, reject);
+      };
+
+      if (_this7._curTask) {
+        _this7._taskList.push(task);
+      } else {
+        _this7.executeTask(task);
+      }
+    });
   };
 
   _proto2.destroy = function destroy() {
     this.nativeRouter.destroy();
   };
 
-  return BaseRouter;
+  return BaseEluxRouter;
 }(MultipleDispatcher);
 var RouteActionTypes = {
   TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",
@@ -4723,30 +4778,32 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
+          return router.initialize.then(function (routeState) {
+            var _extends2;
 
-          if (state) {
-            storeOptions.initState = _extends({}, storeOptions.initState, state);
-          }
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
+            var baseStore = storeCreator(storeOptions);
 
-          var baseStore = storeCreator(storeOptions);
-          return router.initialize.then(function () {
             var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
                 store = _initApp2.store,
-                AppView = _initApp2.AppView;
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
 
-            render(id, AppView, store, {
-              deps: {},
-              router: router,
-              documentHead: ''
-            }, !!env[ssrKey], ins);
-            return store;
+            return setup.then(function () {
+              render(id, AppView, store, {
+                deps: {},
+                router: router,
+                documentHead: ''
+              }, !!env[ssrKey], ins);
+              return store;
+            });
           });
         })
       });
     }
   };
 }
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, request, response) {
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
@@ -4779,9 +4836,13 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, req
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          var baseStore = storeCreator(storeOptions);
-          return router.initialize.then(function () {
-            var _initApp3 = initApp(router, baseStore, middlewares, viewName, undefined, request, response),
+          return router.initialize.then(function (routeState) {
+            var _extends3;
+
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends3 = {}, _extends3[routeConfig.RouteModuleName] = routeState, _extends3));
+            var baseStore = storeCreator(storeOptions);
+
+            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
                 store = _initApp3.store,
                 AppView = _initApp3.AppView,
                 setup = _initApp3.setup;
@@ -4946,10 +5007,6 @@ function invariant(condition, message) {
 
 function addLeadingSlash(path) {
   return path.charAt(0) === '/' ? path : '/' + path;
-}
-
-function stripLeadingSlash(path) {
-  return path.charAt(0) === '/' ? path.substr(1) : path;
 }
 
 function hasBasename(path, prefix) {
@@ -5152,14 +5209,6 @@ function supportsHistory() {
 
 function supportsPopStateOnHashChange() {
   return window.navigator.userAgent.indexOf('Trident') === -1;
-}
-/**
- * Returns false if using go(n) with hash history causes a full page reload.
- */
-
-
-function supportsGoWithoutReloadUsingHash() {
-  return window.navigator.userAgent.indexOf('Firefox') === -1;
 }
 /**
  * Returns true if a given popstate event is an extraneous WebKit event.
@@ -5434,509 +5483,54 @@ function createBrowserHistory(props) {
   return history;
 }
 
-var HashChangeEvent$1 = 'hashchange';
-var HashPathCoders = {
-  hashbang: {
-    encodePath: function encodePath(path) {
-      return path.charAt(0) === '!' ? path : '!/' + stripLeadingSlash(path);
-    },
-    decodePath: function decodePath(path) {
-      return path.charAt(0) === '!' ? path.substr(1) : path;
-    }
-  },
-  noslash: {
-    encodePath: stripLeadingSlash,
-    decodePath: addLeadingSlash
-  },
-  slash: {
-    encodePath: addLeadingSlash,
-    decodePath: addLeadingSlash
-  }
-};
-
-function stripHash(url) {
-  var hashIndex = url.indexOf('#');
-  return hashIndex === -1 ? url : url.slice(0, hashIndex);
-}
-
-function getHashPath() {
-  // We can't use window.location.hash here because it's not
-  // consistent across browsers - Firefox will pre-decode it!
-  var href = window.location.href;
-  var hashIndex = href.indexOf('#');
-  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
-}
-
-function pushHashPath(path) {
-  window.location.hash = path;
-}
-
-function replaceHashPath(path) {
-  window.location.replace(stripHash(window.location.href) + '#' + path);
-}
-
-function createHashHistory(props) {
-  if (props === void 0) {
-    props = {};
-  }
-
-  !canUseDOM ? process.env.NODE_ENV !== "production" ? invariant(false, 'Hash history needs a DOM') : invariant(false) : void 0;
-  var globalHistory = window.history;
-  var canGoWithoutReload = supportsGoWithoutReloadUsingHash();
-  var _props = props,
-      _props$getUserConfirm = _props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
-      _props$hashType = _props.hashType,
-      hashType = _props$hashType === void 0 ? 'slash' : _props$hashType;
-  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
-  var _HashPathCoders$hashT = HashPathCoders[hashType],
-      encodePath = _HashPathCoders$hashT.encodePath,
-      decodePath = _HashPathCoders$hashT.decodePath;
-
-  function getDOMLocation() {
-    var path = decodePath(getHashPath());
-    process.env.NODE_ENV !== "production" ? warning$2(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
-    if (basename) path = stripBasename(path, basename);
-    return createLocation(path);
-  }
-
-  var transitionManager = createTransitionManager();
-
-  function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = globalHistory.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  }
-
-  var forceNextPop = false;
-  var ignorePath = null;
-
-  function locationsAreEqual$$1(a, b) {
-    return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash;
-  }
-
-  function handleHashChange() {
-    var path = getHashPath();
-    var encodedPath = encodePath(path);
-
-    if (path !== encodedPath) {
-      // Ensure we always have a properly-encoded hash.
-      replaceHashPath(encodedPath);
-    } else {
-      var location = getDOMLocation();
-      var prevLocation = history.location;
-      if (!forceNextPop && locationsAreEqual$$1(prevLocation, location)) return; // A hashchange doesn't always == location change.
-
-      if (ignorePath === createPath(location)) return; // Ignore this change; we already setState in push/replace.
-
-      ignorePath = null;
-      handlePop(location);
-    }
-  }
-
-  function handlePop(location) {
-    if (forceNextPop) {
-      forceNextPop = false;
-      setState();
-    } else {
-      var action = 'POP';
-      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-        if (ok) {
-          setState({
-            action: action,
-            location: location
-          });
-        } else {
-          revertPop(location);
-        }
-      });
-    }
-  }
-
-  function revertPop(fromLocation) {
-    var toLocation = history.location; // TODO: We could probably make this more reliable by
-    // keeping a list of paths we've seen in sessionStorage.
-    // Instead, we just default to 0 for paths we don't know.
-
-    var toIndex = allPaths.lastIndexOf(createPath(toLocation));
-    if (toIndex === -1) toIndex = 0;
-    var fromIndex = allPaths.lastIndexOf(createPath(fromLocation));
-    if (fromIndex === -1) fromIndex = 0;
-    var delta = toIndex - fromIndex;
-
-    if (delta) {
-      forceNextPop = true;
-      go(delta);
-    }
-  } // Ensure the hash is encoded properly before doing anything else.
-
-
-  var path = getHashPath();
-  var encodedPath = encodePath(path);
-  if (path !== encodedPath) replaceHashPath(encodedPath);
-  var initialLocation = getDOMLocation();
-  var allPaths = [createPath(initialLocation)]; // Public interface
-
-  function createHref(location) {
-    var baseTag = document.querySelector('base');
-    var href = '';
-
-    if (baseTag && baseTag.getAttribute('href')) {
-      href = stripHash(window.location.href);
-    }
-
-    return href + '#' + encodePath(basename + createPath(location));
-  }
-
-  function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(state === undefined, 'Hash history cannot push state; it is ignored') : void 0;
-    var action = 'PUSH';
-    var location = createLocation(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = createPath(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a PUSH, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        pushHashPath(encodedPath);
-        var prevIndex = allPaths.lastIndexOf(createPath(history.location));
-        var nextPaths = allPaths.slice(0, prevIndex + 1);
-        nextPaths.push(path);
-        allPaths = nextPaths;
-        setState({
-          action: action,
-          location: location
-        });
-      } else {
-        process.env.NODE_ENV !== "production" ? warning$2(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack') : void 0;
-        setState();
-      }
-    });
-  }
-
-  function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(state === undefined, 'Hash history cannot replace state; it is ignored') : void 0;
-    var action = 'REPLACE';
-    var location = createLocation(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = createPath(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        replaceHashPath(encodedPath);
-      }
-
-      var prevIndex = allPaths.indexOf(createPath(history.location));
-      if (prevIndex !== -1) allPaths[prevIndex] = path;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  }
-
-  function go(n) {
-    process.env.NODE_ENV !== "production" ? warning$2(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser') : void 0;
-    globalHistory.go(n);
-  }
-
-  function goBack() {
-    go(-1);
-  }
-
-  function goForward() {
-    go(1);
-  }
-
-  var listenerCount = 0;
-
-  function checkDOMListeners(delta) {
-    listenerCount += delta;
-
-    if (listenerCount === 1 && delta === 1) {
-      window.addEventListener(HashChangeEvent$1, handleHashChange);
-    } else if (listenerCount === 0) {
-      window.removeEventListener(HashChangeEvent$1, handleHashChange);
-    }
-  }
-
-  var isBlocked = false;
-
-  function block(prompt) {
-    if (prompt === void 0) {
-      prompt = false;
-    }
-
-    var unblock = transitionManager.setPrompt(prompt);
-
-    if (!isBlocked) {
-      checkDOMListeners(1);
-      isBlocked = true;
-    }
-
-    return function () {
-      if (isBlocked) {
-        isBlocked = false;
-        checkDOMListeners(-1);
-      }
-
-      return unblock();
-    };
-  }
-
-  function listen(listener) {
-    var unlisten = transitionManager.appendListener(listener);
-    checkDOMListeners(1);
-    return function () {
-      checkDOMListeners(-1);
-      unlisten();
-    };
-  }
-
-  var history = {
-    length: globalHistory.length,
-    action: 'POP',
-    location: initialLocation,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    block: block,
-    listen: listen
-  };
-  return history;
-}
-
-function clamp(n, lowerBound, upperBound) {
-  return Math.min(Math.max(n, lowerBound), upperBound);
-}
-/**
- * Creates a history object that stores locations in memory.
- */
-
-
-function createMemoryHistory(props) {
-  if (props === void 0) {
-    props = {};
-  }
-
-  var _props = props,
-      getUserConfirmation = _props.getUserConfirmation,
-      _props$initialEntries = _props.initialEntries,
-      initialEntries = _props$initialEntries === void 0 ? ['/'] : _props$initialEntries,
-      _props$initialIndex = _props.initialIndex,
-      initialIndex = _props$initialIndex === void 0 ? 0 : _props$initialIndex,
-      _props$keyLength = _props.keyLength,
-      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
-  var transitionManager = createTransitionManager();
-
-  function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = history.entries.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  }
-
-  function createKey() {
-    return Math.random().toString(36).substr(2, keyLength);
-  }
-
-  var index = clamp(initialIndex, 0, initialEntries.length - 1);
-  var entries = initialEntries.map(function (entry) {
-    return typeof entry === 'string' ? createLocation(entry, undefined, createKey()) : createLocation(entry, undefined, entry.key || createKey());
-  }); // Public interface
-
-  var createHref = createPath;
-
-  function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'PUSH';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var prevIndex = history.index;
-      var nextIndex = prevIndex + 1;
-      var nextEntries = history.entries.slice(0);
-
-      if (nextEntries.length > nextIndex) {
-        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
-      } else {
-        nextEntries.push(location);
-      }
-
-      setState({
-        action: action,
-        location: location,
-        index: nextIndex,
-        entries: nextEntries
-      });
-    });
-  }
-
-  function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'REPLACE';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      history.entries[history.index] = location;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  }
-
-  function go(n) {
-    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
-    var action = 'POP';
-    var location = history.entries[nextIndex];
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (ok) {
-        setState({
-          action: action,
-          location: location,
-          index: nextIndex
-        });
-      } else {
-        // Mimic the behavior of DOM histories by
-        // causing a render after a cancelled POP.
-        setState();
-      }
-    });
-  }
-
-  function goBack() {
-    go(-1);
-  }
-
-  function goForward() {
-    go(1);
-  }
-
-  function canGo(n) {
-    var nextIndex = history.index + n;
-    return nextIndex >= 0 && nextIndex < history.entries.length;
-  }
-
-  function block(prompt) {
-    if (prompt === void 0) {
-      prompt = false;
-    }
-
-    return transitionManager.setPrompt(prompt);
-  }
-
-  function listen(listener) {
-    return transitionManager.appendListener(listener);
-  }
-
-  var history = {
-    length: entries.length,
-    action: 'POP',
-    location: entries[index],
-    index: index,
-    entries: entries,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    canGo: canGo,
-    block: block,
-    listen: listen
-  };
-  return history;
-}
-
 setRouteConfig({
   notifyNativeRouter: {
     root: true,
     internal: true
   }
 });
+
+function createServerHistory() {
+  return {
+    push: function push() {
+      return undefined;
+    },
+    replace: function replace() {
+      return undefined;
+    },
+    go: function go() {
+      return undefined;
+    },
+    block: function block() {
+      return function () {
+        return undefined;
+      };
+    }
+  };
+}
+
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter(createHistory) {
+  function BrowserNativeRouter(url) {
     var _this;
 
     _this = _BaseNativeRouter.call(this) || this;
 
     _defineProperty(_assertThisInitialized(_this), "_unlistenHistory", void 0);
 
-    _defineProperty(_assertThisInitialized(_this), "history", void 0);
+    _defineProperty(_assertThisInitialized(_this), "_history", void 0);
 
-    if (createHistory === 'Hash') {
-      _this.history = createHashHistory();
-    } else if (createHistory === 'Memory') {
-      _this.history = createMemoryHistory();
-    } else if (createHistory === 'Browser') {
-      _this.history = createBrowserHistory();
+    if (env.isServer) {
+      _this._history = createServerHistory();
     } else {
-      var _createHistory$split = createHistory.split('?'),
-          pathname = _createHistory$split[0],
-          _createHistory$split$ = _createHistory$split[1],
-          search = _createHistory$split$ === void 0 ? '' : _createHistory$split$;
-
-      _this.history = {
-        action: 'PUSH',
-        length: 0,
-        listen: function listen() {
-          return function () {
-            return undefined;
-          };
-        },
-        createHref: function createHref() {
-          return '';
-        },
-        push: function push() {
-          return undefined;
-        },
-        replace: function replace() {
-          return undefined;
-        },
-        go: function go() {
-          return undefined;
-        },
-        goBack: function goBack() {
-          return undefined;
-        },
-        goForward: function goForward() {
-          return undefined;
-        },
-        block: function block() {
-          return function () {
-            return undefined;
-          };
-        },
-        location: {
-          pathname: pathname,
-          search: search && "?" + search,
-          hash: ''
-        }
-      };
+      _this._history = createBrowserHistory();
     }
 
-    _this._unlistenHistory = _this.history.block(function (location, action) {
+    _this._unlistenHistory = _this._history.block(function (location, action) {
       if (action === 'POP') {
         env.setTimeout(function () {
-          return _this.router.back(1);
+          return _this.eluxRouter.back(1);
         }, 100);
         return false;
       }
@@ -5947,30 +5541,31 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
       if (changed) {
         var _location$pathname = location.pathname,
-            _pathname = _location$pathname === void 0 ? '' : _location$pathname,
+            pathname = _location$pathname === void 0 ? '' : _location$pathname,
             _location$search = location.search,
-            _search = _location$search === void 0 ? '' : _location$search,
+            search = _location$search === void 0 ? '' : _location$search,
             _location$hash = location.hash,
             hash = _location$hash === void 0 ? '' : _location$hash;
 
-        var url = [_pathname, _search, hash].join('');
-        var callback;
+        var _url = [pathname, search, hash].join('');
+
+        var _callback;
 
         if (action === 'REPLACE') {
-          callback = function callback() {
-            return _this.router.replace(url);
+          _callback = function _callback() {
+            return _this.eluxRouter.replace(_url);
           };
         } else if (action === 'PUSH') {
-          callback = function callback() {
-            return _this.router.push(url);
+          _callback = function _callback() {
+            return _this.eluxRouter.push(_url);
           };
         } else {
-          callback = function callback() {
-            return _this.router.relaunch(url);
+          _callback = function _callback() {
+            return _this.eluxRouter.relaunch(_url);
           };
         }
 
-        env.setTimeout(callback, 100);
+        env.setTimeout(_callback, 100);
         return false;
       }
 
@@ -5981,33 +5576,16 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   var _proto = BrowserNativeRouter.prototype;
 
-  _proto.getUrl = function getUrl() {
-    var _this$history$locatio = this.history.location,
-        _this$history$locatio2 = _this$history$locatio.pathname,
-        pathname = _this$history$locatio2 === void 0 ? '' : _this$history$locatio2,
-        _this$history$locatio3 = _this$history$locatio.search,
-        search = _this$history$locatio3 === void 0 ? '' : _this$history$locatio3,
-        _this$history$locatio4 = _this$history$locatio.hash,
-        hash = _this$history$locatio4 === void 0 ? '' : _this$history$locatio4;
-    return [pathname, search, hash].join('');
-  };
-
   _proto.getKey = function getKey(location) {
     return location.state || '';
-  };
-
-  _proto.passive = function passive(url, key, action) {
-    return true;
-  };
-
-  _proto.refresh = function refresh() {
-    this.history.go(0);
   };
 
   _proto.push = function push(getNativeData, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -6017,7 +5595,9 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.replace = function replace(getNativeData, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -6027,7 +5607,9 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.relaunch = function relaunch(getNativeData, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -6037,7 +5619,9 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.back = function back(getNativeData, n, key) {
     if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+
+      this._history.replace(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -6045,7 +5629,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.toOutside = function toOutside(url) {
-    this.history.push(url);
+    this._history.push(url, '');
   };
 
   _proto.destroy = function destroy() {
@@ -6054,18 +5638,18 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   return BrowserNativeRouter;
 }(BaseNativeRouter);
-var Router = function (_BaseRouter) {
-  _inheritsLoose(Router, _BaseRouter);
+var EluxRouter = function (_BaseEluxRouter) {
+  _inheritsLoose(EluxRouter, _BaseEluxRouter);
 
-  function Router(browserNativeRouter, locationTransform) {
-    return _BaseRouter.call(this, browserNativeRouter.getUrl(), browserNativeRouter, locationTransform) || this;
+  function EluxRouter(url, browserNativeRouter, locationTransform, nativeData) {
+    return _BaseEluxRouter.call(this, url, browserNativeRouter, locationTransform, nativeData) || this;
   }
 
-  return Router;
-}(BaseRouter);
-function createRouter(createHistory, locationTransform) {
-  var browserNativeRouter = new BrowserNativeRouter(createHistory);
-  var router = new Router(browserNativeRouter, locationTransform);
+  return EluxRouter;
+}(BaseEluxRouter);
+function createRouter(url, locationTransform, nativeData) {
+  var browserNativeRouter = new BrowserNativeRouter(url);
+  var router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
   return router;
 }
 
@@ -6078,14 +5662,15 @@ function setConfig(conf) {
   setUserConfig(conf);
 }
 var createApp = function createApp(moduleGetter, middlewares) {
+  var url = [location.pathname, location.search, location.hash].join('');
   return createBaseApp({}, function (locationTransform) {
-    return createRouter('Browser', locationTransform);
+    return createRouter(url, locationTransform, {});
   }, renderToDocument, moduleGetter, middlewares);
 };
-var createSSR = function createSSR(moduleGetter, request, response, middlewares) {
+var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
   return createBaseSSR({}, function (locationTransform) {
-    return createRouter(request.url, locationTransform);
-  }, renderToString, moduleGetter, middlewares, request, response);
+    return createRouter(url, locationTransform, nativeData);
+  }, renderToString, moduleGetter, middlewares);
 };
 
 /** @license React v16.13.1
@@ -9285,4 +8870,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };

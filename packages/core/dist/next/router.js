@@ -41,12 +41,12 @@ export class EmptyModuleHandlers {
 }
 export let RouteModuleHandlers = _decorate(null, function (_initialize) {
   class RouteModuleHandlers {
-    constructor(moduleName, store, latestState) {
+    constructor(moduleName, store, latestState, preState) {
       _initialize(this);
 
       this.moduleName = moduleName;
       this.store = store;
-      this.initState = latestState[moduleName];
+      this.initState = preState[moduleName];
     }
 
   }

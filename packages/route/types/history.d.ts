@@ -1,5 +1,5 @@
 import { IStore } from '@elux/core';
-import { Location } from './basic';
+import { Location, RouteState } from './basic';
 declare class RouteStack<T extends {
     destroy?: () => void;
 }> {
@@ -32,9 +32,9 @@ export declare class HistoryStack extends RouteStack<HistoryRecord> {
     static id: number;
     readonly stackkey: string;
     constructor(rootStack: RootStack, store: IStore);
-    push(location: Location): HistoryRecord;
-    replace(location: Location): HistoryRecord;
-    relaunch(location: Location): HistoryRecord;
+    push(routeState: RouteState): HistoryRecord;
+    replace(routeState: RouteState): HistoryRecord;
+    relaunch(routeState: RouteState): HistoryRecord;
     findRecordByKey(recordKey: string): HistoryRecord | undefined;
     destroy(): void;
 }
@@ -45,9 +45,9 @@ export declare class RootStack extends RouteStack<HistoryStack> {
         store: IStore;
         page?: any;
     }[];
-    push(location: Location): HistoryRecord;
-    replace(location: Location): HistoryRecord;
-    relaunch(location: Location): HistoryRecord;
+    push(routeState: RouteState): HistoryRecord;
+    replace(routeState: RouteState): HistoryRecord;
+    relaunch(routeState: RouteState): HistoryRecord;
     private countBack;
     testBack(delta: number, rootOnly: boolean): {
         record: HistoryRecord;

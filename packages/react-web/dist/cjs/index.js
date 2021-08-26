@@ -42,17 +42,18 @@ function setConfig(conf) {
 }
 
 var createApp = function createApp(moduleGetter, middlewares) {
+  var url = [location.pathname, location.search, location.hash].join('');
   return (0, _app.createBaseApp)({}, function (locationTransform) {
-    return (0, _routeBrowser.createRouter)('Browser', locationTransform);
+    return (0, _routeBrowser.createRouter)(url, locationTransform, {});
   }, _stage.renderToDocument, moduleGetter, middlewares);
 };
 
 exports.createApp = createApp;
 
-var createSSR = function createSSR(moduleGetter, request, response, middlewares) {
+var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
   return (0, _app.createBaseSSR)({}, function (locationTransform) {
-    return (0, _routeBrowser.createRouter)(request.url, locationTransform);
-  }, _stage.renderToString, moduleGetter, middlewares, request, response);
+    return (0, _routeBrowser.createRouter)(url, locationTransform, nativeData);
+  }, _stage.renderToString, moduleGetter, middlewares);
 };
 
 exports.createSSR = createSSR;

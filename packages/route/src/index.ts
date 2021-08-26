@@ -14,6 +14,7 @@ import {
   RouteModuleHandlers,
   IRouteModuleHandlersClass,
   env,
+  reinitApp,
 } from '@elux/core';
 
 import {routeConfig, setRouteConfig, EluxLocation, PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation} from './basic';
@@ -36,20 +37,16 @@ export type {RootParams, Location, RouteState, HistoryAction, DeepPartial, Paylo
 
 export type NativeData = {nativeLocation: NativeLocation; nativeUrl: string};
 
-interface RouterTask {
-  method: string;
-}
 interface NativeRouterTask {
   resolve: (nativeData: NativeData | undefined) => void;
   reject: () => void;
   nativeData: undefined | NativeData;
 }
-export abstract class NativeRouter {
+
+export abstract class BaseNativeRouter {
   protected curTask?: NativeRouterTask;
 
-  protected taskList: RouterTask[] = [];
-
-  protected eluxRouter!: EluxRouter;
+  protected eluxRouter!: IEluxRouter;
 
   // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
 
@@ -63,7 +60,7 @@ export abstract class NativeRouter {
 
   public abstract toOutside(url: string): void;
 
-  abstract destroy(): void;
+  public abstract destroy(): void;
 
   protected onChange(key: string): boolean {
     if (this.curTask) {
@@ -74,11 +71,11 @@ export abstract class NativeRouter {
     return key !== this.eluxRouter.routeState.key;
   }
 
-  setEluxRouter(router: EluxRouter): void {
+  public startup(router: IEluxRouter): void {
     this.eluxRouter = router;
   }
 
-  execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined> {
+  public execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined> {
     return new Promise((resolve, reject) => {
       const task: NativeRouterTask = {resolve, reject, nativeData: undefined};
       this.curTask = task;
@@ -102,16 +99,16 @@ export abstract class NativeRouter {
   }
 }
 
-export abstract class EluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown>
+export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown>
   extends MultipleDispatcher<{change: {routeState: RouteState<P>; root: boolean}}>
   implements IEluxRouter<P, N, NT> {
-  private curTask?: () => Promise<void>;
+  private _curTask?: () => Promise<void>;
 
-  private taskList: Array<() => Promise<void>> = [];
+  private _taskList: Array<() => Promise<void>> = [];
 
   private _nativeData: {nativeLocation: NativeLocation; nativeUrl: string} | undefined;
 
-  private internalUrl!: string;
+  private _internalUrl!: string;
 
   public routeState!: RouteState<P>;
 
@@ -125,20 +122,17 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
 
   public latestState: Record<string, any> = {};
 
-  public native!: NT;
-
-  constructor(url: string, public nativeRouter: NativeRouter, protected locationTransform: LocationTransform) {
+  constructor(url: string, protected nativeRouter: BaseNativeRouter, protected locationTransform: LocationTransform, public nativeData: NT) {
     super();
-    nativeRouter.setEluxRouter(this);
+    nativeRouter.startup(this);
     const locationOrPromise = locationTransform.urlToLocation<P>(url);
     const callback = (location: Location<P>) => {
       const routeState: RouteState<P> = {...location, action: 'RELAUNCH', key: ''};
       this.routeState = routeState;
-      this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+      this._internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
       if (!routeConfig.indexUrl) {
-        setRouteConfig({indexUrl: this.internalUrl});
+        setRouteConfig({indexUrl: this._internalUrl});
       }
-      this.latestState = {[this.name]: routeState};
       return routeState;
     };
     if (isPromise(locationOrPromise)) {
@@ -147,8 +141,7 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
       this.initialize = Promise.resolve(callback(locationOrPromise));
     }
   }
-  startup(store: IStore, native: NT): void {
-    this.native = native;
+  startup(store: IStore): void {
     const historyStack = new HistoryStack(this.rootStack, store);
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -165,7 +158,7 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     return this.rootStack.getItems().map(({store}) => store);
   }
   getInternalUrl(): string {
-    return this.internalUrl;
+    return this._internalUrl;
   }
   getNativeLocation(): NativeLocation {
     if (!this._nativeData) {
@@ -231,8 +224,8 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   }
 
-  relaunch(data: PayloadLocation<P, N> | string, root = false, nativeCaller = false): void {
-    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
+  relaunch(data: PayloadLocation<P, N> | string, root = false, nonblocking?: boolean, nativeCaller = false): void | Promise<void> {
+    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
   }
 
   private async _relaunch(data: PayloadLocation<P, N> | string, root: boolean, nativeCaller: boolean) {
@@ -246,9 +239,9 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     if (root) {
-      key = this.rootStack.relaunch(location).getKey();
+      key = this.rootStack.relaunch(routeState).getKey();
     } else {
-      key = this.rootStack.getCurrentItem().relaunch(location).getKey();
+      key = this.rootStack.getCurrentItem().relaunch(routeState).getKey();
     }
     routeState.key = key;
     let nativeData: NativeData | undefined;
@@ -258,14 +251,14 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     }
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this._internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {routeState: cloneState, root});
   }
 
-  push(data: PayloadLocation<P, N> | string, root = false, nativeCaller = false): void {
-    this.addTask(this._push.bind(this, data, root, nativeCaller));
+  push(data: PayloadLocation<P, N> | string, root = false, nonblocking?: boolean, nativeCaller = false): void | Promise<void> {
+    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
   }
 
   private async _push(data: PayloadLocation<P, N> | string, root: boolean, nativeCaller: boolean) {
@@ -279,9 +272,9 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     if (root) {
-      key = this.rootStack.push(location).getKey();
+      key = this.rootStack.push(routeState).getKey();
     } else {
-      key = this.rootStack.getCurrentItem().push(location).getKey();
+      key = this.rootStack.getCurrentItem().push(routeState).getKey();
     }
     routeState.key = key;
     let nativeData: NativeData | undefined;
@@ -291,14 +284,19 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     }
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this._internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
-    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+    if (root) {
+      await reinitApp(this.getCurrentStore());
+    } else {
+      this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+    }
+
     await this.dispatch('change', {routeState: cloneState, root});
   }
 
-  replace(data: PayloadLocation<P, N> | string, root = false, nativeCaller = false): void {
-    this.addTask(this._replace.bind(this, data, root, nativeCaller));
+  replace(data: PayloadLocation<P, N> | string, root = false, nonblocking?: boolean, nativeCaller = false): void | Promise<void> {
+    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
   }
 
   private async _replace(data: PayloadLocation<P, N> | string, root: boolean, nativeCaller: boolean) {
@@ -312,9 +310,9 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     if (root) {
-      key = this.rootStack.replace(location).getKey();
+      key = this.rootStack.replace(routeState).getKey();
     } else {
-      key = this.rootStack.getCurrentItem().replace(location).getKey();
+      key = this.rootStack.getCurrentItem().replace(routeState).getKey();
     }
     routeState.key = key;
     let nativeData: NativeData | undefined;
@@ -324,14 +322,14 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     }
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this._internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {routeState: cloneState, root});
   }
 
-  back(n = 1, root = false, options?: {overflowRedirect?: string; payload?: any}, nativeCaller = false): void {
-    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
+  back(n = 1, root = false, options?: {overflowRedirect?: string; payload?: any}, nonblocking?: boolean, nativeCaller = false): void | Promise<void> {
+    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
   }
 
   private async _back(n = 1, root: boolean, options: {overflowRedirect?: string; payload?: any}, nativeCaller: boolean) {
@@ -365,36 +363,41 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
     }
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
+    this._internalUrl = eluxLocationToEluxUrl({pathname: routeState.pagename, params: routeState.params});
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {routeState, root});
   }
 
-  private taskComplete() {
-    const task = this.taskList.shift();
+  private _taskComplete = () => {
+    const task = this._taskList.shift();
     if (task) {
       this.executeTask(task);
     } else {
-      this.curTask = undefined;
+      this._curTask = undefined;
     }
+  };
+
+  private executeTask(task: () => Promise<void>): void {
+    this._curTask = task;
+    task().finally(this._taskComplete);
   }
 
-  private executeTask(task: () => Promise<void>) {
-    this.curTask = task;
-    task().finally(this.taskComplete.bind(this));
-  }
-
-  private addTask(task: () => Promise<any>, nonblocking?: boolean): void {
-    if (this.curTask) {
-      if (nonblocking) {
-        this.taskList.push(task);
+  private addTask(execute: () => Promise<any>, nonblocking?: boolean): void | Promise<void> {
+    if (env.isServer) {
+      return;
+    }
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+    return new Promise((resolve, reject) => {
+      const task = () => execute().then(resolve, reject);
+      if (this._curTask) {
+        this._taskList.push(task);
       } else {
-        return;
+        this.executeTask(task);
       }
-    } else {
-      this.executeTask(task);
-    }
+    });
   }
 
   destroy(): void {
@@ -402,8 +405,9 @@ export abstract class EluxRouter<P extends RootParams = {}, N extends string = s
   }
 }
 
-export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>, NT> {
+export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>> {
   initialize: Promise<RouteState<P>>;
+  nativeData: NT;
   addListener(name: 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void | Promise<void>): void;
   getInternalUrl(): string;
   getNativeLocation(): NativeLocation;
@@ -412,10 +416,10 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
   locationToNativeData(location: PartialLocation): {nativeUrl: string; nativeLocation: NativeLocation};
   getCurrentPages(): {pagename: string; store: IStore; page?: any}[];
   findRecordByKey(key: string): HistoryRecord | undefined;
-  relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
-  push(data: PayloadLocation<P, N> | string, root?: boolean): void;
-  replace(data: PayloadLocation<P, N> | string, root?: boolean): void;
-  back(n?: number, root?: boolean, options?: {overflowRedirect?: string; payload?: any}): void;
+  relaunch(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+  push(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+  replace(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+  back(n?: number, root?: boolean, options?: {overflowRedirect?: string; payload?: any}, nonblocking?: boolean): void | Promise<void>;
   destroy(): void;
   urlToLocation(url: string): Location<P> | Promise<Location<P>>;
   payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;

@@ -18,6 +18,15 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
+let recoverLock = false;
+
+function recoverClientHead(eluxContext, documentHead) {
+  if (!recoverLock) {
+    recoverLock = true;
+    setClientHead(eluxContext, documentHead);
+  }
+}
+
 const Component = ({
   title = '',
   html = ''
@@ -39,7 +48,8 @@ const Component = ({
   useEffect(() => {
     const raw = eluxContext.documentHead;
     setClientHead(eluxContext, html);
-    return () => setClientHead(eluxContext, raw);
+    recoverLock = false;
+    return () => recoverClientHead(eluxContext, raw);
   }, [eluxContext, html]);
   return null;
 };

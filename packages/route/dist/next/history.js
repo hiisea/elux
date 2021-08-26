@@ -1,5 +1,5 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { forkStore } from '@elux/core';
+import { env, forkStore } from '@elux/core';
 import { routeMeta } from './basic';
 
 class RouteStack {
@@ -91,7 +91,7 @@ export class HistoryRecord {
     _defineProperty(this, "recordKey", void 0);
 
     this.historyStack = historyStack;
-    this.recordKey = ++HistoryRecord.id + '';
+    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
     const {
       pagename,
       params
@@ -116,27 +116,27 @@ export class HistoryStack extends RouteStack {
 
     this.rootStack = rootStack;
     this.store = store;
-    this.stackkey = ++HistoryStack.id + '';
+    this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
   }
 
-  push(location) {
-    const newRecord = new HistoryRecord(location, this);
+  push(routeState) {
+    const newRecord = new HistoryRecord(routeState, this);
 
     this._push(newRecord);
 
     return newRecord;
   }
 
-  replace(location) {
-    const newRecord = new HistoryRecord(location, this);
+  replace(routeState) {
+    const newRecord = new HistoryRecord(routeState, this);
 
     this._replace(newRecord);
 
     return newRecord;
   }
 
-  relaunch(location) {
-    const newRecord = new HistoryRecord(location, this);
+  relaunch(routeState) {
+    const newRecord = new HistoryRecord(routeState, this);
 
     this._relaunch(newRecord);
 
@@ -175,11 +175,11 @@ export class RootStack extends RouteStack {
     });
   }
 
-  push(location) {
+  push(routeState) {
     const curHistory = this.getCurrentItem();
-    const store = forkStore(curHistory.store);
+    const store = forkStore(curHistory.store, routeState);
     const newHistory = new HistoryStack(this, store);
-    const newRecord = new HistoryRecord(location, newHistory);
+    const newRecord = new HistoryRecord(routeState, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -187,14 +187,14 @@ export class RootStack extends RouteStack {
     return newRecord;
   }
 
-  replace(location) {
+  replace(routeState) {
     const curHistory = this.getCurrentItem();
-    return curHistory.relaunch(location);
+    return curHistory.relaunch(routeState);
   }
 
-  relaunch(location) {
+  relaunch(routeState) {
     const curHistory = this.getCurrentItem();
-    const newRecord = curHistory.relaunch(location);
+    const newRecord = curHistory.relaunch(routeState);
 
     this._relaunch(curHistory);
 

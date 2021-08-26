@@ -11,7 +11,7 @@ exports.patchActions = patchActions;
 exports.getApp = getApp;
 exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.modelHotReplacement = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.mutation = exports.action = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
 
-var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
+var _extends4 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
 var _core = require("@elux/core");
 
@@ -145,23 +145,25 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
+          return router.initialize.then(function (routeState) {
+            var _extends2;
 
-          if (state) {
-            storeOptions.initState = (0, _extends2.default)({}, storeOptions.initState, state);
-          }
+            storeOptions.initState = (0, _extends4.default)({}, storeOptions.initState, (_extends2 = {}, _extends2[_route.routeConfig.RouteModuleName] = routeState, _extends2), state);
+            var baseStore = storeCreator(storeOptions);
 
-          var baseStore = storeCreator(storeOptions);
-          return router.initialize.then(function () {
             var _initApp2 = (0, _core.initApp)(router, baseStore, middlewares, viewName, components),
                 store = _initApp2.store,
-                AppView = _initApp2.AppView;
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
 
-            render(id, AppView, store, {
-              deps: {},
-              router: router,
-              documentHead: ''
-            }, !!_core.env[ssrKey], ins);
-            return store;
+            return setup.then(function () {
+              render(id, AppView, store, {
+                deps: {},
+                router: router,
+                documentHead: ''
+              }, !!_core.env[ssrKey], ins);
+              return store;
+            });
           });
         })
       });
@@ -169,7 +171,7 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
   };
 }
 
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, request, response) {
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
@@ -202,9 +204,13 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, req
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          var baseStore = storeCreator(storeOptions);
-          return router.initialize.then(function () {
-            var _initApp3 = (0, _core.initApp)(router, baseStore, middlewares, viewName, undefined, request, response),
+          return router.initialize.then(function (routeState) {
+            var _extends3;
+
+            storeOptions.initState = (0, _extends4.default)({}, storeOptions.initState, (_extends3 = {}, _extends3[_route.routeConfig.RouteModuleName] = routeState, _extends3));
+            var baseStore = storeCreator(storeOptions);
+
+            var _initApp3 = (0, _core.initApp)(router, baseStore, middlewares, viewName),
                 store = _initApp3.store,
                 AppView = _initApp3.AppView,
                 setup = _initApp3.setup;

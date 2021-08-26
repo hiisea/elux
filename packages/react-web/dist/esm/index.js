@@ -13,12 +13,13 @@ export function setConfig(conf) {
   setUserConfig(conf);
 }
 export var createApp = function createApp(moduleGetter, middlewares) {
+  var url = [location.pathname, location.search, location.hash].join('');
   return createBaseApp({}, function (locationTransform) {
-    return createRouter('Browser', locationTransform);
+    return createRouter(url, locationTransform, {});
   }, renderToDocument, moduleGetter, middlewares);
 };
-export var createSSR = function createSSR(moduleGetter, request, response, middlewares) {
+export var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
   return createBaseSSR({}, function (locationTransform) {
-    return createRouter(request.url, locationTransform);
-  }, renderToString, moduleGetter, middlewares, request, response);
+    return createRouter(url, locationTransform, nativeData);
+  }, renderToString, moduleGetter, middlewares);
 };

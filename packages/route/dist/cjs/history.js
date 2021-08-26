@@ -102,7 +102,7 @@ var HistoryRecord = function () {
     (0, _defineProperty2.default)(this, "params", void 0);
     (0, _defineProperty2.default)(this, "recordKey", void 0);
     this.historyStack = historyStack;
-    this.recordKey = ++HistoryRecord.id + '';
+    this.recordKey = _core.env.isServer ? '0' : ++HistoryRecord.id + '';
     var pagename = location.pagename,
         params = location.params;
     this.pagename = pagename;
@@ -131,30 +131,30 @@ var HistoryStack = function (_RouteStack) {
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "stackkey", void 0);
     _this.rootStack = rootStack;
     _this.store = store;
-    _this.stackkey = ++HistoryStack.id + '';
+    _this.stackkey = _core.env.isServer ? '0' : ++HistoryStack.id + '';
     return _this;
   }
 
   var _proto3 = HistoryStack.prototype;
 
-  _proto3.push = function push(location) {
-    var newRecord = new HistoryRecord(location, this);
+  _proto3.push = function push(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
 
     this._push(newRecord);
 
     return newRecord;
   };
 
-  _proto3.replace = function replace(location) {
-    var newRecord = new HistoryRecord(location, this);
+  _proto3.replace = function replace(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
 
     this._replace(newRecord);
 
     return newRecord;
   };
 
-  _proto3.relaunch = function relaunch(location) {
-    var newRecord = new HistoryRecord(location, this);
+  _proto3.relaunch = function relaunch(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
 
     this._relaunch(newRecord);
 
@@ -199,11 +199,11 @@ var RootStack = function (_RouteStack2) {
     });
   };
 
-  _proto4.push = function push(location) {
+  _proto4.push = function push(routeState) {
     var curHistory = this.getCurrentItem();
-    var store = (0, _core.forkStore)(curHistory.store);
+    var store = (0, _core.forkStore)(curHistory.store, routeState);
     var newHistory = new HistoryStack(this, store);
-    var newRecord = new HistoryRecord(location, newHistory);
+    var newRecord = new HistoryRecord(routeState, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -211,14 +211,14 @@ var RootStack = function (_RouteStack2) {
     return newRecord;
   };
 
-  _proto4.replace = function replace(location) {
+  _proto4.replace = function replace(routeState) {
     var curHistory = this.getCurrentItem();
-    return curHistory.relaunch(location);
+    return curHistory.relaunch(routeState);
   };
 
-  _proto4.relaunch = function relaunch(location) {
+  _proto4.relaunch = function relaunch(routeState) {
     var curHistory = this.getCurrentItem();
-    var newRecord = curHistory.relaunch(location);
+    var newRecord = curHistory.relaunch(routeState);
 
     this._relaunch(curHistory);
 

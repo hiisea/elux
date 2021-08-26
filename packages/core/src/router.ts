@@ -32,8 +32,8 @@ export class EmptyModuleHandlers implements IModuleHandlers {
 
 export class RouteModuleHandlers<S extends ICoreRouteState> implements IModuleHandlers<S> {
   initState: S;
-  constructor(public readonly moduleName: string, public store: IStore, latestState: Record<string, any>) {
-    this.initState = latestState[moduleName];
+  constructor(public readonly moduleName: string, public store: IStore, latestState: any, preState: any) {
+    this.initState = preState[moduleName];
   }
   @reducer
   public [ActionTypes.MInit](initState: S): S {

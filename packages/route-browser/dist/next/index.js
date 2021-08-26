@@ -1,6 +1,6 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { EluxRouter, NativeRouter, setRouteConfig } from '@elux/route';
-import { createBrowserHistory, createHashHistory, createMemoryHistory } from 'history';
+import { BaseEluxRouter, BaseNativeRouter, setRouteConfig } from '@elux/route';
+import { createBrowserHistory } from 'history';
 import { env } from '@elux/core';
 setRouteConfig({
   notifyNativeRouter: {
@@ -8,67 +8,43 @@ setRouteConfig({
     internal: true
   }
 });
-export class BrowserNativeRouter extends NativeRouter {
-  constructor(createHistory) {
+
+function createServerHistory() {
+  return {
+    push() {
+      return undefined;
+    },
+
+    replace() {
+      return undefined;
+    },
+
+    go() {
+      return undefined;
+    },
+
+    block() {
+      return () => undefined;
+    }
+
+  };
+}
+
+export class BrowserNativeRouter extends BaseNativeRouter {
+  constructor(url) {
     super();
 
     _defineProperty(this, "_unlistenHistory", void 0);
 
-    _defineProperty(this, "history", void 0);
+    _defineProperty(this, "_history", void 0);
 
-    if (createHistory === 'Hash') {
-      this.history = createHashHistory();
-    } else if (createHistory === 'Memory') {
-      this.history = createMemoryHistory();
-    } else if (createHistory === 'Browser') {
-      this.history = createBrowserHistory();
+    if (env.isServer) {
+      this._history = createServerHistory();
     } else {
-      const [pathname, search = ''] = createHistory.split('?');
-      this.history = {
-        action: 'PUSH',
-        length: 0,
-
-        listen() {
-          return () => undefined;
-        },
-
-        createHref() {
-          return '';
-        },
-
-        push() {
-          return undefined;
-        },
-
-        replace() {
-          return undefined;
-        },
-
-        go() {
-          return undefined;
-        },
-
-        goBack() {
-          return undefined;
-        },
-
-        goForward() {
-          return undefined;
-        },
-
-        block() {
-          return () => undefined;
-        },
-
-        location: {
-          pathname,
-          search: search && `?${search}`,
-          hash: ''
-        }
-      };
+      this._history = createBrowserHistory();
     }
 
-    this._unlistenHistory = this.history.block((location, action) => {
+    this._unlistenHistory = this._history.block((location, action) => {
       if (action === 'POP') {
         env.setTimeout(() => this.eluxRouter.back(1), 100);
         return false;
@@ -102,31 +78,16 @@ export class BrowserNativeRouter extends NativeRouter {
     });
   }
 
-  getUrl() {
-    const {
-      pathname = '',
-      search = '',
-      hash = ''
-    } = this.history.location;
-    return [pathname, search, hash].join('');
-  }
-
   getKey(location) {
     return location.state || '';
-  }
-
-  passive(url, key, action) {
-    return true;
-  }
-
-  refresh() {
-    this.history.go(0);
   }
 
   push(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -136,7 +97,9 @@ export class BrowserNativeRouter extends NativeRouter {
   replace(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -146,7 +109,9 @@ export class BrowserNativeRouter extends NativeRouter {
   relaunch(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -156,7 +121,9 @@ export class BrowserNativeRouter extends NativeRouter {
   back(getNativeData, n, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+
+      this._history.replace(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -164,7 +131,7 @@ export class BrowserNativeRouter extends NativeRouter {
   }
 
   toOutside(url) {
-    this.history.push(url);
+    this._history.push(url, '');
   }
 
   destroy() {
@@ -172,14 +139,14 @@ export class BrowserNativeRouter extends NativeRouter {
   }
 
 }
-export class Router extends EluxRouter {
-  constructor(browserNativeRouter, locationTransform) {
-    super(browserNativeRouter.getUrl(), browserNativeRouter, locationTransform);
+export class EluxRouter extends BaseEluxRouter {
+  constructor(url, browserNativeRouter, locationTransform, nativeData) {
+    super(url, browserNativeRouter, locationTransform, nativeData);
   }
 
 }
-export function createRouter(createHistory, locationTransform) {
-  const browserNativeRouter = new BrowserNativeRouter(createHistory);
-  const router = new Router(browserNativeRouter, locationTransform);
+export function createRouter(url, locationTransform, nativeData) {
+  const browserNativeRouter = new BrowserNativeRouter(url);
+  const router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
   return router;
 }

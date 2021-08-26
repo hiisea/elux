@@ -1,5 +1,5 @@
-import {IStore, forkStore} from '@elux/core';
-import {Location, routeMeta} from './basic';
+import {env, IStore, forkStore} from '@elux/core';
+import {Location, routeMeta, RouteState} from './basic';
 
 class RouteStack<T extends {destroy?: () => void}> {
   protected records: T[] = [];
@@ -79,7 +79,7 @@ export class HistoryRecord {
   public readonly params: Record<string, any>;
   public readonly recordKey: string;
   constructor(location: Location, public readonly historyStack: HistoryStack) {
-    this.recordKey = ++HistoryRecord.id + '';
+    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
     const {pagename, params} = location;
     this.pagename = pagename;
     this.params = params;
@@ -94,20 +94,20 @@ export class HistoryStack extends RouteStack<HistoryRecord> {
   public readonly stackkey: string;
   constructor(public readonly rootStack: RootStack, public readonly store: IStore) {
     super(20);
-    this.stackkey = ++HistoryStack.id + '';
+    this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
   }
-  push(location: Location): HistoryRecord {
-    const newRecord = new HistoryRecord(location, this);
+  push(routeState: RouteState): HistoryRecord {
+    const newRecord = new HistoryRecord(routeState, this);
     this._push(newRecord);
     return newRecord;
   }
-  replace(location: Location): HistoryRecord {
-    const newRecord = new HistoryRecord(location, this);
+  replace(routeState: RouteState): HistoryRecord {
+    const newRecord = new HistoryRecord(routeState, this);
     this._replace(newRecord);
     return newRecord;
   }
-  relaunch(location: Location): HistoryRecord {
-    const newRecord = new HistoryRecord(location, this);
+  relaunch(routeState: RouteState): HistoryRecord {
+    const newRecord = new HistoryRecord(routeState, this);
     this._relaunch(newRecord);
     return newRecord;
   }
@@ -130,22 +130,22 @@ export class RootStack extends RouteStack<HistoryStack> {
       return {pagename, store, page: routeMeta.pages[pagename]};
     });
   }
-  push(location: Location): HistoryRecord {
+  push(routeState: RouteState): HistoryRecord {
     const curHistory = this.getCurrentItem();
-    const store = forkStore(curHistory.store);
+    const store = forkStore(curHistory.store, routeState);
     const newHistory = new HistoryStack(this, store);
-    const newRecord = new HistoryRecord(location, newHistory);
+    const newRecord = new HistoryRecord(routeState, newHistory);
     newHistory.startup(newRecord);
     this._push(newHistory);
     return newRecord;
   }
-  replace(location: Location): HistoryRecord {
+  replace(routeState: RouteState): HistoryRecord {
     const curHistory = this.getCurrentItem();
-    return curHistory.relaunch(location);
+    return curHistory.relaunch(routeState);
   }
-  relaunch(location: Location): HistoryRecord {
+  relaunch(routeState: RouteState): HistoryRecord {
     const curHistory = this.getCurrentItem();
-    const newRecord = curHistory.relaunch(location);
+    const newRecord = curHistory.relaunch(routeState);
     this._relaunch(curHistory);
     return newRecord;
   }
@@ -202,180 +202,3 @@ export class RootStack extends RouteStack<HistoryStack> {
     return undefined;
   }
 }
-
-// export class History {
-//   private records: HistoryRecord[] = [];
-
-//   startup(record: HistoryRecord): void {
-//     this.records = [record];
-//   }
-//   getRecords(): HistoryRecord[] {
-//     return [...this.records];
-//   }
-//   getLength(): number {
-//     return this.records.length;
-//   }
-//   getPages(): {pagename: string; store: IStore; page?: any}[] {
-//     return this.records.map(({pagename, store}) => {
-//       return {pagename, store, page: routeMeta.pages[pagename]};
-//     });
-//   }
-//   findRecord(keyOrIndex: number | string): HistoryRecord | undefined {
-//     if (typeof keyOrIndex === 'number') {
-//       if (keyOrIndex === -1) {
-//         keyOrIndex = this.records.length - 1;
-//       }
-//       return this.records[keyOrIndex];
-//     }
-//     return this.records.find((item) => item.key === keyOrIndex);
-//   }
-//   findIndex(key: string): number {
-//     return this.records.findIndex((item) => item.key === key);
-//   }
-//   getCurrentRecord(): HistoryRecord {
-//     return this.records[0].sub.records[0];
-//   }
-//   getCurrentSubHistory(): History {
-//     return this.records[0].sub;
-//   }
-//   push(location: Location, key: string): void {
-//     const records = this.records;
-//     let store: IStore = records[0].store;
-//     if (!this.parent) {
-//       store = forkStore(store);
-//     }
-//     const newRecord = new HistoryRecord(location, key, this, store);
-//     const maxHistory = routeConfig.maxHistory;
-//     records.unshift(newRecord);
-//     const delList = records.splice(maxHistory);
-//     if (!this.parent) {
-//       delList.forEach((item) => {
-//         item.store.destroy();
-//       });
-//     }
-//   }
-//   replace(location: Location, key: string): void {
-//     const records = this.records;
-//     const store: IStore = records[0].store;
-//     const newRecord = new HistoryRecord(location, key, this, store);
-//     records[0] = newRecord;
-//   }
-//   relaunch(location: Location, key: string): void {
-//     const records = this.records;
-//     const store: IStore = records[0].store;
-//     const newRecord = new HistoryRecord(location, key, this, store);
-//     this.records = [newRecord];
-//   }
-//   preBack(delta: number, overflowRedirect = false): HistoryRecord | undefined {
-//     const records = this.records.slice(delta);
-//     if (records.length === 0) {
-//       if (overflowRedirect) {
-//         return undefined;
-//       } else {
-//         records.push(this.records.pop()!);
-//       }
-//     }
-//     return records[0];
-//   }
-//   back(delta: number, overflowRedirect = false): void {
-//     const delList = this.records.splice(0, delta);
-//     if (this.records.length === 0) {
-//       const last = delList.pop()!;
-//       this.records.push(last);
-//     }
-//     if (!this.parent) {
-//       delList.forEach((item) => {
-//         item.store.destroy();
-//       });
-//     }
-//   }
-// }
-
-// export class History {
-//   private records: HistoryRecord[] = [];
-
-//   constructor(public readonly parent?: History) {}
-//   startup(record: HistoryRecord): void {
-//     this.records = [record];
-//   }
-//   getRecords(): HistoryRecord[] {
-//     return [...this.records];
-//   }
-//   getLength(): number {
-//     return this.records.length;
-//   }
-//   getPages(): {pagename: string; store: IStore; page?: any}[] {
-//     return this.records.map(({pagename, store}) => {
-//       return {pagename, store, page: routeMeta.pages[pagename]};
-//     });
-//   }
-//   findRecord(keyOrIndex: number | string): HistoryRecord | undefined {
-//     if (typeof keyOrIndex === 'number') {
-//       if (keyOrIndex === -1) {
-//         keyOrIndex = this.records.length - 1;
-//       }
-//       return this.records[keyOrIndex];
-//     }
-//     return this.records.find((item) => item.key === keyOrIndex);
-//   }
-//   findIndex(key: string): number {
-//     return this.records.findIndex((item) => item.key === key);
-//   }
-//   getCurrentRecord(): HistoryRecord {
-//     return this.records[0].sub.records[0];
-//   }
-//   getCurrentSubHistory(): History {
-//     return this.records[0].sub;
-//   }
-//   push(location: Location, key: string): void {
-//     const records = this.records;
-//     let store: IStore = records[0].store;
-//     if (!this.parent) {
-//       store = forkStore(store);
-//     }
-//     const newRecord = new HistoryRecord(location, key, this, store);
-//     const maxHistory = routeConfig.maxHistory;
-//     records.unshift(newRecord);
-//     const delList = records.splice(maxHistory);
-//     if (!this.parent) {
-//       delList.forEach((item) => {
-//         item.store.destroy();
-//       });
-//     }
-//   }
-//   replace(location: Location, key: string): void {
-//     const records = this.records;
-//     const store: IStore = records[0].store;
-//     const newRecord = new HistoryRecord(location, key, this, store);
-//     records[0] = newRecord;
-//   }
-//   relaunch(location: Location, key: string): void {
-//     const records = this.records;
-//     const store: IStore = records[0].store;
-//     const newRecord = new HistoryRecord(location, key, this, store);
-//     this.records = [newRecord];
-//   }
-//   preBack(delta: number, overflowRedirect = false): HistoryRecord | undefined {
-//     const records = this.records.slice(delta);
-//     if (records.length === 0) {
-//       if (overflowRedirect) {
-//         return undefined;
-//       } else {
-//         records.push(this.records.pop()!);
-//       }
-//     }
-//     return records[0];
-//   }
-//   back(delta: number, overflowRedirect = false): void {
-//     const delList = this.records.splice(0, delta);
-//     if (this.records.length === 0) {
-//       const last = delList.pop()!;
-//       this.records.push(last);
-//     }
-//     if (!this.parent) {
-//       delList.forEach((item) => {
-//         item.store.destroy();
-//       });
-//     }
-//   }
-// }

@@ -1,13 +1,23 @@
-import { EluxRouter, NativeRouter, NativeData, RootParams, LocationTransform } from '@elux/route';
-import { History } from 'history';
-export declare class BrowserNativeRouter extends NativeRouter {
+import { BaseEluxRouter, BaseNativeRouter, NativeData, RootParams, LocationTransform } from '@elux/route';
+declare type UnregisterCallback = () => void;
+declare type Action = 'PUSH' | 'POP' | 'REPLACE';
+declare type Location = {
+    pathname: string;
+    search: string;
+    hash: string;
+    state?: string;
+};
+export interface IHistory {
+    push(url: string, key: string): void;
+    replace(url: string, key: string): void;
+    go(n: number): void;
+    block(callback: (location: Location, action: Action) => string | false | void): UnregisterCallback;
+}
+export declare class BrowserNativeRouter extends BaseNativeRouter {
     private _unlistenHistory;
-    history: History<never>;
-    constructor(createHistory: 'Browser' | 'Hash' | 'Memory' | string);
-    getUrl(): string;
+    private _history;
+    constructor(url: string);
     private getKey;
-    protected passive(url: string, key: string, action: string): boolean;
-    refresh(): void;
     protected push(getNativeData: () => NativeData, key: string): NativeData | undefined;
     protected replace(getNativeData: () => NativeData, key: string): NativeData | undefined;
     protected relaunch(getNativeData: () => NativeData, key: string): NativeData | undefined;
@@ -15,8 +25,9 @@ export declare class BrowserNativeRouter extends NativeRouter {
     toOutside(url: string): void;
     destroy(): void;
 }
-export declare class Router<P extends RootParams, N extends string, NT = unknown> extends EluxRouter<P, N, NT> {
+export declare class EluxRouter<P extends RootParams, N extends string, NT = unknown> extends BaseEluxRouter<P, N, NT> {
     nativeRouter: BrowserNativeRouter;
-    constructor(browserNativeRouter: BrowserNativeRouter, locationTransform: LocationTransform);
+    constructor(url: string, browserNativeRouter: BrowserNativeRouter, locationTransform: LocationTransform, nativeData: NT);
 }
-export declare function createRouter<P extends RootParams, N extends string>(createHistory: 'Browser' | 'Hash' | 'Memory' | string, locationTransform: LocationTransform): Router<P, N>;
+export declare function createRouter<P extends RootParams, N extends string, NT = unknown>(url: string, locationTransform: LocationTransform, nativeData: NT): EluxRouter<P, N, NT>;
+export {};

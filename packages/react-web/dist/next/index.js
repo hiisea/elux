@@ -13,8 +13,9 @@ export function setConfig(conf) {
   setUserConfig(conf);
 }
 export const createApp = (moduleGetter, middlewares) => {
-  return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares);
+  const url = [location.pathname, location.search, location.hash].join('');
+  return createBaseApp({}, locationTransform => createRouter(url, locationTransform, {}), renderToDocument, moduleGetter, middlewares);
 };
-export const createSSR = (moduleGetter, request, response, middlewares) => {
-  return createBaseSSR({}, locationTransform => createRouter(request.url, locationTransform), renderToString, moduleGetter, middlewares, request, response);
+export const createSSR = (moduleGetter, url, nativeData, middlewares) => {
+  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform, nativeData), renderToString, moduleGetter, middlewares);
 };

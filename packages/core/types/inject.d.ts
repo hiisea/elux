@@ -8,7 +8,7 @@ declare type Actions<T> = Pick<{
     [K in keyof T]: T[K] extends Function ? K : never;
 }[keyof T]>;
 export interface IModuleHandlersClass<H = IModuleHandlers> {
-    new (moduleName: string, store: IStore, latestState: any): H;
+    new (moduleName: string, store: IStore, latestState: any, preState: any): H;
 }
 export declare function exportModule<N extends string, H extends IModuleHandlers, P extends Record<string, any>, CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>>(moduleName: N, ModuleHandlers: IModuleHandlersClass<H>, params: P, components: CS): {
     moduleName: N;

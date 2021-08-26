@@ -32,7 +32,7 @@ type Actions<T> = Pick<
 >;
 
 export interface IModuleHandlersClass<H = IModuleHandlers> {
-  new (moduleName: string, store: IStore, latestState: any): H;
+  new (moduleName: string, store: IStore, latestState: any, preState: any): H;
 }
 export function exportModule<
   N extends string,
@@ -64,7 +64,8 @@ export function exportModule<
   const model = (store: IStore) => {
     if (!store.injectedModules[moduleName]) {
       const {latestState} = store.router;
-      const moduleHandles = new ModuleHandlers(moduleName, store, latestState);
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -84,7 +85,8 @@ export function modelHotReplacement(moduleName: string, ModuleHandlers: IModuleH
   const model = (store: IStore) => {
     if (!store.injectedModules[moduleName]) {
       const {latestState} = store.router;
-      const moduleHandles = new ModuleHandlers(moduleName, store, latestState);
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -98,12 +100,12 @@ export function modelHotReplacement(moduleName: string, ModuleHandlers: IModuleH
   const store = MetaData.currentRouter.getCurrentStore();
   if (MetaData.injectedModules[moduleName]) {
     MetaData.injectedModules[moduleName] = false;
-    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}) as any, true);
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}) as any, true);
   }
   const stores = MetaData.currentRouter.getStoreList();
   stores.forEach((store) => {
     if (store.injectedModules[moduleName]) {
-      const ins = new ModuleHandlers(moduleName, store, {}) as any;
+      const ins = new ModuleHandlers(moduleName, store, {}, {}) as any;
       ins.initState = store.injectedModules[moduleName].initState;
       store.injectedModules[moduleName] = ins;
     }
@@ -148,6 +150,7 @@ export function getModuleList(moduleNames: string[]): CommonModule[] | Promise<C
     return list as CommonModule[];
   }
 }
+
 export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore): void | Promise<void> {
   const moduleOrPromise = getModule(moduleName as string);
   if (isPromise(moduleOrPromise)) {

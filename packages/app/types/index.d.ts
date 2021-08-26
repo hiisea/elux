@@ -1,5 +1,5 @@
 import { IStore, LoadComponent, ModuleGetter, IStoreMiddleware, StoreBuilder, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions, ICoreRouter, StoreOptions } from '@elux/core';
-import { IBaseRouter, LocationTransform, RouteState } from '@elux/route';
+import { IEluxRouter, LocationTransform, RouteState } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers, } from '@elux/core';
 export { RouteActionTypes, createRouteModule } from '@elux/route';
 export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent } from '@elux/core';
@@ -59,9 +59,7 @@ export interface CreateApp<INS = {}> {
     };
 }
 export interface CreateSSR<INS = {}> {
-    (moduleGetter: ModuleGetter, request: {
-        url: string;
-    }, response: any, middlewares?: IStoreMiddleware[]): {
+    (moduleGetter: ModuleGetter, url: string, nativeData: any, middlewares?: IStoreMiddleware[]): {
         useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
             render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
         };
@@ -70,9 +68,9 @@ export interface CreateSSR<INS = {}> {
 export interface EluxContext {
     deps?: Record<string, boolean>;
     documentHead: string;
-    router?: IBaseRouter<any, string>;
+    router?: IEluxRouter<any, string>;
 }
-export declare function createBaseMP<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (store: IStore, eluxContext: EluxContext, ins: INS) => any, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+export declare function createBaseMP<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IEluxRouter, render: (store: IStore, eluxContext: EluxContext, ins: INS) => any, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(storeBuilder: StoreBuilder<O, B>): INS & {
         render(): {
             store: IStore & B;
@@ -80,18 +78,18 @@ export declare function createBaseMP<INS = {}>(ins: INS, createRouter: (location
         };
     };
 };
-export declare function createBaseApp<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+export declare function createBaseApp<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IEluxRouter, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(storeBuilder: StoreBuilder<O, B>): INS & {
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<IStore & B>;
     };
 };
-export declare function createBaseSSR<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>, moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[] | undefined, request: unknown, response: unknown): {
+export declare function createBaseSSR<INS = {}>(ins: INS, createRouter: (locationTransform: LocationTransform) => IEluxRouter, render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(storeBuilder: StoreBuilder<O, B>): INS & {
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
     };
 };
 export declare function patchActions(typeName: string, json?: string): void;
-export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', Req = unknown, Res = unknown> = {
+export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', NT = unknown> = {
     State: {
         [M in keyof A]: A[M]['state'];
     };
@@ -101,9 +99,9 @@ export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions,
     RouteState: RouteState<{
         [M in keyof A]?: A[M]['params'];
     }>;
-    Router: IBaseRouter<{
+    Router: IEluxRouter<{
         [M in keyof A]: A[M]['params'];
-    }, Extract<keyof A[R]['components'], string>, Req, Res>;
+    }, Extract<keyof A[R]['components'], string>, NT>;
     GetActions<N extends keyof A>(...args: N[]): {
         [K in N]: A[K]['actions'];
     };

@@ -14,7 +14,10 @@ export function exportModule(moduleName, ModuleHandlers, params, components) {
   var model = function model(store) {
     if (!store.injectedModules[moduleName]) {
       var _latestState = store.router.latestState;
-      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState);
+
+      var _preState = store.getState();
+
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState, _preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -36,7 +39,10 @@ export function modelHotReplacement(moduleName, ModuleHandlers) {
   var model = function model(store) {
     if (!store.injectedModules[moduleName]) {
       var _latestState2 = store.router.latestState;
-      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2);
+
+      var _preState2 = store.getState();
+
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2, _preState2);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -55,13 +61,13 @@ export function modelHotReplacement(moduleName, ModuleHandlers) {
 
   if (MetaData.injectedModules[moduleName]) {
     MetaData.injectedModules[moduleName] = false;
-    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}), true);
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}), true);
   }
 
   var stores = MetaData.currentRouter.getStoreList();
   stores.forEach(function (store) {
     if (store.injectedModules[moduleName]) {
-      var ins = new ModuleHandlers(moduleName, store, {});
+      var ins = new ModuleHandlers(moduleName, store, {}, {});
       ins.initState = store.injectedModules[moduleName].initState;
       store.injectedModules[moduleName] = ins;
     }

@@ -472,7 +472,8 @@ function exportModule(moduleName, ModuleHandlers, params, components) {
       const {
         latestState
       } = store.router;
-      const moduleHandles = new ModuleHandlers(moduleName, store, latestState);
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -496,7 +497,8 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
       const {
         latestState
       } = store.router;
-      const moduleHandles = new ModuleHandlers(moduleName, store, latestState);
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
       return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
@@ -515,13 +517,13 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
 
   if (MetaData.injectedModules[moduleName]) {
     MetaData.injectedModules[moduleName] = false;
-    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}), true);
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}), true);
   }
 
   const stores = MetaData.currentRouter.getStoreList();
   stores.forEach(store => {
     if (store.injectedModules[moduleName]) {
-      const ins = new ModuleHandlers(moduleName, store, {});
+      const ins = new ModuleHandlers(moduleName, store, {}, {});
       ins.initState = store.injectedModules[moduleName].initState;
       store.injectedModules[moduleName] = ins;
     }
@@ -1286,12 +1288,12 @@ class EmptyModuleHandlers {
 }
 let RouteModuleHandlers = _decorate(null, function (_initialize) {
   class RouteModuleHandlers {
-    constructor(moduleName, store, latestState) {
+    constructor(moduleName, store, latestState, preState) {
       _initialize(this);
 
       this.moduleName = moduleName;
       this.store = store;
-      this.initState = latestState[moduleName];
+      this.initState = preState[moduleName];
     }
 
   }
@@ -1686,10 +1688,10 @@ function enhanceStore(baseStore, router, middlewares) {
   return store;
 }
 
-function initApp(router, baseStore, middlewares, appViewName, preloadComponents = [], request, response) {
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
   MetaData.currentRouter = router;
   const store = enhanceStore(baseStore, router, middlewares);
-  router.startup(store, request, response);
+  router.startup(store);
   const {
     AppModuleName,
     RouteModuleName
@@ -1709,15 +1711,38 @@ function initApp(router, baseStore, middlewares, appViewName, preloadComponents 
 
     return data;
   }, {});
-  const setup = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  const results = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  let setup;
+
+  if (env.isServer) {
+    setup = results.then(([modules]) => {
+      return Promise.all(modules.map(mod => mod.model(store)));
+    });
+  } else {
+    setup = results;
+  }
+
   return {
     store,
     AppView,
     setup
   };
 }
+function reinitApp(store) {
+  const {
+    moduleGetter
+  } = MetaData;
+  const preloadModules = Object.keys(store.router.routeState.params).filter(moduleName => moduleGetter[moduleName] && moduleName !== AppModuleName);
+  const {
+    AppModuleName,
+    RouteModuleName
+  } = coreConfig;
+  const appModule = getModule(AppModuleName);
+  const routeModule = getModule(RouteModuleName);
+  return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]).then(() => undefined);
+}
 let ForkStoreId = 0;
-function forkStore(originalStore) {
+function forkStore(originalStore, routeState) {
   const {
     builder: {
       storeCreator,
@@ -1728,23 +1753,12 @@ function forkStore(originalStore) {
     },
     router
   } = originalStore;
-  const {
-    moduleGetter
-  } = MetaData;
   const baseStore = storeCreator({ ...storeOptions,
-    initState: undefined
+    initState: {
+      [coreConfig.RouteModuleName]: routeState
+    }
   }, ++ForkStoreId);
   const store = enhanceStore(baseStore, router, middlewares);
-  const {
-    AppModuleName,
-    RouteModuleName
-  } = coreConfig;
-  const appModule = getModule(AppModuleName);
-  const routeModule = getModule(RouteModuleName);
-  const preloadModules = Object.keys(router.routeState.params).filter(moduleName => moduleGetter[moduleName] && moduleName !== AppModuleName);
-  getModuleList(preloadModules);
-  routeModule.model(store);
-  appModule.model(store);
   return store;
 }
 
@@ -1786,6 +1800,15 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
+let recoverLock = false;
+
+function recoverClientHead(eluxContext, documentHead) {
+  if (!recoverLock) {
+    recoverLock = true;
+    setClientHead(eluxContext, documentHead);
+  }
+}
+
 const Component$2 = ({
   title = '',
   html = ''
@@ -1807,7 +1830,8 @@ const Component$2 = ({
   useEffect(() => {
     const raw = eluxContext.documentHead;
     setClientHead(eluxContext, html);
-    return () => setClientHead(eluxContext, raw);
+    recoverLock = false;
+    return () => recoverClientHead(eluxContext, raw);
   }, [eluxContext, html]);
   return null;
 };
@@ -1898,7 +1922,7 @@ var Link = React.forwardRef(({
   }
 });
 
-const Router$1 = props => {
+const Router = props => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router;
   const [data, setData] = useState({
@@ -2122,12 +2146,12 @@ function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
   const panel = env.document.getElementById(id);
   renderFun(React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
-  }, React.createElement(Router$1, null, React.createElement(APPView, null))), panel);
+  }, React.createElement(Router, null, React.createElement(APPView, null))), panel);
 }
 function renderToString(id, APPView, store, eluxContext) {
   const html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
-  }, React.createElement(Router$1, null, React.createElement(APPView, null))));
+  }, React.createElement(Router, null, React.createElement(APPView, null))));
 
   return Promise.resolve(html);
 }
@@ -2237,7 +2261,7 @@ class HistoryRecord {
     _defineProperty(this, "recordKey", void 0);
 
     this.historyStack = historyStack;
-    this.recordKey = ++HistoryRecord.id + '';
+    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
     const {
       pagename,
       params
@@ -2262,27 +2286,27 @@ class HistoryStack extends RouteStack {
 
     this.rootStack = rootStack;
     this.store = store;
-    this.stackkey = ++HistoryStack.id + '';
+    this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
   }
 
-  push(location) {
-    const newRecord = new HistoryRecord(location, this);
+  push(routeState) {
+    const newRecord = new HistoryRecord(routeState, this);
 
     this._push(newRecord);
 
     return newRecord;
   }
 
-  replace(location) {
-    const newRecord = new HistoryRecord(location, this);
+  replace(routeState) {
+    const newRecord = new HistoryRecord(routeState, this);
 
     this._replace(newRecord);
 
     return newRecord;
   }
 
-  relaunch(location) {
-    const newRecord = new HistoryRecord(location, this);
+  relaunch(routeState) {
+    const newRecord = new HistoryRecord(routeState, this);
 
     this._relaunch(newRecord);
 
@@ -2321,11 +2345,11 @@ class RootStack extends RouteStack {
     });
   }
 
-  push(location) {
+  push(routeState) {
     const curHistory = this.getCurrentItem();
-    const store = forkStore(curHistory.store);
+    const store = forkStore(curHistory.store, routeState);
     const newHistory = new HistoryStack(this, store);
-    const newRecord = new HistoryRecord(location, newHistory);
+    const newRecord = new HistoryRecord(routeState, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -2333,14 +2357,14 @@ class RootStack extends RouteStack {
     return newRecord;
   }
 
-  replace(location) {
+  replace(routeState) {
     const curHistory = this.getCurrentItem();
-    return curHistory.relaunch(location);
+    return curHistory.relaunch(routeState);
   }
 
-  relaunch(location) {
+  relaunch(routeState) {
     const curHistory = this.getCurrentItem();
-    const newRecord = curHistory.relaunch(location);
+    const newRecord = curHistory.relaunch(routeState);
 
     this._relaunch(curHistory);
 
@@ -2919,9 +2943,7 @@ class BaseNativeRouter {
   constructor() {
     _defineProperty(this, "curTask", void 0);
 
-    _defineProperty(this, "taskList", []);
-
-    _defineProperty(this, "router", void 0);
+    _defineProperty(this, "eluxRouter", void 0);
   }
 
   onChange(key) {
@@ -2931,11 +2953,11 @@ class BaseNativeRouter {
       return false;
     }
 
-    return key !== this.router.routeState.key;
+    return key !== this.eluxRouter.routeState.key;
   }
 
-  setRouter(router) {
-    this.router = router;
+  startup(router) {
+    this.eluxRouter = router;
   }
 
   execute(method, getNativeData, ...args) {
@@ -2965,17 +2987,17 @@ class BaseNativeRouter {
   }
 
 }
-class BaseRouter extends MultipleDispatcher {
-  constructor(url, nativeRouter, locationTransform) {
+class BaseEluxRouter extends MultipleDispatcher {
+  constructor(url, nativeRouter, locationTransform, nativeData) {
     super();
 
-    _defineProperty(this, "curTask", void 0);
+    _defineProperty(this, "_curTask", void 0);
 
-    _defineProperty(this, "taskList", []);
+    _defineProperty(this, "_taskList", []);
 
     _defineProperty(this, "_nativeData", void 0);
 
-    _defineProperty(this, "internalUrl", void 0);
+    _defineProperty(this, "_internalUrl", void 0);
 
     _defineProperty(this, "routeState", void 0);
 
@@ -2989,13 +3011,20 @@ class BaseRouter extends MultipleDispatcher {
 
     _defineProperty(this, "latestState", {});
 
-    _defineProperty(this, "request", void 0);
+    _defineProperty(this, "_taskComplete", () => {
+      const task = this._taskList.shift();
 
-    _defineProperty(this, "response", void 0);
+      if (task) {
+        this.executeTask(task);
+      } else {
+        this._curTask = undefined;
+      }
+    });
 
     this.nativeRouter = nativeRouter;
     this.locationTransform = locationTransform;
-    nativeRouter.setRouter(this);
+    this.nativeData = nativeData;
+    nativeRouter.startup(this);
     const locationOrPromise = locationTransform.urlToLocation(url);
 
     const callback = location => {
@@ -3004,20 +3033,17 @@ class BaseRouter extends MultipleDispatcher {
         key: ''
       };
       this.routeState = routeState;
-      this.internalUrl = eluxLocationToEluxUrl({
+      this._internalUrl = eluxLocationToEluxUrl({
         pathname: routeState.pagename,
         params: routeState.params
       });
 
       if (!routeConfig.indexUrl) {
         setRouteConfig({
-          indexUrl: this.internalUrl
+          indexUrl: this._internalUrl
         });
       }
 
-      this.latestState = {
-        [this.name]: routeState
-      };
       return routeState;
     };
 
@@ -3028,9 +3054,7 @@ class BaseRouter extends MultipleDispatcher {
     }
   }
 
-  startup(store, request, response) {
-    this.request = request;
-    this.response = response;
+  startup(store) {
     const historyStack = new HistoryStack(this.rootStack, store);
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -3053,7 +3077,7 @@ class BaseRouter extends MultipleDispatcher {
   }
 
   getInternalUrl() {
-    return this.internalUrl;
+    return this._internalUrl;
   }
 
   getNativeLocation() {
@@ -3138,8 +3162,8 @@ class BaseRouter extends MultipleDispatcher {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   }
 
-  relaunch(data, root = false, nativeCaller = false) {
-    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
+  relaunch(data, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
   }
 
   async _relaunch(data, root, nativeCaller) {
@@ -3159,9 +3183,9 @@ class BaseRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.relaunch(location).getKey();
+      key = this.rootStack.relaunch(routeState).getKey();
     } else {
-      key = this.rootStack.getCurrentItem().relaunch(location).getKey();
+      key = this.rootStack.getCurrentItem().relaunch(routeState).getKey();
     }
 
     routeState.key = key;
@@ -3174,7 +3198,7 @@ class BaseRouter extends MultipleDispatcher {
 
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
+    this._internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
@@ -3186,8 +3210,8 @@ class BaseRouter extends MultipleDispatcher {
     });
   }
 
-  push(data, root = false, nativeCaller = false) {
-    this.addTask(this._push.bind(this, data, root, nativeCaller));
+  push(data, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
   }
 
   async _push(data, root, nativeCaller) {
@@ -3207,9 +3231,9 @@ class BaseRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.push(location).getKey();
+      key = this.rootStack.push(routeState).getKey();
     } else {
-      key = this.rootStack.getCurrentItem().push(location).getKey();
+      key = this.rootStack.getCurrentItem().push(routeState).getKey();
     }
 
     routeState.key = key;
@@ -3222,20 +3246,26 @@ class BaseRouter extends MultipleDispatcher {
 
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
+    this._internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
     const cloneState = deepClone(routeState);
-    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+
+    if (root) {
+      await reinitApp(this.getCurrentStore());
+    } else {
+      this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+    }
+
     await this.dispatch('change', {
       routeState: cloneState,
       root
     });
   }
 
-  replace(data, root = false, nativeCaller = false) {
-    this.addTask(this._replace.bind(this, data, root, nativeCaller));
+  replace(data, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
   }
 
   async _replace(data, root, nativeCaller) {
@@ -3255,9 +3285,9 @@ class BaseRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.replace(location).getKey();
+      key = this.rootStack.replace(routeState).getKey();
     } else {
-      key = this.rootStack.getCurrentItem().replace(location).getKey();
+      key = this.rootStack.getCurrentItem().replace(routeState).getKey();
     }
 
     routeState.key = key;
@@ -3270,7 +3300,7 @@ class BaseRouter extends MultipleDispatcher {
 
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
+    this._internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
@@ -3282,8 +3312,8 @@ class BaseRouter extends MultipleDispatcher {
     });
   }
 
-  back(n = 1, root = false, options, nativeCaller = false) {
-    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
+  back(n = 1, root = false, options, nonblocking, nativeCaller = false) {
+    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
   }
 
   async _back(n = 1, root, options, nativeCaller) {
@@ -3333,7 +3363,7 @@ class BaseRouter extends MultipleDispatcher {
 
     this._nativeData = nativeData;
     this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
+    this._internalUrl = eluxLocationToEluxUrl({
       pathname: routeState.pagename,
       params: routeState.params
     });
@@ -3345,27 +3375,29 @@ class BaseRouter extends MultipleDispatcher {
     });
   }
 
-  taskComplete() {
-    const task = this.taskList.shift();
-
-    if (task) {
-      this.executeTask(task);
-    } else {
-      this.curTask = undefined;
-    }
-  }
-
   executeTask(task) {
-    this.curTask = task;
-    task().finally(this.taskComplete.bind(this));
+    this._curTask = task;
+    task().finally(this._taskComplete);
   }
 
-  addTask(task) {
-    if (this.curTask) {
+  addTask(execute, nonblocking) {
+    if (env.isServer) {
       return;
-    } else {
-      this.executeTask(task);
     }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const task = () => execute().then(resolve, reject);
+
+      if (this._curTask) {
+        this._taskList.push(task);
+      } else {
+        this.executeTask(task);
+      }
+    });
   }
 
   destroy() {
@@ -3473,25 +3505,25 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
           } = env[ssrKey] || {};
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-
-          if (state) {
+          return router.initialize.then(routeState => {
             storeOptions.initState = { ...storeOptions.initState,
+              [routeConfig.RouteModuleName]: routeState,
               ...state
             };
-          }
-
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
+            const baseStore = storeCreator(storeOptions);
             const {
               store,
-              AppView
+              AppView,
+              setup
             } = initApp(router, baseStore, middlewares, viewName, components);
-            render(id, AppView, store, {
-              deps: {},
-              router,
-              documentHead: ''
-            }, !!env[ssrKey], ins);
-            return store;
+            return setup.then(() => {
+              render(id, AppView, store, {
+                deps: {},
+                router,
+                documentHead: ''
+              }, !!env[ssrKey], ins);
+              return store;
+            });
           });
         }
 
@@ -3500,7 +3532,7 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
 
   };
 }
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = [], request, response) {
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []) {
   defineModuleGetter(moduleGetter);
   const routeModule = getModule(routeConfig.RouteModuleName);
   return {
@@ -3516,13 +3548,16 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
         } = {}) {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
+          return router.initialize.then(routeState => {
+            storeOptions.initState = { ...storeOptions.initState,
+              [routeConfig.RouteModuleName]: routeState
+            };
+            const baseStore = storeCreator(storeOptions);
             const {
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName, undefined, request, response);
+            } = initApp(router, baseStore, middlewares, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {
@@ -3681,10 +3716,6 @@ function invariant(condition, message) {
 
 function addLeadingSlash(path) {
   return path.charAt(0) === '/' ? path : '/' + path;
-}
-
-function stripLeadingSlash(path) {
-  return path.charAt(0) === '/' ? path.substr(1) : path;
 }
 
 function hasBasename(path, prefix) {
@@ -3887,14 +3918,6 @@ function supportsHistory() {
 
 function supportsPopStateOnHashChange() {
   return window.navigator.userAgent.indexOf('Trident') === -1;
-}
-/**
- * Returns false if using go(n) with hash history causes a full page reload.
- */
-
-
-function supportsGoWithoutReloadUsingHash() {
-  return window.navigator.userAgent.indexOf('Firefox') === -1;
 }
 /**
  * Returns true if a given popstate event is an extraneous WebKit event.
@@ -4169,505 +4192,51 @@ function createBrowserHistory(props) {
   return history;
 }
 
-var HashChangeEvent$1 = 'hashchange';
-var HashPathCoders = {
-  hashbang: {
-    encodePath: function encodePath(path) {
-      return path.charAt(0) === '!' ? path : '!/' + stripLeadingSlash(path);
-    },
-    decodePath: function decodePath(path) {
-      return path.charAt(0) === '!' ? path.substr(1) : path;
-    }
-  },
-  noslash: {
-    encodePath: stripLeadingSlash,
-    decodePath: addLeadingSlash
-  },
-  slash: {
-    encodePath: addLeadingSlash,
-    decodePath: addLeadingSlash
-  }
-};
-
-function stripHash(url) {
-  var hashIndex = url.indexOf('#');
-  return hashIndex === -1 ? url : url.slice(0, hashIndex);
-}
-
-function getHashPath() {
-  // We can't use window.location.hash here because it's not
-  // consistent across browsers - Firefox will pre-decode it!
-  var href = window.location.href;
-  var hashIndex = href.indexOf('#');
-  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
-}
-
-function pushHashPath(path) {
-  window.location.hash = path;
-}
-
-function replaceHashPath(path) {
-  window.location.replace(stripHash(window.location.href) + '#' + path);
-}
-
-function createHashHistory(props) {
-  if (props === void 0) {
-    props = {};
-  }
-
-  !canUseDOM ? process.env.NODE_ENV !== "production" ? invariant(false, 'Hash history needs a DOM') : invariant(false) : void 0;
-  var globalHistory = window.history;
-  var canGoWithoutReload = supportsGoWithoutReloadUsingHash();
-  var _props = props,
-      _props$getUserConfirm = _props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
-      _props$hashType = _props.hashType,
-      hashType = _props$hashType === void 0 ? 'slash' : _props$hashType;
-  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
-  var _HashPathCoders$hashT = HashPathCoders[hashType],
-      encodePath = _HashPathCoders$hashT.encodePath,
-      decodePath = _HashPathCoders$hashT.decodePath;
-
-  function getDOMLocation() {
-    var path = decodePath(getHashPath());
-    process.env.NODE_ENV !== "production" ? warning$2(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
-    if (basename) path = stripBasename(path, basename);
-    return createLocation(path);
-  }
-
-  var transitionManager = createTransitionManager();
-
-  function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = globalHistory.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  }
-
-  var forceNextPop = false;
-  var ignorePath = null;
-
-  function locationsAreEqual$$1(a, b) {
-    return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash;
-  }
-
-  function handleHashChange() {
-    var path = getHashPath();
-    var encodedPath = encodePath(path);
-
-    if (path !== encodedPath) {
-      // Ensure we always have a properly-encoded hash.
-      replaceHashPath(encodedPath);
-    } else {
-      var location = getDOMLocation();
-      var prevLocation = history.location;
-      if (!forceNextPop && locationsAreEqual$$1(prevLocation, location)) return; // A hashchange doesn't always == location change.
-
-      if (ignorePath === createPath(location)) return; // Ignore this change; we already setState in push/replace.
-
-      ignorePath = null;
-      handlePop(location);
-    }
-  }
-
-  function handlePop(location) {
-    if (forceNextPop) {
-      forceNextPop = false;
-      setState();
-    } else {
-      var action = 'POP';
-      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-        if (ok) {
-          setState({
-            action: action,
-            location: location
-          });
-        } else {
-          revertPop(location);
-        }
-      });
-    }
-  }
-
-  function revertPop(fromLocation) {
-    var toLocation = history.location; // TODO: We could probably make this more reliable by
-    // keeping a list of paths we've seen in sessionStorage.
-    // Instead, we just default to 0 for paths we don't know.
-
-    var toIndex = allPaths.lastIndexOf(createPath(toLocation));
-    if (toIndex === -1) toIndex = 0;
-    var fromIndex = allPaths.lastIndexOf(createPath(fromLocation));
-    if (fromIndex === -1) fromIndex = 0;
-    var delta = toIndex - fromIndex;
-
-    if (delta) {
-      forceNextPop = true;
-      go(delta);
-    }
-  } // Ensure the hash is encoded properly before doing anything else.
-
-
-  var path = getHashPath();
-  var encodedPath = encodePath(path);
-  if (path !== encodedPath) replaceHashPath(encodedPath);
-  var initialLocation = getDOMLocation();
-  var allPaths = [createPath(initialLocation)]; // Public interface
-
-  function createHref(location) {
-    var baseTag = document.querySelector('base');
-    var href = '';
-
-    if (baseTag && baseTag.getAttribute('href')) {
-      href = stripHash(window.location.href);
-    }
-
-    return href + '#' + encodePath(basename + createPath(location));
-  }
-
-  function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(state === undefined, 'Hash history cannot push state; it is ignored') : void 0;
-    var action = 'PUSH';
-    var location = createLocation(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = createPath(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a PUSH, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        pushHashPath(encodedPath);
-        var prevIndex = allPaths.lastIndexOf(createPath(history.location));
-        var nextPaths = allPaths.slice(0, prevIndex + 1);
-        nextPaths.push(path);
-        allPaths = nextPaths;
-        setState({
-          action: action,
-          location: location
-        });
-      } else {
-        process.env.NODE_ENV !== "production" ? warning$2(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack') : void 0;
-        setState();
-      }
-    });
-  }
-
-  function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(state === undefined, 'Hash history cannot replace state; it is ignored') : void 0;
-    var action = 'REPLACE';
-    var location = createLocation(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = createPath(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        replaceHashPath(encodedPath);
-      }
-
-      var prevIndex = allPaths.indexOf(createPath(history.location));
-      if (prevIndex !== -1) allPaths[prevIndex] = path;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  }
-
-  function go(n) {
-    process.env.NODE_ENV !== "production" ? warning$2(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser') : void 0;
-    globalHistory.go(n);
-  }
-
-  function goBack() {
-    go(-1);
-  }
-
-  function goForward() {
-    go(1);
-  }
-
-  var listenerCount = 0;
-
-  function checkDOMListeners(delta) {
-    listenerCount += delta;
-
-    if (listenerCount === 1 && delta === 1) {
-      window.addEventListener(HashChangeEvent$1, handleHashChange);
-    } else if (listenerCount === 0) {
-      window.removeEventListener(HashChangeEvent$1, handleHashChange);
-    }
-  }
-
-  var isBlocked = false;
-
-  function block(prompt) {
-    if (prompt === void 0) {
-      prompt = false;
-    }
-
-    var unblock = transitionManager.setPrompt(prompt);
-
-    if (!isBlocked) {
-      checkDOMListeners(1);
-      isBlocked = true;
-    }
-
-    return function () {
-      if (isBlocked) {
-        isBlocked = false;
-        checkDOMListeners(-1);
-      }
-
-      return unblock();
-    };
-  }
-
-  function listen(listener) {
-    var unlisten = transitionManager.appendListener(listener);
-    checkDOMListeners(1);
-    return function () {
-      checkDOMListeners(-1);
-      unlisten();
-    };
-  }
-
-  var history = {
-    length: globalHistory.length,
-    action: 'POP',
-    location: initialLocation,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    block: block,
-    listen: listen
-  };
-  return history;
-}
-
-function clamp(n, lowerBound, upperBound) {
-  return Math.min(Math.max(n, lowerBound), upperBound);
-}
-/**
- * Creates a history object that stores locations in memory.
- */
-
-
-function createMemoryHistory(props) {
-  if (props === void 0) {
-    props = {};
-  }
-
-  var _props = props,
-      getUserConfirmation = _props.getUserConfirmation,
-      _props$initialEntries = _props.initialEntries,
-      initialEntries = _props$initialEntries === void 0 ? ['/'] : _props$initialEntries,
-      _props$initialIndex = _props.initialIndex,
-      initialIndex = _props$initialIndex === void 0 ? 0 : _props$initialIndex,
-      _props$keyLength = _props.keyLength,
-      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
-  var transitionManager = createTransitionManager();
-
-  function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = history.entries.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  }
-
-  function createKey() {
-    return Math.random().toString(36).substr(2, keyLength);
-  }
-
-  var index = clamp(initialIndex, 0, initialEntries.length - 1);
-  var entries = initialEntries.map(function (entry) {
-    return typeof entry === 'string' ? createLocation(entry, undefined, createKey()) : createLocation(entry, undefined, entry.key || createKey());
-  }); // Public interface
-
-  var createHref = createPath;
-
-  function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'PUSH';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var prevIndex = history.index;
-      var nextIndex = prevIndex + 1;
-      var nextEntries = history.entries.slice(0);
-
-      if (nextEntries.length > nextIndex) {
-        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
-      } else {
-        nextEntries.push(location);
-      }
-
-      setState({
-        action: action,
-        location: location,
-        index: nextIndex,
-        entries: nextEntries
-      });
-    });
-  }
-
-  function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'REPLACE';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      history.entries[history.index] = location;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  }
-
-  function go(n) {
-    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
-    var action = 'POP';
-    var location = history.entries[nextIndex];
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (ok) {
-        setState({
-          action: action,
-          location: location,
-          index: nextIndex
-        });
-      } else {
-        // Mimic the behavior of DOM histories by
-        // causing a render after a cancelled POP.
-        setState();
-      }
-    });
-  }
-
-  function goBack() {
-    go(-1);
-  }
-
-  function goForward() {
-    go(1);
-  }
-
-  function canGo(n) {
-    var nextIndex = history.index + n;
-    return nextIndex >= 0 && nextIndex < history.entries.length;
-  }
-
-  function block(prompt) {
-    if (prompt === void 0) {
-      prompt = false;
-    }
-
-    return transitionManager.setPrompt(prompt);
-  }
-
-  function listen(listener) {
-    return transitionManager.appendListener(listener);
-  }
-
-  var history = {
-    length: entries.length,
-    action: 'POP',
-    location: entries[index],
-    index: index,
-    entries: entries,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    canGo: canGo,
-    block: block,
-    listen: listen
-  };
-  return history;
-}
-
 setRouteConfig({
   notifyNativeRouter: {
     root: true,
     internal: true
   }
 });
+
+function createServerHistory() {
+  return {
+    push() {
+      return undefined;
+    },
+
+    replace() {
+      return undefined;
+    },
+
+    go() {
+      return undefined;
+    },
+
+    block() {
+      return () => undefined;
+    }
+
+  };
+}
+
 class BrowserNativeRouter extends BaseNativeRouter {
-  constructor(createHistory) {
+  constructor(url) {
     super();
 
     _defineProperty(this, "_unlistenHistory", void 0);
 
-    _defineProperty(this, "history", void 0);
+    _defineProperty(this, "_history", void 0);
 
-    if (createHistory === 'Hash') {
-      this.history = createHashHistory();
-    } else if (createHistory === 'Memory') {
-      this.history = createMemoryHistory();
-    } else if (createHistory === 'Browser') {
-      this.history = createBrowserHistory();
+    if (env.isServer) {
+      this._history = createServerHistory();
     } else {
-      const [pathname, search = ''] = createHistory.split('?');
-      this.history = {
-        action: 'PUSH',
-        length: 0,
-
-        listen() {
-          return () => undefined;
-        },
-
-        createHref() {
-          return '';
-        },
-
-        push() {
-          return undefined;
-        },
-
-        replace() {
-          return undefined;
-        },
-
-        go() {
-          return undefined;
-        },
-
-        goBack() {
-          return undefined;
-        },
-
-        goForward() {
-          return undefined;
-        },
-
-        block() {
-          return () => undefined;
-        },
-
-        location: {
-          pathname,
-          search: search && `?${search}`,
-          hash: ''
-        }
-      };
+      this._history = createBrowserHistory();
     }
 
-    this._unlistenHistory = this.history.block((location, action) => {
+    this._unlistenHistory = this._history.block((location, action) => {
       if (action === 'POP') {
-        env.setTimeout(() => this.router.back(1), 100);
+        env.setTimeout(() => this.eluxRouter.back(1), 100);
         return false;
       }
 
@@ -4684,11 +4253,11 @@ class BrowserNativeRouter extends BaseNativeRouter {
         let callback;
 
         if (action === 'REPLACE') {
-          callback = () => this.router.replace(url);
+          callback = () => this.eluxRouter.replace(url);
         } else if (action === 'PUSH') {
-          callback = () => this.router.push(url);
+          callback = () => this.eluxRouter.push(url);
         } else {
-          callback = () => this.router.relaunch(url);
+          callback = () => this.eluxRouter.relaunch(url);
         }
 
         env.setTimeout(callback, 100);
@@ -4699,31 +4268,16 @@ class BrowserNativeRouter extends BaseNativeRouter {
     });
   }
 
-  getUrl() {
-    const {
-      pathname = '',
-      search = '',
-      hash = ''
-    } = this.history.location;
-    return [pathname, search, hash].join('');
-  }
-
   getKey(location) {
     return location.state || '';
-  }
-
-  passive(url, key, action) {
-    return true;
-  }
-
-  refresh() {
-    this.history.go(0);
   }
 
   push(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -4733,7 +4287,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
   replace(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -4743,7 +4299,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
   relaunch(getNativeData, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -4753,7 +4311,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
   back(getNativeData, n, key) {
     if (!env.isServer) {
       const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+
+      this._history.replace(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -4761,7 +4321,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   toOutside(url) {
-    this.history.push(url);
+    this._history.push(url, '');
   }
 
   destroy() {
@@ -4769,15 +4329,15 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
 }
-class Router extends BaseRouter {
-  constructor(browserNativeRouter, locationTransform) {
-    super(browserNativeRouter.getUrl(), browserNativeRouter, locationTransform);
+class EluxRouter extends BaseEluxRouter {
+  constructor(url, browserNativeRouter, locationTransform, nativeData) {
+    super(url, browserNativeRouter, locationTransform, nativeData);
   }
 
 }
-function createRouter(createHistory, locationTransform) {
-  const browserNativeRouter = new BrowserNativeRouter(createHistory);
-  const router = new Router(browserNativeRouter, locationTransform);
+function createRouter(url, locationTransform, nativeData) {
+  const browserNativeRouter = new BrowserNativeRouter(url);
+  const router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
   return router;
 }
 
@@ -4790,10 +4350,11 @@ function setConfig(conf) {
   setUserConfig(conf);
 }
 const createApp = (moduleGetter, middlewares) => {
-  return createBaseApp({}, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares);
+  const url = [location.pathname, location.search, location.hash].join('');
+  return createBaseApp({}, locationTransform => createRouter(url, locationTransform, {}), renderToDocument, moduleGetter, middlewares);
 };
-const createSSR = (moduleGetter, request, response, middlewares) => {
-  return createBaseSSR({}, locationTransform => createRouter(request.url, locationTransform), renderToString, moduleGetter, middlewares, request, response);
+const createSSR = (moduleGetter, url, nativeData, middlewares) => {
+  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform, nativeData), renderToString, moduleGetter, middlewares);
 };
 
 function createCommonjsModule(fn) {
@@ -8005,4 +7566,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };

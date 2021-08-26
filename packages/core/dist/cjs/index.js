@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.env = exports.deepClone = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.EmptyModuleHandlers = exports.RouteModuleHandlers = exports.CoreModuleHandlers = exports.defineModuleGetter = exports.modelHotReplacement = exports.getComponet = exports.exportComponent = exports.exportView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.forkStore = exports.initApp = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.routeChangeAction = exports.errorAction = exports.logger = exports.setLoading = exports.action = exports.mutation = exports.effect = exports.reducer = exports.ActionTypes = exports.moduleExists = exports.buildConfigSetter = exports.setCoreConfig = exports.deepMergeState = exports.mergeState = exports.coreConfig = void 0;
+exports.env = exports.deepClone = exports.delayPromise = exports.clientSide = exports.serverSide = exports.isServer = exports.isPromise = exports.MultipleDispatcher = exports.SingleDispatcher = exports.deepMerge = exports.LoadingState = exports.EmptyModuleHandlers = exports.RouteModuleHandlers = exports.CoreModuleHandlers = exports.defineModuleGetter = exports.modelHotReplacement = exports.getComponet = exports.exportComponent = exports.exportView = exports.getCachedModules = exports.getModuleList = exports.getModule = exports.getRootModuleAPI = exports.loadComponet = exports.exportModule = exports.loadModel = exports.forkStore = exports.reinitApp = exports.initApp = exports.isProcessedError = exports.setProcessedError = exports.getActionData = exports.routeChangeAction = exports.errorAction = exports.logger = exports.setLoading = exports.action = exports.mutation = exports.effect = exports.reducer = exports.ActionTypes = exports.moduleExists = exports.buildConfigSetter = exports.setCoreConfig = exports.deepMergeState = exports.mergeState = exports.coreConfig = void 0;
 
 var _basic = require("./basic");
 
@@ -35,6 +35,7 @@ exports.isProcessedError = _store.isProcessedError;
 var _app = require("./app");
 
 exports.initApp = _app.initApp;
+exports.reinitApp = _app.reinitApp;
 exports.forkStore = _app.forkStore;
 
 var _inject = require("./inject");

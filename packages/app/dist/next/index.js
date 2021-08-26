@@ -68,25 +68,25 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
           } = env[ssrKey] || {};
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-
-          if (state) {
+          return router.initialize.then(routeState => {
             storeOptions.initState = { ...storeOptions.initState,
+              [routeConfig.RouteModuleName]: routeState,
               ...state
             };
-          }
-
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
+            const baseStore = storeCreator(storeOptions);
             const {
               store,
-              AppView
+              AppView,
+              setup
             } = initApp(router, baseStore, middlewares, viewName, components);
-            render(id, AppView, store, {
-              deps: {},
-              router,
-              documentHead: ''
-            }, !!env[ssrKey], ins);
-            return store;
+            return setup.then(() => {
+              render(id, AppView, store, {
+                deps: {},
+                router,
+                documentHead: ''
+              }, !!env[ssrKey], ins);
+              return store;
+            });
           });
         }
 
@@ -95,7 +95,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
 
   };
 }
-export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = [], request, response) {
+export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []) {
   defineModuleGetter(moduleGetter);
   const routeModule = getModule(routeConfig.RouteModuleName);
   return {
@@ -111,13 +111,16 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
         } = {}) {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
+          return router.initialize.then(routeState => {
+            storeOptions.initState = { ...storeOptions.initState,
+              [routeConfig.RouteModuleName]: routeState
+            };
+            const baseStore = storeCreator(storeOptions);
             const {
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName, undefined, request, response);
+            } = initApp(router, baseStore, middlewares, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {

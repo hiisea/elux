@@ -10,18 +10,14 @@ export declare type NativeData = {
     nativeLocation: NativeLocation;
     nativeUrl: string;
 };
-interface RouterTask {
-    method: string;
-}
 interface NativeRouterTask {
     resolve: (nativeData: NativeData | undefined) => void;
     reject: () => void;
     nativeData: undefined | NativeData;
 }
-export declare abstract class NativeRouter {
+export declare abstract class BaseNativeRouter {
     protected curTask?: NativeRouterTask;
-    protected taskList: RouterTask[];
-    protected eluxRouter: EluxRouter;
+    protected eluxRouter: IEluxRouter;
     protected abstract push(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
     protected abstract replace(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
     protected abstract relaunch(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
@@ -29,21 +25,22 @@ export declare abstract class NativeRouter {
     abstract toOutside(url: string): void;
     abstract destroy(): void;
     protected onChange(key: string): boolean;
-    setEluxRouter(router: EluxRouter): void;
+    startup(router: IEluxRouter): void;
     execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined>;
 }
-export declare abstract class EluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends MultipleDispatcher<{
+export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends MultipleDispatcher<{
     change: {
         routeState: RouteState<P>;
         root: boolean;
     };
 }> implements IEluxRouter<P, N, NT> {
-    nativeRouter: NativeRouter;
+    protected nativeRouter: BaseNativeRouter;
     protected locationTransform: LocationTransform;
-    private curTask?;
-    private taskList;
+    nativeData: NT;
+    private _curTask?;
+    private _taskList;
     private _nativeData;
-    private internalUrl;
+    private _internalUrl;
     routeState: RouteState<P>;
     readonly name: string;
     initialize: Promise<RouteState<P>>;
@@ -52,9 +49,8 @@ export declare abstract class EluxRouter<P extends RootParams = {}, N extends st
     };
     readonly rootStack: RootStack;
     latestState: Record<string, any>;
-    native: NT;
-    constructor(url: string, nativeRouter: NativeRouter, locationTransform: LocationTransform);
-    startup(store: IStore, native: NT): void;
+    constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform, nativeData: NT);
+    startup(store: IStore): void;
     getCurrentPages(): {
         pagename: string;
         store: IStore;
@@ -77,24 +73,25 @@ export declare abstract class EluxRouter<P extends RootParams = {}, N extends st
     findRecordByKey(key: string): HistoryRecord | undefined;
     private payloadToEluxLocation;
     private preAdditions;
-    relaunch(data: PayloadLocation<P, N> | string, root?: boolean, nativeCaller?: boolean): void;
+    relaunch(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _relaunch;
-    push(data: PayloadLocation<P, N> | string, root?: boolean, nativeCaller?: boolean): void;
+    push(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _push;
-    replace(data: PayloadLocation<P, N> | string, root?: boolean, nativeCaller?: boolean): void;
+    replace(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _replace;
     back(n?: number, root?: boolean, options?: {
         overflowRedirect?: string;
         payload?: any;
-    }, nativeCaller?: boolean): void;
+    }, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _back;
-    private taskComplete;
+    private _taskComplete;
     private executeTask;
     private addTask;
     destroy(): void;
 }
-export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>, NT> {
+export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>> {
     initialize: Promise<RouteState<P>>;
+    nativeData: NT;
     addListener(name: 'change', callback: (data: {
         routeState: RouteState<P>;
         root: boolean;
@@ -113,13 +110,13 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
         page?: any;
     }[];
     findRecordByKey(key: string): HistoryRecord | undefined;
-    relaunch(data: PayloadLocation<P, N> | string, root?: boolean): void;
-    push(data: PayloadLocation<P, N> | string, root?: boolean): void;
-    replace(data: PayloadLocation<P, N> | string, root?: boolean): void;
+    relaunch(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+    push(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+    replace(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean): void | Promise<void>;
     back(n?: number, root?: boolean, options?: {
         overflowRedirect?: string;
         payload?: any;
-    }): void;
+    }, nonblocking?: boolean): void | Promise<void>;
     destroy(): void;
     urlToLocation(url: string): Location<P> | Promise<Location<P>>;
     payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;

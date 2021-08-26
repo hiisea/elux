@@ -6,7 +6,7 @@ exports.__esModule = true;
 exports.beforeRouteChangeAction = beforeRouteChangeAction;
 exports.testRouteChangeAction = testRouteChangeAction;
 exports.createRouteModule = createRouteModule;
-exports.RouteActionTypes = exports.EluxRouter = exports.NativeRouter = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.routeMeta = void 0;
+exports.RouteActionTypes = exports.BaseEluxRouter = exports.BaseNativeRouter = exports.nativeLocationToNativeUrl = exports.nativeUrlToNativeLocation = exports.routeMeta = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -36,14 +36,13 @@ exports.createLocationTransform = _transform.createLocationTransform;
 exports.nativeUrlToNativeLocation = _transform.nativeUrlToNativeLocation;
 exports.nativeLocationToNativeUrl = _transform.nativeLocationToNativeUrl;
 
-var NativeRouter = function () {
-  function NativeRouter() {
+var BaseNativeRouter = function () {
+  function BaseNativeRouter() {
     (0, _defineProperty2.default)(this, "curTask", void 0);
-    (0, _defineProperty2.default)(this, "taskList", []);
     (0, _defineProperty2.default)(this, "eluxRouter", void 0);
   }
 
-  var _proto = NativeRouter.prototype;
+  var _proto = BaseNativeRouter.prototype;
 
   _proto.onChange = function onChange(key) {
     if (this.curTask) {
@@ -55,7 +54,7 @@ var NativeRouter = function () {
     return key !== this.eluxRouter.routeState.key;
   };
 
-  _proto.setEluxRouter = function setEluxRouter(router) {
+  _proto.startup = function startup(router) {
     this.eluxRouter = router;
   };
 
@@ -92,54 +91,60 @@ var NativeRouter = function () {
     });
   };
 
-  return NativeRouter;
+  return BaseNativeRouter;
 }();
 
-exports.NativeRouter = NativeRouter;
+exports.BaseNativeRouter = BaseNativeRouter;
 
-var EluxRouter = function (_MultipleDispatcher) {
-  (0, _inheritsLoose2.default)(EluxRouter, _MultipleDispatcher);
+var BaseEluxRouter = function (_MultipleDispatcher) {
+  (0, _inheritsLoose2.default)(BaseEluxRouter, _MultipleDispatcher);
 
-  function EluxRouter(url, nativeRouter, locationTransform) {
+  function BaseEluxRouter(url, nativeRouter, locationTransform, nativeData) {
     var _this2;
 
     _this2 = _MultipleDispatcher.call(this) || this;
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "curTask", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "taskList", []);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_curTask", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_taskList", []);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_nativeData", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "internalUrl", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_internalUrl", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "routeState", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "name", _basic.routeConfig.RouteModuleName);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "initialize", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "injectedModules", {});
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "rootStack", new _history.RootStack());
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "latestState", {});
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "native", void 0);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_taskComplete", function () {
+      var task = _this2._taskList.shift();
+
+      if (task) {
+        _this2.executeTask(task);
+      } else {
+        _this2._curTask = undefined;
+      }
+    });
     _this2.nativeRouter = nativeRouter;
     _this2.locationTransform = locationTransform;
-    nativeRouter.setEluxRouter((0, _assertThisInitialized2.default)(_this2));
+    _this2.nativeData = nativeData;
+    nativeRouter.startup((0, _assertThisInitialized2.default)(_this2));
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
-      var _this2$latestState;
-
       var routeState = (0, _extends2.default)({}, location, {
         action: 'RELAUNCH',
         key: ''
       });
       _this2.routeState = routeState;
-      _this2.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
+      _this2._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
         pathname: routeState.pagename,
         params: routeState.params
       });
 
       if (!_basic.routeConfig.indexUrl) {
         (0, _basic.setRouteConfig)({
-          indexUrl: _this2.internalUrl
+          indexUrl: _this2._internalUrl
         });
       }
 
-      _this2.latestState = (_this2$latestState = {}, _this2$latestState[_this2.name] = routeState, _this2$latestState);
       return routeState;
     };
 
@@ -152,10 +157,9 @@ var EluxRouter = function (_MultipleDispatcher) {
     return _this2;
   }
 
-  var _proto2 = EluxRouter.prototype;
+  var _proto2 = BaseEluxRouter.prototype;
 
-  _proto2.startup = function startup(store, native) {
-    this.native = native;
+  _proto2.startup = function startup(store) {
     var historyStack = new _history.HistoryStack(this.rootStack, store);
     var historyRecord = new _history.HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
@@ -179,7 +183,7 @@ var EluxRouter = function (_MultipleDispatcher) {
   };
 
   _proto2.getInternalUrl = function getInternalUrl() {
-    return this.internalUrl;
+    return this._internalUrl;
   };
 
   _proto2.getNativeLocation = function getNativeLocation() {
@@ -264,7 +268,7 @@ var EluxRouter = function (_MultipleDispatcher) {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   };
 
-  _proto2.relaunch = function relaunch(data, root, nativeCaller) {
+  _proto2.relaunch = function relaunch(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -273,7 +277,7 @@ var EluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
+    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._relaunch = function () {
@@ -314,9 +318,9 @@ var EluxRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.relaunch(location).getKey();
+                key = this.rootStack.relaunch(routeState).getKey();
               } else {
-                key = this.rootStack.getCurrentItem().relaunch(location).getKey();
+                key = this.rootStack.getCurrentItem().relaunch(routeState).getKey();
               }
 
               routeState.key = key;
@@ -338,7 +342,7 @@ var EluxRouter = function (_MultipleDispatcher) {
             case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
+              this._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
@@ -365,7 +369,7 @@ var EluxRouter = function (_MultipleDispatcher) {
     return _relaunch;
   }();
 
-  _proto2.push = function push(data, root, nativeCaller) {
+  _proto2.push = function push(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -374,7 +378,7 @@ var EluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._push.bind(this, data, root, nativeCaller));
+    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._push = function () {
@@ -415,9 +419,9 @@ var EluxRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.push(location).getKey();
+                key = this.rootStack.push(routeState).getKey();
               } else {
-                key = this.rootStack.getCurrentItem().push(location).getKey();
+                key = this.rootStack.getCurrentItem().push(routeState).getKey();
               }
 
               routeState.key = key;
@@ -439,19 +443,35 @@ var EluxRouter = function (_MultipleDispatcher) {
             case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
+              this._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
               cloneState = (0, _core.deepClone)(routeState);
-              this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
+
+              if (!root) {
+                _context2.next = 28;
+                break;
+              }
+
               _context2.next = 26;
+              return (0, _core.reinitApp)(this.getCurrentStore());
+
+            case 26:
+              _context2.next = 29;
+              break;
+
+            case 28:
+              this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
+
+            case 29:
+              _context2.next = 31;
               return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 26:
+            case 31:
             case "end":
               return _context2.stop();
           }
@@ -466,7 +486,7 @@ var EluxRouter = function (_MultipleDispatcher) {
     return _push;
   }();
 
-  _proto2.replace = function replace(data, root, nativeCaller) {
+  _proto2.replace = function replace(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -475,7 +495,7 @@ var EluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._replace.bind(this, data, root, nativeCaller));
+    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._replace = function () {
@@ -516,9 +536,9 @@ var EluxRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.replace(location).getKey();
+                key = this.rootStack.replace(routeState).getKey();
               } else {
-                key = this.rootStack.getCurrentItem().replace(location).getKey();
+                key = this.rootStack.getCurrentItem().replace(routeState).getKey();
               }
 
               routeState.key = key;
@@ -540,7 +560,7 @@ var EluxRouter = function (_MultipleDispatcher) {
             case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
+              this._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
@@ -567,7 +587,7 @@ var EluxRouter = function (_MultipleDispatcher) {
     return _replace;
   }();
 
-  _proto2.back = function back(n, root, options, nativeCaller) {
+  _proto2.back = function back(n, root, options, nonblocking, nativeCaller) {
     if (n === void 0) {
       n = 1;
     }
@@ -580,7 +600,7 @@ var EluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
+    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
   };
 
   _proto2._back = function () {
@@ -665,7 +685,7 @@ var EluxRouter = function (_MultipleDispatcher) {
             case 23:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = (0, _transform.eluxLocationToEluxUrl)({
+              this._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
@@ -692,41 +712,43 @@ var EluxRouter = function (_MultipleDispatcher) {
     return _back;
   }();
 
-  _proto2.taskComplete = function taskComplete() {
-    var task = this.taskList.shift();
-
-    if (task) {
-      this.executeTask(task);
-    } else {
-      this.curTask = undefined;
-    }
-  };
-
   _proto2.executeTask = function executeTask(task) {
-    this.curTask = task;
-    task().finally(this.taskComplete.bind(this));
+    this._curTask = task;
+    task().finally(this._taskComplete);
   };
 
-  _proto2.addTask = function addTask(task, nonblocking) {
-    if (this.curTask) {
-      if (nonblocking) {
-        this.taskList.push(task);
-      } else {
-        return;
-      }
-    } else {
-      this.executeTask(task);
+  _proto2.addTask = function addTask(execute, nonblocking) {
+    var _this7 = this;
+
+    if (_core.env.isServer) {
+      return;
     }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise(function (resolve, reject) {
+      var task = function task() {
+        return execute().then(resolve, reject);
+      };
+
+      if (_this7._curTask) {
+        _this7._taskList.push(task);
+      } else {
+        _this7.executeTask(task);
+      }
+    });
   };
 
   _proto2.destroy = function destroy() {
     this.nativeRouter.destroy();
   };
 
-  return EluxRouter;
+  return BaseEluxRouter;
 }(_core.MultipleDispatcher);
 
-exports.EluxRouter = EluxRouter;
+exports.BaseEluxRouter = BaseEluxRouter;
 var RouteActionTypes = {
   TestRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "TestRouteChange",
   BeforeRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "BeforeRouteChange"

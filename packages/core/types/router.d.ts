@@ -12,7 +12,7 @@ export declare class RouteModuleHandlers<S extends ICoreRouteState> implements I
     readonly moduleName: string;
     store: IStore;
     initState: S;
-    constructor(moduleName: string, store: IStore, latestState: Record<string, any>);
+    constructor(moduleName: string, store: IStore, latestState: any, preState: any);
     destroy(): void;
 }
 export declare type IRouteModuleHandlersClass<S extends ICoreRouteState> = IModuleHandlersClass<IModuleHandlers<S>>;

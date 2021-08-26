@@ -10,13 +10,8 @@ export * from '@elux/app';
 
 setAppConfig({loadComponent, useRouter});
 
-export type GetApp<A extends RootModuleFacade, R extends string = 'route', Req = unknown, Res = unknown> = GetBaseAPP<
-  A,
-  LoadComponentOptions,
-  R,
-  Req,
-  Res
->;
+declare const location: {pathname: string; search: string; hash: string};
+export type GetApp<A extends RootModuleFacade, R extends string = 'route', NT = unknown> = GetBaseAPP<A, LoadComponentOptions, R, NT>;
 
 export function setConfig(
   conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
@@ -26,22 +21,21 @@ export function setConfig(
 }
 
 export const createApp: CreateApp = (moduleGetter, middlewares) => {
+  const url = [location.pathname, location.search, location.hash].join('');
   return createBaseApp(
     {},
-    (locationTransform: LocationTransform) => createRouter('Browser', locationTransform),
+    (locationTransform: LocationTransform) => createRouter(url, locationTransform, {}),
     renderToDocument,
     moduleGetter,
     middlewares
   );
 };
-export const createSSR: CreateSSR = (moduleGetter, request, response, middlewares) => {
+export const createSSR: CreateSSR = (moduleGetter, url, nativeData, middlewares) => {
   return createBaseSSR(
     {},
-    (locationTransform: LocationTransform) => createRouter(request.url, locationTransform),
+    (locationTransform: LocationTransform) => createRouter(url, locationTransform, nativeData),
     renderToString,
     moduleGetter,
-    middlewares,
-    request,
-    response
+    middlewares
   );
 };

@@ -1,7 +1,7 @@
 export {coreConfig, mergeState, deepMergeState, setCoreConfig, buildConfigSetter, moduleExists} from './basic';
 export {ActionTypes, reducer, effect, mutation, action, setLoading, logger, errorAction, routeChangeAction} from './actions';
 export {getActionData, setProcessedError, isProcessedError} from './store';
-export {initApp, forkStore} from './app';
+export {initApp, reinitApp, forkStore} from './app';
 export {
   loadModel,
   exportModule,

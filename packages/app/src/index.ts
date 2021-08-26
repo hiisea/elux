@@ -126,14 +126,7 @@ export interface CreateApp<INS = {}> {
 }
 
 export interface CreateSSR<INS = {}> {
-  (
-    moduleGetter: ModuleGetter,
-    request: {
-      url: string;
-    },
-    response: any,
-    middlewares?: IStoreMiddleware[]
-  ): {
+  (moduleGetter: ModuleGetter, url: string, nativeData: any, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
@@ -172,7 +165,7 @@ export function createBaseMP<INS = {}>(
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
           const baseStore = storeCreator(storeOptions);
-          const {store} = initApp<B>({}, router, baseStore, middlewares);
+          const {store} = initApp<B>(router, baseStore, middlewares);
           const context: ContextWrap = render(store, {deps: {}, router, documentHead: ''}, ins);
           return {store, context};
         },
@@ -203,14 +196,14 @@ export function createBaseApp<INS = {}>(
           const {state, components = []}: {state?: Record<string, any>; components: string[]} = env[ssrKey] || {};
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          if (state) {
-            storeOptions.initState = {...storeOptions.initState, ...state};
-          }
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
-            const {store, AppView} = initApp<B>({}, router, baseStore, middlewares, viewName, components);
-            render(id, AppView, store, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
-            return store;
+          return router.initialize.then((routeState) => {
+            storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState, ...state};
+            const baseStore = storeCreator(storeOptions);
+            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName, components);
+            return setup.then(() => {
+              render(id, AppView, store, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
+              return store;
+            });
           });
         },
       });
@@ -223,8 +216,7 @@ export function createBaseSSR<INS = {}>(
   createRouter: (locationTransform: LocationTransform) => IEluxRouter,
   render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>,
   moduleGetter: ModuleGetter,
-  middlewares: IStoreMiddleware[] = [],
-  nativeData: unknown
+  middlewares: IStoreMiddleware[] = []
 ): {
   useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
     storeBuilder: StoreBuilder<O, B>
@@ -241,9 +233,10 @@ export function createBaseSSR<INS = {}>(
         render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
           const router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
-            const {store, AppView, setup} = initApp<B>(nativeData, router, baseStore, middlewares, viewName);
+          return router.initialize.then((routeState) => {
+            storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState};
+            const baseStore = storeCreator(storeOptions);
+            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};

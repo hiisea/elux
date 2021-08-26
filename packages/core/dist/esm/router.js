@@ -47,12 +47,12 @@ export var EmptyModuleHandlers = function () {
   return EmptyModuleHandlers;
 }();
 export var RouteModuleHandlers = _decorate(null, function (_initialize) {
-  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store, latestState) {
+  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store, latestState, preState) {
     _initialize(this);
 
     this.moduleName = moduleName;
     this.store = store;
-    this.initState = latestState[moduleName];
+    this.initState = preState[moduleName];
   };
 
   return {

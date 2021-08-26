@@ -1,5 +1,5 @@
 import {defineModuleGetter, exportModule, CoreModuleHandlers, IStore} from '@elux/core';
-import {BaseRouter, BaseNativeRouter, DeepPartial, RootParams, NativeData, PagenameMap, createRouteModule} from 'src/index';
+import {BaseEluxRouter, BaseNativeRouter, DeepPartial, RootParams, NativeData, PagenameMap, createRouteModule} from 'src/index';
 
 import nativeRouterMock from './nativeRouter';
 
@@ -115,7 +115,7 @@ defineModuleGetter({
   member: () => exportModule('member', ModuleHandlers, defaultMemberRouteParams, {}),
   article: () => exportModule('article', ModuleHandlers, defaultArticleRouteParams, {}),
 });
-export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> {}
+export class Router<P extends RootParams, N extends string> extends BaseEluxRouter<P, N> {}
 
 export class NativeRouter extends BaseNativeRouter {
   protected push(getNativeData: () => NativeData, key: string): NativeData {
@@ -158,4 +158,4 @@ const store = {
   },
 } as any;
 export const router = new Router('/', nativeRouter, routeModule.locationTransform);
-router.startup(store);
+router.startup(store, {});

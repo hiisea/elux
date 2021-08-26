@@ -99,30 +99,32 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
+          return router.initialize.then(function (routeState) {
+            var _extends2;
 
-          if (state) {
-            storeOptions.initState = _extends({}, storeOptions.initState, state);
-          }
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
+            var baseStore = storeCreator(storeOptions);
 
-          var baseStore = storeCreator(storeOptions);
-          return router.initialize.then(function () {
             var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
                 store = _initApp2.store,
-                AppView = _initApp2.AppView;
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
 
-            render(id, AppView, store, {
-              deps: {},
-              router: router,
-              documentHead: ''
-            }, !!env[ssrKey], ins);
-            return store;
+            return setup.then(function () {
+              render(id, AppView, store, {
+                deps: {},
+                router: router,
+                documentHead: ''
+              }, !!env[ssrKey], ins);
+              return store;
+            });
           });
         })
       });
     }
   };
 }
-export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, request, response) {
+export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
@@ -155,9 +157,13 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          var baseStore = storeCreator(storeOptions);
-          return router.initialize.then(function () {
-            var _initApp3 = initApp(router, baseStore, middlewares, viewName, undefined, request, response),
+          return router.initialize.then(function (routeState) {
+            var _extends3;
+
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends3 = {}, _extends3[routeConfig.RouteModuleName] = routeState, _extends3));
+            var baseStore = storeCreator(storeOptions);
+
+            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
                 store = _initApp3.store,
                 AppView = _initApp3.AppView,
                 setup = _initApp3.setup;
