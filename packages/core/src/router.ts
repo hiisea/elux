@@ -4,13 +4,16 @@ import {loadModel, Handler, IModuleHandlersClass} from './inject';
 
 export const routeMiddleware: IStoreMiddleware = ({store, dispatch, getState}) => (next) => (action) => {
   if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`) {
+    const existsModules = Object.keys(getState()).reduce((obj, moduleName) => {
+      obj[moduleName] = true;
+      return obj;
+    }, {});
     const result = next(action);
     const [routeState] = action.payload as [ICoreRouteState];
-    const rootState = getState();
     Object.keys(routeState.params).forEach((moduleName) => {
       const moduleState = routeState.params[moduleName];
       if (moduleState && Object.keys(moduleState).length > 0) {
-        if (rootState[moduleName]) {
+        if (existsModules[moduleName]) {
           dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
         }
       }

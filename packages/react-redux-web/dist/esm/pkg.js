@@ -1375,15 +1375,18 @@ var routeMiddleware = function routeMiddleware(_ref) {
   return function (next) {
     return function (action) {
       if (action.type === "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes$1.MRouteChange) {
+        var existsModules = Object.keys(getState()).reduce(function (obj, moduleName) {
+          obj[moduleName] = true;
+          return obj;
+        }, {});
         var result = next(action);
         var _ref2 = action.payload,
             routeState = _ref2[0];
-        var rootState = getState();
         Object.keys(routeState.params).forEach(function (moduleName) {
           var moduleState = routeState.params[moduleName];
 
           if (moduleState && Object.keys(moduleState).length > 0) {
-            if (rootState[moduleName]) {
+            if (existsModules[moduleName]) {
               dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
             }
           }
@@ -1886,9 +1889,7 @@ function reinitApp(store) {
       RouteModuleName = coreConfig.RouteModuleName;
   var appModule = getModule(AppModuleName);
   var routeModule = getModule(RouteModuleName);
-  return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]).then(function () {
-    return undefined;
-  });
+  return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
 }
 var ForkStoreId = 0;
 function forkStore(originalStore, routeState) {
@@ -1930,6 +1931,7 @@ var EluxContextComponent = React.createContext({
 });
 
 var clientTimer = 0;
+var recoverLock = false;
 
 function setClientHead(eluxContext, documentHead) {
   eluxContext.documentHead = documentHead;
@@ -1937,6 +1939,7 @@ function setClientHead(eluxContext, documentHead) {
   if (!clientTimer) {
     clientTimer = env.setTimeout(function () {
       clientTimer = 0;
+      recoverLock = false;
       var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
@@ -1946,8 +1949,6 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
-var recoverLock = false;
-
 function recoverClientHead(eluxContext, documentHead) {
   if (!recoverLock) {
     recoverLock = true;
@@ -1956,20 +1957,17 @@ function recoverClientHead(eluxContext, documentHead) {
 }
 
 var Component$2 = function Component(_ref) {
-  var _ref$title = _ref.title,
-      title = _ref$title === void 0 ? '' : _ref$title,
-      _ref$html = _ref.html,
-      html = _ref$html === void 0 ? '' : _ref$html;
+  var title = _ref.title,
+      html = _ref.html;
+  var eluxContext = useContext(EluxContextComponent);
 
   if (!html) {
-    html = "<title>" + title + "</title>";
+    html = eluxContext.documentHead || '<title>Elux</title>';
   }
 
   if (title) {
     html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
   }
-
-  var eluxContext = useContext(EluxContextComponent);
 
   if (env.isServer) {
     eluxContext.documentHead = html;
@@ -2156,10 +2154,12 @@ var Router = function Router(props) {
     var store = item.store;
     var page = item.page ? React.createElement(item.page, {
       key: store.id,
-      store: store
+      store: store,
+      pagename: item.pagename
     }) : React.createElement(Page, {
       key: store.id,
-      store: store
+      store: store,
+      pagename: item.pagename
     }, props.children);
     return page;
   });
@@ -2170,11 +2170,13 @@ var Router = function Router(props) {
 };
 var Page = memo(function (_ref2) {
   var store = _ref2.store,
+      pagename = _ref2.pagename,
       children = _ref2.children;
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
   }, React.createElement("div", {
-    className: "elux-page"
+    className: "elux-page",
+    "data-pagename": pagename
   }, children));
 });
 function useRouter() {

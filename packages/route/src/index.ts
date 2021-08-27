@@ -146,7 +146,7 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
     const historyRecord = new HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
     this.rootStack.startup(historyStack);
-    this.routeState.key = historyRecord.getKey();
+    this.routeState.key = historyRecord.key;
   }
   getCurrentPages(): {pagename: string; store: IStore; page?: any}[] {
     return this.rootStack.getCurrentPages();
@@ -198,6 +198,9 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
   findRecordByKey(key: string): HistoryRecord | undefined {
     return this.rootStack.findRecordByKey(key);
   }
+  findRecordByStep(delta: number, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; steps: [number, number]} {
+    return this.rootStack.testBack(delta, rootOnly);
+  }
   private payloadToEluxLocation(payload: {
     pathname?: string;
     params?: Record<string, any>;
@@ -239,9 +242,9 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     if (root) {
-      key = this.rootStack.relaunch(routeState).getKey();
+      key = this.rootStack.relaunch(routeState).key;
     } else {
-      key = this.rootStack.getCurrentItem().relaunch(routeState).getKey();
+      key = this.rootStack.getCurrentItem().relaunch(routeState).key;
     }
     routeState.key = key;
     let nativeData: NativeData | undefined;
@@ -272,9 +275,9 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     if (root) {
-      key = this.rootStack.push(routeState).getKey();
+      key = this.rootStack.push(routeState).key;
     } else {
-      key = this.rootStack.getCurrentItem().push(routeState).getKey();
+      key = this.rootStack.getCurrentItem().push(routeState).key;
     }
     routeState.key = key;
     let nativeData: NativeData | undefined;
@@ -310,9 +313,9 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
     if (root) {
-      key = this.rootStack.replace(routeState).getKey();
+      key = this.rootStack.replace(routeState).key;
     } else {
-      key = this.rootStack.getCurrentItem().replace(routeState).getKey();
+      key = this.rootStack.getCurrentItem().replace(routeState).key;
     }
     routeState.key = key;
     let nativeData: NativeData | undefined;
@@ -342,7 +345,7 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
       env.setTimeout(() => this.relaunch(url, root), 0);
       return;
     }
-    const key = record.getKey();
+    const key = record.key;
     const pagename = record.pagename;
     const params = deepMerge({}, record.params, options.payload);
     const routeState: RouteState<P> = {key, pagename, params, action: 'BACK'};

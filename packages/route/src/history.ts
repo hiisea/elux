@@ -77,16 +77,15 @@ export class HistoryRecord {
   public readonly destroy: undefined;
   public readonly pagename: string;
   public readonly params: Record<string, any>;
+  public readonly key: string;
   public readonly recordKey: string;
   constructor(location: Location, public readonly historyStack: HistoryStack) {
     this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
     const {pagename, params} = location;
     this.pagename = pagename;
     this.params = params;
+    this.key = [historyStack.stackkey, this.recordKey].join('-');
     //this.query = JSON.stringify(params);
-  }
-  getKey(): string {
-    return [this.historyStack.stackkey, this.recordKey].join('-');
   }
 }
 export class HistoryStack extends RouteStack<HistoryRecord> {

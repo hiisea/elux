@@ -97,10 +97,12 @@ var Router = function Router(props) {
     var store = item.store;
     var page = item.page ? _react.default.createElement(item.page, {
       key: store.id,
-      store: store
+      store: store,
+      pagename: item.pagename
     }) : _react.default.createElement(Page, {
       key: store.id,
-      store: store
+      store: store,
+      pagename: item.pagename
     }, props.children);
     return page;
   });
@@ -113,11 +115,13 @@ var Router = function Router(props) {
 exports.Router = Router;
 var Page = (0, _react.memo)(function (_ref2) {
   var store = _ref2.store,
+      pagename = _ref2.pagename,
       children = _ref2.children;
   return _react.default.createElement(_base.reactComponentsConfig.Provider, {
     store: store
   }, _react.default.createElement("div", {
-    className: "elux-page"
+    className: "elux-page",
+    "data-pagename": pagename
   }, children));
 });
 exports.Page = Page;

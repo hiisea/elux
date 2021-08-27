@@ -74,10 +74,12 @@ export const Router = props => {
     const store = item.store;
     const page = item.page ? React.createElement(item.page, {
       key: store.id,
-      store: store
+      store: store,
+      pagename: item.pagename
     }) : React.createElement(Page, {
       key: store.id,
-      store: store
+      store: store,
+      pagename: item.pagename
     }, props.children);
     return page;
   });
@@ -88,12 +90,14 @@ export const Router = props => {
 };
 export const Page = memo(function ({
   store,
+  pagename,
   children
 }) {
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
   }, React.createElement("div", {
-    className: "elux-page"
+    className: "elux-page",
+    "data-pagename": pagename
   }, children));
 });
 export function useRouter() {

@@ -22,15 +22,18 @@ var routeMiddleware = function routeMiddleware(_ref) {
   return function (next) {
     return function (action) {
       if (action.type === "" + _basic.coreConfig.RouteModuleName + _basic.coreConfig.NSP + _actions.ActionTypes.MRouteChange) {
+        var existsModules = Object.keys(getState()).reduce(function (obj, moduleName) {
+          obj[moduleName] = true;
+          return obj;
+        }, {});
         var result = next(action);
         var _ref2 = action.payload,
             routeState = _ref2[0];
-        var rootState = getState();
         Object.keys(routeState.params).forEach(function (moduleName) {
           var moduleState = routeState.params[moduleName];
 
           if (moduleState && Object.keys(moduleState).length > 0) {
-            if (rootState[moduleName]) {
+            if (existsModules[moduleName]) {
               dispatch((0, _actions.moduleRouteChangeAction)(moduleName, moduleState, routeState.action));
             }
           }

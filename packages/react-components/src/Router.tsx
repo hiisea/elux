@@ -59,9 +59,9 @@ export const Router: React.FC = (props) => {
   const nodes = pages.map((item) => {
     const store = item.store;
     const page = item.page ? (
-      <item.page key={store.id} store={store} />
+      <item.page key={store.id} store={store} pagename={item.pagename} />
     ) : (
-      <Page key={store.id} store={store}>
+      <Page key={store.id} store={store} pagename={item.pagename}>
         {props.children}
       </Page>
     );
@@ -74,10 +74,12 @@ export const Router: React.FC = (props) => {
   );
 };
 
-export const Page: React.FC<{store: IStore}> = memo(function ({store, children}) {
+export const Page: React.FC<{store: IStore; pagename: string}> = memo(function ({store, pagename, children}) {
   return (
     <reactComponentsConfig.Provider store={store}>
-      <div className="elux-page">{children}</div>
+      <div className="elux-page" data-pagename={pagename}>
+        {children}
+      </div>
     </reactComponentsConfig.Provider>
   );
 });
