@@ -22,9 +22,10 @@ function _default(props, context) {
   var onClick = props.onClick,
       href = props.href,
       url = props.url,
-      replace = props.replace,
-      portal = props.portal,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "url", "replace", "portal"]);
+      _props$action = props.action,
+      action = _props$action === void 0 ? 'push' : _props$action,
+      root = props.root,
+      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "url", "action", "root"]);
   var newProps = (0, _extends2.default)({}, rest, {
     onClick: function (_onClick) {
       function onClick(_x) {
@@ -39,13 +40,13 @@ function _default(props, context) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url, portal) : router.push(url, portal);
+      router[action](url, root);
     })
   });
 
   if (href) {
-    return (0, _vue.h)('a', newProps, context.slots);
+    return (0, _vue.h)('a', newProps, context.slots.default());
   } else {
-    return (0, _vue.h)('div', newProps, context.slots);
+    return (0, _vue.h)('div', newProps, context.slots.default());
   }
 }

@@ -1,6 +1,8 @@
 "use strict";
 
 exports.__esModule = true;
+exports.useRouter = useRouter;
+exports.useStore = useStore;
 exports.EluxStoreContextKey = exports.EluxContextKey = exports.setVueComponentsConfig = exports.vueComponentsConfig = void 0;
 
 var _vue = require("vue");
@@ -31,3 +33,19 @@ var EluxContextKey = '__EluxContext__';
 exports.EluxContextKey = EluxContextKey;
 var EluxStoreContextKey = '__EluxStoreContext__';
 exports.EluxStoreContextKey = EluxStoreContextKey;
+
+function useRouter() {
+  var _inject = (0, _vue.inject)(EluxContextKey, {
+    documentHead: ''
+  }),
+      router = _inject.router;
+
+  return router;
+}
+
+function useStore() {
+  var _inject2 = (0, _vue.inject)(EluxStoreContextKey, {}),
+      store = _inject2.store;
+
+  return store;
+}

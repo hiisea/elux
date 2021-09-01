@@ -74,34 +74,29 @@ export var Router = function Router(props) {
       return;
     });
   }, [router]);
-  var nodes = pages.map(function (item) {
-    var store = item.store;
-    var page = item.page ? React.createElement(item.page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }) : React.createElement(Page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }, props.children);
-    return page;
-  });
   return React.createElement("div", {
     ref: containerRef,
     className: classname
-  }, nodes);
+  }, pages.map(function (item) {
+    var store = item.store,
+        pagename = item.pagename;
+    return React.createElement("div", {
+      key: store.id,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, React.createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 export var Page = memo(function (_ref2) {
   var store = _ref2.store,
-      pagename = _ref2.pagename,
-      children = _ref2.children;
+      view = _ref2.view;
+  var View = view;
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, React.createElement("div", {
-    className: "elux-page",
-    "data-pagename": pagename
-  }, children));
+  }, React.createElement(View, null));
 });
 export function useRouter() {
   var eluxContext = useContext(EluxContextComponent);

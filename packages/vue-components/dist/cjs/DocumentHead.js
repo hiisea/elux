@@ -49,9 +49,10 @@ var _default = (0, _vue.defineComponent)({
     headText: function headText() {
       var title = this.title;
       var html = this.html;
+      var eluxContext = this.eluxContext;
 
       if (!html) {
-        html = "<title>" + title + "</title>";
+        html = eluxContext.documentHead || '<title>Elux</title>';
       }
 
       if (title) {

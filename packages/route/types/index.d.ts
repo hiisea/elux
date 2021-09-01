@@ -71,6 +71,11 @@ export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extend
     payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
     nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
     findRecordByKey(key: string): HistoryRecord | undefined;
+    findRecordByStep(delta: number, rootOnly: boolean): {
+        record: HistoryRecord;
+        overflow: boolean;
+        steps: [number, number];
+    };
     private payloadToEluxLocation;
     private preAdditions;
     relaunch(data: PayloadLocation<P, N> | string, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
@@ -95,7 +100,7 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
     addListener(name: 'change', callback: (data: {
         routeState: RouteState<P>;
         root: boolean;
-    }) => void | Promise<void>): void;
+    }) => void | Promise<void>): () => void;
     getInternalUrl(): string;
     getNativeLocation(): NativeLocation;
     getNativeUrl(): string;

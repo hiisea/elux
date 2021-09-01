@@ -2,21 +2,25 @@
 
 exports.__esModule = true;
 var _exportNames = {
+  DocumentHead: true,
+  Switch: true,
+  Else: true,
+  Link: true,
   setConfig: true,
   createApp: true,
-  createSSR: true
+  createSSR: true,
+  loadComponent: true
 };
 exports.setConfig = setConfig;
-exports.createSSR = exports.createApp = void 0;
+exports.createSSR = exports.createApp = exports.Link = exports.Else = exports.Switch = exports.DocumentHead = void 0;
 
 var _reactComponents = require("@elux/react-components");
 
-Object.keys(_reactComponents).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _reactComponents[key]) return;
-  exports[key] = _reactComponents[key];
-});
+exports.loadComponent = _reactComponents.loadComponent;
+exports.DocumentHead = _reactComponents.DocumentHead;
+exports.Switch = _reactComponents.Switch;
+exports.Else = _reactComponents.Else;
+exports.Link = _reactComponents.Link;
 
 var _stage = require("@elux/react-components/stage");
 

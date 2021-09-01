@@ -93,36 +93,31 @@ var Router = function Router(props) {
       return;
     });
   }, [router]);
-  var nodes = pages.map(function (item) {
-    var store = item.store;
-    var page = item.page ? _react.default.createElement(item.page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }) : _react.default.createElement(Page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }, props.children);
-    return page;
-  });
   return _react.default.createElement("div", {
     ref: containerRef,
     className: classname
-  }, nodes);
+  }, pages.map(function (item) {
+    var store = item.store,
+        pagename = item.pagename;
+    return _react.default.createElement("div", {
+      key: store.id,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, _react.default.createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 
 exports.Router = Router;
 var Page = (0, _react.memo)(function (_ref2) {
   var store = _ref2.store,
-      pagename = _ref2.pagename,
-      children = _ref2.children;
+      view = _ref2.view;
+  var View = view;
   return _react.default.createElement(_base.reactComponentsConfig.Provider, {
     store: store
-  }, _react.default.createElement("div", {
-    className: "elux-page",
-    "data-pagename": pagename
-  }, children));
+  }, _react.default.createElement(View, null));
 });
 exports.Page = Page;
 

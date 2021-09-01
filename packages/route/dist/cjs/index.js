@@ -164,7 +164,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     var historyRecord = new _history.HistoryRecord(this.routeState, historyStack);
     historyStack.startup(historyRecord);
     this.rootStack.startup(historyStack);
-    this.routeState.key = historyRecord.getKey();
+    this.routeState.key = historyRecord.key;
   };
 
   _proto2.getCurrentPages = function getCurrentPages() {
@@ -236,6 +236,10 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
   _proto2.findRecordByKey = function findRecordByKey(key) {
     return this.rootStack.findRecordByKey(key);
+  };
+
+  _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
+    return this.rootStack.testBack(delta, rootOnly);
   };
 
   _proto2.payloadToEluxLocation = function payloadToEluxLocation(payload) {
@@ -318,9 +322,9 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.relaunch(routeState).getKey();
+                key = this.rootStack.relaunch(routeState).key;
               } else {
-                key = this.rootStack.getCurrentItem().relaunch(routeState).getKey();
+                key = this.rootStack.getCurrentItem().relaunch(routeState).key;
               }
 
               routeState.key = key;
@@ -419,9 +423,9 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.push(routeState).getKey();
+                key = this.rootStack.push(routeState).key;
               } else {
-                key = this.rootStack.getCurrentItem().push(routeState).getKey();
+                key = this.rootStack.getCurrentItem().push(routeState).key;
               }
 
               routeState.key = key;
@@ -536,9 +540,9 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 12:
               if (root) {
-                key = this.rootStack.replace(routeState).getKey();
+                key = this.rootStack.replace(routeState).key;
               } else {
-                key = this.rootStack.getCurrentItem().replace(routeState).getKey();
+                key = this.rootStack.getCurrentItem().replace(routeState).key;
               }
 
               routeState.key = key;
@@ -641,7 +645,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               return _context4.abrupt("return");
 
             case 8:
-              key = record.getKey();
+              key = record.key;
               pagename = record.pagename;
               params = (0, _core.deepMerge)({}, record.params, options.payload);
               routeState = {

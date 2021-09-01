@@ -88,6 +88,8 @@ export class HistoryRecord {
 
     _defineProperty(this, "params", void 0);
 
+    _defineProperty(this, "key", void 0);
+
     _defineProperty(this, "recordKey", void 0);
 
     this.historyStack = historyStack;
@@ -98,10 +100,7 @@ export class HistoryRecord {
     } = location;
     this.pagename = pagename;
     this.params = params;
-  }
-
-  getKey() {
-    return [this.historyStack.stackkey, this.recordKey].join('-');
+    this.key = [historyStack.stackkey, this.recordKey].join('-');
   }
 
 }

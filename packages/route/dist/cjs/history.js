@@ -95,28 +95,20 @@ var RouteStack = function () {
   return RouteStack;
 }();
 
-var HistoryRecord = function () {
-  function HistoryRecord(location, historyStack) {
-    (0, _defineProperty2.default)(this, "destroy", void 0);
-    (0, _defineProperty2.default)(this, "pagename", void 0);
-    (0, _defineProperty2.default)(this, "params", void 0);
-    (0, _defineProperty2.default)(this, "recordKey", void 0);
-    this.historyStack = historyStack;
-    this.recordKey = _core.env.isServer ? '0' : ++HistoryRecord.id + '';
-    var pagename = location.pagename,
-        params = location.params;
-    this.pagename = pagename;
-    this.params = params;
-  }
-
-  var _proto2 = HistoryRecord.prototype;
-
-  _proto2.getKey = function getKey() {
-    return [this.historyStack.stackkey, this.recordKey].join('-');
-  };
-
-  return HistoryRecord;
-}();
+var HistoryRecord = function HistoryRecord(location, historyStack) {
+  (0, _defineProperty2.default)(this, "destroy", void 0);
+  (0, _defineProperty2.default)(this, "pagename", void 0);
+  (0, _defineProperty2.default)(this, "params", void 0);
+  (0, _defineProperty2.default)(this, "key", void 0);
+  (0, _defineProperty2.default)(this, "recordKey", void 0);
+  this.historyStack = historyStack;
+  this.recordKey = _core.env.isServer ? '0' : ++HistoryRecord.id + '';
+  var pagename = location.pagename,
+      params = location.params;
+  this.pagename = pagename;
+  this.params = params;
+  this.key = [historyStack.stackkey, this.recordKey].join('-');
+};
 
 exports.HistoryRecord = HistoryRecord;
 (0, _defineProperty2.default)(HistoryRecord, "id", 0);
@@ -135,9 +127,9 @@ var HistoryStack = function (_RouteStack) {
     return _this;
   }
 
-  var _proto3 = HistoryStack.prototype;
+  var _proto2 = HistoryStack.prototype;
 
-  _proto3.push = function push(routeState) {
+  _proto2.push = function push(routeState) {
     var newRecord = new HistoryRecord(routeState, this);
 
     this._push(newRecord);
@@ -145,7 +137,7 @@ var HistoryStack = function (_RouteStack) {
     return newRecord;
   };
 
-  _proto3.replace = function replace(routeState) {
+  _proto2.replace = function replace(routeState) {
     var newRecord = new HistoryRecord(routeState, this);
 
     this._replace(newRecord);
@@ -153,7 +145,7 @@ var HistoryStack = function (_RouteStack) {
     return newRecord;
   };
 
-  _proto3.relaunch = function relaunch(routeState) {
+  _proto2.relaunch = function relaunch(routeState) {
     var newRecord = new HistoryRecord(routeState, this);
 
     this._relaunch(newRecord);
@@ -161,13 +153,13 @@ var HistoryStack = function (_RouteStack) {
     return newRecord;
   };
 
-  _proto3.findRecordByKey = function findRecordByKey(recordKey) {
+  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
     return this.records.find(function (item) {
       return item.recordKey === recordKey;
     });
   };
 
-  _proto3.destroy = function destroy() {
+  _proto2.destroy = function destroy() {
     this.store.destroy();
   };
 
@@ -184,9 +176,9 @@ var RootStack = function (_RouteStack2) {
     return _RouteStack2.call(this, 10) || this;
   }
 
-  var _proto4 = RootStack.prototype;
+  var _proto3 = RootStack.prototype;
 
-  _proto4.getCurrentPages = function getCurrentPages() {
+  _proto3.getCurrentPages = function getCurrentPages() {
     return this.records.map(function (item) {
       var store = item.store;
       var record = item.getCurrentItem();
@@ -199,7 +191,7 @@ var RootStack = function (_RouteStack2) {
     });
   };
 
-  _proto4.push = function push(routeState) {
+  _proto3.push = function push(routeState) {
     var curHistory = this.getCurrentItem();
     var store = (0, _core.forkStore)(curHistory.store, routeState);
     var newHistory = new HistoryStack(this, store);
@@ -211,12 +203,12 @@ var RootStack = function (_RouteStack2) {
     return newRecord;
   };
 
-  _proto4.replace = function replace(routeState) {
+  _proto3.replace = function replace(routeState) {
     var curHistory = this.getCurrentItem();
     return curHistory.relaunch(routeState);
   };
 
-  _proto4.relaunch = function relaunch(routeState) {
+  _proto3.relaunch = function relaunch(routeState) {
     var curHistory = this.getCurrentItem();
     var newRecord = curHistory.relaunch(routeState);
 
@@ -225,7 +217,7 @@ var RootStack = function (_RouteStack2) {
     return newRecord;
   };
 
-  _proto4.countBack = function countBack(delta) {
+  _proto3.countBack = function countBack(delta) {
     var historyStacks = this.records;
     var backSteps = [0, 0];
 
@@ -250,7 +242,7 @@ var RootStack = function (_RouteStack2) {
     return backSteps;
   };
 
-  _proto4.testBack = function testBack(delta, rootOnly) {
+  _proto3.testBack = function testBack(delta, rootOnly) {
     var overflow = false;
     var record;
     var steps = [0, 0];
@@ -285,7 +277,7 @@ var RootStack = function (_RouteStack2) {
     };
   };
 
-  _proto4.findRecordByKey = function findRecordByKey(key) {
+  _proto3.findRecordByKey = function findRecordByKey(key) {
     var arr = key.split('-');
     var historyStack = this.records.find(function (item) {
       return item.stackkey === arr[0];

@@ -3,9 +3,9 @@ import type { App } from 'vue';
 import { RootModuleFacade } from '@elux/core';
 import { LoadComponentOptions } from '@elux/vue-components';
 import { CreateApp, CreateSSR, UserConfig, GetBaseAPP } from '@elux/app';
-export * from '@elux/vue-components';
+export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/vue-components';
 export * from '@elux/app';
-export declare type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
+export declare type GetApp<A extends RootModuleFacade, R extends string = 'route', NT = unknown> = GetBaseAPP<A, LoadComponentOptions, R, NT>;
 export declare function setConfig(conf: UserConfig & {
     LoadComponentOnError?: Component<{
         message: string;

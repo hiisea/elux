@@ -2,14 +2,12 @@
 
 exports.__esModule = true;
 var _exportNames = {
-  useStore: true,
   createLogger: true
 };
-exports.createLogger = exports.useStore = void 0;
+exports.createLogger = void 0;
 
 var _vuex = require("vuex");
 
-exports.useStore = _vuex.useStore;
 exports.createLogger = _vuex.createLogger;
 
 var _coreVuex = require("@elux/core-vuex");

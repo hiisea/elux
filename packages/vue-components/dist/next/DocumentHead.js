@@ -43,9 +43,10 @@ export default defineComponent({
     headText() {
       const title = this.title;
       let html = this.html;
+      const eluxContext = this.eluxContext;
 
       if (!html) {
-        html = `<title>${title}</title>`;
+        html = eluxContext.documentHead || '<title>Elux</title>';
       }
 
       if (title) {

@@ -11,6 +11,7 @@ export interface LoadComponentOptions {
 const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
   const loadingComponent = options.OnLoading || vueComponentsConfig.LoadComponentOnLoading;
   const errorComponent = options.OnError || vueComponentsConfig.LoadComponentOnError;
+
   const component: any = (props: any, context: any) => {
     const {deps} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
     const {store} = inject<EluxStoreContext>(EluxStoreContextKey, {store: null as any});

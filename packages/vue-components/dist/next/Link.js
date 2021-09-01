@@ -10,21 +10,21 @@ export default function (props, context) {
     onClick,
     href,
     url,
-    replace,
-    portal,
+    action = 'push',
+    root,
     ...rest
   } = props;
   const newProps = { ...rest,
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url, portal) : router.push(url, portal);
+      router[action](url, root);
     }
   };
 
   if (href) {
-    return h('a', newProps, context.slots);
+    return h('a', newProps, context.slots.default());
   } else {
-    return h('div', newProps, context.slots);
+    return h('div', newProps, context.slots.default());
   }
 }

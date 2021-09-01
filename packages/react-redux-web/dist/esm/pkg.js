@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState, useRef, memo, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
-import { hydrate, render, unstable_batchedUpdates } from 'react-dom';
+import React, { useContext, useEffect, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import { unstable_batchedUpdates, hydrate, render } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
 function _assertThisInitialized(self) {
@@ -2150,34 +2150,29 @@ var Router = function Router(props) {
       return;
     });
   }, [router]);
-  var nodes = pages.map(function (item) {
-    var store = item.store;
-    var page = item.page ? React.createElement(item.page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }) : React.createElement(Page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }, props.children);
-    return page;
-  });
   return React.createElement("div", {
     ref: containerRef,
     className: classname
-  }, nodes);
+  }, pages.map(function (item) {
+    var store = item.store,
+        pagename = item.pagename;
+    return React.createElement("div", {
+      key: store.id,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, React.createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 var Page = memo(function (_ref2) {
   var store = _ref2.store,
-      pagename = _ref2.pagename,
-      children = _ref2.children;
+      view = _ref2.view;
+  var View = view;
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, React.createElement("div", {
-    className: "elux-page",
-    "data-pagename": pagename
-  }, children));
+  }, React.createElement(View, null));
 });
 function useRouter() {
   var eluxContext = useContext(EluxContextComponent);
@@ -2317,3363 +2312,10 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   });
 };
 
-function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
-  var renderFun = fromSSR ? hydrate : render;
-  var panel = env.document.getElementById(id);
-  renderFun(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(Router, null, React.createElement(APPView, null))), panel);
-}
-function renderToString(id, APPView, store, eluxContext) {
-  var html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(Router, null, React.createElement(APPView, null))));
-
-  return Promise.resolve(html);
-}
-
 function createCommonjsModule(fn) {
   var module = { exports: {} };
 	return fn(module, module.exports), module.exports;
 }
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-var runtime_1 = createCommonjsModule(function (module) {
-var runtime = function (exports) {
-
-  var Op = Object.prototype;
-  var hasOwn = Op.hasOwnProperty;
-  var undefined$1; // More compressible than void 0.
-
-  var $Symbol = typeof Symbol === "function" ? Symbol : {};
-  var iteratorSymbol = $Symbol.iterator || "@@iterator";
-  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
-  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-
-  function define(obj, key, value) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-    return obj[key];
-  }
-
-  try {
-    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
-    define({}, "");
-  } catch (err) {
-    define = function (obj, key, value) {
-      return obj[key] = value;
-    };
-  }
-
-  function wrap(innerFn, outerFn, self, tryLocsList) {
-    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
-    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
-    var generator = Object.create(protoGenerator.prototype);
-    var context = new Context(tryLocsList || []); // The ._invoke method unifies the implementations of the .next,
-    // .throw, and .return methods.
-
-    generator._invoke = makeInvokeMethod(innerFn, self, context);
-    return generator;
-  }
-
-  exports.wrap = wrap; // Try/catch helper to minimize deoptimizations. Returns a completion
-  // record like context.tryEntries[i].completion. This interface could
-  // have been (and was previously) designed to take a closure to be
-  // invoked without arguments, but in all the cases we care about we
-  // already have an existing method we want to call, so there's no need
-  // to create a new function object. We can even get away with assuming
-  // the method takes exactly one argument, since that happens to be true
-  // in every case, so we don't have to touch the arguments object. The
-  // only additional allocation required is the completion record, which
-  // has a stable shape and so hopefully should be cheap to allocate.
-
-  function tryCatch(fn, obj, arg) {
-    try {
-      return {
-        type: "normal",
-        arg: fn.call(obj, arg)
-      };
-    } catch (err) {
-      return {
-        type: "throw",
-        arg: err
-      };
-    }
-  }
-
-  var GenStateSuspendedStart = "suspendedStart";
-  var GenStateSuspendedYield = "suspendedYield";
-  var GenStateExecuting = "executing";
-  var GenStateCompleted = "completed"; // Returning this object from the innerFn has the same effect as
-  // breaking out of the dispatch switch statement.
-
-  var ContinueSentinel = {}; // Dummy constructor functions that we use as the .constructor and
-  // .constructor.prototype properties for functions that return Generator
-  // objects. For full spec compliance, you may wish to configure your
-  // minifier not to mangle the names of these two functions.
-
-  function Generator() {}
-
-  function GeneratorFunction() {}
-
-  function GeneratorFunctionPrototype() {} // This is a polyfill for %IteratorPrototype% for environments that
-  // don't natively support it.
-
-
-  var IteratorPrototype = {};
-
-  IteratorPrototype[iteratorSymbol] = function () {
-    return this;
-  };
-
-  var getProto = Object.getPrototypeOf;
-  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
-
-  if (NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
-    // This environment has a native %IteratorPrototype%; use it instead
-    // of the polyfill.
-    IteratorPrototype = NativeIteratorPrototype;
-  }
-
-  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
-  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
-  GeneratorFunctionPrototype.constructor = GeneratorFunction;
-  GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"); // Helper for defining the .next, .throw, and .return methods of the
-  // Iterator interface in terms of a single ._invoke method.
-
-  function defineIteratorMethods(prototype) {
-    ["next", "throw", "return"].forEach(function (method) {
-      define(prototype, method, function (arg) {
-        return this._invoke(method, arg);
-      });
-    });
-  }
-
-  exports.isGeneratorFunction = function (genFun) {
-    var ctor = typeof genFun === "function" && genFun.constructor;
-    return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
-    // do is to check its .name property.
-    (ctor.displayName || ctor.name) === "GeneratorFunction" : false;
-  };
-
-  exports.mark = function (genFun) {
-    if (Object.setPrototypeOf) {
-      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
-    } else {
-      genFun.__proto__ = GeneratorFunctionPrototype;
-      define(genFun, toStringTagSymbol, "GeneratorFunction");
-    }
-
-    genFun.prototype = Object.create(Gp);
-    return genFun;
-  }; // Within the body of any async function, `await x` is transformed to
-  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
-  // `hasOwn.call(value, "__await")` to determine if the yielded value is
-  // meant to be awaited.
-
-
-  exports.awrap = function (arg) {
-    return {
-      __await: arg
-    };
-  };
-
-  function AsyncIterator(generator, PromiseImpl) {
-    function invoke(method, arg, resolve, reject) {
-      var record = tryCatch(generator[method], generator, arg);
-
-      if (record.type === "throw") {
-        reject(record.arg);
-      } else {
-        var result = record.arg;
-        var value = result.value;
-
-        if (value && typeof value === "object" && hasOwn.call(value, "__await")) {
-          return PromiseImpl.resolve(value.__await).then(function (value) {
-            invoke("next", value, resolve, reject);
-          }, function (err) {
-            invoke("throw", err, resolve, reject);
-          });
-        }
-
-        return PromiseImpl.resolve(value).then(function (unwrapped) {
-          // When a yielded Promise is resolved, its final value becomes
-          // the .value of the Promise<{value,done}> result for the
-          // current iteration.
-          result.value = unwrapped;
-          resolve(result);
-        }, function (error) {
-          // If a rejected Promise was yielded, throw the rejection back
-          // into the async generator function so it can be handled there.
-          return invoke("throw", error, resolve, reject);
-        });
-      }
-    }
-
-    var previousPromise;
-
-    function enqueue(method, arg) {
-      function callInvokeWithMethodAndArg() {
-        return new PromiseImpl(function (resolve, reject) {
-          invoke(method, arg, resolve, reject);
-        });
-      }
-
-      return previousPromise = // If enqueue has been called before, then we want to wait until
-      // all previous Promises have been resolved before calling invoke,
-      // so that results are always delivered in the correct order. If
-      // enqueue has not been called before, then it is important to
-      // call invoke immediately, without waiting on a callback to fire,
-      // so that the async generator function has the opportunity to do
-      // any necessary setup in a predictable way. This predictability
-      // is why the Promise constructor synchronously invokes its
-      // executor callback, and why async functions synchronously
-      // execute code before the first await. Since we implement simple
-      // async functions in terms of async generators, it is especially
-      // important to get this right, even though it requires care.
-      previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, // Avoid propagating failures to Promises returned by later
-      // invocations of the iterator.
-      callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
-    } // Define the unified helper method that is used to implement .next,
-    // .throw, and .return (see defineIteratorMethods).
-
-
-    this._invoke = enqueue;
-  }
-
-  defineIteratorMethods(AsyncIterator.prototype);
-
-  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
-    return this;
-  };
-
-  exports.AsyncIterator = AsyncIterator; // Note that simple async functions are implemented on top of
-  // AsyncIterator objects; they just return a Promise for the value of
-  // the final result produced by the iterator.
-
-  exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) {
-    if (PromiseImpl === void 0) PromiseImpl = Promise;
-    var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl);
-    return exports.isGeneratorFunction(outerFn) ? iter // If outerFn is a generator, return the full iterator.
-    : iter.next().then(function (result) {
-      return result.done ? result.value : iter.next();
-    });
-  };
-
-  function makeInvokeMethod(innerFn, self, context) {
-    var state = GenStateSuspendedStart;
-    return function invoke(method, arg) {
-      if (state === GenStateExecuting) {
-        throw new Error("Generator is already running");
-      }
-
-      if (state === GenStateCompleted) {
-        if (method === "throw") {
-          throw arg;
-        } // Be forgiving, per 25.3.3.3.3 of the spec:
-        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-
-
-        return doneResult();
-      }
-
-      context.method = method;
-      context.arg = arg;
-
-      while (true) {
-        var delegate = context.delegate;
-
-        if (delegate) {
-          var delegateResult = maybeInvokeDelegate(delegate, context);
-
-          if (delegateResult) {
-            if (delegateResult === ContinueSentinel) continue;
-            return delegateResult;
-          }
-        }
-
-        if (context.method === "next") {
-          // Setting context._sent for legacy support of Babel's
-          // function.sent implementation.
-          context.sent = context._sent = context.arg;
-        } else if (context.method === "throw") {
-          if (state === GenStateSuspendedStart) {
-            state = GenStateCompleted;
-            throw context.arg;
-          }
-
-          context.dispatchException(context.arg);
-        } else if (context.method === "return") {
-          context.abrupt("return", context.arg);
-        }
-
-        state = GenStateExecuting;
-        var record = tryCatch(innerFn, self, context);
-
-        if (record.type === "normal") {
-          // If an exception is thrown from innerFn, we leave state ===
-          // GenStateExecuting and loop back for another invocation.
-          state = context.done ? GenStateCompleted : GenStateSuspendedYield;
-
-          if (record.arg === ContinueSentinel) {
-            continue;
-          }
-
-          return {
-            value: record.arg,
-            done: context.done
-          };
-        } else if (record.type === "throw") {
-          state = GenStateCompleted; // Dispatch the exception by looping back around to the
-          // context.dispatchException(context.arg) call above.
-
-          context.method = "throw";
-          context.arg = record.arg;
-        }
-      }
-    };
-  } // Call delegate.iterator[context.method](context.arg) and handle the
-  // result, either by returning a { value, done } result from the
-  // delegate iterator, or by modifying context.method and context.arg,
-  // setting context.delegate to null, and returning the ContinueSentinel.
-
-
-  function maybeInvokeDelegate(delegate, context) {
-    var method = delegate.iterator[context.method];
-
-    if (method === undefined$1) {
-      // A .throw or .return when the delegate iterator has no .throw
-      // method always terminates the yield* loop.
-      context.delegate = null;
-
-      if (context.method === "throw") {
-        // Note: ["return"] must be used for ES3 parsing compatibility.
-        if (delegate.iterator["return"]) {
-          // If the delegate iterator has a return method, give it a
-          // chance to clean up.
-          context.method = "return";
-          context.arg = undefined$1;
-          maybeInvokeDelegate(delegate, context);
-
-          if (context.method === "throw") {
-            // If maybeInvokeDelegate(context) changed context.method from
-            // "return" to "throw", let that override the TypeError below.
-            return ContinueSentinel;
-          }
-        }
-
-        context.method = "throw";
-        context.arg = new TypeError("The iterator does not provide a 'throw' method");
-      }
-
-      return ContinueSentinel;
-    }
-
-    var record = tryCatch(method, delegate.iterator, context.arg);
-
-    if (record.type === "throw") {
-      context.method = "throw";
-      context.arg = record.arg;
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    var info = record.arg;
-
-    if (!info) {
-      context.method = "throw";
-      context.arg = new TypeError("iterator result is not an object");
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    if (info.done) {
-      // Assign the result of the finished delegate to the temporary
-      // variable specified by delegate.resultName (see delegateYield).
-      context[delegate.resultName] = info.value; // Resume execution at the desired location (see delegateYield).
-
-      context.next = delegate.nextLoc; // If context.method was "throw" but the delegate handled the
-      // exception, let the outer generator proceed normally. If
-      // context.method was "next", forget context.arg since it has been
-      // "consumed" by the delegate iterator. If context.method was
-      // "return", allow the original .return call to continue in the
-      // outer generator.
-
-      if (context.method !== "return") {
-        context.method = "next";
-        context.arg = undefined$1;
-      }
-    } else {
-      // Re-yield the result returned by the delegate method.
-      return info;
-    } // The delegate iterator is finished, so forget it and continue with
-    // the outer generator.
-
-
-    context.delegate = null;
-    return ContinueSentinel;
-  } // Define Generator.prototype.{next,throw,return} in terms of the
-  // unified ._invoke helper method.
-
-
-  defineIteratorMethods(Gp);
-  define(Gp, toStringTagSymbol, "Generator"); // A Generator should always return itself as the iterator object when the
-  // @@iterator function is called on it. Some browsers' implementations of the
-  // iterator prototype chain incorrectly implement this, causing the Generator
-  // object to not be returned from this call. This ensures that doesn't happen.
-  // See https://github.com/facebook/regenerator/issues/274 for more details.
-
-  Gp[iteratorSymbol] = function () {
-    return this;
-  };
-
-  Gp.toString = function () {
-    return "[object Generator]";
-  };
-
-  function pushTryEntry(locs) {
-    var entry = {
-      tryLoc: locs[0]
-    };
-
-    if (1 in locs) {
-      entry.catchLoc = locs[1];
-    }
-
-    if (2 in locs) {
-      entry.finallyLoc = locs[2];
-      entry.afterLoc = locs[3];
-    }
-
-    this.tryEntries.push(entry);
-  }
-
-  function resetTryEntry(entry) {
-    var record = entry.completion || {};
-    record.type = "normal";
-    delete record.arg;
-    entry.completion = record;
-  }
-
-  function Context(tryLocsList) {
-    // The root entry object (effectively a try statement without a catch
-    // or a finally block) gives us a place to store values thrown from
-    // locations where there is no enclosing try statement.
-    this.tryEntries = [{
-      tryLoc: "root"
-    }];
-    tryLocsList.forEach(pushTryEntry, this);
-    this.reset(true);
-  }
-
-  exports.keys = function (object) {
-    var keys = [];
-
-    for (var key in object) {
-      keys.push(key);
-    }
-
-    keys.reverse(); // Rather than returning an object with a next method, we keep
-    // things simple and return the next function itself.
-
-    return function next() {
-      while (keys.length) {
-        var key = keys.pop();
-
-        if (key in object) {
-          next.value = key;
-          next.done = false;
-          return next;
-        }
-      } // To avoid creating an additional object, we just hang the .value
-      // and .done properties off the next function object itself. This
-      // also ensures that the minifier will not anonymize the function.
-
-
-      next.done = true;
-      return next;
-    };
-  };
-
-  function values(iterable) {
-    if (iterable) {
-      var iteratorMethod = iterable[iteratorSymbol];
-
-      if (iteratorMethod) {
-        return iteratorMethod.call(iterable);
-      }
-
-      if (typeof iterable.next === "function") {
-        return iterable;
-      }
-
-      if (!isNaN(iterable.length)) {
-        var i = -1,
-            next = function next() {
-          while (++i < iterable.length) {
-            if (hasOwn.call(iterable, i)) {
-              next.value = iterable[i];
-              next.done = false;
-              return next;
-            }
-          }
-
-          next.value = undefined$1;
-          next.done = true;
-          return next;
-        };
-
-        return next.next = next;
-      }
-    } // Return an iterator with no values.
-
-
-    return {
-      next: doneResult
-    };
-  }
-
-  exports.values = values;
-
-  function doneResult() {
-    return {
-      value: undefined$1,
-      done: true
-    };
-  }
-
-  Context.prototype = {
-    constructor: Context,
-    reset: function (skipTempReset) {
-      this.prev = 0;
-      this.next = 0; // Resetting context._sent for legacy support of Babel's
-      // function.sent implementation.
-
-      this.sent = this._sent = undefined$1;
-      this.done = false;
-      this.delegate = null;
-      this.method = "next";
-      this.arg = undefined$1;
-      this.tryEntries.forEach(resetTryEntry);
-
-      if (!skipTempReset) {
-        for (var name in this) {
-          // Not sure about the optimal order of these conditions:
-          if (name.charAt(0) === "t" && hasOwn.call(this, name) && !isNaN(+name.slice(1))) {
-            this[name] = undefined$1;
-          }
-        }
-      }
-    },
-    stop: function () {
-      this.done = true;
-      var rootEntry = this.tryEntries[0];
-      var rootRecord = rootEntry.completion;
-
-      if (rootRecord.type === "throw") {
-        throw rootRecord.arg;
-      }
-
-      return this.rval;
-    },
-    dispatchException: function (exception) {
-      if (this.done) {
-        throw exception;
-      }
-
-      var context = this;
-
-      function handle(loc, caught) {
-        record.type = "throw";
-        record.arg = exception;
-        context.next = loc;
-
-        if (caught) {
-          // If the dispatched exception was caught by a catch block,
-          // then let that catch block handle the exception normally.
-          context.method = "next";
-          context.arg = undefined$1;
-        }
-
-        return !!caught;
-      }
-
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        var record = entry.completion;
-
-        if (entry.tryLoc === "root") {
-          // Exception thrown outside of any try block that could handle
-          // it, so set the completion value of the entire function to
-          // throw the exception.
-          return handle("end");
-        }
-
-        if (entry.tryLoc <= this.prev) {
-          var hasCatch = hasOwn.call(entry, "catchLoc");
-          var hasFinally = hasOwn.call(entry, "finallyLoc");
-
-          if (hasCatch && hasFinally) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            } else if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-          } else if (hasCatch) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            }
-          } else if (hasFinally) {
-            if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-          } else {
-            throw new Error("try statement without catch or finally");
-          }
-        }
-      }
-    },
-    abrupt: function (type, arg) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-
-        if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) {
-          var finallyEntry = entry;
-          break;
-        }
-      }
-
-      if (finallyEntry && (type === "break" || type === "continue") && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc) {
-        // Ignore the finally entry if control is not jumping to a
-        // location outside the try/catch block.
-        finallyEntry = null;
-      }
-
-      var record = finallyEntry ? finallyEntry.completion : {};
-      record.type = type;
-      record.arg = arg;
-
-      if (finallyEntry) {
-        this.method = "next";
-        this.next = finallyEntry.finallyLoc;
-        return ContinueSentinel;
-      }
-
-      return this.complete(record);
-    },
-    complete: function (record, afterLoc) {
-      if (record.type === "throw") {
-        throw record.arg;
-      }
-
-      if (record.type === "break" || record.type === "continue") {
-        this.next = record.arg;
-      } else if (record.type === "return") {
-        this.rval = this.arg = record.arg;
-        this.method = "return";
-        this.next = "end";
-      } else if (record.type === "normal" && afterLoc) {
-        this.next = afterLoc;
-      }
-
-      return ContinueSentinel;
-    },
-    finish: function (finallyLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-
-        if (entry.finallyLoc === finallyLoc) {
-          this.complete(entry.completion, entry.afterLoc);
-          resetTryEntry(entry);
-          return ContinueSentinel;
-        }
-      }
-    },
-    "catch": function (tryLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-
-        if (entry.tryLoc === tryLoc) {
-          var record = entry.completion;
-
-          if (record.type === "throw") {
-            var thrown = record.arg;
-            resetTryEntry(entry);
-          }
-
-          return thrown;
-        }
-      } // The context.catch method must only be called with a location
-      // argument that corresponds to a known catch block.
-
-
-      throw new Error("illegal catch attempt");
-    },
-    delegateYield: function (iterable, resultName, nextLoc) {
-      this.delegate = {
-        iterator: values(iterable),
-        resultName: resultName,
-        nextLoc: nextLoc
-      };
-
-      if (this.method === "next") {
-        // Deliberately forget the last sent value so that we don't
-        // accidentally pass it on to the delegate.
-        this.arg = undefined$1;
-      }
-
-      return ContinueSentinel;
-    }
-  }; // Regardless of whether this script is executing as a CommonJS module
-  // or not, return the runtime object so that we can declare the variable
-  // regeneratorRuntime in the outer scope, which allows this module to be
-  // injected easily by `bin/regenerator --include-runtime script.js`.
-
-  return exports;
-}( // If this script is executing as a CommonJS module, use module.exports
-// as the regeneratorRuntime namespace. Otherwise create a new empty
-// object. Either way, the resulting object will be used to initialize
-// the regeneratorRuntime variable at the top of this file.
-module.exports );
-
-try {
-  regeneratorRuntime = runtime;
-} catch (accidentalStrictMode) {
-  // This module should not be running in strict mode, so the above
-  // assignment should always work unless something is misconfigured. Just
-  // in case runtime.js accidentally runs in strict mode, we can escape
-  // strict mode using a global Function call. This could conceivably fail
-  // if a Content Security Policy forbids using Function, but in that case
-  // the proper solution is to fix the accidental strict mode problem. If
-  // you've misconfigured your bundler to force strict mode and applied a
-  // CSP to forbid Function, and you're not willing to fix either of those
-  // problems, please detail your unique predicament in a GitHub issue.
-  Function("r", "regeneratorRuntime = r")(runtime);
-}
-});
-
-var regenerator = runtime_1;
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
-
-var routeConfig = {
-  RouteModuleName: 'route',
-  maxHistory: 10,
-  notifyNativeRouter: {
-    root: true,
-    internal: false
-  },
-  indexUrl: '/'
-};
-var setRouteConfig = buildConfigSetter(routeConfig);
-var routeMeta = {
-  defaultParams: {},
-  pagenames: {},
-  pages: {}
-};
-
-var RouteStack = function () {
-  function RouteStack(limit) {
-    _defineProperty(this, "records", []);
-
-    this.limit = limit;
-  }
-
-  var _proto = RouteStack.prototype;
-
-  _proto.startup = function startup(record) {
-    this.records = [record];
-  };
-
-  _proto.getCurrentItem = function getCurrentItem() {
-    return this.records[0];
-  };
-
-  _proto.getItems = function getItems() {
-    return [].concat(this.records);
-  };
-
-  _proto.getLength = function getLength() {
-    return this.records.length;
-  };
-
-  _proto.getRecordAt = function getRecordAt(n) {
-    if (n < 0) {
-      return this.records[this.records.length + n];
-    } else {
-      return this.records[n];
-    }
-  };
-
-  _proto._push = function _push(item) {
-    var records = this.records;
-    records.unshift(item);
-    var delItem = records.splice(this.limit)[0];
-
-    if (delItem && delItem !== item && delItem.destroy) {
-      delItem.destroy();
-    }
-  };
-
-  _proto._replace = function _replace(item) {
-    var records = this.records;
-    var delItem = records[0];
-    records[0] = item;
-
-    if (delItem && delItem !== item && delItem.destroy) {
-      delItem.destroy();
-    }
-  };
-
-  _proto._relaunch = function _relaunch(item) {
-    var delList = this.records;
-    this.records = [item];
-    delList.forEach(function (delItem) {
-      if (delItem !== item && delItem.destroy) {
-        delItem.destroy();
-      }
-    });
-  };
-
-  _proto.back = function back(delta) {
-    var delList = this.records.splice(0, delta);
-
-    if (this.records.length === 0) {
-      var last = delList.pop();
-      this.records.push(last);
-    }
-
-    delList.forEach(function (delItem) {
-      if (delItem.destroy) {
-        delItem.destroy();
-      }
-    });
-  };
-
-  return RouteStack;
-}();
-
-var HistoryRecord = function () {
-  function HistoryRecord(location, historyStack) {
-    _defineProperty(this, "destroy", void 0);
-
-    _defineProperty(this, "pagename", void 0);
-
-    _defineProperty(this, "params", void 0);
-
-    _defineProperty(this, "recordKey", void 0);
-
-    this.historyStack = historyStack;
-    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
-    var pagename = location.pagename,
-        params = location.params;
-    this.pagename = pagename;
-    this.params = params;
-  }
-
-  var _proto2 = HistoryRecord.prototype;
-
-  _proto2.getKey = function getKey() {
-    return [this.historyStack.stackkey, this.recordKey].join('-');
-  };
-
-  return HistoryRecord;
-}();
-
-_defineProperty(HistoryRecord, "id", 0);
-
-var HistoryStack = function (_RouteStack) {
-  _inheritsLoose(HistoryStack, _RouteStack);
-
-  function HistoryStack(rootStack, store) {
-    var _this;
-
-    _this = _RouteStack.call(this, 20) || this;
-
-    _defineProperty(_assertThisInitialized(_this), "stackkey", void 0);
-
-    _this.rootStack = rootStack;
-    _this.store = store;
-    _this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
-    return _this;
-  }
-
-  var _proto3 = HistoryStack.prototype;
-
-  _proto3.push = function push(routeState) {
-    var newRecord = new HistoryRecord(routeState, this);
-
-    this._push(newRecord);
-
-    return newRecord;
-  };
-
-  _proto3.replace = function replace(routeState) {
-    var newRecord = new HistoryRecord(routeState, this);
-
-    this._replace(newRecord);
-
-    return newRecord;
-  };
-
-  _proto3.relaunch = function relaunch(routeState) {
-    var newRecord = new HistoryRecord(routeState, this);
-
-    this._relaunch(newRecord);
-
-    return newRecord;
-  };
-
-  _proto3.findRecordByKey = function findRecordByKey(recordKey) {
-    return this.records.find(function (item) {
-      return item.recordKey === recordKey;
-    });
-  };
-
-  _proto3.destroy = function destroy() {
-    this.store.destroy();
-  };
-
-  return HistoryStack;
-}(RouteStack);
-
-_defineProperty(HistoryStack, "id", 0);
-
-var RootStack = function (_RouteStack2) {
-  _inheritsLoose(RootStack, _RouteStack2);
-
-  function RootStack() {
-    return _RouteStack2.call(this, 10) || this;
-  }
-
-  var _proto4 = RootStack.prototype;
-
-  _proto4.getCurrentPages = function getCurrentPages() {
-    return this.records.map(function (item) {
-      var store = item.store;
-      var record = item.getCurrentItem();
-      var pagename = record.pagename;
-      return {
-        pagename: pagename,
-        store: store,
-        page: routeMeta.pages[pagename]
-      };
-    });
-  };
-
-  _proto4.push = function push(routeState) {
-    var curHistory = this.getCurrentItem();
-    var store = forkStore(curHistory.store, routeState);
-    var newHistory = new HistoryStack(this, store);
-    var newRecord = new HistoryRecord(routeState, newHistory);
-    newHistory.startup(newRecord);
-
-    this._push(newHistory);
-
-    return newRecord;
-  };
-
-  _proto4.replace = function replace(routeState) {
-    var curHistory = this.getCurrentItem();
-    return curHistory.relaunch(routeState);
-  };
-
-  _proto4.relaunch = function relaunch(routeState) {
-    var curHistory = this.getCurrentItem();
-    var newRecord = curHistory.relaunch(routeState);
-
-    this._relaunch(curHistory);
-
-    return newRecord;
-  };
-
-  _proto4.countBack = function countBack(delta) {
-    var historyStacks = this.records;
-    var backSteps = [0, 0];
-
-    for (var i = 0, k = historyStacks.length; i < k; i++) {
-      var _historyStack = historyStacks[i];
-
-      var recordNum = _historyStack.getLength();
-
-      delta = delta - recordNum;
-
-      if (delta > 0) {
-        backSteps[0]++;
-      } else if (delta === 0) {
-        backSteps[0]++;
-        break;
-      } else {
-        backSteps[1] = recordNum + delta;
-        break;
-      }
-    }
-
-    return backSteps;
-  };
-
-  _proto4.testBack = function testBack(delta, rootOnly) {
-    var overflow = false;
-    var record;
-    var steps = [0, 0];
-
-    if (rootOnly) {
-      if (delta < this.records.length) {
-        record = this.getRecordAt(delta).getCurrentItem();
-        steps[0] = delta;
-      } else {
-        record = this.getRecordAt(-1).getCurrentItem();
-        overflow = true;
-      }
-    } else {
-      var _this$countBack = this.countBack(delta),
-          rootDelta = _this$countBack[0],
-          recordDelta = _this$countBack[1];
-
-      if (rootDelta < this.records.length) {
-        record = this.getRecordAt(rootDelta).getRecordAt(recordDelta);
-        steps[0] = rootDelta;
-        steps[1] = recordDelta;
-      } else {
-        record = this.getRecordAt(-1).getRecordAt(-1);
-        overflow = true;
-      }
-    }
-
-    return {
-      record: record,
-      overflow: overflow,
-      steps: steps
-    };
-  };
-
-  _proto4.findRecordByKey = function findRecordByKey(key) {
-    var arr = key.split('-');
-    var historyStack = this.records.find(function (item) {
-      return item.stackkey === arr[0];
-    });
-
-    if (historyStack) {
-      return historyStack.findRecordByKey(arr[1]);
-    }
-
-    return undefined;
-  };
-
-  return RootStack;
-}(RouteStack);
-
-function isPlainObject$2(obj) {
-  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
-}
-
-function __extendDefault(target, def) {
-  var clone = {};
-  Object.keys(def).forEach(function (key) {
-    if (target[key] === undefined) {
-      clone[key] = def[key];
-    } else {
-      var tval = target[key];
-      var dval = def[key];
-
-      if (isPlainObject$2(tval) && isPlainObject$2(dval) && tval !== dval) {
-        clone[key] = __extendDefault(tval, dval);
-      } else {
-        clone[key] = tval;
-      }
-    }
-  });
-  return clone;
-}
-
-function extendDefault(target, def) {
-  if (!isPlainObject$2(target)) {
-    target = {};
-  }
-
-  if (!isPlainObject$2(def)) {
-    def = {};
-  }
-
-  return __extendDefault(target, def);
-}
-
-function __excludeDefault(data, def) {
-  var result = {};
-  var hasSub = false;
-  Object.keys(data).forEach(function (key) {
-    var value = data[key];
-    var defaultValue = def[key];
-
-    if (value !== defaultValue) {
-      if (typeof value === typeof defaultValue && isPlainObject$2(value)) {
-        value = __excludeDefault(value, defaultValue);
-      }
-
-      if (value !== undefined) {
-        hasSub = true;
-        result[key] = value;
-      }
-    }
-  });
-
-  if (hasSub) {
-    return result;
-  }
-
-  return undefined;
-}
-
-function excludeDefault(data, def, keepTopLevel) {
-  if (!isPlainObject$2(data)) {
-    return {};
-  }
-
-  if (!isPlainObject$2(def)) {
-    return data;
-  }
-
-  var filtered = __excludeDefault(data, def);
-
-  if (keepTopLevel) {
-    var result = {};
-    Object.keys(data).forEach(function (key) {
-      result[key] = filtered && filtered[key] !== undefined ? filtered[key] : {};
-    });
-    return result;
-  }
-
-  return filtered || {};
-}
-
-function __splitPrivate(data) {
-  var keys = Object.keys(data);
-
-  if (keys.length === 0) {
-    return [undefined, undefined];
-  }
-
-  var publicData;
-  var privateData;
-  keys.forEach(function (key) {
-    var value = data[key];
-
-    if (key.startsWith('_')) {
-      if (!privateData) {
-        privateData = {};
-      }
-
-      privateData[key] = value;
-    } else if (isPlainObject$2(value)) {
-      var _splitPrivate = __splitPrivate(value),
-          subPublicData = _splitPrivate[0],
-          subPrivateData = _splitPrivate[1];
-
-      if (subPublicData) {
-        if (!publicData) {
-          publicData = {};
-        }
-
-        publicData[key] = subPublicData;
-      }
-
-      if (subPrivateData) {
-        if (!privateData) {
-          privateData = {};
-        }
-
-        privateData[key] = subPrivateData;
-      }
-    } else {
-      if (!publicData) {
-        publicData = {};
-      }
-
-      publicData[key] = value;
-    }
-  });
-  return [publicData, privateData];
-}
-
-function splitPrivate(data, deleteTopLevel) {
-  if (!isPlainObject$2(data)) {
-    return [undefined, undefined];
-  }
-
-  var keys = Object.keys(data);
-
-  if (keys.length === 0) {
-    return [undefined, undefined];
-  }
-
-  var result = __splitPrivate(data);
-
-  var publicData = result[0];
-  var privateData = result[1];
-  keys.forEach(function (key) {
-    if (!deleteTopLevel[key]) {
-      if (!publicData) {
-        publicData = {};
-      }
-
-      if (!publicData[key]) {
-        publicData[key] = {};
-      }
-    }
-  });
-  return [publicData, privateData];
-}
-
-function assignDefaultData(data) {
-  var def = routeMeta.defaultParams;
-  return Object.keys(data).reduce(function (params, moduleName) {
-    if (def[moduleName]) {
-      params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
-    }
-
-    return params;
-  }, {});
-}
-
-function splitQuery(query) {
-  if (!query) {
-    return undefined;
-  }
-
-  return query.split('&').reduce(function (params, str) {
-    var sections = str.split('=');
-
-    if (sections.length > 1) {
-      var key = sections[0],
-          arr = sections.slice(1);
-
-      if (!params) {
-        params = {};
-      }
-
-      params[key] = decodeURIComponent(arr.join('='));
-    }
-
-    return params;
-  }, undefined);
-}
-
-function joinQuery(params) {
-  return Object.keys(params || {}).map(function (key) {
-    return key + "=" + encodeURIComponent(params[key]);
-  }).join('&');
-}
-
-function isEluxLocation(data) {
-  return data['params'];
-}
-
-function nativeUrlToNativeLocation(url) {
-  if (!url) {
-    return {
-      pathname: '/',
-      searchData: undefined,
-      hashData: undefined
-    };
-  }
-
-  var arr = url.split(/[?#]/);
-
-  if (arr.length === 2 && url.indexOf('?') < 0) {
-    arr.splice(1, 0, '');
-  }
-
-  var path = arr[0],
-      search = arr[1],
-      hash = arr[2];
-  return {
-    pathname: "/" + path.replace(/^\/+|\/+$/g, ''),
-    searchData: splitQuery(search),
-    hashData: splitQuery(hash)
-  };
-}
-function eluxUrlToEluxLocation(url) {
-  if (!url) {
-    return {
-      pathname: '/',
-      params: {}
-    };
-  }
-
-  var _url$split = url.split('?'),
-      pathname = _url$split[0],
-      others = _url$split.slice(1);
-
-  var query = others.join('?');
-  var params = {};
-
-  if (query && query.charAt(0) === '{' && query.charAt(query.length - 1) === '}') {
-    try {
-      params = JSON.parse(query);
-    } catch (e) {
-      env.console.error(e);
-    }
-  }
-
-  return {
-    pathname: "/" + pathname.replace(/^\/+|\/+$/g, ''),
-    params: params
-  };
-}
-function nativeLocationToNativeUrl(_ref) {
-  var pathname = _ref.pathname,
-      searchData = _ref.searchData,
-      hashData = _ref.hashData;
-  var search = joinQuery(searchData);
-  var hash = joinQuery(hashData);
-  return ["/" + pathname.replace(/^\/+|\/+$/g, ''), search && "?" + search, hash && "#" + hash].join('');
-}
-function eluxLocationToEluxUrl(location) {
-  return [location.pathname, JSON.stringify(location.params || {})].join('?');
-}
-function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
-  if (notfoundPagename === void 0) {
-    notfoundPagename = '/404';
-  }
-
-  if (paramsKey === void 0) {
-    paramsKey = '_';
-  }
-
-  var pagenames = Object.keys(pagenameMap);
-  pagenameMap = pagenames.sort(function (a, b) {
-    return b.length - a.length;
-  }).reduce(function (map, pagename) {
-    var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
-    var _pagenameMap$pagename = pagenameMap[pagename],
-        argsToParams = _pagenameMap$pagename.argsToParams,
-        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
-        page = _pagenameMap$pagename.page;
-    map[fullPagename] = {
-      argsToParams: argsToParams,
-      paramsToArgs: paramsToArgs
-    };
-    routeMeta.pagenames[pagename] = pagename;
-    routeMeta.pages[pagename] = page;
-    return map;
-  }, {});
-  pagenames = Object.keys(pagenameMap);
-
-  function toStringArgs(arr) {
-    return arr.map(function (item) {
-      if (item === null || item === undefined) {
-        return undefined;
-      }
-
-      return item.toString();
-    });
-  }
-
-  return {
-    urlToLocation: function urlToLocation(url) {
-      return this.partialLocationToLocation(this.urlToToPartialLocation(url));
-    },
-    urlToToPartialLocation: function urlToToPartialLocation(url) {
-      var givenLocation = this.urlToGivenLocation(url);
-
-      if (isEluxLocation(givenLocation)) {
-        return this.eluxLocationToPartialLocation(givenLocation);
-      }
-
-      return this.nativeLocationToPartialLocation(givenLocation);
-    },
-    urlToEluxLocation: function urlToEluxLocation(url) {
-      var givenLocation = this.urlToGivenLocation(url);
-
-      if (isEluxLocation(givenLocation)) {
-        return givenLocation;
-      }
-
-      return this.nativeLocationToEluxLocation(givenLocation);
-    },
-    urlToGivenLocation: function urlToGivenLocation(url) {
-      var _url$split2 = url.split('?', 2),
-          query = _url$split2[1];
-
-      if (query && query.charAt(0) === '{') {
-        return eluxUrlToEluxLocation(url);
-      }
-
-      return nativeUrlToNativeLocation(url);
-    },
-    nativeLocationToLocation: function nativeLocationToLocation(nativeLocation) {
-      return this.partialLocationToLocation(this.nativeLocationToPartialLocation(nativeLocation));
-    },
-    nativeLocationToPartialLocation: function nativeLocationToPartialLocation(nativeLocation) {
-      var eluxLocation = this.nativeLocationToEluxLocation(nativeLocation);
-      return this.eluxLocationToPartialLocation(eluxLocation);
-    },
-    nativeLocationToEluxLocation: function nativeLocationToEluxLocation(nativeLocation) {
-      nativeLocation = nativeLocationMap.in(nativeLocation);
-      var searchParams;
-      var hashParams;
-
-      try {
-        searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
-        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
-      } catch (e) {
-        env.console.error(e);
-      }
-
-      return {
-        pathname: nativeLocation.pathname,
-        params: deepMerge(searchParams, hashParams) || {}
-      };
-    },
-    eluxLocationToNativeLocation: function eluxLocationToNativeLocation(eluxLocation) {
-      var _ref2, _ref3;
-
-      var pathname = ("/" + eluxLocation.pathname + "/").replace(/^\/+|\/+$/g, '/');
-      var pagename = pagenames.find(function (name) {
-        return pathname.startsWith(name);
-      });
-      var pathParams = {};
-
-      if (pagename) {
-        var _pathArgs = pathname.replace(pagename, '').split('/').map(function (item) {
-          return item ? decodeURIComponent(item) : undefined;
-        });
-
-        pathParams = pagenameMap[pagename].argsToParams(_pathArgs);
-      } else {
-        pagename = notfoundPagename + "/";
-
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
-      }
-
-      var result = splitPrivate(eluxLocation.params, pathParams);
-      var nativeLocation = {
-        pathname: pathname,
-        searchData: result[0] ? (_ref2 = {}, _ref2[paramsKey] = JSON.stringify(result[0]), _ref2) : undefined,
-        hashData: result[1] ? (_ref3 = {}, _ref3[paramsKey] = JSON.stringify(result[1]), _ref3) : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
-    },
-    eluxLocationToPartialLocation: function eluxLocationToPartialLocation(eluxLocation) {
-      var pathname = ("/" + eluxLocation.pathname + "/").replace(/^\/+|\/+$/g, '/');
-      var pagename = pagenames.find(function (name) {
-        return pathname.startsWith(name);
-      });
-      var pathParams = {};
-
-      if (pagename) {
-        var _pathArgs2 = pathname.replace(pagename, '').split('/').map(function (item) {
-          return item ? decodeURIComponent(item) : undefined;
-        });
-
-        pathParams = pagenameMap[pagename].argsToParams(_pathArgs2);
-      } else {
-        pagename = notfoundPagename + "/";
-
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
-      }
-
-      var params = deepMerge({}, pathParams, eluxLocation.params);
-      var modules = moduleExists();
-      Object.keys(params).forEach(function (moduleName) {
-        if (!modules[moduleName]) {
-          delete params[moduleName];
-        }
-      });
-      return {
-        pagename: "/" + pagename.replace(/^\/+|\/+$/g, ''),
-        params: params
-      };
-    },
-    partialLocationToLocation: function partialLocationToLocation(partialLocation) {
-      var pagename = partialLocation.pagename,
-          params = partialLocation.params;
-      var def = routeMeta.defaultParams;
-      var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
-        return def[moduleName] === undefined;
-      });
-      var modulesOrPromise = getModuleList(asyncLoadModules);
-
-      if (isPromise(modulesOrPromise)) {
-        return modulesOrPromise.then(function (modules) {
-          modules.forEach(function (module) {
-            def[module.moduleName] = module.params;
-          });
-          return {
-            pagename: pagename,
-            params: assignDefaultData(params)
-          };
-        });
-      }
-
-      var modules = modulesOrPromise;
-      modules.forEach(function (module) {
-        def[module.moduleName] = module.params;
-      });
-      return {
-        pagename: pagename,
-        params: assignDefaultData(params)
-      };
-    },
-    eluxLocationToLocation: function eluxLocationToLocation(eluxLocation) {
-      return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
-    },
-    partialLocationToMinData: function partialLocationToMinData(partialLocation) {
-      var params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
-      var pathParams;
-      var pathname;
-      var pagename = ("/" + partialLocation.pagename + "/").replace(/^\/+|\/+$/g, '/');
-
-      if (pagenameMap[pagename]) {
-        var _pathArgs3 = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
-
-        pathname = pagename + _pathArgs3.map(function (item) {
-          return item ? encodeURIComponent(item) : '';
-        }).join('/').replace(/\/*$/, '');
-        pathParams = pagenameMap[pagename].argsToParams(_pathArgs3);
-      } else {
-        pathname = pagename;
-        pathParams = {};
-      }
-
-      params = excludeDefault(params, pathParams, false);
-      return {
-        pathname: "/" + pathname.replace(/^\/+|\/+$/g, ''),
-        params: params,
-        pathParams: pathParams
-      };
-    },
-    partialLocationToEluxLocation: function partialLocationToEluxLocation(partialLocation) {
-      var _this$partialLocation = this.partialLocationToMinData(partialLocation),
-          pathname = _this$partialLocation.pathname,
-          params = _this$partialLocation.params;
-
-      return {
-        pathname: pathname,
-        params: params
-      };
-    },
-    partialLocationToNativeLocation: function partialLocationToNativeLocation(partialLocation) {
-      var _ref4, _ref5;
-
-      var _this$partialLocation2 = this.partialLocationToMinData(partialLocation),
-          pathname = _this$partialLocation2.pathname,
-          params = _this$partialLocation2.params,
-          pathParams = _this$partialLocation2.pathParams;
-
-      var result = splitPrivate(params, pathParams);
-      var nativeLocation = {
-        pathname: pathname,
-        searchData: result[0] ? (_ref4 = {}, _ref4[paramsKey] = JSON.stringify(result[0]), _ref4) : undefined,
-        hashData: result[1] ? (_ref5 = {}, _ref5[paramsKey] = JSON.stringify(result[1]), _ref5) : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
-    }
-  };
-}
-
-var BaseNativeRouter = function () {
-  function BaseNativeRouter() {
-    _defineProperty(this, "curTask", void 0);
-
-    _defineProperty(this, "eluxRouter", void 0);
-  }
-
-  var _proto = BaseNativeRouter.prototype;
-
-  _proto.onChange = function onChange(key) {
-    if (this.curTask) {
-      this.curTask.resolve(this.curTask.nativeData);
-      this.curTask = undefined;
-      return false;
-    }
-
-    return key !== this.eluxRouter.routeState.key;
-  };
-
-  _proto.startup = function startup(router) {
-    this.eluxRouter = router;
-  };
-
-  _proto.execute = function execute(method, getNativeData) {
-    var _this = this;
-
-    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      args[_key - 2] = arguments[_key];
-    }
-
-    return new Promise(function (resolve, reject) {
-      var task = {
-        resolve: resolve,
-        reject: reject,
-        nativeData: undefined
-      };
-      _this.curTask = task;
-
-      var result = _this[method].apply(_this, [function () {
-        var nativeData = getNativeData();
-        task.nativeData = nativeData;
-        return nativeData;
-      }].concat(args));
-
-      if (!result) {
-        resolve(undefined);
-        _this.curTask = undefined;
-      } else if (isPromise(result)) {
-        result.catch(function (e) {
-          reject(e);
-          _this.curTask = undefined;
-        });
-      }
-    });
-  };
-
-  return BaseNativeRouter;
-}();
-var BaseEluxRouter = function (_MultipleDispatcher) {
-  _inheritsLoose(BaseEluxRouter, _MultipleDispatcher);
-
-  function BaseEluxRouter(url, nativeRouter, locationTransform, nativeData) {
-    var _this2;
-
-    _this2 = _MultipleDispatcher.call(this) || this;
-
-    _defineProperty(_assertThisInitialized(_this2), "_curTask", void 0);
-
-    _defineProperty(_assertThisInitialized(_this2), "_taskList", []);
-
-    _defineProperty(_assertThisInitialized(_this2), "_nativeData", void 0);
-
-    _defineProperty(_assertThisInitialized(_this2), "_internalUrl", void 0);
-
-    _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
-
-    _defineProperty(_assertThisInitialized(_this2), "name", routeConfig.RouteModuleName);
-
-    _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
-
-    _defineProperty(_assertThisInitialized(_this2), "injectedModules", {});
-
-    _defineProperty(_assertThisInitialized(_this2), "rootStack", new RootStack());
-
-    _defineProperty(_assertThisInitialized(_this2), "latestState", {});
-
-    _defineProperty(_assertThisInitialized(_this2), "_taskComplete", function () {
-      var task = _this2._taskList.shift();
-
-      if (task) {
-        _this2.executeTask(task);
-      } else {
-        _this2._curTask = undefined;
-      }
-    });
-
-    _this2.nativeRouter = nativeRouter;
-    _this2.locationTransform = locationTransform;
-    _this2.nativeData = nativeData;
-    nativeRouter.startup(_assertThisInitialized(_this2));
-    var locationOrPromise = locationTransform.urlToLocation(url);
-
-    var callback = function callback(location) {
-      var routeState = _extends({}, location, {
-        action: 'RELAUNCH',
-        key: ''
-      });
-
-      _this2.routeState = routeState;
-      _this2._internalUrl = eluxLocationToEluxUrl({
-        pathname: routeState.pagename,
-        params: routeState.params
-      });
-
-      if (!routeConfig.indexUrl) {
-        setRouteConfig({
-          indexUrl: _this2._internalUrl
-        });
-      }
-
-      return routeState;
-    };
-
-    if (isPromise(locationOrPromise)) {
-      _this2.initialize = locationOrPromise.then(callback);
-    } else {
-      _this2.initialize = Promise.resolve(callback(locationOrPromise));
-    }
-
-    return _this2;
-  }
-
-  var _proto2 = BaseEluxRouter.prototype;
-
-  _proto2.startup = function startup(store) {
-    var historyStack = new HistoryStack(this.rootStack, store);
-    var historyRecord = new HistoryRecord(this.routeState, historyStack);
-    historyStack.startup(historyRecord);
-    this.rootStack.startup(historyStack);
-    this.routeState.key = historyRecord.getKey();
-  };
-
-  _proto2.getCurrentPages = function getCurrentPages() {
-    return this.rootStack.getCurrentPages();
-  };
-
-  _proto2.getCurrentStore = function getCurrentStore() {
-    return this.rootStack.getCurrentItem().store;
-  };
-
-  _proto2.getStoreList = function getStoreList() {
-    return this.rootStack.getItems().map(function (_ref) {
-      var store = _ref.store;
-      return store;
-    });
-  };
-
-  _proto2.getInternalUrl = function getInternalUrl() {
-    return this._internalUrl;
-  };
-
-  _proto2.getNativeLocation = function getNativeLocation() {
-    if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeLocation;
-  };
-
-  _proto2.getNativeUrl = function getNativeUrl() {
-    if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeUrl;
-  };
-
-  _proto2.getHistoryLength = function getHistoryLength(root) {
-    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
-  };
-
-  _proto2.locationToNativeData = function locationToNativeData(location) {
-    var nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    var nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
-    return {
-      nativeUrl: nativeUrl,
-      nativeLocation: nativeLocation
-    };
-  };
-
-  _proto2.urlToLocation = function urlToLocation(url) {
-    return this.locationTransform.urlToLocation(url);
-  };
-
-  _proto2.payloadLocationToEluxUrl = function payloadLocationToEluxUrl(data) {
-    var eluxLocation = this.payloadToEluxLocation(data);
-    return eluxLocationToEluxUrl(eluxLocation);
-  };
-
-  _proto2.payloadLocationToNativeUrl = function payloadLocationToNativeUrl(data) {
-    var eluxLocation = this.payloadToEluxLocation(data);
-    var nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
-    return this.nativeLocationToNativeUrl(nativeLocation);
-  };
-
-  _proto2.nativeLocationToNativeUrl = function nativeLocationToNativeUrl$1(nativeLocation) {
-    return nativeLocationToNativeUrl(nativeLocation);
-  };
-
-  _proto2.findRecordByKey = function findRecordByKey(key) {
-    return this.rootStack.findRecordByKey(key);
-  };
-
-  _proto2.payloadToEluxLocation = function payloadToEluxLocation(payload) {
-    var params = payload.params || {};
-    var extendParams = payload.extendParams === 'current' ? this.routeState.params : payload.extendParams;
-
-    if (extendParams && params) {
-      params = deepMerge({}, extendParams, params);
-    } else if (extendParams) {
-      params = extendParams;
-    }
-
-    return {
-      pathname: payload.pathname || this.routeState.pagename,
-      params: params
-    };
-  };
-
-  _proto2.preAdditions = function preAdditions(data) {
-    if (typeof data === 'string') {
-      if (/^[\w:]*\/\//.test(data)) {
-        this.nativeRouter.toOutside(data);
-        return null;
-      }
-
-      return this.locationTransform.urlToLocation(data);
-    }
-
-    var eluxLocation = this.payloadToEluxLocation(data);
-    return this.locationTransform.eluxLocationToLocation(eluxLocation);
-  };
-
-  _proto2.relaunch = function relaunch(data, root, nonblocking, nativeCaller) {
-    if (root === void 0) {
-      root = false;
-    }
-
-    if (nativeCaller === void 0) {
-      nativeCaller = false;
-    }
-
-    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
-  };
-
-  _proto2._relaunch = function () {
-    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee(data, root, nativeCaller) {
-      var _this3 = this;
-
-      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
-      return regenerator.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              _context.next = 2;
-              return this.preAdditions(data);
-
-            case 2:
-              preData = _context.sent;
-
-              if (preData) {
-                _context.next = 5;
-                break;
-              }
-
-              return _context.abrupt("return");
-
-            case 5:
-              key = '';
-              location = preData;
-              routeState = _extends({}, location, {
-                action: 'RELAUNCH',
-                key: key
-              });
-              _context.next = 10;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-
-            case 10:
-              _context.next = 12;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-
-            case 12:
-              if (root) {
-                key = this.rootStack.relaunch(routeState).getKey();
-              } else {
-                key = this.rootStack.getCurrentItem().relaunch(routeState).getKey();
-              }
-
-              routeState.key = key;
-              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-              if (!(!nativeCaller && notifyNativeRouter)) {
-                _context.next = 19;
-                break;
-              }
-
-              _context.next = 18;
-              return this.nativeRouter.execute('relaunch', function () {
-                return _this3.locationToNativeData(routeState);
-              }, key);
-
-            case 18:
-              nativeData = _context.sent;
-
-            case 19:
-              this._nativeData = nativeData;
-              this.routeState = routeState;
-              this._internalUrl = eluxLocationToEluxUrl({
-                pathname: routeState.pagename,
-                params: routeState.params
-              });
-              cloneState = deepClone(routeState);
-              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              _context.next = 26;
-              return this.dispatch('change', {
-                routeState: cloneState,
-                root: root
-              });
-
-            case 26:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, this);
-    }));
-
-    function _relaunch(_x, _x2, _x3) {
-      return _relaunch2.apply(this, arguments);
-    }
-
-    return _relaunch;
-  }();
-
-  _proto2.push = function push(data, root, nonblocking, nativeCaller) {
-    if (root === void 0) {
-      root = false;
-    }
-
-    if (nativeCaller === void 0) {
-      nativeCaller = false;
-    }
-
-    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
-  };
-
-  _proto2._push = function () {
-    var _push2 = _asyncToGenerator(regenerator.mark(function _callee2(data, root, nativeCaller) {
-      var _this4 = this;
-
-      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
-      return regenerator.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              _context2.next = 2;
-              return this.preAdditions(data);
-
-            case 2:
-              preData = _context2.sent;
-
-              if (preData) {
-                _context2.next = 5;
-                break;
-              }
-
-              return _context2.abrupt("return");
-
-            case 5:
-              key = '';
-              location = preData;
-              routeState = _extends({}, location, {
-                action: 'PUSH',
-                key: key
-              });
-              _context2.next = 10;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-
-            case 10:
-              _context2.next = 12;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-
-            case 12:
-              if (root) {
-                key = this.rootStack.push(routeState).getKey();
-              } else {
-                key = this.rootStack.getCurrentItem().push(routeState).getKey();
-              }
-
-              routeState.key = key;
-              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-              if (!(!nativeCaller && notifyNativeRouter)) {
-                _context2.next = 19;
-                break;
-              }
-
-              _context2.next = 18;
-              return this.nativeRouter.execute('push', function () {
-                return _this4.locationToNativeData(routeState);
-              }, key);
-
-            case 18:
-              nativeData = _context2.sent;
-
-            case 19:
-              this._nativeData = nativeData;
-              this.routeState = routeState;
-              this._internalUrl = eluxLocationToEluxUrl({
-                pathname: routeState.pagename,
-                params: routeState.params
-              });
-              cloneState = deepClone(routeState);
-
-              if (!root) {
-                _context2.next = 28;
-                break;
-              }
-
-              _context2.next = 26;
-              return reinitApp(this.getCurrentStore());
-
-            case 26:
-              _context2.next = 29;
-              break;
-
-            case 28:
-              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-
-            case 29:
-              _context2.next = 31;
-              return this.dispatch('change', {
-                routeState: cloneState,
-                root: root
-              });
-
-            case 31:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2, this);
-    }));
-
-    function _push(_x4, _x5, _x6) {
-      return _push2.apply(this, arguments);
-    }
-
-    return _push;
-  }();
-
-  _proto2.replace = function replace(data, root, nonblocking, nativeCaller) {
-    if (root === void 0) {
-      root = false;
-    }
-
-    if (nativeCaller === void 0) {
-      nativeCaller = false;
-    }
-
-    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
-  };
-
-  _proto2._replace = function () {
-    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee3(data, root, nativeCaller) {
-      var _this5 = this;
-
-      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
-      return regenerator.wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              _context3.next = 2;
-              return this.preAdditions(data);
-
-            case 2:
-              preData = _context3.sent;
-
-              if (preData) {
-                _context3.next = 5;
-                break;
-              }
-
-              return _context3.abrupt("return");
-
-            case 5:
-              location = preData;
-              key = '';
-              routeState = _extends({}, location, {
-                action: 'REPLACE',
-                key: key
-              });
-              _context3.next = 10;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-
-            case 10:
-              _context3.next = 12;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-
-            case 12:
-              if (root) {
-                key = this.rootStack.replace(routeState).getKey();
-              } else {
-                key = this.rootStack.getCurrentItem().replace(routeState).getKey();
-              }
-
-              routeState.key = key;
-              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-              if (!(!nativeCaller && notifyNativeRouter)) {
-                _context3.next = 19;
-                break;
-              }
-
-              _context3.next = 18;
-              return this.nativeRouter.execute('replace', function () {
-                return _this5.locationToNativeData(routeState);
-              }, key);
-
-            case 18:
-              nativeData = _context3.sent;
-
-            case 19:
-              this._nativeData = nativeData;
-              this.routeState = routeState;
-              this._internalUrl = eluxLocationToEluxUrl({
-                pathname: routeState.pagename,
-                params: routeState.params
-              });
-              cloneState = deepClone(routeState);
-              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              _context3.next = 26;
-              return this.dispatch('change', {
-                routeState: cloneState,
-                root: root
-              });
-
-            case 26:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3, this);
-    }));
-
-    function _replace(_x7, _x8, _x9) {
-      return _replace2.apply(this, arguments);
-    }
-
-    return _replace;
-  }();
-
-  _proto2.back = function back(n, root, options, nonblocking, nativeCaller) {
-    if (n === void 0) {
-      n = 1;
-    }
-
-    if (root === void 0) {
-      root = false;
-    }
-
-    if (nativeCaller === void 0) {
-      nativeCaller = false;
-    }
-
-    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
-  };
-
-  _proto2._back = function () {
-    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, root, options, nativeCaller) {
-      var _this6 = this;
-
-      var _this$rootStack$testB, record, overflow, steps, _url, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
-
-      return regenerator.wrap(function _callee4$(_context4) {
-        while (1) {
-          switch (_context4.prev = _context4.next) {
-            case 0:
-              if (n === void 0) {
-                n = 1;
-              }
-
-              if (!(n < 1)) {
-                _context4.next = 3;
-                break;
-              }
-
-              return _context4.abrupt("return");
-
-            case 3:
-              _this$rootStack$testB = this.rootStack.testBack(n, root), record = _this$rootStack$testB.record, overflow = _this$rootStack$testB.overflow, steps = _this$rootStack$testB.steps;
-
-              if (!overflow) {
-                _context4.next = 8;
-                break;
-              }
-
-              _url = options.overflowRedirect || routeConfig.indexUrl;
-              env.setTimeout(function () {
-                return _this6.relaunch(_url, root);
-              }, 0);
-              return _context4.abrupt("return");
-
-            case 8:
-              key = record.getKey();
-              pagename = record.pagename;
-              params = deepMerge({}, record.params, options.payload);
-              routeState = {
-                key: key,
-                pagename: pagename,
-                params: params,
-                action: 'BACK'
-              };
-              _context4.next = 14;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-
-            case 14:
-              _context4.next = 16;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-
-            case 16:
-              if (steps[0]) {
-                root = true;
-                this.rootStack.back(steps[0]);
-              }
-
-              if (steps[1]) {
-                this.rootStack.getCurrentItem().back(steps[1]);
-              }
-
-              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-              if (!(!nativeCaller && notifyNativeRouter)) {
-                _context4.next = 23;
-                break;
-              }
-
-              _context4.next = 22;
-              return this.nativeRouter.execute('back', function () {
-                return _this6.locationToNativeData(routeState);
-              }, n, key);
-
-            case 22:
-              nativeData = _context4.sent;
-
-            case 23:
-              this._nativeData = nativeData;
-              this.routeState = routeState;
-              this._internalUrl = eluxLocationToEluxUrl({
-                pathname: routeState.pagename,
-                params: routeState.params
-              });
-              cloneState = deepClone(routeState);
-              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              _context4.next = 30;
-              return this.dispatch('change', {
-                routeState: routeState,
-                root: root
-              });
-
-            case 30:
-            case "end":
-              return _context4.stop();
-          }
-        }
-      }, _callee4, this);
-    }));
-
-    function _back(_x10, _x11, _x12, _x13) {
-      return _back2.apply(this, arguments);
-    }
-
-    return _back;
-  }();
-
-  _proto2.executeTask = function executeTask(task) {
-    this._curTask = task;
-    task().finally(this._taskComplete);
-  };
-
-  _proto2.addTask = function addTask(execute, nonblocking) {
-    var _this7 = this;
-
-    if (env.isServer) {
-      return;
-    }
-
-    if (this._curTask && !nonblocking) {
-      return;
-    }
-
-    return new Promise(function (resolve, reject) {
-      var task = function task() {
-        return execute().then(resolve, reject);
-      };
-
-      if (_this7._curTask) {
-        _this7._taskList.push(task);
-      } else {
-        _this7.executeTask(task);
-      }
-    });
-  };
-
-  _proto2.destroy = function destroy() {
-    this.nativeRouter.destroy();
-  };
-
-  return BaseEluxRouter;
-}(MultipleDispatcher);
-var RouteActionTypes = {
-  TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",
-  BeforeRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "BeforeRouteChange"
-};
-function beforeRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.BeforeRouteChange,
-    payload: [routeState]
-  };
-}
-function testRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
-  };
-}
-var defaultNativeLocationMap = {
-  in: function _in(nativeLocation) {
-    return nativeLocation;
-  },
-  out: function out(nativeLocation) {
-    return nativeLocation;
-  }
-};
-function createRouteModule(moduleName, pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
-  if (nativeLocationMap === void 0) {
-    nativeLocationMap = defaultNativeLocationMap;
-  }
-
-  if (notfoundPagename === void 0) {
-    notfoundPagename = '/404';
-  }
-
-  if (paramsKey === void 0) {
-    paramsKey = '_';
-  }
-
-  var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  var routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
-  return _extends({}, routeModule, {
-    locationTransform: locationTransform
-  });
-}
-
-var appMeta = {
-  router: null,
-  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
-};
-var appConfig = {
-  loadComponent: null,
-  useRouter: null,
-  useStore: null
-};
-var setAppConfig = buildConfigSetter(appConfig);
-function setUserConfig(conf) {
-  setCoreConfig(conf);
-  setRouteConfig(conf);
-}
-function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
-  }
-
-  defineModuleGetter(moduleGetter);
-  var routeModule = getModule(routeConfig.RouteModuleName);
-  return {
-    useStore: function useStore(_ref) {
-      var storeCreator = _ref.storeCreator,
-          storeOptions = _ref.storeOptions;
-      return Object.assign(ins, {
-        render: function (_render) {
-          function render() {
-            return _render.apply(this, arguments);
-          }
-
-          render.toString = function () {
-            return _render.toString();
-          };
-
-          return render;
-        }(function () {
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          var baseStore = storeCreator(storeOptions);
-
-          var _initApp = initApp(router, baseStore, middlewares),
-              store = _initApp.store;
-
-          var context = render(store, {
-            deps: {},
-            router: router,
-            documentHead: ''
-          }, ins);
-          return {
-            store: store,
-            context: context
-          };
-        })
-      });
-    }
-  };
-}
-function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
-  }
-
-  defineModuleGetter(moduleGetter);
-  var routeModule = getModule(routeConfig.RouteModuleName);
-  return {
-    useStore: function useStore(_ref2) {
-      var storeCreator = _ref2.storeCreator,
-          storeOptions = _ref2.storeOptions;
-      return Object.assign(ins, {
-        render: function (_render2) {
-          function render(_x) {
-            return _render2.apply(this, arguments);
-          }
-
-          render.toString = function () {
-            return _render2.toString();
-          };
-
-          return render;
-        }(function (_temp) {
-          var _ref3 = _temp === void 0 ? {} : _temp,
-              _ref3$id = _ref3.id,
-              id = _ref3$id === void 0 ? 'root' : _ref3$id,
-              _ref3$ssrKey = _ref3.ssrKey,
-              ssrKey = _ref3$ssrKey === void 0 ? 'eluxInitStore' : _ref3$ssrKey,
-              _ref3$viewName = _ref3.viewName,
-              viewName = _ref3$viewName === void 0 ? 'main' : _ref3$viewName;
-
-          var _ref4 = env[ssrKey] || {},
-              state = _ref4.state,
-              _ref4$components = _ref4.components,
-              components = _ref4$components === void 0 ? [] : _ref4$components;
-
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          return router.initialize.then(function (routeState) {
-            var _extends2;
-
-            storeOptions.initState = _extends({}, storeOptions.initState, (_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
-            var baseStore = storeCreator(storeOptions);
-
-            var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
-                store = _initApp2.store,
-                AppView = _initApp2.AppView,
-                setup = _initApp2.setup;
-
-            return setup.then(function () {
-              render(id, AppView, store, {
-                deps: {},
-                router: router,
-                documentHead: ''
-              }, !!env[ssrKey], ins);
-              return store;
-            });
-          });
-        })
-      });
-    }
-  };
-}
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
-  }
-
-  defineModuleGetter(moduleGetter);
-  var routeModule = getModule(routeConfig.RouteModuleName);
-  return {
-    useStore: function useStore(_ref5) {
-      var storeCreator = _ref5.storeCreator,
-          storeOptions = _ref5.storeOptions;
-      return Object.assign(ins, {
-        render: function (_render3) {
-          function render(_x2) {
-            return _render3.apply(this, arguments);
-          }
-
-          render.toString = function () {
-            return _render3.toString();
-          };
-
-          return render;
-        }(function (_temp2) {
-          var _ref6 = _temp2 === void 0 ? {} : _temp2,
-              _ref6$id = _ref6.id,
-              id = _ref6$id === void 0 ? 'root' : _ref6$id,
-              _ref6$ssrKey = _ref6.ssrKey,
-              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
-              _ref6$viewName = _ref6.viewName,
-              viewName = _ref6$viewName === void 0 ? 'main' : _ref6$viewName;
-
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          return router.initialize.then(function (routeState) {
-            var _extends3;
-
-            storeOptions.initState = _extends({}, storeOptions.initState, (_extends3 = {}, _extends3[routeConfig.RouteModuleName] = routeState, _extends3));
-            var baseStore = storeCreator(storeOptions);
-
-            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
-                store = _initApp3.store,
-                AppView = _initApp3.AppView,
-                setup = _initApp3.setup;
-
-            return setup.then(function () {
-              var state = store.getState();
-              var eluxContext = {
-                deps: {},
-                router: router,
-                documentHead: ''
-              };
-              return render(id, AppView, store, eluxContext, ins).then(function (html) {
-                var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
-
-                if (match) {
-                  return appMeta.SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
-                    state: state,
-                    components: Object.keys(eluxContext.deps)
-                  }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
-                }
-
-                return html;
-              });
-            });
-          });
-        })
-      });
-    }
-  };
-}
-function patchActions(typeName, json) {
-  if (json) {
-    getRootModuleAPI(JSON.parse(json));
-  }
-}
-function getApp() {
-  var modules = getRootModuleAPI();
-  return {
-    GetActions: function GetActions() {
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      return args.reduce(function (prev, moduleName) {
-        prev[moduleName] = modules[moduleName].actions;
-        return prev;
-      }, {});
-    },
-    useRouter: appConfig.useRouter,
-    useStore: appConfig.useStore,
-    GetRouter: function GetRouter() {
-      if (env.isServer) {
-        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
-      }
-
-      return appMeta.router;
-    },
-    LoadComponent: appConfig.loadComponent,
-    Modules: modules,
-    Pagenames: routeMeta.pagenames
-  };
-}
-
-function isAbsolute(pathname) {
-  return pathname.charAt(0) === '/';
-} // About 1.5x faster than the two-arg version of Array#splice()
-
-
-function spliceOne(list, index) {
-  for (var i = index, k = i + 1, n = list.length; k < n; i += 1, k += 1) {
-    list[i] = list[k];
-  }
-
-  list.pop();
-} // This implementation is based heavily on node's url.parse
-
-
-function resolvePathname(to, from) {
-  if (from === undefined) from = '';
-  var toParts = to && to.split('/') || [];
-  var fromParts = from && from.split('/') || [];
-  var isToAbs = to && isAbsolute(to);
-  var isFromAbs = from && isAbsolute(from);
-  var mustEndAbs = isToAbs || isFromAbs;
-
-  if (to && isAbsolute(to)) {
-    // to is absolute
-    fromParts = toParts;
-  } else if (toParts.length) {
-    // to is relative, drop the filename
-    fromParts.pop();
-    fromParts = fromParts.concat(toParts);
-  }
-
-  if (!fromParts.length) return '/';
-  var hasTrailingSlash;
-
-  if (fromParts.length) {
-    var last = fromParts[fromParts.length - 1];
-    hasTrailingSlash = last === '.' || last === '..' || last === '';
-  } else {
-    hasTrailingSlash = false;
-  }
-
-  var up = 0;
-
-  for (var i = fromParts.length; i >= 0; i--) {
-    var part = fromParts[i];
-
-    if (part === '.') {
-      spliceOne(fromParts, i);
-    } else if (part === '..') {
-      spliceOne(fromParts, i);
-      up++;
-    } else if (up) {
-      spliceOne(fromParts, i);
-      up--;
-    }
-  }
-
-  if (!mustEndAbs) for (; up--; up) fromParts.unshift('..');
-  if (mustEndAbs && fromParts[0] !== '' && (!fromParts[0] || !isAbsolute(fromParts[0]))) fromParts.unshift('');
-  var result = fromParts.join('/');
-  if (hasTrailingSlash && result.substr(-1) !== '/') result += '/';
-  return result;
-}
-
-var isProduction$1 = process.env.NODE_ENV === 'production';
-
-function warning$2(condition, message) {
-  if (!isProduction$1) {
-    if (condition) {
-      return;
-    }
-
-    var text = "Warning: " + message;
-
-    if (typeof console !== 'undefined') {
-      console.warn(text);
-    }
-
-    try {
-      throw Error(text);
-    } catch (x) {}
-  }
-}
-
-var isProduction = process.env.NODE_ENV === 'production';
-var prefix = 'Invariant failed';
-
-function invariant(condition, message) {
-  if (condition) {
-    return;
-  }
-
-  if (isProduction) {
-    throw new Error(prefix);
-  }
-
-  throw new Error(prefix + ": " + (message || ''));
-}
-
-function addLeadingSlash(path) {
-  return path.charAt(0) === '/' ? path : '/' + path;
-}
-
-function hasBasename(path, prefix) {
-  return path.toLowerCase().indexOf(prefix.toLowerCase()) === 0 && '/?#'.indexOf(path.charAt(prefix.length)) !== -1;
-}
-
-function stripBasename(path, prefix) {
-  return hasBasename(path, prefix) ? path.substr(prefix.length) : path;
-}
-
-function stripTrailingSlash(path) {
-  return path.charAt(path.length - 1) === '/' ? path.slice(0, -1) : path;
-}
-
-function parsePath(path) {
-  var pathname = path || '/';
-  var search = '';
-  var hash = '';
-  var hashIndex = pathname.indexOf('#');
-
-  if (hashIndex !== -1) {
-    hash = pathname.substr(hashIndex);
-    pathname = pathname.substr(0, hashIndex);
-  }
-
-  var searchIndex = pathname.indexOf('?');
-
-  if (searchIndex !== -1) {
-    search = pathname.substr(searchIndex);
-    pathname = pathname.substr(0, searchIndex);
-  }
-
-  return {
-    pathname: pathname,
-    search: search === '?' ? '' : search,
-    hash: hash === '#' ? '' : hash
-  };
-}
-
-function createPath(location) {
-  var pathname = location.pathname,
-      search = location.search,
-      hash = location.hash;
-  var path = pathname || '/';
-  if (search && search !== '?') path += search.charAt(0) === '?' ? search : "?" + search;
-  if (hash && hash !== '#') path += hash.charAt(0) === '#' ? hash : "#" + hash;
-  return path;
-}
-
-function createLocation(path, state, key, currentLocation) {
-  var location;
-
-  if (typeof path === 'string') {
-    // Two-arg form: push(path, state)
-    location = parsePath(path);
-    location.state = state;
-  } else {
-    // One-arg form: push(location)
-    location = _extends({}, path);
-    if (location.pathname === undefined) location.pathname = '';
-
-    if (location.search) {
-      if (location.search.charAt(0) !== '?') location.search = '?' + location.search;
-    } else {
-      location.search = '';
-    }
-
-    if (location.hash) {
-      if (location.hash.charAt(0) !== '#') location.hash = '#' + location.hash;
-    } else {
-      location.hash = '';
-    }
-
-    if (state !== undefined && location.state === undefined) location.state = state;
-  }
-
-  try {
-    location.pathname = decodeURI(location.pathname);
-  } catch (e) {
-    if (e instanceof URIError) {
-      throw new URIError('Pathname "' + location.pathname + '" could not be decoded. ' + 'This is likely caused by an invalid percent-encoding.');
-    } else {
-      throw e;
-    }
-  }
-
-  if (key) location.key = key;
-
-  if (currentLocation) {
-    // Resolve incomplete/relative pathname relative to current location.
-    if (!location.pathname) {
-      location.pathname = currentLocation.pathname;
-    } else if (location.pathname.charAt(0) !== '/') {
-      location.pathname = resolvePathname(location.pathname, currentLocation.pathname);
-    }
-  } else {
-    // When there is no prior location and pathname is empty, set it to /
-    if (!location.pathname) {
-      location.pathname = '/';
-    }
-  }
-
-  return location;
-}
-
-function createTransitionManager() {
-  var prompt = null;
-
-  function setPrompt(nextPrompt) {
-    process.env.NODE_ENV !== "production" ? warning$2(prompt == null, 'A history supports only one prompt at a time') : void 0;
-    prompt = nextPrompt;
-    return function () {
-      if (prompt === nextPrompt) prompt = null;
-    };
-  }
-
-  function confirmTransitionTo(location, action, getUserConfirmation, callback) {
-    // TODO: If another transition starts while we're still confirming
-    // the previous one, we may end up in a weird state. Figure out the
-    // best way to handle this.
-    if (prompt != null) {
-      var result = typeof prompt === 'function' ? prompt(location, action) : prompt;
-
-      if (typeof result === 'string') {
-        if (typeof getUserConfirmation === 'function') {
-          getUserConfirmation(result, callback);
-        } else {
-          process.env.NODE_ENV !== "production" ? warning$2(false, 'A history needs a getUserConfirmation function in order to use a prompt message') : void 0;
-          callback(true);
-        }
-      } else {
-        // Return false from a transition hook to cancel the transition.
-        callback(result !== false);
-      }
-    } else {
-      callback(true);
-    }
-  }
-
-  var listeners = [];
-
-  function appendListener(fn) {
-    var isActive = true;
-
-    function listener() {
-      if (isActive) fn.apply(void 0, arguments);
-    }
-
-    listeners.push(listener);
-    return function () {
-      isActive = false;
-      listeners = listeners.filter(function (item) {
-        return item !== listener;
-      });
-    };
-  }
-
-  function notifyListeners() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    listeners.forEach(function (listener) {
-      return listener.apply(void 0, args);
-    });
-  }
-
-  return {
-    setPrompt: setPrompt,
-    confirmTransitionTo: confirmTransitionTo,
-    appendListener: appendListener,
-    notifyListeners: notifyListeners
-  };
-}
-
-var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
-
-function getConfirmation(message, callback) {
-  callback(window.confirm(message)); // eslint-disable-line no-alert
-}
-/**
- * Returns true if the HTML5 history API is supported. Taken from Modernizr.
- *
- * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
- * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
- * changed to avoid false negatives for Windows Phones: https://github.com/reactjs/react-router/issues/586
- */
-
-
-function supportsHistory() {
-  var ua = window.navigator.userAgent;
-  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) return false;
-  return window.history && 'pushState' in window.history;
-}
-/**
- * Returns true if browser fires popstate on hash change.
- * IE10 and IE11 do not.
- */
-
-
-function supportsPopStateOnHashChange() {
-  return window.navigator.userAgent.indexOf('Trident') === -1;
-}
-/**
- * Returns true if a given popstate event is an extraneous WebKit event.
- * Accounts for the fact that Chrome on iOS fires real popstate events
- * containing undefined state when pressing the back button.
- */
-
-
-function isExtraneousPopstateEvent(event) {
-  return event.state === undefined && navigator.userAgent.indexOf('CriOS') === -1;
-}
-
-var PopStateEvent = 'popstate';
-var HashChangeEvent = 'hashchange';
-
-function getHistoryState() {
-  try {
-    return window.history.state || {};
-  } catch (e) {
-    // IE 11 sometimes throws when accessing window.history.state
-    // See https://github.com/ReactTraining/history/pull/289
-    return {};
-  }
-}
-/**
- * Creates a history object that uses the HTML5 history API including
- * pushState, replaceState, and the popstate event.
- */
-
-
-function createBrowserHistory(props) {
-  if (props === void 0) {
-    props = {};
-  }
-
-  !canUseDOM ? process.env.NODE_ENV !== "production" ? invariant(false, 'Browser history needs a DOM') : invariant(false) : void 0;
-  var globalHistory = window.history;
-  var canUseHistory = supportsHistory();
-  var needsHashChangeListener = !supportsPopStateOnHashChange();
-  var _props = props,
-      _props$forceRefresh = _props.forceRefresh,
-      forceRefresh = _props$forceRefresh === void 0 ? false : _props$forceRefresh,
-      _props$getUserConfirm = _props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
-      _props$keyLength = _props.keyLength,
-      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
-  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
-
-  function getDOMLocation(historyState) {
-    var _ref = historyState || {},
-        key = _ref.key,
-        state = _ref.state;
-
-    var _window$location = window.location,
-        pathname = _window$location.pathname,
-        search = _window$location.search,
-        hash = _window$location.hash;
-    var path = pathname + search + hash;
-    process.env.NODE_ENV !== "production" ? warning$2(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
-    if (basename) path = stripBasename(path, basename);
-    return createLocation(path, state, key);
-  }
-
-  function createKey() {
-    return Math.random().toString(36).substr(2, keyLength);
-  }
-
-  var transitionManager = createTransitionManager();
-
-  function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = globalHistory.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  }
-
-  function handlePopState(event) {
-    // Ignore extraneous popstate events in WebKit.
-    if (isExtraneousPopstateEvent(event)) return;
-    handlePop(getDOMLocation(event.state));
-  }
-
-  function handleHashChange() {
-    handlePop(getDOMLocation(getHistoryState()));
-  }
-
-  var forceNextPop = false;
-
-  function handlePop(location) {
-    if (forceNextPop) {
-      forceNextPop = false;
-      setState();
-    } else {
-      var action = 'POP';
-      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-        if (ok) {
-          setState({
-            action: action,
-            location: location
-          });
-        } else {
-          revertPop(location);
-        }
-      });
-    }
-  }
-
-  function revertPop(fromLocation) {
-    var toLocation = history.location; // TODO: We could probably make this more reliable by
-    // keeping a list of keys we've seen in sessionStorage.
-    // Instead, we just default to 0 for keys we don't know.
-
-    var toIndex = allKeys.indexOf(toLocation.key);
-    if (toIndex === -1) toIndex = 0;
-    var fromIndex = allKeys.indexOf(fromLocation.key);
-    if (fromIndex === -1) fromIndex = 0;
-    var delta = toIndex - fromIndex;
-
-    if (delta) {
-      forceNextPop = true;
-      go(delta);
-    }
-  }
-
-  var initialLocation = getDOMLocation(getHistoryState());
-  var allKeys = [initialLocation.key]; // Public interface
-
-  function createHref(location) {
-    return basename + createPath(location);
-  }
-
-  function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'PUSH';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var href = createHref(location);
-      var key = location.key,
-          state = location.state;
-
-      if (canUseHistory) {
-        globalHistory.pushState({
-          key: key,
-          state: state
-        }, null, href);
-
-        if (forceRefresh) {
-          window.location.href = href;
-        } else {
-          var prevIndex = allKeys.indexOf(history.location.key);
-          var nextKeys = allKeys.slice(0, prevIndex + 1);
-          nextKeys.push(location.key);
-          allKeys = nextKeys;
-          setState({
-            action: action,
-            location: location
-          });
-        }
-      } else {
-        process.env.NODE_ENV !== "production" ? warning$2(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history') : void 0;
-        window.location.href = href;
-      }
-    });
-  }
-
-  function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$2(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'REPLACE';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var href = createHref(location);
-      var key = location.key,
-          state = location.state;
-
-      if (canUseHistory) {
-        globalHistory.replaceState({
-          key: key,
-          state: state
-        }, null, href);
-
-        if (forceRefresh) {
-          window.location.replace(href);
-        } else {
-          var prevIndex = allKeys.indexOf(history.location.key);
-          if (prevIndex !== -1) allKeys[prevIndex] = location.key;
-          setState({
-            action: action,
-            location: location
-          });
-        }
-      } else {
-        process.env.NODE_ENV !== "production" ? warning$2(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history') : void 0;
-        window.location.replace(href);
-      }
-    });
-  }
-
-  function go(n) {
-    globalHistory.go(n);
-  }
-
-  function goBack() {
-    go(-1);
-  }
-
-  function goForward() {
-    go(1);
-  }
-
-  var listenerCount = 0;
-
-  function checkDOMListeners(delta) {
-    listenerCount += delta;
-
-    if (listenerCount === 1 && delta === 1) {
-      window.addEventListener(PopStateEvent, handlePopState);
-      if (needsHashChangeListener) window.addEventListener(HashChangeEvent, handleHashChange);
-    } else if (listenerCount === 0) {
-      window.removeEventListener(PopStateEvent, handlePopState);
-      if (needsHashChangeListener) window.removeEventListener(HashChangeEvent, handleHashChange);
-    }
-  }
-
-  var isBlocked = false;
-
-  function block(prompt) {
-    if (prompt === void 0) {
-      prompt = false;
-    }
-
-    var unblock = transitionManager.setPrompt(prompt);
-
-    if (!isBlocked) {
-      checkDOMListeners(1);
-      isBlocked = true;
-    }
-
-    return function () {
-      if (isBlocked) {
-        isBlocked = false;
-        checkDOMListeners(-1);
-      }
-
-      return unblock();
-    };
-  }
-
-  function listen(listener) {
-    var unlisten = transitionManager.appendListener(listener);
-    checkDOMListeners(1);
-    return function () {
-      checkDOMListeners(-1);
-      unlisten();
-    };
-  }
-
-  var history = {
-    length: globalHistory.length,
-    action: 'POP',
-    location: initialLocation,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    block: block,
-    listen: listen
-  };
-  return history;
-}
-
-setRouteConfig({
-  notifyNativeRouter: {
-    root: true,
-    internal: true
-  }
-});
-
-function createServerHistory() {
-  return {
-    push: function push() {
-      return undefined;
-    },
-    replace: function replace() {
-      return undefined;
-    },
-    go: function go() {
-      return undefined;
-    },
-    block: function block() {
-      return function () {
-        return undefined;
-      };
-    }
-  };
-}
-
-var BrowserNativeRouter = function (_BaseNativeRouter) {
-  _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
-
-  function BrowserNativeRouter(url) {
-    var _this;
-
-    _this = _BaseNativeRouter.call(this) || this;
-
-    _defineProperty(_assertThisInitialized(_this), "_unlistenHistory", void 0);
-
-    _defineProperty(_assertThisInitialized(_this), "_history", void 0);
-
-    if (env.isServer) {
-      _this._history = createServerHistory();
-    } else {
-      _this._history = createBrowserHistory();
-    }
-
-    _this._unlistenHistory = _this._history.block(function (location, action) {
-      if (action === 'POP') {
-        env.setTimeout(function () {
-          return _this.eluxRouter.back(1);
-        }, 100);
-        return false;
-      }
-
-      var key = _this.getKey(location);
-
-      var changed = _this.onChange(key);
-
-      if (changed) {
-        var _location$pathname = location.pathname,
-            pathname = _location$pathname === void 0 ? '' : _location$pathname,
-            _location$search = location.search,
-            search = _location$search === void 0 ? '' : _location$search,
-            _location$hash = location.hash,
-            hash = _location$hash === void 0 ? '' : _location$hash;
-
-        var _url = [pathname, search, hash].join('');
-
-        var _callback;
-
-        if (action === 'REPLACE') {
-          _callback = function _callback() {
-            return _this.eluxRouter.replace(_url);
-          };
-        } else if (action === 'PUSH') {
-          _callback = function _callback() {
-            return _this.eluxRouter.push(_url);
-          };
-        } else {
-          _callback = function _callback() {
-            return _this.eluxRouter.relaunch(_url);
-          };
-        }
-
-        env.setTimeout(_callback, 100);
-        return false;
-      }
-
-      return undefined;
-    });
-    return _this;
-  }
-
-  var _proto = BrowserNativeRouter.prototype;
-
-  _proto.getKey = function getKey(location) {
-    return location.state || '';
-  };
-
-  _proto.push = function push(getNativeData, key) {
-    if (!env.isServer) {
-      var nativeData = getNativeData();
-
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
-    }
-
-    return undefined;
-  };
-
-  _proto.replace = function replace(getNativeData, key) {
-    if (!env.isServer) {
-      var nativeData = getNativeData();
-
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
-    }
-
-    return undefined;
-  };
-
-  _proto.relaunch = function relaunch(getNativeData, key) {
-    if (!env.isServer) {
-      var nativeData = getNativeData();
-
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
-    }
-
-    return undefined;
-  };
-
-  _proto.back = function back(getNativeData, n, key) {
-    if (!env.isServer) {
-      var nativeData = getNativeData();
-
-      this._history.replace(nativeData.nativeUrl, key);
-
-      return nativeData;
-    }
-
-    return undefined;
-  };
-
-  _proto.toOutside = function toOutside(url) {
-    this._history.push(url, '');
-  };
-
-  _proto.destroy = function destroy() {
-    this._unlistenHistory();
-  };
-
-  return BrowserNativeRouter;
-}(BaseNativeRouter);
-var EluxRouter = function (_BaseEluxRouter) {
-  _inheritsLoose(EluxRouter, _BaseEluxRouter);
-
-  function EluxRouter(url, browserNativeRouter, locationTransform, nativeData) {
-    return _BaseEluxRouter.call(this, url, browserNativeRouter, locationTransform, nativeData) || this;
-  }
-
-  return EluxRouter;
-}(BaseEluxRouter);
-function createRouter(url, locationTransform, nativeData) {
-  var browserNativeRouter = new BrowserNativeRouter(url);
-  var router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
-  return router;
-}
-
-setAppConfig({
-  loadComponent: loadComponent,
-  useRouter: useRouter
-});
-function setConfig(conf) {
-  setReactComponentsConfig(conf);
-  setUserConfig(conf);
-}
-var createApp = function createApp(moduleGetter, middlewares) {
-  var url = [location.pathname, location.search, location.hash].join('');
-  return createBaseApp({}, function (locationTransform) {
-    return createRouter(url, locationTransform, {});
-  }, renderToDocument, moduleGetter, middlewares);
-};
-var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
-  return createBaseSSR({}, function (locationTransform) {
-    return createRouter(url, locationTransform, nativeData);
-  }, renderToString, moduleGetter, middlewares);
-};
 
 /** @license React v16.13.1
  * react-is.production.min.js
@@ -7682,7 +4324,7 @@ function bindActionCreators(actionCreators, dispatch) {
  * @param {any} obj The object to inspect.
  * @returns {boolean} True if the argument appears to be a plain object.
  */
-function isPlainObject$1(obj) {
+function isPlainObject$2(obj) {
   if (typeof obj !== 'object' || obj === null) return false;
   var proto = Object.getPrototypeOf(obj);
   if (proto === null) return true;
@@ -7701,7 +4343,7 @@ function isPlainObject$1(obj) {
  * @param {String} message The warning message.
  * @returns {void}
  */
-function warning$1(message) {
+function warning$2(message) {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
     console.error(message);
@@ -7721,8 +4363,8 @@ function warning$1(message) {
 }
 
 function verifyPlainObject(value, displayName, methodName) {
-  if (!isPlainObject$1(value)) {
-    warning$1(methodName + "() in " + displayName + " must return a plain object. Instead received " + value + ".");
+  if (!isPlainObject$2(value)) {
+    warning$2(methodName + "() in " + displayName + " must return a plain object. Instead received " + value + ".");
   }
 }
 
@@ -7857,7 +4499,7 @@ function verify(selector, methodName, displayName) {
     throw new Error("Unexpected value for " + methodName + " in " + displayName + ".");
   } else if (methodName === 'mapStateToProps' || methodName === 'mapDispatchToProps') {
     if (!Object.prototype.hasOwnProperty.call(selector, 'dependsOnOwnProps')) {
-      warning$1("The selector for " + methodName + " of " + displayName + " did not specify a value for dependsOnOwnProps.");
+      warning$2("The selector for " + methodName + " of " + displayName + " did not specify a value for dependsOnOwnProps.");
     }
   }
 }
@@ -8337,7 +4979,7 @@ var ActionTypes = {
  * @returns {boolean} True if the argument appears to be a plain object.
  */
 
-function isPlainObject(obj) {
+function isPlainObject$1(obj) {
   if (typeof obj !== 'object' || obj === null) return false;
   var proto = obj;
 
@@ -8570,7 +5212,7 @@ function createStore(reducer, preloadedState, enhancer) {
 
 
   function dispatch(action) {
-    if (!isPlainObject(action)) {
+    if (!isPlainObject$1(action)) {
       throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(7) : "Actions must be plain objects. Instead, the actual type was: '" + kindOf(action) + "'. You may need to add middleware to your store setup to handle dispatching other values, such as 'redux-thunk' to handle dispatching functions. See https://redux.js.org/tutorials/fundamentals/part-4-store#middleware and https://redux.js.org/tutorials/fundamentals/part-6-async-logic#using-the-redux-thunk-middleware for examples.");
     }
 
@@ -8688,7 +5330,7 @@ function createStore(reducer, preloadedState, enhancer) {
  */
 
 
-function warning(message) {
+function warning$1(message) {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
     console.error(message);
@@ -8793,7 +5435,7 @@ function applyMiddleware() {
 function isCrushed() {}
 
 if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
-  warning('You are currently using minified code outside of NODE_ENV === "production". ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or setting mode to production in webpack (https://webpack.js.org/concepts/mode/) ' + 'to ensure you have the correct code for your production build.');
+  warning$1('You are currently using minified code outside of NODE_ENV === "production". ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or setting mode to production in webpack (https://webpack.js.org/concepts/mode/) ' + 'to ensure you have the correct code for your production build.');
 }
 
 var reduxReducer = function reduxReducer(state, action) {
@@ -8864,6 +5506,3360 @@ var connectRedux = function connectRedux() {
   };
 };
 
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var runtime_1 = createCommonjsModule(function (module) {
+var runtime = function (exports) {
+
+  var Op = Object.prototype;
+  var hasOwn = Op.hasOwnProperty;
+  var undefined$1; // More compressible than void 0.
+
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+  function define(obj, key, value) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+    return obj[key];
+  }
+
+  try {
+    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+    define({}, "");
+  } catch (err) {
+    define = function (obj, key, value) {
+      return obj[key] = value;
+    };
+  }
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []); // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+    return generator;
+  }
+
+  exports.wrap = wrap; // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
+
+  function tryCatch(fn, obj, arg) {
+    try {
+      return {
+        type: "normal",
+        arg: fn.call(obj, arg)
+      };
+    } catch (err) {
+      return {
+        type: "throw",
+        arg: err
+      };
+    }
+  }
+
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed"; // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
+
+  var ContinueSentinel = {}; // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+
+  function Generator() {}
+
+  function GeneratorFunction() {}
+
+  function GeneratorFunctionPrototype() {} // This is a polyfill for %IteratorPrototype% for environments that
+  // don't natively support it.
+
+
+  var IteratorPrototype = {};
+
+  IteratorPrototype[iteratorSymbol] = function () {
+    return this;
+  };
+
+  var getProto = Object.getPrototypeOf;
+  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+
+  if (NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+    // This environment has a native %IteratorPrototype%; use it instead
+    // of the polyfill.
+    IteratorPrototype = NativeIteratorPrototype;
+  }
+
+  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
+  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+  GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"); // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function (method) {
+      define(prototype, method, function (arg) {
+        return this._invoke(method, arg);
+      });
+    });
+  }
+
+  exports.isGeneratorFunction = function (genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
+    // do is to check its .name property.
+    (ctor.displayName || ctor.name) === "GeneratorFunction" : false;
+  };
+
+  exports.mark = function (genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+      define(genFun, toStringTagSymbol, "GeneratorFunction");
+    }
+
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  }; // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+  // meant to be awaited.
+
+
+  exports.awrap = function (arg) {
+    return {
+      __await: arg
+    };
+  };
+
+  function AsyncIterator(generator, PromiseImpl) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+
+        if (value && typeof value === "object" && hasOwn.call(value, "__await")) {
+          return PromiseImpl.resolve(value.__await).then(function (value) {
+            invoke("next", value, resolve, reject);
+          }, function (err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return PromiseImpl.resolve(value).then(function (unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration.
+          result.value = unwrapped;
+          resolve(result);
+        }, function (error) {
+          // If a rejected Promise was yielded, throw the rejection back
+          // into the async generator function so it can be handled there.
+          return invoke("throw", error, resolve, reject);
+        });
+      }
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new PromiseImpl(function (resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise = // If enqueue has been called before, then we want to wait until
+      // all previous Promises have been resolved before calling invoke,
+      // so that results are always delivered in the correct order. If
+      // enqueue has not been called before, then it is important to
+      // call invoke immediately, without waiting on a callback to fire,
+      // so that the async generator function has the opportunity to do
+      // any necessary setup in a predictable way. This predictability
+      // is why the Promise constructor synchronously invokes its
+      // executor callback, and why async functions synchronously
+      // execute code before the first await. Since we implement simple
+      // async functions in terms of async generators, it is especially
+      // important to get this right, even though it requires care.
+      previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, // Avoid propagating failures to Promises returned by later
+      // invocations of the iterator.
+      callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
+    } // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+
+
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+
+  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+    return this;
+  };
+
+  exports.AsyncIterator = AsyncIterator; // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+
+  exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+    if (PromiseImpl === void 0) PromiseImpl = Promise;
+    var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl);
+    return exports.isGeneratorFunction(outerFn) ? iter // If outerFn is a generator, return the full iterator.
+    : iter.next().then(function (result) {
+      return result.done ? result.value : iter.next();
+    });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        } // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+
+
+        return doneResult();
+      }
+
+      context.method = method;
+      context.arg = arg;
+
+      while (true) {
+        var delegate = context.delegate;
+
+        if (delegate) {
+          var delegateResult = maybeInvokeDelegate(delegate, context);
+
+          if (delegateResult) {
+            if (delegateResult === ContinueSentinel) continue;
+            return delegateResult;
+          }
+        }
+
+        if (context.method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = context.arg;
+        } else if (context.method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw context.arg;
+          }
+
+          context.dispatchException(context.arg);
+        } else if (context.method === "return") {
+          context.abrupt("return", context.arg);
+        }
+
+        state = GenStateExecuting;
+        var record = tryCatch(innerFn, self, context);
+
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done ? GenStateCompleted : GenStateSuspendedYield;
+
+          if (record.arg === ContinueSentinel) {
+            continue;
+          }
+
+          return {
+            value: record.arg,
+            done: context.done
+          };
+        } else if (record.type === "throw") {
+          state = GenStateCompleted; // Dispatch the exception by looping back around to the
+          // context.dispatchException(context.arg) call above.
+
+          context.method = "throw";
+          context.arg = record.arg;
+        }
+      }
+    };
+  } // Call delegate.iterator[context.method](context.arg) and handle the
+  // result, either by returning a { value, done } result from the
+  // delegate iterator, or by modifying context.method and context.arg,
+  // setting context.delegate to null, and returning the ContinueSentinel.
+
+
+  function maybeInvokeDelegate(delegate, context) {
+    var method = delegate.iterator[context.method];
+
+    if (method === undefined$1) {
+      // A .throw or .return when the delegate iterator has no .throw
+      // method always terminates the yield* loop.
+      context.delegate = null;
+
+      if (context.method === "throw") {
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (delegate.iterator["return"]) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined$1;
+          maybeInvokeDelegate(delegate, context);
+
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
+          }
+        }
+
+        context.method = "throw";
+        context.arg = new TypeError("The iterator does not provide a 'throw' method");
+      }
+
+      return ContinueSentinel;
+    }
+
+    var record = tryCatch(method, delegate.iterator, context.arg);
+
+    if (record.type === "throw") {
+      context.method = "throw";
+      context.arg = record.arg;
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    var info = record.arg;
+
+    if (!info) {
+      context.method = "throw";
+      context.arg = new TypeError("iterator result is not an object");
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    if (info.done) {
+      // Assign the result of the finished delegate to the temporary
+      // variable specified by delegate.resultName (see delegateYield).
+      context[delegate.resultName] = info.value; // Resume execution at the desired location (see delegateYield).
+
+      context.next = delegate.nextLoc; // If context.method was "throw" but the delegate handled the
+      // exception, let the outer generator proceed normally. If
+      // context.method was "next", forget context.arg since it has been
+      // "consumed" by the delegate iterator. If context.method was
+      // "return", allow the original .return call to continue in the
+      // outer generator.
+
+      if (context.method !== "return") {
+        context.method = "next";
+        context.arg = undefined$1;
+      }
+    } else {
+      // Re-yield the result returned by the delegate method.
+      return info;
+    } // The delegate iterator is finished, so forget it and continue with
+    // the outer generator.
+
+
+    context.delegate = null;
+    return ContinueSentinel;
+  } // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+
+
+  defineIteratorMethods(Gp);
+  define(Gp, toStringTagSymbol, "Generator"); // A Generator should always return itself as the iterator object when the
+  // @@iterator function is called on it. Some browsers' implementations of the
+  // iterator prototype chain incorrectly implement this, causing the Generator
+  // object to not be returned from this call. This ensures that doesn't happen.
+  // See https://github.com/facebook/regenerator/issues/274 for more details.
+
+  Gp[iteratorSymbol] = function () {
+    return this;
+  };
+
+  Gp.toString = function () {
+    return "[object Generator]";
+  };
+
+  function pushTryEntry(locs) {
+    var entry = {
+      tryLoc: locs[0]
+    };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{
+      tryLoc: "root"
+    }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  exports.keys = function (object) {
+    var keys = [];
+
+    for (var key in object) {
+      keys.push(key);
+    }
+
+    keys.reverse(); // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      } // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+
+
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1,
+            next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined$1;
+          next.done = true;
+          return next;
+        };
+
+        return next.next = next;
+      }
+    } // Return an iterator with no values.
+
+
+    return {
+      next: doneResult
+    };
+  }
+
+  exports.values = values;
+
+  function doneResult() {
+    return {
+      value: undefined$1,
+      done: true
+    };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+    reset: function (skipTempReset) {
+      this.prev = 0;
+      this.next = 0; // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+
+      this.sent = this._sent = undefined$1;
+      this.done = false;
+      this.delegate = null;
+      this.method = "next";
+      this.arg = undefined$1;
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" && hasOwn.call(this, name) && !isNaN(+name.slice(1))) {
+            this[name] = undefined$1;
+          }
+        }
+      }
+    },
+    stop: function () {
+      this.done = true;
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+    dispatchException: function (exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+
+        if (caught) {
+          // If the dispatched exception was caught by a catch block,
+          // then let that catch block handle the exception normally.
+          context.method = "next";
+          context.arg = undefined$1;
+        }
+
+        return !!caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+    abrupt: function (type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry && (type === "break" || type === "continue") && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.method = "next";
+        this.next = finallyEntry.finallyLoc;
+        return ContinueSentinel;
+      }
+
+      return this.complete(record);
+    },
+    complete: function (record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" || record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = this.arg = record.arg;
+        this.method = "return";
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+
+      return ContinueSentinel;
+    },
+    finish: function (finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+    "catch": function (tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+
+          return thrown;
+        }
+      } // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+
+
+      throw new Error("illegal catch attempt");
+    },
+    delegateYield: function (iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      if (this.method === "next") {
+        // Deliberately forget the last sent value so that we don't
+        // accidentally pass it on to the delegate.
+        this.arg = undefined$1;
+      }
+
+      return ContinueSentinel;
+    }
+  }; // Regardless of whether this script is executing as a CommonJS module
+  // or not, return the runtime object so that we can declare the variable
+  // regeneratorRuntime in the outer scope, which allows this module to be
+  // injected easily by `bin/regenerator --include-runtime script.js`.
+
+  return exports;
+}( // If this script is executing as a CommonJS module, use module.exports
+// as the regeneratorRuntime namespace. Otherwise create a new empty
+// object. Either way, the resulting object will be used to initialize
+// the regeneratorRuntime variable at the top of this file.
+module.exports );
+
+try {
+  regeneratorRuntime = runtime;
+} catch (accidentalStrictMode) {
+  // This module should not be running in strict mode, so the above
+  // assignment should always work unless something is misconfigured. Just
+  // in case runtime.js accidentally runs in strict mode, we can escape
+  // strict mode using a global Function call. This could conceivably fail
+  // if a Content Security Policy forbids using Function, but in that case
+  // the proper solution is to fix the accidental strict mode problem. If
+  // you've misconfigured your bundler to force strict mode and applied a
+  // CSP to forbid Function, and you're not willing to fix either of those
+  // problems, please detail your unique predicament in a GitHub issue.
+  Function("r", "regeneratorRuntime = r")(runtime);
+}
+});
+
+var regenerator = runtime_1;
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
+var routeConfig = {
+  RouteModuleName: 'route',
+  maxHistory: 10,
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  },
+  indexUrl: '/'
+};
+var setRouteConfig = buildConfigSetter(routeConfig);
+var routeMeta = {
+  defaultParams: {},
+  pagenames: {},
+  pages: {}
+};
+
+var RouteStack = function () {
+  function RouteStack(limit) {
+    _defineProperty(this, "records", []);
+
+    this.limit = limit;
+  }
+
+  var _proto = RouteStack.prototype;
+
+  _proto.startup = function startup(record) {
+    this.records = [record];
+  };
+
+  _proto.getCurrentItem = function getCurrentItem() {
+    return this.records[0];
+  };
+
+  _proto.getItems = function getItems() {
+    return [].concat(this.records);
+  };
+
+  _proto.getLength = function getLength() {
+    return this.records.length;
+  };
+
+  _proto.getRecordAt = function getRecordAt(n) {
+    if (n < 0) {
+      return this.records[this.records.length + n];
+    } else {
+      return this.records[n];
+    }
+  };
+
+  _proto._push = function _push(item) {
+    var records = this.records;
+    records.unshift(item);
+    var delItem = records.splice(this.limit)[0];
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  };
+
+  _proto._replace = function _replace(item) {
+    var records = this.records;
+    var delItem = records[0];
+    records[0] = item;
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  };
+
+  _proto._relaunch = function _relaunch(item) {
+    var delList = this.records;
+    this.records = [item];
+    delList.forEach(function (delItem) {
+      if (delItem !== item && delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  };
+
+  _proto.back = function back(delta) {
+    var delList = this.records.splice(0, delta);
+
+    if (this.records.length === 0) {
+      var last = delList.pop();
+      this.records.push(last);
+    }
+
+    delList.forEach(function (delItem) {
+      if (delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  };
+
+  return RouteStack;
+}();
+
+var HistoryRecord = function HistoryRecord(location, historyStack) {
+  _defineProperty(this, "destroy", void 0);
+
+  _defineProperty(this, "pagename", void 0);
+
+  _defineProperty(this, "params", void 0);
+
+  _defineProperty(this, "key", void 0);
+
+  _defineProperty(this, "recordKey", void 0);
+
+  this.historyStack = historyStack;
+  this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
+  var pagename = location.pagename,
+      params = location.params;
+  this.pagename = pagename;
+  this.params = params;
+  this.key = [historyStack.stackkey, this.recordKey].join('-');
+};
+
+_defineProperty(HistoryRecord, "id", 0);
+
+var HistoryStack = function (_RouteStack) {
+  _inheritsLoose(HistoryStack, _RouteStack);
+
+  function HistoryStack(rootStack, store) {
+    var _this;
+
+    _this = _RouteStack.call(this, 20) || this;
+
+    _defineProperty(_assertThisInitialized(_this), "stackkey", void 0);
+
+    _this.rootStack = rootStack;
+    _this.store = store;
+    _this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+    return _this;
+  }
+
+  var _proto2 = HistoryStack.prototype;
+
+  _proto2.push = function push(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
+
+    this._push(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.replace = function replace(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
+
+    this._replace(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.relaunch = function relaunch(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
+
+    this._relaunch(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
+    return this.records.find(function (item) {
+      return item.recordKey === recordKey;
+    });
+  };
+
+  _proto2.destroy = function destroy() {
+    this.store.destroy();
+  };
+
+  return HistoryStack;
+}(RouteStack);
+
+_defineProperty(HistoryStack, "id", 0);
+
+var RootStack = function (_RouteStack2) {
+  _inheritsLoose(RootStack, _RouteStack2);
+
+  function RootStack() {
+    return _RouteStack2.call(this, 10) || this;
+  }
+
+  var _proto3 = RootStack.prototype;
+
+  _proto3.getCurrentPages = function getCurrentPages() {
+    return this.records.map(function (item) {
+      var store = item.store;
+      var record = item.getCurrentItem();
+      var pagename = record.pagename;
+      return {
+        pagename: pagename,
+        store: store,
+        page: routeMeta.pages[pagename]
+      };
+    });
+  };
+
+  _proto3.push = function push(routeState) {
+    var curHistory = this.getCurrentItem();
+    var store = forkStore(curHistory.store, routeState);
+    var newHistory = new HistoryStack(this, store);
+    var newRecord = new HistoryRecord(routeState, newHistory);
+    newHistory.startup(newRecord);
+
+    this._push(newHistory);
+
+    return newRecord;
+  };
+
+  _proto3.replace = function replace(routeState) {
+    var curHistory = this.getCurrentItem();
+    return curHistory.relaunch(routeState);
+  };
+
+  _proto3.relaunch = function relaunch(routeState) {
+    var curHistory = this.getCurrentItem();
+    var newRecord = curHistory.relaunch(routeState);
+
+    this._relaunch(curHistory);
+
+    return newRecord;
+  };
+
+  _proto3.countBack = function countBack(delta) {
+    var historyStacks = this.records;
+    var backSteps = [0, 0];
+
+    for (var i = 0, k = historyStacks.length; i < k; i++) {
+      var _historyStack = historyStacks[i];
+
+      var recordNum = _historyStack.getLength();
+
+      delta = delta - recordNum;
+
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
+      } else {
+        backSteps[1] = recordNum + delta;
+        break;
+      }
+    }
+
+    return backSteps;
+  };
+
+  _proto3.testBack = function testBack(delta, rootOnly) {
+    var overflow = false;
+    var record;
+    var steps = [0, 0];
+
+    if (rootOnly) {
+      if (delta < this.records.length) {
+        record = this.getRecordAt(delta).getCurrentItem();
+        steps[0] = delta;
+      } else {
+        record = this.getRecordAt(-1).getCurrentItem();
+        overflow = true;
+      }
+    } else {
+      var _this$countBack = this.countBack(delta),
+          rootDelta = _this$countBack[0],
+          recordDelta = _this$countBack[1];
+
+      if (rootDelta < this.records.length) {
+        record = this.getRecordAt(rootDelta).getRecordAt(recordDelta);
+        steps[0] = rootDelta;
+        steps[1] = recordDelta;
+      } else {
+        record = this.getRecordAt(-1).getRecordAt(-1);
+        overflow = true;
+      }
+    }
+
+    return {
+      record: record,
+      overflow: overflow,
+      steps: steps
+    };
+  };
+
+  _proto3.findRecordByKey = function findRecordByKey(key) {
+    var arr = key.split('-');
+    var historyStack = this.records.find(function (item) {
+      return item.stackkey === arr[0];
+    });
+
+    if (historyStack) {
+      return historyStack.findRecordByKey(arr[1]);
+    }
+
+    return undefined;
+  };
+
+  return RootStack;
+}(RouteStack);
+
+function isPlainObject(obj) {
+  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+}
+
+function __extendDefault(target, def) {
+  var clone = {};
+  Object.keys(def).forEach(function (key) {
+    if (target[key] === undefined) {
+      clone[key] = def[key];
+    } else {
+      var tval = target[key];
+      var dval = def[key];
+
+      if (isPlainObject(tval) && isPlainObject(dval) && tval !== dval) {
+        clone[key] = __extendDefault(tval, dval);
+      } else {
+        clone[key] = tval;
+      }
+    }
+  });
+  return clone;
+}
+
+function extendDefault(target, def) {
+  if (!isPlainObject(target)) {
+    target = {};
+  }
+
+  if (!isPlainObject(def)) {
+    def = {};
+  }
+
+  return __extendDefault(target, def);
+}
+
+function __excludeDefault(data, def) {
+  var result = {};
+  var hasSub = false;
+  Object.keys(data).forEach(function (key) {
+    var value = data[key];
+    var defaultValue = def[key];
+
+    if (value !== defaultValue) {
+      if (typeof value === typeof defaultValue && isPlainObject(value)) {
+        value = __excludeDefault(value, defaultValue);
+      }
+
+      if (value !== undefined) {
+        hasSub = true;
+        result[key] = value;
+      }
+    }
+  });
+
+  if (hasSub) {
+    return result;
+  }
+
+  return undefined;
+}
+
+function excludeDefault(data, def, keepTopLevel) {
+  if (!isPlainObject(data)) {
+    return {};
+  }
+
+  if (!isPlainObject(def)) {
+    return data;
+  }
+
+  var filtered = __excludeDefault(data, def);
+
+  if (keepTopLevel) {
+    var result = {};
+    Object.keys(data).forEach(function (key) {
+      result[key] = filtered && filtered[key] !== undefined ? filtered[key] : {};
+    });
+    return result;
+  }
+
+  return filtered || {};
+}
+
+function __splitPrivate(data) {
+  var keys = Object.keys(data);
+
+  if (keys.length === 0) {
+    return [undefined, undefined];
+  }
+
+  var publicData;
+  var privateData;
+  keys.forEach(function (key) {
+    var value = data[key];
+
+    if (key.startsWith('_')) {
+      if (!privateData) {
+        privateData = {};
+      }
+
+      privateData[key] = value;
+    } else if (isPlainObject(value)) {
+      var _splitPrivate = __splitPrivate(value),
+          subPublicData = _splitPrivate[0],
+          subPrivateData = _splitPrivate[1];
+
+      if (subPublicData) {
+        if (!publicData) {
+          publicData = {};
+        }
+
+        publicData[key] = subPublicData;
+      }
+
+      if (subPrivateData) {
+        if (!privateData) {
+          privateData = {};
+        }
+
+        privateData[key] = subPrivateData;
+      }
+    } else {
+      if (!publicData) {
+        publicData = {};
+      }
+
+      publicData[key] = value;
+    }
+  });
+  return [publicData, privateData];
+}
+
+function splitPrivate(data, deleteTopLevel) {
+  if (!isPlainObject(data)) {
+    return [undefined, undefined];
+  }
+
+  var keys = Object.keys(data);
+
+  if (keys.length === 0) {
+    return [undefined, undefined];
+  }
+
+  var result = __splitPrivate(data);
+
+  var publicData = result[0];
+  var privateData = result[1];
+  keys.forEach(function (key) {
+    if (!deleteTopLevel[key]) {
+      if (!publicData) {
+        publicData = {};
+      }
+
+      if (!publicData[key]) {
+        publicData[key] = {};
+      }
+    }
+  });
+  return [publicData, privateData];
+}
+
+function assignDefaultData(data) {
+  var def = routeMeta.defaultParams;
+  return Object.keys(data).reduce(function (params, moduleName) {
+    if (def[moduleName]) {
+      params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
+    }
+
+    return params;
+  }, {});
+}
+
+function splitQuery(query) {
+  if (!query) {
+    return undefined;
+  }
+
+  return query.split('&').reduce(function (params, str) {
+    var sections = str.split('=');
+
+    if (sections.length > 1) {
+      var key = sections[0],
+          arr = sections.slice(1);
+
+      if (!params) {
+        params = {};
+      }
+
+      params[key] = decodeURIComponent(arr.join('='));
+    }
+
+    return params;
+  }, undefined);
+}
+
+function joinQuery(params) {
+  return Object.keys(params || {}).map(function (key) {
+    return key + "=" + encodeURIComponent(params[key]);
+  }).join('&');
+}
+
+function isEluxLocation(data) {
+  return data['params'];
+}
+
+function nativeUrlToNativeLocation(url) {
+  if (!url) {
+    return {
+      pathname: '/',
+      searchData: undefined,
+      hashData: undefined
+    };
+  }
+
+  var arr = url.split(/[?#]/);
+
+  if (arr.length === 2 && url.indexOf('?') < 0) {
+    arr.splice(1, 0, '');
+  }
+
+  var path = arr[0],
+      search = arr[1],
+      hash = arr[2];
+  return {
+    pathname: "/" + path.replace(/^\/+|\/+$/g, ''),
+    searchData: splitQuery(search),
+    hashData: splitQuery(hash)
+  };
+}
+function eluxUrlToEluxLocation(url) {
+  if (!url) {
+    return {
+      pathname: '/',
+      params: {}
+    };
+  }
+
+  var _url$split = url.split('?'),
+      pathname = _url$split[0],
+      others = _url$split.slice(1);
+
+  var query = others.join('?');
+  var params = {};
+
+  if (query && query.charAt(0) === '{' && query.charAt(query.length - 1) === '}') {
+    try {
+      params = JSON.parse(query);
+    } catch (e) {
+      env.console.error(e);
+    }
+  }
+
+  return {
+    pathname: "/" + pathname.replace(/^\/+|\/+$/g, ''),
+    params: params
+  };
+}
+function nativeLocationToNativeUrl(_ref) {
+  var pathname = _ref.pathname,
+      searchData = _ref.searchData,
+      hashData = _ref.hashData;
+  var search = joinQuery(searchData);
+  var hash = joinQuery(hashData);
+  return ["/" + pathname.replace(/^\/+|\/+$/g, ''), search && "?" + search, hash && "#" + hash].join('');
+}
+function eluxLocationToEluxUrl(location) {
+  return [location.pathname, JSON.stringify(location.params || {})].join('?');
+}
+function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
+  if (notfoundPagename === void 0) {
+    notfoundPagename = '/404';
+  }
+
+  if (paramsKey === void 0) {
+    paramsKey = '_';
+  }
+
+  var pagenames = Object.keys(pagenameMap);
+  pagenameMap = pagenames.sort(function (a, b) {
+    return b.length - a.length;
+  }).reduce(function (map, pagename) {
+    var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
+    var _pagenameMap$pagename = pagenameMap[pagename],
+        argsToParams = _pagenameMap$pagename.argsToParams,
+        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        page = _pagenameMap$pagename.page;
+    map[fullPagename] = {
+      argsToParams: argsToParams,
+      paramsToArgs: paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pages[pagename] = page;
+    return map;
+  }, {});
+  pagenames = Object.keys(pagenameMap);
+
+  function toStringArgs(arr) {
+    return arr.map(function (item) {
+      if (item === null || item === undefined) {
+        return undefined;
+      }
+
+      return item.toString();
+    });
+  }
+
+  return {
+    urlToLocation: function urlToLocation(url) {
+      return this.partialLocationToLocation(this.urlToToPartialLocation(url));
+    },
+    urlToToPartialLocation: function urlToToPartialLocation(url) {
+      var givenLocation = this.urlToGivenLocation(url);
+
+      if (isEluxLocation(givenLocation)) {
+        return this.eluxLocationToPartialLocation(givenLocation);
+      }
+
+      return this.nativeLocationToPartialLocation(givenLocation);
+    },
+    urlToEluxLocation: function urlToEluxLocation(url) {
+      var givenLocation = this.urlToGivenLocation(url);
+
+      if (isEluxLocation(givenLocation)) {
+        return givenLocation;
+      }
+
+      return this.nativeLocationToEluxLocation(givenLocation);
+    },
+    urlToGivenLocation: function urlToGivenLocation(url) {
+      var _url$split2 = url.split('?', 2),
+          query = _url$split2[1];
+
+      if (query && query.charAt(0) === '{') {
+        return eluxUrlToEluxLocation(url);
+      }
+
+      return nativeUrlToNativeLocation(url);
+    },
+    nativeLocationToLocation: function nativeLocationToLocation(nativeLocation) {
+      return this.partialLocationToLocation(this.nativeLocationToPartialLocation(nativeLocation));
+    },
+    nativeLocationToPartialLocation: function nativeLocationToPartialLocation(nativeLocation) {
+      var eluxLocation = this.nativeLocationToEluxLocation(nativeLocation);
+      return this.eluxLocationToPartialLocation(eluxLocation);
+    },
+    nativeLocationToEluxLocation: function nativeLocationToEluxLocation(nativeLocation) {
+      nativeLocation = nativeLocationMap.in(nativeLocation);
+      var searchParams;
+      var hashParams;
+
+      try {
+        searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
+        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
+      } catch (e) {
+        env.console.error(e);
+      }
+
+      return {
+        pathname: nativeLocation.pathname,
+        params: deepMerge(searchParams, hashParams) || {}
+      };
+    },
+    eluxLocationToNativeLocation: function eluxLocationToNativeLocation(eluxLocation) {
+      var _ref2, _ref3;
+
+      var pathname = ("/" + eluxLocation.pathname + "/").replace(/^\/+|\/+$/g, '/');
+      var pagename = pagenames.find(function (name) {
+        return pathname.startsWith(name);
+      });
+      var pathParams = {};
+
+      if (pagename) {
+        var _pathArgs = pathname.replace(pagename, '').split('/').map(function (item) {
+          return item ? decodeURIComponent(item) : undefined;
+        });
+
+        pathParams = pagenameMap[pagename].argsToParams(_pathArgs);
+      } else {
+        pagename = notfoundPagename + "/";
+
+        if (pagenameMap[pagename]) {
+          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
+        }
+      }
+
+      var result = splitPrivate(eluxLocation.params, pathParams);
+      var nativeLocation = {
+        pathname: pathname,
+        searchData: result[0] ? (_ref2 = {}, _ref2[paramsKey] = JSON.stringify(result[0]), _ref2) : undefined,
+        hashData: result[1] ? (_ref3 = {}, _ref3[paramsKey] = JSON.stringify(result[1]), _ref3) : undefined
+      };
+      return nativeLocationMap.out(nativeLocation);
+    },
+    eluxLocationToPartialLocation: function eluxLocationToPartialLocation(eluxLocation) {
+      var pathname = ("/" + eluxLocation.pathname + "/").replace(/^\/+|\/+$/g, '/');
+      var pagename = pagenames.find(function (name) {
+        return pathname.startsWith(name);
+      });
+      var pathParams = {};
+
+      if (pagename) {
+        var _pathArgs2 = pathname.replace(pagename, '').split('/').map(function (item) {
+          return item ? decodeURIComponent(item) : undefined;
+        });
+
+        pathParams = pagenameMap[pagename].argsToParams(_pathArgs2);
+      } else {
+        pagename = notfoundPagename + "/";
+
+        if (pagenameMap[pagename]) {
+          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
+        }
+      }
+
+      var params = deepMerge({}, pathParams, eluxLocation.params);
+      var modules = moduleExists();
+      Object.keys(params).forEach(function (moduleName) {
+        if (!modules[moduleName]) {
+          delete params[moduleName];
+        }
+      });
+      return {
+        pagename: "/" + pagename.replace(/^\/+|\/+$/g, ''),
+        params: params
+      };
+    },
+    partialLocationToLocation: function partialLocationToLocation(partialLocation) {
+      var pagename = partialLocation.pagename,
+          params = partialLocation.params;
+      var def = routeMeta.defaultParams;
+      var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
+        return def[moduleName] === undefined;
+      });
+      var modulesOrPromise = getModuleList(asyncLoadModules);
+
+      if (isPromise(modulesOrPromise)) {
+        return modulesOrPromise.then(function (modules) {
+          modules.forEach(function (module) {
+            def[module.moduleName] = module.params;
+          });
+          return {
+            pagename: pagename,
+            params: assignDefaultData(params)
+          };
+        });
+      }
+
+      var modules = modulesOrPromise;
+      modules.forEach(function (module) {
+        def[module.moduleName] = module.params;
+      });
+      return {
+        pagename: pagename,
+        params: assignDefaultData(params)
+      };
+    },
+    eluxLocationToLocation: function eluxLocationToLocation(eluxLocation) {
+      return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
+    },
+    partialLocationToMinData: function partialLocationToMinData(partialLocation) {
+      var params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
+      var pathParams;
+      var pathname;
+      var pagename = ("/" + partialLocation.pagename + "/").replace(/^\/+|\/+$/g, '/');
+
+      if (pagenameMap[pagename]) {
+        var _pathArgs3 = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
+
+        pathname = pagename + _pathArgs3.map(function (item) {
+          return item ? encodeURIComponent(item) : '';
+        }).join('/').replace(/\/*$/, '');
+        pathParams = pagenameMap[pagename].argsToParams(_pathArgs3);
+      } else {
+        pathname = pagename;
+        pathParams = {};
+      }
+
+      params = excludeDefault(params, pathParams, false);
+      return {
+        pathname: "/" + pathname.replace(/^\/+|\/+$/g, ''),
+        params: params,
+        pathParams: pathParams
+      };
+    },
+    partialLocationToEluxLocation: function partialLocationToEluxLocation(partialLocation) {
+      var _this$partialLocation = this.partialLocationToMinData(partialLocation),
+          pathname = _this$partialLocation.pathname,
+          params = _this$partialLocation.params;
+
+      return {
+        pathname: pathname,
+        params: params
+      };
+    },
+    partialLocationToNativeLocation: function partialLocationToNativeLocation(partialLocation) {
+      var _ref4, _ref5;
+
+      var _this$partialLocation2 = this.partialLocationToMinData(partialLocation),
+          pathname = _this$partialLocation2.pathname,
+          params = _this$partialLocation2.params,
+          pathParams = _this$partialLocation2.pathParams;
+
+      var result = splitPrivate(params, pathParams);
+      var nativeLocation = {
+        pathname: pathname,
+        searchData: result[0] ? (_ref4 = {}, _ref4[paramsKey] = JSON.stringify(result[0]), _ref4) : undefined,
+        hashData: result[1] ? (_ref5 = {}, _ref5[paramsKey] = JSON.stringify(result[1]), _ref5) : undefined
+      };
+      return nativeLocationMap.out(nativeLocation);
+    }
+  };
+}
+
+var BaseNativeRouter = function () {
+  function BaseNativeRouter() {
+    _defineProperty(this, "curTask", void 0);
+
+    _defineProperty(this, "eluxRouter", void 0);
+  }
+
+  var _proto = BaseNativeRouter.prototype;
+
+  _proto.onChange = function onChange(key) {
+    if (this.curTask) {
+      this.curTask.resolve(this.curTask.nativeData);
+      this.curTask = undefined;
+      return false;
+    }
+
+    return key !== this.eluxRouter.routeState.key;
+  };
+
+  _proto.startup = function startup(router) {
+    this.eluxRouter = router;
+  };
+
+  _proto.execute = function execute(method, getNativeData) {
+    var _this = this;
+
+    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      args[_key - 2] = arguments[_key];
+    }
+
+    return new Promise(function (resolve, reject) {
+      var task = {
+        resolve: resolve,
+        reject: reject,
+        nativeData: undefined
+      };
+      _this.curTask = task;
+
+      var result = _this[method].apply(_this, [function () {
+        var nativeData = getNativeData();
+        task.nativeData = nativeData;
+        return nativeData;
+      }].concat(args));
+
+      if (!result) {
+        resolve(undefined);
+        _this.curTask = undefined;
+      } else if (isPromise(result)) {
+        result.catch(function (e) {
+          reject(e);
+          _this.curTask = undefined;
+        });
+      }
+    });
+  };
+
+  return BaseNativeRouter;
+}();
+var BaseEluxRouter = function (_MultipleDispatcher) {
+  _inheritsLoose(BaseEluxRouter, _MultipleDispatcher);
+
+  function BaseEluxRouter(url, nativeRouter, locationTransform, nativeData) {
+    var _this2;
+
+    _this2 = _MultipleDispatcher.call(this) || this;
+
+    _defineProperty(_assertThisInitialized(_this2), "_curTask", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "_taskList", []);
+
+    _defineProperty(_assertThisInitialized(_this2), "_nativeData", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "_internalUrl", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "name", routeConfig.RouteModuleName);
+
+    _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
+
+    _defineProperty(_assertThisInitialized(_this2), "injectedModules", {});
+
+    _defineProperty(_assertThisInitialized(_this2), "rootStack", new RootStack());
+
+    _defineProperty(_assertThisInitialized(_this2), "latestState", {});
+
+    _defineProperty(_assertThisInitialized(_this2), "_taskComplete", function () {
+      var task = _this2._taskList.shift();
+
+      if (task) {
+        _this2.executeTask(task);
+      } else {
+        _this2._curTask = undefined;
+      }
+    });
+
+    _this2.nativeRouter = nativeRouter;
+    _this2.locationTransform = locationTransform;
+    _this2.nativeData = nativeData;
+    nativeRouter.startup(_assertThisInitialized(_this2));
+    var locationOrPromise = locationTransform.urlToLocation(url);
+
+    var callback = function callback(location) {
+      var routeState = _extends({}, location, {
+        action: 'RELAUNCH',
+        key: ''
+      });
+
+      _this2.routeState = routeState;
+      _this2._internalUrl = eluxLocationToEluxUrl({
+        pathname: routeState.pagename,
+        params: routeState.params
+      });
+
+      if (!routeConfig.indexUrl) {
+        setRouteConfig({
+          indexUrl: _this2._internalUrl
+        });
+      }
+
+      return routeState;
+    };
+
+    if (isPromise(locationOrPromise)) {
+      _this2.initialize = locationOrPromise.then(callback);
+    } else {
+      _this2.initialize = Promise.resolve(callback(locationOrPromise));
+    }
+
+    return _this2;
+  }
+
+  var _proto2 = BaseEluxRouter.prototype;
+
+  _proto2.startup = function startup(store) {
+    var historyStack = new HistoryStack(this.rootStack, store);
+    var historyRecord = new HistoryRecord(this.routeState, historyStack);
+    historyStack.startup(historyRecord);
+    this.rootStack.startup(historyStack);
+    this.routeState.key = historyRecord.key;
+  };
+
+  _proto2.getCurrentPages = function getCurrentPages() {
+    return this.rootStack.getCurrentPages();
+  };
+
+  _proto2.getCurrentStore = function getCurrentStore() {
+    return this.rootStack.getCurrentItem().store;
+  };
+
+  _proto2.getStoreList = function getStoreList() {
+    return this.rootStack.getItems().map(function (_ref) {
+      var store = _ref.store;
+      return store;
+    });
+  };
+
+  _proto2.getInternalUrl = function getInternalUrl() {
+    return this._internalUrl;
+  };
+
+  _proto2.getNativeLocation = function getNativeLocation() {
+    if (!this._nativeData) {
+      this._nativeData = this.locationToNativeData(this.routeState);
+    }
+
+    return this._nativeData.nativeLocation;
+  };
+
+  _proto2.getNativeUrl = function getNativeUrl() {
+    if (!this._nativeData) {
+      this._nativeData = this.locationToNativeData(this.routeState);
+    }
+
+    return this._nativeData.nativeUrl;
+  };
+
+  _proto2.getHistoryLength = function getHistoryLength(root) {
+    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
+  };
+
+  _proto2.locationToNativeData = function locationToNativeData(location) {
+    var nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
+    var nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
+    return {
+      nativeUrl: nativeUrl,
+      nativeLocation: nativeLocation
+    };
+  };
+
+  _proto2.urlToLocation = function urlToLocation(url) {
+    return this.locationTransform.urlToLocation(url);
+  };
+
+  _proto2.payloadLocationToEluxUrl = function payloadLocationToEluxUrl(data) {
+    var eluxLocation = this.payloadToEluxLocation(data);
+    return eluxLocationToEluxUrl(eluxLocation);
+  };
+
+  _proto2.payloadLocationToNativeUrl = function payloadLocationToNativeUrl(data) {
+    var eluxLocation = this.payloadToEluxLocation(data);
+    var nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
+    return this.nativeLocationToNativeUrl(nativeLocation);
+  };
+
+  _proto2.nativeLocationToNativeUrl = function nativeLocationToNativeUrl$1(nativeLocation) {
+    return nativeLocationToNativeUrl(nativeLocation);
+  };
+
+  _proto2.findRecordByKey = function findRecordByKey(key) {
+    return this.rootStack.findRecordByKey(key);
+  };
+
+  _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
+    return this.rootStack.testBack(delta, rootOnly);
+  };
+
+  _proto2.payloadToEluxLocation = function payloadToEluxLocation(payload) {
+    var params = payload.params || {};
+    var extendParams = payload.extendParams === 'current' ? this.routeState.params : payload.extendParams;
+
+    if (extendParams && params) {
+      params = deepMerge({}, extendParams, params);
+    } else if (extendParams) {
+      params = extendParams;
+    }
+
+    return {
+      pathname: payload.pathname || this.routeState.pagename,
+      params: params
+    };
+  };
+
+  _proto2.preAdditions = function preAdditions(data) {
+    if (typeof data === 'string') {
+      if (/^[\w:]*\/\//.test(data)) {
+        this.nativeRouter.toOutside(data);
+        return null;
+      }
+
+      return this.locationTransform.urlToLocation(data);
+    }
+
+    var eluxLocation = this.payloadToEluxLocation(data);
+    return this.locationTransform.eluxLocationToLocation(eluxLocation);
+  };
+
+  _proto2.relaunch = function relaunch(data, root, nonblocking, nativeCaller) {
+    if (root === void 0) {
+      root = false;
+    }
+
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
+    }
+
+    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
+  };
+
+  _proto2._relaunch = function () {
+    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee(data, root, nativeCaller) {
+      var _this3 = this;
+
+      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
+      return regenerator.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.next = 2;
+              return this.preAdditions(data);
+
+            case 2:
+              preData = _context.sent;
+
+              if (preData) {
+                _context.next = 5;
+                break;
+              }
+
+              return _context.abrupt("return");
+
+            case 5:
+              key = '';
+              location = preData;
+              routeState = _extends({}, location, {
+                action: 'RELAUNCH',
+                key: key
+              });
+              _context.next = 10;
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+
+            case 10:
+              _context.next = 12;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+            case 12:
+              if (root) {
+                key = this.rootStack.relaunch(routeState).key;
+              } else {
+                key = this.rootStack.getCurrentItem().relaunch(routeState).key;
+              }
+
+              routeState.key = key;
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context.next = 19;
+                break;
+              }
+
+              _context.next = 18;
+              return this.nativeRouter.execute('relaunch', function () {
+                return _this3.locationToNativeData(routeState);
+              }, key);
+
+            case 18:
+              nativeData = _context.sent;
+
+            case 19:
+              this._nativeData = nativeData;
+              this.routeState = routeState;
+              this._internalUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              _context.next = 26;
+              return this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
+
+            case 26:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+
+    function _relaunch(_x, _x2, _x3) {
+      return _relaunch2.apply(this, arguments);
+    }
+
+    return _relaunch;
+  }();
+
+  _proto2.push = function push(data, root, nonblocking, nativeCaller) {
+    if (root === void 0) {
+      root = false;
+    }
+
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
+    }
+
+    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
+  };
+
+  _proto2._push = function () {
+    var _push2 = _asyncToGenerator(regenerator.mark(function _callee2(data, root, nativeCaller) {
+      var _this4 = this;
+
+      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
+      return regenerator.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.next = 2;
+              return this.preAdditions(data);
+
+            case 2:
+              preData = _context2.sent;
+
+              if (preData) {
+                _context2.next = 5;
+                break;
+              }
+
+              return _context2.abrupt("return");
+
+            case 5:
+              key = '';
+              location = preData;
+              routeState = _extends({}, location, {
+                action: 'PUSH',
+                key: key
+              });
+              _context2.next = 10;
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+
+            case 10:
+              _context2.next = 12;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+            case 12:
+              if (root) {
+                key = this.rootStack.push(routeState).key;
+              } else {
+                key = this.rootStack.getCurrentItem().push(routeState).key;
+              }
+
+              routeState.key = key;
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context2.next = 19;
+                break;
+              }
+
+              _context2.next = 18;
+              return this.nativeRouter.execute('push', function () {
+                return _this4.locationToNativeData(routeState);
+              }, key);
+
+            case 18:
+              nativeData = _context2.sent;
+
+            case 19:
+              this._nativeData = nativeData;
+              this.routeState = routeState;
+              this._internalUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
+              cloneState = deepClone(routeState);
+
+              if (!root) {
+                _context2.next = 28;
+                break;
+              }
+
+              _context2.next = 26;
+              return reinitApp(this.getCurrentStore());
+
+            case 26:
+              _context2.next = 29;
+              break;
+
+            case 28:
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+
+            case 29:
+              _context2.next = 31;
+              return this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
+
+            case 31:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+
+    function _push(_x4, _x5, _x6) {
+      return _push2.apply(this, arguments);
+    }
+
+    return _push;
+  }();
+
+  _proto2.replace = function replace(data, root, nonblocking, nativeCaller) {
+    if (root === void 0) {
+      root = false;
+    }
+
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
+    }
+
+    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
+  };
+
+  _proto2._replace = function () {
+    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee3(data, root, nativeCaller) {
+      var _this5 = this;
+
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
+      return regenerator.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.next = 2;
+              return this.preAdditions(data);
+
+            case 2:
+              preData = _context3.sent;
+
+              if (preData) {
+                _context3.next = 5;
+                break;
+              }
+
+              return _context3.abrupt("return");
+
+            case 5:
+              location = preData;
+              key = '';
+              routeState = _extends({}, location, {
+                action: 'REPLACE',
+                key: key
+              });
+              _context3.next = 10;
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+
+            case 10:
+              _context3.next = 12;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+            case 12:
+              if (root) {
+                key = this.rootStack.replace(routeState).key;
+              } else {
+                key = this.rootStack.getCurrentItem().replace(routeState).key;
+              }
+
+              routeState.key = key;
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context3.next = 19;
+                break;
+              }
+
+              _context3.next = 18;
+              return this.nativeRouter.execute('replace', function () {
+                return _this5.locationToNativeData(routeState);
+              }, key);
+
+            case 18:
+              nativeData = _context3.sent;
+
+            case 19:
+              this._nativeData = nativeData;
+              this.routeState = routeState;
+              this._internalUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              _context3.next = 26;
+              return this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
+
+            case 26:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3, this);
+    }));
+
+    function _replace(_x7, _x8, _x9) {
+      return _replace2.apply(this, arguments);
+    }
+
+    return _replace;
+  }();
+
+  _proto2.back = function back(n, root, options, nonblocking, nativeCaller) {
+    if (n === void 0) {
+      n = 1;
+    }
+
+    if (root === void 0) {
+      root = false;
+    }
+
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
+    }
+
+    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
+  };
+
+  _proto2._back = function () {
+    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, root, options, nativeCaller) {
+      var _this6 = this;
+
+      var _this$rootStack$testB, record, overflow, steps, _url, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
+
+      return regenerator.wrap(function _callee4$(_context4) {
+        while (1) {
+          switch (_context4.prev = _context4.next) {
+            case 0:
+              if (n === void 0) {
+                n = 1;
+              }
+
+              if (!(n < 1)) {
+                _context4.next = 3;
+                break;
+              }
+
+              return _context4.abrupt("return");
+
+            case 3:
+              _this$rootStack$testB = this.rootStack.testBack(n, root), record = _this$rootStack$testB.record, overflow = _this$rootStack$testB.overflow, steps = _this$rootStack$testB.steps;
+
+              if (!overflow) {
+                _context4.next = 8;
+                break;
+              }
+
+              _url = options.overflowRedirect || routeConfig.indexUrl;
+              env.setTimeout(function () {
+                return _this6.relaunch(_url, root);
+              }, 0);
+              return _context4.abrupt("return");
+
+            case 8:
+              key = record.key;
+              pagename = record.pagename;
+              params = deepMerge({}, record.params, options.payload);
+              routeState = {
+                key: key,
+                pagename: pagename,
+                params: params,
+                action: 'BACK'
+              };
+              _context4.next = 14;
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+
+            case 14:
+              _context4.next = 16;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+            case 16:
+              if (steps[0]) {
+                root = true;
+                this.rootStack.back(steps[0]);
+              }
+
+              if (steps[1]) {
+                this.rootStack.getCurrentItem().back(steps[1]);
+              }
+
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context4.next = 23;
+                break;
+              }
+
+              _context4.next = 22;
+              return this.nativeRouter.execute('back', function () {
+                return _this6.locationToNativeData(routeState);
+              }, n, key);
+
+            case 22:
+              nativeData = _context4.sent;
+
+            case 23:
+              this._nativeData = nativeData;
+              this.routeState = routeState;
+              this._internalUrl = eluxLocationToEluxUrl({
+                pathname: routeState.pagename,
+                params: routeState.params
+              });
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              _context4.next = 30;
+              return this.dispatch('change', {
+                routeState: routeState,
+                root: root
+              });
+
+            case 30:
+            case "end":
+              return _context4.stop();
+          }
+        }
+      }, _callee4, this);
+    }));
+
+    function _back(_x10, _x11, _x12, _x13) {
+      return _back2.apply(this, arguments);
+    }
+
+    return _back;
+  }();
+
+  _proto2.executeTask = function executeTask(task) {
+    this._curTask = task;
+    task().finally(this._taskComplete);
+  };
+
+  _proto2.addTask = function addTask(execute, nonblocking) {
+    var _this7 = this;
+
+    if (env.isServer) {
+      return;
+    }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise(function (resolve, reject) {
+      var task = function task() {
+        return execute().then(resolve, reject);
+      };
+
+      if (_this7._curTask) {
+        _this7._taskList.push(task);
+      } else {
+        _this7.executeTask(task);
+      }
+    });
+  };
+
+  _proto2.destroy = function destroy() {
+    this.nativeRouter.destroy();
+  };
+
+  return BaseEluxRouter;
+}(MultipleDispatcher);
+var RouteActionTypes = {
+  TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",
+  BeforeRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "BeforeRouteChange"
+};
+function beforeRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
+    payload: [routeState]
+  };
+}
+var defaultNativeLocationMap = {
+  in: function _in(nativeLocation) {
+    return nativeLocation;
+  },
+  out: function out(nativeLocation) {
+    return nativeLocation;
+  }
+};
+function createRouteModule(moduleName, pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
+  if (nativeLocationMap === void 0) {
+    nativeLocationMap = defaultNativeLocationMap;
+  }
+
+  if (notfoundPagename === void 0) {
+    notfoundPagename = '/404';
+  }
+
+  if (paramsKey === void 0) {
+    paramsKey = '_';
+  }
+
+  var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
+  var routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
+  return _extends({}, routeModule, {
+    locationTransform: locationTransform
+  });
+}
+
+var appMeta = {
+  router: null,
+  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
+};
+var appConfig = {
+  loadComponent: null,
+  useRouter: null,
+  useStore: null
+};
+var setAppConfig = buildConfigSetter(appConfig);
+function setUserConfig(conf) {
+  setCoreConfig(conf);
+  setRouteConfig(conf);
+}
+function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
+  if (middlewares === void 0) {
+    middlewares = [];
+  }
+
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
+  return {
+    useStore: function useStore(_ref) {
+      var storeCreator = _ref.storeCreator,
+          storeOptions = _ref.storeOptions;
+      return Object.assign(ins, {
+        render: function (_render) {
+          function render() {
+            return _render.apply(this, arguments);
+          }
+
+          render.toString = function () {
+            return _render.toString();
+          };
+
+          return render;
+        }(function () {
+          var router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
+          var baseStore = storeCreator(storeOptions);
+
+          var _initApp = initApp(router, baseStore, middlewares),
+              store = _initApp.store;
+
+          var context = render({
+            deps: {},
+            router: router,
+            documentHead: ''
+          }, ins);
+          return {
+            store: store,
+            context: context
+          };
+        })
+      });
+    }
+  };
+}
+function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
+  if (middlewares === void 0) {
+    middlewares = [];
+  }
+
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
+  return {
+    useStore: function useStore(_ref2) {
+      var storeCreator = _ref2.storeCreator,
+          storeOptions = _ref2.storeOptions;
+      return Object.assign(ins, {
+        render: function (_render2) {
+          function render(_x) {
+            return _render2.apply(this, arguments);
+          }
+
+          render.toString = function () {
+            return _render2.toString();
+          };
+
+          return render;
+        }(function (_temp) {
+          var _ref3 = _temp === void 0 ? {} : _temp,
+              _ref3$id = _ref3.id,
+              id = _ref3$id === void 0 ? 'root' : _ref3$id,
+              _ref3$ssrKey = _ref3.ssrKey,
+              ssrKey = _ref3$ssrKey === void 0 ? 'eluxInitStore' : _ref3$ssrKey,
+              _ref3$viewName = _ref3.viewName,
+              viewName = _ref3$viewName === void 0 ? 'main' : _ref3$viewName;
+
+          var _ref4 = env[ssrKey] || {},
+              state = _ref4.state,
+              _ref4$components = _ref4.components,
+              components = _ref4$components === void 0 ? [] : _ref4$components;
+
+          var router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
+          return router.initialize.then(function (routeState) {
+            var _extends2;
+
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
+            var baseStore = storeCreator(storeOptions);
+
+            var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
+                store = _initApp2.store,
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
+
+            return setup.then(function () {
+              render(id, AppView, {
+                deps: {},
+                router: router,
+                documentHead: ''
+              }, !!env[ssrKey], ins);
+              return store;
+            });
+          });
+        })
+      });
+    }
+  };
+}
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
+  if (middlewares === void 0) {
+    middlewares = [];
+  }
+
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
+  return {
+    useStore: function useStore(_ref5) {
+      var storeCreator = _ref5.storeCreator,
+          storeOptions = _ref5.storeOptions;
+      return Object.assign(ins, {
+        render: function (_render3) {
+          function render(_x2) {
+            return _render3.apply(this, arguments);
+          }
+
+          render.toString = function () {
+            return _render3.toString();
+          };
+
+          return render;
+        }(function (_temp2) {
+          var _ref6 = _temp2 === void 0 ? {} : _temp2,
+              _ref6$id = _ref6.id,
+              id = _ref6$id === void 0 ? 'root' : _ref6$id,
+              _ref6$ssrKey = _ref6.ssrKey,
+              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
+              _ref6$viewName = _ref6.viewName,
+              viewName = _ref6$viewName === void 0 ? 'main' : _ref6$viewName;
+
+          var router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
+          return router.initialize.then(function (routeState) {
+            var _extends3;
+
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends3 = {}, _extends3[routeConfig.RouteModuleName] = routeState, _extends3));
+            var baseStore = storeCreator(storeOptions);
+
+            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
+                store = _initApp3.store,
+                AppView = _initApp3.AppView,
+                setup = _initApp3.setup;
+
+            return setup.then(function () {
+              var state = store.getState();
+              var eluxContext = {
+                deps: {},
+                router: router,
+                documentHead: ''
+              };
+              return render(id, AppView, eluxContext, ins).then(function (html) {
+                var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
+
+                if (match) {
+                  return appMeta.SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + ssrKey + " = " + JSON.stringify({
+                    state: state,
+                    components: Object.keys(eluxContext.deps)
+                  }) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
+                }
+
+                return html;
+              });
+            });
+          });
+        })
+      });
+    }
+  };
+}
+function patchActions(typeName, json) {
+  if (json) {
+    getRootModuleAPI(JSON.parse(json));
+  }
+}
+function getApp() {
+  var modules = getRootModuleAPI();
+  return {
+    GetActions: function GetActions() {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      return args.reduce(function (prev, moduleName) {
+        prev[moduleName] = modules[moduleName].actions;
+        return prev;
+      }, {});
+    },
+    useRouter: appConfig.useRouter,
+    useStore: appConfig.useStore,
+    GetRouter: function GetRouter() {
+      if (env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
+      }
+
+      return appMeta.router;
+    },
+    LoadComponent: appConfig.loadComponent,
+    Modules: modules,
+    Pagenames: routeMeta.pagenames
+  };
+}
+
+function renderToDocument(id, APPView, eluxContext, fromSSR) {
+  var renderFun = fromSSR ? hydrate : render;
+  var panel = env.document.getElementById(id);
+  renderFun(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Router, {
+    page: APPView
+  })), panel);
+}
+function renderToString(id, APPView, eluxContext) {
+  var html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Router, {
+    page: APPView
+  })));
+
+  return Promise.resolve(html);
+}
+
+function isAbsolute(pathname) {
+  return pathname.charAt(0) === '/';
+} // About 1.5x faster than the two-arg version of Array#splice()
+
+
+function spliceOne(list, index) {
+  for (var i = index, k = i + 1, n = list.length; k < n; i += 1, k += 1) {
+    list[i] = list[k];
+  }
+
+  list.pop();
+} // This implementation is based heavily on node's url.parse
+
+
+function resolvePathname(to, from) {
+  if (from === undefined) from = '';
+  var toParts = to && to.split('/') || [];
+  var fromParts = from && from.split('/') || [];
+  var isToAbs = to && isAbsolute(to);
+  var isFromAbs = from && isAbsolute(from);
+  var mustEndAbs = isToAbs || isFromAbs;
+
+  if (to && isAbsolute(to)) {
+    // to is absolute
+    fromParts = toParts;
+  } else if (toParts.length) {
+    // to is relative, drop the filename
+    fromParts.pop();
+    fromParts = fromParts.concat(toParts);
+  }
+
+  if (!fromParts.length) return '/';
+  var hasTrailingSlash;
+
+  if (fromParts.length) {
+    var last = fromParts[fromParts.length - 1];
+    hasTrailingSlash = last === '.' || last === '..' || last === '';
+  } else {
+    hasTrailingSlash = false;
+  }
+
+  var up = 0;
+
+  for (var i = fromParts.length; i >= 0; i--) {
+    var part = fromParts[i];
+
+    if (part === '.') {
+      spliceOne(fromParts, i);
+    } else if (part === '..') {
+      spliceOne(fromParts, i);
+      up++;
+    } else if (up) {
+      spliceOne(fromParts, i);
+      up--;
+    }
+  }
+
+  if (!mustEndAbs) for (; up--; up) fromParts.unshift('..');
+  if (mustEndAbs && fromParts[0] !== '' && (!fromParts[0] || !isAbsolute(fromParts[0]))) fromParts.unshift('');
+  var result = fromParts.join('/');
+  if (hasTrailingSlash && result.substr(-1) !== '/') result += '/';
+  return result;
+}
+
+var isProduction$1 = process.env.NODE_ENV === 'production';
+
+function warning(condition, message) {
+  if (!isProduction$1) {
+    if (condition) {
+      return;
+    }
+
+    var text = "Warning: " + message;
+
+    if (typeof console !== 'undefined') {
+      console.warn(text);
+    }
+
+    try {
+      throw Error(text);
+    } catch (x) {}
+  }
+}
+
+var isProduction = process.env.NODE_ENV === 'production';
+var prefix = 'Invariant failed';
+
+function invariant(condition, message) {
+  if (condition) {
+    return;
+  }
+
+  if (isProduction) {
+    throw new Error(prefix);
+  }
+
+  throw new Error(prefix + ": " + (message || ''));
+}
+
+function addLeadingSlash(path) {
+  return path.charAt(0) === '/' ? path : '/' + path;
+}
+
+function hasBasename(path, prefix) {
+  return path.toLowerCase().indexOf(prefix.toLowerCase()) === 0 && '/?#'.indexOf(path.charAt(prefix.length)) !== -1;
+}
+
+function stripBasename(path, prefix) {
+  return hasBasename(path, prefix) ? path.substr(prefix.length) : path;
+}
+
+function stripTrailingSlash(path) {
+  return path.charAt(path.length - 1) === '/' ? path.slice(0, -1) : path;
+}
+
+function parsePath(path) {
+  var pathname = path || '/';
+  var search = '';
+  var hash = '';
+  var hashIndex = pathname.indexOf('#');
+
+  if (hashIndex !== -1) {
+    hash = pathname.substr(hashIndex);
+    pathname = pathname.substr(0, hashIndex);
+  }
+
+  var searchIndex = pathname.indexOf('?');
+
+  if (searchIndex !== -1) {
+    search = pathname.substr(searchIndex);
+    pathname = pathname.substr(0, searchIndex);
+  }
+
+  return {
+    pathname: pathname,
+    search: search === '?' ? '' : search,
+    hash: hash === '#' ? '' : hash
+  };
+}
+
+function createPath(location) {
+  var pathname = location.pathname,
+      search = location.search,
+      hash = location.hash;
+  var path = pathname || '/';
+  if (search && search !== '?') path += search.charAt(0) === '?' ? search : "?" + search;
+  if (hash && hash !== '#') path += hash.charAt(0) === '#' ? hash : "#" + hash;
+  return path;
+}
+
+function createLocation(path, state, key, currentLocation) {
+  var location;
+
+  if (typeof path === 'string') {
+    // Two-arg form: push(path, state)
+    location = parsePath(path);
+    location.state = state;
+  } else {
+    // One-arg form: push(location)
+    location = _extends({}, path);
+    if (location.pathname === undefined) location.pathname = '';
+
+    if (location.search) {
+      if (location.search.charAt(0) !== '?') location.search = '?' + location.search;
+    } else {
+      location.search = '';
+    }
+
+    if (location.hash) {
+      if (location.hash.charAt(0) !== '#') location.hash = '#' + location.hash;
+    } else {
+      location.hash = '';
+    }
+
+    if (state !== undefined && location.state === undefined) location.state = state;
+  }
+
+  try {
+    location.pathname = decodeURI(location.pathname);
+  } catch (e) {
+    if (e instanceof URIError) {
+      throw new URIError('Pathname "' + location.pathname + '" could not be decoded. ' + 'This is likely caused by an invalid percent-encoding.');
+    } else {
+      throw e;
+    }
+  }
+
+  if (key) location.key = key;
+
+  if (currentLocation) {
+    // Resolve incomplete/relative pathname relative to current location.
+    if (!location.pathname) {
+      location.pathname = currentLocation.pathname;
+    } else if (location.pathname.charAt(0) !== '/') {
+      location.pathname = resolvePathname(location.pathname, currentLocation.pathname);
+    }
+  } else {
+    // When there is no prior location and pathname is empty, set it to /
+    if (!location.pathname) {
+      location.pathname = '/';
+    }
+  }
+
+  return location;
+}
+
+function createTransitionManager() {
+  var prompt = null;
+
+  function setPrompt(nextPrompt) {
+    process.env.NODE_ENV !== "production" ? warning(prompt == null, 'A history supports only one prompt at a time') : void 0;
+    prompt = nextPrompt;
+    return function () {
+      if (prompt === nextPrompt) prompt = null;
+    };
+  }
+
+  function confirmTransitionTo(location, action, getUserConfirmation, callback) {
+    // TODO: If another transition starts while we're still confirming
+    // the previous one, we may end up in a weird state. Figure out the
+    // best way to handle this.
+    if (prompt != null) {
+      var result = typeof prompt === 'function' ? prompt(location, action) : prompt;
+
+      if (typeof result === 'string') {
+        if (typeof getUserConfirmation === 'function') {
+          getUserConfirmation(result, callback);
+        } else {
+          process.env.NODE_ENV !== "production" ? warning(false, 'A history needs a getUserConfirmation function in order to use a prompt message') : void 0;
+          callback(true);
+        }
+      } else {
+        // Return false from a transition hook to cancel the transition.
+        callback(result !== false);
+      }
+    } else {
+      callback(true);
+    }
+  }
+
+  var listeners = [];
+
+  function appendListener(fn) {
+    var isActive = true;
+
+    function listener() {
+      if (isActive) fn.apply(void 0, arguments);
+    }
+
+    listeners.push(listener);
+    return function () {
+      isActive = false;
+      listeners = listeners.filter(function (item) {
+        return item !== listener;
+      });
+    };
+  }
+
+  function notifyListeners() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    listeners.forEach(function (listener) {
+      return listener.apply(void 0, args);
+    });
+  }
+
+  return {
+    setPrompt: setPrompt,
+    confirmTransitionTo: confirmTransitionTo,
+    appendListener: appendListener,
+    notifyListeners: notifyListeners
+  };
+}
+
+var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+
+function getConfirmation(message, callback) {
+  callback(window.confirm(message)); // eslint-disable-line no-alert
+}
+/**
+ * Returns true if the HTML5 history API is supported. Taken from Modernizr.
+ *
+ * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
+ * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
+ * changed to avoid false negatives for Windows Phones: https://github.com/reactjs/react-router/issues/586
+ */
+
+
+function supportsHistory() {
+  var ua = window.navigator.userAgent;
+  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) return false;
+  return window.history && 'pushState' in window.history;
+}
+/**
+ * Returns true if browser fires popstate on hash change.
+ * IE10 and IE11 do not.
+ */
+
+
+function supportsPopStateOnHashChange() {
+  return window.navigator.userAgent.indexOf('Trident') === -1;
+}
+/**
+ * Returns true if a given popstate event is an extraneous WebKit event.
+ * Accounts for the fact that Chrome on iOS fires real popstate events
+ * containing undefined state when pressing the back button.
+ */
+
+
+function isExtraneousPopstateEvent(event) {
+  return event.state === undefined && navigator.userAgent.indexOf('CriOS') === -1;
+}
+
+var PopStateEvent = 'popstate';
+var HashChangeEvent = 'hashchange';
+
+function getHistoryState() {
+  try {
+    return window.history.state || {};
+  } catch (e) {
+    // IE 11 sometimes throws when accessing window.history.state
+    // See https://github.com/ReactTraining/history/pull/289
+    return {};
+  }
+}
+/**
+ * Creates a history object that uses the HTML5 history API including
+ * pushState, replaceState, and the popstate event.
+ */
+
+
+function createBrowserHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  !canUseDOM ? process.env.NODE_ENV !== "production" ? invariant(false, 'Browser history needs a DOM') : invariant(false) : void 0;
+  var globalHistory = window.history;
+  var canUseHistory = supportsHistory();
+  var needsHashChangeListener = !supportsPopStateOnHashChange();
+  var _props = props,
+      _props$forceRefresh = _props.forceRefresh,
+      forceRefresh = _props$forceRefresh === void 0 ? false : _props$forceRefresh,
+      _props$getUserConfirm = _props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
+      _props$keyLength = _props.keyLength,
+      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
+  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
+
+  function getDOMLocation(historyState) {
+    var _ref = historyState || {},
+        key = _ref.key,
+        state = _ref.state;
+
+    var _window$location = window.location,
+        pathname = _window$location.pathname,
+        search = _window$location.search,
+        hash = _window$location.hash;
+    var path = pathname + search + hash;
+    process.env.NODE_ENV !== "production" ? warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
+    if (basename) path = stripBasename(path, basename);
+    return createLocation(path, state, key);
+  }
+
+  function createKey() {
+    return Math.random().toString(36).substr(2, keyLength);
+  }
+
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = globalHistory.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  function handlePopState(event) {
+    // Ignore extraneous popstate events in WebKit.
+    if (isExtraneousPopstateEvent(event)) return;
+    handlePop(getDOMLocation(event.state));
+  }
+
+  function handleHashChange() {
+    handlePop(getDOMLocation(getHistoryState()));
+  }
+
+  var forceNextPop = false;
+
+  function handlePop(location) {
+    if (forceNextPop) {
+      forceNextPop = false;
+      setState();
+    } else {
+      var action = 'POP';
+      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+        if (ok) {
+          setState({
+            action: action,
+            location: location
+          });
+        } else {
+          revertPop(location);
+        }
+      });
+    }
+  }
+
+  function revertPop(fromLocation) {
+    var toLocation = history.location; // TODO: We could probably make this more reliable by
+    // keeping a list of keys we've seen in sessionStorage.
+    // Instead, we just default to 0 for keys we don't know.
+
+    var toIndex = allKeys.indexOf(toLocation.key);
+    if (toIndex === -1) toIndex = 0;
+    var fromIndex = allKeys.indexOf(fromLocation.key);
+    if (fromIndex === -1) fromIndex = 0;
+    var delta = toIndex - fromIndex;
+
+    if (delta) {
+      forceNextPop = true;
+      go(delta);
+    }
+  }
+
+  var initialLocation = getDOMLocation(getHistoryState());
+  var allKeys = [initialLocation.key]; // Public interface
+
+  function createHref(location) {
+    return basename + createPath(location);
+  }
+
+  function push(path, state) {
+    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    var action = 'PUSH';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var href = createHref(location);
+      var key = location.key,
+          state = location.state;
+
+      if (canUseHistory) {
+        globalHistory.pushState({
+          key: key,
+          state: state
+        }, null, href);
+
+        if (forceRefresh) {
+          window.location.href = href;
+        } else {
+          var prevIndex = allKeys.indexOf(history.location.key);
+          var nextKeys = allKeys.slice(0, prevIndex + 1);
+          nextKeys.push(location.key);
+          allKeys = nextKeys;
+          setState({
+            action: action,
+            location: location
+          });
+        }
+      } else {
+        process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history') : void 0;
+        window.location.href = href;
+      }
+    });
+  }
+
+  function replace(path, state) {
+    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    var action = 'REPLACE';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var href = createHref(location);
+      var key = location.key,
+          state = location.state;
+
+      if (canUseHistory) {
+        globalHistory.replaceState({
+          key: key,
+          state: state
+        }, null, href);
+
+        if (forceRefresh) {
+          window.location.replace(href);
+        } else {
+          var prevIndex = allKeys.indexOf(history.location.key);
+          if (prevIndex !== -1) allKeys[prevIndex] = location.key;
+          setState({
+            action: action,
+            location: location
+          });
+        }
+      } else {
+        process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history') : void 0;
+        window.location.replace(href);
+      }
+    });
+  }
+
+  function go(n) {
+    globalHistory.go(n);
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  var listenerCount = 0;
+
+  function checkDOMListeners(delta) {
+    listenerCount += delta;
+
+    if (listenerCount === 1 && delta === 1) {
+      window.addEventListener(PopStateEvent, handlePopState);
+      if (needsHashChangeListener) window.addEventListener(HashChangeEvent, handleHashChange);
+    } else if (listenerCount === 0) {
+      window.removeEventListener(PopStateEvent, handlePopState);
+      if (needsHashChangeListener) window.removeEventListener(HashChangeEvent, handleHashChange);
+    }
+  }
+
+  var isBlocked = false;
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    var unblock = transitionManager.setPrompt(prompt);
+
+    if (!isBlocked) {
+      checkDOMListeners(1);
+      isBlocked = true;
+    }
+
+    return function () {
+      if (isBlocked) {
+        isBlocked = false;
+        checkDOMListeners(-1);
+      }
+
+      return unblock();
+    };
+  }
+
+  function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  }
+
+  var history = {
+    length: globalHistory.length,
+    action: 'POP',
+    location: initialLocation,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: true
+  }
+});
+
+function createServerHistory() {
+  return {
+    push: function push() {
+      return undefined;
+    },
+    replace: function replace() {
+      return undefined;
+    },
+    go: function go() {
+      return undefined;
+    },
+    block: function block() {
+      return function () {
+        return undefined;
+      };
+    }
+  };
+}
+
+var BrowserNativeRouter = function (_BaseNativeRouter) {
+  _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
+
+  function BrowserNativeRouter(url) {
+    var _this;
+
+    _this = _BaseNativeRouter.call(this) || this;
+
+    _defineProperty(_assertThisInitialized(_this), "_unlistenHistory", void 0);
+
+    _defineProperty(_assertThisInitialized(_this), "_history", void 0);
+
+    if (env.isServer) {
+      _this._history = createServerHistory();
+    } else {
+      _this._history = createBrowserHistory();
+    }
+
+    _this._unlistenHistory = _this._history.block(function (location, action) {
+      if (action === 'POP') {
+        env.setTimeout(function () {
+          return _this.eluxRouter.back(1);
+        }, 100);
+        return false;
+      }
+
+      var key = _this.getKey(location);
+
+      var changed = _this.onChange(key);
+
+      if (changed) {
+        var _location$pathname = location.pathname,
+            pathname = _location$pathname === void 0 ? '' : _location$pathname,
+            _location$search = location.search,
+            search = _location$search === void 0 ? '' : _location$search,
+            _location$hash = location.hash,
+            hash = _location$hash === void 0 ? '' : _location$hash;
+
+        var _url = [pathname, search, hash].join('');
+
+        var _callback;
+
+        if (action === 'REPLACE') {
+          _callback = function _callback() {
+            return _this.eluxRouter.replace(_url);
+          };
+        } else if (action === 'PUSH') {
+          _callback = function _callback() {
+            return _this.eluxRouter.push(_url);
+          };
+        } else {
+          _callback = function _callback() {
+            return _this.eluxRouter.relaunch(_url);
+          };
+        }
+
+        env.setTimeout(_callback, 100);
+        return false;
+      }
+
+      return undefined;
+    });
+    return _this;
+  }
+
+  var _proto = BrowserNativeRouter.prototype;
+
+  _proto.getKey = function getKey(location) {
+    return location.state || '';
+  };
+
+  _proto.push = function push(getNativeData, key) {
+    if (!env.isServer) {
+      var nativeData = getNativeData();
+
+      this._history.push(nativeData.nativeUrl, key);
+
+      return nativeData;
+    }
+
+    return undefined;
+  };
+
+  _proto.replace = function replace(getNativeData, key) {
+    if (!env.isServer) {
+      var nativeData = getNativeData();
+
+      this._history.push(nativeData.nativeUrl, key);
+
+      return nativeData;
+    }
+
+    return undefined;
+  };
+
+  _proto.relaunch = function relaunch(getNativeData, key) {
+    if (!env.isServer) {
+      var nativeData = getNativeData();
+
+      this._history.push(nativeData.nativeUrl, key);
+
+      return nativeData;
+    }
+
+    return undefined;
+  };
+
+  _proto.back = function back(getNativeData, n, key) {
+    if (!env.isServer) {
+      var nativeData = getNativeData();
+
+      this._history.replace(nativeData.nativeUrl, key);
+
+      return nativeData;
+    }
+
+    return undefined;
+  };
+
+  _proto.toOutside = function toOutside(url) {
+    this._history.push(url, '');
+  };
+
+  _proto.destroy = function destroy() {
+    this._unlistenHistory();
+  };
+
+  return BrowserNativeRouter;
+}(BaseNativeRouter);
+var EluxRouter = function (_BaseEluxRouter) {
+  _inheritsLoose(EluxRouter, _BaseEluxRouter);
+
+  function EluxRouter(url, browserNativeRouter, locationTransform, nativeData) {
+    return _BaseEluxRouter.call(this, url, browserNativeRouter, locationTransform, nativeData) || this;
+  }
+
+  return EluxRouter;
+}(BaseEluxRouter);
+function createRouter(url, locationTransform, nativeData) {
+  var browserNativeRouter = new BrowserNativeRouter(url);
+  var router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
+  return router;
+}
+
+setAppConfig({
+  loadComponent: loadComponent,
+  useRouter: useRouter
+});
+function setConfig(conf) {
+  setReactComponentsConfig(conf);
+  setUserConfig(conf);
+}
+var createApp = function createApp(moduleGetter, middlewares) {
+  var url = [location.pathname, location.search, location.hash].join('');
+  return createBaseApp({}, function (locationTransform) {
+    return createRouter(url, locationTransform, {});
+  }, renderToDocument, moduleGetter, middlewares);
+};
+var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+  return createBaseSSR({}, function (locationTransform) {
+    return createRouter(url, locationTransform, nativeData);
+  }, renderToString, moduleGetter, middlewares);
+};
+
 setAppConfig({
   useStore: useStore
 });
@@ -8872,4 +8868,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page, Provider, RouteActionTypes, Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };

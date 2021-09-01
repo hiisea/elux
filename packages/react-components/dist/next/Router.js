@@ -70,35 +70,32 @@ export const Router = props => {
       return;
     });
   }, [router]);
-  const nodes = pages.map(item => {
-    const store = item.store;
-    const page = item.page ? React.createElement(item.page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }) : React.createElement(Page, {
-      key: store.id,
-      store: store,
-      pagename: item.pagename
-    }, props.children);
-    return page;
-  });
   return React.createElement("div", {
     ref: containerRef,
     className: classname
-  }, nodes);
+  }, pages.map(item => {
+    const {
+      store,
+      pagename
+    } = item;
+    return React.createElement("div", {
+      key: store.id,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, React.createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 export const Page = memo(function ({
   store,
-  pagename,
-  children
+  view
 }) {
+  const View = view;
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, React.createElement("div", {
-    className: "elux-page",
-    "data-pagename": pagename
-  }, children));
+  }, React.createElement(View, null));
 });
 export function useRouter() {
   const eluxContext = useContext(EluxContextComponent);

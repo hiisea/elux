@@ -145,7 +145,7 @@ export interface EluxContext {
 export function createBaseMP<INS = {}>(
   ins: INS,
   createRouter: (locationTransform: LocationTransform) => IEluxRouter,
-  render: (store: IStore, eluxContext: EluxContext, ins: INS) => any,
+  render: (eluxContext: EluxContext, ins: INS) => any,
   moduleGetter: ModuleGetter,
   middlewares: IStoreMiddleware[] = []
 ): {
@@ -166,7 +166,7 @@ export function createBaseMP<INS = {}>(
           appMeta.router = router;
           const baseStore = storeCreator(storeOptions);
           const {store} = initApp<B>(router, baseStore, middlewares);
-          const context: ContextWrap = render(store, {deps: {}, router, documentHead: ''}, ins);
+          const context: ContextWrap = render({deps: {}, router, documentHead: ''}, ins);
           return {store, context};
         },
       });
@@ -177,7 +177,7 @@ export function createBaseMP<INS = {}>(
 export function createBaseApp<INS = {}>(
   ins: INS,
   createRouter: (locationTransform: LocationTransform) => IEluxRouter,
-  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void,
+  render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void,
   moduleGetter: ModuleGetter,
   middlewares: IStoreMiddleware[] = []
 ): {
@@ -201,7 +201,7 @@ export function createBaseApp<INS = {}>(
             const baseStore = storeCreator(storeOptions);
             const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName, components);
             return setup.then(() => {
-              render(id, AppView, store, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
+              render(id, AppView, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
               return store;
             });
           });
@@ -214,7 +214,7 @@ export function createBaseApp<INS = {}>(
 export function createBaseSSR<INS = {}>(
   ins: INS,
   createRouter: (locationTransform: LocationTransform) => IEluxRouter,
-  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>,
+  render: (id: string, component: any, eluxContext: EluxContext, ins: INS) => Promise<string>,
   moduleGetter: ModuleGetter,
   middlewares: IStoreMiddleware[] = []
 ): {
@@ -240,7 +240,7 @@ export function createBaseSSR<INS = {}>(
             return setup.then(() => {
               const state = store.getState();
               const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
-              return render(id, AppView, store, eluxContext, ins).then((html) => {
+              return render(id, AppView, eluxContext, ins).then((html) => {
                 const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
                 if (match) {
                   return appMeta.SSRTPL.replace(

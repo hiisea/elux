@@ -1,4 +1,4 @@
-import { inject, watch, reactive, createVNode, createTextVNode, defineComponent, h, defineAsyncComponent, provide, createApp as createApp$1, createSSRApp } from 'vue';
+import { watch, reactive, computed, createVNode, createTextVNode, inject, defineComponent, Comment, h, Fragment, defineAsyncComponent, provide, shallowRef, ref, onBeforeMount, createApp as createApp$1, createSSRApp } from 'vue';
 
 function getDevtoolsGlobalHook() {
   return getTarget().__VUE_DEVTOOLS_GLOBAL_HOOK__;
@@ -31,11 +31,6 @@ function setupDevtoolsPlugin(pluginDescriptor, setupFn) {
  * @license MIT
  */
 var storeKey = 'store';
-
-function useStore(key) {
-  if (key === void 0) key = null;
-  return inject(key !== null ? key : storeKey);
-}
 /**
  * Get the first item that pass the test
  * by second argument function
@@ -99,7 +94,7 @@ function forEachValue(obj, fn) {
   });
 }
 
-function isObject(obj) {
+function isObject$1(obj) {
   return obj !== null && typeof obj === 'object';
 }
 
@@ -399,7 +394,7 @@ function getNestedState(state, path) {
 }
 
 function unifyObjectStyle(type, payload, options) {
-  if (isObject(type) && type.type) {
+  if (isObject$1(type) && type.type) {
     options = payload;
     payload = type;
     type = type.type;
@@ -926,6 +921,10 @@ function makeAssertionMessage(path, key, type, value, expected) {
   return buf;
 }
 
+function createStore(options) {
+  return new Store(options);
+}
+
 var Store = function Store(options) {
   var this$1$1 = this;
   if (options === void 0) options = {};
@@ -1317,39 +1316,6 @@ function pad(num, maxLength) {
   return repeat('0', maxLength - num.toString().length) + num;
 }
 
-var root;
-
-if (typeof self !== 'undefined') {
-  root = self;
-} else if (typeof window !== 'undefined') {
-  root = window;
-} else if (typeof global !== 'undefined') {
-  root = global;
-} else if (typeof module !== 'undefined') {
-  root = module;
-} else {
-  root = new Function('return this')();
-}
-
-var env = root;
-env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
-
-env.encodeBas64 = function (str) {
-  if (!str) {
-    return '';
-  }
-
-  return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
-};
-
-env.decodeBas64 = function (str) {
-  if (!str) {
-    return '';
-  }
-
-  return typeof atob === 'function' ? atob(str) : typeof Buffer !== 'undefined' ? Buffer.from(str, 'base64').toString() : str;
-};
-
 function _assertThisInitialized(self) {
   if (self === void 0) {
     throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -1388,6 +1354,39 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
+var root;
+
+if (typeof self !== 'undefined') {
+  root = self;
+} else if (typeof window !== 'undefined') {
+  root = window;
+} else if (typeof global !== 'undefined') {
+  root = global;
+} else if (typeof module !== 'undefined') {
+  root = module;
+} else {
+  root = new Function('return this')();
+}
+
+var env = root;
+env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+
+env.encodeBas64 = function (str) {
+  if (!str) {
+    return '';
+  }
+
+  return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
+};
+
+env.decodeBas64 = function (str) {
+  if (!str) {
+    return '';
+  }
+
+  return typeof atob === 'function' ? atob(str) : typeof Buffer !== 'undefined' ? Buffer.from(str, 'base64').toString() : str;
+};
+
 var LoadingState;
 
 (function (LoadingState) {
@@ -1423,6 +1422,50 @@ var SingleDispatcher = function () {
   };
 
   return SingleDispatcher;
+}();
+var MultipleDispatcher = function () {
+  function MultipleDispatcher() {
+    _defineProperty(this, "listenerId", 0);
+
+    _defineProperty(this, "listenerMap", {});
+  }
+
+  var _proto2 = MultipleDispatcher.prototype;
+
+  _proto2.addListener = function addListener(name, callback) {
+    this.listenerId++;
+    var id = "" + this.listenerId;
+
+    if (!this.listenerMap[name]) {
+      this.listenerMap[name] = {};
+    }
+
+    var listenerMap = this.listenerMap[name];
+    listenerMap[id] = callback;
+    return function () {
+      delete listenerMap[id];
+    };
+  };
+
+  _proto2.dispatch = function dispatch(name, data) {
+    var listenerMap = this.listenerMap[name];
+
+    if (listenerMap) {
+      var hasPromise = false;
+      var arr = Object.keys(listenerMap).map(function (id) {
+        var result = listenerMap[id](data);
+
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+
+        return result;
+      });
+      return hasPromise ? Promise.all(arr) : undefined;
+    }
+  };
+
+  return MultipleDispatcher;
 }();
 var TaskCounter = function (_SingleDispatcher) {
   _inheritsLoose(TaskCounter, _SingleDispatcher);
@@ -1498,7 +1541,11 @@ var TaskCounter = function (_SingleDispatcher) {
 
   return TaskCounter;
 }(SingleDispatcher);
-function isPlainObject$1(obj) {
+function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function isObject(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -1507,8 +1554,8 @@ function __deepMerge(optimize, target, inject) {
     var src = target[key];
     var val = inject[key];
 
-    if (isPlainObject$1(val)) {
-      if (isPlainObject$1(src)) {
+    if (isObject(val)) {
+      if (isObject(src)) {
         target[key] = __deepMerge(optimize, src, val);
       } else {
         target[key] = optimize ? val : __deepMerge(optimize, {}, val);
@@ -1525,48 +1572,42 @@ function deepMerge(target) {
     args[_key - 1] = arguments[_key];
   }
 
+  args = args.filter(function (item) {
+    return isObject(item) && Object.keys(item).length;
+  });
+
   if (args.length === 0) {
     return target;
   }
 
-  if (!isPlainObject$1(target)) {
+  if (!isObject(target)) {
     target = {};
   }
 
-  args = args.filter(function (item) {
-    return isPlainObject$1(item) && Object.keys(item).length;
-  });
-
-  if (args.length < 1) {
-    return target;
-  }
-
   args.forEach(function (inject, index) {
-    if (isPlainObject$1(inject)) {
-      var lastArg = false;
-      var last2Arg = null;
+    var lastArg = false;
+    var last2Arg = null;
 
-      if (index === args.length - 1) {
-        lastArg = true;
-      } else if (index === args.length - 2) {
-        last2Arg = args[index + 1];
-      }
-
-      Object.keys(inject).forEach(function (key) {
-        var src = target[key];
-        var val = inject[key];
-
-        if (isPlainObject$1(val)) {
-          if (isPlainObject$1(src)) {
-            target[key] = __deepMerge(lastArg, src, val);
-          } else {
-            target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
-          }
-        } else {
-          target[key] = val;
-        }
-      });
+    if (index === args.length - 1) {
+      lastArg = true;
+    } else if (index === args.length - 2) {
+      last2Arg = args[index + 1];
     }
+
+    Object.keys(inject).forEach(function (key) {
+      var src = target[key];
+      var val = inject[key];
+
+      if (isObject(val)) {
+        if (isObject(src)) {
+          target[key] = __deepMerge(lastArg, src, val);
+        } else {
+          target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
+        }
+      } else {
+        target[key] = val;
+      }
+    });
   });
   return target;
 }
@@ -1626,7 +1667,9 @@ var coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2
+  DepthTimeOnLoading: 2,
+  RouteModuleName: 'route',
+  AppModuleName: 'stage'
 };
 function buildConfigSetter(data) {
   return function (config) {
@@ -1636,12 +1679,60 @@ function buildConfigSetter(data) {
   };
 }
 var setCoreConfig = buildConfigSetter(coreConfig);
+function isEluxComponent(data) {
+  return data['__elux_component__'];
+}
+var MetaData = {
+  injectedModules: {},
+  reducersMap: {},
+  effectsMap: {},
+  moduleCaches: {},
+  componentCaches: {},
+  facadeMap: null,
+  moduleGetter: null,
+  moduleExists: null,
+  currentRouter: null
+};
+function moduleExists() {
+  return MetaData.moduleExists;
+}
+function deepMergeState(target) {
+  if (target === void 0) {
+    target = {};
+  }
+
+  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+
+  if (coreConfig.MutableData) {
+    return deepMerge.apply(void 0, [target].concat(args));
+  }
+
+  return deepMerge.apply(void 0, [{}, target].concat(args));
+}
+function mergeState(target) {
+  if (target === void 0) {
+    target = {};
+  }
+
+  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+    args[_key2 - 1] = arguments[_key2];
+  }
+
+  if (coreConfig.MutableData) {
+    return Object.assign.apply(Object, [target].concat(args));
+  }
+
+  return Object.assign.apply(Object, [{}, target].concat(args));
+}
+
 var ActionTypes = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
-  Error: "Elux" + coreConfig.NSP + "Error",
-  Replace: "Elux" + coreConfig.NSP + "Replace"
+  MRouteChange: 'RouteChange',
+  Error: "Elux" + coreConfig.NSP + "Error"
 };
 function errorAction(error) {
   return {
@@ -1649,15 +1740,15 @@ function errorAction(error) {
     payload: [error]
   };
 }
+function routeChangeAction(routeState) {
+  return {
+    type: "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes.MRouteChange,
+    payload: [routeState]
+  };
+}
 function moduleInitAction(moduleName, initState) {
   return {
     type: "" + moduleName + coreConfig.NSP + ActionTypes.MInit,
-    payload: [initState]
-  };
-}
-function moduleReInitAction(moduleName, initState) {
-  return {
-    type: "" + moduleName + coreConfig.NSP + ActionTypes.MReInit,
     payload: [initState]
   };
 }
@@ -1667,66 +1758,15 @@ function moduleLoadingAction(moduleName, loadingState) {
     payload: [loadingState]
   };
 }
-function isEluxComponent(data) {
-  return data['__elux_component__'];
-}
-var MetaData = {
-  appModuleName: 'stage',
-  injectedModules: {},
-  reducersMap: {},
-  effectsMap: {},
-  moduleCaches: {},
-  componentCaches: {},
-  facadeMap: null,
-  moduleGetter: null,
-  loadings: {}
-};
-
-function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
-  if (!actionHandlerMap[actionName]) {
-    actionHandlerMap[actionName] = {};
-  }
-
-  if (actionHandlerMap[actionName][listenerModule]) {
-    warn("Action duplicate or conflict : " + actionName + ".");
-  }
-
-  actionHandlerMap[actionName][listenerModule] = handler;
-}
-
-function injectActions(moduleName, handlers) {
-  var injectedModules = MetaData.injectedModules;
-
-  if (injectedModules[moduleName]) {
-    return;
-  }
-
-  injectedModules[moduleName] = true;
-
-  for (var actionNames in handlers) {
-    if (typeof handlers[actionNames] === 'function') {
-      (function () {
-        var handler = handlers[actionNames];
-
-        if (handler.__isReducer__ || handler.__isEffect__) {
-          actionNames.split(coreConfig.MSP).forEach(function (actionName) {
-            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
-            var arr = actionName.split(coreConfig.NSP);
-
-            if (arr[1]) {
-              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
-            } else {
-              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
-            }
-          });
-        }
-      })();
-    }
-  }
+function moduleRouteChangeAction(moduleName, params, action) {
+  return {
+    type: "" + moduleName + coreConfig.NSP + ActionTypes.MRouteChange,
+    payload: [params, action]
+  };
 }
 function setLoading(store, item, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
-  var loadings = MetaData.loadings;
+  var loadings = store.loadingGroups;
 
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -1780,7 +1820,7 @@ function effect(loadingKey) {
     if (loadingForModuleName && loadingForGroupName && !env.isServer) {
       function injectLoading(curAction, promiseResult) {
         if (loadingForModuleName === 'app') {
-          loadingForModuleName = MetaData.appModuleName;
+          loadingForModuleName = coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
@@ -1816,36 +1856,6 @@ function logger(before, after) {
     fun.__decorators__.push([before, after]);
   };
 }
-function deepMergeState(target) {
-  if (target === void 0) {
-    target = {};
-  }
-
-  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    args[_key - 1] = arguments[_key];
-  }
-
-  if (coreConfig.MutableData) {
-    return deepMerge.apply(void 0, [target].concat(args));
-  }
-
-  return deepMerge.apply(void 0, [{}, target].concat(args));
-}
-function mergeState(target) {
-  if (target === void 0) {
-    target = {};
-  }
-
-  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    args[_key2 - 1] = arguments[_key2];
-  }
-
-  if (coreConfig.MutableData) {
-    return Object.assign.apply(Object, [target].concat(args));
-  }
-
-  return Object.assign.apply(Object, [{}, target].concat(args));
-}
 
 function _extends() {
   _extends = Object.assign || function (target) {
@@ -1863,6 +1873,349 @@ function _extends() {
   };
 
   return _extends.apply(this, arguments);
+}
+
+function exportModule(moduleName, ModuleHandlers, params, components) {
+  Object.keys(components).forEach(function (key) {
+    var component = components[key];
+
+    if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
+      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
+    }
+  });
+
+  var model = function model(store) {
+    if (!store.injectedModules[moduleName]) {
+      var _latestState = store.router.latestState;
+
+      var _preState = store.getState();
+
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState, _preState);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+    }
+
+    return undefined;
+  };
+
+  return {
+    moduleName: moduleName,
+    model: model,
+    components: components,
+    state: undefined,
+    params: params,
+    actions: undefined
+  };
+}
+function modelHotReplacement(moduleName, ModuleHandlers) {
+  var model = function model(store) {
+    if (!store.injectedModules[moduleName]) {
+      var _latestState2 = store.router.latestState;
+
+      var _preState2 = store.getState();
+
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2, _preState2);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+    }
+
+    return undefined;
+  };
+
+  var moduleCache = MetaData.moduleCaches[moduleName];
+
+  if (moduleCache && moduleCache['model']) {
+    moduleCache.model = model;
+  }
+
+  var store = MetaData.currentRouter.getCurrentStore();
+
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}), true);
+  }
+
+  var stores = MetaData.currentRouter.getStoreList();
+  stores.forEach(function (store) {
+    if (store.injectedModules[moduleName]) {
+      var ins = new ModuleHandlers(moduleName, store, {}, {});
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log("[HMR] @medux Updated model: " + moduleName);
+}
+function getModule(moduleName) {
+  if (MetaData.moduleCaches[moduleName]) {
+    return MetaData.moduleCaches[moduleName];
+  }
+
+  var moduleOrPromise = MetaData.moduleGetter[moduleName]();
+
+  if (isPromise(moduleOrPromise)) {
+    var promiseModule = moduleOrPromise.then(function (_ref) {
+      var module = _ref.default;
+      MetaData.moduleCaches[moduleName] = module;
+      return module;
+    }, function (reason) {
+      MetaData.moduleCaches[moduleName] = undefined;
+      throw reason;
+    });
+    MetaData.moduleCaches[moduleName] = promiseModule;
+    return promiseModule;
+  }
+
+  MetaData.moduleCaches[moduleName] = moduleOrPromise;
+  return moduleOrPromise;
+}
+function getModuleList(moduleNames) {
+  if (moduleNames.length < 1) {
+    return [];
+  }
+
+  var list = moduleNames.map(function (moduleName) {
+    if (MetaData.moduleCaches[moduleName]) {
+      return MetaData.moduleCaches[moduleName];
+    }
+
+    return getModule(moduleName);
+  });
+
+  if (list.some(function (item) {
+    return isPromise(item);
+  })) {
+    return Promise.all(list);
+  } else {
+    return list;
+  }
+}
+function loadModel(moduleName, store) {
+  var moduleOrPromise = getModule(moduleName);
+
+  if (isPromise(moduleOrPromise)) {
+    return moduleOrPromise.then(function (module) {
+      return module.model(store);
+    });
+  }
+
+  return moduleOrPromise.model(store);
+}
+function getComponet(moduleName, componentName) {
+  var key = [moduleName, componentName].join(coreConfig.NSP);
+
+  if (MetaData.componentCaches[key]) {
+    return MetaData.componentCaches[key];
+  }
+
+  var moduleCallback = function moduleCallback(module) {
+    var componentOrFun = module.components[componentName];
+
+    if (isEluxComponent(componentOrFun)) {
+      var component = componentOrFun;
+      MetaData.componentCaches[key] = component;
+      return component;
+    }
+
+    var promiseComponent = componentOrFun().then(function (_ref2) {
+      var component = _ref2.default;
+      MetaData.componentCaches[key] = component;
+      return component;
+    }, function (reason) {
+      MetaData.componentCaches[key] = undefined;
+      throw reason;
+    });
+    MetaData.componentCaches[key] = promiseComponent;
+    return promiseComponent;
+  };
+
+  var moduleOrPromise = getModule(moduleName);
+
+  if (isPromise(moduleOrPromise)) {
+    return moduleOrPromise.then(moduleCallback);
+  }
+
+  return moduleCallback(moduleOrPromise);
+}
+function getComponentList(keys) {
+  if (keys.length < 1) {
+    return Promise.resolve([]);
+  }
+
+  return Promise.all(keys.map(function (key) {
+    if (MetaData.componentCaches[key]) {
+      return MetaData.componentCaches[key];
+    }
+
+    var _key$split = key.split(coreConfig.NSP),
+        moduleName = _key$split[0],
+        componentName = _key$split[1];
+
+    return getComponet(moduleName, componentName);
+  }));
+}
+function loadComponet(moduleName, componentName, store, deps) {
+  var promiseOrComponent = getComponet(moduleName, componentName);
+
+  var callback = function callback(component) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
+      if (env.isServer) {
+        return null;
+      }
+
+      var module = getModule(moduleName);
+      module.model(store);
+    }
+
+    deps[moduleName + coreConfig.NSP + componentName] = true;
+    return component;
+  };
+
+  if (isPromise(promiseOrComponent)) {
+    if (env.isServer) {
+      return null;
+    }
+
+    return promiseOrComponent.then(callback);
+  }
+
+  return callback(promiseOrComponent);
+}
+function getRootModuleAPI(data) {
+  if (!MetaData.facadeMap) {
+    if (data) {
+      MetaData.facadeMap = Object.keys(data).reduce(function (prev, moduleName) {
+        var arr = data[moduleName];
+        var actions = {};
+        var actionNames = {};
+        arr.forEach(function (actionName) {
+          actions[actionName] = function () {
+            for (var _len = arguments.length, payload = new Array(_len), _key = 0; _key < _len; _key++) {
+              payload[_key] = arguments[_key];
+            }
+
+            return {
+              type: moduleName + coreConfig.NSP + actionName,
+              payload: payload
+            };
+          };
+
+          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
+        });
+        var moduleFacade = {
+          name: moduleName,
+          actions: actions,
+          actionNames: actionNames
+        };
+        prev[moduleName] = moduleFacade;
+        return prev;
+      }, {});
+    } else {
+      var cacheData = {};
+      MetaData.facadeMap = new Proxy({}, {
+        set: function set(target, moduleName, val, receiver) {
+          return Reflect.set(target, moduleName, val, receiver);
+        },
+        get: function get(target, moduleName, receiver) {
+          var val = Reflect.get(target, moduleName, receiver);
+
+          if (val !== undefined) {
+            return val;
+          }
+
+          if (!cacheData[moduleName]) {
+            cacheData[moduleName] = {
+              name: moduleName,
+              actionNames: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return moduleName + coreConfig.NSP + actionName;
+                }
+              }),
+              actions: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return function () {
+                    for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                      payload[_key2] = arguments[_key2];
+                    }
+
+                    return {
+                      type: moduleName + coreConfig.NSP + actionName,
+                      payload: payload
+                    };
+                  };
+                }
+              })
+            };
+          }
+
+          return cacheData[moduleName];
+        }
+      });
+    }
+  }
+
+  return MetaData.facadeMap;
+}
+function exportComponent(component) {
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'component';
+  return eluxComponent;
+}
+function exportView(component) {
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'view';
+  return eluxComponent;
+}
+
+function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
+  }
+
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    warn("Action duplicate : " + actionName + ".");
+  }
+
+  actionHandlerMap[actionName][listenerModule] = handler;
+}
+
+function injectActions(moduleName, handlers, hmr) {
+  var injectedModules = MetaData.injectedModules;
+
+  if (injectedModules[moduleName]) {
+    return;
+  }
+
+  injectedModules[moduleName] = true;
+
+  for (var actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      (function () {
+        var handler = handlers[actionNames];
+
+        if (handler.__isReducer__ || handler.__isEffect__) {
+          actionNames.split(coreConfig.MSP).forEach(function (actionName) {
+            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
+            var arr = actionName.split(coreConfig.NSP);
+
+            if (arr[1]) {
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            } else {
+              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            }
+          });
+        }
+      })();
+    }
+  }
+}
+function defineModuleGetter(moduleGetter) {
+  MetaData.moduleGetter = moduleGetter;
+  MetaData.moduleExists = Object.keys(moduleGetter).reduce(function (data, moduleName) {
+    data[moduleName] = true;
+    return data;
+  }, {});
 }
 
 function _arrayWithHoles(arr) {
@@ -2329,209 +2682,118 @@ function _optionalCallableProperty(obj, name) {
   return value;
 }
 
-function getModuleGetter() {
-  return MetaData.moduleGetter;
-}
-function exportModule(moduleName, ModuleHandles, params, components) {
-  Object.keys(components).forEach(function (key) {
-    var component = components[key];
+var routeMiddleware = function routeMiddleware(_ref) {
+  _ref.store;
+      var dispatch = _ref.dispatch,
+      getState = _ref.getState;
+  return function (next) {
+    return function (action) {
+      if (action.type === "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes.MRouteChange) {
+        var existsModules = Object.keys(getState()).reduce(function (obj, moduleName) {
+          obj[moduleName] = true;
+          return obj;
+        }, {});
+        var result = next(action);
+        var _ref2 = action.payload,
+            routeState = _ref2[0];
+        Object.keys(routeState.params).forEach(function (moduleName) {
+          var moduleState = routeState.params[moduleName];
 
-    if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
-      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
-    }
-  });
-
-  var model = function model(store) {
-    if (!store.injectedModules[moduleName]) {
-      var moduleHandles = new ModuleHandles(moduleName);
-      store.injectedModules[moduleName] = moduleHandles;
-      moduleHandles.store = store;
-      injectActions(moduleName, moduleHandles);
-      var _initState = moduleHandles.initState;
-      var preModuleState = store.getState(moduleName);
-
-      if (preModuleState) {
-        return store.dispatch(moduleReInitAction(moduleName, _initState));
+          if (moduleState && Object.keys(moduleState).length > 0) {
+            if (existsModules[moduleName]) {
+              dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
+            }
+          }
+        });
+        return result;
+      } else {
+        return next(action);
       }
-
-      return store.dispatch(moduleInitAction(moduleName, _initState));
-    }
-
-    return undefined;
+    };
   };
-
-  return {
-    moduleName: moduleName,
-    model: model,
-    components: components,
-    state: undefined,
-    params: params,
-    actions: undefined
-  };
-}
-function getModule(moduleName) {
-  if (MetaData.moduleCaches[moduleName]) {
-    return MetaData.moduleCaches[moduleName];
-  }
-
-  var moduleOrPromise = MetaData.moduleGetter[moduleName]();
-
-  if (isPromise(moduleOrPromise)) {
-    var promiseModule = moduleOrPromise.then(function (_ref) {
-      var module = _ref.default;
-      MetaData.moduleCaches[moduleName] = module;
-      return module;
-    }, function (reason) {
-      MetaData.moduleCaches[moduleName] = undefined;
-      throw reason;
-    });
-    MetaData.moduleCaches[moduleName] = promiseModule;
-    return promiseModule;
-  }
-
-  MetaData.moduleCaches[moduleName] = moduleOrPromise;
-  return moduleOrPromise;
-}
-function getModuleList(moduleNames) {
-  if (moduleNames.length < 1) {
-    return [];
-  }
-
-  var list = moduleNames.map(function (moduleName) {
-    if (MetaData.moduleCaches[moduleName]) {
-      return MetaData.moduleCaches[moduleName];
-    }
-
-    return getModule(moduleName);
-  });
-
-  if (list.some(function (item) {
-    return isPromise(item);
-  })) {
-    return Promise.all(list);
-  } else {
-    return list;
-  }
-}
-
-function _loadModel(moduleName, store) {
-  var moduleOrPromise = getModule(moduleName);
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(function (module) {
-      return module.model(store);
-    });
-  }
-
-  return moduleOrPromise.model(store);
-}
-function getComponet(moduleName, componentName) {
-  var key = [moduleName, componentName].join(coreConfig.NSP);
-
-  if (MetaData.componentCaches[key]) {
-    return MetaData.componentCaches[key];
-  }
-
-  var moduleCallback = function moduleCallback(module) {
-    var componentOrFun = module.components[componentName];
-
-    if (isEluxComponent(componentOrFun)) {
-      var component = componentOrFun;
-      MetaData.componentCaches[key] = component;
-      return component;
-    }
-
-    var promiseComponent = componentOrFun().then(function (_ref2) {
-      var component = _ref2.default;
-      MetaData.componentCaches[key] = component;
-      return component;
-    }, function (reason) {
-      MetaData.componentCaches[key] = undefined;
-      throw reason;
-    });
-    MetaData.componentCaches[key] = promiseComponent;
-    return promiseComponent;
-  };
-
-  var moduleOrPromise = getModule(moduleName);
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(moduleCallback);
-  }
-
-  return moduleCallback(moduleOrPromise);
-}
-function getComponentList(keys) {
-  if (keys.length < 1) {
-    return Promise.resolve([]);
-  }
-
-  return Promise.all(keys.map(function (key) {
-    if (MetaData.componentCaches[key]) {
-      return MetaData.componentCaches[key];
-    }
-
-    var _key$split = key.split(coreConfig.NSP),
-        moduleName = _key$split[0],
-        componentName = _key$split[1];
-
-    return getComponet(moduleName, componentName);
-  }));
-}
-function loadComponet(moduleName, componentName, store, deps) {
-  var promiseOrComponent = getComponet(moduleName, componentName);
-
-  var callback = function callback(component) {
-    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
-      if (env.isServer) {
-        return null;
-      }
-
-      var module = getModule(moduleName);
-      module.model(store);
-    }
-
-    deps[moduleName + coreConfig.NSP + componentName] = true;
-    return component;
-  };
-
-  if (isPromise(promiseOrComponent)) {
-    if (env.isServer) {
-      return null;
-    }
-
-    return promiseOrComponent.then(callback);
-  }
-
-  return callback(promiseOrComponent);
-}
-var EmptyModuleHandlers = function EmptyModuleHandlers(moduleName) {
-  _defineProperty(this, "store", void 0);
-
-  _defineProperty(this, "initState", void 0);
-
-  this.moduleName = moduleName;
-  this.initState = {};
 };
-var CoreModuleHandlers = _decorate(null, function (_initialize) {
-  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, initState) {
+var EmptyModuleHandlers = function () {
+  function EmptyModuleHandlers(moduleName, store) {
+    _defineProperty(this, "initState", {});
+
+    this.moduleName = moduleName;
+    this.store = store;
+  }
+
+  var _proto = EmptyModuleHandlers.prototype;
+
+  _proto.destroy = function destroy() {
+    return;
+  };
+
+  return EmptyModuleHandlers;
+}();
+var RouteModuleHandlers = _decorate(null, function (_initialize) {
+  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store, latestState, preState) {
     _initialize(this);
 
     this.moduleName = moduleName;
+    this.store = store;
+    this.initState = preState[moduleName];
+  };
+
+  return {
+    F: RouteModuleHandlers,
+    d: [{
+      kind: "field",
+      key: "initState",
+      value: void 0
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: ActionTypes.MInit,
+      value: function value(initState) {
+        return initState;
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: ActionTypes.MRouteChange,
+      value: function value(routeState) {
+        return mergeState(this.store.getState(this.moduleName), routeState);
+      }
+    }, {
+      kind: "method",
+      key: "destroy",
+      value: function destroy() {
+        return;
+      }
+    }]
+  };
+});
+var CoreModuleHandlers = _decorate(null, function (_initialize2) {
+  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, store, initState) {
+    _initialize2(this);
+
+    this.moduleName = moduleName;
+    this.store = store;
     this.initState = initState;
   };
 
   return {
     F: CoreModuleHandlers,
     d: [{
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
       kind: "get",
       key: "actions",
       value: function actions() {
         return MetaData.facadeMap[this.moduleName].actions;
+      }
+    }, {
+      kind: "get",
+      key: "router",
+      value: function router() {
+        return this.store.router;
+      }
+    }, {
+      kind: "method",
+      key: "getLatestState",
+      value: function getLatestState() {
+        return this.store.router.latestState;
       }
     }, {
       kind: "method",
@@ -2540,15 +2802,15 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
         return MetaData.facadeMap[this.moduleName].actions;
       }
     }, {
-      kind: "get",
-      key: "state",
-      value: function state() {
+      kind: "method",
+      key: "getState",
+      value: function getState() {
         return this.store.getState(this.moduleName);
       }
     }, {
-      kind: "get",
-      key: "rootState",
-      value: function rootState() {
+      kind: "method",
+      key: "getRootState",
+      value: function getRootState() {
         return this.store.getState();
       }
     }, {
@@ -2558,16 +2820,16 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
         return this.store.getCurrentActionName();
       }
     }, {
-      kind: "get",
-      key: "currentRootState",
-      value: function currentRootState() {
-        return this.store.getCurrentState();
+      kind: "method",
+      key: "getCurrentState",
+      value: function getCurrentState() {
+        return this.store.getCurrentState(this.moduleName);
       }
     }, {
-      kind: "get",
-      key: "currentState",
-      value: function currentState() {
-        return this.store.getCurrentState(this.moduleName);
+      kind: "method",
+      key: "getCurrentRootState",
+      value: function getCurrentRootState() {
+        return this.store.getCurrentState();
       }
     }, {
       kind: "method",
@@ -2578,121 +2840,43 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
     }, {
       kind: "method",
       key: "loadModel",
-      value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
+      value: function loadModel$1(moduleName) {
+        return loadModel(moduleName, this.store);
+      }
+    }, {
+      kind: "method",
+      key: "getRouteParams",
+      value: function getRouteParams() {
+        var route = this.store.getState(this.store.router.name);
+        return route.params[this.moduleName];
       }
     }, {
       kind: "method",
       decorators: [reducer],
-      key: "Init",
-      value: function Init(initState) {
+      key: ActionTypes.MInit,
+      value: function value(initState) {
         return initState;
       }
     }, {
       kind: "method",
       decorators: [reducer],
-      key: "Update",
-      value: function Update(payload, key) {
-        return mergeState(this.state, payload);
+      key: ActionTypes.MLoading,
+      value: function value(payload) {
+        var state = this.getState();
+        var loading = mergeState(state.loading, payload);
+        return mergeState(state, {
+          loading: loading
+        });
       }
     }, {
       kind: "method",
-      decorators: [reducer],
-      key: "Loading",
-      value: function Loading(payload) {
-        var loading = mergeState(this.state.loading, payload);
-        return mergeState(this.state, {
-          loading: loading
-        });
+      key: "destroy",
+      value: function destroy() {
+        return;
       }
     }]
   };
 });
-function getRootModuleAPI(data) {
-  if (!MetaData.facadeMap) {
-    if (data) {
-      MetaData.facadeMap = Object.keys(data).reduce(function (prev, moduleName) {
-        var arr = data[moduleName];
-        var actions = {};
-        var actionNames = {};
-        arr.forEach(function (actionName) {
-          actions[actionName] = function () {
-            for (var _len = arguments.length, payload = new Array(_len), _key = 0; _key < _len; _key++) {
-              payload[_key] = arguments[_key];
-            }
-
-            return {
-              type: moduleName + coreConfig.NSP + actionName,
-              payload: payload
-            };
-          };
-
-          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
-        });
-        var moduleFacade = {
-          name: moduleName,
-          actions: actions,
-          actionNames: actionNames
-        };
-        prev[moduleName] = moduleFacade;
-        return prev;
-      }, {});
-    } else {
-      var cacheData = {};
-      MetaData.facadeMap = new Proxy({}, {
-        set: function set(target, moduleName, val, receiver) {
-          return Reflect.set(target, moduleName, val, receiver);
-        },
-        get: function get(target, moduleName, receiver) {
-          var val = Reflect.get(target, moduleName, receiver);
-
-          if (val !== undefined) {
-            return val;
-          }
-
-          if (!cacheData[moduleName]) {
-            cacheData[moduleName] = {
-              name: moduleName,
-              actionNames: new Proxy({}, {
-                get: function get(__, actionName) {
-                  return moduleName + coreConfig.NSP + actionName;
-                }
-              }),
-              actions: new Proxy({}, {
-                get: function get(__, actionName) {
-                  return function () {
-                    for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                      payload[_key2] = arguments[_key2];
-                    }
-
-                    return {
-                      type: moduleName + coreConfig.NSP + actionName,
-                      payload: payload
-                    };
-                  };
-                }
-              })
-            };
-          }
-
-          return cacheData[moduleName];
-        }
-      });
-    }
-  }
-
-  return MetaData.facadeMap;
-}
-function exportComponent(component) {
-  var eluxComponent = component;
-  eluxComponent.__elux_component__ = 'component';
-  return eluxComponent;
-}
-function exportView(component) {
-  var eluxComponent = component;
-  eluxComponent.__elux_component__ = 'view';
-  return eluxComponent;
-}
 
 var errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
@@ -2738,28 +2922,7 @@ function compose() {
   });
 }
 
-function cloneStore(store) {
-  var _store$clone = store.clone,
-      creator = _store$clone.creator,
-      options = _store$clone.options,
-      middlewares = _store$clone.middlewares,
-      injectedModules = _store$clone.injectedModules;
-  var initState = store.getPureState();
-  var newBStore = creator(_extends({}, options, {
-    initState: initState
-  }));
-  var newIStore = enhanceStore(newBStore, middlewares, injectedModules);
-  newIStore.id = (store.id || 0) + 1;
-  return newIStore;
-}
-function enhanceStore(baseStore, middlewares, injectedModules) {
-  if (injectedModules === void 0) {
-    injectedModules = {};
-  }
-
-  var _baseStore$clone = baseStore.clone,
-      options = _baseStore$clone.options,
-      creator = _baseStore$clone.creator;
+function enhanceStore(baseStore, router, middlewares) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -2769,19 +2932,35 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.router = router;
   store.getState = getState;
-  store.injectedModules = injectedModules;
-  store.clone = {
-    creator: creator,
-    options: options,
-    middlewares: middlewares,
-    injectedModules: injectedModules
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  var injectedModules = store.injectedModules;
+  store.options = {
+    middlewares: middlewares
   };
+  var _destroy = baseStore.destroy;
+
+  store.destroy = function () {
+    _destroy();
+
+    Object.keys(injectedModules).forEach(function (moduleName) {
+      injectedModules[moduleName].destroy();
+    });
+  };
+
   var currentData = {
     actionName: '',
     prevState: {}
   };
-  var update = baseStore.update;
+  var _update = baseStore.update;
+
+  baseStore.update = function (actionName, state, actionData) {
+    _update(actionName, state, actionData);
+
+    router.latestState = _extends({}, router.latestState, state);
+  };
 
   store.getCurrentActionName = function () {
     return currentData.actionName;
@@ -2797,6 +2976,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
   };
 
   var middlewareAPI = {
+    store: store,
     getState: getState,
     dispatch: function dispatch(action) {
       return _dispatch2(action);
@@ -2826,7 +3006,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
 
         if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
           if (!injectedModules[moduleName]) {
-            var result = _loadModel(moduleName, store);
+            var result = loadModel(moduleName, store);
 
             if (isPromise(result)) {
               return result.then(function () {
@@ -2904,7 +3084,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     if (handlerModuleNames.length > 0) {
       var orderList = [];
       handlerModuleNames.forEach(function (moduleName) {
-        if (moduleName === MetaData.appModuleName) {
+        if (moduleName === coreConfig.AppModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -2935,7 +3115,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
             }
           }
         });
-        update(actionName, newState, actionData);
+        store.update(actionName, newState, actionData);
       } else {
         var result = [];
         orderList.forEach(function (moduleName) {
@@ -2963,13 +3143,546 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     return respondHandler(action, false, prevData);
   }
 
-  var arr = middlewares ? [preMiddleware].concat(middlewares) : [preMiddleware];
-  var chain = arr.map(function (middleware) {
+  var chain = [preMiddleware, routeMiddleware].concat(middlewares || []).map(function (middleware) {
     return middleware(middlewareAPI);
   });
   _dispatch2 = compose.apply(void 0, chain)(_dispatch);
   store.dispatch = _dispatch2;
   return store;
+}
+
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+  if (preloadComponents === void 0) {
+    preloadComponents = [];
+  }
+
+  MetaData.currentRouter = router;
+  var store = enhanceStore(baseStore, router, middlewares);
+  router.startup(store);
+  var AppModuleName = coreConfig.AppModuleName,
+      RouteModuleName = coreConfig.RouteModuleName;
+  var moduleGetter = MetaData.moduleGetter;
+  var appModule = getModule(AppModuleName);
+  var routeModule = getModule(RouteModuleName);
+  var AppView = appViewName ? getComponet(AppModuleName, appViewName) : {
+    __elux_component__: 'view'
+  };
+  var preloadModules = Object.keys(router.routeState.params).concat(Object.keys(baseStore.getState())).reduce(function (data, moduleName) {
+    if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
+      data[moduleName] = true;
+    }
+
+    return data;
+  }, {});
+  var results = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  var setup;
+
+  if (env.isServer) {
+    setup = results.then(function (_ref) {
+      var modules = _ref[0];
+      return Promise.all(modules.map(function (mod) {
+        return mod.model(store);
+      }));
+    });
+  } else {
+    setup = results;
+  }
+
+  return {
+    store: store,
+    AppView: AppView,
+    setup: setup
+  };
+}
+function reinitApp(store) {
+  var moduleGetter = MetaData.moduleGetter;
+  var preloadModules = Object.keys(store.router.routeState.params).filter(function (moduleName) {
+    return moduleGetter[moduleName] && moduleName !== AppModuleName;
+  });
+  var AppModuleName = coreConfig.AppModuleName,
+      RouteModuleName = coreConfig.RouteModuleName;
+  var appModule = getModule(AppModuleName);
+  var routeModule = getModule(RouteModuleName);
+  return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
+}
+var ForkStoreId = 0;
+function forkStore(originalStore, routeState) {
+  var _initState;
+
+  var _originalStore$builde = originalStore.builder,
+      storeCreator = _originalStore$builde.storeCreator,
+      storeOptions = _originalStore$builde.storeOptions,
+      middlewares = originalStore.options.middlewares,
+      router = originalStore.router;
+  var baseStore = storeCreator(_extends({}, storeOptions, {
+    initState: (_initState = {}, _initState[coreConfig.RouteModuleName] = routeState, _initState)
+  }), ++ForkStoreId);
+  var store = enhanceStore(baseStore, router, middlewares);
+  return store;
+}
+
+var updateMutation = function updateMutation(state, _ref) {
+  var newState = _ref.newState;
+  mergeState(state, newState);
+};
+
+var UpdateMutationName = 'update';
+function storeCreator(storeOptions, id) {
+  var _mutations;
+
+  if (id === void 0) {
+    id = 0;
+  }
+
+  var _storeOptions$initSta = storeOptions.initState,
+      initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta,
+      plugins = storeOptions.plugins;
+  var devtools = id === 0 && process.env.NODE_ENV === 'development';
+  var store = createStore({
+    state: initState,
+    mutations: (_mutations = {}, _mutations[UpdateMutationName] = updateMutation, _mutations),
+    plugins: plugins,
+    devtools: devtools
+  });
+  var vuexStore = store;
+  vuexStore.id = id;
+  vuexStore.builder = {
+    storeCreator: storeCreator,
+    storeOptions: storeOptions
+  };
+
+  vuexStore.getState = function () {
+    return store.state;
+  };
+
+  vuexStore.update = function (actionName, newState, actionData) {
+    store.commit(UpdateMutationName, {
+      actionName: actionName,
+      newState: newState,
+      actionData: actionData
+    });
+  };
+
+  vuexStore.destroy = function () {
+    return;
+  };
+
+  return vuexStore;
+}
+function createVuex(storeOptions) {
+  if (storeOptions === void 0) {
+    storeOptions = {};
+  }
+
+  return {
+    storeOptions: storeOptions,
+    storeCreator: storeCreator
+  };
+}
+function refStore(store, maps) {
+  var state = store.getState();
+  return Object.keys(maps).reduce(function (data, prop) {
+    data[prop] = computed(function () {
+      return maps[prop](state);
+    });
+    return data;
+  }, {});
+}
+function getRefsValue(refs, keys) {
+  return (keys || Object.keys(refs)).reduce(function (data, key) {
+    data[key] = refs[key].value;
+    return data;
+  }, {});
+}
+function mapState(storeProperty, maps) {
+  return Object.keys(maps).reduce(function (data, prop) {
+    data[prop] = function () {
+      var store = this[storeProperty];
+      var state = store.getState();
+      return maps[prop].call(this, state);
+    };
+
+    return data;
+  }, {});
+}
+
+var vueComponentsConfig = {
+  setPageTitle: function setPageTitle(title) {
+    return env.document.title = title;
+  },
+  Provider: null,
+  LoadComponentOnError: function LoadComponentOnError(_ref) {
+    var message = _ref.message;
+    return createVNode("div", {
+      "class": "g-component-error"
+    }, [message]);
+  },
+  LoadComponentOnLoading: function LoadComponentOnLoading() {
+    return createVNode("div", {
+      "class": "g-component-loading"
+    }, [createTextVNode("loading...")]);
+  }
+};
+var setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
+var EluxContextKey = '__EluxContext__';
+var EluxStoreContextKey = '__EluxStoreContext__';
+function useRouter() {
+  var _inject = inject(EluxContextKey, {
+    documentHead: ''
+  }),
+      router = _inject.router;
+
+  return router;
+}
+function useStore() {
+  var _inject2 = inject(EluxStoreContextKey, {}),
+      store = _inject2.store;
+
+  return store;
+}
+
+var clientTimer = 0;
+
+function setClientHead(eluxContext, documentHead) {
+  eluxContext.documentHead = documentHead;
+
+  if (!clientTimer) {
+    clientTimer = env.setTimeout(function () {
+      clientTimer = 0;
+      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
+
+      if (arr[1]) {
+        env.document.title = arr[1];
+      }
+    }, 0);
+  }
+}
+
+var DocumentHead = defineComponent({
+  props: {
+    title: {
+      type: String,
+      default: ''
+    },
+    html: {
+      type: String,
+      default: ''
+    }
+  },
+  data: function data() {
+    return {
+      eluxContext: inject(EluxContextKey, {
+        documentHead: ''
+      }),
+      raw: ''
+    };
+  },
+  computed: {
+    headText: function headText() {
+      var title = this.title;
+      var html = this.html;
+      var eluxContext = this.eluxContext;
+
+      if (!html) {
+        html = eluxContext.documentHead || '<title>Elux</title>';
+      }
+
+      if (title) {
+        return html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
+      }
+
+      return html;
+    }
+  },
+  mounted: function mounted() {
+    this.raw = this.eluxContext.documentHead;
+    setClientHead(this.eluxContext, this.headText);
+  },
+  unmounted: function unmounted() {
+    setClientHead(this.eluxContext, this.raw);
+  },
+  render: function render() {
+    if (isServer()) {
+      this.eluxContext.documentHead = this.headText;
+    }
+
+    return null;
+  }
+});
+
+function Switch (props, context) {
+  var arr = [];
+  var children = context.slots.default ? context.slots.default() : [];
+  children.forEach(function (item) {
+    if (item.type !== Comment) {
+      arr.push(item);
+    }
+  });
+
+  if (arr.length > 0) {
+    return h(Fragment, null, [arr[0]]);
+  }
+
+  return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
+}
+
+function Else (props, context) {
+  var arr = [];
+  var children = context.slots.default ? context.slots.default() : [];
+  children.forEach(function (item) {
+    if (item.type !== Comment) {
+      arr.push(item);
+    }
+  });
+
+  if (arr.length > 0) {
+    return h(Fragment, null, arr);
+  }
+
+  return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
+}
+
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
+}
+
+function Link (props, context) {
+  var _inject = inject(EluxContextKey, {
+    documentHead: ''
+  }),
+      router = _inject.router;
+
+  var onClick = props.onClick,
+      href = props.href,
+      url = props.url,
+      _props$action = props.action,
+      action = _props$action === void 0 ? 'push' : _props$action,
+      root = props.root,
+      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "action", "root"]);
+
+  var newProps = _extends({}, rest, {
+    onClick: function (_onClick) {
+      function onClick(_x) {
+        return _onClick.apply(this, arguments);
+      }
+
+      onClick.toString = function () {
+        return _onClick.toString();
+      };
+
+      return onClick;
+    }(function (event) {
+      event.preventDefault();
+      onClick && onClick(event);
+      router[action](url, root);
+    })
+  });
+
+  if (href) {
+    return h('a', newProps, context.slots.default());
+  } else {
+    return h('div', newProps, context.slots.default());
+  }
+}
+
+var loadComponent = function loadComponent(moduleName, componentName, options) {
+  if (options === void 0) {
+    options = {};
+  }
+
+  var loadingComponent = options.OnLoading || vueComponentsConfig.LoadComponentOnLoading;
+  var errorComponent = options.OnError || vueComponentsConfig.LoadComponentOnError;
+
+  var component = function component(props, context) {
+    var _inject = inject(EluxContextKey, {
+      documentHead: ''
+    }),
+        deps = _inject.deps;
+
+    var _inject2 = inject(EluxStoreContextKey, {
+      store: null
+    }),
+        store = _inject2.store;
+
+    var result;
+    var errorMessage = '';
+
+    try {
+      result = loadComponet(moduleName, componentName, store, deps || {});
+    } catch (e) {
+      env.console.error(e);
+      errorMessage = e.message || "" + e;
+    }
+
+    if (result !== undefined) {
+      if (result === null) {
+        return h(loadingComponent);
+      }
+
+      if (isPromise(result)) {
+        return h(defineAsyncComponent({
+          loader: function loader() {
+            return result;
+          },
+          errorComponent: errorComponent,
+          loadingComponent: loadingComponent
+        }), props, context.slots);
+      }
+
+      return h(result, props, context.slots);
+    }
+
+    return h(errorComponent, null, errorMessage);
+  };
+
+  return component;
+};
+
+var StageView;
+var Page = defineComponent({
+  props: {
+    store: {
+      type: Object,
+      required: true
+    },
+    view: {
+      type: Object,
+      required: true
+    }
+  },
+  setup: function setup(props) {
+    var store = props.store,
+        view = props.view;
+    var storeContext = {
+      store: store
+    };
+    provide(EluxStoreContextKey, storeContext);
+    return function () {
+      return h(view, null);
+    };
+  }
+});
+var Router = defineComponent({
+  setup: function setup() {
+    var _inject = inject(EluxContextKey, {
+      documentHead: ''
+    }),
+        router = _inject.router;
+
+    var data = shallowRef({
+      classname: 'elux-app',
+      pages: router.getCurrentPages().reverse()
+    });
+    var containerRef = ref({
+      className: ''
+    });
+    var removeListener = router.addListener('change', function (_ref) {
+      var routeState = _ref.routeState,
+          root = _ref.root;
+
+      if (root) {
+        var pages = router.getCurrentPages().reverse();
+        var completeCallback;
+
+        if (routeState.action === 'PUSH') {
+          var completePromise = new Promise(function (resolve) {
+            completeCallback = resolve;
+          });
+          data.value = {
+            classname: 'elux-app elux-animation elux-change ' + Date.now(),
+            pages: pages
+          };
+          env.setTimeout(function () {
+            containerRef.value.className = 'elux-app elux-animation';
+          }, 200);
+          env.setTimeout(function () {
+            containerRef.value.className = 'elux-app';
+            completeCallback();
+          }, 500);
+          return completePromise;
+        } else if (routeState.action === 'BACK') {
+          var _completePromise = new Promise(function (resolve) {
+            completeCallback = resolve;
+          });
+
+          data.value = {
+            classname: 'elux-app ' + Date.now(),
+            pages: [].concat(pages, [data.value.pages[data.value.pages.length - 1]])
+          };
+          env.setTimeout(function () {
+            containerRef.value.className = 'elux-app elux-animation elux-change';
+          }, 200);
+          env.setTimeout(function () {
+            data.value = {
+              classname: 'elux-app ' + Date.now(),
+              pages: pages
+            };
+            completeCallback();
+          }, 500);
+          return _completePromise;
+        } else if (routeState.action === 'RELAUNCH') {
+          data.value = {
+            classname: 'elux-app ' + Date.now(),
+            pages: pages
+          };
+        }
+      }
+
+      return;
+    });
+    onBeforeMount(function () {
+      removeListener();
+    });
+    return function () {
+      var _data$value = data.value,
+          classname = _data$value.classname,
+          pages = _data$value.pages;
+      return createVNode("div", {
+        "ref": containerRef,
+        "class": classname
+      }, [pages.map(function (item) {
+        var store = item.store,
+            pagename = item.pagename;
+        return createVNode("div", {
+          "key": store.id,
+          "class": "elux-page",
+          "data-pagename": pagename
+        }, [createVNode(Page, {
+          "store": store,
+          "view": item.page || StageView
+        }, null)]);
+      })]);
+    };
+  }
+});
+function renderToDocument(id, APPView, eluxContext, fromSSR, app) {
+  StageView = APPView;
+  app.provide(EluxContextKey, eluxContext);
+
+  if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+    env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
+  }
+
+  app.mount("#" + id);
+}
+function renderToString(id, APPView, eluxContext, app) {
+  StageView = APPView;
+  app.provide(EluxContextKey, eluxContext);
+
+  var htmlPromise = require('@vue/server-renderer').renderToString(app);
+
+  return htmlPromise;
 }
 
 function createCommonjsModule(fn) {
@@ -3740,617 +4453,305 @@ function _asyncToGenerator(fn) {
   };
 }
 
-var defFun = function defFun() {
-  return undefined;
-};
-
-function defineModuleGetter(moduleGetter, appModuleName) {
-  if (appModuleName === void 0) {
-    appModuleName = 'stage';
-  }
-
-  MetaData.appModuleName = appModuleName;
-  MetaData.moduleGetter = moduleGetter;
-
-  if (!moduleGetter[appModuleName]) {
-    throw appModuleName + " could not be found in moduleGetter";
-  }
-}
-function renderApp(_x, _x2, _x3, _x4, _x5) {
-  return _renderApp.apply(this, arguments);
-}
-
-function _renderApp() {
-  _renderApp = _asyncToGenerator(regenerator.mark(function _callee(baseStore, preloadModules, preloadComponents, middlewares, appViewName) {
-    var moduleGetter, appModuleName, store, modules, appModule, AppView;
-    return regenerator.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            if (appViewName === void 0) {
-              appViewName = 'main';
-            }
-
-            moduleGetter = MetaData.moduleGetter, appModuleName = MetaData.appModuleName;
-            preloadModules = preloadModules.filter(function (moduleName) {
-              return moduleGetter[moduleName] && moduleName !== appModuleName;
-            });
-            preloadModules.unshift(appModuleName);
-            store = enhanceStore(baseStore, middlewares);
-            _context.next = 7;
-            return getModuleList(preloadModules);
-
-          case 7:
-            modules = _context.sent;
-            _context.next = 10;
-            return getComponentList(preloadComponents);
-
-          case 10:
-            appModule = modules[0];
-            _context.next = 13;
-            return appModule.model(store);
-
-          case 13:
-            AppView = getComponet(appModuleName, appViewName);
-            return _context.abrupt("return", {
-              store: store,
-              AppView: AppView
-            });
-
-          case 15:
-          case "end":
-            return _context.stop();
-        }
-      }
-    }, _callee);
-  }));
-  return _renderApp.apply(this, arguments);
-}
-
-function initApp(baseStore, middlewares) {
-  var moduleGetter = MetaData.moduleGetter,
-      appModuleName = MetaData.appModuleName;
-  var store = enhanceStore(baseStore, middlewares);
-  var appModule = moduleGetter[appModuleName]();
-  appModule.model(store);
-  return store;
-}
-function ssrApp(_x6, _x7, _x8, _x9) {
-  return _ssrApp.apply(this, arguments);
-}
-
-function _ssrApp() {
-  _ssrApp = _asyncToGenerator(regenerator.mark(function _callee2(baseStore, preloadModules, middlewares, appViewName) {
-    var moduleGetter, appModuleName, store, _yield$getModuleList, appModule, otherModules, AppView;
-
-    return regenerator.wrap(function _callee2$(_context2) {
-      while (1) {
-        switch (_context2.prev = _context2.next) {
-          case 0:
-            if (appViewName === void 0) {
-              appViewName = 'main';
-            }
-
-            moduleGetter = MetaData.moduleGetter, appModuleName = MetaData.appModuleName;
-            preloadModules = preloadModules.filter(function (moduleName) {
-              return moduleGetter[moduleName] && moduleName !== appModuleName;
-            });
-            preloadModules.unshift(appModuleName);
-            store = enhanceStore(baseStore, middlewares);
-            _context2.next = 7;
-            return getModuleList(preloadModules);
-
-          case 7:
-            _yield$getModuleList = _context2.sent;
-            appModule = _yield$getModuleList[0];
-            otherModules = _yield$getModuleList.slice(1);
-            _context2.next = 12;
-            return appModule.model(store);
-
-          case 12:
-            _context2.next = 14;
-            return Promise.all(otherModules.map(function (module) {
-              return module.model(store);
-            }));
-
-          case 14:
-            store.dispatch = defFun;
-            AppView = getComponet(appModuleName, appViewName);
-            return _context2.abrupt("return", {
-              store: store,
-              AppView: AppView
-            });
-
-          case 17:
-          case "end":
-            return _context2.stop();
-        }
-      }
-    }, _callee2);
-  }));
-  return _ssrApp.apply(this, arguments);
-}
-
-var updateMutation = function updateMutation(state, _ref) {
-  var newState = _ref.newState;
-  mergeState(state, newState);
-};
-
-var UpdateMutationName = 'update';
-function storeCreator(storeOptions) {
-  var _mutations;
-
-  var _storeOptions$initSta = storeOptions.initState,
-      initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta,
-      plugins = storeOptions.plugins,
-      _storeOptions$devtool = storeOptions.devtools,
-      devtools = _storeOptions$devtool === void 0 ? true : _storeOptions$devtool;
-  var store = new Store({
-    state: initState,
-    mutations: (_mutations = {}, _mutations[UpdateMutationName] = updateMutation, _mutations),
-    plugins: plugins,
-    devtools: devtools
-  });
-  var vuexStore = store;
-
-  vuexStore.getState = function () {
-    return store.state;
-  };
-
-  vuexStore.getPureState = function () {
-    var state = vuexStore.getState();
-    return JSON.parse(JSON.stringify(state));
-  };
-
-  vuexStore.update = function (actionName, newState, actionData) {
-    store.commit(UpdateMutationName, {
-      actionName: actionName,
-      newState: newState,
-      actionData: actionData
-    });
-  };
-
-  vuexStore.clone = {
-    creator: storeCreator,
-    options: storeOptions
-  };
-  return vuexStore;
-}
-function createVuex(storeOptions) {
-  if (storeOptions === void 0) {
-    storeOptions = {};
-  }
-
-  return {
-    storeOptions: storeOptions,
-    storeCreator: storeCreator
-  };
-}
-
-var vueComponentsConfig = {
-  setPageTitle: function setPageTitle(title) {
-    return env.document.title = title;
-  },
-  Provider: null,
-  LoadComponentOnError: function LoadComponentOnError(_ref) {
-    var message = _ref.message;
-    return createVNode("div", {
-      "class": "g-component-error"
-    }, [message]);
-  },
-  LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return createVNode("div", {
-      "class": "g-component-loading"
-    }, [createTextVNode("loading...")]);
-  }
-};
-var setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
-var EluxContextKey = '__EluxContext__';
-var EluxStoreContextKey = '__EluxStoreContext__';
-
-var clientTimer = 0;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(function () {
-      clientTimer = 0;
-      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        env.document.title = arr[1];
-      }
-    }, 0);
-  }
-}
-
-var DocumentHead = defineComponent({
-  props: {
-    title: {
-      type: String,
-      default: ''
-    },
-    html: {
-      type: String,
-      default: ''
-    }
-  },
-  data: function data() {
-    return {
-      eluxContext: inject(EluxContextKey, {
-        documentHead: ''
-      }),
-      raw: ''
-    };
-  },
-  computed: {
-    headText: function headText() {
-      var title = this.title;
-      var html = this.html;
-
-      if (!html) {
-        html = "<title>" + title + "</title>";
-      }
-
-      if (title) {
-        return html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
-      }
-
-      return html;
-    }
-  },
-  mounted: function mounted() {
-    this.raw = this.eluxContext.documentHead;
-    setClientHead(this.eluxContext, this.headText);
-  },
-  unmounted: function unmounted() {
-    setClientHead(this.eluxContext, this.raw);
-  },
-  render: function render() {
-    if (isServer()) {
-      this.eluxContext.documentHead = this.headText;
-    }
-
-    return null;
-  }
-});
-
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-
-  return target;
-}
-
-function Link (props, context) {
-  var _inject = inject(EluxContextKey, {
-    documentHead: ''
-  }),
-      router = _inject.router;
-
-  var onClick = props.onClick,
-      href = props.href,
-      url = props.url,
-      replace = props.replace,
-      portal = props.portal,
-      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "replace", "portal"]);
-
-  var newProps = _extends({}, rest, {
-    onClick: function (_onClick) {
-      function onClick(_x) {
-        return _onClick.apply(this, arguments);
-      }
-
-      onClick.toString = function () {
-        return _onClick.toString();
-      };
-
-      return onClick;
-    }(function (event) {
-      event.preventDefault();
-      onClick && onClick(event);
-      replace ? router.replace(url, portal) : router.push(url, portal);
-    })
-  });
-
-  if (href) {
-    return h('a', newProps, context.slots);
-  } else {
-    return h('div', newProps, context.slots);
-  }
-}
-
-var loadComponent = function loadComponent(moduleName, componentName, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var loadingComponent = options.OnLoading || vueComponentsConfig.LoadComponentOnLoading;
-  var errorComponent = options.OnError || vueComponentsConfig.LoadComponentOnError;
-
-  var component = function component(props, context) {
-    var _inject = inject(EluxContextKey, {
-      documentHead: ''
-    }),
-        deps = _inject.deps;
-
-    var _inject2 = inject(EluxStoreContextKey, {
-      store: null
-    }),
-        store = _inject2.store;
-
-    var result;
-    var errorMessage = '';
-
-    try {
-      result = loadComponet(moduleName, componentName, store, deps || {});
-    } catch (e) {
-      env.console.error(e);
-      errorMessage = e.message || "" + e;
-    }
-
-    if (result !== undefined) {
-      if (result === null) {
-        return h(loadingComponent);
-      }
-
-      if (isPromise(result)) {
-        return h(defineAsyncComponent({
-          loader: function loader() {
-            return result;
-          },
-          errorComponent: errorComponent,
-          loadingComponent: loadingComponent
-        }), props, context.slots);
-      }
-
-      return h(result, props, context.slots);
-    }
-
-    return h(errorComponent, null, errorMessage);
-  };
-
-  return component;
-};
-
-var StageView;
-var Router$1 = function Router(props, context) {
-  return h(Page, props, context.slots);
-};
-var Page = {
-  setup: function setup(props, context) {
-    var _inject = inject(EluxContextKey, {
-      documentHead: ''
-    }),
-        router = _inject.router;
-
-    var store = router.getCurrentStore();
-    var storeContext = {
-      store: store
-    };
-    provide(EluxStoreContextKey, storeContext);
-    return function () {
-      return h(StageView, props, context.slots);
-    };
-  }
-};
-function renderToDocument(id, APPView, store, eluxContext, fromSSR, app) {
-  StageView = APPView;
-  app.use(store);
-  app.provide(EluxContextKey, eluxContext);
-
-  if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
-    env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
-  }
-
-  app.mount("#" + id);
-}
-function renderToString(id, APPView, store, eluxContext, app) {
-  StageView = APPView;
-  app.use(store);
-  app.provide(EluxContextKey, eluxContext);
-
-  var htmlPromise = require('@vue/server-renderer').renderToString(app);
-
-  return htmlPromise;
-}
-
 var routeConfig = {
+  RouteModuleName: 'route',
   maxHistory: 10,
   notifyNativeRouter: {
     root: true,
     internal: false
   },
-  indexUrl: ''
+  indexUrl: '/'
 };
 var setRouteConfig = buildConfigSetter(routeConfig);
 var routeMeta = {
   defaultParams: {},
-  pagenames: {}
+  pagenames: {},
+  pages: {}
 };
 
-var HistoryRecord = function () {
-  function HistoryRecord(location, key, history, store) {
-    _defineProperty(this, "pagename", void 0);
+var RouteStack = function () {
+  function RouteStack(limit) {
+    _defineProperty(this, "records", []);
 
-    _defineProperty(this, "query", void 0);
-
-    _defineProperty(this, "sub", void 0);
-
-    _defineProperty(this, "frozenState", '');
-
-    this.key = key;
-    this.history = history;
-    this.store = store;
-    var pagename = location.pagename,
-        params = location.params;
-    this.pagename = pagename;
-    this.query = JSON.stringify(params);
-    this.sub = new History(history, this);
+    this.limit = limit;
   }
 
-  var _proto = HistoryRecord.prototype;
+  var _proto = RouteStack.prototype;
 
-  _proto.getParams = function getParams() {
-    return JSON.parse(this.query);
+  _proto.startup = function startup(record) {
+    this.records = [record];
   };
 
-  _proto.freeze = function freeze() {
-    if (!this.frozenState) {
-      this.frozenState = JSON.stringify(this.store.getState());
+  _proto.getCurrentItem = function getCurrentItem() {
+    return this.records[0];
+  };
+
+  _proto.getItems = function getItems() {
+    return [].concat(this.records);
+  };
+
+  _proto.getLength = function getLength() {
+    return this.records.length;
+  };
+
+  _proto.getRecordAt = function getRecordAt(n) {
+    if (n < 0) {
+      return this.records[this.records.length + n];
+    } else {
+      return this.records[n];
     }
   };
 
-  _proto.getSnapshotState = function getSnapshotState() {
-    if (this.frozenState) {
-      if (typeof this.frozenState === 'string') {
-        this.frozenState = JSON.parse(this.frozenState);
-      }
+  _proto._push = function _push(item) {
+    var records = this.records;
+    records.unshift(item);
+    var delItem = records.splice(this.limit)[0];
 
-      return this.frozenState;
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  };
+
+  _proto._replace = function _replace(item) {
+    var records = this.records;
+    var delItem = records[0];
+    records[0] = item;
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  };
+
+  _proto._relaunch = function _relaunch(item) {
+    var delList = this.records;
+    this.records = [item];
+    delList.forEach(function (delItem) {
+      if (delItem !== item && delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  };
+
+  _proto.back = function back(delta) {
+    var delList = this.records.splice(0, delta);
+
+    if (this.records.length === 0) {
+      var last = delList.pop();
+      this.records.push(last);
+    }
+
+    delList.forEach(function (delItem) {
+      if (delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  };
+
+  return RouteStack;
+}();
+
+var HistoryRecord = function HistoryRecord(location, historyStack) {
+  _defineProperty(this, "destroy", void 0);
+
+  _defineProperty(this, "pagename", void 0);
+
+  _defineProperty(this, "params", void 0);
+
+  _defineProperty(this, "key", void 0);
+
+  _defineProperty(this, "recordKey", void 0);
+
+  this.historyStack = historyStack;
+  this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
+  var pagename = location.pagename,
+      params = location.params;
+  this.pagename = pagename;
+  this.params = params;
+  this.key = [historyStack.stackkey, this.recordKey].join('-');
+};
+
+_defineProperty(HistoryRecord, "id", 0);
+
+var HistoryStack = function (_RouteStack) {
+  _inheritsLoose(HistoryStack, _RouteStack);
+
+  function HistoryStack(rootStack, store) {
+    var _this;
+
+    _this = _RouteStack.call(this, 20) || this;
+
+    _defineProperty(_assertThisInitialized(_this), "stackkey", void 0);
+
+    _this.rootStack = rootStack;
+    _this.store = store;
+    _this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+    return _this;
+  }
+
+  var _proto2 = HistoryStack.prototype;
+
+  _proto2.push = function push(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
+
+    this._push(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.replace = function replace(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
+
+    this._replace(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.relaunch = function relaunch(routeState) {
+    var newRecord = new HistoryRecord(routeState, this);
+
+    this._relaunch(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
+    return this.records.find(function (item) {
+      return item.recordKey === recordKey;
+    });
+  };
+
+  _proto2.destroy = function destroy() {
+    this.store.destroy();
+  };
+
+  return HistoryStack;
+}(RouteStack);
+
+_defineProperty(HistoryStack, "id", 0);
+
+var RootStack = function (_RouteStack2) {
+  _inheritsLoose(RootStack, _RouteStack2);
+
+  function RootStack() {
+    return _RouteStack2.call(this, 10) || this;
+  }
+
+  var _proto3 = RootStack.prototype;
+
+  _proto3.getCurrentPages = function getCurrentPages() {
+    return this.records.map(function (item) {
+      var store = item.store;
+      var record = item.getCurrentItem();
+      var pagename = record.pagename;
+      return {
+        pagename: pagename,
+        store: store,
+        page: routeMeta.pages[pagename]
+      };
+    });
+  };
+
+  _proto3.push = function push(routeState) {
+    var curHistory = this.getCurrentItem();
+    var store = forkStore(curHistory.store, routeState);
+    var newHistory = new HistoryStack(this, store);
+    var newRecord = new HistoryRecord(routeState, newHistory);
+    newHistory.startup(newRecord);
+
+    this._push(newHistory);
+
+    return newRecord;
+  };
+
+  _proto3.replace = function replace(routeState) {
+    var curHistory = this.getCurrentItem();
+    return curHistory.relaunch(routeState);
+  };
+
+  _proto3.relaunch = function relaunch(routeState) {
+    var curHistory = this.getCurrentItem();
+    var newRecord = curHistory.relaunch(routeState);
+
+    this._relaunch(curHistory);
+
+    return newRecord;
+  };
+
+  _proto3.countBack = function countBack(delta) {
+    var historyStacks = this.records;
+    var backSteps = [0, 0];
+
+    for (var i = 0, k = historyStacks.length; i < k; i++) {
+      var _historyStack = historyStacks[i];
+
+      var recordNum = _historyStack.getLength();
+
+      delta = delta - recordNum;
+
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
+      } else {
+        backSteps[1] = recordNum + delta;
+        break;
+      }
+    }
+
+    return backSteps;
+  };
+
+  _proto3.testBack = function testBack(delta, rootOnly) {
+    var overflow = false;
+    var record;
+    var steps = [0, 0];
+
+    if (rootOnly) {
+      if (delta < this.records.length) {
+        record = this.getRecordAt(delta).getCurrentItem();
+        steps[0] = delta;
+      } else {
+        record = this.getRecordAt(-1).getCurrentItem();
+        overflow = true;
+      }
+    } else {
+      var _this$countBack = this.countBack(delta),
+          rootDelta = _this$countBack[0],
+          recordDelta = _this$countBack[1];
+
+      if (rootDelta < this.records.length) {
+        record = this.getRecordAt(rootDelta).getRecordAt(recordDelta);
+        steps[0] = rootDelta;
+        steps[1] = recordDelta;
+      } else {
+        record = this.getRecordAt(-1).getRecordAt(-1);
+        overflow = true;
+      }
+    }
+
+    return {
+      record: record,
+      overflow: overflow,
+      steps: steps
+    };
+  };
+
+  _proto3.findRecordByKey = function findRecordByKey(key) {
+    var arr = key.split('-');
+    var historyStack = this.records.find(function (item) {
+      return item.stackkey === arr[0];
+    });
+
+    if (historyStack) {
+      return historyStack.findRecordByKey(arr[1]);
     }
 
     return undefined;
   };
 
-  _proto.getStore = function getStore() {
-    return this.store;
-  };
-
-  return HistoryRecord;
-}();
-var History = function () {
-  function History(parent, record) {
-    _defineProperty(this, "records", []);
-
-    this.parent = parent;
-
-    if (record) {
-      this.records = [record];
-    }
-  }
-
-  var _proto2 = History.prototype;
-
-  _proto2.init = function init(record) {
-    this.records = [record];
-  };
-
-  _proto2.getLength = function getLength() {
-    return this.records.length;
-  };
-
-  _proto2.findRecord = function findRecord(keyOrIndex) {
-    if (typeof keyOrIndex === 'number') {
-      if (keyOrIndex === -1) {
-        keyOrIndex = this.records.length - 1;
-      }
-
-      return this.records[keyOrIndex];
-    }
-
-    return this.records.find(function (item) {
-      return item.key === keyOrIndex;
-    });
-  };
-
-  _proto2.findIndex = function findIndex(key) {
-    return this.records.findIndex(function (item) {
-      return item.key === key;
-    });
-  };
-
-  _proto2.getCurrentRecord = function getCurrentRecord() {
-    return this.records[0].sub.records[0];
-  };
-
-  _proto2.getCurrentSubHistory = function getCurrentSubHistory() {
-    return this.records[0].sub;
-  };
-
-  _proto2.push = function push(location, key) {
-    var records = this.records;
-    var store = records[0].getStore();
-
-    if (!this.parent) {
-      store = cloneStore(store);
-    }
-
-    var newRecord = new HistoryRecord(location, key, this, store);
-    var maxHistory = routeConfig.maxHistory;
-    records.unshift(newRecord);
-
-    if (records.length > maxHistory) {
-      records.length = maxHistory;
-    }
-  };
-
-  _proto2.replace = function replace(location, key) {
-    var records = this.records;
-    var store = records[0].getStore();
-    var newRecord = new HistoryRecord(location, key, this, store);
-    records[0] = newRecord;
-  };
-
-  _proto2.relaunch = function relaunch(location, key) {
-    var records = this.records;
-    var store = records[0].getStore();
-
-    if (!this.parent) {
-      store = cloneStore(store);
-    }
-
-    var newRecord = new HistoryRecord(location, key, this, store);
-    this.records = [newRecord];
-  };
-
-  _proto2.preBack = function preBack(delta, overflowRedirect) {
-    if (overflowRedirect === void 0) {
-      overflowRedirect = false;
-    }
-
-    var records = this.records.slice(delta);
-
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
-      } else {
-        records.push(this.records.pop());
-      }
-    }
-
-    return records[0];
-  };
-
-  _proto2.back = function back(delta, overflowRedirect) {
-    if (overflowRedirect === void 0) {
-      overflowRedirect = false;
-    }
-
-    var records = this.records.slice(delta);
-
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
-      } else {
-        records.push(this.records.pop());
-      }
-    }
-
-    this.records = records;
-  };
-
-  return History;
-}();
+  return RootStack;
+}(RouteStack);
 
 function isPlainObject(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
@@ -4634,12 +5035,18 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     return b.length - a.length;
   }).reduce(function (map, pagename) {
     var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
+    var _pagenameMap$pagename = pagenameMap[pagename],
+        argsToParams = _pagenameMap$pagename.argsToParams,
+        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        page = _pagenameMap$pagename.page;
+    map[fullPagename] = {
+      argsToParams: argsToParams,
+      paramsToArgs: paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pages[pagename] = page;
     return map;
   }, {});
-  pagenames.forEach(function (key) {
-    routeMeta.pagenames[key] = key;
-  });
   pagenames = Object.keys(pagenameMap);
 
   function toStringArgs(arr) {
@@ -4761,9 +5168,9 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       }
 
       var params = deepMerge({}, pathParams, eluxLocation.params);
-      var moduleGetter = getModuleGetter();
+      var modules = moduleExists();
       Object.keys(params).forEach(function (moduleName) {
-        if (!moduleGetter[moduleName]) {
+        if (!modules[moduleName]) {
           delete params[moduleName];
         }
       });
@@ -4859,173 +5266,11 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
   };
 }
 
-var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModuleHandlers) {
-  var ModuleWithRouteHandlers = function (_CoreModuleHandlers2) {
-    _inheritsLoose(ModuleWithRouteHandlers, _CoreModuleHandlers2);
-
-    function ModuleWithRouteHandlers() {
-      var _this;
-
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      _this = _CoreModuleHandlers2.call.apply(_CoreModuleHandlers2, [this].concat(args)) || this;
-
-      _initialize(_assertThisInitialized(_this));
-
-      return _this;
-    }
-
-    return ModuleWithRouteHandlers;
-  }(_CoreModuleHandlers);
-
-  return {
-    F: ModuleWithRouteHandlers,
-    d: [{
-      kind: "method",
-      decorators: [reducer],
-      key: "Init",
-      value: function Init(initState) {
-        var routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMergeState(initState, routeParams) : initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "RouteParams",
-      value: function RouteParams(payload) {
-        return deepMergeState(this.state, payload);
-      }
-    }]
-  };
-}, CoreModuleHandlers);
-var RouteActionTypes = {
-  MRouteParams: 'RouteParams',
-  RouteChange: "route" + coreConfig.NSP + "RouteChange",
-  TestRouteChange: "route" + coreConfig.NSP + "TestRouteChange"
-};
-function testRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
-  };
-}
-function routeParamsAction(moduleName, params, action) {
-  return {
-    type: "" + moduleName + coreConfig.NSP + RouteActionTypes.MRouteParams,
-    payload: [params, action]
-  };
-}
-function routeChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.RouteChange,
-    payload: [routeState]
-  };
-}
-var routeMiddleware = function routeMiddleware(_ref) {
-  var dispatch = _ref.dispatch,
-      getState = _ref.getState;
-  return function (next) {
-    return function (action) {
-      if (action.type === RouteActionTypes.RouteChange) {
-        var result = next(action);
-        var routeState = action.payload[0];
-        var rootRouteParams = routeState.params;
-        var rootState = getState();
-        Object.keys(rootRouteParams).forEach(function (moduleName) {
-          var routeParams = rootRouteParams[moduleName];
-
-          if (routeParams && Object.keys(routeParams).length > 0) {
-            if (rootState[moduleName]) {
-              dispatch(routeParamsAction(moduleName, routeParams, routeState.action));
-            }
-          }
-        });
-        return result;
-      }
-
-      return next(action);
-    };
-  };
-};
-
-var RouteModuleHandlers = _decorate(null, function (_initialize2) {
-  var RouteModuleHandlers = function RouteModuleHandlers() {
-    _initialize2(this);
-  };
-
-  return {
-    F: RouteModuleHandlers,
-    d: [{
-      kind: "field",
-      key: "initState",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "moduleName",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "actions",
-      value: void 0
-    }, {
-      kind: "get",
-      key: "state",
-      value: function state() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "RouteChange",
-      value: function RouteChange(routeState) {
-        return mergeState(this.state, routeState);
-      }
-    }]
-  };
-});
-
-var defaultNativeLocationMap = {
-  in: function _in(nativeLocation) {
-    return nativeLocation;
-  },
-  out: function out(nativeLocation) {
-    return nativeLocation;
-  }
-};
-function createRouteModule(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
-  if (nativeLocationMap === void 0) {
-    nativeLocationMap = defaultNativeLocationMap;
-  }
-
-  if (notfoundPagename === void 0) {
-    notfoundPagename = '/404';
-  }
-
-  if (paramsKey === void 0) {
-    paramsKey = '_';
-  }
-
-  var handlers = RouteModuleHandlers;
-  var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  var routeModule = exportModule('route', handlers, {}, {});
-  return _extends({}, routeModule, {
-    locationTransform: locationTransform
-  });
-}
-
 var BaseNativeRouter = function () {
   function BaseNativeRouter() {
     _defineProperty(this, "curTask", void 0);
 
-    _defineProperty(this, "taskList", []);
-
-    _defineProperty(this, "router", null);
+    _defineProperty(this, "eluxRouter", void 0);
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -5037,11 +5282,11 @@ var BaseNativeRouter = function () {
       return false;
     }
 
-    return key !== this.router.getCurKey();
+    return key !== this.eluxRouter.routeState.key;
   };
 
-  _proto.setRouter = function setRouter(router) {
-    this.router = router;
+  _proto.startup = function startup(router) {
+    this.eluxRouter = router;
   };
 
   _proto.execute = function execute(method, getNativeData) {
@@ -5079,53 +5324,65 @@ var BaseNativeRouter = function () {
 
   return BaseNativeRouter;
 }();
-var BaseRouter = function () {
-  function BaseRouter(url, nativeRouter, locationTransform) {
-    var _this2 = this;
+var BaseEluxRouter = function (_MultipleDispatcher) {
+  _inheritsLoose(BaseEluxRouter, _MultipleDispatcher);
 
-    _defineProperty(this, "_tid", 0);
+  function BaseEluxRouter(url, nativeRouter, locationTransform, nativeData) {
+    var _this2;
 
-    _defineProperty(this, "curTask", void 0);
+    _this2 = _MultipleDispatcher.call(this) || this;
 
-    _defineProperty(this, "taskList", []);
+    _defineProperty(_assertThisInitialized(_this2), "_curTask", void 0);
 
-    _defineProperty(this, "_nativeData", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_taskList", []);
 
-    _defineProperty(this, "routeState", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_nativeData", void 0);
 
-    _defineProperty(this, "internalUrl", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_internalUrl", void 0);
 
-    _defineProperty(this, "history", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
 
-    _defineProperty(this, "_lid", 0);
+    _defineProperty(_assertThisInitialized(_this2), "name", routeConfig.RouteModuleName);
 
-    _defineProperty(this, "listenerMap", {});
+    _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
 
-    _defineProperty(this, "initRouteState", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "injectedModules", {});
 
-    this.nativeRouter = nativeRouter;
-    this.locationTransform = locationTransform;
-    nativeRouter.setRouter(this);
-    this.history = new History();
+    _defineProperty(_assertThisInitialized(_this2), "rootStack", new RootStack());
+
+    _defineProperty(_assertThisInitialized(_this2), "latestState", {});
+
+    _defineProperty(_assertThisInitialized(_this2), "_taskComplete", function () {
+      var task = _this2._taskList.shift();
+
+      if (task) {
+        _this2.executeTask(task);
+      } else {
+        _this2._curTask = undefined;
+      }
+    });
+
+    _this2.nativeRouter = nativeRouter;
+    _this2.locationTransform = locationTransform;
+    _this2.nativeData = nativeData;
+    nativeRouter.startup(_assertThisInitialized(_this2));
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
-      var key = _this2._createKey();
-
       var routeState = _extends({}, location, {
         action: 'RELAUNCH',
-        key: key
+        key: ''
       });
 
       _this2.routeState = routeState;
-      _this2.internalUrl = eluxLocationToEluxUrl({
+      _this2._internalUrl = eluxLocationToEluxUrl({
         pathname: routeState.pagename,
         params: routeState.params
       });
 
       if (!routeConfig.indexUrl) {
         setRouteConfig({
-          indexUrl: _this2.internalUrl
+          indexUrl: _this2._internalUrl
         });
       }
 
@@ -5133,46 +5390,41 @@ var BaseRouter = function () {
     };
 
     if (isPromise(locationOrPromise)) {
-      this.initRouteState = locationOrPromise.then(callback);
+      _this2.initialize = locationOrPromise.then(callback);
     } else {
-      this.initRouteState = callback(locationOrPromise);
+      _this2.initialize = Promise.resolve(callback(locationOrPromise));
     }
+
+    return _this2;
   }
 
-  var _proto2 = BaseRouter.prototype;
+  var _proto2 = BaseEluxRouter.prototype;
 
-  _proto2.addListener = function addListener(callback) {
-    this._lid++;
-    var id = "" + this._lid;
-    var listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
+  _proto2.startup = function startup(store) {
+    var historyStack = new HistoryStack(this.rootStack, store);
+    var historyRecord = new HistoryRecord(this.routeState, historyStack);
+    historyStack.startup(historyRecord);
+    this.rootStack.startup(historyStack);
+    this.routeState.key = historyRecord.key;
   };
 
-  _proto2.dispatch = function dispatch(data) {
-    var listenerMap = this.listenerMap;
-    var arr = Object.keys(listenerMap).map(function (id) {
-      return listenerMap[id](data);
+  _proto2.getCurrentPages = function getCurrentPages() {
+    return this.rootStack.getCurrentPages();
+  };
+
+  _proto2.getCurrentStore = function getCurrentStore() {
+    return this.rootStack.getCurrentItem().store;
+  };
+
+  _proto2.getStoreList = function getStoreList() {
+    return this.rootStack.getItems().map(function (_ref) {
+      var store = _ref.store;
+      return store;
     });
-    return Promise.all(arr);
-  };
-
-  _proto2.getRouteState = function getRouteState() {
-    return this.routeState;
-  };
-
-  _proto2.getPagename = function getPagename() {
-    return this.routeState.pagename;
-  };
-
-  _proto2.getParams = function getParams() {
-    return this.routeState.params;
   };
 
   _proto2.getInternalUrl = function getInternalUrl() {
-    return this.internalUrl;
+    return this._internalUrl;
   };
 
   _proto2.getNativeLocation = function getNativeLocation() {
@@ -5191,25 +5443,8 @@ var BaseRouter = function () {
     return this._nativeData.nativeUrl;
   };
 
-  _proto2.init = function init(store) {
-    var historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
-    this.history.init(historyRecord);
-  };
-
-  _proto2.getCurrentStore = function getCurrentStore() {
-    return this.history.getCurrentRecord().getStore();
-  };
-
-  _proto2.getCurKey = function getCurKey() {
-    return this.routeState.key;
-  };
-
-  _proto2.getHistory = function getHistory(root) {
-    return root ? this.history : this.history.getCurrentSubHistory();
-  };
-
   _proto2.getHistoryLength = function getHistoryLength(root) {
-    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
+    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   };
 
   _proto2.locationToNativeData = function locationToNativeData(location) {
@@ -5240,9 +5475,12 @@ var BaseRouter = function () {
     return nativeLocationToNativeUrl(nativeLocation);
   };
 
-  _proto2._createKey = function _createKey() {
-    this._tid++;
-    return "" + this._tid;
+  _proto2.findRecordByKey = function findRecordByKey(key) {
+    return this.rootStack.findRecordByKey(key);
+  };
+
+  _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
+    return this.rootStack.testBack(delta, rootOnly);
   };
 
   _proto2.payloadToEluxLocation = function payloadToEluxLocation(payload) {
@@ -5275,7 +5513,7 @@ var BaseRouter = function () {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   };
 
-  _proto2.relaunch = function relaunch(data, root, nativeCaller) {
+  _proto2.relaunch = function relaunch(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -5284,14 +5522,14 @@ var BaseRouter = function () {
       nativeCaller = false;
     }
 
-    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
+    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._relaunch = function () {
     var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee(data, root, nativeCaller) {
       var _this3 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
       return regenerator.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -5310,8 +5548,8 @@ var BaseRouter = function () {
               return _context.abrupt("return");
 
             case 5:
+              key = '';
               location = preData;
-              key = this._createKey();
               routeState = _extends({}, location, {
                 action: 'RELAUNCH',
                 key: key
@@ -5321,41 +5559,47 @@ var BaseRouter = function () {
 
             case 10:
               _context.next = 12;
-              return this.dispatch(routeState);
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
+              if (root) {
+                key = this.rootStack.relaunch(routeState).key;
+              } else {
+                key = this.rootStack.getCurrentItem().relaunch(routeState).key;
+              }
+
+              routeState.key = key;
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context.next = 17;
+                _context.next = 19;
                 break;
               }
 
-              _context.next = 16;
+              _context.next = 18;
               return this.nativeRouter.execute('relaunch', function () {
                 return _this3.locationToNativeData(routeState);
               }, key);
 
-            case 16:
+            case 18:
               nativeData = _context.sent;
 
-            case 17:
+            case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              _context.next = 26;
+              return this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
 
-              if (root) {
-                this.history.relaunch(location, key);
-              } else {
-                this.history.getCurrentSubHistory().relaunch(location, key);
-              }
-
-              this.getCurrentStore().dispatch(routeChangeAction(routeState));
-
-            case 22:
+            case 26:
             case "end":
               return _context.stop();
           }
@@ -5370,7 +5614,7 @@ var BaseRouter = function () {
     return _relaunch;
   }();
 
-  _proto2.push = function push(data, root, nativeCaller) {
+  _proto2.push = function push(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -5379,14 +5623,14 @@ var BaseRouter = function () {
       nativeCaller = false;
     }
 
-    this.addTask(this._push.bind(this, data, root, nativeCaller));
+    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._push = function () {
     var _push2 = _asyncToGenerator(regenerator.mark(function _callee2(data, root, nativeCaller) {
       var _this4 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
       return regenerator.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -5405,8 +5649,8 @@ var BaseRouter = function () {
               return _context2.abrupt("return");
 
             case 5:
+              key = '';
               location = preData;
-              key = this._createKey();
               routeState = _extends({}, location, {
                 action: 'PUSH',
                 key: key
@@ -5416,41 +5660,63 @@ var BaseRouter = function () {
 
             case 10:
               _context2.next = 12;
-              return this.dispatch(routeState);
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
+              if (root) {
+                key = this.rootStack.push(routeState).key;
+              } else {
+                key = this.rootStack.getCurrentItem().push(routeState).key;
+              }
+
+              routeState.key = key;
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context2.next = 17;
+                _context2.next = 19;
                 break;
               }
 
-              _context2.next = 16;
+              _context2.next = 18;
               return this.nativeRouter.execute('push', function () {
                 return _this4.locationToNativeData(routeState);
               }, key);
 
-            case 16:
+            case 18:
               nativeData = _context2.sent;
 
-            case 17:
+            case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
+              cloneState = deepClone(routeState);
 
-              if (root) {
-                this.history.push(location, key);
-              } else {
-                this.history.getCurrentSubHistory().push(location, key);
+              if (!root) {
+                _context2.next = 28;
+                break;
               }
 
-              this.getCurrentStore().dispatch(routeChangeAction(routeState));
+              _context2.next = 26;
+              return reinitApp(this.getCurrentStore());
 
-            case 22:
+            case 26:
+              _context2.next = 29;
+              break;
+
+            case 28:
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+
+            case 29:
+              _context2.next = 31;
+              return this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
+
+            case 31:
             case "end":
               return _context2.stop();
           }
@@ -5465,7 +5731,7 @@ var BaseRouter = function () {
     return _push;
   }();
 
-  _proto2.replace = function replace(data, root, nativeCaller) {
+  _proto2.replace = function replace(data, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -5474,14 +5740,14 @@ var BaseRouter = function () {
       nativeCaller = false;
     }
 
-    this.addTask(this._replace.bind(this, data, root, nativeCaller));
+    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
   };
 
   _proto2._replace = function () {
     var _replace2 = _asyncToGenerator(regenerator.mark(function _callee3(data, root, nativeCaller) {
       var _this5 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return regenerator.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
@@ -5501,7 +5767,7 @@ var BaseRouter = function () {
 
             case 5:
               location = preData;
-              key = this._createKey();
+              key = '';
               routeState = _extends({}, location, {
                 action: 'REPLACE',
                 key: key
@@ -5511,41 +5777,47 @@ var BaseRouter = function () {
 
             case 10:
               _context3.next = 12;
-              return this.dispatch(routeState);
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
+              if (root) {
+                key = this.rootStack.replace(routeState).key;
+              } else {
+                key = this.rootStack.getCurrentItem().replace(routeState).key;
+              }
+
+              routeState.key = key;
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context3.next = 17;
+                _context3.next = 19;
                 break;
               }
 
-              _context3.next = 16;
+              _context3.next = 18;
               return this.nativeRouter.execute('replace', function () {
                 return _this5.locationToNativeData(routeState);
               }, key);
 
-            case 16:
+            case 18:
               nativeData = _context3.sent;
 
-            case 17:
+            case 19:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              _context3.next = 26;
+              return this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
 
-              if (root) {
-                this.history.replace(location, key);
-              } else {
-                this.history.getCurrentSubHistory().replace(location, key);
-              }
-
-              this.getCurrentStore().dispatch(routeChangeAction(routeState));
-
-            case 22:
+            case 26:
             case "end":
               return _context3.stop();
           }
@@ -5560,7 +5832,7 @@ var BaseRouter = function () {
     return _replace;
   }();
 
-  _proto2.back = function back(n, root, overflowRedirect, nativeCaller) {
+  _proto2.back = function back(n, root, options, nonblocking, nativeCaller) {
     if (n === void 0) {
       n = 1;
     }
@@ -5569,22 +5841,19 @@ var BaseRouter = function () {
       root = false;
     }
 
-    if (overflowRedirect === void 0) {
-      overflowRedirect = true;
-    }
-
     if (nativeCaller === void 0) {
       nativeCaller = false;
     }
 
-    this.addTask(this._back.bind(this, n, root, overflowRedirect, nativeCaller));
+    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
   };
 
   _proto2._back = function () {
-    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, root, overflowRedirect, nativeCaller) {
+    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, root, options, nativeCaller) {
       var _this6 = this;
 
-      var historyRecord, key, pagename, routeState, nativeData, notifyNativeRouter;
+      var _this$rootStack$testB, record, overflow, steps, _url, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
+
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -5598,66 +5867,80 @@ var BaseRouter = function () {
                 break;
               }
 
-              return _context4.abrupt("return", undefined);
+              return _context4.abrupt("return");
 
             case 3:
-              historyRecord = root ? this.history.preBack(n, overflowRedirect) : this.history.getCurrentSubHistory().preBack(n, overflowRedirect);
+              _this$rootStack$testB = this.rootStack.testBack(n, root), record = _this$rootStack$testB.record, overflow = _this$rootStack$testB.overflow, steps = _this$rootStack$testB.steps;
 
-              if (historyRecord) {
-                _context4.next = 6;
+              if (!overflow) {
+                _context4.next = 8;
                 break;
               }
 
-              return _context4.abrupt("return", this.relaunch(routeConfig.indexUrl, root));
+              _url = options.overflowRedirect || routeConfig.indexUrl;
+              env.setTimeout(function () {
+                return _this6.relaunch(_url, root);
+              }, 0);
+              return _context4.abrupt("return");
 
-            case 6:
-              key = historyRecord.key, pagename = historyRecord.pagename;
+            case 8:
+              key = record.key;
+              pagename = record.pagename;
+              params = deepMerge({}, record.params, options.payload);
               routeState = {
                 key: key,
                 pagename: pagename,
-                params: historyRecord.getParams(),
+                params: params,
                 action: 'BACK'
               };
-              _context4.next = 10;
+              _context4.next = 14;
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
-            case 10:
-              _context4.next = 12;
-              return this.dispatch(routeState);
+            case 14:
+              _context4.next = 16;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 12:
+            case 16:
+              if (steps[0]) {
+                root = true;
+                this.rootStack.back(steps[0]);
+              }
+
+              if (steps[1]) {
+                this.rootStack.getCurrentItem().back(steps[1]);
+              }
+
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context4.next = 17;
+                _context4.next = 23;
                 break;
               }
 
-              _context4.next = 16;
+              _context4.next = 22;
               return this.nativeRouter.execute('back', function () {
                 return _this6.locationToNativeData(routeState);
               }, n, key);
 
-            case 16:
+            case 22:
               nativeData = _context4.sent;
 
-            case 17:
+            case 23:
               this._nativeData = nativeData;
               this.routeState = routeState;
-              this.internalUrl = eluxLocationToEluxUrl({
+              this._internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              _context4.next = 30;
+              return this.dispatch('change', {
+                routeState: routeState,
+                root: root
+              });
 
-              if (root) {
-                this.history.back(n);
-              } else {
-                this.history.getCurrentSubHistory().back(n);
-              }
-
-              this.getCurrentStore().dispatch(routeChangeAction(routeState));
-
-            case 22:
+            case 30:
             case "end":
               return _context4.stop();
           }
@@ -5672,60 +5955,110 @@ var BaseRouter = function () {
     return _back;
   }();
 
-  _proto2.taskComplete = function taskComplete() {
-    var task = this.taskList.shift();
-
-    if (task) {
-      this.executeTask(task);
-    } else {
-      this.curTask = undefined;
-    }
-  };
-
   _proto2.executeTask = function executeTask(task) {
-    this.curTask = task;
-    task().finally(this.taskComplete.bind(this));
+    this._curTask = task;
+    task().finally(this._taskComplete);
   };
 
-  _proto2.addTask = function addTask(task) {
-    if (this.curTask) {
-      this.taskList.push(task);
-    } else {
-      this.executeTask(task);
+  _proto2.addTask = function addTask(execute, nonblocking) {
+    var _this7 = this;
+
+    if (env.isServer) {
+      return;
     }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise(function (resolve, reject) {
+      var task = function task() {
+        return execute().then(resolve, reject);
+      };
+
+      if (_this7._curTask) {
+        _this7._taskList.push(task);
+      } else {
+        _this7.executeTask(task);
+      }
+    });
   };
 
   _proto2.destroy = function destroy() {
     this.nativeRouter.destroy();
   };
 
-  return BaseRouter;
-}();
+  return BaseEluxRouter;
+}(MultipleDispatcher);
+var RouteActionTypes = {
+  TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",
+  BeforeRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "BeforeRouteChange"
+};
+function beforeRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
+    payload: [routeState]
+  };
+}
+var defaultNativeLocationMap = {
+  in: function _in(nativeLocation) {
+    return nativeLocation;
+  },
+  out: function out(nativeLocation) {
+    return nativeLocation;
+  }
+};
+function createRouteModule(moduleName, pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
+  if (nativeLocationMap === void 0) {
+    nativeLocationMap = defaultNativeLocationMap;
+  }
+
+  if (notfoundPagename === void 0) {
+    notfoundPagename = '/404';
+  }
+
+  if (paramsKey === void 0) {
+    paramsKey = '_';
+  }
+
+  var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
+  var routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
+  return _extends({}, routeModule, {
+    locationTransform: locationTransform
+  });
+}
 
 var appMeta = {
   router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
 var appConfig = {
-  loadComponent: null
+  loadComponent: null,
+  useRouter: null,
+  useStore: null
 };
 var setAppConfig = buildConfigSetter(appConfig);
 function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter, appModuleName);
-  var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule('route');
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
   return {
     useStore: function useStore(_ref) {
-      var storeOptions = _ref.storeOptions,
-          storeCreator = _ref.storeCreator;
+      var storeCreator = _ref.storeCreator,
+          storeOptions = _ref.storeOptions;
       return Object.assign(ins, {
         render: function (_render) {
           function render() {
@@ -5740,19 +6073,12 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
         }(function () {
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          var routeState = router.initRouteState;
+          var baseStore = storeCreator(storeOptions);
 
-          var initState = _extends({}, storeOptions.initState, {
-            route: routeState
-          });
+          var _initApp = initApp(router, baseStore, middlewares),
+              store = _initApp.store;
 
-          var baseStore = storeCreator(_extends({}, storeOptions, {
-            initState: initState
-          }));
-          var store = initApp(baseStore, istoreMiddleware);
-          router.init(store);
-          routeModule.model(store);
-          var context = render(store, {
+          var context = render({
             deps: {},
             router: router,
             documentHead: ''
@@ -5766,18 +6092,17 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
     }
   };
 }
-function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter, appModuleName);
-  var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule('route');
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
   return {
     useStore: function useStore(_ref2) {
-      var storeOptions = _ref2.storeOptions,
-          storeCreator = _ref2.storeCreator;
+      var storeCreator = _ref2.storeCreator,
+          storeOptions = _ref2.storeOptions;
       return Object.assign(ins, {
         render: function (_render2) {
           function render(_x) {
@@ -5795,31 +6120,29 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
               id = _ref3$id === void 0 ? 'root' : _ref3$id,
               _ref3$ssrKey = _ref3.ssrKey,
               ssrKey = _ref3$ssrKey === void 0 ? 'eluxInitStore' : _ref3$ssrKey,
-              viewName = _ref3.viewName;
-
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
+              _ref3$viewName = _ref3.viewName,
+              viewName = _ref3$viewName === void 0 ? 'main' : _ref3$viewName;
 
           var _ref4 = env[ssrKey] || {},
               state = _ref4.state,
               _ref4$components = _ref4.components,
               components = _ref4$components === void 0 ? [] : _ref4$components;
 
-          var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
-          return roterStatePromise.then(function (routeState) {
-            var initState = _extends({}, storeOptions.initState, {
-              route: routeState
-            }, state);
+          var router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
+          return router.initialize.then(function (routeState) {
+            var _extends2;
 
-            var baseStore = storeCreator(_extends({}, storeOptions, {
-              initState: initState
-            }));
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
-              var store = _ref5.store,
-                  AppView = _ref5.AppView;
-              router.init(store);
-              routeModule.model(store);
-              render(id, AppView, store, {
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
+            var baseStore = storeCreator(storeOptions);
+
+            var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
+                store = _initApp2.store,
+                AppView = _initApp2.AppView,
+                setup = _initApp2.setup;
+
+            return setup.then(function () {
+              render(id, AppView, {
                 deps: {},
                 router: router,
                 documentHead: ''
@@ -5832,18 +6155,17 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
     }
   };
 }
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter, appModuleName);
-  var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule('route');
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
   return {
-    useStore: function useStore(_ref6) {
-      var storeOptions = _ref6.storeOptions,
-          storeCreator = _ref6.storeCreator;
+    useStore: function useStore(_ref5) {
+      var storeCreator = _ref5.storeCreator,
+          storeOptions = _ref5.storeOptions;
       return Object.assign(ins, {
         render: function (_render3) {
           function render(_x2) {
@@ -5856,35 +6178,35 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
 
           return render;
         }(function (_temp2) {
-          var _ref7 = _temp2 === void 0 ? {} : _temp2,
-              _ref7$id = _ref7.id,
-              id = _ref7$id === void 0 ? 'root' : _ref7$id,
-              _ref7$ssrKey = _ref7.ssrKey,
-              ssrKey = _ref7$ssrKey === void 0 ? 'eluxInitStore' : _ref7$ssrKey,
-              viewName = _ref7.viewName;
+          var _ref6 = _temp2 === void 0 ? {} : _temp2,
+              _ref6$id = _ref6.id,
+              id = _ref6$id === void 0 ? 'root' : _ref6$id,
+              _ref6$ssrKey = _ref6.ssrKey,
+              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
+              _ref6$viewName = _ref6.viewName,
+              viewName = _ref6$viewName === void 0 ? 'main' : _ref6$viewName;
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
-          return roterStatePromise.then(function (routeState) {
-            var initState = _extends({}, storeOptions.initState, {
-              route: routeState
-            });
+          return router.initialize.then(function (routeState) {
+            var _extends3;
 
-            var baseStore = storeCreator(_extends({}, storeOptions, {
-              initState: initState
-            }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
-              var store = _ref8.store,
-                  AppView = _ref8.AppView;
-              router.init(store);
+            storeOptions.initState = _extends({}, storeOptions.initState, (_extends3 = {}, _extends3[routeConfig.RouteModuleName] = routeState, _extends3));
+            var baseStore = storeCreator(storeOptions);
+
+            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
+                store = _initApp3.store,
+                AppView = _initApp3.AppView,
+                setup = _initApp3.setup;
+
+            return setup.then(function () {
               var state = store.getState();
               var eluxContext = {
                 deps: {},
                 router: router,
                 documentHead: ''
               };
-              return render(id, AppView, store, eluxContext, ins).then(function (html) {
+              return render(id, AppView, eluxContext, ins).then(function (html) {
                 var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
                 if (match) {
@@ -5921,11 +6243,14 @@ function getApp() {
         return prev;
       }, {});
     },
+    useRouter: appConfig.useRouter,
+    useStore: appConfig.useStore,
     GetRouter: function GetRouter() {
+      if (env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
+      }
+
       return appMeta.router;
-    },
-    GetStore: function GetStore() {
-      return appMeta.router.getCurrentStore();
     },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
@@ -6034,10 +6359,6 @@ function invariant(condition, message) {
 
 function addLeadingSlash(path) {
   return path.charAt(0) === '/' ? path : '/' + path;
-}
-
-function stripLeadingSlash(path) {
-  return path.charAt(0) === '/' ? path.substr(1) : path;
 }
 
 function hasBasename(path, prefix) {
@@ -6240,14 +6561,6 @@ function supportsHistory() {
 
 function supportsPopStateOnHashChange() {
   return window.navigator.userAgent.indexOf('Trident') === -1;
-}
-/**
- * Returns false if using go(n) with hash history causes a full page reload.
- */
-
-
-function supportsGoWithoutReloadUsingHash() {
-  return window.navigator.userAgent.indexOf('Firefox') === -1;
 }
 /**
  * Returns true if a given popstate event is an extraneous WebKit event.
@@ -6522,549 +6835,89 @@ function createBrowserHistory(props) {
   return history;
 }
 
-var HashChangeEvent$1 = 'hashchange';
-var HashPathCoders = {
-  hashbang: {
-    encodePath: function encodePath(path) {
-      return path.charAt(0) === '!' ? path : '!/' + stripLeadingSlash(path);
-    },
-    decodePath: function decodePath(path) {
-      return path.charAt(0) === '!' ? path.substr(1) : path;
-    }
-  },
-  noslash: {
-    encodePath: stripLeadingSlash,
-    decodePath: addLeadingSlash
-  },
-  slash: {
-    encodePath: addLeadingSlash,
-    decodePath: addLeadingSlash
-  }
-};
-
-function stripHash(url) {
-  var hashIndex = url.indexOf('#');
-  return hashIndex === -1 ? url : url.slice(0, hashIndex);
-}
-
-function getHashPath() {
-  // We can't use window.location.hash here because it's not
-  // consistent across browsers - Firefox will pre-decode it!
-  var href = window.location.href;
-  var hashIndex = href.indexOf('#');
-  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
-}
-
-function pushHashPath(path) {
-  window.location.hash = path;
-}
-
-function replaceHashPath(path) {
-  window.location.replace(stripHash(window.location.href) + '#' + path);
-}
-
-function createHashHistory(props) {
-  if (props === void 0) {
-    props = {};
-  }
-
-  !canUseDOM ? process.env.NODE_ENV !== "production" ? invariant(false, 'Hash history needs a DOM') : invariant(false) : void 0;
-  var globalHistory = window.history;
-  var canGoWithoutReload = supportsGoWithoutReloadUsingHash();
-  var _props = props,
-      _props$getUserConfirm = _props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
-      _props$hashType = _props.hashType,
-      hashType = _props$hashType === void 0 ? 'slash' : _props$hashType;
-  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
-  var _HashPathCoders$hashT = HashPathCoders[hashType],
-      encodePath = _HashPathCoders$hashT.encodePath,
-      decodePath = _HashPathCoders$hashT.decodePath;
-
-  function getDOMLocation() {
-    var path = decodePath(getHashPath());
-    process.env.NODE_ENV !== "production" ? warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
-    if (basename) path = stripBasename(path, basename);
-    return createLocation(path);
-  }
-
-  var transitionManager = createTransitionManager();
-
-  function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = globalHistory.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  }
-
-  var forceNextPop = false;
-  var ignorePath = null;
-
-  function locationsAreEqual$$1(a, b) {
-    return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash;
-  }
-
-  function handleHashChange() {
-    var path = getHashPath();
-    var encodedPath = encodePath(path);
-
-    if (path !== encodedPath) {
-      // Ensure we always have a properly-encoded hash.
-      replaceHashPath(encodedPath);
-    } else {
-      var location = getDOMLocation();
-      var prevLocation = history.location;
-      if (!forceNextPop && locationsAreEqual$$1(prevLocation, location)) return; // A hashchange doesn't always == location change.
-
-      if (ignorePath === createPath(location)) return; // Ignore this change; we already setState in push/replace.
-
-      ignorePath = null;
-      handlePop(location);
-    }
-  }
-
-  function handlePop(location) {
-    if (forceNextPop) {
-      forceNextPop = false;
-      setState();
-    } else {
-      var action = 'POP';
-      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-        if (ok) {
-          setState({
-            action: action,
-            location: location
-          });
-        } else {
-          revertPop(location);
-        }
-      });
-    }
-  }
-
-  function revertPop(fromLocation) {
-    var toLocation = history.location; // TODO: We could probably make this more reliable by
-    // keeping a list of paths we've seen in sessionStorage.
-    // Instead, we just default to 0 for paths we don't know.
-
-    var toIndex = allPaths.lastIndexOf(createPath(toLocation));
-    if (toIndex === -1) toIndex = 0;
-    var fromIndex = allPaths.lastIndexOf(createPath(fromLocation));
-    if (fromIndex === -1) fromIndex = 0;
-    var delta = toIndex - fromIndex;
-
-    if (delta) {
-      forceNextPop = true;
-      go(delta);
-    }
-  } // Ensure the hash is encoded properly before doing anything else.
-
-
-  var path = getHashPath();
-  var encodedPath = encodePath(path);
-  if (path !== encodedPath) replaceHashPath(encodedPath);
-  var initialLocation = getDOMLocation();
-  var allPaths = [createPath(initialLocation)]; // Public interface
-
-  function createHref(location) {
-    var baseTag = document.querySelector('base');
-    var href = '';
-
-    if (baseTag && baseTag.getAttribute('href')) {
-      href = stripHash(window.location.href);
-    }
-
-    return href + '#' + encodePath(basename + createPath(location));
-  }
-
-  function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Hash history cannot push state; it is ignored') : void 0;
-    var action = 'PUSH';
-    var location = createLocation(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = createPath(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a PUSH, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        pushHashPath(encodedPath);
-        var prevIndex = allPaths.lastIndexOf(createPath(history.location));
-        var nextPaths = allPaths.slice(0, prevIndex + 1);
-        nextPaths.push(path);
-        allPaths = nextPaths;
-        setState({
-          action: action,
-          location: location
-        });
-      } else {
-        process.env.NODE_ENV !== "production" ? warning(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack') : void 0;
-        setState();
-      }
-    });
-  }
-
-  function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(state === undefined, 'Hash history cannot replace state; it is ignored') : void 0;
-    var action = 'REPLACE';
-    var location = createLocation(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = createPath(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        replaceHashPath(encodedPath);
-      }
-
-      var prevIndex = allPaths.indexOf(createPath(history.location));
-      if (prevIndex !== -1) allPaths[prevIndex] = path;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  }
-
-  function go(n) {
-    process.env.NODE_ENV !== "production" ? warning(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser') : void 0;
-    globalHistory.go(n);
-  }
-
-  function goBack() {
-    go(-1);
-  }
-
-  function goForward() {
-    go(1);
-  }
-
-  var listenerCount = 0;
-
-  function checkDOMListeners(delta) {
-    listenerCount += delta;
-
-    if (listenerCount === 1 && delta === 1) {
-      window.addEventListener(HashChangeEvent$1, handleHashChange);
-    } else if (listenerCount === 0) {
-      window.removeEventListener(HashChangeEvent$1, handleHashChange);
-    }
-  }
-
-  var isBlocked = false;
-
-  function block(prompt) {
-    if (prompt === void 0) {
-      prompt = false;
-    }
-
-    var unblock = transitionManager.setPrompt(prompt);
-
-    if (!isBlocked) {
-      checkDOMListeners(1);
-      isBlocked = true;
-    }
-
-    return function () {
-      if (isBlocked) {
-        isBlocked = false;
-        checkDOMListeners(-1);
-      }
-
-      return unblock();
-    };
-  }
-
-  function listen(listener) {
-    var unlisten = transitionManager.appendListener(listener);
-    checkDOMListeners(1);
-    return function () {
-      checkDOMListeners(-1);
-      unlisten();
-    };
-  }
-
-  var history = {
-    length: globalHistory.length,
-    action: 'POP',
-    location: initialLocation,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    block: block,
-    listen: listen
-  };
-  return history;
-}
-
-function clamp(n, lowerBound, upperBound) {
-  return Math.min(Math.max(n, lowerBound), upperBound);
-}
-/**
- * Creates a history object that stores locations in memory.
- */
-
-
-function createMemoryHistory(props) {
-  if (props === void 0) {
-    props = {};
-  }
-
-  var _props = props,
-      getUserConfirmation = _props.getUserConfirmation,
-      _props$initialEntries = _props.initialEntries,
-      initialEntries = _props$initialEntries === void 0 ? ['/'] : _props$initialEntries,
-      _props$initialIndex = _props.initialIndex,
-      initialIndex = _props$initialIndex === void 0 ? 0 : _props$initialIndex,
-      _props$keyLength = _props.keyLength,
-      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
-  var transitionManager = createTransitionManager();
-
-  function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = history.entries.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  }
-
-  function createKey() {
-    return Math.random().toString(36).substr(2, keyLength);
-  }
-
-  var index = clamp(initialIndex, 0, initialEntries.length - 1);
-  var entries = initialEntries.map(function (entry) {
-    return typeof entry === 'string' ? createLocation(entry, undefined, createKey()) : createLocation(entry, undefined, entry.key || createKey());
-  }); // Public interface
-
-  var createHref = createPath;
-
-  function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'PUSH';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var prevIndex = history.index;
-      var nextIndex = prevIndex + 1;
-      var nextEntries = history.entries.slice(0);
-
-      if (nextEntries.length > nextIndex) {
-        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
-      } else {
-        nextEntries.push(location);
-      }
-
-      setState({
-        action: action,
-        location: location,
-        index: nextIndex,
-        entries: nextEntries
-      });
-    });
-  }
-
-  function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
-    var action = 'REPLACE';
-    var location = createLocation(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      history.entries[history.index] = location;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  }
-
-  function go(n) {
-    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
-    var action = 'POP';
-    var location = history.entries[nextIndex];
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (ok) {
-        setState({
-          action: action,
-          location: location,
-          index: nextIndex
-        });
-      } else {
-        // Mimic the behavior of DOM histories by
-        // causing a render after a cancelled POP.
-        setState();
-      }
-    });
-  }
-
-  function goBack() {
-    go(-1);
-  }
-
-  function goForward() {
-    go(1);
-  }
-
-  function canGo(n) {
-    var nextIndex = history.index + n;
-    return nextIndex >= 0 && nextIndex < history.entries.length;
-  }
-
-  function block(prompt) {
-    if (prompt === void 0) {
-      prompt = false;
-    }
-
-    return transitionManager.setPrompt(prompt);
-  }
-
-  function listen(listener) {
-    return transitionManager.appendListener(listener);
-  }
-
-  var history = {
-    length: entries.length,
-    action: 'POP',
-    location: entries[index],
-    index: index,
-    entries: entries,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    canGo: canGo,
-    block: block,
-    listen: listen
-  };
-  return history;
-}
-
 setRouteConfig({
   notifyNativeRouter: {
     root: true,
     internal: true
   }
 });
+
+function createServerHistory() {
+  return {
+    push: function push() {
+      return undefined;
+    },
+    replace: function replace() {
+      return undefined;
+    },
+    go: function go() {
+      return undefined;
+    },
+    block: function block() {
+      return function () {
+        return undefined;
+      };
+    }
+  };
+}
+
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter(createHistory) {
+  function BrowserNativeRouter(url) {
     var _this;
 
     _this = _BaseNativeRouter.call(this) || this;
 
     _defineProperty(_assertThisInitialized(_this), "_unlistenHistory", void 0);
 
-    _defineProperty(_assertThisInitialized(_this), "history", void 0);
+    _defineProperty(_assertThisInitialized(_this), "_history", void 0);
 
-    _defineProperty(_assertThisInitialized(_this), "serverSide", false);
-
-    if (createHistory === 'Hash') {
-      _this.history = createHashHistory();
-    } else if (createHistory === 'Memory') {
-      _this.history = createMemoryHistory();
-    } else if (createHistory === 'Browser') {
-      _this.history = createBrowserHistory();
+    if (env.isServer) {
+      _this._history = createServerHistory();
     } else {
-      _this.serverSide = true;
-
-      var _createHistory$split = createHistory.split('?'),
-          pathname = _createHistory$split[0],
-          _createHistory$split$ = _createHistory$split[1],
-          search = _createHistory$split$ === void 0 ? '' : _createHistory$split$;
-
-      _this.history = {
-        action: 'PUSH',
-        length: 0,
-        listen: function listen() {
-          return function () {
-            return undefined;
-          };
-        },
-        createHref: function createHref() {
-          return '';
-        },
-        push: function push() {
-          return undefined;
-        },
-        replace: function replace() {
-          return undefined;
-        },
-        go: function go() {
-          return undefined;
-        },
-        goBack: function goBack() {
-          return undefined;
-        },
-        goForward: function goForward() {
-          return undefined;
-        },
-        block: function block() {
-          return function () {
-            return undefined;
-          };
-        },
-        location: {
-          pathname: pathname,
-          search: search && "?" + search,
-          hash: ''
-        }
-      };
+      _this._history = createBrowserHistory();
     }
 
-    _this._unlistenHistory = _this.history.block(function (location, action) {
-      var _location$pathname = location.pathname,
-          pathname = _location$pathname === void 0 ? '' : _location$pathname,
-          _location$search = location.search,
-          search = _location$search === void 0 ? '' : _location$search,
-          _location$hash = location.hash,
-          hash = _location$hash === void 0 ? '' : _location$hash;
-      var url = [pathname, search, hash].join('');
+    _this._unlistenHistory = _this._history.block(function (location, action) {
+      if (action === 'POP') {
+        env.setTimeout(function () {
+          return _this.eluxRouter.back(1);
+        }, 100);
+        return false;
+      }
 
       var key = _this.getKey(location);
 
       var changed = _this.onChange(key);
 
       if (changed) {
-        var index = 0;
-        var callback;
+        var _location$pathname = location.pathname,
+            pathname = _location$pathname === void 0 ? '' : _location$pathname,
+            _location$search = location.search,
+            search = _location$search === void 0 ? '' : _location$search,
+            _location$hash = location.hash,
+            hash = _location$hash === void 0 ? '' : _location$hash;
 
-        if (action === 'POP') {
-          index = _this.router.getHistory().findIndex(key);
-        }
+        var _url = [pathname, search, hash].join('');
 
-        if (index > 0) {
-          callback = function callback() {
-            return _this.router.back(index);
-          };
-        } else if (action === 'REPLACE') {
-          callback = function callback() {
-            return _this.router.replace(url);
+        var _callback;
+
+        if (action === 'REPLACE') {
+          _callback = function _callback() {
+            return _this.eluxRouter.replace(_url);
           };
         } else if (action === 'PUSH') {
-          callback = function callback() {
-            return _this.router.push(url);
+          _callback = function _callback() {
+            return _this.eluxRouter.push(_url);
           };
         } else {
-          callback = function callback() {
-            return _this.router.relaunch(url);
+          _callback = function _callback() {
+            return _this.eluxRouter.relaunch(_url);
           };
         }
 
-        callback && env.setTimeout(callback, 50);
+        env.setTimeout(_callback, 100);
         return false;
       }
 
@@ -7075,33 +6928,16 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   var _proto = BrowserNativeRouter.prototype;
 
-  _proto.getUrl = function getUrl() {
-    var _this$history$locatio = this.history.location,
-        _this$history$locatio2 = _this$history$locatio.pathname,
-        pathname = _this$history$locatio2 === void 0 ? '' : _this$history$locatio2,
-        _this$history$locatio3 = _this$history$locatio.search,
-        search = _this$history$locatio3 === void 0 ? '' : _this$history$locatio3,
-        _this$history$locatio4 = _this$history$locatio.hash,
-        hash = _this$history$locatio4 === void 0 ? '' : _this$history$locatio4;
-    return [pathname, search, hash].join('');
-  };
-
   _proto.getKey = function getKey(location) {
     return location.state || '';
   };
 
-  _proto.passive = function passive(url, key, action) {
-    return true;
-  };
-
-  _proto.refresh = function refresh() {
-    this.history.go(0);
-  };
-
   _proto.push = function push(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -7109,9 +6945,11 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.replace = function replace(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -7119,9 +6957,11 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.relaunch = function relaunch(getNativeData, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
+
+      this._history.push(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -7129,9 +6969,11 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.back = function back(getNativeData, n, key) {
-    if (!this.serverSide) {
+    if (!env.isServer) {
       var nativeData = getNativeData();
-      this.history.go(-n);
+
+      this._history.replace(nativeData.nativeUrl, key);
+
       return nativeData;
     }
 
@@ -7139,7 +6981,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.toOutside = function toOutside(url) {
-    this.history.push(url);
+    this._history.push(url, '');
   };
 
   _proto.destroy = function destroy() {
@@ -7148,18 +6990,18 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   return BrowserNativeRouter;
 }(BaseNativeRouter);
-var Router = function (_BaseRouter) {
-  _inheritsLoose(Router, _BaseRouter);
+var EluxRouter = function (_BaseEluxRouter) {
+  _inheritsLoose(EluxRouter, _BaseEluxRouter);
 
-  function Router(browserNativeRouter, locationTransform) {
-    return _BaseRouter.call(this, browserNativeRouter.getUrl(), browserNativeRouter, locationTransform) || this;
+  function EluxRouter(url, browserNativeRouter, locationTransform, nativeData) {
+    return _BaseEluxRouter.call(this, url, browserNativeRouter, locationTransform, nativeData) || this;
   }
 
-  return Router;
-}(BaseRouter);
-function createRouter(createHistory, locationTransform) {
-  var browserNativeRouter = new BrowserNativeRouter(createHistory);
-  var router = new Router(browserNativeRouter, locationTransform);
+  return EluxRouter;
+}(BaseEluxRouter);
+function createRouter(url, locationTransform, nativeData) {
+  var browserNativeRouter = new BrowserNativeRouter(url);
+  var router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
   return router;
 }
 
@@ -7167,23 +7009,26 @@ setCoreConfig({
   MutableData: true
 });
 setAppConfig({
-  loadComponent: loadComponent
+  loadComponent: loadComponent,
+  useRouter: useRouter,
+  useStore: useStore
 });
 function setConfig(conf) {
   setVueComponentsConfig(conf);
   setUserConfig(conf);
 }
-var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
-  var app = createApp$1(Router$1);
+var createApp = function createApp(moduleGetter, middlewares) {
+  var url = [location.pathname, location.search, location.hash].join('');
+  var app = createApp$1(Router);
   return createBaseApp(app, function (locationTransform) {
-    return createRouter('Browser', locationTransform);
-  }, renderToDocument, moduleGetter, middlewares, appModuleName);
+    return createRouter(url, locationTransform, {});
+  }, renderToDocument, moduleGetter, middlewares);
 };
-var createSSR = function createSSR(moduleGetter, url, middlewares, appModuleName) {
-  var app = createSSRApp(Router$1);
+var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+  var app = createSSRApp(Router);
   return createBaseSSR(app, function (locationTransform) {
-    return createRouter(url, locationTransform);
-  }, renderToString, moduleGetter, middlewares, appModuleName);
+    return createRouter(url, locationTransform, nativeData);
+  }, renderToString, moduleGetter, middlewares);
 };
 
-export { ActionTypes, ModuleWithRouteHandlers as BaseModuleHandlers, DocumentHead, EluxContextKey, EluxStoreContextKey, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, setVueComponentsConfig, storeCreator, useStore, vueComponentsConfig };
+export { ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, Switch, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, getRefsValue, isProcessedError, isServer, loadComponent, logger, mapState, modelHotReplacement, mutation, patchActions, reducer, refStore, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, storeCreator };

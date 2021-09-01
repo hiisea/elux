@@ -11,9 +11,10 @@ export default function (props, context) {
   var onClick = props.onClick,
       href = props.href,
       url = props.url,
-      replace = props.replace,
-      portal = props.portal,
-      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "replace", "portal"]);
+      _props$action = props.action,
+      action = _props$action === void 0 ? 'push' : _props$action,
+      root = props.root,
+      rest = _objectWithoutPropertiesLoose(props, ["onClick", "href", "url", "action", "root"]);
 
   var newProps = _extends({}, rest, {
     onClick: function (_onClick) {
@@ -29,13 +30,13 @@ export default function (props, context) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? router.replace(url, portal) : router.push(url, portal);
+      router[action](url, root);
     })
   });
 
   if (href) {
-    return h('a', newProps, context.slots);
+    return h('a', newProps, context.slots.default());
   } else {
-    return h('div', newProps, context.slots);
+    return h('div', newProps, context.slots.default());
   }
 }

@@ -1,4 +1,4 @@
-import { setReactComponentsConfig } from '@elux/react-web';
+import { setReactComponentsConfig } from '@elux/react-components';
 import { Provider, useStore } from '@elux/react-redux';
 import { setAppConfig } from '@elux/app';
 setAppConfig({

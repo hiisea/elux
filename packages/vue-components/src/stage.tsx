@@ -1,43 +1,117 @@
-import {Component, h, provide, inject} from 'vue';
+import {h, provide, inject, defineComponent, DefineComponent, shallowRef, ref, onBeforeMount, PropType} from 'vue';
 import type {App} from 'vue';
 import {env, IStore} from '@elux/core';
 import {EluxContext, EluxContextKey, EluxStoreContextKey, EluxStoreContext} from './base';
 
-let StageView: Component<any>;
+let StageView: DefineComponent;
 
-export const Router: Component<any> = (props, context) => {
-  return h(Page, props, context.slots);
-};
-
-export const Page: Component<any> = {
-  setup(props, context) {
-    const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
-    const store = router!.getCurrentStore();
-    const storeContext: EluxStoreContext = {store};
-    provide(EluxStoreContextKey, storeContext);
-    return () => h(StageView, props, context.slots);
+export const Page = defineComponent({
+  props: {
+    store: {
+      type: Object as PropType<IStore>,
+      required: true,
+    },
+    view: {
+      type: Object as PropType<DefineComponent>,
+      required: true,
+    },
   },
-};
+  setup(props) {
+    const {store, view} = props;
+    const storeContext: EluxStoreContext = {store: store!};
+    provide(EluxStoreContextKey, storeContext);
+    return () => h(view, null);
+  },
+});
 
-export function renderToMP(store: IStore, eluxContext: EluxContext, app: App): void {
-  app.use(store as any);
+export const Router = defineComponent({
+  setup() {
+    const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
+    const data = shallowRef<{
+      classname: string;
+      pages: {
+        pagename: string;
+        store: IStore<any>;
+        page?: any;
+      }[];
+    }>({
+      classname: 'elux-app',
+      pages: router!.getCurrentPages().reverse(),
+    });
+    const containerRef = ref<{className: string}>({className: ''});
+    const removeListener = router!.addListener('change', ({routeState, root}) => {
+      if (root) {
+        const pages = router!.getCurrentPages().reverse();
+        let completeCallback: () => void;
+        if (routeState.action === 'PUSH') {
+          const completePromise = new Promise<void>((resolve) => {
+            completeCallback = resolve;
+          });
+          data.value = {classname: 'elux-app elux-animation elux-change ' + Date.now(), pages};
+          env.setTimeout(() => {
+            containerRef.value.className = 'elux-app elux-animation';
+          }, 200);
+          env.setTimeout(() => {
+            containerRef.value.className = 'elux-app';
+            completeCallback();
+          }, 500);
+          return completePromise;
+        } else if (routeState.action === 'BACK') {
+          const completePromise = new Promise<void>((resolve) => {
+            completeCallback = resolve;
+          });
+          data.value = {classname: 'elux-app ' + Date.now(), pages: [...pages, data.value.pages[data.value.pages.length - 1]]};
+          env.setTimeout(() => {
+            containerRef.value.className = 'elux-app elux-animation elux-change';
+          }, 200);
+          env.setTimeout(() => {
+            data.value = {classname: 'elux-app ' + Date.now(), pages};
+            completeCallback();
+          }, 500);
+          return completePromise;
+        } else if (routeState.action === 'RELAUNCH') {
+          data.value = {classname: 'elux-app ' + Date.now(), pages};
+        }
+      }
+      return;
+    });
+    onBeforeMount(() => {
+      removeListener();
+    });
+    return () => {
+      const {classname, pages} = data.value;
+      return (
+        <div ref={containerRef} class={classname}>
+          {pages.map((item) => {
+            const {store, pagename} = item;
+            return (
+              <div key={store.id} class="elux-page" data-pagename={pagename}>
+                <Page store={store} view={item.page || StageView} />
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+  },
+});
+
+export function renderToMP(eluxContext: EluxContext, app: App): void {
   app.provide<EluxContext>(EluxContextKey, eluxContext);
   if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
     env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
   }
 }
-export function renderToDocument(id: string, APPView: Component<any>, store: IStore, eluxContext: EluxContext, fromSSR: boolean, app: App): void {
+export function renderToDocument(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, fromSSR: boolean, app: App): void {
   StageView = APPView;
-  app.use(store as any);
   app.provide<EluxContext>(EluxContextKey, eluxContext);
   if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
     env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
   }
   app.mount(`#${id}`);
 }
-export function renderToString(id: string, APPView: Component<any>, store: IStore, eluxContext: EluxContext, app: App): Promise<string> {
+export function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App): Promise<string> {
   StageView = APPView;
-  app.use(store as any);
   app.provide<EluxContext>(EluxContextKey, eluxContext);
   const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);
   return htmlPromise;

@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState, useRef, memo} from 'react';
 import {ICoreRouter, env, IStore} from '@elux/core';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
-export const Router: React.FC = (props) => {
+export const Router: React.FC<{page: React.ComponentType}> = (props) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router!;
   const [data, setData] = useState<{
@@ -56,30 +56,25 @@ export const Router: React.FC = (props) => {
       return;
     });
   }, [router]);
-  const nodes = pages.map((item) => {
-    const store = item.store;
-    const page = item.page ? (
-      <item.page key={store.id} store={store} pagename={item.pagename} />
-    ) : (
-      <Page key={store.id} store={store} pagename={item.pagename}>
-        {props.children}
-      </Page>
-    );
-    return page;
-  });
   return (
     <div ref={containerRef} className={classname}>
-      {nodes}
+      {pages.map((item) => {
+        const {store, pagename} = item;
+        return (
+          <div key={store.id} className="elux-page" data-pagename={pagename}>
+            <Page store={store} view={item.page || props.page}></Page>
+          </div>
+        );
+      })}
     </div>
   );
 };
 
-export const Page: React.FC<{store: IStore; pagename: string}> = memo(function ({store, pagename, children}) {
+export const Page: React.FC<{store: IStore; view: React.ComponentType}> = memo(function ({store, view}) {
+  const View = view;
   return (
     <reactComponentsConfig.Provider store={store}>
-      <div className="elux-page" data-pagename={pagename}>
-        {children}
-      </div>
+      <View />
     </reactComponentsConfig.Provider>
   );
 });

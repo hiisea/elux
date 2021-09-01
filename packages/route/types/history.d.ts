@@ -22,9 +22,9 @@ export declare class HistoryRecord {
     readonly destroy: undefined;
     readonly pagename: string;
     readonly params: Record<string, any>;
+    readonly key: string;
     readonly recordKey: string;
     constructor(location: Location, historyStack: HistoryStack);
-    getKey(): string;
 }
 export declare class HistoryStack extends RouteStack<HistoryRecord> {
     readonly rootStack: RootStack;

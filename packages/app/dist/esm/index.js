@@ -47,7 +47,7 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
           var _initApp = initApp(router, baseStore, middlewares),
               store = _initApp.store;
 
-          var context = render(store, {
+          var context = render({
             deps: {},
             router: router,
             documentHead: ''
@@ -111,7 +111,7 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
                 setup = _initApp2.setup;
 
             return setup.then(function () {
-              render(id, AppView, store, {
+              render(id, AppView, {
                 deps: {},
                 router: router,
                 documentHead: ''
@@ -175,7 +175,7 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
                 router: router,
                 documentHead: ''
               };
-              return render(id, AppView, store, eluxContext, ins).then(function (html) {
+              return render(id, AppView, eluxContext, ins).then(function (html) {
                 var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
                 if (match) {
