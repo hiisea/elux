@@ -136,10 +136,6 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     return undefined;
   }
 
-  public toOutside(url: string): void {
-    this._history.push(url, '');
-  }
-
   public destroy(): void {
     this._unlistenHistory();
   }

@@ -70,12 +70,12 @@ var Router = (0, _vue.defineComponent)({
 
           _core.env.setTimeout(function () {
             containerRef.value.className = 'elux-app elux-animation';
-          }, 200);
+          }, 100);
 
           _core.env.setTimeout(function () {
             containerRef.value.className = 'elux-app';
             completeCallback();
-          }, 500);
+          }, 400);
 
           return completePromise;
         } else if (routeState.action === 'BACK') {
@@ -90,7 +90,7 @@ var Router = (0, _vue.defineComponent)({
 
           _core.env.setTimeout(function () {
             containerRef.value.className = 'elux-app elux-animation elux-change';
-          }, 200);
+          }, 100);
 
           _core.env.setTimeout(function () {
             data.value = {
@@ -98,7 +98,7 @@ var Router = (0, _vue.defineComponent)({
               pages: pages
             };
             completeCallback();
-          }, 500);
+          }, 400);
 
           return _completePromise;
         } else if (routeState.action === 'RELAUNCH') {
@@ -111,7 +111,7 @@ var Router = (0, _vue.defineComponent)({
 
       return;
     });
-    (0, _vue.onBeforeMount)(function () {
+    (0, _vue.onBeforeUnmount)(function () {
       removeListener();
     });
     return function () {

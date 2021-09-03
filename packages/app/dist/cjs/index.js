@@ -9,7 +9,7 @@ exports.createBaseApp = createBaseApp;
 exports.createBaseSSR = createBaseSSR;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.modelHotReplacement = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.mutation = exports.action = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
+exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.modelHotReplacement = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.mutation = exports.action = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
 
 var _extends4 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -28,6 +28,7 @@ exports.logger = _core.logger;
 exports.isServer = _core.isServer;
 exports.serverSide = _core.serverSide;
 exports.clientSide = _core.clientSide;
+exports.deepClone = _core.deepClone;
 exports.deepMerge = _core.deepMerge;
 exports.deepMergeState = _core.deepMergeState;
 exports.exportModule = _core.exportModule;

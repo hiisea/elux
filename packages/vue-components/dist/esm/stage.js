@@ -1,5 +1,5 @@
 import { createVNode as _createVNode } from "vue";
-import { h, provide, inject, defineComponent, shallowRef, ref, onBeforeMount } from 'vue';
+import { h, provide, inject, defineComponent, shallowRef, ref, onBeforeUnmount } from 'vue';
 import { env } from '@elux/core';
 import { EluxContextKey, EluxStoreContextKey } from './base';
 var StageView;
@@ -58,11 +58,11 @@ export var Router = defineComponent({
           };
           env.setTimeout(function () {
             containerRef.value.className = 'elux-app elux-animation';
-          }, 200);
+          }, 100);
           env.setTimeout(function () {
             containerRef.value.className = 'elux-app';
             completeCallback();
-          }, 500);
+          }, 400);
           return completePromise;
         } else if (routeState.action === 'BACK') {
           var _completePromise = new Promise(function (resolve) {
@@ -75,14 +75,14 @@ export var Router = defineComponent({
           };
           env.setTimeout(function () {
             containerRef.value.className = 'elux-app elux-animation elux-change';
-          }, 200);
+          }, 100);
           env.setTimeout(function () {
             data.value = {
               classname: 'elux-app ' + Date.now(),
               pages: pages
             };
             completeCallback();
-          }, 500);
+          }, 400);
           return _completePromise;
         } else if (routeState.action === 'RELAUNCH') {
           data.value = {
@@ -94,7 +94,7 @@ export var Router = defineComponent({
 
       return;
     });
-    onBeforeMount(function () {
+    onBeforeUnmount(function () {
       removeListener();
     });
     return function () {

@@ -1,7 +1,7 @@
 import { HTMLAttributes, VNode } from 'vue';
 declare type MouseEvent = any;
 export interface Props extends HTMLAttributes {
-    url: string;
+    route: string;
     onClick?(event: MouseEvent): void;
     href?: string;
     action?: 'push' | 'replace' | 'relaunch';

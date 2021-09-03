@@ -2,7 +2,7 @@ import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { isPromise, deepMerge, routeChangeAction, coreConfig, exportModule, deepClone, MultipleDispatcher, RouteModuleHandlers, env, reinitApp } from '@elux/core';
 import { routeConfig, setRouteConfig } from './basic';
 import { RootStack, HistoryStack, HistoryRecord } from './history';
-import { eluxLocationToEluxUrl, nativeLocationToNativeUrl, createLocationTransform } from './transform';
+import { eluxLocationToEluxUrl, createLocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta } from './basic';
 export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
 export class BaseNativeRouter {
@@ -54,7 +54,7 @@ export class BaseNativeRouter {
 
 }
 export class BaseEluxRouter extends MultipleDispatcher {
-  constructor(url, nativeRouter, locationTransform, nativeData) {
+  constructor(nativeUrl, nativeRouter, locationTransform, nativeData) {
     super();
 
     _defineProperty(this, "_curTask", void 0);
@@ -91,10 +91,11 @@ export class BaseEluxRouter extends MultipleDispatcher {
     this.locationTransform = locationTransform;
     this.nativeData = nativeData;
     nativeRouter.startup(this);
-    const locationOrPromise = locationTransform.urlToLocation(url);
+    const nativeLocation = locationTransform.nativeUrlToNativeLocation(nativeUrl);
+    const locationStateOrPromise = locationTransform.partialLocationStateToLocationState(locationTransform.nativeLocationToPartialLocationState(nativeLocation));
 
-    const callback = location => {
-      const routeState = { ...location,
+    const callback = locationState => {
+      const routeState = { ...locationState,
         action: 'RELAUNCH',
         key: ''
       };
@@ -113,10 +114,10 @@ export class BaseEluxRouter extends MultipleDispatcher {
       return routeState;
     };
 
-    if (isPromise(locationOrPromise)) {
-      this.initialize = locationOrPromise.then(callback);
+    if (isPromise(locationStateOrPromise)) {
+      this.initialize = locationStateOrPromise.then(callback);
     } else {
-      this.initialize = Promise.resolve(callback(locationOrPromise));
+      this.initialize = Promise.resolve(callback(locationStateOrPromise));
     }
   }
 
@@ -148,7 +149,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
 
   getNativeLocation() {
     if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
+      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
     }
 
     return this._nativeData.nativeLocation;
@@ -156,7 +157,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
 
   getNativeUrl() {
     if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
+      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
     }
 
     return this._nativeData.nativeUrl;
@@ -164,34 +165,6 @@ export class BaseEluxRouter extends MultipleDispatcher {
 
   getHistoryLength(root) {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
-  }
-
-  locationToNativeData(location) {
-    const nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    const nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
-    return {
-      nativeUrl,
-      nativeLocation
-    };
-  }
-
-  urlToLocation(url) {
-    return this.locationTransform.urlToLocation(url);
-  }
-
-  payloadLocationToEluxUrl(data) {
-    const eluxLocation = this.payloadToEluxLocation(data);
-    return eluxLocationToEluxUrl(eluxLocation);
-  }
-
-  payloadLocationToNativeUrl(data) {
-    const eluxLocation = this.payloadToEluxLocation(data);
-    const nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
-    return this.nativeLocationToNativeUrl(nativeLocation);
-  }
-
-  nativeLocationToNativeUrl(nativeLocation) {
-    return nativeLocationToNativeUrl(nativeLocation);
   }
 
   findRecordByKey(key) {
@@ -202,49 +175,47 @@ export class BaseEluxRouter extends MultipleDispatcher {
     return this.rootStack.testBack(delta, rootOnly);
   }
 
-  payloadToEluxLocation(payload) {
-    let params = payload.params || {};
-    const extendParams = payload.extendParams === 'current' ? this.routeState.params : payload.extendParams;
-
-    if (extendParams && params) {
-      params = deepMerge({}, extendParams, params);
-    } else if (extendParams) {
-      params = extendParams;
-    }
-
+  partialLocationStateToNativeData(partialLocationState) {
+    const nativeLocation = this.locationTransform.partialLocationStateToNativeLocation(partialLocationState);
+    const nativeUrl = this.locationTransform.nativeLocationToNativeUrl(nativeLocation);
     return {
-      pathname: payload.pathname || this.routeState.pagename,
-      params
+      nativeUrl,
+      nativeLocation
     };
   }
 
-  preAdditions(data) {
-    if (typeof data === 'string') {
-      if (/^[\w:]*\/\//.test(data)) {
-        this.nativeRouter.toOutside(data);
-        return null;
+  preAdditions(eluxUrlOrPayload) {
+    let partialLocationState;
+
+    if (typeof eluxUrlOrPayload === 'string') {
+      const eluxLocation = this.locationTransform.eluxUrlToEluxLocation(eluxUrlOrPayload);
+      partialLocationState = this.locationTransform.eluxLocationToPartialLocationState(eluxLocation);
+    } else {
+      const {
+        extendParams,
+        pagename
+      } = eluxUrlOrPayload;
+      const data = { ...eluxUrlOrPayload
+      };
+
+      if (extendParams === 'current') {
+        data.extendParams = this.routeState.params;
+        data.pagename = pagename || this.routeState.pagename;
       }
 
-      return this.locationTransform.urlToLocation(data);
+      partialLocationState = this.locationTransform.payloadToPartialLocationState(data);
     }
 
-    const eluxLocation = this.payloadToEluxLocation(data);
-    return this.locationTransform.eluxLocationToLocation(eluxLocation);
+    return this.locationTransform.partialLocationStateToLocationState(partialLocationState);
   }
 
-  relaunch(data, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
+  relaunch(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._relaunch.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
   }
 
-  async _relaunch(data, root, nativeCaller) {
-    const preData = await this.preAdditions(data);
-
-    if (!preData) {
-      return;
-    }
-
+  async _relaunch(eluxUrlOrPayload, root, nativeCaller) {
+    const location = await this.preAdditions(eluxUrlOrPayload);
     let key = '';
-    const location = preData;
     const routeState = { ...location,
       action: 'RELAUNCH',
       key
@@ -263,7 +234,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNativeData(routeState), key);
+      nativeData = await this.nativeRouter.execute('relaunch', () => this.partialLocationStateToNativeData(routeState), key);
     }
 
     this._nativeData = nativeData;
@@ -280,19 +251,13 @@ export class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  push(data, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
+  push(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._push.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
   }
 
-  async _push(data, root, nativeCaller) {
-    const preData = await this.preAdditions(data);
-
-    if (!preData) {
-      return;
-    }
-
+  async _push(eluxUrlOrPayload, root, nativeCaller) {
+    const location = await this.preAdditions(eluxUrlOrPayload);
     let key = '';
-    const location = preData;
     const routeState = { ...location,
       action: 'PUSH',
       key
@@ -311,7 +276,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('push', () => this.locationToNativeData(routeState), key);
+      nativeData = await this.nativeRouter.execute('push', () => this.partialLocationStateToNativeData(routeState), key);
     }
 
     this._nativeData = nativeData;
@@ -334,18 +299,12 @@ export class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  replace(data, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
+  replace(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._replace.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
   }
 
-  async _replace(data, root, nativeCaller) {
-    const preData = await this.preAdditions(data);
-
-    if (!preData) {
-      return;
-    }
-
-    const location = preData;
+  async _replace(eluxUrlOrPayload, root, nativeCaller) {
+    const location = await this.preAdditions(eluxUrlOrPayload);
     let key = '';
     const routeState = { ...location,
       action: 'REPLACE',
@@ -365,7 +324,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNativeData(routeState), key);
+      nativeData = await this.nativeRouter.execute('replace', () => this.partialLocationStateToNativeData(routeState), key);
     }
 
     this._nativeData = nativeData;
@@ -428,7 +387,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('back', () => this.locationToNativeData(routeState), n, key);
+      nativeData = await this.nativeRouter.execute('back', () => this.partialLocationStateToNativeData(routeState), n, key);
     }
 
     this._nativeData = nativeData;

@@ -12,7 +12,7 @@ var routeConfig = {
     root: true,
     internal: false
   },
-  indexUrl: '/'
+  indexUrl: '/index'
 };
 exports.routeConfig = routeConfig;
 var setRouteConfig = (0, _core.buildConfigSetter)(routeConfig);

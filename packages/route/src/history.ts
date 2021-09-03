@@ -1,5 +1,5 @@
 import {env, IStore, forkStore} from '@elux/core';
-import {Location, routeMeta, RouteState} from './basic';
+import {LocationState, routeMeta, RouteState} from './basic';
 
 class RouteStack<T extends {destroy?: () => void}> {
   protected records: T[] = [];
@@ -79,7 +79,7 @@ export class HistoryRecord {
   public readonly params: Record<string, any>;
   public readonly key: string;
   public readonly recordKey: string;
-  constructor(location: Location, public readonly historyStack: HistoryStack) {
+  constructor(location: LocationState, public readonly historyStack: HistoryStack) {
     this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
     const {pagename, params} = location;
     this.pagename = pagename;

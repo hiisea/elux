@@ -99,7 +99,7 @@ exports.BaseNativeRouter = BaseNativeRouter;
 var BaseEluxRouter = function (_MultipleDispatcher) {
   (0, _inheritsLoose2.default)(BaseEluxRouter, _MultipleDispatcher);
 
-  function BaseEluxRouter(url, nativeRouter, locationTransform, nativeData) {
+  function BaseEluxRouter(nativeUrl, nativeRouter, locationTransform, nativeData) {
     var _this2;
 
     _this2 = _MultipleDispatcher.call(this) || this;
@@ -126,10 +126,11 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     _this2.locationTransform = locationTransform;
     _this2.nativeData = nativeData;
     nativeRouter.startup((0, _assertThisInitialized2.default)(_this2));
-    var locationOrPromise = locationTransform.urlToLocation(url);
+    var nativeLocation = locationTransform.nativeUrlToNativeLocation(nativeUrl);
+    var locationStateOrPromise = locationTransform.partialLocationStateToLocationState(locationTransform.nativeLocationToPartialLocationState(nativeLocation));
 
-    var callback = function callback(location) {
-      var routeState = (0, _extends2.default)({}, location, {
+    var callback = function callback(locationState) {
+      var routeState = (0, _extends2.default)({}, locationState, {
         action: 'RELAUNCH',
         key: ''
       });
@@ -148,10 +149,10 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
       return routeState;
     };
 
-    if ((0, _core.isPromise)(locationOrPromise)) {
-      _this2.initialize = locationOrPromise.then(callback);
+    if ((0, _core.isPromise)(locationStateOrPromise)) {
+      _this2.initialize = locationStateOrPromise.then(callback);
     } else {
-      _this2.initialize = Promise.resolve(callback(locationOrPromise));
+      _this2.initialize = Promise.resolve(callback(locationStateOrPromise));
     }
 
     return _this2;
@@ -188,7 +189,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
   _proto2.getNativeLocation = function getNativeLocation() {
     if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
+      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
     }
 
     return this._nativeData.nativeLocation;
@@ -196,7 +197,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
   _proto2.getNativeUrl = function getNativeUrl() {
     if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
+      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
     }
 
     return this._nativeData.nativeUrl;
@@ -204,34 +205,6 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
   _proto2.getHistoryLength = function getHistoryLength(root) {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
-  };
-
-  _proto2.locationToNativeData = function locationToNativeData(location) {
-    var nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    var nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
-    return {
-      nativeUrl: nativeUrl,
-      nativeLocation: nativeLocation
-    };
-  };
-
-  _proto2.urlToLocation = function urlToLocation(url) {
-    return this.locationTransform.urlToLocation(url);
-  };
-
-  _proto2.payloadLocationToEluxUrl = function payloadLocationToEluxUrl(data) {
-    var eluxLocation = this.payloadToEluxLocation(data);
-    return (0, _transform.eluxLocationToEluxUrl)(eluxLocation);
-  };
-
-  _proto2.payloadLocationToNativeUrl = function payloadLocationToNativeUrl(data) {
-    var eluxLocation = this.payloadToEluxLocation(data);
-    var nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
-    return this.nativeLocationToNativeUrl(nativeLocation);
-  };
-
-  _proto2.nativeLocationToNativeUrl = function nativeLocationToNativeUrl(nativeLocation) {
-    return (0, _transform.nativeLocationToNativeUrl)(nativeLocation);
   };
 
   _proto2.findRecordByKey = function findRecordByKey(key) {
@@ -242,37 +215,39 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     return this.rootStack.testBack(delta, rootOnly);
   };
 
-  _proto2.payloadToEluxLocation = function payloadToEluxLocation(payload) {
-    var params = payload.params || {};
-    var extendParams = payload.extendParams === 'current' ? this.routeState.params : payload.extendParams;
-
-    if (extendParams && params) {
-      params = (0, _core.deepMerge)({}, extendParams, params);
-    } else if (extendParams) {
-      params = extendParams;
-    }
-
+  _proto2.partialLocationStateToNativeData = function partialLocationStateToNativeData(partialLocationState) {
+    var nativeLocation = this.locationTransform.partialLocationStateToNativeLocation(partialLocationState);
+    var nativeUrl = this.locationTransform.nativeLocationToNativeUrl(nativeLocation);
     return {
-      pathname: payload.pathname || this.routeState.pagename,
-      params: params
+      nativeUrl: nativeUrl,
+      nativeLocation: nativeLocation
     };
   };
 
-  _proto2.preAdditions = function preAdditions(data) {
-    if (typeof data === 'string') {
-      if (/^[\w:]*\/\//.test(data)) {
-        this.nativeRouter.toOutside(data);
-        return null;
+  _proto2.preAdditions = function preAdditions(eluxUrlOrPayload) {
+    var partialLocationState;
+
+    if (typeof eluxUrlOrPayload === 'string') {
+      var eluxLocation = this.locationTransform.eluxUrlToEluxLocation(eluxUrlOrPayload);
+      partialLocationState = this.locationTransform.eluxLocationToPartialLocationState(eluxLocation);
+    } else {
+      var extendParams = eluxUrlOrPayload.extendParams,
+          pagename = eluxUrlOrPayload.pagename;
+
+      var _data = (0, _extends2.default)({}, eluxUrlOrPayload);
+
+      if (extendParams === 'current') {
+        _data.extendParams = this.routeState.params;
+        _data.pagename = pagename || this.routeState.pagename;
       }
 
-      return this.locationTransform.urlToLocation(data);
+      partialLocationState = this.locationTransform.payloadToPartialLocationState(_data);
     }
 
-    var eluxLocation = this.payloadToEluxLocation(data);
-    return this.locationTransform.eluxLocationToLocation(eluxLocation);
+    return this.locationTransform.partialLocationStateToLocationState(partialLocationState);
   };
 
-  _proto2.relaunch = function relaunch(data, root, nonblocking, nativeCaller) {
+  _proto2.relaunch = function relaunch(eluxUrlOrPayload, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -281,46 +256,36 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    return this.addTask(this._relaunch.bind(this, data, root, nativeCaller), nonblocking);
+    return this.addTask(this._relaunch.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
   };
 
   _proto2._relaunch = function () {
-    var _relaunch2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee(data, root, nativeCaller) {
+    var _relaunch2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee(eluxUrlOrPayload, root, nativeCaller) {
       var _this3 = this;
 
-      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
+      var location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regenerator.default.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
               _context.next = 2;
-              return this.preAdditions(data);
+              return this.preAdditions(eluxUrlOrPayload);
 
             case 2:
-              preData = _context.sent;
-
-              if (preData) {
-                _context.next = 5;
-                break;
-              }
-
-              return _context.abrupt("return");
-
-            case 5:
+              location = _context.sent;
               key = '';
-              location = preData;
               routeState = (0, _extends2.default)({}, location, {
                 action: 'RELAUNCH',
                 key: key
               });
-              _context.next = 10;
+              _context.next = 7;
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
-            case 10:
-              _context.next = 12;
+            case 7:
+              _context.next = 9;
               return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 12:
+            case 9:
               if (root) {
                 key = this.rootStack.relaunch(routeState).key;
               } else {
@@ -331,19 +296,19 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context.next = 19;
+                _context.next = 16;
                 break;
               }
 
-              _context.next = 18;
+              _context.next = 15;
               return this.nativeRouter.execute('relaunch', function () {
-                return _this3.locationToNativeData(routeState);
+                return _this3.partialLocationStateToNativeData(routeState);
               }, key);
 
-            case 18:
+            case 15:
               nativeData = _context.sent;
 
-            case 19:
+            case 16:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
@@ -352,13 +317,13 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               });
               cloneState = (0, _core.deepClone)(routeState);
               this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
-              _context.next = 26;
+              _context.next = 23;
               return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 26:
+            case 23:
             case "end":
               return _context.stop();
           }
@@ -373,7 +338,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     return _relaunch;
   }();
 
-  _proto2.push = function push(data, root, nonblocking, nativeCaller) {
+  _proto2.push = function push(eluxUrlOrPayload, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -382,46 +347,36 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    return this.addTask(this._push.bind(this, data, root, nativeCaller), nonblocking);
+    return this.addTask(this._push.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
   };
 
   _proto2._push = function () {
-    var _push2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee2(data, root, nativeCaller) {
+    var _push2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee2(eluxUrlOrPayload, root, nativeCaller) {
       var _this4 = this;
 
-      var preData, key, location, routeState, nativeData, notifyNativeRouter, cloneState;
+      var location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regenerator.default.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
               _context2.next = 2;
-              return this.preAdditions(data);
+              return this.preAdditions(eluxUrlOrPayload);
 
             case 2:
-              preData = _context2.sent;
-
-              if (preData) {
-                _context2.next = 5;
-                break;
-              }
-
-              return _context2.abrupt("return");
-
-            case 5:
+              location = _context2.sent;
               key = '';
-              location = preData;
               routeState = (0, _extends2.default)({}, location, {
                 action: 'PUSH',
                 key: key
               });
-              _context2.next = 10;
+              _context2.next = 7;
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
-            case 10:
-              _context2.next = 12;
+            case 7:
+              _context2.next = 9;
               return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 12:
+            case 9:
               if (root) {
                 key = this.rootStack.push(routeState).key;
               } else {
@@ -432,19 +387,19 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context2.next = 19;
+                _context2.next = 16;
                 break;
               }
 
-              _context2.next = 18;
+              _context2.next = 15;
               return this.nativeRouter.execute('push', function () {
-                return _this4.locationToNativeData(routeState);
+                return _this4.partialLocationStateToNativeData(routeState);
               }, key);
 
-            case 18:
+            case 15:
               nativeData = _context2.sent;
 
-            case 19:
+            case 16:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
@@ -454,28 +409,28 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               cloneState = (0, _core.deepClone)(routeState);
 
               if (!root) {
-                _context2.next = 28;
+                _context2.next = 25;
                 break;
               }
 
-              _context2.next = 26;
+              _context2.next = 23;
               return (0, _core.reinitApp)(this.getCurrentStore());
 
-            case 26:
-              _context2.next = 29;
+            case 23:
+              _context2.next = 26;
               break;
 
-            case 28:
+            case 25:
               this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
 
-            case 29:
-              _context2.next = 31;
+            case 26:
+              _context2.next = 28;
               return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 31:
+            case 28:
             case "end":
               return _context2.stop();
           }
@@ -490,7 +445,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     return _push;
   }();
 
-  _proto2.replace = function replace(data, root, nonblocking, nativeCaller) {
+  _proto2.replace = function replace(eluxUrlOrPayload, root, nonblocking, nativeCaller) {
     if (root === void 0) {
       root = false;
     }
@@ -499,46 +454,36 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    return this.addTask(this._replace.bind(this, data, root, nativeCaller), nonblocking);
+    return this.addTask(this._replace.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
   };
 
   _proto2._replace = function () {
-    var _replace2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee3(data, root, nativeCaller) {
+    var _replace2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee3(eluxUrlOrPayload, root, nativeCaller) {
       var _this5 = this;
 
-      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
+      var location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return _regenerator.default.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
               _context3.next = 2;
-              return this.preAdditions(data);
+              return this.preAdditions(eluxUrlOrPayload);
 
             case 2:
-              preData = _context3.sent;
-
-              if (preData) {
-                _context3.next = 5;
-                break;
-              }
-
-              return _context3.abrupt("return");
-
-            case 5:
-              location = preData;
+              location = _context3.sent;
               key = '';
               routeState = (0, _extends2.default)({}, location, {
                 action: 'REPLACE',
                 key: key
               });
-              _context3.next = 10;
+              _context3.next = 7;
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
-            case 10:
-              _context3.next = 12;
+            case 7:
+              _context3.next = 9;
               return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 12:
+            case 9:
               if (root) {
                 key = this.rootStack.replace(routeState).key;
               } else {
@@ -549,19 +494,19 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               notifyNativeRouter = _basic.routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context3.next = 19;
+                _context3.next = 16;
                 break;
               }
 
-              _context3.next = 18;
+              _context3.next = 15;
               return this.nativeRouter.execute('replace', function () {
-                return _this5.locationToNativeData(routeState);
+                return _this5.partialLocationStateToNativeData(routeState);
               }, key);
 
-            case 18:
+            case 15:
               nativeData = _context3.sent;
 
-            case 19:
+            case 16:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this._internalUrl = (0, _transform.eluxLocationToEluxUrl)({
@@ -570,13 +515,13 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               });
               cloneState = (0, _core.deepClone)(routeState);
               this.getCurrentStore().dispatch((0, _core.routeChangeAction)(cloneState));
-              _context3.next = 26;
+              _context3.next = 23;
               return this.dispatch('change', {
                 routeState: cloneState,
                 root: root
               });
 
-            case 26:
+            case 23:
             case "end":
               return _context3.stop();
           }
@@ -611,7 +556,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     var _back2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee4(n, root, options, nativeCaller) {
       var _this6 = this;
 
-      var _this$rootStack$testB, record, overflow, steps, _url, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
+      var _this$rootStack$testB, record, overflow, steps, url, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
 
       return _regenerator.default.wrap(function _callee4$(_context4) {
         while (1) {
@@ -636,10 +581,10 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
                 break;
               }
 
-              _url = options.overflowRedirect || _basic.routeConfig.indexUrl;
+              url = options.overflowRedirect || _basic.routeConfig.indexUrl;
 
               _core.env.setTimeout(function () {
-                return _this6.relaunch(_url, root);
+                return _this6.relaunch(url, root);
               }, 0);
 
               return _context4.abrupt("return");
@@ -680,7 +625,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
               _context4.next = 22;
               return this.nativeRouter.execute('back', function () {
-                return _this6.locationToNativeData(routeState);
+                return _this6.partialLocationStateToNativeData(routeState);
               }, n, key);
 
             case 22:

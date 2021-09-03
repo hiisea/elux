@@ -5,11 +5,11 @@ import { EluxContextComponent } from './base';
 export default React.forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
-      url = _ref.url,
+      route = _ref.route,
       root = _ref.root,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "root", "action"]);
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "route", "root", "action"]);
 
   var eluxContext = useContext(EluxContextComponent);
   var router = eluxContext.router;
@@ -28,7 +28,7 @@ export default React.forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      router[action](url, root);
+      router[action](route, root);
     })
   });
 

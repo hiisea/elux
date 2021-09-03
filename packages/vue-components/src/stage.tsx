@@ -1,4 +1,4 @@
-import {h, provide, inject, defineComponent, DefineComponent, shallowRef, ref, onBeforeMount, PropType} from 'vue';
+import {h, provide, inject, defineComponent, DefineComponent, shallowRef, ref, onBeforeUnmount, PropType} from 'vue';
 import type {App} from 'vue';
 import {env, IStore} from '@elux/core';
 import {EluxContext, EluxContextKey, EluxStoreContextKey, EluxStoreContext} from './base';
@@ -50,11 +50,11 @@ export const Router = defineComponent({
           data.value = {classname: 'elux-app elux-animation elux-change ' + Date.now(), pages};
           env.setTimeout(() => {
             containerRef.value.className = 'elux-app elux-animation';
-          }, 200);
+          }, 100);
           env.setTimeout(() => {
             containerRef.value.className = 'elux-app';
             completeCallback();
-          }, 500);
+          }, 400);
           return completePromise;
         } else if (routeState.action === 'BACK') {
           const completePromise = new Promise<void>((resolve) => {
@@ -63,11 +63,11 @@ export const Router = defineComponent({
           data.value = {classname: 'elux-app ' + Date.now(), pages: [...pages, data.value.pages[data.value.pages.length - 1]]};
           env.setTimeout(() => {
             containerRef.value.className = 'elux-app elux-animation elux-change';
-          }, 200);
+          }, 100);
           env.setTimeout(() => {
             data.value = {classname: 'elux-app ' + Date.now(), pages};
             completeCallback();
-          }, 500);
+          }, 400);
           return completePromise;
         } else if (routeState.action === 'RELAUNCH') {
           data.value = {classname: 'elux-app ' + Date.now(), pages};
@@ -75,7 +75,7 @@ export const Router = defineComponent({
       }
       return;
     });
-    onBeforeMount(() => {
+    onBeforeUnmount(() => {
       removeListener();
     });
     return () => {

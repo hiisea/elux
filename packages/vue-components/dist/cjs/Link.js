@@ -21,11 +21,11 @@ function _default(props, context) {
 
   var onClick = props.onClick,
       href = props.href,
-      url = props.url,
+      route = props.route,
       _props$action = props.action,
       action = _props$action === void 0 ? 'push' : _props$action,
       root = props.root,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "url", "action", "root"]);
+      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "route", "action", "root"]);
   var newProps = (0, _extends2.default)({}, rest, {
     onClick: function (_onClick) {
       function onClick(_x) {
@@ -40,7 +40,7 @@ function _default(props, context) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      router[action](url, root);
+      router[action](route, root);
     })
   });
 

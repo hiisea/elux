@@ -51,12 +51,12 @@ var Router = function Router(props) {
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 200);
+          }, 100);
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app';
             completeCallback();
-          }, 500);
+          }, 400);
 
           return completePromise;
         } else if (routeState.action === 'BACK') {
@@ -71,7 +71,7 @@ var Router = function Router(props) {
 
           _core.env.setTimeout(function () {
             containerRef.current.className = 'elux-app elux-animation elux-change';
-          }, 200);
+          }, 100);
 
           _core.env.setTimeout(function () {
             setData({
@@ -79,7 +79,7 @@ var Router = function Router(props) {
               pages: _pages
             });
             completeCallback();
-          }, 500);
+          }, 400);
 
           return _completePromise;
         } else if (routeState.action === 'RELAUNCH') {

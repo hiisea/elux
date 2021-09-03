@@ -34,11 +34,11 @@ export const Router = props => {
           });
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation';
-          }, 200);
+          }, 100);
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app';
             completeCallback();
-          }, 500);
+          }, 400);
           return completePromise;
         } else if (routeState.action === 'BACK') {
           const completePromise = new Promise(resolve => {
@@ -50,14 +50,14 @@ export const Router = props => {
           });
           env.setTimeout(() => {
             containerRef.current.className = 'elux-app elux-animation elux-change';
-          }, 200);
+          }, 100);
           env.setTimeout(() => {
             setData({
               classname: 'elux-app ' + Date.now(),
               pages
             });
             completeCallback();
-          }, 500);
+          }, 400);
           return completePromise;
         } else if (routeState.action === 'RELAUNCH') {
           setData({

@@ -1,7 +1,7 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import { env, getRootModuleAPI, buildConfigSetter, initApp, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
 import { setRouteConfig, routeConfig, routeMeta } from '@elux/route';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
+export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepClone, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
 export { RouteActionTypes, createRouteModule } from '@elux/route';
 var appMeta = {
   router: null,

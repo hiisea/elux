@@ -1,22 +1,30 @@
 import {deepMerge, env, getModuleList, moduleExists, isPromise} from '@elux/core';
 import {extendDefault, excludeDefault, splitPrivate} from './deep-extend';
-import {routeMeta, EluxLocation, PartialLocation, Location, RootParams, NativeLocation} from './basic';
+import {routeMeta, EluxLocation, PartialLocationState, LocationState, RootParams, NativeLocation} from './basic';
 
 export interface LocationTransform {
-  eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation; // E->L
-  eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>>; // E->L
-  eluxLocationToNativeLocation(eluxLocation: EluxLocation): NativeLocation; // E->N
-  partialLocationToEluxLocation(partialLocation: PartialLocation): EluxLocation; // L->E
-  partialLocationToNativeLocation(partialLocation: PartialLocation): NativeLocation; // L->N
-  nativeLocationToEluxLocation(nativeLocation: NativeLocation): EluxLocation; // N->E
-  nativeLocationToPartialLocation(nativeLocation: NativeLocation): PartialLocation; // N->L
-  nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Location<P> | Promise<Location<P>>; // N->L
-  urlToEluxLocation(url: string): EluxLocation; // U->E
-  urlToToPartialLocation(url: string): PartialLocation; // U->L
-  urlToLocation<P extends RootParams>(url: string): Location<P> | Promise<Location<P>>; // U->L
-  urlToGivenLocation(url: string): NativeLocation | EluxLocation;
-  partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>>;
-  partialLocationToMinData(partialLocation: PartialLocation): {pathname: string; params: Record<string, any>; pathParams: Record<string, any>};
+  eluxLocationToPartialLocationState(eluxLocation: EluxLocation): PartialLocationState;
+  partialLocationStateToEluxLocation(partialLocationState: PartialLocationState): EluxLocation;
+  nativeLocationToPartialLocationState(nativeLocation: NativeLocation): PartialLocationState;
+  partialLocationStateToNativeLocation(partialLocationState: PartialLocationState): NativeLocation;
+  eluxLocationToNativeLocation(eluxLocation: EluxLocation): NativeLocation;
+  nativeLocationToEluxLocation(nativeLocation: NativeLocation): EluxLocation;
+  eluxUrlToEluxLocation(eluxUrl: string): EluxLocation;
+  eluxLocationToEluxUrl(location: EluxLocation): string;
+  nativeUrlToNativeLocation(nativeUrl: string): NativeLocation;
+  nativeLocationToNativeUrl(location: NativeLocation): string;
+  eluxUrlToNativeUrl(eluxUrl: string): string;
+  nativeUrlToEluxUrl(nativeUrl: string): string;
+  partialLocationStateToLocationState<P extends RootParams>(partialLocationState: PartialLocationState): LocationState<P> | Promise<LocationState<P>>;
+  partialLocationStateToMinData(
+    partialLocationState: PartialLocationState
+  ): {pathname: string; params: Record<string, any>; pathParams: Record<string, any>};
+  payloadToPartialLocationState(payload: {
+    params?: Record<string, any>;
+    extendParams?: Record<string, any>;
+    pagename?: string;
+    pathname?: string;
+  }): PartialLocationState;
 }
 
 export interface PagenameMap {
@@ -64,9 +72,6 @@ function joinQuery(params: Record<string, string> | undefined): string {
     .join('&');
 }
 
-function isEluxLocation(data: EluxLocation | NativeLocation): data is EluxLocation {
-  return data['params'];
-}
 export function nativeUrlToNativeLocation(url: string): NativeLocation {
   if (!url) {
     return {
@@ -113,6 +118,7 @@ export function nativeLocationToNativeUrl({pathname, searchData, hashData}: Nati
 export function eluxLocationToEluxUrl(location: EluxLocation): string {
   return [location.pathname, JSON.stringify(location.params || {})].join('?');
 }
+
 export function createLocationTransform(
   pagenameMap: PagenameMap,
   nativeLocationMap: NativeLocationMap,
@@ -141,49 +147,48 @@ export function createLocationTransform(
     });
   }
   return {
-    urlToLocation<P extends RootParams>(url: string): Location<P> | Promise<Location<P>> {
-      return this.partialLocationToLocation(this.urlToToPartialLocation(url));
-    },
-    urlToToPartialLocation(url) {
-      const givenLocation = this.urlToGivenLocation(url);
-      if (isEluxLocation(givenLocation)) {
-        return this.eluxLocationToPartialLocation(givenLocation);
+    eluxLocationToPartialLocationState(eluxLocation) {
+      const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
+      let pagename = pagenames.find((name) => pathname.startsWith(name));
+      let pathParams: Record<string, any> = {};
+      if (pagename) {
+        const pathArgs: Array<string | undefined> = pathname
+          .replace(pagename, '')
+          .split('/')
+          .map((item) => (item ? decodeURIComponent(item) : undefined));
+        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
+      } else {
+        pagename = `${notfoundPagename}/`;
+        if (pagenameMap[pagename]) {
+          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
+        }
       }
-      return this.nativeLocationToPartialLocation(givenLocation);
+      const params = deepMerge({}, pathParams, eluxLocation.params);
+      const modules = moduleExists();
+      Object.keys(params).forEach((moduleName) => {
+        if (!modules[moduleName]) {
+          delete params[moduleName];
+        }
+      });
+      return {pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`, params};
     },
-    urlToEluxLocation(url) {
-      const givenLocation = this.urlToGivenLocation(url);
-      if (isEluxLocation(givenLocation)) {
-        return givenLocation;
-      }
-      return this.nativeLocationToEluxLocation(givenLocation);
+    partialLocationStateToEluxLocation(partialLocation) {
+      const {pathname, params} = this.partialLocationStateToMinData(partialLocation);
+      return {pathname, params};
     },
-    urlToGivenLocation(url) {
-      const [, query] = url.split('?', 2);
-      if (query && query.charAt(0) === '{') {
-        return eluxUrlToEluxLocation(url);
-      }
-      return nativeUrlToNativeLocation(url);
-    },
-    nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Location<P> | Promise<Location<P>> {
-      return this.partialLocationToLocation(this.nativeLocationToPartialLocation(nativeLocation));
-    },
-    nativeLocationToPartialLocation(nativeLocation) {
+    nativeLocationToPartialLocationState(nativeLocation) {
       const eluxLocation = this.nativeLocationToEluxLocation(nativeLocation);
-      return this.eluxLocationToPartialLocation(eluxLocation);
+      return this.eluxLocationToPartialLocationState(eluxLocation);
     },
-    nativeLocationToEluxLocation(nativeLocation) {
-      nativeLocation = nativeLocationMap.in(nativeLocation);
-      let searchParams;
-      let hashParams;
-      try {
-        searchParams =
-          nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
-        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
-      } catch (e) {
-        env.console.error(e);
-      }
-      return {pathname: nativeLocation.pathname, params: deepMerge(searchParams, hashParams) || {}};
+    partialLocationStateToNativeLocation(partialLocation) {
+      const {pathname, params, pathParams} = this.partialLocationStateToMinData(partialLocation);
+      const result = splitPrivate(params, pathParams);
+      const nativeLocation = {
+        pathname,
+        searchData: result[0] ? {[paramsKey]: JSON.stringify(result[0])} : undefined,
+        hashData: result[1] ? {[paramsKey]: JSON.stringify(result[1])} : undefined,
+      };
+      return nativeLocationMap.out(nativeLocation);
     },
     eluxLocationToNativeLocation(eluxLocation) {
       const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
@@ -209,33 +214,35 @@ export function createLocationTransform(
       };
       return nativeLocationMap.out(nativeLocation);
     },
-    eluxLocationToPartialLocation(eluxLocation) {
-      const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
-      let pagename = pagenames.find((name) => pathname.startsWith(name));
-      let pathParams: Record<string, any> = {};
-      if (pagename) {
-        const pathArgs: Array<string | undefined> = pathname
-          .replace(pagename, '')
-          .split('/')
-          .map((item) => (item ? decodeURIComponent(item) : undefined));
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-      } else {
-        pagename = `${notfoundPagename}/`;
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
+    nativeLocationToEluxLocation(nativeLocation) {
+      nativeLocation = nativeLocationMap.in(nativeLocation);
+      let searchParams;
+      let hashParams;
+      try {
+        searchParams =
+          nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
+        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
+      } catch (e) {
+        env.console.error(e);
       }
-      const params = deepMerge({}, pathParams, eluxLocation.params);
-      const modules = moduleExists();
-      Object.keys(params).forEach((moduleName) => {
-        if (!modules[moduleName]) {
-          delete params[moduleName];
-        }
-      });
-      return {pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`, params};
+      return {pathname: nativeLocation.pathname, params: deepMerge(searchParams, hashParams) || {}};
     },
-    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>> {
-      const {pagename, params} = partialLocation;
+    eluxUrlToEluxLocation,
+    eluxLocationToEluxUrl,
+    nativeUrlToNativeLocation,
+    nativeLocationToNativeUrl,
+    eluxUrlToNativeUrl(eluxUrl) {
+      const eluxLocation = this.eluxUrlToEluxLocation(eluxUrl);
+      return nativeLocationToNativeUrl(this.eluxLocationToNativeLocation(eluxLocation));
+    },
+    nativeUrlToEluxUrl(nativeUrl) {
+      const nativeLocation = this.nativeUrlToNativeLocation(nativeUrl);
+      return eluxLocationToEluxUrl(this.nativeLocationToEluxLocation(nativeLocation));
+    },
+    partialLocationStateToLocationState<P extends RootParams>(
+      partialLocationState: PartialLocationState
+    ): LocationState<P> | Promise<LocationState<P>> {
+      const {pagename, params} = partialLocationState;
       const def = routeMeta.defaultParams;
       const asyncLoadModules = Object.keys(params).filter((moduleName) => def[moduleName] === undefined);
       const modulesOrPromise = getModuleList(asyncLoadModules);
@@ -253,14 +260,11 @@ export function createLocationTransform(
       });
       return {pagename, params: assignDefaultData(params) as P};
     },
-    eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>> {
-      return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
-    },
-    partialLocationToMinData(partialLocation) {
-      let params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
+    partialLocationStateToMinData(partialLocationState) {
+      let params = excludeDefault(partialLocationState.params, routeMeta.defaultParams, true);
       let pathParams: Record<string, any>;
       let pathname: string;
-      const pagename = `/${partialLocation.pagename}/`.replace(/^\/+|\/+$/g, '/');
+      const pagename = `/${partialLocationState.pagename}/`.replace(/^\/+|\/+$/g, '/');
       if (pagenameMap[pagename]) {
         const pathArgs = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
         pathname =
@@ -277,19 +281,19 @@ export function createLocationTransform(
       params = excludeDefault(params, pathParams, false);
       return {pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`, params, pathParams};
     },
-    partialLocationToEluxLocation(partialLocation) {
-      const {pathname, params} = this.partialLocationToMinData(partialLocation);
-      return {pathname, params};
-    },
-    partialLocationToNativeLocation(partialLocation) {
-      const {pathname, params, pathParams} = this.partialLocationToMinData(partialLocation);
-      const result = splitPrivate(params, pathParams);
-      const nativeLocation = {
-        pathname,
-        searchData: result[0] ? {[paramsKey]: JSON.stringify(result[0])} : undefined,
-        hashData: result[1] ? {[paramsKey]: JSON.stringify(result[1])} : undefined,
-      };
-      return nativeLocationMap.out(nativeLocation);
+    payloadToPartialLocationState(payload) {
+      const {params, extendParams, pagename, pathname} = payload;
+      let newParams: Record<string, any>;
+      if (extendParams && params) {
+        newParams = deepMerge({}, extendParams, params);
+      } else {
+        newParams = extendParams || {};
+      }
+      if (pathname) {
+        return this.eluxLocationToPartialLocationState({pathname, params: newParams});
+      } else {
+        return {pagename: pagename || '/', params: newParams};
+      }
     },
   };
 }

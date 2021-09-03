@@ -15,7 +15,7 @@ export const routeConfig: RouteConfig = {
     root: true,
     internal: false,
   },
-  indexUrl: '/',
+  indexUrl: '/index',
 };
 
 export const setRouteConfig = buildConfigSetter(routeConfig);
@@ -30,27 +30,6 @@ export type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
 
 export type RootParams = Record<string, any>;
 
-export interface Location<P extends RootParams = {}> {
-  pagename: string;
-  params: Partial<P>;
-}
-export interface PayloadLocation<P extends RootParams = {}, N extends string = string> {
-  pathname?: N;
-  params?: DeepPartial<P>;
-  extendParams?: DeepPartial<P> | 'current';
-}
-
-export type RouteState<P extends RootParams = any> = Location<P> & {
-  action: HistoryAction;
-  key: string;
-};
-
-export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
-
-export interface PartialLocation {
-  pagename: string;
-  params: Record<string, any>;
-}
 export interface EluxLocation {
   pathname: string;
   params: Record<string, any>;
@@ -60,3 +39,27 @@ export interface NativeLocation {
   searchData?: Record<string, string>;
   hashData?: Record<string, string>;
 }
+
+export interface PayloadData<P extends RootParams = {}, N extends string = string> {
+  pagename?: N;
+  pathname?: string;
+  params?: DeepPartial<P>;
+  extendParams?: DeepPartial<P> | 'current';
+}
+
+export interface LocationState<P extends RootParams = {}> {
+  pagename: string;
+  params: Partial<P>;
+}
+
+export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
+
+export interface PartialLocationState {
+  pagename: string;
+  params: Record<string, any>;
+}
+
+export type RouteState<P extends RootParams = any> = LocationState<P> & {
+  action: HistoryAction;
+  key: string;
+};

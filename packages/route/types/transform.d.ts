@@ -1,23 +1,29 @@
-import { EluxLocation, PartialLocation, Location, RootParams, NativeLocation } from './basic';
+import { EluxLocation, PartialLocationState, LocationState, RootParams, NativeLocation } from './basic';
 export interface LocationTransform {
-    eluxLocationToPartialLocation(eluxLocation: EluxLocation): PartialLocation;
-    eluxLocationToLocation<P extends RootParams>(eluxLocation: EluxLocation): Location<P> | Promise<Location<P>>;
+    eluxLocationToPartialLocationState(eluxLocation: EluxLocation): PartialLocationState;
+    partialLocationStateToEluxLocation(partialLocationState: PartialLocationState): EluxLocation;
+    nativeLocationToPartialLocationState(nativeLocation: NativeLocation): PartialLocationState;
+    partialLocationStateToNativeLocation(partialLocationState: PartialLocationState): NativeLocation;
     eluxLocationToNativeLocation(eluxLocation: EluxLocation): NativeLocation;
-    partialLocationToEluxLocation(partialLocation: PartialLocation): EluxLocation;
-    partialLocationToNativeLocation(partialLocation: PartialLocation): NativeLocation;
     nativeLocationToEluxLocation(nativeLocation: NativeLocation): EluxLocation;
-    nativeLocationToPartialLocation(nativeLocation: NativeLocation): PartialLocation;
-    nativeLocationToLocation<P extends RootParams>(nativeLocation: NativeLocation): Location<P> | Promise<Location<P>>;
-    urlToEluxLocation(url: string): EluxLocation;
-    urlToToPartialLocation(url: string): PartialLocation;
-    urlToLocation<P extends RootParams>(url: string): Location<P> | Promise<Location<P>>;
-    urlToGivenLocation(url: string): NativeLocation | EluxLocation;
-    partialLocationToLocation<P extends RootParams>(partialLocation: PartialLocation): Location<P> | Promise<Location<P>>;
-    partialLocationToMinData(partialLocation: PartialLocation): {
+    eluxUrlToEluxLocation(eluxUrl: string): EluxLocation;
+    eluxLocationToEluxUrl(location: EluxLocation): string;
+    nativeUrlToNativeLocation(nativeUrl: string): NativeLocation;
+    nativeLocationToNativeUrl(location: NativeLocation): string;
+    eluxUrlToNativeUrl(eluxUrl: string): string;
+    nativeUrlToEluxUrl(nativeUrl: string): string;
+    partialLocationStateToLocationState<P extends RootParams>(partialLocationState: PartialLocationState): LocationState<P> | Promise<LocationState<P>>;
+    partialLocationStateToMinData(partialLocationState: PartialLocationState): {
         pathname: string;
         params: Record<string, any>;
         pathParams: Record<string, any>;
     };
+    payloadToPartialLocationState(payload: {
+        params?: Record<string, any>;
+        extendParams?: Record<string, any>;
+        pagename?: string;
+        pathname?: string;
+    }): PartialLocationState;
 }
 export interface PagenameMap {
     [pageName: string]: {

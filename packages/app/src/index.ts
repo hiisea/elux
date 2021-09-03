@@ -35,6 +35,7 @@ export {
   isServer,
   serverSide,
   clientSide,
+  deepClone,
   deepMerge,
   deepMergeState,
   exportModule,

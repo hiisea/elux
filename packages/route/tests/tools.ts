@@ -157,5 +157,5 @@ const store = {
     return undefined;
   },
 } as any;
-export const router = new Router('/', nativeRouter, routeModule.locationTransform);
-router.startup(store, {});
+export const router = new Router('/', nativeRouter, routeModule.locationTransform, {});
+router.startup(store);

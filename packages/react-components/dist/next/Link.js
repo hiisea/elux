@@ -4,7 +4,7 @@ import { EluxContextComponent } from './base';
 export default React.forwardRef(({
   onClick,
   href,
-  url,
+  route,
   root,
   action = 'push',
   ...rest
@@ -15,7 +15,7 @@ export default React.forwardRef(({
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      router[action](url, root);
+      router[action](route, root);
     }
   };
 

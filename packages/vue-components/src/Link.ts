@@ -4,7 +4,7 @@ import {EluxContext, EluxContextKey} from './base';
 type MouseEvent = any;
 
 export interface Props extends HTMLAttributes {
-  url: string;
+  route: string;
   onClick?(event: MouseEvent): void;
   href?: string;
   action?: 'push' | 'replace' | 'relaunch';
@@ -14,13 +14,13 @@ export interface Props extends HTMLAttributes {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function (props: Props, context: {slots: {default?: () => VNode[]}}) {
   const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
-  const {onClick, href, url, action = 'push', root, ...rest} = props;
+  const {onClick, href, route, action = 'push', root, ...rest} = props;
   const newProps = {
     ...rest,
     onClick: (event: MouseEvent) => {
       event.preventDefault();
       onClick && onClick(event);
-      router![action](url, root);
+      router![action](route, root);
     },
   };
   if (href) {

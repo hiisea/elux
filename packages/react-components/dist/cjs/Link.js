@@ -20,11 +20,11 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
 var _default = _react.default.forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
-      url = _ref.url,
+      route = _ref.route,
       root = _ref.root,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(_ref, ["onClick", "href", "url", "root", "action"]);
+      rest = (0, _objectWithoutPropertiesLoose2.default)(_ref, ["onClick", "href", "route", "root", "action"]);
   var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);
   var router = eluxContext.router;
   var props = (0, _extends2.default)({}, rest, {
@@ -41,7 +41,7 @@ var _default = _react.default.forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      router[action](url, root);
+      router[action](route, root);
     })
   });
 

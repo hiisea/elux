@@ -1,5 +1,5 @@
 import { IStore } from '@elux/core';
-import { Location, RouteState } from './basic';
+import { LocationState, RouteState } from './basic';
 declare class RouteStack<T extends {
     destroy?: () => void;
 }> {
@@ -24,7 +24,7 @@ export declare class HistoryRecord {
     readonly params: Record<string, any>;
     readonly key: string;
     readonly recordKey: string;
-    constructor(location: Location, historyStack: HistoryStack);
+    constructor(location: LocationState, historyStack: HistoryStack);
 }
 export declare class HistoryStack extends RouteStack<HistoryRecord> {
     readonly rootStack: RootStack;

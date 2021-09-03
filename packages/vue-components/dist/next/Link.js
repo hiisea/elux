@@ -9,7 +9,7 @@ export default function (props, context) {
   const {
     onClick,
     href,
-    url,
+    route,
     action = 'push',
     root,
     ...rest
@@ -18,7 +18,7 @@ export default function (props, context) {
     onClick: event => {
       event.preventDefault();
       onClick && onClick(event);
-      router[action](url, root);
+      router[action](route, root);
     }
   };
 

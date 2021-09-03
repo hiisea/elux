@@ -2,14 +2,14 @@ import React, {useContext} from 'react';
 import {EluxContextComponent} from './base';
 
 export interface Props extends React.HTMLAttributes<HTMLDivElement> {
-  url: string;
+  route: string;
   onClick?(event: React.MouseEvent): void;
   href?: string;
   action?: 'push' | 'replace' | 'relaunch';
   root?: boolean;
 }
 
-export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, href, url, root, action = 'push', ...rest}, ref) => {
+export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, href, route, root, action = 'push', ...rest}, ref) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router!;
   const props = {
@@ -17,7 +17,7 @@ export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, href, url, 
     onClick: (event: React.MouseEvent) => {
       event.preventDefault();
       onClick && onClick(event);
-      router[action](url, root);
+      router[action](route, root);
     },
   };
   if (href) {
