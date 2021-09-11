@@ -1,0 +1,518 @@
+import {deepMerge, moduleExists, getModuleList, isPromise} from '@elux/core';
+import {routeMeta, routeConfig} from './basic';
+import {extendDefault, excludeDefault} from './deep-extend';
+
+interface aaa {
+  nativePathname: string;
+  nativeQuery: string;
+  pathname: string;
+  args: Record<string, any>;
+  pagename: string;
+  params: Record<string, any>;
+}
+export interface EluxLocationPayload {
+  url: string;
+  pathname: string;
+  args: Record<string, any>;
+  pagename: string;
+  _pathArgs?: Record<string, any>;
+  _params?: Record<string, any>;
+  _locationState?: string;
+  _nativeLocation?: string;
+}
+
+export interface NativeLocationPayload {
+  url: string;
+  pathname: string;
+  query: string;
+  _eluxLocation?: string;
+  _locationState?: string;
+}
+
+interface LocationStatePayload {
+  url: string;
+  pagename: string;
+  params: Record<string, any>;
+  _isWhole?: Boolean;
+  _eluxLocation?: string;
+  _nativeLocation?: string;
+  _wholeLocationState?: string;
+}
+
+function assignDefaultData(data: {[moduleName: string]: any}): {[moduleName: string]: any} {
+  const def = routeMeta.defaultParams;
+  return Object.keys(data).reduce((params, moduleName) => {
+    if (def[moduleName]) {
+      params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
+    }
+    return params;
+  }, {});
+}
+
+const urlParser = {
+  toUrl(type: 'e' | 'n' | 's', pathname: string, query: string): string {
+    return [type, ':/', pathname, query && `?${query}`].join('');
+  },
+  toPathname(url: string): string {
+    return url.substr(3).split('?')[0];
+  },
+  toQuery(url: string): string {
+    return url.replace(/^.+?(\?|$)/, '');
+  },
+  checkUrl(type: 'e' | 'n' | 's', url: string): string {
+    let pathname: string, query: string;
+    const arr = url.split('://');
+    if (arr.length > 1) {
+      arr.shift();
+    }
+    pathname = arr[0].split('?')[0];
+    query = url.replace(/^.+?(\?|$)/, '');
+    if (type === 'e' || type === 's') {
+      if (query === '{}' || query.charAt(0) !== '{' || query.charAt(query.length - 1) !== '}') {
+        query = '';
+      }
+    }
+    pathname = this.checkPathname(pathname);
+    return this.toUrl(type, pathname, query);
+  },
+  checkPathname(pathname: string): string {
+    pathname = `/${pathname.replace(/^\/+|\/+$/g, '')}`;
+    pathname === '/' ? '/index' : pathname;
+    return pathname;
+  },
+};
+const locationCaches = {
+  getItem<T>(url: string): T | undefined {},
+  setItem<T>(url: string, item: T): void {},
+  updateItem<T>(url: string, data: Partial<T>): void {},
+};
+
+function patchCache(url: string, item: Record<string, any>, payload: Record<string, any>) {
+  const updated: null | Record<string, any> = Object.keys(payload).reduce((data, key) => {
+    if (!item![key] === undefined && payload[key] !== undefined) {
+      if (!data) {
+        data = {};
+      }
+      data[key] = payload[key];
+    }
+    return data;
+  }, null as null | Record<string, any>);
+  if (updated) {
+    locationCaches.updateItem(url, updated);
+    Object.assign(item, updated);
+  }
+}
+
+export function createEluxLocation(dataOrUrl: string | {pathname: string; args: Record<string, any>}): EluxLocation {
+  if (typeof dataOrUrl === 'string') {
+    const url = urlParser.checkUrl('e', dataOrUrl);
+    return buildEluxLocation({url});
+  } else {
+    const {pathname, args} = dataOrUrl;
+    const url = EluxLocation.toUrl(urlParser.checkPathname(pathname), args);
+    return buildEluxLocation({url, pathname, args});
+  }
+}
+
+function buildEluxLocation(payload: Partial<EluxLocationPayload>): EluxLocation {
+  const url = payload.url!;
+  let item = locationCaches.getItem<EluxLocationPayload>(url);
+  if (item) {
+    patchCache(url, item, payload);
+  } else {
+    let {pathname, args, pagename} = payload;
+    if (!pathname) {
+      pathname = urlParser.toPathname(url);
+    }
+    if (!args) {
+      const query = urlParser.toQuery(url);
+      if (query) {
+        try {
+          args = JSON.parse(query);
+        } catch (e) {
+          //env.console.error(e);
+        }
+      }
+      args = args || {};
+    }
+    if (!pagename) {
+      const {pagenameList, notfoundPagename} = routeMeta;
+      const _pathname = `${pathname}/`;
+      const _pagename = pagenameList.find((name) => _pathname.startsWith(name));
+      if (_pagename) {
+        pagename = _pagename.substr(0, _pagename.length - 1);
+      } else {
+        pagename = notfoundPagename;
+      }
+    }
+    item = {...payload, url, pathname, args, pagename};
+    locationCaches.setItem<EluxLocationPayload>(url, item);
+  }
+  return new EluxLocation(item);
+}
+
+export function createNativeLocation(dataOrUrl: string | {pathname: string; query: string}): NativeLocation {
+  if (typeof dataOrUrl === 'string') {
+    const url = urlParser.checkUrl('n', dataOrUrl);
+    return buildNativeLocation({url});
+  } else {
+    const {pathname, query} = dataOrUrl;
+    const url = NativeLocation.toUrl(urlParser.checkPathname(pathname), query);
+    return buildNativeLocation({url, pathname, query});
+  }
+}
+
+function buildNativeLocation(payload: Partial<NativeLocationPayload>): NativeLocation {
+  const url = payload.url!;
+  let item = locationCaches.getItem<NativeLocationPayload>(url);
+  if (item) {
+    patchCache(url, item, payload);
+  } else {
+    let {pathname, query} = payload;
+    if (!pathname) {
+      pathname = urlParser.toPathname(url);
+    }
+    if (!query) {
+      query = urlParser.toQuery(url);
+    }
+    item = {...payload, url, pathname, query};
+    locationCaches.setItem<NativeLocationPayload>(url, item);
+  }
+  return new NativeLocation(item);
+}
+
+export function createLocationState(dataOrUrl: string | {pagename: string; params: Record<string, any>}): LocationState {
+  if (typeof dataOrUrl === 'string') {
+    const url = urlParser.checkUrl('s', dataOrUrl);
+    return buildLocationState({url});
+  } else {
+    const {pagename, params} = dataOrUrl;
+    const url = LocationState.toUrl(urlParser.checkPathname(dataOrUrl.pagename), params);
+    return buildLocationState({url, pagename, params});
+  }
+}
+
+function buildLocationState(payload: Partial<LocationStatePayload>): LocationState {
+  const url = payload.url!;
+  let item = locationCaches.getItem<LocationStatePayload>(url);
+  if (item) {
+    patchCache(url, item, payload);
+  } else {
+    let {pagename, params} = payload;
+    if (!pagename) {
+      pagename = urlParser.toPathname(url);
+    }
+    if (!params) {
+      const query = urlParser.toQuery(url);
+      if (query) {
+        try {
+          params = JSON.parse(query);
+        } catch (e) {
+          //env.console.error(e);
+        }
+      }
+      params = params || {};
+    }
+    item = {...payload, url, pagename, params};
+    locationCaches.setItem<LocationStatePayload>(url, item);
+  }
+  return new LocationState(item);
+}
+
+export class EluxLocation {
+  readonly url!: string;
+  readonly pathname!: string;
+  readonly args!: Record<string, any>;
+  readonly pagename!: string;
+  private readonly _pathArgs?: Record<string, any>;
+  private readonly _params?: Record<string, any>;
+  private readonly _nativeLocation?: string;
+  private readonly _locationState?: string;
+  private _nativeLocationIns?: NativeLocation;
+  private _locationStateIns?: LocationState;
+
+  static toUrl(pathname: string, args: Record<string, any>): string {
+    const query = Object.keys(args).length ? JSON.stringify(args) : '';
+    return urlParser.toUrl('e', pathname, query);
+  }
+  constructor(payload: Partial<EluxLocationPayload>) {
+    Object.assign(this, payload);
+  }
+  update(payload: Partial<EluxLocationPayload>): void {
+    Object.assign(this, payload);
+    locationCaches.updateItem(this.url, payload);
+  }
+  getParams(): Record<string, any> {
+    let {_pathArgs, _params} = this;
+    const updateData: {_pathArgs?: any; _params?: any} = {};
+    if (!_pathArgs) {
+      const {pagenameMap, notfoundPagename} = routeMeta;
+      const _pagename = `${this.pagename}/`;
+      let arrArgs: Array<string | undefined>;
+      if (this.pagename === notfoundPagename) {
+        arrArgs = [this.pathname];
+      } else {
+        const _pathname = `${this.pathname}/`;
+        arrArgs = _pathname
+          .replace(_pagename, '')
+          .split('/')
+          .map((item) => (item ? decodeURIComponent(item) : undefined));
+      }
+      if (pagenameMap[_pagename]) {
+        _pathArgs = pagenameMap[_pagename].argsToParams(arrArgs);
+      } else {
+        _pathArgs = {};
+      }
+      updateData._pathArgs = _pathArgs;
+    }
+    if (!_params) {
+      const {args} = this;
+      _params = deepMerge({}, _pathArgs, args) as Record<string, any>;
+      const modules = moduleExists();
+      Object.keys(_params).forEach((moduleName) => {
+        if (!modules[moduleName]) {
+          delete _params![moduleName];
+        }
+      });
+      updateData._params = _params;
+    }
+    (updateData._pathArgs || updateData._params) && this.update(updateData);
+    return this._params!;
+  }
+  private getLocationStatePayload(): Partial<LocationStatePayload> {
+    const {url, pagename, _params, _nativeLocation} = this;
+    if (!this._locationState) {
+      const pagename = this.pagename;
+      const params = this.getParams();
+      this.update({_locationState: LocationState.toUrl(pagename, params)});
+    }
+    return {url: this._locationState, pagename, params: _params, _nativeLocation, _eluxLocation: url};
+  }
+  private getNativeLocationPayload(): Partial<NativeLocationPayload> {
+    const {url, _locationState} = this;
+    if (!this._nativeLocation) {
+      const {nativeLocationMap} = routeMeta;
+      const {pathname, query} = nativeLocationMap.out({pathname: this.pathname, args: this.args});
+      this.update({_nativeLocation: NativeLocation.toUrl(pathname, query)});
+      return {url: this._nativeLocation!, _locationState, _eluxLocation: url, pathname, query};
+    }
+    return {url: this._nativeLocation, _locationState, _eluxLocation: url};
+  }
+  getLocationState(): LocationState {
+    if (!this._locationStateIns) {
+      const payload = this.getLocationStatePayload();
+      this._locationStateIns = buildLocationState(payload);
+    }
+    return this._locationStateIns;
+  }
+  getNativeLocation(): NativeLocation {
+    if (!this._nativeLocationIns) {
+      const payload = this.getNativeLocationPayload();
+      this._nativeLocationIns = buildNativeLocation(payload);
+    }
+    return this._nativeLocationIns;
+  }
+}
+
+export class NativeLocation {
+  readonly url!: string;
+  readonly pathname!: string;
+  readonly query!: string;
+  private readonly _locationState?: string;
+  private readonly _eluxLocation?: string;
+  private _locationStateIns?: LocationState;
+  private _eluxLocationIns?: EluxLocation;
+
+  static toUrl(pathname: string, query: string): string {
+    return urlParser.toUrl('n', pathname, query);
+  }
+  constructor(payload: NativeLocationPayload) {
+    Object.assign(this, payload);
+  }
+  update(payload: Partial<NativeLocationPayload>): void {
+    Object.assign(this, payload);
+    locationCaches.updateItem(this.url, payload);
+  }
+  private getEluxLocationPayload(): Partial<EluxLocationPayload> {
+    const {url, _locationState} = this;
+    if (!this._eluxLocation) {
+      const {nativeLocationMap} = routeMeta;
+      const {pathname, args} = nativeLocationMap.in({pathname: this.pathname, query: this.query});
+      this.update({_eluxLocation: EluxLocation.toUrl(pathname, args)});
+      return {url: this._eluxLocation, _locationState, _nativeLocation: url, pathname, args};
+    }
+    return {url: this._eluxLocation, _locationState, _nativeLocation: url};
+  }
+  getLocationState(): LocationState {
+    if (!this._locationStateIns) {
+      if (!this._locationState) {
+        const eluxLocation = this.getEluxLocation();
+        const locationState = eluxLocation.getLocationState();
+        this.update({_locationState: locationState.url});
+        this._locationStateIns = locationState;
+      } else {
+        const {_eluxLocation, url} = this;
+        this._locationStateIns = buildLocationState({url: this._locationState, _eluxLocation, _nativeLocation: url});
+      }
+    }
+    return this._locationStateIns;
+  }
+  getEluxLocation(): EluxLocation {
+    if (!this._eluxLocationIns) {
+      const payload = this.getEluxLocationPayload();
+      this._eluxLocationIns = buildEluxLocation(payload);
+    }
+    return this._eluxLocationIns;
+  }
+  private joinQuery(params: Record<string, string> | undefined): string {
+    return Object.keys(params || {})
+      .map((key) => `${key}=${encodeURIComponent((params as any)[key])}`)
+      .join('&');
+  }
+  private splitQuery(query: string): Record<string, string> | undefined {
+    if (!query) {
+      return undefined;
+    }
+    return query.split('&').reduce((params, str) => {
+      const sections = str.split('=');
+      if (sections.length > 1) {
+        const [key, ...arr] = sections;
+        if (!params) {
+          params = {};
+        }
+        params[key] = decodeURIComponent(arr.join('='));
+      }
+      return params;
+    }, undefined as any);
+  }
+}
+
+export class LocationState {
+  readonly url!: string;
+  readonly pagename!: string;
+  readonly params!: Record<string, any>;
+  private readonly _isWhole?: Boolean;
+  private readonly _eluxLocation?: string;
+  private readonly _nativeLocation?: string;
+  private readonly _wholeLocationState?: string;
+  private _eluxLocationIns?: EluxLocation;
+  private _nativeLocationIns?: NativeLocation;
+  private _wholeLocationStateIns?: LocationState | Promise<LocationState>;
+
+  static toUrl(pagename: string, params: Record<string, any>): string {
+    const query = Object.keys(params).length ? JSON.stringify(params) : '';
+    return urlParser.toUrl('s', pagename, query);
+  }
+
+  constructor(payload: LocationStatePayload) {
+    Object.assign(this, payload);
+  }
+  update(payload: Partial<LocationStatePayload>): void {
+    Object.assign(this, payload);
+    locationCaches.updateItem(this.url, payload);
+  }
+  getNativeLocation(): NativeLocation {
+    if (!this._nativeLocationIns) {
+      if (!this._nativeLocation) {
+        const eluxLocation = this.getEluxLocation();
+        const nativeLocation = eluxLocation.getNativeLocation();
+        this.update({_nativeLocation: nativeLocation.url});
+        this._nativeLocationIns = nativeLocation;
+      } else {
+        const {_eluxLocation, url} = this;
+        this._nativeLocationIns = buildNativeLocation({url: this._nativeLocation, _eluxLocation, _locationState: url});
+      }
+    }
+    return this._nativeLocationIns;
+  }
+  private getEluxLocationPayload(): Partial<EluxLocationPayload> {
+    const {url, pagename, params, _nativeLocation} = this;
+    if (!this._eluxLocation) {
+      const {params, pagename} = this;
+      const {pagenameMap} = routeMeta;
+      const _pagename = `${pagename}/`;
+      const minParams = excludeDefault(params, routeMeta.defaultParams, true);
+      let pathname: string;
+      let _pathArgs: Record<string, any>;
+      if (pagenameMap[_pagename]) {
+        const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minParams));
+        pathname =
+          _pagename +
+          pathArgsArr
+            .map((item) => (item ? encodeURIComponent(item) : ''))
+            .join('/')
+            .replace(/\/*$/, '');
+        _pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
+      } else {
+        pathname = '/index';
+        _pathArgs = {};
+      }
+      const args = excludeDefault(minParams, _pathArgs, false);
+      this.update({_eluxLocation: EluxLocation.toUrl(pathname, args)});
+      return {url: this._eluxLocation, pagename, _params: params, _nativeLocation, _locationState: url, args, pathname, _pathArgs};
+    }
+    return {url: this._eluxLocation, pagename, _params: params, _nativeLocation, _locationState: url};
+  }
+  getEluxLocation(): EluxLocation {
+    if (!this._eluxLocationIns) {
+      const payload = this.getEluxLocationPayload();
+      this._eluxLocationIns = buildEluxLocation(payload);
+    }
+    return this._eluxLocationIns;
+  }
+  private toStringArgs(arr: any[]): Array<string | undefined> {
+    return arr.map((item) => {
+      if (item === null || item === undefined) {
+        return undefined;
+      }
+      return item.toString();
+    });
+  }
+  getWholeLocationState(): LocationState | Promise<LocationState> {
+    if (this._isWhole) {
+      return this;
+    }
+    if (!this._wholeLocationStateIns) {
+      this._wholeLocationStateIns = this.getWholeParams();
+    }
+    return this._wholeLocationStateIns;
+  }
+
+  private getWholeParams(): LocationState | Promise<LocationState> {
+    const {params, pagename} = this;
+    const def = routeMeta.defaultParams;
+    const asyncLoadModules = Object.keys(params).filter((moduleName) => def[moduleName] === undefined);
+    const modulesOrPromise = getModuleList(asyncLoadModules);
+    if (isPromise(modulesOrPromise)) {
+      return modulesOrPromise.then((modules) => {
+        modules.forEach((module) => {
+          def[module.moduleName] = module.params;
+        });
+        const wholeParams = assignDefaultData(params);
+        this.update({_wholeLocationState: LocationState.toUrl(pagename, wholeParams)});
+        return buildLocationState({
+          url: this._wholeLocationState,
+          pagename,
+          params: wholeParams,
+          _isWhole: true,
+          _nativeLocation: this._nativeLocation,
+          _eluxLocation: this._eluxLocation,
+        });
+      });
+    }
+    const modules = modulesOrPromise;
+    modules.forEach((module) => {
+      def[module.moduleName] = module.params;
+    });
+    const wholeParams = assignDefaultData(params);
+    this.update({_wholeLocationState: LocationState.toUrl(pagename, wholeParams)});
+    return buildLocationState({
+      url: this._wholeLocationState,
+      pagename,
+      params: wholeParams,
+      _isWhole: true,
+      _nativeLocation: this._nativeLocation,
+      _eluxLocation: this._eluxLocation,
+    });
+  }
+}
