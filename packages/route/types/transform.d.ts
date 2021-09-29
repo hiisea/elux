@@ -27,7 +27,6 @@ export declare const urlParser: {
 };
 export interface ILocationTransform<P extends RootParams = any> {
     getPagename(): string;
-    getFastUrl(): string;
     getEluxUrl(): string;
     getNativeUrl(withoutProtocol?: boolean): string;
     getParams(): Partial<P> | Promise<Partial<P>>;

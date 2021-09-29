@@ -166,7 +166,6 @@ interface LocationCache {
 
 export interface ILocationTransform<P extends RootParams = any> {
   getPagename(): string;
-  getFastUrl(): string;
   getEluxUrl(): string;
   getNativeUrl(withoutProtocol?: boolean): string;
   getParams(): Partial<P> | Promise<Partial<P>>;
@@ -174,15 +173,15 @@ export interface ILocationTransform<P extends RootParams = any> {
 /**
  * pagename,payload,params,eurl(pathmatch,args),nurl
  */
-class LocationTransform<P extends RootParams = any> implements ILocationTransform {
-  private _pagename?: string;
-  private _payload?: Record<string, any>;
-  private _params?: Partial<P>;
-  private _eurl?: string;
-  private _nurl?: string;
+class LocationTransform<P extends RootParams = any> implements ILocationTransform, LocationCache {
+  _pagename?: string;
+  _payload?: Record<string, any>;
+  _params?: Partial<P>;
+  _eurl?: string;
+  _nurl?: string;
   private _minData?: {pathmatch: string; args: Record<string, any>};
   constructor(private readonly url: string, data?: LocationCache) {
-    data && Object.keys(data).length && Object.assign(this, data);
+    data && this.update(data);
   }
   private getPayload(): Record<string, any> {
     if (!this._payload) {
@@ -210,10 +209,10 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
   }
   private getMinData(): {pathmatch: string; args: Record<string, any>} {
     if (!this._minData) {
-      const minUrl = this.getEluxUrl();
+      const eluxUrl = this.getEluxUrl();
       if (!this._minData) {
-        const pathmatch = urlParser.getPath(minUrl);
-        const search = urlParser.getSearch(minUrl);
+        const pathmatch = urlParser.getPath(eluxUrl);
+        const search = urlParser.getSearch(eluxUrl);
         this._minData = {pathmatch, args: urlParser.parseSearch(search)};
       }
     }
@@ -228,7 +227,11 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
     });
   }
   public update(data: LocationCache): void {
-    Object.assign(this, data);
+    Object.keys(data).forEach((key) => {
+      if (data[key] && !this[key]) {
+        this[key] = data[key];
+      }
+    });
   }
   public getPagename(): string {
     if (!this._pagename) {
@@ -240,9 +243,6 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
       this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
     }
     return this._pagename;
-  }
-  public getFastUrl(): string {
-    return this.url;
   }
   public getEluxUrl(): string {
     if (!this._eurl) {
@@ -346,11 +346,13 @@ export function location<P extends RootParams = any>(dataOrUrl: string | EluxLoc
   }
 }
 
-function createFromElux(eurl: string): LocationTransform {
+function createFromElux(eurl: string, data?: {nurl?: string}): LocationTransform {
   let item = locationCaches.getItem<LocationTransform>(eurl);
   if (!item) {
-    item = new LocationTransform(eurl, {});
+    item = new LocationTransform(eurl, {_eurl: eurl, _nurl: data?.nurl});
     locationCaches.setItem(eurl, item);
+  } else if (!item._eurl || !item._nurl) {
+    item.update({_eurl: eurl, _nurl: data?.nurl});
   }
   return item;
 }
@@ -364,7 +366,7 @@ function createFromNative(nurl: string, data?: NativeLocation): LocationTransfor
     eurl = urlParser.getEluxUrl(pathmatch, args);
     locationCaches.setItem(nurl, eurl);
   }
-  return createFromElux(eurl);
+  return createFromElux(eurl, {nurl});
 }
 
 function createFromState(surl: string, data?: StateLocation): LocationTransform {

@@ -17,10 +17,13 @@ export default React.forwardRef(({
     route && router[action](route, root);
   }, [_onClick, action, root, route, router]);
   props['onClick'] = onClick;
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
 
   if (href) {
     return React.createElement("a", _extends({}, props, {
-      href: href,
       ref: ref
     }));
   } else {

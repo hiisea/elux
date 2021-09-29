@@ -19,6 +19,10 @@ export default function ({onClick: _onClick, href, route, action = 'push', root,
     _onClick && _onClick(event);
     route && router![action](route, root);
   };
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
 
   if (href) {
     return h('a', props, context.slots.default!());

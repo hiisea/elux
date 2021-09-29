@@ -200,7 +200,7 @@ var LocationTransform = function () {
     (0, _defineProperty2.default)(this, "_nurl", void 0);
     (0, _defineProperty2.default)(this, "_minData", void 0);
     this.url = url;
-    data && Object.keys(data).length && this.update(data);
+    data && this.update(data);
   }
 
   var _proto2 = LocationTransform.prototype;
@@ -237,11 +237,11 @@ var LocationTransform = function () {
 
   _proto2.getMinData = function getMinData() {
     if (!this._minData) {
-      var minUrl = this.getEluxUrl();
+      var eluxUrl = this.getEluxUrl();
 
       if (!this._minData) {
-        var pathmatch = urlParser.getPath(minUrl);
-        var search = urlParser.getSearch(minUrl);
+        var pathmatch = urlParser.getPath(eluxUrl);
+        var search = urlParser.getSearch(eluxUrl);
         this._minData = {
           pathmatch: pathmatch,
           args: urlParser.parseSearch(search)
@@ -263,7 +263,13 @@ var LocationTransform = function () {
   };
 
   _proto2.update = function update(data) {
-    Object.assign(this, data);
+    var _this = this;
+
+    Object.keys(data).forEach(function (key) {
+      if (data[key] && !_this[key]) {
+        _this[key] = data[key];
+      }
+    });
   };
 
   _proto2.getPagename = function getPagename() {
@@ -282,10 +288,6 @@ var LocationTransform = function () {
     }
 
     return this._pagename;
-  };
-
-  _proto2.getFastUrl = function getFastUrl() {
-    return this.url;
   };
 
   _proto2.getEluxUrl = function getEluxUrl() {
@@ -339,7 +341,7 @@ var LocationTransform = function () {
   };
 
   _proto2.getParams = function getParams() {
-    var _this = this;
+    var _this2 = this;
 
     if (!this._params) {
       var payload = this.getPayload();
@@ -363,7 +365,7 @@ var LocationTransform = function () {
               delete _params[moduleName];
             }
           });
-          _this._params = _params;
+          _this2._params = _params;
           return _params;
         });
       }
@@ -425,12 +427,20 @@ function location(dataOrUrl) {
   }
 }
 
-function createFromElux(eurl) {
+function createFromElux(eurl, data) {
   var item = locationCaches.getItem(eurl);
 
   if (!item) {
-    item = new LocationTransform(eurl, {});
+    item = new LocationTransform(eurl, {
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
     locationCaches.setItem(eurl, item);
+  } else if (!item._eurl || !item._nurl) {
+    item.update({
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
   }
 
   return item;
@@ -451,7 +461,9 @@ function createFromNative(nurl, data) {
     locationCaches.setItem(nurl, eurl);
   }
 
-  return createFromElux(eurl);
+  return createFromElux(eurl, {
+    nurl: nurl
+  });
 }
 
 function createFromState(surl, data) {

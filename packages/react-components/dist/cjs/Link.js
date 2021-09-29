@@ -33,10 +33,13 @@ var _default = _react.default.forwardRef(function (_ref, ref) {
     route && router[action](route, root);
   }, [_onClick, action, root, route, router]);
   props['onClick'] = onClick;
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
 
   if (href) {
     return _react.default.createElement("a", (0, _extends2.default)({}, props, {
-      href: href,
       ref: ref
     }));
   } else {

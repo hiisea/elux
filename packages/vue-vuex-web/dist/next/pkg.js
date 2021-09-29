@@ -3317,6 +3317,11 @@ function Link ({
     route && router[action](route, root);
   };
 
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
+
   if (href) {
     return h('a', props, context.slots.default());
   } else {
@@ -4099,7 +4104,7 @@ class LocationTransform {
     _defineProperty(this, "_minData", void 0);
 
     this.url = url;
-    data && Object.keys(data).length && this.update(data);
+    data && this.update(data);
   }
 
   getPayload() {
@@ -4133,11 +4138,11 @@ class LocationTransform {
 
   getMinData() {
     if (!this._minData) {
-      const minUrl = this.getEluxUrl();
+      const eluxUrl = this.getEluxUrl();
 
       if (!this._minData) {
-        const pathmatch = urlParser.getPath(minUrl);
-        const search = urlParser.getSearch(minUrl);
+        const pathmatch = urlParser.getPath(eluxUrl);
+        const search = urlParser.getSearch(eluxUrl);
         this._minData = {
           pathmatch,
           args: urlParser.parseSearch(search)
@@ -4159,7 +4164,11 @@ class LocationTransform {
   }
 
   update(data) {
-    Object.assign(this, data);
+    Object.keys(data).forEach(key => {
+      if (data[key] && !this[key]) {
+        this[key] = data[key];
+      }
+    });
   }
 
   getPagename() {
@@ -4179,10 +4188,6 @@ class LocationTransform {
     }
 
     return this._pagename;
-  }
-
-  getFastUrl() {
-    return this.url;
   }
 
   getEluxUrl() {
@@ -4320,12 +4325,20 @@ function location$1(dataOrUrl) {
   }
 }
 
-function createFromElux(eurl) {
+function createFromElux(eurl, data) {
   let item = locationCaches.getItem(eurl);
 
   if (!item) {
-    item = new LocationTransform(eurl, {});
+    item = new LocationTransform(eurl, {
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
     locationCaches.setItem(eurl, item);
+  } else if (!item._eurl || !item._nurl) {
+    item.update({
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
   }
 
   return item;
@@ -4347,7 +4360,9 @@ function createFromNative(nurl, data) {
     locationCaches.setItem(nurl, eurl);
   }
 
-  return createFromElux(eurl);
+  return createFromElux(eurl, {
+    nurl
+  });
 }
 
 function createFromState(surl, data) {

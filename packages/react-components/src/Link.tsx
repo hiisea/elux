@@ -21,8 +21,13 @@ export default React.forwardRef<HTMLAnchorElement, Props>(({onClick: _onClick, h
     [_onClick, action, root, route, router]
   );
   props['onClick'] = onClick;
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
+
   if (href) {
-    return <a {...props} href={href} ref={ref} />;
+    return <a {...props} ref={ref} />;
   } else {
     return <div {...props} ref={ref} />;
   }

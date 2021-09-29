@@ -21,6 +21,11 @@ export default function (_ref, context) {
     route && router[action](route, root);
   };
 
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
+
   if (href) {
     return h('a', props, context.slots.default());
   } else {
