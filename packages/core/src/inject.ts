@@ -1,4 +1,4 @@
-import {isPromise, warn} from './sprite';
+import {isPromise, warn, deepClone} from './sprite';
 import {
   EluxComponent,
   isEluxComponent,
@@ -68,7 +68,7 @@ export function exportModule<
       const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
-      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(moduleHandles.initState) : moduleHandles.initState));
     }
     return undefined;
   };
@@ -89,7 +89,7 @@ export function modelHotReplacement(moduleName: string, ModuleHandlers: IModuleH
       const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
-      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(moduleHandles.initState) : moduleHandles.initState));
     }
     return undefined;
   };

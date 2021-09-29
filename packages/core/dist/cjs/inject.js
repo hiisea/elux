@@ -44,7 +44,7 @@ function exportModule(moduleName, ModuleHandlers, params, components) {
       var moduleHandles = new ModuleHandlers(moduleName, store, _latestState, _preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
-      return store.dispatch((0, _actions.moduleInitAction)(moduleName, moduleHandles.initState));
+      return store.dispatch((0, _actions.moduleInitAction)(moduleName, _basic.coreConfig.MutableData ? (0, _sprite.deepClone)(moduleHandles.initState) : moduleHandles.initState));
     }
 
     return undefined;
@@ -70,7 +70,7 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
       var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2, _preState2);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
-      return store.dispatch((0, _actions.moduleInitAction)(moduleName, moduleHandles.initState));
+      return store.dispatch((0, _actions.moduleInitAction)(moduleName, _basic.coreConfig.MutableData ? (0, _sprite.deepClone)(moduleHandles.initState) : moduleHandles.initState));
     }
 
     return undefined;
