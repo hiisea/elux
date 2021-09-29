@@ -57,7 +57,7 @@ export function reinitApp(store: IStore): Promise<void> {
 }
 
 let ForkStoreId = 0;
-export function forkStore<T extends IStore>(originalStore: T, routeState: ICoreRouteState): T {
+export function forkStore<T extends IStore, S extends ICoreRouteState>(originalStore: T, routeState: S): T {
   const {
     builder: {storeCreator, storeOptions},
     options: {middlewares},

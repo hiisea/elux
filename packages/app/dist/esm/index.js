@@ -1,8 +1,8 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import { env, getRootModuleAPI, buildConfigSetter, initApp, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
+import { env, getRootModuleAPI, buildConfigSetter, initApp, setCoreConfig } from '@elux/core';
 import { setRouteConfig, routeConfig, routeMeta } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepClone, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
-export { RouteActionTypes, createRouteModule } from '@elux/route';
+export { RouteActionTypes, location, createRouteModule, safeJsonParse } from '@elux/route';
 var appMeta = {
   router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
@@ -17,13 +17,12 @@ export function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-export function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
+export function createBaseMP(ins, router, render, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter);
-  var routeModule = getModule(routeConfig.RouteModuleName);
+  appMeta.router = router;
   return {
     useStore: function useStore(_ref) {
       var storeCreator = _ref.storeCreator,
@@ -40,8 +39,6 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
 
           return render;
         }(function () {
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           var baseStore = storeCreator(storeOptions);
 
           var _initApp = initApp(router, baseStore, middlewares),
@@ -61,13 +58,12 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
     }
   };
 }
-export function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
+export function createBaseApp(ins, router, render, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter);
-  var routeModule = getModule(routeConfig.RouteModuleName);
+  appMeta.router = router;
   return {
     useStore: function useStore(_ref2) {
       var storeCreator = _ref2.storeCreator,
@@ -97,8 +93,6 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
               _ref4$components = _ref4.components,
               components = _ref4$components === void 0 ? [] : _ref4$components;
 
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(function (routeState) {
             var _extends2;
 
@@ -124,13 +118,12 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
     }
   };
 }
-export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
+export function createBaseSSR(ins, router, render, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter);
-  var routeModule = getModule(routeConfig.RouteModuleName);
+  appMeta.router = router;
   return {
     useStore: function useStore(_ref5) {
       var storeCreator = _ref5.storeCreator,
@@ -155,8 +148,6 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
               _ref6$viewName = _ref6.viewName,
               viewName = _ref6$viewName === void 0 ? 'main' : _ref6$viewName;
 
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(function (routeState) {
             var _extends3;
 

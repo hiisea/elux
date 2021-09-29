@@ -84,22 +84,13 @@ export class HistoryRecord {
   constructor(location, historyStack) {
     _defineProperty(this, "destroy", void 0);
 
-    _defineProperty(this, "pagename", void 0);
-
-    _defineProperty(this, "params", void 0);
-
     _defineProperty(this, "key", void 0);
 
     _defineProperty(this, "recordKey", void 0);
 
+    this.location = location;
     this.historyStack = historyStack;
     this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
-    const {
-      pagename,
-      params
-    } = location;
-    this.pagename = pagename;
-    this.params = params;
     this.key = [historyStack.stackkey, this.recordKey].join('-');
   }
 
@@ -118,24 +109,24 @@ export class HistoryStack extends RouteStack {
     this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
   }
 
-  push(routeState) {
-    const newRecord = new HistoryRecord(routeState, this);
+  push(location) {
+    const newRecord = new HistoryRecord(location, this);
 
     this._push(newRecord);
 
     return newRecord;
   }
 
-  replace(routeState) {
-    const newRecord = new HistoryRecord(routeState, this);
+  replace(location) {
+    const newRecord = new HistoryRecord(location, this);
 
     this._replace(newRecord);
 
     return newRecord;
   }
 
-  relaunch(routeState) {
-    const newRecord = new HistoryRecord(routeState, this);
+  relaunch(location) {
+    const newRecord = new HistoryRecord(location, this);
 
     this._relaunch(newRecord);
 
@@ -163,9 +154,7 @@ export class RootStack extends RouteStack {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const {
-        pagename
-      } = record;
+      const pagename = record.location.getPagename();
       return {
         pagename,
         store,
@@ -174,11 +163,17 @@ export class RootStack extends RouteStack {
     });
   }
 
-  push(routeState) {
+  push(location) {
     const curHistory = this.getCurrentItem();
+    const routeState = {
+      pagename: location.getPagename(),
+      params: location.getParams(),
+      action: 'RELAUNCH',
+      key: ''
+    };
     const store = forkStore(curHistory.store, routeState);
     const newHistory = new HistoryStack(this, store);
-    const newRecord = new HistoryRecord(routeState, newHistory);
+    const newRecord = new HistoryRecord(location, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -186,14 +181,14 @@ export class RootStack extends RouteStack {
     return newRecord;
   }
 
-  replace(routeState) {
+  replace(location) {
     const curHistory = this.getCurrentItem();
-    return curHistory.relaunch(routeState);
+    return curHistory.relaunch(location);
   }
 
-  relaunch(routeState) {
+  relaunch(location) {
     const curHistory = this.getCurrentItem();
-    const newRecord = curHistory.relaunch(routeState);
+    const newRecord = curHistory.relaunch(location);
 
     this._relaunch(curHistory);
 

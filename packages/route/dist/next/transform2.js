@@ -1,84 +1,21 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { deepMerge, moduleExists, getModuleList, isPromise, RouteModuleHandlers, exportModule } from '@elux/core';
-import { routeMeta, routeConfig, safeJsonParse } from './basic';
+import { routeMeta, routeConfig } from './basic';
 import { extendDefault, excludeDefault } from './deep-extend';
+const locationCaches = {
+  getItem(url) {
+    return;
+  },
 
-class LocationCaches {
-  constructor(limit) {
-    _defineProperty(this, "length", 0);
+  setItem(url, item) {
+    return;
+  },
 
-    _defineProperty(this, "first", void 0);
-
-    _defineProperty(this, "last", void 0);
-
-    _defineProperty(this, "data", {});
-
-    this.limit = limit;
-  }
-
-  getItem(key) {
-    const data = this.data;
-    const cache = data[key];
-
-    if (cache && cache.next) {
-      const nextCache = cache.next;
-      delete data[key];
-      data[key] = cache;
-      nextCache.prev = cache.prev;
-      cache.prev = this.last;
-      cache.next = undefined;
-      this.last = cache;
-
-      if (this.first === cache) {
-        this.first = nextCache;
-      }
-    }
-
-    return cache == null ? void 0 : cache.payload;
-  }
-
-  setItem(key, item) {
-    const data = this.data;
-
-    if (data[key]) {
-      data[key].payload = item;
-      return;
-    }
-
-    const cache = {
-      key,
-      prev: this.last,
-      next: undefined,
-      payload: item
-    };
-    data[key] = cache;
-
-    if (this.last) {
-      this.last.next = cache;
-    }
-
-    this.last = cache;
-
-    if (!this.first) {
-      this.first = cache;
-    }
-
-    const length = this.length + 1;
-
-    if (length > this.limit) {
-      const firstCache = this.first;
-      delete data[firstCache.key];
-      this.first = firstCache.next;
-    } else {
-      this.length = length;
-    }
-
+  updateItem(url, data) {
     return;
   }
 
-}
-
-const locationCaches = new LocationCaches(routeConfig.maxLocationCache);
+};
 export const urlParser = {
   type: {
     e: 'e',
@@ -125,7 +62,7 @@ export const urlParser = {
   },
 
   getPath(url) {
-    return url.substr(3).split('?', 1)[0];
+    return url.substr(3).split('?')[0];
   },
 
   getSearch(url) {
@@ -137,19 +74,23 @@ export const urlParser = {
   },
 
   parseSearch(search) {
-    return safeJsonParse(search);
+    if (!search || search === '{}' || search.charAt(0) !== '{' || search.charAt(search.length - 1) !== '}') {
+      return {};
+    }
+
+    return JSON.parse(search);
   },
 
   checkUrl(url) {
-    const type = this.type[url.charAt(0)] || 'e';
+    const type = this.type[url.charAt(0)] || 'n';
     let path, search;
-    const arr = url.split('://', 2);
+    const arr = url.split('://');
 
     if (arr.length > 1) {
       arr.shift();
     }
 
-    path = arr[0].split('?', 1)[0];
+    path = arr[0].split('?')[0];
     path = this.checkPath(path);
 
     if (type === 'e' || type === 's') {
@@ -159,16 +100,11 @@ export const urlParser = {
         search = '';
       }
     } else {
-      let arr = url.split(`${routeConfig.paramsKey}=`, 2);
+      let arr = url.split(`${routeConfig.paramsKey}=`);
 
       if (arr[1]) {
-        arr = arr[1].split('&', 1);
-
-        if (arr[0]) {
-          search = `${routeConfig.paramsKey}=${arr[0]}`;
-        } else {
-          search = '';
-        }
+        arr = arr[1].split('&');
+        search = arr[0] || '';
       } else {
         search = '';
       }
@@ -179,42 +115,69 @@ export const urlParser = {
 
   checkPath(path) {
     path = `/${path.replace(/^\/+|\/+$/g, '')}`;
-
-    if (path === '/') {
-      path = '/index';
-    }
-
+    path === '/' ? '/index' : path;
     return path;
-  },
-
-  withoutProtocol(url) {
-    return url.replace(/^[^/]+?:\//, '');
   }
 
 };
-
-class LocationTransform {
+export class LocationTransform {
   constructor(url, data) {
+    _defineProperty(this, "_eurl", void 0);
+
+    _defineProperty(this, "_nurl", void 0);
+
     _defineProperty(this, "_pagename", void 0);
 
     _defineProperty(this, "_payload", void 0);
 
     _defineProperty(this, "_params", void 0);
 
-    _defineProperty(this, "_eurl", void 0);
+    _defineProperty(this, "_pathmatch", void 0);
 
-    _defineProperty(this, "_nurl", void 0);
+    _defineProperty(this, "_search", void 0);
+
+    _defineProperty(this, "_pathArgs", void 0);
+
+    _defineProperty(this, "_args", void 0);
 
     _defineProperty(this, "_minData", void 0);
 
     this.url = url;
-    data && Object.keys(data).length && this.update(data);
+    Object.assign(this, data);
   }
 
-  getPayload() {
-    if (!this._payload) {
-      const search = urlParser.getSearch(this.url);
-      const args = urlParser.parseSearch(search);
+  update(payload) {
+    Object.assign(this, payload);
+    locationCaches.updateItem(this.url, payload);
+  }
+
+  getPathmatch() {
+    if (!this._pathmatch) {
+      this._pathmatch = urlParser.getPath(this.url);
+    }
+
+    return this._pathmatch;
+  }
+
+  getSearch() {
+    if (!this._search) {
+      this._search = urlParser.getSearch(this.url);
+    }
+
+    return this._search;
+  }
+
+  getArgs() {
+    if (!this._args) {
+      const search = this.getSearch();
+      this._args = urlParser.parseSearch(search);
+    }
+
+    return this._args;
+  }
+
+  getPathArgs() {
+    if (!this._pathArgs) {
       const {
         notfoundPagename
       } = routeConfig;
@@ -222,7 +185,7 @@ class LocationTransform {
         pagenameMap
       } = routeMeta;
       const pagename = this.getPagename();
-      const pathmatch = urlParser.getPath(this.url);
+      const pathmatch = this.getPathmatch();
       const _pagename = `${pagename}/`;
       let arrArgs;
 
@@ -233,8 +196,20 @@ class LocationTransform {
         arrArgs = _pathmatch.replace(_pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
       }
 
-      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
-      this._payload = deepMerge({}, pathArgs, args);
+      this._pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+    }
+  }
+
+  getPayload() {
+    if (!this._payload) {
+      const pathArgs = this.getPathArgs();
+      const args = this.getArgs();
+
+      const _payload = deepMerge({}, pathArgs, args);
+
+      this.update({
+        _payload
+      });
     }
 
     return this._payload;
@@ -267,10 +242,6 @@ class LocationTransform {
     });
   }
 
-  update(data) {
-    Object.assign(this, data);
-  }
-
   getPagename() {
     if (!this._pagename) {
       const {
@@ -279,12 +250,16 @@ class LocationTransform {
       const {
         pagenameList
       } = routeMeta;
-      const pathmatch = urlParser.getPath(this.url);
+      const pathmatch = this.getPathmatch();
       const __pathmatch = `${pathmatch}/`;
 
       const __pagename = pagenameList.find(name => __pathmatch.startsWith(name));
 
-      this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+      const _pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+
+      this.update({
+        _pagename
+      });
     }
 
     return this._pagename;
@@ -308,8 +283,7 @@ class LocationTransform {
 
       if (pagenameMap[_pagename]) {
         const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
-        pathmatch = _pagename + pathArgsArr.map(item => item ? encodeURIComponent(item) : '').join('/');
-        pathmatch = pathmatch.replace(/\/*$/, '');
+        pathmatch = _pagename + pathArgsArr.map(item => item ? encodeURIComponent(item) : '').join('/').replace(/\/*$/, '');
         pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
       } else {
         pathmatch = '/index';
@@ -321,13 +295,15 @@ class LocationTransform {
         pathmatch,
         args
       };
-      this._eurl = urlParser.getEluxUrl(pathmatch, args);
+      this.update({
+        _eurl: urlParser.getEluxUrl(pathmatch, args)
+      });
     }
 
     return this._eurl;
   }
 
-  getNativeUrl(withoutProtocol) {
+  getNativeUrl() {
     if (!this._nurl) {
       const {
         nativeLocationMap
@@ -337,10 +313,12 @@ class LocationTransform {
         pathname,
         query
       } = nativeLocationMap.out(minData);
-      this._nurl = urlParser.getNativeUrl(pathname, query);
+      this.update({
+        _nurl: urlParser.getNativeUrl(pathname, query)
+      });
     }
 
-    return withoutProtocol ? urlParser.withoutProtocol(this._nurl) : this._nurl;
+    return this._nurl;
   }
 
   getParams() {
@@ -364,7 +342,9 @@ class LocationTransform {
               delete _params[moduleName];
             }
           });
-          this._params = _params;
+          this.update({
+            _params
+          });
           return _params;
         });
       }
@@ -382,7 +362,9 @@ class LocationTransform {
           delete _params[moduleName];
         }
       });
-      this._params = _params;
+      this.update({
+        _params
+      });
       return _params;
     } else {
       return this._params;
@@ -390,18 +372,17 @@ class LocationTransform {
   }
 
 }
-
-export function location(dataOrUrl) {
+export function createLocationTransform(dataOrUrl) {
   if (typeof dataOrUrl === 'string') {
     const url = urlParser.checkUrl(dataOrUrl);
     const type = url.charAt(0);
 
     if (type === 'e') {
-      return createFromElux(url);
+      return createEluxLocationFromElux(url);
     } else if (type === 's') {
-      return createFromState(url);
+      return createEluxLocationFromState(url);
     } else {
-      return createFromNative(url);
+      return createEluxLocationFromNative(url);
     }
   } else if (dataOrUrl['pathmatch']) {
     const {
@@ -409,7 +390,7 @@ export function location(dataOrUrl) {
       args
     } = dataOrUrl;
     const eurl = urlParser.getEluxUrl(urlParser.checkPath(pathmatch), args);
-    return createFromElux(eurl);
+    return createEluxLocationFromElux(eurl);
   } else if (dataOrUrl['pagename']) {
     const data = dataOrUrl;
     const {
@@ -417,7 +398,7 @@ export function location(dataOrUrl) {
       payload
     } = data;
     const surl = urlParser.getStateUrl(urlParser.checkPath(pagename), payload);
-    return createFromState(surl, data);
+    return createEluxLocationFromState(surl, data);
   } else {
     const data = dataOrUrl;
     const {
@@ -425,22 +406,22 @@ export function location(dataOrUrl) {
       query
     } = data;
     const nurl = urlParser.getNativeUrl(urlParser.checkPath(pathname), query);
-    return createFromNative(nurl, data);
+    return createEluxLocationFromNative(nurl, data);
   }
 }
 
-function createFromElux(eurl) {
-  let item = locationCaches.getItem(eurl);
+function createEluxLocationFromElux(eurl) {
+  let locationData = locationCaches.getItem(eurl);
 
-  if (!item) {
-    item = new LocationTransform(eurl, {});
-    locationCaches.setItem(eurl, item);
+  if (!locationData) {
+    locationData = {};
+    locationCaches.setItem(eurl, locationData);
   }
 
-  return item;
+  return new LocationTransform(eurl, locationData);
 }
 
-function createFromNative(nurl, data) {
+function createEluxLocationFromNative(nurl, data) {
   let eurl = locationCaches.getItem(nurl);
 
   if (!eurl) {
@@ -456,29 +437,36 @@ function createFromNative(nurl, data) {
     locationCaches.setItem(nurl, eurl);
   }
 
-  return createFromElux(eurl);
+  let locationData = locationCaches.getItem(eurl);
+
+  if (!locationData) {
+    locationData = {};
+    locationCaches.setItem(eurl, locationData);
+  }
+
+  return new LocationTransform(eurl, locationData);
 }
 
-function createFromState(surl, data) {
+function createEluxLocationFromState(surl, data) {
   const eurl = `e${surl.substr(1)}`;
-  let item = locationCaches.getItem(eurl);
+  let locationData = locationCaches.getItem(eurl);
 
-  if (!item) {
+  if (!locationData) {
     data = data || urlParser.parseStateUrl(surl);
-    item = new LocationTransform(eurl, {
+    locationData = {
       _pagename: data.pagename,
       _payload: data.payload
-    });
-    locationCaches.setItem(eurl, item);
-  } else if (!item._pagename || !item._payload) {
+    };
+    locationCaches.setItem(eurl, locationData);
+  } else if (!locationData._pagename || !locationData._payload) {
     data = data || urlParser.parseStateUrl(surl);
-    item.update({
+    locationCaches.updateItem(eurl, {
       _pagename: data.pagename,
       _payload: data.payload
     });
   }
 
-  return item;
+  return new LocationTransform(eurl, locationData);
 }
 
 function assignDefaultData(data) {
@@ -516,7 +504,7 @@ const defaultNativeLocationMap = {
   }
 
 };
-export function createRouteModule(pagenameMap, nativeLocationMap = defaultNativeLocationMap) {
+export function createRouteModule(moduleName, pagenameMap, nativeLocationMap = defaultNativeLocationMap) {
   const pagenames = Object.keys(pagenameMap);
 
   const _pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
@@ -538,5 +526,5 @@ export function createRouteModule(pagenameMap, nativeLocationMap = defaultNative
   routeMeta.pagenameMap = _pagenameMap;
   routeMeta.pagenameList = Object.keys(_pagenameMap);
   routeMeta.nativeLocationMap = nativeLocationMap;
-  return exportModule(routeConfig.RouteModuleName, RouteModuleHandlers, {}, {});
+  return exportModule(moduleName, RouteModuleHandlers, {}, {});
 }

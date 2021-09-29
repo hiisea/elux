@@ -1,103 +1,26 @@
-"use strict";
-
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
-exports.__esModule = true;
-exports.location = location;
-exports.createRouteModule = createRouteModule;
-exports.urlParser = void 0;
-
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var _core = require("@elux/core");
-
-var _basic = require("./basic");
-
-var _deepExtend = require("./deep-extend");
-
-var LocationCaches = function () {
-  function LocationCaches(limit) {
-    (0, _defineProperty2.default)(this, "length", 0);
-    (0, _defineProperty2.default)(this, "first", void 0);
-    (0, _defineProperty2.default)(this, "last", void 0);
-    (0, _defineProperty2.default)(this, "data", {});
-    this.limit = limit;
-  }
-
-  var _proto = LocationCaches.prototype;
-
-  _proto.getItem = function getItem(key) {
-    var data = this.data;
-    var cache = data[key];
-
-    if (cache && cache.next) {
-      var nextCache = cache.next;
-      delete data[key];
-      data[key] = cache;
-      nextCache.prev = cache.prev;
-      cache.prev = this.last;
-      cache.next = undefined;
-      this.last = cache;
-
-      if (this.first === cache) {
-        this.first = nextCache;
-      }
-    }
-
-    return cache == null ? void 0 : cache.payload;
-  };
-
-  _proto.setItem = function setItem(key, item) {
-    var data = this.data;
-
-    if (data[key]) {
-      data[key].payload = item;
-      return;
-    }
-
-    var cache = {
-      key: key,
-      prev: this.last,
-      next: undefined,
-      payload: item
-    };
-    data[key] = cache;
-
-    if (this.last) {
-      this.last.next = cache;
-    }
-
-    this.last = cache;
-
-    if (!this.first) {
-      this.first = cache;
-    }
-
-    var length = this.length + 1;
-
-    if (length > this.limit) {
-      var firstCache = this.first;
-      delete data[firstCache.key];
-      this.first = firstCache.next;
-    } else {
-      this.length = length;
-    }
-
+import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import { deepMerge, moduleExists, getModuleList, isPromise, RouteModuleHandlers, exportModule } from '@elux/core';
+import { routeMeta, routeConfig } from './basic';
+import { extendDefault, excludeDefault } from './deep-extend';
+var locationCaches = {
+  getItem: function getItem(url) {
     return;
-  };
-
-  return LocationCaches;
-}();
-
-var locationCaches = new LocationCaches(_basic.routeConfig.maxLocationCache);
-var urlParser = {
+  },
+  setItem: function setItem(url, item) {
+    return;
+  },
+  updateItem: function updateItem(url, data) {
+    return;
+  }
+};
+export var urlParser = {
   type: {
     e: 'e',
     s: 's',
     n: 'n'
   },
   getNativeUrl: function getNativeUrl(pathname, query) {
-    return this.getUrl('n', pathname, query ? _basic.routeConfig.paramsKey + "=" + encodeURIComponent(query) : '');
+    return this.getUrl('n', pathname, query ? routeConfig.paramsKey + "=" + encodeURIComponent(query) : '');
   },
   getEluxUrl: function getEluxUrl(pathmatch, args) {
     var search = this.stringifySearch(args);
@@ -109,7 +32,7 @@ var urlParser = {
   },
   parseNativeUrl: function parseNativeUrl(nurl) {
     var pathname = this.getPath(nurl);
-    var arr = nurl.split(_basic.routeConfig.paramsKey + "=");
+    var arr = nurl.split(routeConfig.paramsKey + "=");
     var query = arr[1] || '';
     return {
       pathname: pathname,
@@ -129,7 +52,7 @@ var urlParser = {
     return [type, ':/', path, search && search !== '{}' ? "?" + search : ''].join('');
   },
   getPath: function getPath(url) {
-    return url.substr(3).split('?', 1)[0];
+    return url.substr(3).split('?')[0];
   },
   getSearch: function getSearch(url) {
     return url.replace(/^.+?(\?|$)/, '');
@@ -138,18 +61,22 @@ var urlParser = {
     return Object.keys(data).length ? JSON.stringify(data) : '';
   },
   parseSearch: function parseSearch(search) {
-    return (0, _basic.safeJsonParse)(search);
+    if (!search || search === '{}' || search.charAt(0) !== '{' || search.charAt(search.length - 1) !== '}') {
+      return {};
+    }
+
+    return JSON.parse(search);
   },
   checkUrl: function checkUrl(url) {
-    var type = this.type[url.charAt(0)] || 'e';
+    var type = this.type[url.charAt(0)] || 'n';
     var path, search;
-    var arr = url.split('://', 2);
+    var arr = url.split('://');
 
     if (arr.length > 1) {
       arr.shift();
     }
 
-    path = arr[0].split('?', 1)[0];
+    path = arr[0].split('?')[0];
     path = this.checkPath(path);
 
     if (type === 'e' || type === 's') {
@@ -159,16 +86,11 @@ var urlParser = {
         search = '';
       }
     } else {
-      var _arr = url.split(_basic.routeConfig.paramsKey + "=", 2);
+      var _arr = url.split(routeConfig.paramsKey + "=");
 
       if (_arr[1]) {
-        _arr = _arr[1].split('&', 1);
-
-        if (_arr[0]) {
-          search = _basic.routeConfig.paramsKey + "=" + _arr[0];
-        } else {
-          search = '';
-        }
+        _arr = _arr[1].split('&');
+        search = _arr[0] || '';
       } else {
         search = '';
       }
@@ -178,41 +100,74 @@ var urlParser = {
   },
   checkPath: function checkPath(path) {
     path = "/" + path.replace(/^\/+|\/+$/g, '');
-
-    if (path === '/') {
-      path = '/index';
-    }
-
+    path === '/' ? '/index' : path;
     return path;
-  },
-  withoutProtocol: function withoutProtocol(url) {
-    return url.replace(/^[^/]+?:\//, '');
   }
 };
-exports.urlParser = urlParser;
-
-var LocationTransform = function () {
+export var LocationTransform = function () {
   function LocationTransform(url, data) {
-    (0, _defineProperty2.default)(this, "_pagename", void 0);
-    (0, _defineProperty2.default)(this, "_payload", void 0);
-    (0, _defineProperty2.default)(this, "_params", void 0);
-    (0, _defineProperty2.default)(this, "_eurl", void 0);
-    (0, _defineProperty2.default)(this, "_nurl", void 0);
-    (0, _defineProperty2.default)(this, "_minData", void 0);
+    _defineProperty(this, "_eurl", void 0);
+
+    _defineProperty(this, "_nurl", void 0);
+
+    _defineProperty(this, "_pagename", void 0);
+
+    _defineProperty(this, "_payload", void 0);
+
+    _defineProperty(this, "_params", void 0);
+
+    _defineProperty(this, "_pathmatch", void 0);
+
+    _defineProperty(this, "_search", void 0);
+
+    _defineProperty(this, "_pathArgs", void 0);
+
+    _defineProperty(this, "_args", void 0);
+
+    _defineProperty(this, "_minData", void 0);
+
     this.url = url;
-    data && Object.keys(data).length && this.update(data);
+    Object.assign(this, data);
   }
 
-  var _proto2 = LocationTransform.prototype;
+  var _proto = LocationTransform.prototype;
 
-  _proto2.getPayload = function getPayload() {
-    if (!this._payload) {
-      var search = urlParser.getSearch(this.url);
-      var args = urlParser.parseSearch(search);
-      var notfoundPagename = _basic.routeConfig.notfoundPagename;
-      var pagenameMap = _basic.routeMeta.pagenameMap;
+  _proto.update = function update(payload) {
+    Object.assign(this, payload);
+    locationCaches.updateItem(this.url, payload);
+  };
+
+  _proto.getPathmatch = function getPathmatch() {
+    if (!this._pathmatch) {
+      this._pathmatch = urlParser.getPath(this.url);
+    }
+
+    return this._pathmatch;
+  };
+
+  _proto.getSearch = function getSearch() {
+    if (!this._search) {
+      this._search = urlParser.getSearch(this.url);
+    }
+
+    return this._search;
+  };
+
+  _proto.getArgs = function getArgs() {
+    if (!this._args) {
+      var search = this.getSearch();
+      this._args = urlParser.parseSearch(search);
+    }
+
+    return this._args;
+  };
+
+  _proto.getPathArgs = function getPathArgs() {
+    if (!this._pathArgs) {
+      var notfoundPagename = routeConfig.notfoundPagename;
+      var pagenameMap = routeMeta.pagenameMap;
       var pagename = this.getPagename();
-      var pathmatch = urlParser.getPath(this.url);
+      var pathmatch = this.getPathmatch();
 
       var _pagename = pagename + "/";
 
@@ -228,14 +183,26 @@ var LocationTransform = function () {
         });
       }
 
-      var pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
-      this._payload = (0, _core.deepMerge)({}, pathArgs, args);
+      this._pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+    }
+  };
+
+  _proto.getPayload = function getPayload() {
+    if (!this._payload) {
+      var pathArgs = this.getPathArgs();
+      var args = this.getArgs();
+
+      var _payload = deepMerge({}, pathArgs, args);
+
+      this.update({
+        _payload: _payload
+      });
     }
 
     return this._payload;
   };
 
-  _proto2.getMinData = function getMinData() {
+  _proto.getMinData = function getMinData() {
     if (!this._minData) {
       var minUrl = this.getEluxUrl();
 
@@ -252,7 +219,7 @@ var LocationTransform = function () {
     return this._minData;
   };
 
-  _proto2.toStringArgs = function toStringArgs(arr) {
+  _proto.toStringArgs = function toStringArgs(arr) {
     return arr.map(function (item) {
       if (item === null || item === undefined) {
         return undefined;
@@ -262,15 +229,11 @@ var LocationTransform = function () {
     });
   };
 
-  _proto2.update = function update(data) {
-    Object.assign(this, data);
-  };
-
-  _proto2.getPagename = function getPagename() {
+  _proto.getPagename = function getPagename() {
     if (!this._pagename) {
-      var notfoundPagename = _basic.routeConfig.notfoundPagename;
-      var pagenameList = _basic.routeMeta.pagenameList;
-      var pathmatch = urlParser.getPath(this.url);
+      var notfoundPagename = routeConfig.notfoundPagename;
+      var pagenameList = routeMeta.pagenameList;
+      var pathmatch = this.getPathmatch();
 
       var __pathmatch = pathmatch + "/";
 
@@ -278,22 +241,26 @@ var LocationTransform = function () {
         return __pathmatch.startsWith(name);
       });
 
-      this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+      var _pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+
+      this.update({
+        _pagename: _pagename
+      });
     }
 
     return this._pagename;
   };
 
-  _proto2.getFastUrl = function getFastUrl() {
+  _proto.getFastUrl = function getFastUrl() {
     return this.url;
   };
 
-  _proto2.getEluxUrl = function getEluxUrl() {
+  _proto.getEluxUrl = function getEluxUrl() {
     if (!this._eurl) {
       var payload = this.getPayload();
-      var minPayload = (0, _deepExtend.excludeDefault)(payload, _basic.routeMeta.defaultParams, true);
+      var minPayload = excludeDefault(payload, routeMeta.defaultParams, true);
       var pagename = this.getPagename();
-      var pagenameMap = _basic.routeMeta.pagenameMap;
+      var pagenameMap = routeMeta.pagenameMap;
 
       var _pagename = pagename + "/";
 
@@ -304,52 +271,55 @@ var LocationTransform = function () {
         var pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
         pathmatch = _pagename + pathArgsArr.map(function (item) {
           return item ? encodeURIComponent(item) : '';
-        }).join('/');
-        pathmatch = pathmatch.replace(/\/*$/, '');
+        }).join('/').replace(/\/*$/, '');
         pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
       } else {
         pathmatch = '/index';
         pathArgs = {};
       }
 
-      var args = (0, _deepExtend.excludeDefault)(minPayload, pathArgs, false);
+      var args = excludeDefault(minPayload, pathArgs, false);
       this._minData = {
         pathmatch: pathmatch,
         args: args
       };
-      this._eurl = urlParser.getEluxUrl(pathmatch, args);
+      this.update({
+        _eurl: urlParser.getEluxUrl(pathmatch, args)
+      });
     }
 
     return this._eurl;
   };
 
-  _proto2.getNativeUrl = function getNativeUrl(withoutProtocol) {
+  _proto.getNativeUrl = function getNativeUrl() {
     if (!this._nurl) {
-      var nativeLocationMap = _basic.routeMeta.nativeLocationMap;
+      var nativeLocationMap = routeMeta.nativeLocationMap;
       var minData = this.getMinData();
 
       var _nativeLocationMap$ou = nativeLocationMap.out(minData),
           pathname = _nativeLocationMap$ou.pathname,
           query = _nativeLocationMap$ou.query;
 
-      this._nurl = urlParser.getNativeUrl(pathname, query);
+      this.update({
+        _nurl: urlParser.getNativeUrl(pathname, query)
+      });
     }
 
-    return withoutProtocol ? urlParser.withoutProtocol(this._nurl) : this._nurl;
+    return this._nurl;
   };
 
-  _proto2.getParams = function getParams() {
+  _proto.getParams = function getParams() {
     var _this = this;
 
     if (!this._params) {
       var payload = this.getPayload();
-      var def = _basic.routeMeta.defaultParams;
+      var def = routeMeta.defaultParams;
       var asyncLoadModules = Object.keys(payload).filter(function (moduleName) {
         return def[moduleName] === undefined;
       });
-      var modulesOrPromise = (0, _core.getModuleList)(asyncLoadModules);
+      var modulesOrPromise = getModuleList(asyncLoadModules);
 
-      if ((0, _core.isPromise)(modulesOrPromise)) {
+      if (isPromise(modulesOrPromise)) {
         return modulesOrPromise.then(function (modules) {
           modules.forEach(function (module) {
             def[module.moduleName] = module.params;
@@ -357,13 +327,17 @@ var LocationTransform = function () {
 
           var _params = assignDefaultData(payload);
 
-          var modulesMap = (0, _core.moduleExists)();
+          var modulesMap = moduleExists();
           Object.keys(_params).forEach(function (moduleName) {
             if (!modulesMap[moduleName]) {
               delete _params[moduleName];
             }
           });
-          _this._params = _params;
+
+          _this.update({
+            _params: _params
+          });
+
           return _params;
         });
       }
@@ -375,13 +349,15 @@ var LocationTransform = function () {
 
       var _params = assignDefaultData(payload);
 
-      var modulesMap = (0, _core.moduleExists)();
+      var modulesMap = moduleExists();
       Object.keys(_params).forEach(function (moduleName) {
         if (!modulesMap[moduleName]) {
           delete _params[moduleName];
         }
       });
-      this._params = _params;
+      this.update({
+        _params: _params
+      });
       return _params;
     } else {
       return this._params;
@@ -390,57 +366,56 @@ var LocationTransform = function () {
 
   return LocationTransform;
 }();
-
-function location(dataOrUrl) {
+export function createLocationTransform(dataOrUrl) {
   if (typeof dataOrUrl === 'string') {
     var _url = urlParser.checkUrl(dataOrUrl);
 
     var type = _url.charAt(0);
 
     if (type === 'e') {
-      return createFromElux(_url);
+      return createEluxLocationFromElux(_url);
     } else if (type === 's') {
-      return createFromState(_url);
+      return createEluxLocationFromState(_url);
     } else {
-      return createFromNative(_url);
+      return createEluxLocationFromNative(_url);
     }
   } else if (dataOrUrl['pathmatch']) {
     var _ref = dataOrUrl,
         pathmatch = _ref.pathmatch,
         args = _ref.args;
     var eurl = urlParser.getEluxUrl(urlParser.checkPath(pathmatch), args);
-    return createFromElux(eurl);
+    return createEluxLocationFromElux(eurl);
   } else if (dataOrUrl['pagename']) {
     var data = dataOrUrl;
     var pagename = data.pagename,
         payload = data.payload;
     var surl = urlParser.getStateUrl(urlParser.checkPath(pagename), payload);
-    return createFromState(surl, data);
+    return createEluxLocationFromState(surl, data);
   } else {
     var _data = dataOrUrl;
     var pathname = _data.pathname,
         query = _data.query;
     var nurl = urlParser.getNativeUrl(urlParser.checkPath(pathname), query);
-    return createFromNative(nurl, _data);
+    return createEluxLocationFromNative(nurl, _data);
   }
 }
 
-function createFromElux(eurl) {
-  var item = locationCaches.getItem(eurl);
+function createEluxLocationFromElux(eurl) {
+  var locationData = locationCaches.getItem(eurl);
 
-  if (!item) {
-    item = new LocationTransform(eurl, {});
-    locationCaches.setItem(eurl, item);
+  if (!locationData) {
+    locationData = {};
+    locationCaches.setItem(eurl, locationData);
   }
 
-  return item;
+  return new LocationTransform(eurl, locationData);
 }
 
-function createFromNative(nurl, data) {
+function createEluxLocationFromNative(nurl, data) {
   var eurl = locationCaches.getItem(nurl);
 
   if (!eurl) {
-    var nativeLocationMap = _basic.routeMeta.nativeLocationMap;
+    var nativeLocationMap = routeMeta.nativeLocationMap;
     data = data || urlParser.parseNativeUrl(nurl);
 
     var _nativeLocationMap$in = nativeLocationMap.in(data),
@@ -451,36 +426,43 @@ function createFromNative(nurl, data) {
     locationCaches.setItem(nurl, eurl);
   }
 
-  return createFromElux(eurl);
+  var locationData = locationCaches.getItem(eurl);
+
+  if (!locationData) {
+    locationData = {};
+    locationCaches.setItem(eurl, locationData);
+  }
+
+  return new LocationTransform(eurl, locationData);
 }
 
-function createFromState(surl, data) {
+function createEluxLocationFromState(surl, data) {
   var eurl = "e" + surl.substr(1);
-  var item = locationCaches.getItem(eurl);
+  var locationData = locationCaches.getItem(eurl);
 
-  if (!item) {
+  if (!locationData) {
     data = data || urlParser.parseStateUrl(surl);
-    item = new LocationTransform(eurl, {
+    locationData = {
       _pagename: data.pagename,
       _payload: data.payload
-    });
-    locationCaches.setItem(eurl, item);
-  } else if (!item._pagename || !item._payload) {
+    };
+    locationCaches.setItem(eurl, locationData);
+  } else if (!locationData._pagename || !locationData._payload) {
     data = data || urlParser.parseStateUrl(surl);
-    item.update({
+    locationCaches.updateItem(eurl, {
       _pagename: data.pagename,
       _payload: data.payload
     });
   }
 
-  return item;
+  return new LocationTransform(eurl, locationData);
 }
 
 function assignDefaultData(data) {
-  var def = _basic.routeMeta.defaultParams;
+  var def = routeMeta.defaultParams;
   return Object.keys(data).reduce(function (params, moduleName) {
     if (def[moduleName]) {
-      params[moduleName] = (0, _deepExtend.extendDefault)(data[moduleName], def[moduleName]);
+      params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
     }
 
     return params;
@@ -505,8 +487,7 @@ var defaultNativeLocationMap = {
     };
   }
 };
-
-function createRouteModule(pagenameMap, nativeLocationMap) {
+export function createRouteModule(moduleName, pagenameMap, nativeLocationMap) {
   if (nativeLocationMap === void 0) {
     nativeLocationMap = defaultNativeLocationMap;
   }
@@ -525,13 +506,13 @@ function createRouteModule(pagenameMap, nativeLocationMap) {
       argsToParams: argsToParams,
       paramsToArgs: paramsToArgs
     };
-    _basic.routeMeta.pagenames[pagename] = pagename;
-    _basic.routeMeta.pages[pagename] = page;
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pages[pagename] = page;
     return map;
   }, {});
 
-  _basic.routeMeta.pagenameMap = _pagenameMap;
-  _basic.routeMeta.pagenameList = Object.keys(_pagenameMap);
-  _basic.routeMeta.nativeLocationMap = nativeLocationMap;
-  return (0, _core.exportModule)(_basic.routeConfig.RouteModuleName, _core.RouteModuleHandlers, {}, {});
+  routeMeta.pagenameMap = _pagenameMap;
+  routeMeta.pagenameList = Object.keys(_pagenameMap);
+  routeMeta.nativeLocationMap = nativeLocationMap;
+  return exportModule(moduleName, RouteModuleHandlers, {}, {});
 }

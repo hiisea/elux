@@ -1,5 +1,5 @@
 import { createSSRApp, createApp as createVue } from 'vue';
-import { setCoreConfig } from '@elux/core';
+import { setCoreConfig, defineModuleGetter } from '@elux/core';
 import { setVueComponentsConfig, loadComponent, useRouter, useStore } from '@elux/vue-components';
 import { renderToString, renderToDocument, Router } from '@elux/vue-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
@@ -19,15 +19,15 @@ export function setConfig(conf) {
   setUserConfig(conf);
 }
 export var createApp = function createApp(moduleGetter, middlewares) {
-  var url = [location.pathname, location.search, location.hash].join('');
+  defineModuleGetter(moduleGetter);
+  var url = ['n:/', location.pathname, location.search].join('');
   var app = createVue(Router);
-  return createBaseApp(app, function (locationTransform) {
-    return createRouter(url, locationTransform, {});
-  }, renderToDocument, moduleGetter, middlewares);
+  var router = createRouter(url, {});
+  return createBaseApp(app, router, renderToDocument, middlewares);
 };
 export var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+  defineModuleGetter(moduleGetter);
   var app = createSSRApp(Router);
-  return createBaseSSR(app, function (locationTransform) {
-    return createRouter(url, locationTransform, nativeData);
-  }, renderToString, moduleGetter, middlewares);
+  var router = createRouter('n:/' + url, nativeData);
+  return createBaseSSR(app, router, renderToString, middlewares);
 };

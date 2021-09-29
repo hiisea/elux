@@ -1,5 +1,5 @@
 import { IStore } from '@elux/core';
-import { LocationState, RouteState } from './basic';
+import { ILocationTransform } from './transform';
 declare class RouteStack<T extends {
     destroy?: () => void;
 }> {
@@ -17,14 +17,13 @@ declare class RouteStack<T extends {
     back(delta: number): void;
 }
 export declare class HistoryRecord {
+    readonly location: ILocationTransform;
     readonly historyStack: HistoryStack;
     static id: number;
     readonly destroy: undefined;
-    readonly pagename: string;
-    readonly params: Record<string, any>;
     readonly key: string;
     readonly recordKey: string;
-    constructor(location: LocationState, historyStack: HistoryStack);
+    constructor(location: ILocationTransform, historyStack: HistoryStack);
 }
 export declare class HistoryStack extends RouteStack<HistoryRecord> {
     readonly rootStack: RootStack;
@@ -32,9 +31,9 @@ export declare class HistoryStack extends RouteStack<HistoryRecord> {
     static id: number;
     readonly stackkey: string;
     constructor(rootStack: RootStack, store: IStore);
-    push(routeState: RouteState): HistoryRecord;
-    replace(routeState: RouteState): HistoryRecord;
-    relaunch(routeState: RouteState): HistoryRecord;
+    push(location: ILocationTransform): HistoryRecord;
+    replace(location: ILocationTransform): HistoryRecord;
+    relaunch(location: ILocationTransform): HistoryRecord;
     findRecordByKey(recordKey: string): HistoryRecord | undefined;
     destroy(): void;
 }
@@ -45,9 +44,9 @@ export declare class RootStack extends RouteStack<HistoryStack> {
         store: IStore;
         page?: any;
     }[];
-    push(routeState: RouteState): HistoryRecord;
-    replace(routeState: RouteState): HistoryRecord;
-    relaunch(routeState: RouteState): HistoryRecord;
+    push(location: ILocationTransform): HistoryRecord;
+    replace(location: ILocationTransform): HistoryRecord;
+    relaunch(location: ILocationTransform): HistoryRecord;
     private countBack;
     testBack(delta: number, rootOnly: boolean): {
         record: HistoryRecord;

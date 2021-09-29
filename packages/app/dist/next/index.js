@@ -1,7 +1,7 @@
-import { env, getRootModuleAPI, buildConfigSetter, initApp, defineModuleGetter, setCoreConfig, getModule } from '@elux/core';
+import { env, getRootModuleAPI, buildConfigSetter, initApp, setCoreConfig } from '@elux/core';
 import { setRouteConfig, routeConfig, routeMeta } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepClone, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, delayPromise, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, CoreModuleHandlers as BaseModuleHandlers } from '@elux/core';
-export { RouteActionTypes, createRouteModule } from '@elux/route';
+export { RouteActionTypes, location, createRouteModule, safeJsonParse } from '@elux/route';
 const appMeta = {
   router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
@@ -16,9 +16,8 @@ export function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-export function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
+export function createBaseMP(ins, router, render, middlewares = []) {
+  appMeta.router = router;
   return {
     useStore({
       storeCreator,
@@ -26,8 +25,6 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
     }) {
       return Object.assign(ins, {
         render() {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           const baseStore = storeCreator(storeOptions);
           const {
             store
@@ -48,9 +45,8 @@ export function createBaseMP(ins, createRouter, render, moduleGetter, middleware
 
   };
 }
-export function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
+export function createBaseApp(ins, router, render, middlewares = []) {
+  appMeta.router = router;
   return {
     useStore({
       storeCreator,
@@ -66,8 +62,6 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
             state,
             components = []
           } = env[ssrKey] || {};
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(routeState => {
             storeOptions.initState = { ...storeOptions.initState,
               [routeConfig.RouteModuleName]: routeState,
@@ -95,9 +89,8 @@ export function createBaseApp(ins, createRouter, render, moduleGetter, middlewar
 
   };
 }
-export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
+export function createBaseSSR(ins, router, render, middlewares = []) {
+  appMeta.router = router;
   return {
     useStore({
       storeCreator,
@@ -109,8 +102,6 @@ export function createBaseSSR(ins, createRouter, render, moduleGetter, middlewar
           ssrKey = 'eluxInitStore',
           viewName = 'main'
         } = {}) {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(routeState => {
             storeOptions.initState = { ...storeOptions.initState,
               [routeConfig.RouteModuleName]: routeState

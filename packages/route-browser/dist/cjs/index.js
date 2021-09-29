@@ -47,7 +47,7 @@ function createServerHistory() {
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   (0, _inheritsLoose2.default)(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter(url) {
+  function BrowserNativeRouter() {
     var _this;
 
     _this = _BaseNativeRouter.call(this) || this;
@@ -60,7 +60,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
       _this._history = (0, _history.createBrowserHistory)();
     }
 
-    _this._unlistenHistory = _this._history.block(function (location, action) {
+    _this._unlistenHistory = _this._history.block(function (locationData, action) {
       if (action === 'POP') {
         _core.env.setTimeout(function () {
           return _this.eluxRouter.back(1);
@@ -69,19 +69,17 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
         return false;
       }
 
-      var key = _this.getKey(location);
+      var key = _this.getKey(locationData);
 
       var changed = _this.onChange(key);
 
       if (changed) {
-        var _location$pathname = location.pathname,
-            pathname = _location$pathname === void 0 ? '' : _location$pathname,
-            _location$search = location.search,
-            search = _location$search === void 0 ? '' : _location$search,
-            _location$hash = location.hash,
-            hash = _location$hash === void 0 ? '' : _location$hash;
+        var _locationData$pathnam = locationData.pathname,
+            pathname = _locationData$pathnam === void 0 ? '' : _locationData$pathnam,
+            _locationData$search = locationData.search,
+            search = _locationData$search === void 0 ? '' : _locationData$search;
 
-        var _url = [pathname, search, hash].join('');
+        var _url = ['n:/', pathname, search].join('');
 
         var _callback;
 
@@ -111,53 +109,45 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   var _proto = BrowserNativeRouter.prototype;
 
-  _proto.getKey = function getKey(location) {
-    return location.state || '';
+  _proto.getKey = function getKey(locationData) {
+    return locationData.state || '';
   };
 
-  _proto.push = function push(getNativeData, key) {
+  _proto.push = function push(location, key) {
     if (!_core.env.isServer) {
-      var nativeData = getNativeData();
+      this._history.push(location.getNativeUrl(true), key);
 
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
   };
 
-  _proto.replace = function replace(getNativeData, key) {
+  _proto.replace = function replace(location, key) {
     if (!_core.env.isServer) {
-      var nativeData = getNativeData();
+      this._history.push(location.getNativeUrl(true), key);
 
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
   };
 
-  _proto.relaunch = function relaunch(getNativeData, key) {
+  _proto.relaunch = function relaunch(location, key) {
     if (!_core.env.isServer) {
-      var nativeData = getNativeData();
+      this._history.push(location.getNativeUrl(true), key);
 
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
   };
 
-  _proto.back = function back(getNativeData, n, key) {
+  _proto.back = function back(location, n, key) {
     if (!_core.env.isServer) {
-      var nativeData = getNativeData();
+      this._history.replace(location.getNativeUrl(true), key);
 
-      this._history.replace(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
@@ -175,8 +165,8 @@ exports.BrowserNativeRouter = BrowserNativeRouter;
 var EluxRouter = function (_BaseEluxRouter) {
   (0, _inheritsLoose2.default)(EluxRouter, _BaseEluxRouter);
 
-  function EluxRouter(url, browserNativeRouter, locationTransform, nativeData) {
-    return _BaseEluxRouter.call(this, url, browserNativeRouter, locationTransform, nativeData) || this;
+  function EluxRouter(nativeUrl, browserNativeRouter, nativeData) {
+    return _BaseEluxRouter.call(this, nativeUrl, browserNativeRouter, nativeData) || this;
   }
 
   return EluxRouter;
@@ -184,8 +174,8 @@ var EluxRouter = function (_BaseEluxRouter) {
 
 exports.EluxRouter = EluxRouter;
 
-function createRouter(url, locationTransform, nativeData) {
-  var browserNativeRouter = new BrowserNativeRouter(url);
-  var router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
+function createRouter(nativeUrl, nativeData) {
+  var browserNativeRouter = new BrowserNativeRouter();
+  var router = new EluxRouter(nativeUrl, browserNativeRouter, nativeData);
   return router;
 }

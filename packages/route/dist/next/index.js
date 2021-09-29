@@ -1,10 +1,10 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge, routeChangeAction, coreConfig, exportModule, deepClone, MultipleDispatcher, RouteModuleHandlers, env, reinitApp } from '@elux/core';
-import { routeConfig, setRouteConfig } from './basic';
+import { isPromise, deepMerge, routeChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp } from '@elux/core';
+import { routeConfig } from './basic';
 import { RootStack, HistoryStack, HistoryRecord } from './history';
-import { eluxLocationToEluxUrl, createLocationTransform } from './transform';
-export { setRouteConfig, routeConfig, routeMeta } from './basic';
-export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
+import { location as createLocationTransform } from './transform';
+export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
+export { location, createRouteModule } from './transform';
 export class BaseNativeRouter {
   constructor() {
     _defineProperty(this, "curTask", void 0);
@@ -14,7 +14,7 @@ export class BaseNativeRouter {
 
   onChange(key) {
     if (this.curTask) {
-      this.curTask.resolve(this.curTask.nativeData);
+      this.curTask();
       this.curTask = undefined;
       return false;
     }
@@ -26,22 +26,13 @@ export class BaseNativeRouter {
     this.eluxRouter = router;
   }
 
-  execute(method, getNativeData, ...args) {
+  execute(method, location, ...args) {
     return new Promise((resolve, reject) => {
-      const task = {
-        resolve,
-        reject,
-        nativeData: undefined
-      };
-      this.curTask = task;
-      const result = this[method](() => {
-        const nativeData = getNativeData();
-        task.nativeData = nativeData;
-        return nativeData;
-      }, ...args);
+      this.curTask = resolve;
+      const result = this[method](location, ...args);
 
       if (!result) {
-        resolve(undefined);
+        resolve();
         this.curTask = undefined;
       } else if (isPromise(result)) {
         result.catch(e => {
@@ -54,16 +45,14 @@ export class BaseNativeRouter {
 
 }
 export class BaseEluxRouter extends MultipleDispatcher {
-  constructor(nativeUrl, nativeRouter, locationTransform, nativeData) {
+  constructor(nativeUrl, nativeRouter, nativeData) {
     super();
 
     _defineProperty(this, "_curTask", void 0);
 
     _defineProperty(this, "_taskList", []);
 
-    _defineProperty(this, "_nativeData", void 0);
-
-    _defineProperty(this, "_internalUrl", void 0);
+    _defineProperty(this, "location", void 0);
 
     _defineProperty(this, "routeState", void 0);
 
@@ -88,42 +77,34 @@ export class BaseEluxRouter extends MultipleDispatcher {
     });
 
     this.nativeRouter = nativeRouter;
-    this.locationTransform = locationTransform;
     this.nativeData = nativeData;
     nativeRouter.startup(this);
-    const nativeLocation = locationTransform.nativeUrlToNativeLocation(nativeUrl);
-    const locationStateOrPromise = locationTransform.partialLocationStateToLocationState(locationTransform.nativeLocationToPartialLocationState(nativeLocation));
+    const location = createLocationTransform(nativeUrl);
+    this.location = location;
+    const pagename = location.getPagename();
+    const paramsOrPromise = location.getParams();
 
-    const callback = locationState => {
-      const routeState = { ...locationState,
+    const callback = params => {
+      const routeState = {
+        pagename,
+        params,
         action: 'RELAUNCH',
         key: ''
       };
       this.routeState = routeState;
-      this._internalUrl = eluxLocationToEluxUrl({
-        pathname: routeState.pagename,
-        params: routeState.params
-      });
-
-      if (!routeConfig.indexUrl) {
-        setRouteConfig({
-          indexUrl: this._internalUrl
-        });
-      }
-
       return routeState;
     };
 
-    if (isPromise(locationStateOrPromise)) {
-      this.initialize = locationStateOrPromise.then(callback);
+    if (isPromise(paramsOrPromise)) {
+      this.initialize = paramsOrPromise.then(callback);
     } else {
-      this.initialize = Promise.resolve(callback(locationStateOrPromise));
+      this.initialize = Promise.resolve(callback(paramsOrPromise));
     }
   }
 
   startup(store) {
     const historyStack = new HistoryStack(this.rootStack, store);
-    const historyRecord = new HistoryRecord(this.routeState, historyStack);
+    const historyRecord = new HistoryRecord(this.location, historyStack);
     historyStack.startup(historyRecord);
     this.rootStack.startup(historyStack);
     this.routeState.key = historyRecord.key;
@@ -143,26 +124,6 @@ export class BaseEluxRouter extends MultipleDispatcher {
     }) => store);
   }
 
-  getInternalUrl() {
-    return this._internalUrl;
-  }
-
-  getNativeLocation() {
-    if (!this._nativeData) {
-      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeLocation;
-  }
-
-  getNativeUrl() {
-    if (!this._nativeData) {
-      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeUrl;
-  }
-
   getHistoryLength(root) {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
@@ -175,48 +136,25 @@ export class BaseEluxRouter extends MultipleDispatcher {
     return this.rootStack.testBack(delta, rootOnly);
   }
 
-  partialLocationStateToNativeData(partialLocationState) {
-    const nativeLocation = this.locationTransform.partialLocationStateToNativeLocation(partialLocationState);
-    const nativeUrl = this.locationTransform.nativeLocationToNativeUrl(nativeLocation);
+  extendCurrent(params, pagename) {
     return {
-      nativeUrl,
-      nativeLocation
+      payload: deepMerge({}, this.routeState.params, params),
+      pagename: pagename || this.routeState.pagename
     };
   }
 
-  preAdditions(eluxUrlOrPayload) {
-    let partialLocationState;
-
-    if (typeof eluxUrlOrPayload === 'string') {
-      const eluxLocation = this.locationTransform.eluxUrlToEluxLocation(eluxUrlOrPayload);
-      partialLocationState = this.locationTransform.eluxLocationToPartialLocationState(eluxLocation);
-    } else {
-      const {
-        extendParams,
-        pagename
-      } = eluxUrlOrPayload;
-      const data = { ...eluxUrlOrPayload
-      };
-
-      if (extendParams === 'current') {
-        data.extendParams = this.routeState.params;
-        data.pagename = pagename || this.routeState.pagename;
-      }
-
-      partialLocationState = this.locationTransform.payloadToPartialLocationState(data);
-    }
-
-    return this.locationTransform.partialLocationStateToLocationState(partialLocationState);
+  relaunch(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._relaunch.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
   }
 
-  relaunch(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._relaunch.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
-  }
-
-  async _relaunch(eluxUrlOrPayload, root, nativeCaller) {
-    const location = await this.preAdditions(eluxUrlOrPayload);
+  async _relaunch(dataOrUrl, root, nativeCaller) {
+    const location = createLocationTransform(dataOrUrl);
+    const pagename = location.getPagename();
+    const params = await location.getParams();
     let key = '';
-    const routeState = { ...location,
+    const routeState = {
+      pagename,
+      params,
       action: 'RELAUNCH',
       key
     };
@@ -224,25 +162,20 @@ export class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.relaunch(routeState).key;
+      key = this.rootStack.relaunch(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().relaunch(routeState).key;
+      key = this.rootStack.getCurrentItem().relaunch(location).key;
     }
 
     routeState.key = key;
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('relaunch', () => this.partialLocationStateToNativeData(routeState), key);
+      await this.nativeRouter.execute('relaunch', location, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {
@@ -251,14 +184,18 @@ export class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  push(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._push.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
+  push(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._push.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
   }
 
-  async _push(eluxUrlOrPayload, root, nativeCaller) {
-    const location = await this.preAdditions(eluxUrlOrPayload);
+  async _push(dataOrUrl, root, nativeCaller) {
+    const location = createLocationTransform(dataOrUrl);
+    const pagename = location.getPagename();
+    const params = await location.getParams();
     let key = '';
-    const routeState = { ...location,
+    const routeState = {
+      pagename,
+      params,
       action: 'PUSH',
       key
     };
@@ -266,25 +203,20 @@ export class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.push(routeState).key;
+      key = this.rootStack.push(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().push(routeState).key;
+      key = this.rootStack.getCurrentItem().push(location).key;
     }
 
     routeState.key = key;
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('push', () => this.partialLocationStateToNativeData(routeState), key);
+      await this.nativeRouter.execute('push', location, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
 
     if (root) {
@@ -299,14 +231,18 @@ export class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  replace(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._replace.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
+  replace(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._replace.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
   }
 
-  async _replace(eluxUrlOrPayload, root, nativeCaller) {
-    const location = await this.preAdditions(eluxUrlOrPayload);
+  async _replace(dataOrUrl, root, nativeCaller) {
+    const location = createLocationTransform(dataOrUrl);
+    const pagename = location.getPagename();
+    const params = await location.getParams();
     let key = '';
-    const routeState = { ...location,
+    const routeState = {
+      pagename,
+      params,
       action: 'REPLACE',
       key
     };
@@ -314,25 +250,20 @@ export class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.replace(routeState).key;
+      key = this.rootStack.replace(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().replace(routeState).key;
+      key = this.rootStack.getCurrentItem().replace(location).key;
     }
 
     routeState.key = key;
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('replace', () => this.partialLocationStateToNativeData(routeState), key);
+      await this.nativeRouter.execute('replace', location, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {
@@ -363,8 +294,9 @@ export class BaseEluxRouter extends MultipleDispatcher {
     }
 
     const key = record.key;
-    const pagename = record.pagename;
-    const params = deepMerge({}, record.params, options.payload);
+    const location = record.location;
+    const pagename = location.getPagename();
+    const params = deepMerge({}, location.getParams(), options.payload);
     const routeState = {
       key,
       pagename,
@@ -383,19 +315,14 @@ export class BaseEluxRouter extends MultipleDispatcher {
       this.rootStack.getCurrentItem().back(steps[1]);
     }
 
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('back', () => this.partialLocationStateToNativeData(routeState), n, key);
+      await this.nativeRouter.execute('back', location, n, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {
@@ -448,22 +375,5 @@ export function testRouteChangeAction(routeState) {
   return {
     type: RouteActionTypes.TestRouteChange,
     payload: [routeState]
-  };
-}
-const defaultNativeLocationMap = {
-  in(nativeLocation) {
-    return nativeLocation;
-  },
-
-  out(nativeLocation) {
-    return nativeLocation;
-  }
-
-};
-export function createRouteModule(moduleName, pagenameMap, nativeLocationMap = defaultNativeLocationMap, notfoundPagename = '/404', paramsKey = '_') {
-  const locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  const routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
-  return { ...routeModule,
-    locationTransform
   };
 }

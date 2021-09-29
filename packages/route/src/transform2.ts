@@ -1,80 +1,18 @@
 import {deepMerge, moduleExists, getModuleList, isPromise, RouteModuleHandlers, IRouteModuleHandlersClass, exportModule} from '@elux/core';
-import {
-  routeMeta,
-  routeConfig,
-  NativeLocationMap,
-  PagenameMap,
-  RouteState,
-  RootParams,
-  EluxLocation,
-  NativeLocation,
-  StateLocation,
-  safeJsonParse,
-} from './basic';
+import {routeMeta, routeConfig, NativeLocationMap, PagenameMap, RouteState, RootParams} from './basic';
 import {extendDefault, excludeDefault} from './deep-extend';
 
-interface CacheItem {
-  key: string;
-  prev: CacheItem | undefined;
-  next: CacheItem | undefined;
-  payload: any;
-}
-class LocationCaches {
-  private length = 0;
-  private first: CacheItem | undefined;
-  private last: CacheItem | undefined;
-  private data: Record<string, CacheItem | undefined> = {};
-  constructor(private limit: number) {}
-  getItem<T>(key: string): T | undefined {
-    const data = this.data;
-    const cache = data[key];
-    if (cache && cache.next) {
-      const nextCache = cache.next;
-      delete data[key];
-      data[key] = cache;
-      nextCache.prev = cache.prev;
-      cache.prev = this.last;
-      cache.next = undefined;
-      this.last = cache;
-      if (this.first === cache) {
-        this.first = nextCache;
-      }
-    }
-    return cache?.payload;
-  }
-  setItem<T>(key: string, item: T): void {
-    const data = this.data;
-    if (data[key]) {
-      data[key]!.payload = item;
-      return;
-    }
-    const cache: CacheItem = {
-      key,
-      prev: this.last,
-      next: undefined,
-      payload: item,
-    };
-    data[key] = cache;
-    if (this.last) {
-      this.last.next = cache;
-    }
-    this.last = cache;
-    if (!this.first) {
-      this.first = cache;
-    }
-    const length = this.length + 1;
-    if (length > this.limit) {
-      const firstCache = this.first;
-      delete data[firstCache.key];
-      this.first = firstCache.next;
-    } else {
-      this.length = length;
-    }
+const locationCaches = {
+  getItem<T>(url: string): T | undefined {
     return;
-  }
-}
-const locationCaches = new LocationCaches(routeConfig.maxLocationCache);
-
+  },
+  setItem<T>(url: string, item: T): void {
+    return;
+  },
+  updateItem<T>(url: string, data: Partial<T>): void {
+    return;
+  },
+};
 export const urlParser = {
   type: {e: 'e', s: 's', n: 'n'},
   getNativeUrl(pathname: string, query: string): string {
@@ -104,7 +42,7 @@ export const urlParser = {
     return [type, ':/', path, search && search !== '{}' ? `?${search}` : ''].join('');
   },
   getPath(url: string): string {
-    return url.substr(3).split('?', 1)[0];
+    return url.substr(3).split('?')[0];
   },
   getSearch(url: string): string {
     return url.replace(/^.+?(\?|$)/, '');
@@ -113,16 +51,19 @@ export const urlParser = {
     return Object.keys(data).length ? JSON.stringify(data) : '';
   },
   parseSearch(search: string): Record<string, any> {
-    return safeJsonParse(search);
+    if (!search || search === '{}' || search.charAt(0) !== '{' || search.charAt(search.length - 1) !== '}') {
+      return {};
+    }
+    return JSON.parse(search);
   },
   checkUrl(url: string): string {
-    const type: 'e' | 'n' | 's' = this.type[url.charAt(0)] || 'e';
+    const type: 'e' | 'n' | 's' = this.type[url.charAt(0)] || 'n';
     let path: string, search: string;
-    const arr = url.split('://', 2);
+    const arr = url.split('://');
     if (arr.length > 1) {
       arr.shift();
     }
-    path = arr[0].split('?', 1)[0];
+    path = arr[0].split('?')[0];
     path = this.checkPath(path);
     if (type === 'e' || type === 's') {
       search = url.replace(/^.+?(\?|$)/, '');
@@ -130,14 +71,10 @@ export const urlParser = {
         search = '';
       }
     } else {
-      let arr = url.split(`${routeConfig.paramsKey}=`, 2);
+      let arr = url.split(`${routeConfig.paramsKey}=`);
       if (arr[1]) {
-        arr = arr[1].split('&', 1);
-        if (arr[0]) {
-          search = `${routeConfig.paramsKey}=${arr[0]}`;
-        } else {
-          search = '';
-        }
+        arr = arr[1].split('&');
+        search = arr[0] || '';
       } else {
         search = '';
       }
@@ -146,17 +83,12 @@ export const urlParser = {
   },
   checkPath(path: string): string {
     path = `/${path.replace(/^\/+|\/+$/g, '')}`;
-    if (path === '/') {
-      path = '/index';
-    }
+    path === '/' ? '/index' : path;
     return path;
-  },
-  withoutProtocol(url: string): string {
-    return url.replace(/^[^/]+?:\//, '');
   },
 };
 
-interface LocationCache {
+export interface LocationCache {
   _eurl?: string;
   _nurl?: string;
   _pagename?: string;
@@ -164,34 +96,58 @@ interface LocationCache {
   _params?: Record<string, any>;
 }
 
-export interface ILocationTransform<P extends RootParams = any> {
+interface ILocationTransform<P extends RootParams = any> {
   getPagename(): string;
   getFastUrl(): string;
   getEluxUrl(): string;
-  getNativeUrl(withoutProtocol?: boolean): string;
+  getNativeUrl(): string;
   getParams(): Partial<P> | Promise<Partial<P>>;
 }
-/**
- * pagename,payload,params,eurl(pathmatch,args),nurl
- */
-class LocationTransform<P extends RootParams = any> implements ILocationTransform {
-  private _pagename?: string;
-  private _payload?: Record<string, any>;
-  private _params?: Partial<P>;
-  private _eurl?: string;
-  private _nurl?: string;
+export class LocationTransform implements ILocationTransform, LocationCache {
+  readonly _eurl?: string;
+  readonly _nurl?: string;
+  readonly _pagename?: string;
+  readonly _payload?: Record<string, any>;
+  readonly _params?: Record<string, any>;
+
+  private _pathmatch?: string;
+  private _search?: string;
+  private _pathArgs?: Record<string, any>;
+  private _args?: Record<string, any>;
   private _minData?: {pathmatch: string; args: Record<string, any>};
-  constructor(private readonly url: string, data?: LocationCache) {
-    data && Object.keys(data).length && Object.assign(this, data);
+
+  constructor(private readonly url: string, data: LocationCache) {
+    Object.assign(this, data);
   }
-  private getPayload(): Record<string, any> {
-    if (!this._payload) {
-      const search = urlParser.getSearch(this.url);
-      const args = urlParser.parseSearch(search);
+  private update(payload: Partial<LocationCache>): void {
+    Object.assign(this, payload);
+    locationCaches.updateItem(this.url, payload);
+  }
+  private getPathmatch(): string {
+    if (!this._pathmatch) {
+      this._pathmatch = urlParser.getPath(this.url);
+    }
+    return this._pathmatch;
+  }
+  private getSearch(): string {
+    if (!this._search) {
+      this._search = urlParser.getSearch(this.url);
+    }
+    return this._search;
+  }
+  private getArgs(): Record<string, any> {
+    if (!this._args) {
+      const search = this.getSearch();
+      this._args = urlParser.parseSearch(search);
+    }
+    return this._args;
+  }
+  private getPathArgs() {
+    if (!this._pathArgs) {
       const {notfoundPagename} = routeConfig;
       const {pagenameMap} = routeMeta;
       const pagename = this.getPagename();
-      const pathmatch = urlParser.getPath(this.url);
+      const pathmatch = this.getPathmatch();
       const _pagename = `${pagename}/`;
       let arrArgs: Array<string | undefined>;
       if (pagename === notfoundPagename) {
@@ -203,10 +159,17 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
           .split('/')
           .map((item) => (item ? decodeURIComponent(item) : undefined));
       }
-      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
-      this._payload = deepMerge({}, pathArgs, args) as Record<string, any>;
+      this._pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
     }
-    return this._payload;
+  }
+  private getPayload(): Record<string, any> {
+    if (!this._payload) {
+      const pathArgs = this.getPathArgs();
+      const args = this.getArgs();
+      const _payload = deepMerge({}, pathArgs, args) as Record<string, any>;
+      this.update({_payload});
+    }
+    return this._payload!;
   }
   private getMinData(): {pathmatch: string; args: Record<string, any>} {
     if (!this._minData) {
@@ -227,19 +190,17 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
       return item.toString();
     });
   }
-  public update(data: LocationCache): void {
-    Object.assign(this, data);
-  }
   public getPagename(): string {
     if (!this._pagename) {
       const {notfoundPagename} = routeConfig;
       const {pagenameList} = routeMeta;
-      const pathmatch = urlParser.getPath(this.url);
+      const pathmatch = this.getPathmatch();
       const __pathmatch = `${pathmatch}/`;
       const __pagename = pagenameList.find((name) => __pathmatch.startsWith(name));
-      this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+      const _pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+      this.update({_pagename});
     }
-    return this._pagename;
+    return this._pagename!;
   }
   public getFastUrl(): string {
     return this.url;
@@ -255,8 +216,12 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
       let pathArgs: Record<string, any>;
       if (pagenameMap[_pagename]) {
         const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
-        pathmatch = _pagename + pathArgsArr.map((item) => (item ? encodeURIComponent(item) : '')).join('/');
-        pathmatch = pathmatch.replace(/\/*$/, '');
+        pathmatch =
+          _pagename +
+          pathArgsArr
+            .map((item) => (item ? encodeURIComponent(item) : ''))
+            .join('/')
+            .replace(/\/*$/, '');
         pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
       } else {
         pathmatch = '/index';
@@ -264,20 +229,20 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
       }
       const args = excludeDefault(minPayload, pathArgs, false);
       this._minData = {pathmatch, args};
-      this._eurl = urlParser.getEluxUrl(pathmatch, args);
+      this.update({_eurl: urlParser.getEluxUrl(pathmatch, args)});
     }
-    return this._eurl;
+    return this._eurl!;
   }
-  public getNativeUrl(withoutProtocol?: boolean): string {
+  public getNativeUrl(): string {
     if (!this._nurl) {
       const {nativeLocationMap} = routeMeta;
       const minData = this.getMinData();
       const {pathname, query} = nativeLocationMap.out(minData);
-      this._nurl = urlParser.getNativeUrl(pathname, query);
+      this.update({_nurl: urlParser.getNativeUrl(pathname, query)});
     }
-    return withoutProtocol ? urlParser.withoutProtocol(this._nurl) : this._nurl;
+    return this._nurl!;
   }
-  public getParams(): Partial<P> | Promise<Partial<P>> {
+  public getParams(): Record<string, any> | Promise<Record<string, any>> {
     if (!this._params) {
       const payload = this.getPayload();
       const def = routeMeta.defaultParams;
@@ -288,14 +253,14 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
           modules.forEach((module) => {
             def[module.moduleName] = module.params;
           });
-          const _params: any = assignDefaultData(payload);
+          const _params = assignDefaultData(payload);
           const modulesMap = moduleExists();
           Object.keys(_params).forEach((moduleName) => {
             if (!modulesMap[moduleName]) {
               delete _params[moduleName];
             }
           });
-          this._params = _params;
+          this.update({_params});
           return _params;
         });
       }
@@ -303,14 +268,14 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
       modules.forEach((module) => {
         def[module.moduleName] = module.params;
       });
-      const _params: any = assignDefaultData(payload);
+      const _params = assignDefaultData(payload);
       const modulesMap = moduleExists();
       Object.keys(_params).forEach((moduleName) => {
         if (!modulesMap[moduleName]) {
           delete _params[moduleName];
         }
       });
-      this._params = _params;
+      this.update({_params});
       return _params;
     } else {
       return this._params;
@@ -318,44 +283,50 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
   }
 }
 
-export function location<P extends RootParams = any>(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ILocationTransform<P> {
+export function createLocationTransform<P extends RootParams = any>(
+  dataOrUrl:
+    | string
+    | {pathmatch: string; args: Record<string, any>}
+    | {pagename: string; payload: Record<string, any>}
+    | {pathname: string; query: string}
+): ILocationTransform<P> {
   if (typeof dataOrUrl === 'string') {
     const url = urlParser.checkUrl(dataOrUrl);
     const type: 'e' | 'n' | 's' = url.charAt(0) as any;
     if (type === 'e') {
-      return createFromElux(url);
+      return createEluxLocationFromElux(url);
     } else if (type === 's') {
-      return createFromState(url);
+      return createEluxLocationFromState(url);
     } else {
-      return createFromNative(url);
+      return createEluxLocationFromNative(url);
     }
   } else if (dataOrUrl['pathmatch']) {
-    const {pathmatch, args} = dataOrUrl as EluxLocation;
+    const {pathmatch, args} = dataOrUrl as {pathmatch: string; args: Record<string, any>};
     const eurl = urlParser.getEluxUrl(urlParser.checkPath(pathmatch), args);
-    return createFromElux(eurl);
+    return createEluxLocationFromElux(eurl);
   } else if (dataOrUrl['pagename']) {
-    const data = dataOrUrl as StateLocation;
+    const data = dataOrUrl as {pagename: string; payload: Record<string, any>};
     const {pagename, payload} = data;
     const surl = urlParser.getStateUrl(urlParser.checkPath(pagename), payload);
-    return createFromState(surl, data);
+    return createEluxLocationFromState(surl, data);
   } else {
-    const data = dataOrUrl as NativeLocation;
+    const data = dataOrUrl as {pathname: string; query: string};
     const {pathname, query} = data;
     const nurl = urlParser.getNativeUrl(urlParser.checkPath(pathname), query);
-    return createFromNative(nurl, data);
+    return createEluxLocationFromNative(nurl, data);
   }
 }
 
-function createFromElux(eurl: string): LocationTransform {
-  let item = locationCaches.getItem<LocationTransform>(eurl);
-  if (!item) {
-    item = new LocationTransform(eurl, {});
-    locationCaches.setItem(eurl, item);
+function createEluxLocationFromElux(eurl: string): ILocationTransform {
+  let locationData = locationCaches.getItem<LocationCache>(eurl);
+  if (!locationData) {
+    locationData = {};
+    locationCaches.setItem<LocationCache>(eurl, locationData);
   }
-  return item;
+  return new LocationTransform(eurl, locationData);
 }
 
-function createFromNative(nurl: string, data?: NativeLocation): LocationTransform {
+function createEluxLocationFromNative(nurl: string, data?: {pathname: string; query: string}): ILocationTransform {
   let eurl = locationCaches.getItem<string>(nurl);
   if (!eurl) {
     const {nativeLocationMap} = routeMeta;
@@ -364,21 +335,26 @@ function createFromNative(nurl: string, data?: NativeLocation): LocationTransfor
     eurl = urlParser.getEluxUrl(pathmatch, args);
     locationCaches.setItem(nurl, eurl);
   }
-  return createFromElux(eurl);
+  let locationData = locationCaches.getItem<LocationCache>(eurl);
+  if (!locationData) {
+    locationData = {};
+    locationCaches.setItem<LocationCache>(eurl, locationData);
+  }
+  return new LocationTransform(eurl, locationData);
 }
 
-function createFromState(surl: string, data?: StateLocation): LocationTransform {
+function createEluxLocationFromState(surl: string, data?: {pagename: string; payload: Record<string, any>}): ILocationTransform {
   const eurl = `e${surl.substr(1)}`;
-  let item = locationCaches.getItem<LocationTransform>(eurl);
-  if (!item) {
+  let locationData = locationCaches.getItem<LocationCache>(eurl);
+  if (!locationData) {
     data = data || urlParser.parseStateUrl(surl);
-    item = new LocationTransform(eurl, {_pagename: data.pagename, _payload: data.payload});
-    locationCaches.setItem(eurl, item);
-  } else if (!item._pagename || !item._payload) {
+    locationData = {_pagename: data.pagename, _payload: data.payload};
+    locationCaches.setItem<LocationCache>(eurl, locationData);
+  } else if (!locationData._pagename || !locationData._payload) {
     data = data || urlParser.parseStateUrl(surl);
-    item.update({_pagename: data.pagename, _payload: data.payload});
+    locationCaches.updateItem<LocationCache>(eurl, {_pagename: data.pagename, _payload: data.payload});
   }
-  return item;
+  return new LocationTransform(eurl, locationData);
 }
 
 function assignDefaultData(data: {[moduleName: string]: any}): {[moduleName: string]: any} {
@@ -403,7 +379,11 @@ const defaultNativeLocationMap: NativeLocationMap = {
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeLocationMap: NativeLocationMap = defaultNativeLocationMap) {
+export function createRouteModule<N extends string, G extends PagenameMap>(
+  moduleName: N,
+  pagenameMap: G,
+  nativeLocationMap: NativeLocationMap = defaultNativeLocationMap
+) {
   const pagenames = Object.keys(pagenameMap);
   const _pagenameMap = pagenames
     .sort((a, b) => b.length - a.length)
@@ -420,10 +400,5 @@ export function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeL
   routeMeta.pagenameList = Object.keys(_pagenameMap);
   routeMeta.nativeLocationMap = nativeLocationMap;
 
-  return exportModule(
-    routeConfig.RouteModuleName as any,
-    RouteModuleHandlers as IRouteModuleHandlersClass<RouteState>,
-    {},
-    {} as {[k in keyof G]: any}
-  );
+  return exportModule(moduleName, RouteModuleHandlers as IRouteModuleHandlersClass<RouteState>, {}, {} as {[k in keyof G]: any});
 }

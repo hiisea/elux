@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import React, { useContext, useEffect, useCallback, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
 import { unstable_batchedUpdates, hydrate, render } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
@@ -1896,22 +1896,21 @@ function _extends() {
 }
 
 var Link = React.forwardRef(({
-  onClick,
+  onClick: _onClick,
   href,
   route,
   root,
   action = 'push',
-  ...rest
+  ...props
 }, ref) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router;
-  const props = { ...rest,
-    onClick: event => {
-      event.preventDefault();
-      onClick && onClick(event);
-      router[action](route, root);
-    }
-  };
+  const onClick = useCallback(event => {
+    event.preventDefault();
+    _onClick && _onClick(event);
+    route && router[action](route, root);
+  }, [_onClick, action, root, route, router]);
+  props['onClick'] = onClick;
 
   if (href) {
     return React.createElement("a", _extends({}, props, {
@@ -5349,18 +5348,39 @@ const connectRedux = function (...args) {
 const routeConfig = {
   RouteModuleName: 'route',
   maxHistory: 10,
+  maxLocationCache: env.isServer ? 10000 : 500,
   notifyNativeRouter: {
     root: true,
     internal: false
   },
-  indexUrl: '/index'
+  indexUrl: '/index',
+  notfoundPagename: '/404',
+  paramsKey: '_'
 };
 const setRouteConfig = buildConfigSetter(routeConfig);
 const routeMeta = {
   defaultParams: {},
   pagenames: {},
-  pages: {}
+  pages: {},
+  pagenameMap: {},
+  pagenameList: [],
+  nativeLocationMap: {}
 };
+function safeJsonParse(json) {
+  if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
+    return {};
+  }
+
+  let args = {};
+
+  try {
+    args = JSON.parse(json);
+  } catch (error) {
+    args = {};
+  }
+
+  return args;
+}
 
 class RouteStack {
   constructor(limit) {
@@ -5444,22 +5464,13 @@ class HistoryRecord {
   constructor(location, historyStack) {
     _defineProperty(this, "destroy", void 0);
 
-    _defineProperty(this, "pagename", void 0);
-
-    _defineProperty(this, "params", void 0);
-
     _defineProperty(this, "key", void 0);
 
     _defineProperty(this, "recordKey", void 0);
 
+    this.location = location;
     this.historyStack = historyStack;
     this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
-    const {
-      pagename,
-      params
-    } = location;
-    this.pagename = pagename;
-    this.params = params;
     this.key = [historyStack.stackkey, this.recordKey].join('-');
   }
 
@@ -5478,24 +5489,24 @@ class HistoryStack extends RouteStack {
     this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
   }
 
-  push(routeState) {
-    const newRecord = new HistoryRecord(routeState, this);
+  push(location) {
+    const newRecord = new HistoryRecord(location, this);
 
     this._push(newRecord);
 
     return newRecord;
   }
 
-  replace(routeState) {
-    const newRecord = new HistoryRecord(routeState, this);
+  replace(location) {
+    const newRecord = new HistoryRecord(location, this);
 
     this._replace(newRecord);
 
     return newRecord;
   }
 
-  relaunch(routeState) {
-    const newRecord = new HistoryRecord(routeState, this);
+  relaunch(location) {
+    const newRecord = new HistoryRecord(location, this);
 
     this._relaunch(newRecord);
 
@@ -5523,9 +5534,7 @@ class RootStack extends RouteStack {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const {
-        pagename
-      } = record;
+      const pagename = record.location.getPagename();
       return {
         pagename,
         store,
@@ -5534,11 +5543,17 @@ class RootStack extends RouteStack {
     });
   }
 
-  push(routeState) {
+  push(location) {
     const curHistory = this.getCurrentItem();
+    const routeState = {
+      pagename: location.getPagename(),
+      params: location.getParams(),
+      action: 'RELAUNCH',
+      key: ''
+    };
     const store = forkStore(curHistory.store, routeState);
     const newHistory = new HistoryStack(this, store);
-    const newRecord = new HistoryRecord(routeState, newHistory);
+    const newRecord = new HistoryRecord(location, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -5546,14 +5561,14 @@ class RootStack extends RouteStack {
     return newRecord;
   }
 
-  replace(routeState) {
+  replace(location) {
     const curHistory = this.getCurrentItem();
-    return curHistory.relaunch(routeState);
+    return curHistory.relaunch(location);
   }
 
-  relaunch(routeState) {
+  relaunch(location) {
     const curHistory = this.getCurrentItem();
-    const newRecord = curHistory.relaunch(routeState);
+    const newRecord = curHistory.relaunch(location);
 
     this._relaunch(curHistory);
 
@@ -5712,80 +5727,482 @@ function excludeDefault(data, def, keepTopLevel) {
   return filtered || {};
 }
 
-function __splitPrivate(data) {
-  const keys = Object.keys(data);
+class LocationCaches {
+  constructor(limit) {
+    _defineProperty(this, "length", 0);
 
-  if (keys.length === 0) {
-    return [undefined, undefined];
+    _defineProperty(this, "first", void 0);
+
+    _defineProperty(this, "last", void 0);
+
+    _defineProperty(this, "data", {});
+
+    this.limit = limit;
   }
 
-  let publicData;
-  let privateData;
-  keys.forEach(key => {
-    const value = data[key];
+  getItem(key) {
+    const data = this.data;
+    const cache = data[key];
 
-    if (key.startsWith('_')) {
-      if (!privateData) {
-        privateData = {};
+    if (cache && cache.next) {
+      const nextCache = cache.next;
+      delete data[key];
+      data[key] = cache;
+      nextCache.prev = cache.prev;
+      cache.prev = this.last;
+      cache.next = undefined;
+      this.last = cache;
+
+      if (this.first === cache) {
+        this.first = nextCache;
       }
-
-      privateData[key] = value;
-    } else if (isPlainObject(value)) {
-      const [subPublicData, subPrivateData] = __splitPrivate(value);
-
-      if (subPublicData) {
-        if (!publicData) {
-          publicData = {};
-        }
-
-        publicData[key] = subPublicData;
-      }
-
-      if (subPrivateData) {
-        if (!privateData) {
-          privateData = {};
-        }
-
-        privateData[key] = subPrivateData;
-      }
-    } else {
-      if (!publicData) {
-        publicData = {};
-      }
-
-      publicData[key] = value;
     }
-  });
-  return [publicData, privateData];
+
+    return cache == null ? void 0 : cache.payload;
+  }
+
+  setItem(key, item) {
+    const data = this.data;
+
+    if (data[key]) {
+      data[key].payload = item;
+      return;
+    }
+
+    const cache = {
+      key,
+      prev: this.last,
+      next: undefined,
+      payload: item
+    };
+    data[key] = cache;
+
+    if (this.last) {
+      this.last.next = cache;
+    }
+
+    this.last = cache;
+
+    if (!this.first) {
+      this.first = cache;
+    }
+
+    const length = this.length + 1;
+
+    if (length > this.limit) {
+      const firstCache = this.first;
+      delete data[firstCache.key];
+      this.first = firstCache.next;
+    } else {
+      this.length = length;
+    }
+
+    return;
+  }
+
 }
 
-function splitPrivate(data, deleteTopLevel) {
-  if (!isPlainObject(data)) {
-    return [undefined, undefined];
-  }
+const locationCaches = new LocationCaches(routeConfig.maxLocationCache);
+const urlParser = {
+  type: {
+    e: 'e',
+    s: 's',
+    n: 'n'
+  },
 
-  const keys = Object.keys(data);
+  getNativeUrl(pathname, query) {
+    return this.getUrl('n', pathname, query ? `${routeConfig.paramsKey}=${encodeURIComponent(query)}` : '');
+  },
 
-  if (keys.length === 0) {
-    return [undefined, undefined];
-  }
+  getEluxUrl(pathmatch, args) {
+    const search = this.stringifySearch(args);
+    return this.getUrl('e', pathmatch, search);
+  },
 
-  const result = __splitPrivate(data);
+  getStateUrl(pagename, payload) {
+    const search = this.stringifySearch(payload);
+    return this.getUrl('s', pagename, search);
+  },
 
-  let publicData = result[0];
-  const privateData = result[1];
-  keys.forEach(function (key) {
-    if (!deleteTopLevel[key]) {
-      if (!publicData) {
-        publicData = {};
+  parseNativeUrl(nurl) {
+    const pathname = this.getPath(nurl);
+    const arr = nurl.split(`${routeConfig.paramsKey}=`);
+    const query = arr[1] || '';
+    return {
+      pathname,
+      query: decodeURIComponent(query)
+    };
+  },
+
+  parseStateUrl(surl) {
+    const pagename = this.getPath(surl);
+    const search = this.getSearch(surl);
+    const payload = this.parseSearch(search);
+    return {
+      pagename,
+      payload
+    };
+  },
+
+  getUrl(type, path, search) {
+    return [type, ':/', path, search && search !== '{}' ? `?${search}` : ''].join('');
+  },
+
+  getPath(url) {
+    return url.substr(3).split('?', 1)[0];
+  },
+
+  getSearch(url) {
+    return url.replace(/^.+?(\?|$)/, '');
+  },
+
+  stringifySearch(data) {
+    return Object.keys(data).length ? JSON.stringify(data) : '';
+  },
+
+  parseSearch(search) {
+    return safeJsonParse(search);
+  },
+
+  checkUrl(url) {
+    const type = this.type[url.charAt(0)] || 'e';
+    let path, search;
+    const arr = url.split('://', 2);
+
+    if (arr.length > 1) {
+      arr.shift();
+    }
+
+    path = arr[0].split('?', 1)[0];
+    path = this.checkPath(path);
+
+    if (type === 'e' || type === 's') {
+      search = url.replace(/^.+?(\?|$)/, '');
+
+      if (search === '{}' || search.charAt(0) !== '{' || search.charAt(search.length - 1) !== '}') {
+        search = '';
       }
+    } else {
+      let arr = url.split(`${routeConfig.paramsKey}=`, 2);
 
-      if (!publicData[key]) {
-        publicData[key] = {};
+      if (arr[1]) {
+        arr = arr[1].split('&', 1);
+
+        if (arr[0]) {
+          search = `${routeConfig.paramsKey}=${arr[0]}`;
+        } else {
+          search = '';
+        }
+      } else {
+        search = '';
       }
     }
-  });
-  return [publicData, privateData];
+
+    return this.getUrl(type, path, search);
+  },
+
+  checkPath(path) {
+    path = `/${path.replace(/^\/+|\/+$/g, '')}`;
+
+    if (path === '/') {
+      path = '/index';
+    }
+
+    return path;
+  },
+
+  withoutProtocol(url) {
+    return url.replace(/^[^/]+?:\//, '');
+  }
+
+};
+
+class LocationTransform {
+  constructor(url, data) {
+    _defineProperty(this, "_pagename", void 0);
+
+    _defineProperty(this, "_payload", void 0);
+
+    _defineProperty(this, "_params", void 0);
+
+    _defineProperty(this, "_eurl", void 0);
+
+    _defineProperty(this, "_nurl", void 0);
+
+    _defineProperty(this, "_minData", void 0);
+
+    this.url = url;
+    data && Object.keys(data).length && this.update(data);
+  }
+
+  getPayload() {
+    if (!this._payload) {
+      const search = urlParser.getSearch(this.url);
+      const args = urlParser.parseSearch(search);
+      const {
+        notfoundPagename
+      } = routeConfig;
+      const {
+        pagenameMap
+      } = routeMeta;
+      const pagename = this.getPagename();
+      const pathmatch = urlParser.getPath(this.url);
+      const _pagename = `${pagename}/`;
+      let arrArgs;
+
+      if (pagename === notfoundPagename) {
+        arrArgs = [pathmatch];
+      } else {
+        const _pathmatch = `${pathmatch}/`;
+        arrArgs = _pathmatch.replace(_pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
+      }
+
+      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+      this._payload = deepMerge({}, pathArgs, args);
+    }
+
+    return this._payload;
+  }
+
+  getMinData() {
+    if (!this._minData) {
+      const minUrl = this.getEluxUrl();
+
+      if (!this._minData) {
+        const pathmatch = urlParser.getPath(minUrl);
+        const search = urlParser.getSearch(minUrl);
+        this._minData = {
+          pathmatch,
+          args: urlParser.parseSearch(search)
+        };
+      }
+    }
+
+    return this._minData;
+  }
+
+  toStringArgs(arr) {
+    return arr.map(item => {
+      if (item === null || item === undefined) {
+        return undefined;
+      }
+
+      return item.toString();
+    });
+  }
+
+  update(data) {
+    Object.assign(this, data);
+  }
+
+  getPagename() {
+    if (!this._pagename) {
+      const {
+        notfoundPagename
+      } = routeConfig;
+      const {
+        pagenameList
+      } = routeMeta;
+      const pathmatch = urlParser.getPath(this.url);
+      const __pathmatch = `${pathmatch}/`;
+
+      const __pagename = pagenameList.find(name => __pathmatch.startsWith(name));
+
+      this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+    }
+
+    return this._pagename;
+  }
+
+  getFastUrl() {
+    return this.url;
+  }
+
+  getEluxUrl() {
+    if (!this._eurl) {
+      const payload = this.getPayload();
+      const minPayload = excludeDefault(payload, routeMeta.defaultParams, true);
+      const pagename = this.getPagename();
+      const {
+        pagenameMap
+      } = routeMeta;
+      const _pagename = `${pagename}/`;
+      let pathmatch;
+      let pathArgs;
+
+      if (pagenameMap[_pagename]) {
+        const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
+        pathmatch = _pagename + pathArgsArr.map(item => item ? encodeURIComponent(item) : '').join('/');
+        pathmatch = pathmatch.replace(/\/*$/, '');
+        pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
+      } else {
+        pathmatch = '/index';
+        pathArgs = {};
+      }
+
+      const args = excludeDefault(minPayload, pathArgs, false);
+      this._minData = {
+        pathmatch,
+        args
+      };
+      this._eurl = urlParser.getEluxUrl(pathmatch, args);
+    }
+
+    return this._eurl;
+  }
+
+  getNativeUrl(withoutProtocol) {
+    if (!this._nurl) {
+      const {
+        nativeLocationMap
+      } = routeMeta;
+      const minData = this.getMinData();
+      const {
+        pathname,
+        query
+      } = nativeLocationMap.out(minData);
+      this._nurl = urlParser.getNativeUrl(pathname, query);
+    }
+
+    return withoutProtocol ? urlParser.withoutProtocol(this._nurl) : this._nurl;
+  }
+
+  getParams() {
+    if (!this._params) {
+      const payload = this.getPayload();
+      const def = routeMeta.defaultParams;
+      const asyncLoadModules = Object.keys(payload).filter(moduleName => def[moduleName] === undefined);
+      const modulesOrPromise = getModuleList(asyncLoadModules);
+
+      if (isPromise(modulesOrPromise)) {
+        return modulesOrPromise.then(modules => {
+          modules.forEach(module => {
+            def[module.moduleName] = module.params;
+          });
+
+          const _params = assignDefaultData(payload);
+
+          const modulesMap = moduleExists();
+          Object.keys(_params).forEach(moduleName => {
+            if (!modulesMap[moduleName]) {
+              delete _params[moduleName];
+            }
+          });
+          this._params = _params;
+          return _params;
+        });
+      }
+
+      const modules = modulesOrPromise;
+      modules.forEach(module => {
+        def[module.moduleName] = module.params;
+      });
+
+      const _params = assignDefaultData(payload);
+
+      const modulesMap = moduleExists();
+      Object.keys(_params).forEach(moduleName => {
+        if (!modulesMap[moduleName]) {
+          delete _params[moduleName];
+        }
+      });
+      this._params = _params;
+      return _params;
+    } else {
+      return this._params;
+    }
+  }
+
+}
+
+function location$1(dataOrUrl) {
+  if (typeof dataOrUrl === 'string') {
+    const url = urlParser.checkUrl(dataOrUrl);
+    const type = url.charAt(0);
+
+    if (type === 'e') {
+      return createFromElux(url);
+    } else if (type === 's') {
+      return createFromState(url);
+    } else {
+      return createFromNative(url);
+    }
+  } else if (dataOrUrl['pathmatch']) {
+    const {
+      pathmatch,
+      args
+    } = dataOrUrl;
+    const eurl = urlParser.getEluxUrl(urlParser.checkPath(pathmatch), args);
+    return createFromElux(eurl);
+  } else if (dataOrUrl['pagename']) {
+    const data = dataOrUrl;
+    const {
+      pagename,
+      payload
+    } = data;
+    const surl = urlParser.getStateUrl(urlParser.checkPath(pagename), payload);
+    return createFromState(surl, data);
+  } else {
+    const data = dataOrUrl;
+    const {
+      pathname,
+      query
+    } = data;
+    const nurl = urlParser.getNativeUrl(urlParser.checkPath(pathname), query);
+    return createFromNative(nurl, data);
+  }
+}
+
+function createFromElux(eurl) {
+  let item = locationCaches.getItem(eurl);
+
+  if (!item) {
+    item = new LocationTransform(eurl, {});
+    locationCaches.setItem(eurl, item);
+  }
+
+  return item;
+}
+
+function createFromNative(nurl, data) {
+  let eurl = locationCaches.getItem(nurl);
+
+  if (!eurl) {
+    const {
+      nativeLocationMap
+    } = routeMeta;
+    data = data || urlParser.parseNativeUrl(nurl);
+    const {
+      pathmatch,
+      args
+    } = nativeLocationMap.in(data);
+    eurl = urlParser.getEluxUrl(pathmatch, args);
+    locationCaches.setItem(nurl, eurl);
+  }
+
+  return createFromElux(eurl);
+}
+
+function createFromState(surl, data) {
+  const eurl = `e${surl.substr(1)}`;
+  let item = locationCaches.getItem(eurl);
+
+  if (!item) {
+    data = data || urlParser.parseStateUrl(surl);
+    item = new LocationTransform(eurl, {
+      _pagename: data.pagename,
+      _payload: data.payload
+    });
+    locationCaches.setItem(eurl, item);
+  } else if (!item._pagename || !item._payload) {
+    data = data || urlParser.parseStateUrl(surl);
+    item.update({
+      _pagename: data.pagename,
+      _payload: data.payload
+    });
+  }
+
+  return item;
 }
 
 function assignDefaultData(data) {
@@ -5799,94 +6216,34 @@ function assignDefaultData(data) {
   }, {});
 }
 
-function splitQuery(query) {
-  if (!query) {
-    return undefined;
-  }
-
-  return query.split('&').reduce((params, str) => {
-    const sections = str.split('=');
-
-    if (sections.length > 1) {
-      const [key, ...arr] = sections;
-
-      if (!params) {
-        params = {};
-      }
-
-      params[key] = decodeURIComponent(arr.join('='));
-    }
-
-    return params;
-  }, undefined);
-}
-
-function joinQuery(params) {
-  return Object.keys(params || {}).map(key => `${key}=${encodeURIComponent(params[key])}`).join('&');
-}
-
-function nativeUrlToNativeLocation(url) {
-  if (!url) {
+const defaultNativeLocationMap = {
+  in(nativeLocation) {
+    const {
+      pathname,
+      query
+    } = nativeLocation;
     return {
-      pathname: '/',
-      searchData: undefined,
-      hashData: undefined
+      pathmatch: pathname,
+      args: urlParser.parseSearch(query)
+    };
+  },
+
+  out(eluxLocation) {
+    const {
+      pathmatch,
+      args
+    } = eluxLocation;
+    return {
+      pathname: pathmatch,
+      query: urlParser.stringifySearch(args)
     };
   }
 
-  const arr = url.split(/[?#]/);
+};
+function createRouteModule(pagenameMap, nativeLocationMap = defaultNativeLocationMap) {
+  const pagenames = Object.keys(pagenameMap);
 
-  if (arr.length === 2 && url.indexOf('?') < 0) {
-    arr.splice(1, 0, '');
-  }
-
-  const [path, search, hash] = arr;
-  return {
-    pathname: `/${path.replace(/^\/+|\/+$/g, '')}`,
-    searchData: splitQuery(search),
-    hashData: splitQuery(hash)
-  };
-}
-function eluxUrlToEluxLocation(url) {
-  if (!url) {
-    return {
-      pathname: '/',
-      params: {}
-    };
-  }
-
-  const [pathname, ...others] = url.split('?');
-  const query = others.join('?');
-  let params = {};
-
-  if (query && query.charAt(0) === '{' && query.charAt(query.length - 1) === '}') {
-    try {
-      params = JSON.parse(query);
-    } catch (e) {
-      env.console.error(e);
-    }
-  }
-
-  return {
-    pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`,
-    params
-  };
-}
-function nativeLocationToNativeUrl({
-  pathname,
-  searchData,
-  hashData
-}) {
-  const search = joinQuery(searchData);
-  const hash = joinQuery(hashData);
-  return [`/${pathname.replace(/^\/+|\/+$/g, '')}`, search && `?${search}`, hash && `#${hash}`].join('');
-}
-function eluxLocationToEluxUrl(location) {
-  return [location.pathname, JSON.stringify(location.params || {})].join('?');
-}
-function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename = '/404', paramsKey = '_') {
-  let pagenames = Object.keys(pagenameMap);
-  pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
+  const _pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
     const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
     const {
       argsToParams,
@@ -5901,228 +6258,11 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     routeMeta.pages[pagename] = page;
     return map;
   }, {});
-  pagenames = Object.keys(pagenameMap);
 
-  function toStringArgs(arr) {
-    return arr.map(item => {
-      if (item === null || item === undefined) {
-        return undefined;
-      }
-
-      return item.toString();
-    });
-  }
-
-  return {
-    eluxLocationToPartialLocationState(eluxLocation) {
-      const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
-      let pagename = pagenames.find(name => pathname.startsWith(name));
-      let pathParams = {};
-
-      if (pagename) {
-        const pathArgs = pathname.replace(pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-      } else {
-        pagename = `${notfoundPagename}/`;
-
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
-      }
-
-      const params = deepMerge({}, pathParams, eluxLocation.params);
-      const modules = moduleExists();
-      Object.keys(params).forEach(moduleName => {
-        if (!modules[moduleName]) {
-          delete params[moduleName];
-        }
-      });
-      return {
-        pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`,
-        params
-      };
-    },
-
-    partialLocationStateToEluxLocation(partialLocation) {
-      const {
-        pathname,
-        params
-      } = this.partialLocationStateToMinData(partialLocation);
-      return {
-        pathname,
-        params
-      };
-    },
-
-    nativeLocationToPartialLocationState(nativeLocation) {
-      const eluxLocation = this.nativeLocationToEluxLocation(nativeLocation);
-      return this.eluxLocationToPartialLocationState(eluxLocation);
-    },
-
-    partialLocationStateToNativeLocation(partialLocation) {
-      const {
-        pathname,
-        params,
-        pathParams
-      } = this.partialLocationStateToMinData(partialLocation);
-      const result = splitPrivate(params, pathParams);
-      const nativeLocation = {
-        pathname,
-        searchData: result[0] ? {
-          [paramsKey]: JSON.stringify(result[0])
-        } : undefined,
-        hashData: result[1] ? {
-          [paramsKey]: JSON.stringify(result[1])
-        } : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
-    },
-
-    eluxLocationToNativeLocation(eluxLocation) {
-      const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
-      let pagename = pagenames.find(name => pathname.startsWith(name));
-      let pathParams = {};
-
-      if (pagename) {
-        const pathArgs = pathname.replace(pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-      } else {
-        pagename = `${notfoundPagename}/`;
-
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
-      }
-
-      const result = splitPrivate(eluxLocation.params, pathParams);
-      const nativeLocation = {
-        pathname,
-        searchData: result[0] ? {
-          [paramsKey]: JSON.stringify(result[0])
-        } : undefined,
-        hashData: result[1] ? {
-          [paramsKey]: JSON.stringify(result[1])
-        } : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
-    },
-
-    nativeLocationToEluxLocation(nativeLocation) {
-      nativeLocation = nativeLocationMap.in(nativeLocation);
-      let searchParams;
-      let hashParams;
-
-      try {
-        searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
-        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
-      } catch (e) {
-        env.console.error(e);
-      }
-
-      return {
-        pathname: nativeLocation.pathname,
-        params: deepMerge(searchParams, hashParams) || {}
-      };
-    },
-
-    eluxUrlToEluxLocation,
-    eluxLocationToEluxUrl,
-    nativeUrlToNativeLocation,
-    nativeLocationToNativeUrl,
-
-    eluxUrlToNativeUrl(eluxUrl) {
-      const eluxLocation = this.eluxUrlToEluxLocation(eluxUrl);
-      return nativeLocationToNativeUrl(this.eluxLocationToNativeLocation(eluxLocation));
-    },
-
-    nativeUrlToEluxUrl(nativeUrl) {
-      const nativeLocation = this.nativeUrlToNativeLocation(nativeUrl);
-      return eluxLocationToEluxUrl(this.nativeLocationToEluxLocation(nativeLocation));
-    },
-
-    partialLocationStateToLocationState(partialLocationState) {
-      const {
-        pagename,
-        params
-      } = partialLocationState;
-      const def = routeMeta.defaultParams;
-      const asyncLoadModules = Object.keys(params).filter(moduleName => def[moduleName] === undefined);
-      const modulesOrPromise = getModuleList(asyncLoadModules);
-
-      if (isPromise(modulesOrPromise)) {
-        return modulesOrPromise.then(modules => {
-          modules.forEach(module => {
-            def[module.moduleName] = module.params;
-          });
-          return {
-            pagename,
-            params: assignDefaultData(params)
-          };
-        });
-      }
-
-      const modules = modulesOrPromise;
-      modules.forEach(module => {
-        def[module.moduleName] = module.params;
-      });
-      return {
-        pagename,
-        params: assignDefaultData(params)
-      };
-    },
-
-    partialLocationStateToMinData(partialLocationState) {
-      let params = excludeDefault(partialLocationState.params, routeMeta.defaultParams, true);
-      let pathParams;
-      let pathname;
-      const pagename = `/${partialLocationState.pagename}/`.replace(/^\/+|\/+$/g, '/');
-
-      if (pagenameMap[pagename]) {
-        const pathArgs = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
-        pathname = pagename + pathArgs.map(item => item ? encodeURIComponent(item) : '').join('/').replace(/\/*$/, '');
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-      } else {
-        pathname = pagename;
-        pathParams = {};
-      }
-
-      params = excludeDefault(params, pathParams, false);
-      return {
-        pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`,
-        params,
-        pathParams
-      };
-    },
-
-    payloadToPartialLocationState(payload) {
-      const {
-        params,
-        extendParams,
-        pagename,
-        pathname
-      } = payload;
-      let newParams;
-
-      if (extendParams && params) {
-        newParams = deepMerge({}, extendParams, params);
-      } else {
-        newParams = extendParams || {};
-      }
-
-      if (pathname) {
-        return this.eluxLocationToPartialLocationState({
-          pathname,
-          params: newParams
-        });
-      } else {
-        return {
-          pagename: pagename || '/',
-          params: newParams
-        };
-      }
-    }
-
-  };
+  routeMeta.pagenameMap = _pagenameMap;
+  routeMeta.pagenameList = Object.keys(_pagenameMap);
+  routeMeta.nativeLocationMap = nativeLocationMap;
+  return exportModule(routeConfig.RouteModuleName, RouteModuleHandlers, {}, {});
 }
 
 class BaseNativeRouter {
@@ -6134,7 +6274,7 @@ class BaseNativeRouter {
 
   onChange(key) {
     if (this.curTask) {
-      this.curTask.resolve(this.curTask.nativeData);
+      this.curTask();
       this.curTask = undefined;
       return false;
     }
@@ -6146,22 +6286,13 @@ class BaseNativeRouter {
     this.eluxRouter = router;
   }
 
-  execute(method, getNativeData, ...args) {
+  execute(method, location, ...args) {
     return new Promise((resolve, reject) => {
-      const task = {
-        resolve,
-        reject,
-        nativeData: undefined
-      };
-      this.curTask = task;
-      const result = this[method](() => {
-        const nativeData = getNativeData();
-        task.nativeData = nativeData;
-        return nativeData;
-      }, ...args);
+      this.curTask = resolve;
+      const result = this[method](location, ...args);
 
       if (!result) {
-        resolve(undefined);
+        resolve();
         this.curTask = undefined;
       } else if (isPromise(result)) {
         result.catch(e => {
@@ -6174,16 +6305,14 @@ class BaseNativeRouter {
 
 }
 class BaseEluxRouter extends MultipleDispatcher {
-  constructor(nativeUrl, nativeRouter, locationTransform, nativeData) {
+  constructor(nativeUrl, nativeRouter, nativeData) {
     super();
 
     _defineProperty(this, "_curTask", void 0);
 
     _defineProperty(this, "_taskList", []);
 
-    _defineProperty(this, "_nativeData", void 0);
-
-    _defineProperty(this, "_internalUrl", void 0);
+    _defineProperty(this, "location", void 0);
 
     _defineProperty(this, "routeState", void 0);
 
@@ -6208,42 +6337,34 @@ class BaseEluxRouter extends MultipleDispatcher {
     });
 
     this.nativeRouter = nativeRouter;
-    this.locationTransform = locationTransform;
     this.nativeData = nativeData;
     nativeRouter.startup(this);
-    const nativeLocation = locationTransform.nativeUrlToNativeLocation(nativeUrl);
-    const locationStateOrPromise = locationTransform.partialLocationStateToLocationState(locationTransform.nativeLocationToPartialLocationState(nativeLocation));
+    const location = location$1(nativeUrl);
+    this.location = location;
+    const pagename = location.getPagename();
+    const paramsOrPromise = location.getParams();
 
-    const callback = locationState => {
-      const routeState = { ...locationState,
+    const callback = params => {
+      const routeState = {
+        pagename,
+        params,
         action: 'RELAUNCH',
         key: ''
       };
       this.routeState = routeState;
-      this._internalUrl = eluxLocationToEluxUrl({
-        pathname: routeState.pagename,
-        params: routeState.params
-      });
-
-      if (!routeConfig.indexUrl) {
-        setRouteConfig({
-          indexUrl: this._internalUrl
-        });
-      }
-
       return routeState;
     };
 
-    if (isPromise(locationStateOrPromise)) {
-      this.initialize = locationStateOrPromise.then(callback);
+    if (isPromise(paramsOrPromise)) {
+      this.initialize = paramsOrPromise.then(callback);
     } else {
-      this.initialize = Promise.resolve(callback(locationStateOrPromise));
+      this.initialize = Promise.resolve(callback(paramsOrPromise));
     }
   }
 
   startup(store) {
     const historyStack = new HistoryStack(this.rootStack, store);
-    const historyRecord = new HistoryRecord(this.routeState, historyStack);
+    const historyRecord = new HistoryRecord(this.location, historyStack);
     historyStack.startup(historyRecord);
     this.rootStack.startup(historyStack);
     this.routeState.key = historyRecord.key;
@@ -6263,26 +6384,6 @@ class BaseEluxRouter extends MultipleDispatcher {
     }) => store);
   }
 
-  getInternalUrl() {
-    return this._internalUrl;
-  }
-
-  getNativeLocation() {
-    if (!this._nativeData) {
-      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeLocation;
-  }
-
-  getNativeUrl() {
-    if (!this._nativeData) {
-      this._nativeData = this.partialLocationStateToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeUrl;
-  }
-
   getHistoryLength(root) {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
@@ -6295,48 +6396,25 @@ class BaseEluxRouter extends MultipleDispatcher {
     return this.rootStack.testBack(delta, rootOnly);
   }
 
-  partialLocationStateToNativeData(partialLocationState) {
-    const nativeLocation = this.locationTransform.partialLocationStateToNativeLocation(partialLocationState);
-    const nativeUrl = this.locationTransform.nativeLocationToNativeUrl(nativeLocation);
+  extendCurrent(params, pagename) {
     return {
-      nativeUrl,
-      nativeLocation
+      payload: deepMerge({}, this.routeState.params, params),
+      pagename: pagename || this.routeState.pagename
     };
   }
 
-  preAdditions(eluxUrlOrPayload) {
-    let partialLocationState;
-
-    if (typeof eluxUrlOrPayload === 'string') {
-      const eluxLocation = this.locationTransform.eluxUrlToEluxLocation(eluxUrlOrPayload);
-      partialLocationState = this.locationTransform.eluxLocationToPartialLocationState(eluxLocation);
-    } else {
-      const {
-        extendParams,
-        pagename
-      } = eluxUrlOrPayload;
-      const data = { ...eluxUrlOrPayload
-      };
-
-      if (extendParams === 'current') {
-        data.extendParams = this.routeState.params;
-        data.pagename = pagename || this.routeState.pagename;
-      }
-
-      partialLocationState = this.locationTransform.payloadToPartialLocationState(data);
-    }
-
-    return this.locationTransform.partialLocationStateToLocationState(partialLocationState);
+  relaunch(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._relaunch.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
   }
 
-  relaunch(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._relaunch.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
-  }
-
-  async _relaunch(eluxUrlOrPayload, root, nativeCaller) {
-    const location = await this.preAdditions(eluxUrlOrPayload);
+  async _relaunch(dataOrUrl, root, nativeCaller) {
+    const location = location$1(dataOrUrl);
+    const pagename = location.getPagename();
+    const params = await location.getParams();
     let key = '';
-    const routeState = { ...location,
+    const routeState = {
+      pagename,
+      params,
       action: 'RELAUNCH',
       key
     };
@@ -6344,25 +6422,20 @@ class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.relaunch(routeState).key;
+      key = this.rootStack.relaunch(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().relaunch(routeState).key;
+      key = this.rootStack.getCurrentItem().relaunch(location).key;
     }
 
     routeState.key = key;
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('relaunch', () => this.partialLocationStateToNativeData(routeState), key);
+      await this.nativeRouter.execute('relaunch', location, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {
@@ -6371,14 +6444,18 @@ class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  push(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._push.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
+  push(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._push.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
   }
 
-  async _push(eluxUrlOrPayload, root, nativeCaller) {
-    const location = await this.preAdditions(eluxUrlOrPayload);
+  async _push(dataOrUrl, root, nativeCaller) {
+    const location = location$1(dataOrUrl);
+    const pagename = location.getPagename();
+    const params = await location.getParams();
     let key = '';
-    const routeState = { ...location,
+    const routeState = {
+      pagename,
+      params,
       action: 'PUSH',
       key
     };
@@ -6386,25 +6463,20 @@ class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.push(routeState).key;
+      key = this.rootStack.push(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().push(routeState).key;
+      key = this.rootStack.getCurrentItem().push(location).key;
     }
 
     routeState.key = key;
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('push', () => this.partialLocationStateToNativeData(routeState), key);
+      await this.nativeRouter.execute('push', location, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
 
     if (root) {
@@ -6419,14 +6491,18 @@ class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  replace(eluxUrlOrPayload, root = false, nonblocking, nativeCaller = false) {
-    return this.addTask(this._replace.bind(this, eluxUrlOrPayload, root, nativeCaller), nonblocking);
+  replace(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._replace.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
   }
 
-  async _replace(eluxUrlOrPayload, root, nativeCaller) {
-    const location = await this.preAdditions(eluxUrlOrPayload);
+  async _replace(dataOrUrl, root, nativeCaller) {
+    const location = location$1(dataOrUrl);
+    const pagename = location.getPagename();
+    const params = await location.getParams();
     let key = '';
-    const routeState = { ...location,
+    const routeState = {
+      pagename,
+      params,
       action: 'REPLACE',
       key
     };
@@ -6434,25 +6510,20 @@ class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.replace(routeState).key;
+      key = this.rootStack.replace(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().replace(routeState).key;
+      key = this.rootStack.getCurrentItem().replace(location).key;
     }
 
     routeState.key = key;
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('replace', () => this.partialLocationStateToNativeData(routeState), key);
+      await this.nativeRouter.execute('replace', location, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {
@@ -6483,8 +6554,9 @@ class BaseEluxRouter extends MultipleDispatcher {
     }
 
     const key = record.key;
-    const pagename = record.pagename;
-    const params = deepMerge({}, record.params, options.payload);
+    const location = record.location;
+    const pagename = location.getPagename();
+    const params = deepMerge({}, location.getParams(), options.payload);
     const routeState = {
       key,
       pagename,
@@ -6503,19 +6575,14 @@ class BaseEluxRouter extends MultipleDispatcher {
       this.rootStack.getCurrentItem().back(steps[1]);
     }
 
-    let nativeData;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('back', () => this.partialLocationStateToNativeData(routeState), n, key);
+      await this.nativeRouter.execute('back', location, n, key);
     }
 
-    this._nativeData = nativeData;
+    this.location = location;
     this.routeState = routeState;
-    this._internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
     await this.dispatch('change', {
@@ -6570,23 +6637,6 @@ function testRouteChangeAction(routeState) {
     payload: [routeState]
   };
 }
-const defaultNativeLocationMap = {
-  in(nativeLocation) {
-    return nativeLocation;
-  },
-
-  out(nativeLocation) {
-    return nativeLocation;
-  }
-
-};
-function createRouteModule(moduleName, pagenameMap, nativeLocationMap = defaultNativeLocationMap, notfoundPagename = '/404', paramsKey = '_') {
-  const locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  const routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
-  return { ...routeModule,
-    locationTransform
-  };
-}
 
 const appMeta = {
   router: null,
@@ -6602,9 +6652,8 @@ function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
+function createBaseMP(ins, router, render, middlewares = []) {
+  appMeta.router = router;
   return {
     useStore({
       storeCreator,
@@ -6612,8 +6661,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [])
     }) {
       return Object.assign(ins, {
         render() {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           const baseStore = storeCreator(storeOptions);
           const {
             store
@@ -6634,9 +6681,8 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = [])
 
   };
 }
-function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
+function createBaseApp(ins, router, render, middlewares = []) {
+  appMeta.router = router;
   return {
     useStore({
       storeCreator,
@@ -6652,8 +6698,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
             state,
             components = []
           } = env[ssrKey] || {};
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(routeState => {
             storeOptions.initState = { ...storeOptions.initState,
               [routeConfig.RouteModuleName]: routeState,
@@ -6681,9 +6725,8 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []
 
   };
 }
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
+function createBaseSSR(ins, router, render, middlewares = []) {
+  appMeta.router = router;
   return {
     useStore({
       storeCreator,
@@ -6695,8 +6738,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []
           ssrKey = 'eluxInitStore',
           viewName = 'main'
         } = {}) {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(routeState => {
             storeOptions.initState = { ...storeOptions.initState,
               [routeConfig.RouteModuleName]: routeState
@@ -7389,7 +7430,7 @@ function createServerHistory() {
 }
 
 class BrowserNativeRouter extends BaseNativeRouter {
-  constructor(url) {
+  constructor() {
     super();
 
     _defineProperty(this, "_unlistenHistory", void 0);
@@ -7402,22 +7443,21 @@ class BrowserNativeRouter extends BaseNativeRouter {
       this._history = createBrowserHistory();
     }
 
-    this._unlistenHistory = this._history.block((location, action) => {
+    this._unlistenHistory = this._history.block((locationData, action) => {
       if (action === 'POP') {
         env.setTimeout(() => this.eluxRouter.back(1), 100);
         return false;
       }
 
-      const key = this.getKey(location);
+      const key = this.getKey(locationData);
       const changed = this.onChange(key);
 
       if (changed) {
         const {
           pathname = '',
-          search = '',
-          hash = ''
-        } = location;
-        const url = [pathname, search, hash].join('');
+          search = ''
+        } = locationData;
+        const url = ['n:/', pathname, search].join('');
         let callback;
 
         if (action === 'REPLACE') {
@@ -7436,53 +7476,45 @@ class BrowserNativeRouter extends BaseNativeRouter {
     });
   }
 
-  getKey(location) {
-    return location.state || '';
+  getKey(locationData) {
+    return locationData.state || '';
   }
 
-  push(getNativeData, key) {
+  push(location, key) {
     if (!env.isServer) {
-      const nativeData = getNativeData();
+      this._history.push(location.getNativeUrl(true), key);
 
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
   }
 
-  replace(getNativeData, key) {
+  replace(location, key) {
     if (!env.isServer) {
-      const nativeData = getNativeData();
+      this._history.push(location.getNativeUrl(true), key);
 
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
   }
 
-  relaunch(getNativeData, key) {
+  relaunch(location, key) {
     if (!env.isServer) {
-      const nativeData = getNativeData();
+      this._history.push(location.getNativeUrl(true), key);
 
-      this._history.push(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
   }
 
-  back(getNativeData, n, key) {
+  back(location, n, key) {
     if (!env.isServer) {
-      const nativeData = getNativeData();
+      this._history.replace(location.getNativeUrl(true), key);
 
-      this._history.replace(nativeData.nativeUrl, key);
-
-      return nativeData;
+      return true;
     }
 
     return undefined;
@@ -7494,14 +7526,14 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
 }
 class EluxRouter extends BaseEluxRouter {
-  constructor(url, browserNativeRouter, locationTransform, nativeData) {
-    super(url, browserNativeRouter, locationTransform, nativeData);
+  constructor(nativeUrl, browserNativeRouter, nativeData) {
+    super(nativeUrl, browserNativeRouter, nativeData);
   }
 
 }
-function createRouter(url, locationTransform, nativeData) {
-  const browserNativeRouter = new BrowserNativeRouter(url);
-  const router = new EluxRouter(url, browserNativeRouter, locationTransform, nativeData);
+function createRouter(nativeUrl, nativeData) {
+  const browserNativeRouter = new BrowserNativeRouter();
+  const router = new EluxRouter(nativeUrl, browserNativeRouter, nativeData);
   return router;
 }
 
@@ -7514,11 +7546,15 @@ function setConfig(conf) {
   setUserConfig(conf);
 }
 const createApp = (moduleGetter, middlewares) => {
-  const url = [location.pathname, location.search, location.hash].join('');
-  return createBaseApp({}, locationTransform => createRouter(url, locationTransform, {}), renderToDocument, moduleGetter, middlewares);
+  defineModuleGetter(moduleGetter);
+  const url = ['n:/', location.pathname, location.search].join('');
+  const router = createRouter(url, {});
+  return createBaseApp({}, router, renderToDocument, middlewares);
 };
 const createSSR = (moduleGetter, url, nativeData, middlewares) => {
-  return createBaseSSR({}, locationTransform => createRouter(url, locationTransform, nativeData), renderToString, moduleGetter, middlewares);
+  defineModuleGetter(moduleGetter);
+  const router = createRouter('n:/' + url, nativeData);
+  return createBaseSSR({}, router, renderToString, middlewares);
 };
 
 setAppConfig({
@@ -7529,4 +7565,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepClone, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reducer, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepClone, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, location$1 as location, logger, modelHotReplacement, mutation, patchActions, reducer, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };

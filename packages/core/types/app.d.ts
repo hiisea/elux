@@ -5,4 +5,4 @@ export declare function initApp<ST extends BStore = BStore>(router: ICoreRouter,
     setup: Promise<void>;
 };
 export declare function reinitApp(store: IStore): Promise<void>;
-export declare function forkStore<T extends IStore>(originalStore: T, routeState: ICoreRouteState): T;
+export declare function forkStore<T extends IStore, S extends ICoreRouteState>(originalStore: T, routeState: S): T;

@@ -1,3 +1,4 @@
+import { defineModuleGetter } from '@elux/core';
 import { setReactComponentsConfig, loadComponent, useRouter } from '@elux/react-components';
 import { renderToString, renderToDocument } from '@elux/react-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
@@ -13,13 +14,13 @@ export function setConfig(conf) {
   setUserConfig(conf);
 }
 export var createApp = function createApp(moduleGetter, middlewares) {
-  var url = [location.pathname, location.search, location.hash].join('');
-  return createBaseApp({}, function (locationTransform) {
-    return createRouter(url, locationTransform, {});
-  }, renderToDocument, moduleGetter, middlewares);
+  defineModuleGetter(moduleGetter);
+  var url = ['n:/', location.pathname, location.search].join('');
+  var router = createRouter(url, {});
+  return createBaseApp({}, router, renderToDocument, middlewares);
 };
 export var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
-  return createBaseSSR({}, function (locationTransform) {
-    return createRouter(url, locationTransform, nativeData);
-  }, renderToString, moduleGetter, middlewares);
+  defineModuleGetter(moduleGetter);
+  var router = createRouter('n:/' + url, nativeData);
+  return createBaseSSR({}, router, renderToString, middlewares);
 };

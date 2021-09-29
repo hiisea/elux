@@ -14,6 +14,8 @@ var _exportNames = {
 exports.setConfig = setConfig;
 exports.createSSR = exports.createApp = exports.Link = exports.Else = exports.Switch = exports.DocumentHead = void 0;
 
+var _core = require("@elux/core");
+
 var _reactComponents = require("@elux/react-components");
 
 exports.loadComponent = _reactComponents.loadComponent;
@@ -46,18 +48,18 @@ function setConfig(conf) {
 }
 
 var createApp = function createApp(moduleGetter, middlewares) {
-  var url = [location.pathname, location.search, location.hash].join('');
-  return (0, _app.createBaseApp)({}, function (locationTransform) {
-    return (0, _routeBrowser.createRouter)(url, locationTransform, {});
-  }, _stage.renderToDocument, moduleGetter, middlewares);
+  (0, _core.defineModuleGetter)(moduleGetter);
+  var url = ['n:/', location.pathname, location.search].join('');
+  var router = (0, _routeBrowser.createRouter)(url, {});
+  return (0, _app.createBaseApp)({}, router, _stage.renderToDocument, middlewares);
 };
 
 exports.createApp = createApp;
 
 var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
-  return (0, _app.createBaseSSR)({}, function (locationTransform) {
-    return (0, _routeBrowser.createRouter)(url, locationTransform, nativeData);
-  }, _stage.renderToString, moduleGetter, middlewares);
+  (0, _core.defineModuleGetter)(moduleGetter);
+  var router = (0, _routeBrowser.createRouter)('n:/' + url, nativeData);
+  return (0, _app.createBaseSSR)({}, router, _stage.renderToString, middlewares);
 };
 
 exports.createSSR = createSSR;

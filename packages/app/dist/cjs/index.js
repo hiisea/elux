@@ -9,7 +9,7 @@ exports.createBaseApp = createBaseApp;
 exports.createBaseSSR = createBaseSSR;
 exports.patchActions = patchActions;
 exports.getApp = getApp;
-exports.setAppConfig = exports.appConfig = exports.createRouteModule = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.modelHotReplacement = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.mutation = exports.action = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
+exports.setAppConfig = exports.appConfig = exports.safeJsonParse = exports.createRouteModule = exports.location = exports.RouteActionTypes = exports.BaseModuleHandlers = exports.EmptyModuleHandlers = exports.modelHotReplacement = exports.exportComponent = exports.exportView = exports.delayPromise = exports.setProcessedError = exports.isProcessedError = exports.exportModule = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.clientSide = exports.serverSide = exports.isServer = exports.logger = exports.setLoading = exports.mutation = exports.action = exports.reducer = exports.errorAction = exports.effect = exports.LoadingState = exports.ActionTypes = void 0;
 
 var _extends4 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -44,7 +44,9 @@ exports.BaseModuleHandlers = _core.CoreModuleHandlers;
 var _route = require("@elux/route");
 
 exports.RouteActionTypes = _route.RouteActionTypes;
+exports.location = _route.location;
 exports.createRouteModule = _route.createRouteModule;
+exports.safeJsonParse = _route.safeJsonParse;
 var appMeta = {
   router: null,
   SSRTPL: _core.env.isServer ? _core.env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
@@ -63,13 +65,12 @@ function setUserConfig(conf) {
   (0, _route.setRouteConfig)(conf);
 }
 
-function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
+function createBaseMP(ins, router, render, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  (0, _core.defineModuleGetter)(moduleGetter);
-  var routeModule = (0, _core.getModule)(_route.routeConfig.RouteModuleName);
+  appMeta.router = router;
   return {
     useStore: function useStore(_ref) {
       var storeCreator = _ref.storeCreator,
@@ -86,8 +87,6 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
 
           return render;
         }(function () {
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           var baseStore = storeCreator(storeOptions);
 
           var _initApp = (0, _core.initApp)(router, baseStore, middlewares),
@@ -108,13 +107,12 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
   };
 }
 
-function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
+function createBaseApp(ins, router, render, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  (0, _core.defineModuleGetter)(moduleGetter);
-  var routeModule = (0, _core.getModule)(_route.routeConfig.RouteModuleName);
+  appMeta.router = router;
   return {
     useStore: function useStore(_ref2) {
       var storeCreator = _ref2.storeCreator,
@@ -144,8 +142,6 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
               _ref4$components = _ref4.components,
               components = _ref4$components === void 0 ? [] : _ref4$components;
 
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(function (routeState) {
             var _extends2;
 
@@ -172,13 +168,12 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
   };
 }
 
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
+function createBaseSSR(ins, router, render, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  (0, _core.defineModuleGetter)(moduleGetter);
-  var routeModule = (0, _core.getModule)(_route.routeConfig.RouteModuleName);
+  appMeta.router = router;
   return {
     useStore: function useStore(_ref5) {
       var storeCreator = _ref5.storeCreator,
@@ -203,8 +198,6 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
               _ref6$viewName = _ref6.viewName,
               viewName = _ref6$viewName === void 0 ? 'main' : _ref6$viewName;
 
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
           return router.initialize.then(function (routeState) {
             var _extends3;
 

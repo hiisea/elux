@@ -1,30 +1,28 @@
 import { h, inject } from 'vue';
 import { EluxContextKey } from './base';
-export default function (props, context) {
+export default function ({
+  onClick: _onClick,
+  href,
+  route,
+  action = 'push',
+  root,
+  ...props
+}, context) {
   const {
     router
   } = inject(EluxContextKey, {
     documentHead: ''
   });
-  const {
-    onClick,
-    href,
-    route,
-    action = 'push',
-    root,
-    ...rest
-  } = props;
-  const newProps = { ...rest,
-    onClick: event => {
-      event.preventDefault();
-      onClick && onClick(event);
-      router[action](route, root);
-    }
+
+  props['onClick'] = event => {
+    event.preventDefault();
+    _onClick && _onClick(event);
+    route && router[action](route, root);
   };
 
   if (href) {
-    return h('a', newProps, context.slots.default());
+    return h('a', props, context.slots.default());
   } else {
-    return h('div', newProps, context.slots.default());
+    return h('div', props, context.slots.default());
   }
 }

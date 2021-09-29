@@ -54,20 +54,20 @@ function setConfig(conf) {
 }
 
 var createApp = function createApp(moduleGetter, middlewares) {
-  var url = [location.pathname, location.search, location.hash].join('');
+  (0, _core.defineModuleGetter)(moduleGetter);
+  var url = ['n:/', location.pathname, location.search].join('');
   var app = (0, _vue.createApp)(_stage.Router);
-  return (0, _app.createBaseApp)(app, function (locationTransform) {
-    return (0, _routeBrowser.createRouter)(url, locationTransform, {});
-  }, _stage.renderToDocument, moduleGetter, middlewares);
+  var router = (0, _routeBrowser.createRouter)(url, {});
+  return (0, _app.createBaseApp)(app, router, _stage.renderToDocument, middlewares);
 };
 
 exports.createApp = createApp;
 
 var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+  (0, _core.defineModuleGetter)(moduleGetter);
   var app = (0, _vue.createSSRApp)(_stage.Router);
-  return (0, _app.createBaseSSR)(app, function (locationTransform) {
-    return (0, _routeBrowser.createRouter)(url, locationTransform, nativeData);
-  }, _stage.renderToString, moduleGetter, middlewares);
+  var router = (0, _routeBrowser.createRouter)('n:/' + url, nativeData);
+  return (0, _app.createBaseSSR)(app, router, _stage.renderToString, middlewares);
 };
 
 exports.createSSR = createSSR;
