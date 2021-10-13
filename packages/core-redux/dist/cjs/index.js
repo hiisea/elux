@@ -16,7 +16,11 @@ var reduxReducer = function reduxReducer(state, action) {
   return (0, _extends2.default)({}, state, action.state);
 };
 
-function storeCreator(storeOptions) {
+function storeCreator(storeOptions, id) {
+  if (id === void 0) {
+    id = 0;
+  }
+
   var _storeOptions$initSta = storeOptions.initState,
       initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta,
       _storeOptions$enhance = storeOptions.enhancers,
@@ -29,13 +33,18 @@ function storeCreator(storeOptions) {
     enhancers.push(middlewareEnhancer);
   }
 
-  if (process.env.NODE_ENV === 'development' && _core.env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(_core.env.__REDUX_DEVTOOLS_EXTENSION__(_core.env.__REDUX_DEVTOOLS_EXTENSION__OPTIONS));
+  if (id === 0 && process.env.NODE_ENV === 'development' && _core.env.__REDUX_DEVTOOLS_EXTENSION__) {
+    enhancers.push(_core.env.__REDUX_DEVTOOLS_EXTENSION__());
   }
 
   var store = (0, _redux.createStore)(reduxReducer, initState, enhancers.length > 1 ? _redux.compose.apply(void 0, enhancers) : enhancers[0]);
   var dispatch = store.dispatch;
   var reduxStore = store;
+  reduxStore.id = id;
+  reduxStore.builder = {
+    storeCreator: storeCreator,
+    storeOptions: storeOptions
+  };
 
   reduxStore.update = function (actionName, state, actionData) {
     dispatch({
@@ -43,6 +52,10 @@ function storeCreator(storeOptions) {
       state: state,
       payload: actionData
     });
+  };
+
+  reduxStore.destroy = function () {
+    return;
   };
 
   return reduxStore;

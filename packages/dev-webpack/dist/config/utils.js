@@ -12,7 +12,6 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const EslintWebpackPlugin = require('eslint-webpack-plugin');
 const StylelintPlugin = require('stylelint-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const ModuleFederationPlugin = require('../../libs/ModuleFederationPlugin');
@@ -372,21 +371,15 @@ function moduleExports({ cache, sourceMap, nodeEnv, rootPath, srcPath, distPath,
                 }),
             enableEslintPlugin && new EslintWebpackPlugin({ cache: true, extensions: scriptExtensions }),
             enableStylelintPlugin && new StylelintPlugin({ files: `src/**/*.{${cssExtensions.join(',')}}` }),
+            new webpack_1.default.DefinePlugin({
+                'process.env.PROJ_ENV': JSON.stringify(globalVar.client || {}),
+            }),
             new HtmlWebpackPlugin({
+                clientPublicPath: clientPublicPath,
                 minify: false,
                 inject: 'body',
                 template: path_1.default.join(publicPath, './client/index.html'),
             }),
-            new HtmlReplaceWebpackPlugin([
-                {
-                    pattern: '$$ClientPublicPath$$',
-                    replacement: clientPublicPath,
-                },
-                {
-                    pattern: '$$ClientGlobalVar$$',
-                    replacement: JSON.stringify(globalVar.client || {}),
-                },
-            ]),
             isProdModel &&
                 new MiniCssExtractPlugin({
                     ignoreOrder: true,
@@ -485,10 +478,16 @@ function moduleExports({ cache, sourceMap, nodeEnv, rootPath, srcPath, distPath,
                     },
                 ].filter(Boolean),
             },
-            plugins: [isVue && new VueLoaderPlugin(), SsrPlugin.server, new webpack_1.default.ProgressPlugin()].filter(Boolean),
+            plugins: [
+                isVue && new VueLoaderPlugin(),
+                SsrPlugin.server,
+                new webpack_1.default.DefinePlugin({
+                    'process.env.PROJ_ENV': JSON.stringify(globalVar.server || {}),
+                }),
+                new webpack_1.default.ProgressPlugin(),
+            ].filter(Boolean),
         }
         : { name: 'server' };
-    global['ENV'] = globalVar.server;
     const devServerConfig = {
         static: [
             { publicPath: clientPublicPath, directory: path_1.default.join(envPath, './client') },

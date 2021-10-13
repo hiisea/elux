@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
-exports.isPlainObject = isPlainObject;
+exports.deepClone = deepClone;
 exports.deepMerge = deepMerge;
 exports.warn = warn;
 exports.isPromise = isPromise;
@@ -87,9 +87,17 @@ var MultipleDispatcher = function () {
     var listenerMap = this.listenerMap[name];
 
     if (listenerMap) {
-      Object.keys(listenerMap).forEach(function (id) {
-        listenerMap[id](data);
+      var hasPromise = false;
+      var arr = Object.keys(listenerMap).map(function (id) {
+        var result = listenerMap[id](data);
+
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   };
 
@@ -173,7 +181,11 @@ var TaskCounter = function (_SingleDispatcher) {
 
 exports.TaskCounter = TaskCounter;
 
-function isPlainObject(obj) {
+function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function isObject(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -182,8 +194,8 @@ function __deepMerge(optimize, target, inject) {
     var src = target[key];
     var val = inject[key];
 
-    if (isPlainObject(val)) {
-      if (isPlainObject(src)) {
+    if (isObject(val)) {
+      if (isObject(src)) {
         target[key] = __deepMerge(optimize, src, val);
       } else {
         target[key] = optimize ? val : __deepMerge(optimize, {}, val);
@@ -200,44 +212,42 @@ function deepMerge(target) {
     args[_key - 1] = arguments[_key];
   }
 
-  if (!isPlainObject(target)) {
-    target = {};
-  }
-
   args = args.filter(function (item) {
-    return isPlainObject(item) && Object.keys(item).length;
+    return isObject(item) && Object.keys(item).length;
   });
 
-  if (args.length < 1) {
+  if (args.length === 0) {
     return target;
   }
 
+  if (!isObject(target)) {
+    target = {};
+  }
+
   args.forEach(function (inject, index) {
-    if (isPlainObject(inject)) {
-      var lastArg = false;
-      var last2Arg = null;
+    var lastArg = false;
+    var last2Arg = null;
 
-      if (index === args.length - 1) {
-        lastArg = true;
-      } else if (index === args.length - 2) {
-        last2Arg = args[index + 1];
-      }
-
-      Object.keys(inject).forEach(function (key) {
-        var src = target[key];
-        var val = inject[key];
-
-        if (isPlainObject(val)) {
-          if (isPlainObject(src)) {
-            target[key] = __deepMerge(lastArg, src, val);
-          } else {
-            target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
-          }
-        } else {
-          target[key] = val;
-        }
-      });
+    if (index === args.length - 1) {
+      lastArg = true;
+    } else if (index === args.length - 2) {
+      last2Arg = args[index + 1];
     }
+
+    Object.keys(inject).forEach(function (key) {
+      var src = target[key];
+      var val = inject[key];
+
+      if (isObject(val)) {
+        if (isObject(src)) {
+          target[key] = __deepMerge(lastArg, src, val);
+        } else {
+          target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
+        }
+      } else {
+        target[key] = val;
+      }
+    });
   });
   return target;
 }

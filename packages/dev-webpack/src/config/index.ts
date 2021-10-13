@@ -5,9 +5,32 @@ import path from 'path';
 // import defaultGateway from 'default-gateway';
 import WebpackDevServer from 'webpack-dev-server';
 import TerserPlugin from 'terser-webpack-plugin';
+import {networkInterfaces} from 'os';
 import chalk from 'chalk';
 import webpack, {Compiler, MultiCompiler} from 'webpack';
 import genConfig from './gen';
+
+function getLocalIP() {
+  let result = 'localhost';
+  const interfaces = networkInterfaces();
+  for (const devName in interfaces) {
+    const isEnd = interfaces[devName]?.some((item) => {
+      // 取IPv4, 不为127.0.0.1的内网ip
+      if (item.family === 'IPv4' && item.address !== '127.0.0.1' && !item.internal) {
+        result = item.address;
+        return true;
+      }
+      return false;
+    });
+    // 若获取到ip, 结束遍历
+    if (isEnd) {
+      break;
+    }
+  }
+  return result;
+}
+
+const localIP = getLocalIP();
 
 export function dev(projEnvName: string, port?: number): void {
   const config = genConfig(process.cwd(), projEnvName, 'development', port);
@@ -63,6 +86,7 @@ export function dev(projEnvName: string, port?: number): void {
   const host = devServerConfig.host || '0.0.0.0';
   const publicPath = devServerConfig.dev?.publicPath || '/';
   const localUrl = `${protocol}://localhost:${serverPort}${publicPath}`;
+  const localIpUrl = `${protocol}://${localIP}:${serverPort}${publicPath}`;
 
   const devServer = new WebpackDevServer(webpackCompiler, devServerConfig);
 
@@ -90,8 +114,9 @@ export function dev(projEnvName: string, port?: number): void {
 *                                     *
 ***************************************
 `);
+      console.info(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localUrl)}`);
       console.info(
-        `.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localUrl)} \n`
+        `.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localIpUrl)} \n`
       );
       console.info(`WebpackCache: ${chalk.blue(cache)}`);
       if (cache !== 'filesystem') {

@@ -1,33 +1,32 @@
 import React from 'react';
-import { env } from '@elux/core';
-import { EluxContextComponent, reactComponentsConfig } from './base';
 import { hydrate, render } from 'react-dom';
-export function renderToMP(store, eluxContext) {
+import { env } from '@elux/core';
+import { EluxContextComponent } from './base';
+import { Router } from './Router';
+export function renderToMP(eluxContext) {
   const Component = ({
     children
   }) => React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
-  }, React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, children));
+  }, children);
 
   return Component;
 }
-export function renderToDocument(id, APPView, store, eluxContext, fromSSR) {
+export function renderToDocument(id, APPView, eluxContext, fromSSR) {
   const renderFun = fromSSR ? hydrate : render;
   const panel = env.document.getElementById(id);
   renderFun(React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
-  }, React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement(APPView, null))), panel);
+  }, React.createElement(Router, {
+    page: APPView
+  })), panel);
 }
-export function renderToString(id, APPView, store, eluxContext) {
+export function renderToString(id, APPView, eluxContext) {
   const html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
     value: eluxContext
-  }, React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement(APPView, null))));
+  }, React.createElement(Router, {
+    page: APPView
+  })));
 
   return Promise.resolve(html);
 }

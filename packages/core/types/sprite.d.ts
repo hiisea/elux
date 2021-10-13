@@ -13,11 +13,11 @@ export declare class MultipleDispatcher<T extends Record<string, any> = {}> {
     protected listenerId: number;
     protected listenerMap: {
         [N in keyof T]?: {
-            [id: string]: (data: T[N]) => void;
+            [id: string]: (data: T[N]) => void | Promise<void>;
         };
     };
-    addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void): () => void;
-    dispatch<N extends keyof T>(name: N, data: T[N]): void;
+    addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void | Promise<void>): () => void;
+    dispatch<N extends keyof T>(name: N, data: T[N]): void | Promise<void[]>;
 }
 export declare class TaskCounter extends SingleDispatcher<LoadingState> {
     deferSecond: number;
@@ -30,7 +30,7 @@ export declare class TaskCounter extends SingleDispatcher<LoadingState> {
     addItem(promise: Promise<any>, note?: string): Promise<any>;
     private completeItem;
 }
-export declare function isPlainObject(obj: any): Boolean;
+export declare function deepClone<T>(data: T): T;
 export declare function deepMerge(target: {
     [key: string]: any;
 }, ...args: any[]): any;

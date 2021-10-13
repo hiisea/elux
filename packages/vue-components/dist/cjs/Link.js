@@ -5,46 +5,40 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 exports.__esModule = true;
 exports.default = _default;
 
-var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
-
 var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/objectWithoutPropertiesLoose"));
 
 var _vue = require("vue");
 
 var _base = require("./base");
 
-function _default(props, context) {
+function _default(_ref, context) {
+  var _onClick = _ref.onClick,
+      href = _ref.href,
+      route = _ref.route,
+      _ref$action = _ref.action,
+      action = _ref$action === void 0 ? 'push' : _ref$action,
+      root = _ref.root,
+      props = (0, _objectWithoutPropertiesLoose2.default)(_ref, ["onClick", "href", "route", "action", "root"]);
+
   var _inject = (0, _vue.inject)(_base.EluxContextKey, {
     documentHead: ''
   }),
       router = _inject.router;
 
-  var onClick = props.onClick,
-      href = props.href,
-      url = props.url,
-      replace = props.replace,
-      rest = (0, _objectWithoutPropertiesLoose2.default)(props, ["onClick", "href", "url", "replace"]);
-  var newProps = (0, _extends2.default)({}, rest, {
-    onClick: function (_onClick) {
-      function onClick(_x) {
-        return _onClick.apply(this, arguments);
-      }
+  props['onClick'] = function (event) {
+    event.preventDefault();
+    _onClick && _onClick(event);
+    route && router[action](route, root);
+  };
 
-      onClick.toString = function () {
-        return _onClick.toString();
-      };
-
-      return onClick;
-    }(function (event) {
-      event.preventDefault();
-      onClick && onClick(event);
-      replace ? router.replace(url) : router.push(url);
-    })
-  });
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
 
   if (href) {
-    return (0, _vue.h)('a', newProps, context.slots);
+    return (0, _vue.h)('a', props, context.slots.default());
   } else {
-    return (0, _vue.h)('div', newProps, context.slots);
+    return (0, _vue.h)('div', props, context.slots.default());
   }
 }

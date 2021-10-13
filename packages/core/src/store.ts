@@ -4,19 +4,19 @@ import {
   Action,
   ActionHandler,
   ActionHandlerList,
-  ActionTypes,
   coreConfig,
-  errorAction,
   MetaData,
-  IStore,
-  BStore,
-  BStoreOptions,
   IModuleHandlers,
-  Dispatch,
+  BStore,
+  IStore,
+  IStoreMiddleware,
   GetState,
   State,
+  ICoreRouter,
 } from './basic';
+import {ActionTypes, errorAction} from './actions';
 import {loadModel} from './inject';
+import {routeMiddleware} from './router';
 
 const errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error: any): boolean {
@@ -35,8 +35,6 @@ export function getActionData(action: Action): any[] {
   return Array.isArray(action.payload) ? action.payload : [];
 }
 
-export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
-
 function compose(...funcs: Function[]) {
   if (funcs.length === 0) {
     return (arg: any) => arg;
@@ -49,30 +47,45 @@ function compose(...funcs: Function[]) {
   return funcs.reduce((a, b) => (...args: any[]) => a(b(...args)));
 }
 
-export function enhanceStore<S extends State = any>(
-  baseStore: BStore,
-  middlewares?: IStoreMiddleware[],
-  injectedModules: {[moduleName: string]: IModuleHandlers} = {}
-): IStore<S> {
+export function enhanceStore<S extends State = any>(baseStore: BStore, router: ICoreRouter, middlewares?: IStoreMiddleware[]): IStore<S> {
   const store: IStore<S> = baseStore as any;
   const _getState = baseStore.getState;
   const getState: GetState<S> = (moduleName?: string) => {
     const state = _getState();
     return moduleName ? state[moduleName] : state;
   };
+  store.router = router;
   store.getState = getState;
-  store.injectedModules = injectedModules;
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  const injectedModules = store.injectedModules;
+  store.options = {
+    middlewares,
+  };
+  const _destroy = baseStore.destroy;
+  store.destroy = () => {
+    _destroy();
+    Object.keys(injectedModules).forEach((moduleName) => {
+      injectedModules[moduleName].destroy();
+    });
+  };
   const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
-  const update = baseStore.update;
+  const _update = baseStore.update;
+  baseStore.update = (actionName: string, state: Partial<S>, actionData: any[]) => {
+    _update(actionName, state, actionData);
+    router.latestState = {...router.latestState, ...state};
+  };
   store.getCurrentActionName = () => currentData.actionName;
   store.getCurrentState = (moduleName?: string) => {
     const state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
   };
+
   let dispatch = (action: Action) => {
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
   };
   const middlewareAPI = {
+    store,
     getState,
     dispatch: (action: Action) => dispatch(action),
   };
@@ -151,7 +164,7 @@ export function enhanceStore<S extends State = any>(
     if (handlerModuleNames.length > 0) {
       const orderList: string[] = [];
       handlerModuleNames.forEach((moduleName) => {
-        if (moduleName === MetaData.appModuleName) {
+        if (moduleName === coreConfig.AppModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -178,7 +191,7 @@ export function enhanceStore<S extends State = any>(
             }
           }
         });
-        update(actionName, newState as S, actionData);
+        store.update(actionName, newState as S, actionData);
       } else {
         const result: Promise<any>[] = [];
         orderList.forEach((moduleName) => {
@@ -200,14 +213,9 @@ export function enhanceStore<S extends State = any>(
     respondHandler(action, true, prevData);
     return respondHandler(action, false, prevData);
   }
-  const arr = middlewares ? [preMiddleware, ...middlewares] : [preMiddleware];
-  const chain = arr.map((middleware) => middleware(middlewareAPI));
+
+  const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map((middleware) => middleware(middlewareAPI));
   dispatch = compose(...chain)(_dispatch);
   store.dispatch = dispatch;
   return store;
-}
-
-export interface StoreBuilder<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore> {
-  storeOptions: O;
-  storeCreator: (options: O) => B;
 }

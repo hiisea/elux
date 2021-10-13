@@ -1,26 +1,34 @@
 import { createSSRApp, createApp as createVue } from 'vue';
-import { setCoreConfig } from '@elux/core';
-import { setVueComponentsConfig, loadComponent } from '@elux/vue-components';
-import { renderToString, renderToDocument, RootComponent } from '@elux/vue-components/stage';
+import { setCoreConfig, defineModuleGetter } from '@elux/core';
+import { setVueComponentsConfig, loadComponent, useRouter, useStore } from '@elux/vue-components';
+import { renderToString, renderToDocument, Router } from '@elux/vue-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
-import { createRouter } from '@elux/route-browser';
-export * from '@elux/vue-components';
+import { createRouter, createBrowserHistory, createServerHistory } from '@elux/route-browser';
+export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/vue-components';
 export * from '@elux/app';
 setCoreConfig({
   MutableData: true
 });
 setAppConfig({
-  loadComponent
+  loadComponent,
+  useRouter,
+  useStore
 });
 export function setConfig(conf) {
   setVueComponentsConfig(conf);
   setUserConfig(conf);
 }
-export const createApp = (moduleGetter, middlewares, appModuleName) => {
-  const app = createVue(RootComponent);
-  return createBaseApp(app, locationTransform => createRouter('Browser', locationTransform), renderToDocument, moduleGetter, middlewares, appModuleName);
+export const createApp = (moduleGetter, middlewares) => {
+  defineModuleGetter(moduleGetter);
+  const app = createVue(Router);
+  const history = createBrowserHistory();
+  const router = createRouter(history, {});
+  return createBaseApp(app, router, renderToDocument, middlewares);
 };
-export const createSSR = (moduleGetter, url, middlewares, appModuleName) => {
-  const app = createSSRApp(RootComponent);
-  return createBaseSSR(app, locationTransform => createRouter(url, locationTransform), renderToString, moduleGetter, middlewares, appModuleName);
+export const createSSR = (moduleGetter, url, nativeData, middlewares) => {
+  defineModuleGetter(moduleGetter);
+  const app = createSSRApp(Router);
+  const history = createServerHistory(url);
+  const router = createRouter(history, nativeData);
+  return createBaseSSR(app, router, renderToString, middlewares);
 };

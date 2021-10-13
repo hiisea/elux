@@ -1,24 +1,23 @@
-import {isPromise} from './sprite';
+import {isPromise, warn, deepClone} from './sprite';
 import {
-  Action,
   EluxComponent,
   isEluxComponent,
   IModuleHandlers,
-  injectActions,
   CommonModule,
   MetaData,
   ModuleGetter,
-  IStore,
   FacadeMap,
+  IStore,
   coreConfig,
-  reducer,
-  mergeState,
-  moduleInitAction,
-  moduleReInitAction,
+  ActionHandlerMap,
+  ActionHandler,
+  ActionHandlerList,
 } from './basic';
+import {moduleInitAction} from './actions';
+
 import env from './env';
 
-type Handler<F> = F extends (...args: infer P) => any
+export type Handler<F> = F extends (...args: infer P) => any
   ? (
       ...args: P
     ) => {
@@ -32,18 +31,8 @@ type Actions<T> = Pick<
   }[keyof T]
 >;
 
-type HandlerThis<T> = T extends (...args: infer P) => any
-  ? (
-      ...args: P
-    ) => {
-      type: string;
-    }
-  : undefined;
-
-type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
-
-export function getModuleGetter(): ModuleGetter {
-  return MetaData.moduleGetter;
+export interface IModuleHandlersClass<H = IModuleHandlers> {
+  new (moduleName: string, store: IStore, latestState: any, preState: any): H;
 }
 export function exportModule<
   N extends string,
@@ -52,9 +41,7 @@ export function exportModule<
   CS extends Record<string, EluxComponent | (() => Promise<EluxComponent>)>
 >(
   moduleName: N,
-  ModuleHandles: {
-    new (moduleName: string): H;
-  },
+  ModuleHandlers: IModuleHandlersClass<H>,
   params: P,
   components: CS
 ): {
@@ -76,16 +63,13 @@ export function exportModule<
   });
   const model = (store: IStore) => {
     if (!store.injectedModules[moduleName]) {
-      const moduleHandles = new ModuleHandles(moduleName);
+      const {latestState} = store.router;
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
-      moduleHandles.store = store;
       injectActions(moduleName, moduleHandles as any);
-      const initState = moduleHandles.initState;
-      const preModuleState = store.getState(moduleName);
-      if (preModuleState) {
-        return store.dispatch(moduleReInitAction(moduleName, initState));
-      }
-      return store.dispatch(moduleInitAction(moduleName, initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
     return undefined;
   };
@@ -98,7 +82,38 @@ export function exportModule<
     actions: undefined as any,
   };
 }
-
+export function modelHotReplacement(moduleName: string, ModuleHandlers: IModuleHandlersClass): void {
+  const model = (store: IStore) => {
+    if (!store.injectedModules[moduleName]) {
+      const {latestState} = store.router;
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles as any);
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
+    }
+    return undefined;
+  };
+  const moduleCache = MetaData.moduleCaches[moduleName];
+  if (moduleCache && moduleCache['model']) {
+    (moduleCache as CommonModule).model = model;
+  }
+  const store = MetaData.currentRouter.getCurrentStore();
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}) as any, true);
+  }
+  const stores = MetaData.currentRouter.getStoreList();
+  stores.forEach((store) => {
+    if (store.injectedModules[moduleName]) {
+      const ins = new ModuleHandlers(moduleName, store, {}, {}) as any;
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log(`[HMR] @medux Updated model: ${moduleName}`);
+}
 export function getModule(moduleName: string): Promise<CommonModule> | CommonModule {
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName]!;
@@ -137,6 +152,7 @@ export function getModuleList(moduleNames: string[]): CommonModule[] | Promise<C
     return list as CommonModule[];
   }
 }
+
 export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: IStore): void | Promise<void> {
   const moduleOrPromise = getModule(moduleName as string);
   if (isPromise(moduleOrPromise)) {
@@ -199,7 +215,7 @@ export function loadComponet(
 ): EluxComponent | null | Promise<EluxComponent | null> {
   const promiseOrComponent = getComponet(moduleName, componentName);
   const callback = (component: EluxComponent) => {
-    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
       if (env.isServer) {
         return null;
       }
@@ -220,81 +236,6 @@ export function loadComponet(
 
 export function getCachedModules(): Record<string, undefined | CommonModule | Promise<CommonModule>> {
   return MetaData.moduleCaches;
-}
-
-export class EmptyModuleHandlers implements IModuleHandlers {
-  store!: IStore;
-
-  initState: any;
-
-  constructor(public readonly moduleName: string) {
-    this.initState = {};
-  }
-}
-
-/**
- * ModuleHandlers基类
- * 所有ModuleHandlers必须继承此基类
- */
-export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}> implements IModuleHandlers {
-  store!: IStore<R>;
-
-  constructor(public readonly moduleName: string, public readonly initState: S) {}
-
-  protected get actions(): ActionsThis<this> {
-    return MetaData.facadeMap[this.moduleName].actions as any;
-  }
-
-  protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {[K in keyof T]: Handler<T[K]>} {
-    return MetaData.facadeMap[this.moduleName].actions as any;
-  }
-
-  protected get state(): S {
-    return this.store.getState(this.moduleName) as S;
-  }
-
-  protected get rootState(): R {
-    return this.store.getState() as R;
-  }
-
-  protected getCurrentActionName(): string {
-    return this.store.getCurrentActionName();
-  }
-
-  protected get currentRootState(): R {
-    return this.store.getCurrentState();
-  }
-
-  protected get currentState(): S {
-    return this.store.getCurrentState(this.moduleName) as S;
-  }
-
-  protected dispatch(action: Action): void | Promise<void> {
-    return this.store.dispatch(action);
-  }
-
-  /**
-   * 动态加载并初始化其他模块的model
-   */
-  protected loadModel(moduleName: string): void | Promise<void> {
-    return loadModel(moduleName, this.store);
-  }
-
-  @reducer
-  public Init(initState: S): S {
-    return initState;
-  }
-
-  @reducer
-  public Update(payload: Partial<S>, key: string): S {
-    return mergeState(this.state, payload);
-  }
-
-  @reducer
-  public Loading(payload: Record<string, string>): S {
-    const loading = mergeState(this.state.loading, payload);
-    return mergeState(this.state, {loading});
-  }
 }
 
 type GetPromiseComponent<T> = T extends () => Promise<{default: infer R}> ? R : T;
@@ -399,3 +340,56 @@ export type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends
   componentName: V,
   options?: O
 ) => A[M]['components'][V];
+
+function transformAction(actionName: string, handler: ActionHandler, listenerModule: string, actionHandlerMap: ActionHandlerMap, hmr?: boolean) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
+  }
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    warn(`Action duplicate : ${actionName}.`);
+  }
+  actionHandlerMap[actionName][listenerModule] = handler;
+}
+
+export function injectActions(moduleName: string, handlers: ActionHandlerList, hmr?: boolean): void {
+  const injectedModules = MetaData.injectedModules;
+  if (injectedModules[moduleName]) {
+    return;
+  }
+  injectedModules[moduleName] = true;
+  // eslint-disable-next-line no-restricted-syntax
+  for (const actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      const handler = handlers[actionNames];
+      if (handler.__isReducer__ || handler.__isEffect__) {
+        actionNames.split(coreConfig.MSP).forEach((actionName) => {
+          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+          const arr = actionName.split(coreConfig.NSP);
+          if (arr[1]) {
+            // handler.__isHandler__ = true;
+            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          } else {
+            // handler.__isHandler__ = false;
+            transformAction(
+              moduleName + coreConfig.NSP + actionName,
+              handler,
+              moduleName,
+              handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap,
+              hmr
+            );
+            // addModuleActionCreatorList(moduleName, actionName);
+          }
+        });
+      }
+    }
+  }
+  // return MetaData.facadeMap[moduleName].actions;
+}
+
+export function defineModuleGetter(moduleGetter: ModuleGetter): void {
+  MetaData.moduleGetter = moduleGetter;
+  MetaData.moduleExists = Object.keys(moduleGetter).reduce((data, moduleName) => {
+    data[moduleName] = true;
+    return data;
+  }, {});
+}

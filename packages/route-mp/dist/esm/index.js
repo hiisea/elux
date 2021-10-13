@@ -1,138 +1,142 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { nativeLocationToNativeUrl, BaseRouter, BaseNativeRouter } from '@elux/route';
+import { BaseEluxRouter, BaseNativeRouter, setRouteConfig, routeConfig, urlParser } from '@elux/route';
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  }
+});
 export var MPNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(MPNativeRouter, _BaseNativeRouter);
 
-  function MPNativeRouter(routeENV, tabPages) {
+  function MPNativeRouter(_history, tabPages) {
     var _this;
 
     _this = _BaseNativeRouter.call(this) || this;
 
     _defineProperty(_assertThisInitialized(_this), "_unlistenHistory", void 0);
 
-    _this.routeENV = routeENV;
+    _this._history = _history;
     _this.tabPages = tabPages;
-    _this._unlistenHistory = routeENV.onRouteChange(function (pathname, searchData, action) {
-      var key = searchData ? searchData['__key__'] : '';
+    var _routeConfig$notifyNa = routeConfig.notifyNativeRouter,
+        root = _routeConfig$notifyNa.root,
+        internal = _routeConfig$notifyNa.internal;
 
-      if (action === 'POP' && !key) {
-        key = _this.router.history.getRecord(-1).key;
-      }
+    if (root || internal) {
+      _this._unlistenHistory = _history.onRouteChange(function (pathname, search, action) {
+        var nativeUrl = [pathname, search].filter(Boolean).join('?');
+        var arr = search.match(/__key__=(\w+)/);
+        var key = arr ? arr[1] : '';
 
-      var nativeLocation = {
-        pathname: pathname,
-        searchData: searchData
-      };
+        if (action === 'POP' && !key) {
+          var _this$router$findReco = _this.router.findRecordByStep(-1, false),
+              record = _this$router$findReco.record;
 
-      var changed = _this.onChange(key);
-
-      if (changed) {
-        var index = -1;
-
-        if (action === 'POP') {
-          index = _this.router.findHistoryIndexByKey(key);
+          key = record.key;
         }
 
-        if (index > -1) {
-          _this.router.back(index + 1, '', false, true);
-        } else if (action === 'REPLACE') {
-          _this.router.replace(nativeLocation, false, true);
-        } else if (action === 'PUSH') {
-          _this.router.push(nativeLocation, false, true);
-        } else {
-          _this.router.relaunch(nativeLocation, false, true);
+        var changed = _this.onChange(key);
+
+        if (changed) {
+          if (action === 'POP') {
+            _this.router.back(key, true, {}, true, true);
+          } else if (action === 'REPLACE') {
+            _this.router.replace(nativeUrl, true, true, true);
+          } else if (action === 'PUSH') {
+            _this.router.push(nativeUrl, true, true, true);
+          } else {
+            _this.router.relaunch(nativeUrl, true, true, true);
+          }
         }
-      }
-    });
+      });
+    }
+
     return _this;
   }
 
   var _proto = MPNativeRouter.prototype;
 
-  _proto.getLocation = function getLocation() {
-    return this.routeENV.getLocation();
-  };
-
-  _proto.toUrl = function toUrl(url, key) {
+  _proto.addKey = function addKey(url, key) {
     return url.indexOf('?') > -1 ? url + "&__key__=" + key : url + "?__key__=" + key;
   };
 
-  _proto.push = function push(getNativeData, key) {
-    var nativeData = getNativeData();
+  _proto.push = function push(location, key) {
+    var nativeUrl = location.getNativeUrl(true);
 
-    if (this.tabPages[nativeData.nativeUrl]) {
-      throw "Replacing 'push' with 'relaunch' for TabPage: " + nativeData.nativeUrl;
+    var _nativeUrl$split = nativeUrl.split('?'),
+        pathname = _nativeUrl$split[0];
+
+    if (this.tabPages[pathname]) {
+      return Promise.reject("Replacing 'push' with 'relaunch' for TabPage: " + pathname);
     }
 
-    return this.routeENV.navigateTo({
-      url: this.toUrl(nativeData.nativeUrl, key)
-    }).then(function () {
-      return nativeData;
+    return this._history.navigateTo({
+      url: this.addKey(nativeUrl, key)
     });
   };
 
-  _proto.replace = function replace(getNativeData, key) {
-    var nativeData = getNativeData();
+  _proto.replace = function replace(location, key) {
+    var nativeUrl = location.getNativeUrl(true);
 
-    if (this.tabPages[nativeData.nativeUrl]) {
-      throw "Replacing 'push' with 'relaunch' for TabPage: " + nativeData.nativeUrl;
+    var _nativeUrl$split2 = nativeUrl.split('?'),
+        pathname = _nativeUrl$split2[0];
+
+    if (this.tabPages[pathname]) {
+      return Promise.reject("Replacing 'replace' with 'relaunch' for TabPage: " + pathname);
     }
 
-    return this.routeENV.redirectTo({
-      url: this.toUrl(nativeData.nativeUrl, key)
-    }).then(function () {
-      return nativeData;
+    return this._history.redirectTo({
+      url: this.addKey(nativeUrl, key)
     });
   };
 
-  _proto.relaunch = function relaunch(getNativeData, key) {
-    var nativeData = getNativeData();
+  _proto.relaunch = function relaunch(location, key) {
+    var nativeUrl = location.getNativeUrl(true);
 
-    if (this.tabPages[nativeData.nativeUrl]) {
-      return this.routeENV.switchTab({
-        url: nativeData.nativeUrl
-      }).then(function () {
-        return nativeData;
+    var _nativeUrl$split3 = nativeUrl.split('?'),
+        pathname = _nativeUrl$split3[0];
+
+    if (this.tabPages[pathname]) {
+      return this._history.switchTab({
+        url: pathname
       });
     }
 
-    return this.routeENV.reLaunch({
-      url: this.toUrl(nativeData.nativeUrl, key)
-    }).then(function () {
-      return nativeData;
+    return this._history.reLaunch({
+      url: this.addKey(nativeUrl, key)
     });
   };
 
-  _proto.back = function back(getNativeData, n, key) {
-    var nativeData = getNativeData();
-    return this.routeENV.navigateBack({
-      delta: n
-    }).then(function () {
-      return nativeData;
+  _proto.back = function back(location, index, key) {
+    return this._history.navigateBack({
+      delta: index[0]
     });
   };
-
-  _proto.toOutside = function toOutside(url) {};
 
   _proto.destroy = function destroy() {
-    this._unlistenHistory();
+    this._unlistenHistory && this._unlistenHistory();
   };
 
   return MPNativeRouter;
 }(BaseNativeRouter);
-export var Router = function (_BaseRouter) {
-  _inheritsLoose(Router, _BaseRouter);
+export var EluxRouter = function (_BaseEluxRouter) {
+  _inheritsLoose(EluxRouter, _BaseEluxRouter);
 
-  function Router(mpNativeRouter, locationTransform) {
-    return _BaseRouter.call(this, nativeLocationToNativeUrl(mpNativeRouter.getLocation()), mpNativeRouter, locationTransform) || this;
+  function EluxRouter(nativeUrl, mpNativeRouter) {
+    return _BaseEluxRouter.call(this, nativeUrl, mpNativeRouter, {}) || this;
   }
 
-  return Router;
-}(BaseRouter);
-export function createRouter(locationTransform, routeENV, tabPages) {
-  var mpNativeRouter = new MPNativeRouter(routeENV, tabPages);
-  var router = new Router(mpNativeRouter, locationTransform);
+  return EluxRouter;
+}(BaseEluxRouter);
+export function createRouter(mpHistory, tabPages) {
+  var mpNativeRouter = new MPNativeRouter(mpHistory, tabPages);
+
+  var _mpHistory$getLocatio = mpHistory.getLocation(),
+      pathname = _mpHistory$getLocatio.pathname,
+      search = _mpHistory$getLocatio.search;
+
+  var router = new EluxRouter(urlParser.getUrl('n', pathname, search), mpNativeRouter);
   return router;
 }

@@ -1,14 +1,17 @@
-import { HTMLAttributes } from 'vue';
+import { HTMLAttributes, VNode } from 'vue';
 declare type MouseEvent = any;
 export interface Props extends HTMLAttributes {
-    url: string;
+    route?: string;
     onClick?(event: MouseEvent): void;
     href?: string;
-    replace?: boolean;
+    action?: 'push' | 'replace' | 'relaunch';
+    root?: boolean;
 }
-export default function (props: Props, context: {
-    slots: any;
-}): import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+export default function ({ onClick: _onClick, href, route, action, root, ...props }: Props, context: {
+    slots: {
+        default?: () => VNode[];
+    };
+}): VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
 }>;
 export {};

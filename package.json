@@ -18,13 +18,14 @@
     "node": ">=14.0.0"
   },
   "workspaces": [
-    "packages/app",
     "packages/core",
     "packages/core-redux",
     "packages/core-vuex",
     "packages/route",
     "packages/route-browser",
     "packages/route-mp",
+    "packages/app",
+    "packages/taro",
     "packages/react-components",
     "packages/react-redux",
     "packages/react-web",
@@ -33,8 +34,10 @@
     "packages/react-redux-taro",
     "packages/vue-components",
     "packages/vue-web",
+    "packages/vue-taro",
     "packages/vue-vuex",
-    "packages/vue-vuex-web"
+    "packages/vue-vuex-web",
+    "packages/vue-vuex-taro"
   ],
   "scripts": {
     "commit": "git-cz",
@@ -44,7 +47,7 @@
     "jsonlint": "prettier --write **/*.json",
     "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
     "pre-lerna": "lerna publish --no-git-tag-version --registry=http://localhost:4873/",
-    "lerna": "lerna publish",
+    "lerna": "lerna publish --registry=http://localhost:4873/",
     "debug": "node --inspect=19248 --debug-brk"
   },
   "husky": {

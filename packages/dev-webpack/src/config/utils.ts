@@ -12,7 +12,6 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const EslintWebpackPlugin = require('eslint-webpack-plugin');
 const StylelintPlugin = require('stylelint-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlReplaceWebpackPlugin = require('html-replace-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 const {VueLoaderPlugin} = require('vue-loader');
@@ -41,7 +40,7 @@ interface DevServerConfig {
   [key: string]: any;
 }
 
-function getCssScopedName(srcPath: string, localName: string, mfileName: string) {
+function getCssScopedName(srcPath: string, localName: string, mfileName: string): string {
   if (mfileName.match(/[/\\]global.module.\w+?$/)) {
     return `g-${localName}`;
   }
@@ -452,21 +451,15 @@ function moduleExports({
           }),
       enableEslintPlugin && new EslintWebpackPlugin({cache: true, extensions: scriptExtensions}),
       enableStylelintPlugin && new StylelintPlugin({files: `src/**/*.{${cssExtensions.join(',')}}`}),
+      new webpack.DefinePlugin({
+        'process.env.PROJ_ENV': JSON.stringify(globalVar.client || {}),
+      }),
       new HtmlWebpackPlugin({
+        clientPublicPath: clientPublicPath,
         minify: false,
         inject: 'body',
         template: path.join(publicPath, './client/index.html'),
       }),
-      new HtmlReplaceWebpackPlugin([
-        {
-          pattern: '$$ClientPublicPath$$',
-          replacement: clientPublicPath,
-        },
-        {
-          pattern: '$$ClientGlobalVar$$',
-          replacement: JSON.stringify(globalVar.client || {}),
-        },
-      ]),
       isProdModel &&
         new MiniCssExtractPlugin({
           ignoreOrder: true,
@@ -587,11 +580,16 @@ function moduleExports({
             },
           ].filter(Boolean),
         },
-        plugins: [isVue && new VueLoaderPlugin(), SsrPlugin.server, new webpack.ProgressPlugin()].filter(Boolean),
+        plugins: [
+          isVue && new VueLoaderPlugin(),
+          SsrPlugin.server,
+          new webpack.DefinePlugin({
+            'process.env.PROJ_ENV': JSON.stringify(globalVar.server || {}),
+          }),
+          new webpack.ProgressPlugin(),
+        ].filter(Boolean),
       }
     : {name: 'server'};
-
-  global['ENV'] = globalVar.server;
 
   const devServerConfig: DevServerConfig = {
     static: [

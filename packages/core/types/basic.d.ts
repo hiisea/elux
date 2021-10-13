@@ -1,9 +1,11 @@
-import { LoadingState, TaskCounter } from './sprite';
+import { TaskCounter } from './sprite';
 export declare const coreConfig: {
     NSP: string;
     MSP: string;
     MutableData: boolean;
     DepthTimeOnLoading: number;
+    AppModuleName: string;
+    RouteModuleName: string;
 };
 export declare function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void;
 export declare const setCoreConfig: (config: Partial<{
@@ -11,6 +13,8 @@ export declare const setCoreConfig: (config: Partial<{
     MSP: string;
     MutableData: boolean;
     DepthTimeOnLoading: number;
+    AppModuleName: string;
+    RouteModuleName: string;
 }>) => void;
 export interface Action {
     type: string;
@@ -32,10 +36,11 @@ export declare type ActionHandlerMap = Record<string, ActionHandlerList>;
 export declare type ActionCreator = (...args: any[]) => Action;
 export declare type ActionCreatorList = Record<string, ActionCreator>;
 export declare type ActionCreatorMap = Record<string, ActionCreatorList>;
-export interface IModuleHandlers {
-    moduleName: string;
-    readonly initState: any;
-    store: IStore;
+export interface IModuleHandlers<S = any> {
+    readonly moduleName: string;
+    readonly initState: S;
+    readonly store: IStore;
+    destroy(): void;
 }
 export declare type Dispatch = (action: Action) => void | Promise<void>;
 export declare type State = Record<string, Record<string, any>>;
@@ -43,21 +48,49 @@ export interface GetState<S extends State = {}> {
     (): S;
     (moduleName: string): Record<string, any> | undefined;
 }
-export interface BStoreOptions {
+export interface StoreOptions {
     initState?: Record<string, any>;
 }
-export interface BStore<S extends Record<string, any> = {}> {
-    getState(): S;
-    update: (actionName: string, state: S, actionData: any[]) => void;
-    dispatch: (action: Action) => any;
+export interface StoreBuilder<O extends StoreOptions = StoreOptions, B extends BStore = BStore> {
+    storeOptions: O;
+    storeCreator: (options: O, id?: number) => B;
 }
-export interface IStore<S extends State = {}> {
+export interface BStore<S extends State = any> {
+    id: number;
+    builder: StoreBuilder;
     dispatch: Dispatch;
     getState: GetState<S>;
     update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
-    injectedModules: Record<string, IModuleHandlers>;
+    destroy(): void;
+}
+export declare type IStoreMiddleware = (api: {
+    store: IStore;
+    getState: GetState;
+    dispatch: Dispatch;
+}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
+export interface IStore<S extends State = any> extends BStore<S> {
+    router: ICoreRouter;
     getCurrentActionName: () => string;
     getCurrentState: GetState<S>;
+    injectedModules: {
+        [moduleName: string]: IModuleHandlers;
+    };
+    loadingGroups: Record<string, TaskCounter>;
+    options: {
+        middlewares?: IStoreMiddleware[];
+    };
+}
+export interface ICoreRouteState {
+    action: string;
+    params: any;
+}
+export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
+    routeState: ST;
+    startup(store: IStore): void;
+    getCurrentStore(): IStore;
+    getStoreList(): IStore[];
+    readonly name: string;
+    latestState: Record<string, any>;
 }
 export interface CommonModule<ModuleName extends string = string> {
     moduleName: ModuleName;
@@ -77,39 +110,21 @@ export declare type FacadeMap = Record<string, {
     actions: ActionCreatorList;
     actionNames: Record<string, string>;
 }>;
-export declare const ActionTypes: {
-    MLoading: string;
-    MInit: string;
-    MReInit: string;
-    Error: string;
-};
-export declare function errorAction(error: Object): Action;
-export declare function moduleInitAction(moduleName: string, initState: any): Action;
-export declare function moduleReInitAction(moduleName: string, initState: any): Action;
-export declare function moduleLoadingAction(moduleName: string, loadingState: {
-    [group: string]: LoadingState;
-}): Action;
 export interface EluxComponent {
     __elux_component__: 'view' | 'component';
 }
 export declare function isEluxComponent(data: any): data is EluxComponent;
 export declare const MetaData: {
     facadeMap: FacadeMap;
-    appModuleName: string;
     moduleGetter: ModuleGetter;
+    moduleExists: Record<string, boolean>;
     injectedModules: Record<string, boolean>;
     reducersMap: ActionHandlerMap;
     effectsMap: ActionHandlerMap;
     moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
     componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
-    loadings: Record<string, TaskCounter>;
+    currentRouter: ICoreRouter;
 };
-export declare function injectActions(moduleName: string, handlers: ActionHandlerList): void;
-export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;
-export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
-export declare function effect(loadingKey?: string | null): Function;
-export declare const mutation: typeof reducer;
-export declare const action: typeof effect;
-export declare function logger(before: (action: Action, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
+export declare function moduleExists(): Record<string, boolean>;
 export declare function deepMergeState(target?: any, ...args: any[]): any;
 export declare function mergeState(target?: any, ...args: any[]): any;

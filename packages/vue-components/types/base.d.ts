@@ -1,6 +1,6 @@
 import { Component } from 'vue';
-import { IStore } from '@elux/core';
-import { IBaseRouter } from '@elux/route';
+import { IStore, ICoreRouter } from '@elux/core';
+import { IEluxRouter } from '@elux/route';
 export declare const vueComponentsConfig: {
     setPageTitle(title: string): void;
     Provider: Component<{
@@ -24,7 +24,12 @@ export declare const setVueComponentsConfig: (config: Partial<{
 export interface EluxContext {
     deps?: Record<string, boolean>;
     documentHead: string;
-    store?: IStore;
-    router?: IBaseRouter<any, string>;
+    router?: IEluxRouter;
+}
+export interface EluxStoreContext {
+    store: IStore;
 }
 export declare const EluxContextKey = "__EluxContext__";
+export declare const EluxStoreContextKey = "__EluxStoreContext__";
+export declare function useRouter(): ICoreRouter;
+export declare function useStore(): IStore;

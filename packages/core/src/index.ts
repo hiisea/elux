@@ -1,22 +1,8 @@
-export {
-  ActionTypes,
-  reducer,
-  coreConfig,
-  effect,
-  mutation,
-  action,
-  errorAction,
-  logger,
-  mergeState,
-  deepMergeState,
-  setCoreConfig,
-  setLoading,
-  buildConfigSetter,
-} from './basic';
+export {coreConfig, mergeState, deepMergeState, setCoreConfig, buildConfigSetter, moduleExists} from './basic';
+export {ActionTypes, reducer, effect, mutation, action, setLoading, logger, errorAction, routeChangeAction} from './actions';
 export {getActionData, setProcessedError, isProcessedError} from './store';
+export {initApp, reinitApp, forkStore} from './app';
 export {
-  CoreModuleHandlers,
-  EmptyModuleHandlers,
   loadModel,
   exportModule,
   loadComponet,
@@ -27,24 +13,42 @@ export {
   exportView,
   exportComponent,
   getComponet,
-  getModuleGetter,
+  modelHotReplacement,
+  defineModuleGetter,
 } from './inject';
-export {LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, delayPromise} from './sprite';
-export {defineModuleGetter, renderApp, ssrApp, initApp} from './render';
+export {CoreModuleHandlers, RouteModuleHandlers, EmptyModuleHandlers} from './router';
+export {
+  LoadingState,
+  deepMerge,
+  SingleDispatcher,
+  MultipleDispatcher,
+  isPromise,
+  isServer,
+  serverSide,
+  clientSide,
+  delayPromise,
+  deepClone,
+} from './sprite';
+
 export {default as env} from './env';
-export type {IStoreMiddleware, StoreBuilder} from './store';
+
 export type {
   Action,
   EluxComponent,
   CommonModule,
   ModuleGetter,
+  ICoreRouter,
+  ICoreRouteState,
   IStore,
   BStore,
-  BStoreOptions,
   IModuleHandlers,
   Dispatch,
   GetState,
   State,
+  IStoreMiddleware,
+  StoreBuilder,
+  StoreOptions,
 } from './basic';
 
-export type {RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, LoadComponent} from './inject';
+export type {RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, LoadComponent, IModuleHandlersClass} from './inject';
+export type {IRouteModuleHandlersClass} from './router';

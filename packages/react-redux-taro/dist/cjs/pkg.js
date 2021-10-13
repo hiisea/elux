@@ -11,39 +11,6 @@ function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'defau
 var Taro__default = /*#__PURE__*/_interopDefaultLegacy(Taro);
 var React__default = /*#__PURE__*/_interopDefaultLegacy(React);
 
-var root;
-
-if (typeof self !== 'undefined') {
-  root = self;
-} else if (typeof window !== 'undefined') {
-  root = window;
-} else if (typeof global !== 'undefined') {
-  root = global;
-} else if (typeof module !== 'undefined') {
-  root = module;
-} else {
-  root = new Function('return this')();
-}
-
-var env = root;
-env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
-
-env.encodeBas64 = function (str) {
-  if (!str) {
-    return '';
-  }
-
-  return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
-};
-
-env.decodeBas64 = function (str) {
-  if (!str) {
-    return '';
-  }
-
-  return typeof atob === 'function' ? atob(str) : typeof Buffer !== 'undefined' ? Buffer.from(str, 'base64').toString() : str;
-};
-
 function _assertThisInitialized(self) {
   if (self === void 0) {
     throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -82,6 +49,39 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
+var root;
+
+if (typeof self !== 'undefined') {
+  root = self;
+} else if (typeof window !== 'undefined') {
+  root = window;
+} else if (typeof global !== 'undefined') {
+  root = global;
+} else if (typeof module !== 'undefined') {
+  root = module;
+} else {
+  root = new Function('return this')();
+}
+
+var env = root;
+env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
+
+env.encodeBas64 = function (str) {
+  if (!str) {
+    return '';
+  }
+
+  return typeof btoa === 'function' ? btoa(str) : typeof Buffer !== 'undefined' ? Buffer.from(str).toString('base64') : str;
+};
+
+env.decodeBas64 = function (str) {
+  if (!str) {
+    return '';
+  }
+
+  return typeof atob === 'function' ? atob(str) : typeof Buffer !== 'undefined' ? Buffer.from(str, 'base64').toString() : str;
+};
+
 exports.LoadingState = void 0;
 
 (function (LoadingState) {
@@ -117,6 +117,42 @@ var SingleDispatcher = function () {
   };
 
   return SingleDispatcher;
+}();
+var MultipleDispatcher = function () {
+  function MultipleDispatcher() {
+    _defineProperty(this, "listenerId", 0);
+
+    _defineProperty(this, "listenerMap", {});
+  }
+
+  var _proto2 = MultipleDispatcher.prototype;
+
+  _proto2.addListener = function addListener(name, callback) {
+    this.listenerId++;
+    var id = "" + this.listenerId;
+
+    if (!this.listenerMap[name]) {
+      this.listenerMap[name] = {};
+    }
+
+    var listenerMap = this.listenerMap[name];
+    listenerMap[id] = callback;
+    return function () {
+      delete listenerMap[id];
+    };
+  };
+
+  _proto2.dispatch = function dispatch(name, data) {
+    var listenerMap = this.listenerMap[name];
+
+    if (listenerMap) {
+      Object.keys(listenerMap).forEach(function (id) {
+        listenerMap[id](data);
+      });
+    }
+  };
+
+  return MultipleDispatcher;
 }();
 var TaskCounter = function (_SingleDispatcher) {
   _inheritsLoose(TaskCounter, _SingleDispatcher);
@@ -192,7 +228,11 @@ var TaskCounter = function (_SingleDispatcher) {
 
   return TaskCounter;
 }(SingleDispatcher);
-function isPlainObject$3(obj) {
+function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function isObject(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -201,8 +241,8 @@ function __deepMerge(optimize, target, inject) {
     var src = target[key];
     var val = inject[key];
 
-    if (isPlainObject$3(val)) {
-      if (isPlainObject$3(src)) {
+    if (isObject(val)) {
+      if (isObject(src)) {
         target[key] = __deepMerge(optimize, src, val);
       } else {
         target[key] = optimize ? val : __deepMerge(optimize, {}, val);
@@ -219,44 +259,42 @@ function deepMerge(target) {
     args[_key - 1] = arguments[_key];
   }
 
-  if (!isPlainObject$3(target)) {
-    target = {};
-  }
-
   args = args.filter(function (item) {
-    return isPlainObject$3(item) && Object.keys(item).length;
+    return isObject(item) && Object.keys(item).length;
   });
 
-  if (args.length < 1) {
+  if (args.length === 0) {
     return target;
   }
 
+  if (!isObject(target)) {
+    target = {};
+  }
+
   args.forEach(function (inject, index) {
-    if (isPlainObject$3(inject)) {
-      var lastArg = false;
-      var last2Arg = null;
+    var lastArg = false;
+    var last2Arg = null;
 
-      if (index === args.length - 1) {
-        lastArg = true;
-      } else if (index === args.length - 2) {
-        last2Arg = args[index + 1];
-      }
-
-      Object.keys(inject).forEach(function (key) {
-        var src = target[key];
-        var val = inject[key];
-
-        if (isPlainObject$3(val)) {
-          if (isPlainObject$3(src)) {
-            target[key] = __deepMerge(lastArg, src, val);
-          } else {
-            target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
-          }
-        } else {
-          target[key] = val;
-        }
-      });
+    if (index === args.length - 1) {
+      lastArg = true;
+    } else if (index === args.length - 2) {
+      last2Arg = args[index + 1];
     }
+
+    Object.keys(inject).forEach(function (key) {
+      var src = target[key];
+      var val = inject[key];
+
+      if (isObject(val)) {
+        if (isObject(src)) {
+          target[key] = __deepMerge(lastArg, src, val);
+        } else {
+          target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
+        }
+      } else {
+        target[key] = val;
+      }
+    });
   });
   return target;
 }
@@ -316,7 +354,9 @@ var coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2
+  DepthTimeOnLoading: 2,
+  RouteModuleName: 'route',
+  AppModuleName: 'stage'
 };
 function buildConfigSetter(data) {
   return function (config) {
@@ -326,10 +366,59 @@ function buildConfigSetter(data) {
   };
 }
 var setCoreConfig = buildConfigSetter(coreConfig);
+function isEluxComponent(data) {
+  return data['__elux_component__'];
+}
+var MetaData = {
+  injectedModules: {},
+  reducersMap: {},
+  effectsMap: {},
+  moduleCaches: {},
+  componentCaches: {},
+  facadeMap: null,
+  moduleGetter: null,
+  moduleExists: null,
+  currentRouter: null
+};
+function moduleExists() {
+  return MetaData.moduleExists;
+}
+function deepMergeState(target) {
+  if (target === void 0) {
+    target = {};
+  }
+
+  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+
+  if (coreConfig.MutableData) {
+    return deepMerge.apply(void 0, [target].concat(args));
+  }
+
+  return deepMerge.apply(void 0, [{}, target].concat(args));
+}
+function mergeState(target) {
+  if (target === void 0) {
+    target = {};
+  }
+
+  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+    args[_key2 - 1] = arguments[_key2];
+  }
+
+  if (coreConfig.MutableData) {
+    return Object.assign.apply(Object, [target].concat(args));
+  }
+
+  return Object.assign.apply(Object, [{}, target].concat(args));
+}
+
 var ActionTypes$1 = {
   MLoading: 'Loading',
   MInit: 'Init',
   MReInit: 'ReInit',
+  MRouteChange: 'RouteChange',
   Error: "Elux" + coreConfig.NSP + "Error"
 };
 function errorAction(error) {
@@ -338,15 +427,15 @@ function errorAction(error) {
     payload: [error]
   };
 }
+function routeChangeAction(routeState) {
+  return {
+    type: "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes$1.MRouteChange,
+    payload: [routeState]
+  };
+}
 function moduleInitAction(moduleName, initState) {
   return {
     type: "" + moduleName + coreConfig.NSP + ActionTypes$1.MInit,
-    payload: [initState]
-  };
-}
-function moduleReInitAction(moduleName, initState) {
-  return {
-    type: "" + moduleName + coreConfig.NSP + ActionTypes$1.MReInit,
     payload: [initState]
   };
 }
@@ -356,66 +445,15 @@ function moduleLoadingAction(moduleName, loadingState) {
     payload: [loadingState]
   };
 }
-function isEluxComponent(data) {
-  return data['__elux_component__'];
-}
-var MetaData = {
-  appModuleName: 'stage',
-  injectedModules: {},
-  reducersMap: {},
-  effectsMap: {},
-  moduleCaches: {},
-  componentCaches: {},
-  facadeMap: null,
-  moduleGetter: null,
-  loadings: {}
-};
-
-function transformAction(actionName, handler, listenerModule, actionHandlerMap) {
-  if (!actionHandlerMap[actionName]) {
-    actionHandlerMap[actionName] = {};
-  }
-
-  if (actionHandlerMap[actionName][listenerModule]) {
-    warn("Action duplicate or conflict : " + actionName + ".");
-  }
-
-  actionHandlerMap[actionName][listenerModule] = handler;
-}
-
-function injectActions(moduleName, handlers) {
-  var injectedModules = MetaData.injectedModules;
-
-  if (injectedModules[moduleName]) {
-    return;
-  }
-
-  injectedModules[moduleName] = true;
-
-  for (var actionNames in handlers) {
-    if (typeof handlers[actionNames] === 'function') {
-      (function () {
-        var handler = handlers[actionNames];
-
-        if (handler.__isReducer__ || handler.__isEffect__) {
-          actionNames.split(coreConfig.MSP).forEach(function (actionName) {
-            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
-            var arr = actionName.split(coreConfig.NSP);
-
-            if (arr[1]) {
-              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
-            } else {
-              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap);
-            }
-          });
-        }
-      })();
-    }
-  }
+function moduleRouteChangeAction(moduleName, params, action) {
+  return {
+    type: "" + moduleName + coreConfig.NSP + ActionTypes$1.MRouteChange,
+    payload: [params, action]
+  };
 }
 function setLoading(store, item, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
-  var loadings = MetaData.loadings;
+  var loadings = store.loadingGroups;
 
   if (!loadings[key]) {
     loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
@@ -469,7 +507,7 @@ function effect(loadingKey) {
     if (loadingForModuleName && loadingForGroupName && !env.isServer) {
       function injectLoading(curAction, promiseResult) {
         if (loadingForModuleName === 'app') {
-          loadingForModuleName = MetaData.appModuleName;
+          loadingForModuleName = coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
@@ -505,36 +543,6 @@ function logger(before, after) {
     fun.__decorators__.push([before, after]);
   };
 }
-function deepMergeState(target) {
-  if (target === void 0) {
-    target = {};
-  }
-
-  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    args[_key - 1] = arguments[_key];
-  }
-
-  if (coreConfig.MutableData) {
-    return deepMerge.apply(void 0, [target].concat(args));
-  }
-
-  return deepMerge.apply(void 0, [{}, target].concat(args));
-}
-function mergeState(target) {
-  if (target === void 0) {
-    target = {};
-  }
-
-  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    args[_key2 - 1] = arguments[_key2];
-  }
-
-  if (coreConfig.MutableData) {
-    return Object.assign.apply(Object, [target].concat(args));
-  }
-
-  return Object.assign.apply(Object, [{}, target].concat(args));
-}
 
 function _extends() {
   _extends = Object.assign || function (target) {
@@ -552,6 +560,343 @@ function _extends() {
   };
 
   return _extends.apply(this, arguments);
+}
+
+function exportModule(moduleName, ModuleHandlers, params, components) {
+  Object.keys(components).forEach(function (key) {
+    var component = components[key];
+
+    if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
+      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
+    }
+  });
+
+  var model = function model(store) {
+    if (!store.injectedModules[moduleName]) {
+      var _latestState = store.router.latestState;
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+    }
+
+    return undefined;
+  };
+
+  return {
+    moduleName: moduleName,
+    model: model,
+    components: components,
+    state: undefined,
+    params: params,
+    actions: undefined
+  };
+}
+function modelHotReplacement(moduleName, ModuleHandlers) {
+  var model = function model(store) {
+    if (!store.injectedModules[moduleName]) {
+      var _latestState2 = store.router.latestState;
+      var moduleHandles = new ModuleHandlers(moduleName, store, _latestState2);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+    }
+
+    return undefined;
+  };
+
+  var moduleCache = MetaData.moduleCaches[moduleName];
+
+  if (moduleCache && moduleCache['model']) {
+    moduleCache.model = model;
+  }
+
+  var store = MetaData.currentRouter.getCurrentStore();
+
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}), true);
+  }
+
+  var stores = MetaData.currentRouter.getStoreList();
+  stores.forEach(function (store) {
+    if (store.injectedModules[moduleName]) {
+      var ins = new ModuleHandlers(moduleName, store, {});
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log("[HMR] @medux Updated model: " + moduleName);
+}
+function getModule(moduleName) {
+  if (MetaData.moduleCaches[moduleName]) {
+    return MetaData.moduleCaches[moduleName];
+  }
+
+  var moduleOrPromise = MetaData.moduleGetter[moduleName]();
+
+  if (isPromise(moduleOrPromise)) {
+    var promiseModule = moduleOrPromise.then(function (_ref) {
+      var module = _ref.default;
+      MetaData.moduleCaches[moduleName] = module;
+      return module;
+    }, function (reason) {
+      MetaData.moduleCaches[moduleName] = undefined;
+      throw reason;
+    });
+    MetaData.moduleCaches[moduleName] = promiseModule;
+    return promiseModule;
+  }
+
+  MetaData.moduleCaches[moduleName] = moduleOrPromise;
+  return moduleOrPromise;
+}
+function getModuleList(moduleNames) {
+  if (moduleNames.length < 1) {
+    return [];
+  }
+
+  var list = moduleNames.map(function (moduleName) {
+    if (MetaData.moduleCaches[moduleName]) {
+      return MetaData.moduleCaches[moduleName];
+    }
+
+    return getModule(moduleName);
+  });
+
+  if (list.some(function (item) {
+    return isPromise(item);
+  })) {
+    return Promise.all(list);
+  } else {
+    return list;
+  }
+}
+function loadModel(moduleName, store) {
+  var moduleOrPromise = getModule(moduleName);
+
+  if (isPromise(moduleOrPromise)) {
+    return moduleOrPromise.then(function (module) {
+      return module.model(store);
+    });
+  }
+
+  return moduleOrPromise.model(store);
+}
+function getComponet(moduleName, componentName) {
+  var key = [moduleName, componentName].join(coreConfig.NSP);
+
+  if (MetaData.componentCaches[key]) {
+    return MetaData.componentCaches[key];
+  }
+
+  var moduleCallback = function moduleCallback(module) {
+    var componentOrFun = module.components[componentName];
+
+    if (isEluxComponent(componentOrFun)) {
+      var component = componentOrFun;
+      MetaData.componentCaches[key] = component;
+      return component;
+    }
+
+    var promiseComponent = componentOrFun().then(function (_ref2) {
+      var component = _ref2.default;
+      MetaData.componentCaches[key] = component;
+      return component;
+    }, function (reason) {
+      MetaData.componentCaches[key] = undefined;
+      throw reason;
+    });
+    MetaData.componentCaches[key] = promiseComponent;
+    return promiseComponent;
+  };
+
+  var moduleOrPromise = getModule(moduleName);
+
+  if (isPromise(moduleOrPromise)) {
+    return moduleOrPromise.then(moduleCallback);
+  }
+
+  return moduleCallback(moduleOrPromise);
+}
+function getComponentList(keys) {
+  if (keys.length < 1) {
+    return Promise.resolve([]);
+  }
+
+  return Promise.all(keys.map(function (key) {
+    if (MetaData.componentCaches[key]) {
+      return MetaData.componentCaches[key];
+    }
+
+    var _key$split = key.split(coreConfig.NSP),
+        moduleName = _key$split[0],
+        componentName = _key$split[1];
+
+    return getComponet(moduleName, componentName);
+  }));
+}
+function loadComponet(moduleName, componentName, store, deps) {
+  var promiseOrComponent = getComponet(moduleName, componentName);
+
+  var callback = function callback(component) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
+      if (env.isServer) {
+        return null;
+      }
+
+      var module = getModule(moduleName);
+      module.model(store);
+    }
+
+    deps[moduleName + coreConfig.NSP + componentName] = true;
+    return component;
+  };
+
+  if (isPromise(promiseOrComponent)) {
+    if (env.isServer) {
+      return null;
+    }
+
+    return promiseOrComponent.then(callback);
+  }
+
+  return callback(promiseOrComponent);
+}
+function getRootModuleAPI(data) {
+  if (!MetaData.facadeMap) {
+    if (data) {
+      MetaData.facadeMap = Object.keys(data).reduce(function (prev, moduleName) {
+        var arr = data[moduleName];
+        var actions = {};
+        var actionNames = {};
+        arr.forEach(function (actionName) {
+          actions[actionName] = function () {
+            for (var _len = arguments.length, payload = new Array(_len), _key = 0; _key < _len; _key++) {
+              payload[_key] = arguments[_key];
+            }
+
+            return {
+              type: moduleName + coreConfig.NSP + actionName,
+              payload: payload
+            };
+          };
+
+          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
+        });
+        var moduleFacade = {
+          name: moduleName,
+          actions: actions,
+          actionNames: actionNames
+        };
+        prev[moduleName] = moduleFacade;
+        return prev;
+      }, {});
+    } else {
+      var cacheData = {};
+      MetaData.facadeMap = new Proxy({}, {
+        set: function set(target, moduleName, val, receiver) {
+          return Reflect.set(target, moduleName, val, receiver);
+        },
+        get: function get(target, moduleName, receiver) {
+          var val = Reflect.get(target, moduleName, receiver);
+
+          if (val !== undefined) {
+            return val;
+          }
+
+          if (!cacheData[moduleName]) {
+            cacheData[moduleName] = {
+              name: moduleName,
+              actionNames: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return moduleName + coreConfig.NSP + actionName;
+                }
+              }),
+              actions: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return function () {
+                    for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                      payload[_key2] = arguments[_key2];
+                    }
+
+                    return {
+                      type: moduleName + coreConfig.NSP + actionName,
+                      payload: payload
+                    };
+                  };
+                }
+              })
+            };
+          }
+
+          return cacheData[moduleName];
+        }
+      });
+    }
+  }
+
+  return MetaData.facadeMap;
+}
+function exportComponent(component) {
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'component';
+  return eluxComponent;
+}
+function exportView(component) {
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'view';
+  return eluxComponent;
+}
+
+function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
+  }
+
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    warn("Action duplicate : " + actionName + ".");
+  }
+
+  actionHandlerMap[actionName][listenerModule] = handler;
+}
+
+function injectActions(moduleName, handlers, hmr) {
+  var injectedModules = MetaData.injectedModules;
+
+  if (injectedModules[moduleName]) {
+    return;
+  }
+
+  injectedModules[moduleName] = true;
+
+  for (var actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      (function () {
+        var handler = handlers[actionNames];
+
+        if (handler.__isReducer__ || handler.__isEffect__) {
+          actionNames.split(coreConfig.MSP).forEach(function (actionName) {
+            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
+            var arr = actionName.split(coreConfig.NSP);
+
+            if (arr[1]) {
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            } else {
+              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            }
+          });
+        }
+      })();
+    }
+  }
+}
+function defineModuleGetter(moduleGetter) {
+  MetaData.moduleGetter = moduleGetter;
+  MetaData.moduleExists = Object.keys(moduleGetter).reduce(function (data, moduleName) {
+    data[moduleName] = true;
+    return data;
+  }, {});
 }
 
 function _arrayWithHoles(arr) {
@@ -1018,205 +1363,99 @@ function _optionalCallableProperty(obj, name) {
   return value;
 }
 
-function getModuleGetter() {
-  return MetaData.moduleGetter;
-}
-function exportModule(moduleName, ModuleHandles, params, components) {
-  Object.keys(components).forEach(function (key) {
-    var component = components[key];
+var routeMiddleware = function routeMiddleware(_ref) {
+  _ref.store;
+      var dispatch = _ref.dispatch,
+      getState = _ref.getState;
+  return function (next) {
+    return function (action) {
+      if (action.type === "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes$1.MRouteChange) {
+        var result = next(action);
+        var _ref2 = action.payload,
+            routeState = _ref2[0];
+        var rootState = getState();
+        Object.keys(routeState.params).forEach(function (moduleName) {
+          var moduleState = routeState.params[moduleName];
 
-    if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
-      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
-    }
-  });
-
-  var model = function model(store) {
-    if (!store.injectedModules[moduleName]) {
-      var moduleHandles = new ModuleHandles(moduleName);
-      store.injectedModules[moduleName] = moduleHandles;
-      moduleHandles.store = store;
-      injectActions(moduleName, moduleHandles);
-      var _initState = moduleHandles.initState;
-      var preModuleState = store.getState(moduleName);
-
-      if (preModuleState) {
-        return store.dispatch(moduleReInitAction(moduleName, _initState));
+          if (moduleState && Object.keys(moduleState).length > 0) {
+            if (rootState[moduleName]) {
+              dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
+            }
+          }
+        });
+        return result;
+      } else {
+        return next(action);
       }
-
-      return store.dispatch(moduleInitAction(moduleName, _initState));
-    }
-
-    return undefined;
+    };
   };
-
-  return {
-    moduleName: moduleName,
-    model: model,
-    components: components,
-    state: undefined,
-    params: params,
-    actions: undefined
-  };
-}
-function getModule(moduleName) {
-  if (MetaData.moduleCaches[moduleName]) {
-    return MetaData.moduleCaches[moduleName];
-  }
-
-  var moduleOrPromise = MetaData.moduleGetter[moduleName]();
-
-  if (isPromise(moduleOrPromise)) {
-    var promiseModule = moduleOrPromise.then(function (_ref) {
-      var module = _ref.default;
-      MetaData.moduleCaches[moduleName] = module;
-      return module;
-    }, function (reason) {
-      MetaData.moduleCaches[moduleName] = undefined;
-      throw reason;
-    });
-    MetaData.moduleCaches[moduleName] = promiseModule;
-    return promiseModule;
-  }
-
-  MetaData.moduleCaches[moduleName] = moduleOrPromise;
-  return moduleOrPromise;
-}
-function getModuleList(moduleNames) {
-  if (moduleNames.length < 1) {
-    return [];
-  }
-
-  var list = moduleNames.map(function (moduleName) {
-    if (MetaData.moduleCaches[moduleName]) {
-      return MetaData.moduleCaches[moduleName];
-    }
-
-    return getModule(moduleName);
-  });
-
-  if (list.some(function (item) {
-    return isPromise(item);
-  })) {
-    return Promise.all(list);
-  } else {
-    return list;
-  }
-}
-
-function _loadModel(moduleName, store) {
-  var moduleOrPromise = getModule(moduleName);
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(function (module) {
-      return module.model(store);
-    });
-  }
-
-  return moduleOrPromise.model(store);
-}
-function getComponet(moduleName, componentName) {
-  var key = [moduleName, componentName].join(coreConfig.NSP);
-
-  if (MetaData.componentCaches[key]) {
-    return MetaData.componentCaches[key];
-  }
-
-  var moduleCallback = function moduleCallback(module) {
-    var componentOrFun = module.components[componentName];
-
-    if (isEluxComponent(componentOrFun)) {
-      var component = componentOrFun;
-      MetaData.componentCaches[key] = component;
-      return component;
-    }
-
-    var promiseComponent = componentOrFun().then(function (_ref2) {
-      var component = _ref2.default;
-      MetaData.componentCaches[key] = component;
-      return component;
-    }, function (reason) {
-      MetaData.componentCaches[key] = undefined;
-      throw reason;
-    });
-    MetaData.componentCaches[key] = promiseComponent;
-    return promiseComponent;
-  };
-
-  var moduleOrPromise = getModule(moduleName);
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(moduleCallback);
-  }
-
-  return moduleCallback(moduleOrPromise);
-}
-function getComponentList(keys) {
-  if (keys.length < 1) {
-    return Promise.resolve([]);
-  }
-
-  return Promise.all(keys.map(function (key) {
-    if (MetaData.componentCaches[key]) {
-      return MetaData.componentCaches[key];
-    }
-
-    var _key$split = key.split(coreConfig.NSP),
-        moduleName = _key$split[0],
-        componentName = _key$split[1];
-
-    return getComponet(moduleName, componentName);
-  }));
-}
-function loadComponet(moduleName, componentName, store, deps) {
-  var promiseOrComponent = getComponet(moduleName, componentName);
-
-  var callback = function callback(component) {
-    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
-      if (env.isServer) {
-        return null;
-      }
-
-      var module = getModule(moduleName);
-      module.model(store);
-    }
-
-    deps[moduleName + coreConfig.NSP + componentName] = true;
-    return component;
-  };
-
-  if (isPromise(promiseOrComponent)) {
-    if (env.isServer) {
-      return null;
-    }
-
-    return promiseOrComponent.then(callback);
-  }
-
-  return callback(promiseOrComponent);
-}
-var EmptyModuleHandlers = function EmptyModuleHandlers(moduleName) {
-  _defineProperty(this, "store", void 0);
-
-  _defineProperty(this, "initState", void 0);
-
-  this.moduleName = moduleName;
-  this.initState = {};
 };
-var CoreModuleHandlers = _decorate(null, function (_initialize) {
-  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, initState) {
+var EmptyModuleHandlers = function () {
+  function EmptyModuleHandlers(moduleName, store) {
+    _defineProperty(this, "initState", {});
+
+    this.moduleName = moduleName;
+    this.store = store;
+  }
+
+  var _proto = EmptyModuleHandlers.prototype;
+
+  _proto.destroy = function destroy() {
+    return;
+  };
+
+  return EmptyModuleHandlers;
+}();
+var RouteModuleHandlers = _decorate(null, function (_initialize) {
+  var RouteModuleHandlers = function RouteModuleHandlers(moduleName, store, latestState) {
     _initialize(this);
 
     this.moduleName = moduleName;
+    this.store = store;
+    this.initState = latestState[moduleName];
+  };
+
+  return {
+    F: RouteModuleHandlers,
+    d: [{
+      kind: "field",
+      key: "initState",
+      value: void 0
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: ActionTypes$1.MInit,
+      value: function value(initState) {
+        return initState;
+      }
+    }, {
+      kind: "method",
+      decorators: [reducer],
+      key: ActionTypes$1.MRouteChange,
+      value: function value(routeState) {
+        return mergeState(this.store.getState(this.moduleName), routeState);
+      }
+    }, {
+      kind: "method",
+      key: "destroy",
+      value: function destroy() {
+        return;
+      }
+    }]
+  };
+});
+var CoreModuleHandlers = _decorate(null, function (_initialize2) {
+  var CoreModuleHandlers = function CoreModuleHandlers(moduleName, store, initState) {
+    _initialize2(this);
+
+    this.moduleName = moduleName;
+    this.store = store;
     this.initState = initState;
   };
 
   return {
     F: CoreModuleHandlers,
     d: [{
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
       kind: "get",
       key: "actions",
       value: function actions() {
@@ -1229,15 +1468,15 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
         return MetaData.facadeMap[this.moduleName].actions;
       }
     }, {
-      kind: "get",
-      key: "state",
-      value: function state() {
+      kind: "method",
+      key: "getState",
+      value: function getState() {
         return this.store.getState(this.moduleName);
       }
     }, {
-      kind: "get",
-      key: "rootState",
-      value: function rootState() {
+      kind: "method",
+      key: "getRootState",
+      value: function getRootState() {
         return this.store.getState();
       }
     }, {
@@ -1247,16 +1486,16 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
         return this.store.getCurrentActionName();
       }
     }, {
-      kind: "get",
-      key: "currentRootState",
-      value: function currentRootState() {
-        return this.store.getCurrentState();
+      kind: "method",
+      key: "getCurrentState",
+      value: function getCurrentState() {
+        return this.store.getCurrentState(this.moduleName);
       }
     }, {
-      kind: "get",
-      key: "currentState",
-      value: function currentState() {
-        return this.store.getCurrentState(this.moduleName);
+      kind: "method",
+      key: "getCurrentRootState",
+      value: function getCurrentRootState() {
+        return this.store.getCurrentState();
       }
     }, {
       kind: "method",
@@ -1267,121 +1506,43 @@ var CoreModuleHandlers = _decorate(null, function (_initialize) {
     }, {
       kind: "method",
       key: "loadModel",
-      value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
+      value: function loadModel$1(moduleName) {
+        return loadModel(moduleName, this.store);
+      }
+    }, {
+      kind: "method",
+      key: "getRouteParams",
+      value: function getRouteParams() {
+        var route = this.store.getState(this.store.router.name);
+        return route.params[this.moduleName];
       }
     }, {
       kind: "method",
       decorators: [reducer],
-      key: "Init",
-      value: function Init(initState) {
+      key: ActionTypes$1.MInit,
+      value: function value(initState) {
         return initState;
       }
     }, {
       kind: "method",
       decorators: [reducer],
-      key: "Update",
-      value: function Update(payload, key) {
-        return mergeState(this.state, payload);
+      key: ActionTypes$1.MLoading,
+      value: function value(payload) {
+        var state = this.getState();
+        var loading = mergeState(state.loading, payload);
+        return mergeState(state, {
+          loading: loading
+        });
       }
     }, {
       kind: "method",
-      decorators: [reducer],
-      key: "Loading",
-      value: function Loading(payload) {
-        var loading = mergeState(this.state.loading, payload);
-        return mergeState(this.state, {
-          loading: loading
-        });
+      key: "destroy",
+      value: function destroy() {
+        return;
       }
     }]
   };
 });
-function getRootModuleAPI(data) {
-  if (!MetaData.facadeMap) {
-    if (data) {
-      MetaData.facadeMap = Object.keys(data).reduce(function (prev, moduleName) {
-        var arr = data[moduleName];
-        var actions = {};
-        var actionNames = {};
-        arr.forEach(function (actionName) {
-          actions[actionName] = function () {
-            for (var _len = arguments.length, payload = new Array(_len), _key = 0; _key < _len; _key++) {
-              payload[_key] = arguments[_key];
-            }
-
-            return {
-              type: moduleName + coreConfig.NSP + actionName,
-              payload: payload
-            };
-          };
-
-          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
-        });
-        var moduleFacade = {
-          name: moduleName,
-          actions: actions,
-          actionNames: actionNames
-        };
-        prev[moduleName] = moduleFacade;
-        return prev;
-      }, {});
-    } else {
-      var cacheData = {};
-      MetaData.facadeMap = new Proxy({}, {
-        set: function set(target, moduleName, val, receiver) {
-          return Reflect.set(target, moduleName, val, receiver);
-        },
-        get: function get(target, moduleName, receiver) {
-          var val = Reflect.get(target, moduleName, receiver);
-
-          if (val !== undefined) {
-            return val;
-          }
-
-          if (!cacheData[moduleName]) {
-            cacheData[moduleName] = {
-              name: moduleName,
-              actionNames: new Proxy({}, {
-                get: function get(__, actionName) {
-                  return moduleName + coreConfig.NSP + actionName;
-                }
-              }),
-              actions: new Proxy({}, {
-                get: function get(__, actionName) {
-                  return function () {
-                    for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                      payload[_key2] = arguments[_key2];
-                    }
-
-                    return {
-                      type: moduleName + coreConfig.NSP + actionName,
-                      payload: payload
-                    };
-                  };
-                }
-              })
-            };
-          }
-
-          return cacheData[moduleName];
-        }
-      });
-    }
-  }
-
-  return MetaData.facadeMap;
-}
-function exportComponent(component) {
-  var eluxComponent = component;
-  eluxComponent.__elux_component__ = 'component';
-  return eluxComponent;
-}
-function exportView(component) {
-  var eluxComponent = component;
-  eluxComponent.__elux_component__ = 'view';
-  return eluxComponent;
-}
 
 var errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
@@ -1427,11 +1588,7 @@ function compose$1() {
   });
 }
 
-function enhanceStore(baseStore, middlewares, injectedModules) {
-  if (injectedModules === void 0) {
-    injectedModules = {};
-  }
-
+function enhanceStore(baseStore, router, middlewares) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -1441,13 +1598,35 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.router = router;
   store.getState = getState;
-  store.injectedModules = injectedModules;
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  var injectedModules = store.injectedModules;
+  store.options = {
+    middlewares: middlewares
+  };
+  var _destroy = baseStore.destroy;
+
+  store.destroy = function () {
+    _destroy();
+
+    Object.keys(injectedModules).forEach(function (moduleName) {
+      injectedModules[moduleName].destroy();
+    });
+  };
+
   var currentData = {
     actionName: '',
     prevState: {}
   };
-  var update = baseStore.update;
+  var _update = baseStore.update;
+
+  baseStore.update = function (actionName, state, actionData) {
+    _update(actionName, state, actionData);
+
+    router.latestState = _extends({}, router.latestState, state);
+  };
 
   store.getCurrentActionName = function () {
     return currentData.actionName;
@@ -1463,6 +1642,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
   };
 
   var middlewareAPI = {
+    store: store,
     getState: getState,
     dispatch: function dispatch(action) {
       return _dispatch2(action);
@@ -1492,7 +1672,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
 
         if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
           if (!injectedModules[moduleName]) {
-            var result = _loadModel(moduleName, store);
+            var result = loadModel(moduleName, store);
 
             if (isPromise(result)) {
               return result.then(function () {
@@ -1570,7 +1750,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     if (handlerModuleNames.length > 0) {
       var orderList = [];
       handlerModuleNames.forEach(function (moduleName) {
-        if (moduleName === MetaData.appModuleName) {
+        if (moduleName === coreConfig.AppModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -1601,7 +1781,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
             }
           }
         });
-        update(actionName, newState, actionData);
+        store.update(actionName, newState, actionData);
       } else {
         var result = [];
         orderList.forEach(function (moduleName) {
@@ -1629,8 +1809,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     return respondHandler(action, false, prevData);
   }
 
-  var arr = middlewares ? [preMiddleware].concat(middlewares) : [preMiddleware];
-  var chain = arr.map(function (middleware) {
+  var chain = [preMiddleware, routeMiddleware].concat(middlewares || []).map(function (middleware) {
     return middleware(middlewareAPI);
   });
   _dispatch2 = compose$1.apply(void 0, chain)(_dispatch);
@@ -1638,941 +1817,59 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
   return store;
 }
 
-function createCommonjsModule(fn) {
-  var module = { exports: {} };
-	return fn(module, module.exports), module.exports;
-}
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-var runtime = createCommonjsModule(function (module) {
-!(function(global) {
-
-  var Op = Object.prototype;
-  var hasOwn = Op.hasOwnProperty;
-  var undefined$1; // More compressible than void 0.
-  var $Symbol = typeof Symbol === "function" ? Symbol : {};
-  var iteratorSymbol = $Symbol.iterator || "@@iterator";
-  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
-  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-  var runtime = global.regeneratorRuntime;
-  if (runtime) {
-    {
-      // If regeneratorRuntime is defined globally and we're in a module,
-      // make the exports object identical to regeneratorRuntime.
-      module.exports = runtime;
-    }
-    // Don't bother evaluating the rest of this file if the runtime was
-    // already defined globally.
-    return;
+function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+  if (preloadComponents === void 0) {
+    preloadComponents = [];
   }
 
-  // Define the runtime globally (as expected by generated code) as either
-  // module.exports (if we're in a module) or a new, empty object.
-  runtime = global.regeneratorRuntime = module.exports ;
-
-  function wrap(innerFn, outerFn, self, tryLocsList) {
-    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
-    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
-    var generator = Object.create(protoGenerator.prototype);
-    var context = new Context(tryLocsList || []);
-
-    // The ._invoke method unifies the implementations of the .next,
-    // .throw, and .return methods.
-    generator._invoke = makeInvokeMethod(innerFn, self, context);
-
-    return generator;
-  }
-  runtime.wrap = wrap;
-
-  // Try/catch helper to minimize deoptimizations. Returns a completion
-  // record like context.tryEntries[i].completion. This interface could
-  // have been (and was previously) designed to take a closure to be
-  // invoked without arguments, but in all the cases we care about we
-  // already have an existing method we want to call, so there's no need
-  // to create a new function object. We can even get away with assuming
-  // the method takes exactly one argument, since that happens to be true
-  // in every case, so we don't have to touch the arguments object. The
-  // only additional allocation required is the completion record, which
-  // has a stable shape and so hopefully should be cheap to allocate.
-  function tryCatch(fn, obj, arg) {
-    try {
-      return { type: "normal", arg: fn.call(obj, arg) };
-    } catch (err) {
-      return { type: "throw", arg: err };
-    }
-  }
-
-  var GenStateSuspendedStart = "suspendedStart";
-  var GenStateSuspendedYield = "suspendedYield";
-  var GenStateExecuting = "executing";
-  var GenStateCompleted = "completed";
-
-  // Returning this object from the innerFn has the same effect as
-  // breaking out of the dispatch switch statement.
-  var ContinueSentinel = {};
-
-  // Dummy constructor functions that we use as the .constructor and
-  // .constructor.prototype properties for functions that return Generator
-  // objects. For full spec compliance, you may wish to configure your
-  // minifier not to mangle the names of these two functions.
-  function Generator() {}
-  function GeneratorFunction() {}
-  function GeneratorFunctionPrototype() {}
-
-  // This is a polyfill for %IteratorPrototype% for environments that
-  // don't natively support it.
-  var IteratorPrototype = {};
-  IteratorPrototype[iteratorSymbol] = function () {
-    return this;
+  MetaData.currentRouter = router;
+  var store = enhanceStore(baseStore, router, middlewares);
+  router.startup(store);
+  var AppModuleName = coreConfig.AppModuleName,
+      RouteModuleName = coreConfig.RouteModuleName;
+  var moduleGetter = MetaData.moduleGetter;
+  var appModule = getModule(AppModuleName);
+  var routeModule = getModule(RouteModuleName);
+  var AppView = appViewName ? getComponet(AppModuleName, appViewName) : {
+    __elux_component__: 'view'
   };
-
-  var getProto = Object.getPrototypeOf;
-  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
-  if (NativeIteratorPrototype &&
-      NativeIteratorPrototype !== Op &&
-      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
-    // This environment has a native %IteratorPrototype%; use it instead
-    // of the polyfill.
-    IteratorPrototype = NativeIteratorPrototype;
-  }
-
-  var Gp = GeneratorFunctionPrototype.prototype =
-    Generator.prototype = Object.create(IteratorPrototype);
-  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
-  GeneratorFunctionPrototype.constructor = GeneratorFunction;
-  GeneratorFunctionPrototype[toStringTagSymbol] =
-    GeneratorFunction.displayName = "GeneratorFunction";
-
-  // Helper for defining the .next, .throw, and .return methods of the
-  // Iterator interface in terms of a single ._invoke method.
-  function defineIteratorMethods(prototype) {
-    ["next", "throw", "return"].forEach(function(method) {
-      prototype[method] = function(arg) {
-        return this._invoke(method, arg);
-      };
-    });
-  }
-
-  runtime.isGeneratorFunction = function(genFun) {
-    var ctor = typeof genFun === "function" && genFun.constructor;
-    return ctor
-      ? ctor === GeneratorFunction ||
-        // For the native GeneratorFunction constructor, the best we can
-        // do is to check its .name property.
-        (ctor.displayName || ctor.name) === "GeneratorFunction"
-      : false;
-  };
-
-  runtime.mark = function(genFun) {
-    if (Object.setPrototypeOf) {
-      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
-    } else {
-      genFun.__proto__ = GeneratorFunctionPrototype;
-      if (!(toStringTagSymbol in genFun)) {
-        genFun[toStringTagSymbol] = "GeneratorFunction";
-      }
-    }
-    genFun.prototype = Object.create(Gp);
-    return genFun;
-  };
-
-  // Within the body of any async function, `await x` is transformed to
-  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
-  // `hasOwn.call(value, "__await")` to determine if the yielded value is
-  // meant to be awaited.
-  runtime.awrap = function(arg) {
-    return { __await: arg };
-  };
-
-  function AsyncIterator(generator) {
-    function invoke(method, arg, resolve, reject) {
-      var record = tryCatch(generator[method], generator, arg);
-      if (record.type === "throw") {
-        reject(record.arg);
-      } else {
-        var result = record.arg;
-        var value = result.value;
-        if (value &&
-            typeof value === "object" &&
-            hasOwn.call(value, "__await")) {
-          return Promise.resolve(value.__await).then(function(value) {
-            invoke("next", value, resolve, reject);
-          }, function(err) {
-            invoke("throw", err, resolve, reject);
-          });
-        }
-
-        return Promise.resolve(value).then(function(unwrapped) {
-          // When a yielded Promise is resolved, its final value becomes
-          // the .value of the Promise<{value,done}> result for the
-          // current iteration. If the Promise is rejected, however, the
-          // result for this iteration will be rejected with the same
-          // reason. Note that rejections of yielded Promises are not
-          // thrown back into the generator function, as is the case
-          // when an awaited Promise is rejected. This difference in
-          // behavior between yield and await is important, because it
-          // allows the consumer to decide what to do with the yielded
-          // rejection (swallow it and continue, manually .throw it back
-          // into the generator, abandon iteration, whatever). With
-          // await, by contrast, there is no opportunity to examine the
-          // rejection reason outside the generator function, so the
-          // only option is to throw it from the await expression, and
-          // let the generator function handle the exception.
-          result.value = unwrapped;
-          resolve(result);
-        }, reject);
-      }
+  var preloadModules = Object.keys(router.routeState.params).concat(Object.keys(baseStore.getState())).reduce(function (data, moduleName) {
+    if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
+      data[moduleName] = true;
     }
 
-    var previousPromise;
-
-    function enqueue(method, arg) {
-      function callInvokeWithMethodAndArg() {
-        return new Promise(function(resolve, reject) {
-          invoke(method, arg, resolve, reject);
-        });
-      }
-
-      return previousPromise =
-        // If enqueue has been called before, then we want to wait until
-        // all previous Promises have been resolved before calling invoke,
-        // so that results are always delivered in the correct order. If
-        // enqueue has not been called before, then it is important to
-        // call invoke immediately, without waiting on a callback to fire,
-        // so that the async generator function has the opportunity to do
-        // any necessary setup in a predictable way. This predictability
-        // is why the Promise constructor synchronously invokes its
-        // executor callback, and why async functions synchronously
-        // execute code before the first await. Since we implement simple
-        // async functions in terms of async generators, it is especially
-        // important to get this right, even though it requires care.
-        previousPromise ? previousPromise.then(
-          callInvokeWithMethodAndArg,
-          // Avoid propagating failures to Promises returned by later
-          // invocations of the iterator.
-          callInvokeWithMethodAndArg
-        ) : callInvokeWithMethodAndArg();
-    }
-
-    // Define the unified helper method that is used to implement .next,
-    // .throw, and .return (see defineIteratorMethods).
-    this._invoke = enqueue;
-  }
-
-  defineIteratorMethods(AsyncIterator.prototype);
-  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
-    return this;
-  };
-  runtime.AsyncIterator = AsyncIterator;
-
-  // Note that simple async functions are implemented on top of
-  // AsyncIterator objects; they just return a Promise for the value of
-  // the final result produced by the iterator.
-  runtime.async = function(innerFn, outerFn, self, tryLocsList) {
-    var iter = new AsyncIterator(
-      wrap(innerFn, outerFn, self, tryLocsList)
-    );
-
-    return runtime.isGeneratorFunction(outerFn)
-      ? iter // If outerFn is a generator, return the full iterator.
-      : iter.next().then(function(result) {
-          return result.done ? result.value : iter.next();
-        });
-  };
-
-  function makeInvokeMethod(innerFn, self, context) {
-    var state = GenStateSuspendedStart;
-
-    return function invoke(method, arg) {
-      if (state === GenStateExecuting) {
-        throw new Error("Generator is already running");
-      }
-
-      if (state === GenStateCompleted) {
-        if (method === "throw") {
-          throw arg;
-        }
-
-        // Be forgiving, per 25.3.3.3.3 of the spec:
-        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-        return doneResult();
-      }
-
-      context.method = method;
-      context.arg = arg;
-
-      while (true) {
-        var delegate = context.delegate;
-        if (delegate) {
-          var delegateResult = maybeInvokeDelegate(delegate, context);
-          if (delegateResult) {
-            if (delegateResult === ContinueSentinel) continue;
-            return delegateResult;
-          }
-        }
-
-        if (context.method === "next") {
-          // Setting context._sent for legacy support of Babel's
-          // function.sent implementation.
-          context.sent = context._sent = context.arg;
-
-        } else if (context.method === "throw") {
-          if (state === GenStateSuspendedStart) {
-            state = GenStateCompleted;
-            throw context.arg;
-          }
-
-          context.dispatchException(context.arg);
-
-        } else if (context.method === "return") {
-          context.abrupt("return", context.arg);
-        }
-
-        state = GenStateExecuting;
-
-        var record = tryCatch(innerFn, self, context);
-        if (record.type === "normal") {
-          // If an exception is thrown from innerFn, we leave state ===
-          // GenStateExecuting and loop back for another invocation.
-          state = context.done
-            ? GenStateCompleted
-            : GenStateSuspendedYield;
-
-          if (record.arg === ContinueSentinel) {
-            continue;
-          }
-
-          return {
-            value: record.arg,
-            done: context.done
-          };
-
-        } else if (record.type === "throw") {
-          state = GenStateCompleted;
-          // Dispatch the exception by looping back around to the
-          // context.dispatchException(context.arg) call above.
-          context.method = "throw";
-          context.arg = record.arg;
-        }
-      }
-    };
-  }
-
-  // Call delegate.iterator[context.method](context.arg) and handle the
-  // result, either by returning a { value, done } result from the
-  // delegate iterator, or by modifying context.method and context.arg,
-  // setting context.delegate to null, and returning the ContinueSentinel.
-  function maybeInvokeDelegate(delegate, context) {
-    var method = delegate.iterator[context.method];
-    if (method === undefined$1) {
-      // A .throw or .return when the delegate iterator has no .throw
-      // method always terminates the yield* loop.
-      context.delegate = null;
-
-      if (context.method === "throw") {
-        if (delegate.iterator.return) {
-          // If the delegate iterator has a return method, give it a
-          // chance to clean up.
-          context.method = "return";
-          context.arg = undefined$1;
-          maybeInvokeDelegate(delegate, context);
-
-          if (context.method === "throw") {
-            // If maybeInvokeDelegate(context) changed context.method from
-            // "return" to "throw", let that override the TypeError below.
-            return ContinueSentinel;
-          }
-        }
-
-        context.method = "throw";
-        context.arg = new TypeError(
-          "The iterator does not provide a 'throw' method");
-      }
-
-      return ContinueSentinel;
-    }
-
-    var record = tryCatch(method, delegate.iterator, context.arg);
-
-    if (record.type === "throw") {
-      context.method = "throw";
-      context.arg = record.arg;
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    var info = record.arg;
-
-    if (! info) {
-      context.method = "throw";
-      context.arg = new TypeError("iterator result is not an object");
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    if (info.done) {
-      // Assign the result of the finished delegate to the temporary
-      // variable specified by delegate.resultName (see delegateYield).
-      context[delegate.resultName] = info.value;
-
-      // Resume execution at the desired location (see delegateYield).
-      context.next = delegate.nextLoc;
-
-      // If context.method was "throw" but the delegate handled the
-      // exception, let the outer generator proceed normally. If
-      // context.method was "next", forget context.arg since it has been
-      // "consumed" by the delegate iterator. If context.method was
-      // "return", allow the original .return call to continue in the
-      // outer generator.
-      if (context.method !== "return") {
-        context.method = "next";
-        context.arg = undefined$1;
-      }
-
-    } else {
-      // Re-yield the result returned by the delegate method.
-      return info;
-    }
-
-    // The delegate iterator is finished, so forget it and continue with
-    // the outer generator.
-    context.delegate = null;
-    return ContinueSentinel;
-  }
-
-  // Define Generator.prototype.{next,throw,return} in terms of the
-  // unified ._invoke helper method.
-  defineIteratorMethods(Gp);
-
-  Gp[toStringTagSymbol] = "Generator";
-
-  // A Generator should always return itself as the iterator object when the
-  // @@iterator function is called on it. Some browsers' implementations of the
-  // iterator prototype chain incorrectly implement this, causing the Generator
-  // object to not be returned from this call. This ensures that doesn't happen.
-  // See https://github.com/facebook/regenerator/issues/274 for more details.
-  Gp[iteratorSymbol] = function() {
-    return this;
-  };
-
-  Gp.toString = function() {
-    return "[object Generator]";
-  };
-
-  function pushTryEntry(locs) {
-    var entry = { tryLoc: locs[0] };
-
-    if (1 in locs) {
-      entry.catchLoc = locs[1];
-    }
-
-    if (2 in locs) {
-      entry.finallyLoc = locs[2];
-      entry.afterLoc = locs[3];
-    }
-
-    this.tryEntries.push(entry);
-  }
-
-  function resetTryEntry(entry) {
-    var record = entry.completion || {};
-    record.type = "normal";
-    delete record.arg;
-    entry.completion = record;
-  }
-
-  function Context(tryLocsList) {
-    // The root entry object (effectively a try statement without a catch
-    // or a finally block) gives us a place to store values thrown from
-    // locations where there is no enclosing try statement.
-    this.tryEntries = [{ tryLoc: "root" }];
-    tryLocsList.forEach(pushTryEntry, this);
-    this.reset(true);
-  }
-
-  runtime.keys = function(object) {
-    var keys = [];
-    for (var key in object) {
-      keys.push(key);
-    }
-    keys.reverse();
-
-    // Rather than returning an object with a next method, we keep
-    // things simple and return the next function itself.
-    return function next() {
-      while (keys.length) {
-        var key = keys.pop();
-        if (key in object) {
-          next.value = key;
-          next.done = false;
-          return next;
-        }
-      }
-
-      // To avoid creating an additional object, we just hang the .value
-      // and .done properties off the next function object itself. This
-      // also ensures that the minifier will not anonymize the function.
-      next.done = true;
-      return next;
-    };
-  };
-
-  function values(iterable) {
-    if (iterable) {
-      var iteratorMethod = iterable[iteratorSymbol];
-      if (iteratorMethod) {
-        return iteratorMethod.call(iterable);
-      }
-
-      if (typeof iterable.next === "function") {
-        return iterable;
-      }
-
-      if (!isNaN(iterable.length)) {
-        var i = -1, next = function next() {
-          while (++i < iterable.length) {
-            if (hasOwn.call(iterable, i)) {
-              next.value = iterable[i];
-              next.done = false;
-              return next;
-            }
-          }
-
-          next.value = undefined$1;
-          next.done = true;
-
-          return next;
-        };
-
-        return next.next = next;
-      }
-    }
-
-    // Return an iterator with no values.
-    return { next: doneResult };
-  }
-  runtime.values = values;
-
-  function doneResult() {
-    return { value: undefined$1, done: true };
-  }
-
-  Context.prototype = {
-    constructor: Context,
-
-    reset: function(skipTempReset) {
-      this.prev = 0;
-      this.next = 0;
-      // Resetting context._sent for legacy support of Babel's
-      // function.sent implementation.
-      this.sent = this._sent = undefined$1;
-      this.done = false;
-      this.delegate = null;
-
-      this.method = "next";
-      this.arg = undefined$1;
-
-      this.tryEntries.forEach(resetTryEntry);
-
-      if (!skipTempReset) {
-        for (var name in this) {
-          // Not sure about the optimal order of these conditions:
-          if (name.charAt(0) === "t" &&
-              hasOwn.call(this, name) &&
-              !isNaN(+name.slice(1))) {
-            this[name] = undefined$1;
-          }
-        }
-      }
-    },
-
-    stop: function() {
-      this.done = true;
-
-      var rootEntry = this.tryEntries[0];
-      var rootRecord = rootEntry.completion;
-      if (rootRecord.type === "throw") {
-        throw rootRecord.arg;
-      }
-
-      return this.rval;
-    },
-
-    dispatchException: function(exception) {
-      if (this.done) {
-        throw exception;
-      }
-
-      var context = this;
-      function handle(loc, caught) {
-        record.type = "throw";
-        record.arg = exception;
-        context.next = loc;
-
-        if (caught) {
-          // If the dispatched exception was caught by a catch block,
-          // then let that catch block handle the exception normally.
-          context.method = "next";
-          context.arg = undefined$1;
-        }
-
-        return !! caught;
-      }
-
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        var record = entry.completion;
-
-        if (entry.tryLoc === "root") {
-          // Exception thrown outside of any try block that could handle
-          // it, so set the completion value of the entire function to
-          // throw the exception.
-          return handle("end");
-        }
-
-        if (entry.tryLoc <= this.prev) {
-          var hasCatch = hasOwn.call(entry, "catchLoc");
-          var hasFinally = hasOwn.call(entry, "finallyLoc");
-
-          if (hasCatch && hasFinally) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            } else if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-
-          } else if (hasCatch) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            }
-
-          } else if (hasFinally) {
-            if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-
-          } else {
-            throw new Error("try statement without catch or finally");
-          }
-        }
-      }
-    },
-
-    abrupt: function(type, arg) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.tryLoc <= this.prev &&
-            hasOwn.call(entry, "finallyLoc") &&
-            this.prev < entry.finallyLoc) {
-          var finallyEntry = entry;
-          break;
-        }
-      }
-
-      if (finallyEntry &&
-          (type === "break" ||
-           type === "continue") &&
-          finallyEntry.tryLoc <= arg &&
-          arg <= finallyEntry.finallyLoc) {
-        // Ignore the finally entry if control is not jumping to a
-        // location outside the try/catch block.
-        finallyEntry = null;
-      }
-
-      var record = finallyEntry ? finallyEntry.completion : {};
-      record.type = type;
-      record.arg = arg;
-
-      if (finallyEntry) {
-        this.method = "next";
-        this.next = finallyEntry.finallyLoc;
-        return ContinueSentinel;
-      }
-
-      return this.complete(record);
-    },
-
-    complete: function(record, afterLoc) {
-      if (record.type === "throw") {
-        throw record.arg;
-      }
-
-      if (record.type === "break" ||
-          record.type === "continue") {
-        this.next = record.arg;
-      } else if (record.type === "return") {
-        this.rval = this.arg = record.arg;
-        this.method = "return";
-        this.next = "end";
-      } else if (record.type === "normal" && afterLoc) {
-        this.next = afterLoc;
-      }
-
-      return ContinueSentinel;
-    },
-
-    finish: function(finallyLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.finallyLoc === finallyLoc) {
-          this.complete(entry.completion, entry.afterLoc);
-          resetTryEntry(entry);
-          return ContinueSentinel;
-        }
-      }
-    },
-
-    "catch": function(tryLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        if (entry.tryLoc === tryLoc) {
-          var record = entry.completion;
-          if (record.type === "throw") {
-            var thrown = record.arg;
-            resetTryEntry(entry);
-          }
-          return thrown;
-        }
-      }
-
-      // The context.catch method must only be called with a location
-      // argument that corresponds to a known catch block.
-      throw new Error("illegal catch attempt");
-    },
-
-    delegateYield: function(iterable, resultName, nextLoc) {
-      this.delegate = {
-        iterator: values(iterable),
-        resultName: resultName,
-        nextLoc: nextLoc
-      };
-
-      if (this.method === "next") {
-        // Deliberately forget the last sent value so that we don't
-        // accidentally pass it on to the delegate.
-        this.arg = undefined$1;
-      }
-
-      return ContinueSentinel;
-    }
-  };
-})(
-  // In sloppy mode, unbound `this` refers to the global object, fallback to
-  // Function constructor if we're in global strict mode. That is sadly a form
-  // of indirect eval which violates Content Security Policy.
-  (function() { return this })() || Function("return this")()
-);
-});
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-// This method of obtaining a reference to the global object needs to be
-// kept identical to the way it is obtained in runtime.js
-var g$1 = (function() { return this })() || Function("return this")();
-
-// Use `getOwnPropertyNames` because not all browsers support calling
-// `hasOwnProperty` on the global `self` object in a worker. See #183.
-var hadRuntime = g$1.regeneratorRuntime &&
-  Object.getOwnPropertyNames(g$1).indexOf("regeneratorRuntime") >= 0;
-
-// Save the old regeneratorRuntime in case it needs to be restored later.
-var oldRuntime = hadRuntime && g$1.regeneratorRuntime;
-
-// Force reevalutation of runtime.js.
-g$1.regeneratorRuntime = undefined;
-
-var runtimeModule = runtime;
-
-if (hadRuntime) {
-  // Restore the original runtime.
-  g$1.regeneratorRuntime = oldRuntime;
-} else {
-  // Remove the global property added by runtime.js.
-  try {
-    delete g$1.regeneratorRuntime;
-  } catch(e) {
-    g$1.regeneratorRuntime = undefined;
-  }
-}
-
-var regenerator = runtimeModule;
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
+    return data;
+  }, {});
+  var setup = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  return {
+    store: store,
+    AppView: AppView,
+    setup: setup
   };
 }
-
-var defFun = function defFun() {
-  return undefined;
-};
-
-function defineModuleGetter(moduleGetter, appModuleName) {
-  if (appModuleName === void 0) {
-    appModuleName = 'stage';
-  }
-
-  MetaData.appModuleName = appModuleName;
-  MetaData.moduleGetter = moduleGetter;
-
-  if (!moduleGetter[appModuleName]) {
-    throw appModuleName + " could not be found in moduleGetter";
-  }
-}
-function renderApp(_x, _x2, _x3, _x4, _x5) {
-  return _renderApp.apply(this, arguments);
-}
-
-function _renderApp() {
-  _renderApp = _asyncToGenerator(regenerator.mark(function _callee(baseStore, preloadModules, preloadComponents, middlewares, appViewName) {
-    var moduleGetter, appModuleName, store, modules, appModule, AppView;
-    return regenerator.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            if (appViewName === void 0) {
-              appViewName = 'main';
-            }
-
-            moduleGetter = MetaData.moduleGetter, appModuleName = MetaData.appModuleName;
-            preloadModules = preloadModules.filter(function (moduleName) {
-              return moduleGetter[moduleName] && moduleName !== appModuleName;
-            });
-            preloadModules.unshift(appModuleName);
-            store = enhanceStore(baseStore, middlewares);
-            _context.next = 7;
-            return getModuleList(preloadModules);
-
-          case 7:
-            modules = _context.sent;
-            _context.next = 10;
-            return getComponentList(preloadComponents);
-
-          case 10:
-            appModule = modules[0];
-            _context.next = 13;
-            return appModule.model(store);
-
-          case 13:
-            AppView = getComponet(appModuleName, appViewName);
-            return _context.abrupt("return", {
-              store: store,
-              AppView: AppView
-            });
-
-          case 15:
-          case "end":
-            return _context.stop();
-        }
-      }
-    }, _callee);
-  }));
-  return _renderApp.apply(this, arguments);
-}
-
-function initApp(baseStore, middlewares) {
-  var moduleGetter = MetaData.moduleGetter,
-      appModuleName = MetaData.appModuleName;
-  var store = enhanceStore(baseStore, middlewares);
-  var appModule = moduleGetter[appModuleName]();
+var ForkStoreId = 0;
+function forkStore(originalStore) {
+  var _originalStore$builde = originalStore.builder,
+      storeCreator = _originalStore$builde.storeCreator,
+      storeOptions = _originalStore$builde.storeOptions,
+      middlewares = originalStore.options.middlewares,
+      router = originalStore.router;
+  var moduleGetter = MetaData.moduleGetter;
+  var baseStore = storeCreator(_extends({}, storeOptions, {
+    initState: undefined
+  }), ++ForkStoreId);
+  var store = enhanceStore(baseStore, router, middlewares);
+  var AppModuleName = coreConfig.AppModuleName,
+      RouteModuleName = coreConfig.RouteModuleName;
+  var appModule = getModule(AppModuleName);
+  var routeModule = getModule(RouteModuleName);
+  var preloadModules = Object.keys(router.routeState.params).filter(function (moduleName) {
+    return moduleGetter[moduleName] && moduleName !== AppModuleName;
+  });
+  getModuleList(preloadModules);
+  routeModule.model(store);
   appModule.model(store);
   return store;
-}
-function ssrApp(_x6, _x7, _x8, _x9) {
-  return _ssrApp.apply(this, arguments);
-}
-
-function _ssrApp() {
-  _ssrApp = _asyncToGenerator(regenerator.mark(function _callee2(baseStore, preloadModules, middlewares, appViewName) {
-    var moduleGetter, appModuleName, store, _yield$getModuleList, appModule, otherModules, AppView;
-
-    return regenerator.wrap(function _callee2$(_context2) {
-      while (1) {
-        switch (_context2.prev = _context2.next) {
-          case 0:
-            if (appViewName === void 0) {
-              appViewName = 'main';
-            }
-
-            moduleGetter = MetaData.moduleGetter, appModuleName = MetaData.appModuleName;
-            preloadModules = preloadModules.filter(function (moduleName) {
-              return moduleGetter[moduleName] && moduleName !== appModuleName;
-            });
-            preloadModules.unshift(appModuleName);
-            store = enhanceStore(baseStore, middlewares);
-            _context2.next = 7;
-            return getModuleList(preloadModules);
-
-          case 7:
-            _yield$getModuleList = _context2.sent;
-            appModule = _yield$getModuleList[0];
-            otherModules = _yield$getModuleList.slice(1);
-            _context2.next = 12;
-            return appModule.model(store);
-
-          case 12:
-            _context2.next = 14;
-            return Promise.all(otherModules.map(function (module) {
-              return module.model(store);
-            }));
-
-          case 14:
-            store.dispatch = defFun;
-            AppView = getComponet(appModuleName, appViewName);
-            return _context2.abrupt("return", {
-              store: store,
-              AppView: AppView
-            });
-
-          case 17:
-          case "end":
-            return _context2.stop();
-        }
-      }
-    }, _callee2);
-  }));
-  return _ssrApp.apply(this, arguments);
 }
 
 var reactComponentsConfig = {
@@ -2580,6 +1877,7 @@ var reactComponentsConfig = {
     return env.document.title = title;
   },
   Provider: null,
+  useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
     return React__default['default'].createElement("div", {
@@ -2699,10 +1997,13 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
   var onClick = _ref.onClick,
       href = _ref.href,
       url = _ref.url,
-      replace = _ref.replace,
-      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "replace"]);
+      root = _ref.root,
+      _ref$action = _ref.action,
+      action = _ref$action === void 0 ? 'push' : _ref$action,
+      rest = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "url", "root", "action"]);
 
   var eluxContext = React.useContext(EluxContextComponent);
+  var router = eluxContext.router;
 
   var props = _extends({}, rest, {
     onClick: function (_onClick) {
@@ -2718,7 +2019,7 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
     }(function (event) {
       event.preventDefault();
       onClick && onClick(event);
-      replace ? eluxContext.router.replace(url) : eluxContext.router.push(url);
+      router[action](url, root);
     })
   });
 
@@ -2734,6 +2035,72 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
   }
 });
 
+var Router$1 = function Router(props) {
+  var eluxContext = React.useContext(EluxContextComponent);
+  var router = eluxContext.router;
+
+  var _useState = React.useState('elux-app'),
+      classname = _useState[0],
+      setClassname = _useState[1];
+
+  var pages = [].concat(router.getHistory(true).getPages()).reverse();
+  var containerRef = React.useRef(null);
+  React.useEffect(function () {
+    return router.addListener('change', function (_ref) {
+      var routeState = _ref.routeState,
+          root = _ref.root;
+
+      if (root) {
+        if (routeState.action === 'PUSH') {
+          setClassname('elux-app elux-animation elux-change ' + Date.now());
+          env.setTimeout(function () {
+            containerRef.current.className = 'elux-app elux-animation';
+          }, 0);
+          env.setTimeout(function () {
+            containerRef.current.className = 'elux-app';
+          }, 1000);
+        } else if (routeState.action === 'BACK') {
+          containerRef.current.className = 'elux-app elux-animation elux-change';
+          env.setTimeout(function () {
+            setClassname('elux-app ' + Date.now());
+          }, 1000);
+        } else if (routeState.action === 'RELAUNCH') {
+          setClassname('elux-app ' + Date.now());
+        }
+      }
+    });
+  }, [router]);
+  var nodes = pages.map(function (item) {
+    var store = item.store;
+    var page = item.page ? React__default['default'].createElement(item.page, {
+      key: store.id,
+      store: store
+    }) : React__default['default'].createElement(Page$1, {
+      key: store.id,
+      store: store
+    }, props.children);
+    return page;
+  });
+  return React__default['default'].createElement("div", {
+    ref: containerRef,
+    className: classname
+  }, nodes);
+};
+var Page$1 = React.memo(function (_ref2) {
+  var store = _ref2.store,
+      children = _ref2.children;
+  return React__default['default'].createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, React__default['default'].createElement("div", {
+    className: "elux-page"
+  }, children));
+});
+function useRouter() {
+  var eluxContext = React.useContext(EluxContextComponent);
+  var router = eluxContext.router;
+  return router;
+}
+
 var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
@@ -2745,7 +2112,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   var Loader = function (_Component) {
     _inheritsLoose(Loader, _Component);
 
-    function Loader(props, context) {
+    function Loader(props) {
       var _this;
 
       _this = _Component.call(this, props) || this;
@@ -2761,8 +2128,6 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       _defineProperty(_assertThisInitialized(_this), "state", {
         ver: 0
       });
-
-      _this.context = context;
 
       _this.execute();
 
@@ -2788,15 +2153,14 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       var _this2 = this;
 
       if (!this.view && !this.loading && !this.error) {
-        var _ref = this.context || {},
-            deps = _ref.deps,
-            store = _ref.store;
-
+        var _this$props = this.props,
+            deps = _this$props.deps,
+            store = _this$props.store;
         this.loading = true;
         var result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps || {});
+          result = loadComponet(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -2829,9 +2193,11 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     };
 
     _proto.render = function render() {
-      var _this$props = this.props,
-          forwardedRef = _this$props.forwardedRef,
-          rest = _objectWithoutPropertiesLoose(_this$props, ["forwardedRef"]);
+      var _this$props2 = this.props,
+          forwardedRef = _this$props2.forwardedRef;
+          _this$props2.deps;
+          _this$props2.store;
+          var rest = _objectWithoutPropertiesLoose(_this$props2, ["forwardedRef", "deps", "store"]);
 
       if (this.view) {
         var View = this.view;
@@ -2853,329 +2219,970 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     return Loader;
   }(React.Component);
 
-  _defineProperty(Loader, "contextType", EluxContextComponent);
-
   return React__default['default'].forwardRef(function (props, ref) {
+    var _useContext = React.useContext(EluxContextComponent),
+        _useContext$deps = _useContext.deps,
+        deps = _useContext$deps === void 0 ? {} : _useContext$deps;
+
+    var store = reactComponentsConfig.useStore();
     return React__default['default'].createElement(Loader, _extends({}, props, {
+      store: store,
+      deps: deps,
       forwardedRef: ref
     }));
   });
 };
 
-function renderToMP(store, eluxContext) {
-  var Component = function Component(_ref) {
-    var children = _ref.children;
-    return React__default['default'].createElement(EluxContextComponent.Provider, {
-      value: eluxContext
-    }, React__default['default'].createElement(reactComponentsConfig.Provider, {
-      store: store
-    }, children));
-  };
-
-  return Component;
+function createCommonjsModule(fn) {
+  var module = { exports: {} };
+	return fn(module, module.exports), module.exports;
 }
 
-var routeConfig = {
-  actionMaxHistory: 10,
-  pagesMaxHistory: 10,
-  disableNativeRoute: false,
-  indexUrl: '',
-  defaultParams: {}
-};
-var setRouteConfig = buildConfigSetter(routeConfig);
-var routeMeta = {};
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
-function locationToUri(location, key) {
-  var pagename = location.pagename,
-      params = location.params;
-  var query = params ? JSON.stringify(params) : '';
-  return {
-    uri: [key, pagename, query].join('|'),
-    pagename: pagename,
-    query: query,
-    key: key
-  };
-}
+var runtime = createCommonjsModule(function (module) {
+!function (global) {
 
-function isHistoryRecord(data) {
-  return data['uri'];
-}
+  var Op = Object.prototype;
+  var hasOwn = Op.hasOwnProperty;
+  var undefined$1; // More compressible than void 0.
 
-function splitUri() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+  var runtime = global.regeneratorRuntime;
+
+  if (runtime) {
+    {
+      // If regeneratorRuntime is defined globally and we're in a module,
+      // make the exports object identical to regeneratorRuntime.
+      module.exports = runtime;
+    } // Don't bother evaluating the rest of this file if the runtime was
+    // already defined globally.
+
+
+    return;
+  } // Define the runtime globally (as expected by generated code) as either
+  // module.exports (if we're in a module) or a new, empty object.
+
+
+  runtime = global.regeneratorRuntime = module.exports ;
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []); // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+    return generator;
   }
 
-  var _args$ = args[0],
-      uri = _args$ === void 0 ? '' : _args$,
-      name = args[1];
+  runtime.wrap = wrap; // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
 
-  var _uri$split = uri.split('|'),
-      key = _uri$split[0],
-      pagename = _uri$split[1],
-      others = _uri$split.slice(2);
-
-  var arr = [key, pagename, others.join('|')];
-  var index = {
-    key: 0,
-    pagename: 1,
-    query: 2
-  };
-
-  if (name) {
-    return arr[index[name]];
-  }
-
-  return arr;
-}
-
-function uriToLocation(uri) {
-  var _splitUri = splitUri(uri),
-      key = _splitUri[0],
-      pagename = _splitUri[1],
-      query = _splitUri[2];
-
-  var location = {
-    pagename: pagename,
-    params: JSON.parse(query)
-  };
-  return {
-    key: key,
-    location: location
-  };
-}
-var History = function () {
-  function History(data, parent) {
-    _defineProperty(this, "curRecord", void 0);
-
-    _defineProperty(this, "pages", []);
-
-    _defineProperty(this, "actions", []);
-
-    this.parent = parent;
-
-    if (isHistoryRecord(data)) {
-      this.curRecord = data;
-    } else {
-      var _locationToUri = locationToUri(data.location, data.key),
-          _uri = _locationToUri.uri,
-          pagename = _locationToUri.pagename,
-          query = _locationToUri.query;
-
-      this.curRecord = {
-        uri: _uri,
-        pagename: pagename,
-        query: query,
-        key: data.key,
-        sub: new History({
-          uri: _uri,
-          pagename: pagename,
-          query: query,
-          key: data.key
-        }, this)
+  function tryCatch(fn, obj, arg) {
+    try {
+      return {
+        type: "normal",
+        arg: fn.call(obj, arg)
+      };
+    } catch (err) {
+      return {
+        type: "throw",
+        arg: err
       };
     }
   }
 
-  var _proto = History.prototype;
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed"; // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
 
-  _proto.getLength = function getLength() {
-    return this.actions.length;
+  var ContinueSentinel = {}; // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+
+  function Generator() {}
+
+  function GeneratorFunction() {}
+
+  function GeneratorFunctionPrototype() {} // This is a polyfill for %IteratorPrototype% for environments that
+  // don't natively support it.
+
+
+  var IteratorPrototype = {};
+
+  IteratorPrototype[iteratorSymbol] = function () {
+    return this;
   };
 
-  _proto.getRecord = function getRecord(keyOrIndex) {
-    if (typeof keyOrIndex === 'number') {
-      if (keyOrIndex === -1) {
-        keyOrIndex = this.actions.length - 1;
-      }
+  var getProto = Object.getPrototypeOf;
+  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
 
-      return this.actions[keyOrIndex];
+  if (NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+    // This environment has a native %IteratorPrototype%; use it instead
+    // of the polyfill.
+    IteratorPrototype = NativeIteratorPrototype;
+  }
+
+  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
+  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+  GeneratorFunctionPrototype[toStringTagSymbol] = GeneratorFunction.displayName = "GeneratorFunction"; // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function (method) {
+      prototype[method] = function (arg) {
+        return this._invoke(method, arg);
+      };
+    });
+  }
+
+  runtime.isGeneratorFunction = function (genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
+    // do is to check its .name property.
+    (ctor.displayName || ctor.name) === "GeneratorFunction" : false;
+  };
+
+  runtime.mark = function (genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+
+      if (!(toStringTagSymbol in genFun)) {
+        genFun[toStringTagSymbol] = "GeneratorFunction";
+      }
     }
 
-    return this.actions.find(function (item) {
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  }; // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+  // meant to be awaited.
+
+
+  runtime.awrap = function (arg) {
+    return {
+      __await: arg
+    };
+  };
+
+  function AsyncIterator(generator) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+
+        if (value && typeof value === "object" && hasOwn.call(value, "__await")) {
+          return Promise.resolve(value.__await).then(function (value) {
+            invoke("next", value, resolve, reject);
+          }, function (err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return Promise.resolve(value).then(function (unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration. If the Promise is rejected, however, the
+          // result for this iteration will be rejected with the same
+          // reason. Note that rejections of yielded Promises are not
+          // thrown back into the generator function, as is the case
+          // when an awaited Promise is rejected. This difference in
+          // behavior between yield and await is important, because it
+          // allows the consumer to decide what to do with the yielded
+          // rejection (swallow it and continue, manually .throw it back
+          // into the generator, abandon iteration, whatever). With
+          // await, by contrast, there is no opportunity to examine the
+          // rejection reason outside the generator function, so the
+          // only option is to throw it from the await expression, and
+          // let the generator function handle the exception.
+          result.value = unwrapped;
+          resolve(result);
+        }, reject);
+      }
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new Promise(function (resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise = // If enqueue has been called before, then we want to wait until
+      // all previous Promises have been resolved before calling invoke,
+      // so that results are always delivered in the correct order. If
+      // enqueue has not been called before, then it is important to
+      // call invoke immediately, without waiting on a callback to fire,
+      // so that the async generator function has the opportunity to do
+      // any necessary setup in a predictable way. This predictability
+      // is why the Promise constructor synchronously invokes its
+      // executor callback, and why async functions synchronously
+      // execute code before the first await. Since we implement simple
+      // async functions in terms of async generators, it is especially
+      // important to get this right, even though it requires care.
+      previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, // Avoid propagating failures to Promises returned by later
+      // invocations of the iterator.
+      callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
+    } // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+
+
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+
+  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+    return this;
+  };
+
+  runtime.AsyncIterator = AsyncIterator; // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+
+  runtime.async = function (innerFn, outerFn, self, tryLocsList) {
+    var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList));
+    return runtime.isGeneratorFunction(outerFn) ? iter // If outerFn is a generator, return the full iterator.
+    : iter.next().then(function (result) {
+      return result.done ? result.value : iter.next();
+    });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        } // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+
+
+        return doneResult();
+      }
+
+      context.method = method;
+      context.arg = arg;
+
+      while (true) {
+        var delegate = context.delegate;
+
+        if (delegate) {
+          var delegateResult = maybeInvokeDelegate(delegate, context);
+
+          if (delegateResult) {
+            if (delegateResult === ContinueSentinel) continue;
+            return delegateResult;
+          }
+        }
+
+        if (context.method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = context.arg;
+        } else if (context.method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw context.arg;
+          }
+
+          context.dispatchException(context.arg);
+        } else if (context.method === "return") {
+          context.abrupt("return", context.arg);
+        }
+
+        state = GenStateExecuting;
+        var record = tryCatch(innerFn, self, context);
+
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done ? GenStateCompleted : GenStateSuspendedYield;
+
+          if (record.arg === ContinueSentinel) {
+            continue;
+          }
+
+          return {
+            value: record.arg,
+            done: context.done
+          };
+        } else if (record.type === "throw") {
+          state = GenStateCompleted; // Dispatch the exception by looping back around to the
+          // context.dispatchException(context.arg) call above.
+
+          context.method = "throw";
+          context.arg = record.arg;
+        }
+      }
+    };
+  } // Call delegate.iterator[context.method](context.arg) and handle the
+  // result, either by returning a { value, done } result from the
+  // delegate iterator, or by modifying context.method and context.arg,
+  // setting context.delegate to null, and returning the ContinueSentinel.
+
+
+  function maybeInvokeDelegate(delegate, context) {
+    var method = delegate.iterator[context.method];
+
+    if (method === undefined$1) {
+      // A .throw or .return when the delegate iterator has no .throw
+      // method always terminates the yield* loop.
+      context.delegate = null;
+
+      if (context.method === "throw") {
+        if (delegate.iterator.return) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined$1;
+          maybeInvokeDelegate(delegate, context);
+
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
+          }
+        }
+
+        context.method = "throw";
+        context.arg = new TypeError("The iterator does not provide a 'throw' method");
+      }
+
+      return ContinueSentinel;
+    }
+
+    var record = tryCatch(method, delegate.iterator, context.arg);
+
+    if (record.type === "throw") {
+      context.method = "throw";
+      context.arg = record.arg;
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    var info = record.arg;
+
+    if (!info) {
+      context.method = "throw";
+      context.arg = new TypeError("iterator result is not an object");
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    if (info.done) {
+      // Assign the result of the finished delegate to the temporary
+      // variable specified by delegate.resultName (see delegateYield).
+      context[delegate.resultName] = info.value; // Resume execution at the desired location (see delegateYield).
+
+      context.next = delegate.nextLoc; // If context.method was "throw" but the delegate handled the
+      // exception, let the outer generator proceed normally. If
+      // context.method was "next", forget context.arg since it has been
+      // "consumed" by the delegate iterator. If context.method was
+      // "return", allow the original .return call to continue in the
+      // outer generator.
+
+      if (context.method !== "return") {
+        context.method = "next";
+        context.arg = undefined$1;
+      }
+    } else {
+      // Re-yield the result returned by the delegate method.
+      return info;
+    } // The delegate iterator is finished, so forget it and continue with
+    // the outer generator.
+
+
+    context.delegate = null;
+    return ContinueSentinel;
+  } // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+
+
+  defineIteratorMethods(Gp);
+  Gp[toStringTagSymbol] = "Generator"; // A Generator should always return itself as the iterator object when the
+  // @@iterator function is called on it. Some browsers' implementations of the
+  // iterator prototype chain incorrectly implement this, causing the Generator
+  // object to not be returned from this call. This ensures that doesn't happen.
+  // See https://github.com/facebook/regenerator/issues/274 for more details.
+
+  Gp[iteratorSymbol] = function () {
+    return this;
+  };
+
+  Gp.toString = function () {
+    return "[object Generator]";
+  };
+
+  function pushTryEntry(locs) {
+    var entry = {
+      tryLoc: locs[0]
+    };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{
+      tryLoc: "root"
+    }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  runtime.keys = function (object) {
+    var keys = [];
+
+    for (var key in object) {
+      keys.push(key);
+    }
+
+    keys.reverse(); // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      } // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+
+
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1,
+            next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined$1;
+          next.done = true;
+          return next;
+        };
+
+        return next.next = next;
+      }
+    } // Return an iterator with no values.
+
+
+    return {
+      next: doneResult
+    };
+  }
+
+  runtime.values = values;
+
+  function doneResult() {
+    return {
+      value: undefined$1,
+      done: true
+    };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+    reset: function (skipTempReset) {
+      this.prev = 0;
+      this.next = 0; // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+
+      this.sent = this._sent = undefined$1;
+      this.done = false;
+      this.delegate = null;
+      this.method = "next";
+      this.arg = undefined$1;
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" && hasOwn.call(this, name) && !isNaN(+name.slice(1))) {
+            this[name] = undefined$1;
+          }
+        }
+      }
+    },
+    stop: function () {
+      this.done = true;
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+    dispatchException: function (exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+
+        if (caught) {
+          // If the dispatched exception was caught by a catch block,
+          // then let that catch block handle the exception normally.
+          context.method = "next";
+          context.arg = undefined$1;
+        }
+
+        return !!caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+    abrupt: function (type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry && (type === "break" || type === "continue") && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.method = "next";
+        this.next = finallyEntry.finallyLoc;
+        return ContinueSentinel;
+      }
+
+      return this.complete(record);
+    },
+    complete: function (record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" || record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = this.arg = record.arg;
+        this.method = "return";
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+
+      return ContinueSentinel;
+    },
+    finish: function (finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+    "catch": function (tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+
+          return thrown;
+        }
+      } // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+
+
+      throw new Error("illegal catch attempt");
+    },
+    delegateYield: function (iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      if (this.method === "next") {
+        // Deliberately forget the last sent value so that we don't
+        // accidentally pass it on to the delegate.
+        this.arg = undefined$1;
+      }
+
+      return ContinueSentinel;
+    }
+  };
+}( // In sloppy mode, unbound `this` refers to the global object, fallback to
+// Function constructor if we're in global strict mode. That is sadly a form
+// of indirect eval which violates Content Security Policy.
+function () {
+  return this;
+}() || Function("return this")());
+});
+
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+// This method of obtaining a reference to the global object needs to be
+// kept identical to the way it is obtained in runtime.js
+var g$1 = function () {
+  return this;
+}() || Function("return this")(); // Use `getOwnPropertyNames` because not all browsers support calling
+// `hasOwnProperty` on the global `self` object in a worker. See #183.
+
+
+var hadRuntime = g$1.regeneratorRuntime && Object.getOwnPropertyNames(g$1).indexOf("regeneratorRuntime") >= 0; // Save the old regeneratorRuntime in case it needs to be restored later.
+
+var oldRuntime = hadRuntime && g$1.regeneratorRuntime; // Force reevalutation of runtime.js.
+
+g$1.regeneratorRuntime = undefined;
+var runtimeModule = runtime;
+
+if (hadRuntime) {
+  // Restore the original runtime.
+  g$1.regeneratorRuntime = oldRuntime;
+} else {
+  // Remove the global property added by runtime.js.
+  try {
+    delete g$1.regeneratorRuntime;
+  } catch (e) {
+    g$1.regeneratorRuntime = undefined;
+  }
+}
+
+var regenerator = runtimeModule;
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
+var routeConfig = {
+  RouteModuleName: 'route',
+  maxHistory: 10,
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  },
+  indexUrl: ''
+};
+var setRouteConfig = buildConfigSetter(routeConfig);
+var routeMeta = {
+  defaultParams: {},
+  pagenames: {},
+  pages: {}
+};
+
+var HistoryRecord = function HistoryRecord(location, key, history, store) {
+  _defineProperty(this, "pagename", void 0);
+
+  _defineProperty(this, "params", void 0);
+
+  _defineProperty(this, "sub", void 0);
+
+  this.key = key;
+  this.history = history;
+  this.store = store;
+  var pagename = location.pagename,
+      params = location.params;
+  this.pagename = pagename;
+  this.params = params;
+  this.sub = new History(history);
+  this.sub.startup(this);
+};
+var History = function () {
+  function History(parent) {
+    _defineProperty(this, "records", []);
+
+    this.parent = parent;
+  }
+
+  var _proto = History.prototype;
+
+  _proto.startup = function startup(record) {
+    this.records = [record];
+  };
+
+  _proto.getRecords = function getRecords() {
+    return [].concat(this.records);
+  };
+
+  _proto.getLength = function getLength() {
+    return this.records.length;
+  };
+
+  _proto.getPages = function getPages() {
+    return this.records.map(function (_ref) {
+      var pagename = _ref.pagename,
+          store = _ref.store;
+      return {
+        pagename: pagename,
+        store: store,
+        page: routeMeta.pages[pagename]
+      };
+    });
+  };
+
+  _proto.findRecord = function findRecord(keyOrIndex) {
+    if (typeof keyOrIndex === 'number') {
+      if (keyOrIndex === -1) {
+        keyOrIndex = this.records.length - 1;
+      }
+
+      return this.records[keyOrIndex];
+    }
+
+    return this.records.find(function (item) {
       return item.key === keyOrIndex;
     });
   };
 
   _proto.findIndex = function findIndex(key) {
-    return this.actions.findIndex(function (item) {
+    return this.records.findIndex(function (item) {
       return item.key === key;
     });
   };
 
-  _proto.getCurrentInternalHistory = function getCurrentInternalHistory() {
-    return this.curRecord.sub;
+  _proto.getCurrentRecord = function getCurrentRecord() {
+    return this.records[0].sub.records[0];
   };
 
-  _proto.getStack = function getStack() {
-    return this.actions;
-  };
-
-  _proto.getUriStack = function getUriStack() {
-    return this.actions.map(function (item) {
-      return item.uri;
-    });
-  };
-
-  _proto.getPageStack = function getPageStack() {
-    return this.pages;
+  _proto.getCurrentSubHistory = function getCurrentSubHistory() {
+    return this.records[0].sub;
   };
 
   _proto.push = function push(location, key) {
-    var _pages$;
+    var records = this.records;
+    var store = records[0].store;
 
-    var historyRecord = this.curRecord;
-
-    var _locationToUri2 = locationToUri(location, key),
-        uri = _locationToUri2.uri,
-        pagename = _locationToUri2.pagename,
-        query = _locationToUri2.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-    var pages = [].concat(this.pages);
-    var actions = [].concat(this.actions);
-    var actionsMax = routeConfig.actionMaxHistory;
-    var pagesMax = routeConfig.pagesMaxHistory;
-    actions.unshift(historyRecord);
-
-    if (actions.length > actionsMax) {
-      actions.length = actionsMax;
+    if (!this.parent) {
+      store = forkStore(store);
     }
 
-    if (splitUri((_pages$ = pages[0]) == null ? void 0 : _pages$.uri, 'pagename') !== pagename) {
-      pages.unshift(historyRecord);
+    var newRecord = new HistoryRecord(location, key, this, store);
+    var maxHistory = routeConfig.maxHistory;
+    records.unshift(newRecord);
+    var delList = records.splice(maxHistory);
 
-      if (pages.length > pagesMax) {
-        pages.length = pagesMax;
-      }
-    } else {
-      pages[0] = historyRecord;
-    }
-
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
+    if (!this.parent) {
+      delList.forEach(function (item) {
+        item.store.destroy();
       });
     }
   };
 
   _proto.replace = function replace(location, key) {
-    var _locationToUri3 = locationToUri(location, key),
-        uri = _locationToUri3.uri,
-        pagename = _locationToUri3.pagename,
-        query = _locationToUri3.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
+    var records = this.records;
+    var store = records[0].store;
+    var newRecord = new HistoryRecord(location, key, this, store);
+    records[0] = newRecord;
   };
 
   _proto.relaunch = function relaunch(location, key) {
-    var _locationToUri4 = locationToUri(location, key),
-        uri = _locationToUri4.uri,
-        pagename = _locationToUri4.pagename,
-        query = _locationToUri4.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-    this.actions = [];
-    this.pages = [];
-
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
+    var records = this.records;
+    var store = records[0].store;
+    var newRecord = new HistoryRecord(location, key, this, store);
+    this.records = [newRecord];
   };
 
-  _proto.back = function back(delta) {
-    var _actions$;
-
-    var historyRecord = this.getRecord(delta - 1);
-
-    if (!historyRecord) {
-      return false;
+  _proto.preBack = function preBack(delta, overflowRedirect) {
+    if (overflowRedirect === void 0) {
+      overflowRedirect = false;
     }
 
-    this.curRecord = historyRecord;
-    var uri = historyRecord.uri,
-        pagename = historyRecord.pagename,
-        query = historyRecord.query;
-    var pages = [].concat(this.pages);
-    var actions = [].concat(this.actions);
-    var deleteActions = actions.splice(0, delta);
-    var arr = deleteActions.reduce(function (pre, curStack) {
-      var ctag = splitUri(curStack.uri, 'pagename');
+    var records = this.records.slice(delta);
 
-      if (pre[pre.length - 1] !== ctag) {
-        pre.push(ctag);
+    if (records.length === 0) {
+      if (overflowRedirect) {
+        return undefined;
+      } else {
+        records.push(this.records.pop());
       }
-
-      return pre;
-    }, []);
-
-    if (arr[arr.length - 1] === splitUri((_actions$ = actions[0]) == null ? void 0 : _actions$.uri, 'pagename')) {
-      arr.pop();
     }
 
-    pages.splice(0, arr.length);
-    this.actions = actions;
-    this.pages = pages;
+    return records[0];
+  };
 
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
+  _proto.back = function back(delta, overflowRedirect) {
+
+    var delList = this.records.splice(0, delta);
+
+    if (this.records.length === 0) {
+      var last = delList.pop();
+      this.records.push(last);
+    }
+
+    if (!this.parent) {
+      delList.forEach(function (item) {
+        item.store.destroy();
       });
     }
-
-    return true;
   };
 
   return History;
@@ -3343,7 +3350,7 @@ function splitPrivate(data, deleteTopLevel) {
 }
 
 function assignDefaultData(data) {
-  var def = routeConfig.defaultParams;
+  var def = routeMeta.defaultParams;
   return Object.keys(data).reduce(function (params, moduleName) {
     if (def[moduleName]) {
       params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
@@ -3354,7 +3361,11 @@ function assignDefaultData(data) {
 }
 
 function splitQuery(query) {
-  return (query || '').split('&').reduce(function (params, str) {
+  if (!query) {
+    return undefined;
+  }
+
+  return query.split('&').reduce(function (params, str) {
     var sections = str.split('=');
 
     if (sections.length > 1) {
@@ -3459,12 +3470,17 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     return b.length - a.length;
   }).reduce(function (map, pagename) {
     var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
+    var _pagenameMap$pagename = pagenameMap[pagename],
+        argsToParams = _pagenameMap$pagename.argsToParams,
+        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        page = _pagenameMap$pagename.page;
+    map[fullPagename] = {
+      argsToParams: argsToParams,
+      paramsToArgs: paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pages[pagename] = page;
     return map;
-  }, {});
-  routeMeta.pagenames = pagenames.reduce(function (obj, key) {
-    obj[key] = key;
-    return obj;
   }, {});
   pagenames = Object.keys(pagenameMap);
 
@@ -3531,7 +3547,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
 
       return {
         pathname: nativeLocation.pathname,
-        params: deepMerge(searchParams, hashParams)
+        params: deepMerge(searchParams, hashParams) || {}
       };
     },
     eluxLocationToNativeLocation: function eluxLocationToNativeLocation(eluxLocation) {
@@ -3587,9 +3603,9 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       }
 
       var params = deepMerge({}, pathParams, eluxLocation.params);
-      var moduleGetter = getModuleGetter();
+      var modules = moduleExists();
       Object.keys(params).forEach(function (moduleName) {
-        if (!moduleGetter[moduleName]) {
+        if (!modules[moduleName]) {
           delete params[moduleName];
         }
       });
@@ -3601,7 +3617,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
     partialLocationToLocation: function partialLocationToLocation(partialLocation) {
       var pagename = partialLocation.pagename,
           params = partialLocation.params;
-      var def = routeConfig.defaultParams;
+      var def = routeMeta.defaultParams;
       var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
         return def[moduleName] === undefined;
       });
@@ -3632,7 +3648,7 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
     },
     partialLocationToMinData: function partialLocationToMinData(partialLocation) {
-      var params = excludeDefault(partialLocation.params, routeConfig.defaultParams, true);
+      var params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
       var pathParams;
       var pathname;
       var pagename = ("/" + partialLocation.pagename + "/").replace(/^\/+|\/+$/g, '/');
@@ -3685,166 +3701,6 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
   };
 }
 
-var ModuleWithRouteHandlers = _decorate(null, function (_initialize, _CoreModuleHandlers) {
-  var ModuleWithRouteHandlers = function (_CoreModuleHandlers2) {
-    _inheritsLoose(ModuleWithRouteHandlers, _CoreModuleHandlers2);
-
-    function ModuleWithRouteHandlers() {
-      var _this;
-
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      _this = _CoreModuleHandlers2.call.apply(_CoreModuleHandlers2, [this].concat(args)) || this;
-
-      _initialize(_assertThisInitialized(_this));
-
-      return _this;
-    }
-
-    return ModuleWithRouteHandlers;
-  }(_CoreModuleHandlers);
-
-  return {
-    F: ModuleWithRouteHandlers,
-    d: [{
-      kind: "method",
-      decorators: [reducer],
-      key: "Init",
-      value: function Init(initState) {
-        var routeParams = this.rootState.route.params[this.moduleName];
-        return routeParams ? deepMerge({}, initState, routeParams) : initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "RouteParams",
-      value: function RouteParams(payload) {
-        return deepMergeState(this.state, payload);
-      }
-    }]
-  };
-}, CoreModuleHandlers);
-var RouteActionTypes = {
-  MRouteParams: 'RouteParams',
-  RouteChange: "route" + coreConfig.NSP + "RouteChange",
-  TestRouteChange: "route" + coreConfig.NSP + "TestRouteChange"
-};
-function testRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
-  };
-}
-function routeParamsAction(moduleName, params, action) {
-  return {
-    type: "" + moduleName + coreConfig.NSP + RouteActionTypes.MRouteParams,
-    payload: [params, action]
-  };
-}
-function routeChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.RouteChange,
-    payload: [routeState]
-  };
-}
-var routeMiddleware = function routeMiddleware(_ref) {
-  var dispatch = _ref.dispatch,
-      getState = _ref.getState;
-  return function (next) {
-    return function (action) {
-      if (action.type === RouteActionTypes.RouteChange) {
-        var result = next(action);
-        var routeState = action.payload[0];
-        var rootRouteParams = routeState.params;
-        var rootState = getState();
-        Object.keys(rootRouteParams).forEach(function (moduleName) {
-          var routeParams = rootRouteParams[moduleName];
-
-          if (routeParams && Object.keys(routeParams).length > 0) {
-            if (rootState[moduleName]) {
-              dispatch(routeParamsAction(moduleName, routeParams, routeState.action));
-            }
-          }
-        });
-        return result;
-      }
-
-      return next(action);
-    };
-  };
-};
-
-var RouteModuleHandlers = _decorate(null, function (_initialize2) {
-  var RouteModuleHandlers = function RouteModuleHandlers() {
-    _initialize2(this);
-  };
-
-  return {
-    F: RouteModuleHandlers,
-    d: [{
-      kind: "field",
-      key: "initState",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "moduleName",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
-      kind: "field",
-      key: "actions",
-      value: void 0
-    }, {
-      kind: "get",
-      key: "state",
-      value: function state() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "RouteChange",
-      value: function RouteChange(routeState) {
-        return mergeState(this.state, routeState);
-      }
-    }]
-  };
-});
-
-var defaultNativeLocationMap = {
-  in: function _in(nativeLocation) {
-    return nativeLocation;
-  },
-  out: function out(nativeLocation) {
-    return nativeLocation;
-  }
-};
-function createRouteModule(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
-  if (nativeLocationMap === void 0) {
-    nativeLocationMap = defaultNativeLocationMap;
-  }
-
-  if (notfoundPagename === void 0) {
-    notfoundPagename = '/404';
-  }
-
-  if (paramsKey === void 0) {
-    paramsKey = '_';
-  }
-
-  var handlers = RouteModuleHandlers;
-  var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  var routeModule = exportModule('route', handlers, {}, {});
-  return _extends({}, routeModule, {
-    locationTransform: locationTransform
-  });
-}
-
 var BaseNativeRouter = function () {
   function BaseNativeRouter() {
     _defineProperty(this, "curTask", void 0);
@@ -3863,7 +3719,7 @@ var BaseNativeRouter = function () {
       return false;
     }
 
-    return key !== this.router.getCurKey();
+    return key !== this.router.routeState.key;
   };
 
   _proto.setRouter = function setRouter(router) {
@@ -3905,38 +3761,44 @@ var BaseNativeRouter = function () {
 
   return BaseNativeRouter;
 }();
-var BaseRouter = function () {
+var BaseRouter = function (_MultipleDispatcher) {
+  _inheritsLoose(BaseRouter, _MultipleDispatcher);
+
   function BaseRouter(url, nativeRouter, locationTransform) {
-    var _this2 = this;
+    var _this2;
 
-    _defineProperty(this, "_tid", 0);
+    _this2 = _MultipleDispatcher.call(this) || this;
 
-    _defineProperty(this, "curTask", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_tid", 0);
 
-    _defineProperty(this, "taskList", []);
+    _defineProperty(_assertThisInitialized(_this2), "curTask", void 0);
 
-    _defineProperty(this, "_nativeData", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "taskList", []);
 
-    _defineProperty(this, "routeState", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "_nativeData", void 0);
 
-    _defineProperty(this, "internalUrl", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "internalUrl", void 0);
 
-    _defineProperty(this, "store", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
 
-    _defineProperty(this, "history", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "name", routeConfig.RouteModuleName);
 
-    _defineProperty(this, "_lid", 0);
+    _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
 
-    _defineProperty(this, "listenerMap", {});
+    _defineProperty(_assertThisInitialized(_this2), "injectedModules", {});
 
-    _defineProperty(this, "initRouteState", void 0);
+    _defineProperty(_assertThisInitialized(_this2), "history", new History(null));
 
-    this.nativeRouter = nativeRouter;
-    this.locationTransform = locationTransform;
-    nativeRouter.setRouter(this);
+    _defineProperty(_assertThisInitialized(_this2), "latestState", {});
+
+    _this2.nativeRouter = nativeRouter;
+    _this2.locationTransform = locationTransform;
+    nativeRouter.setRouter(_assertThisInitialized(_this2));
     var locationOrPromise = locationTransform.urlToLocation(url);
 
     var callback = function callback(location) {
+      var _this2$latestState;
+
       var key = _this2._createKey();
 
       var routeState = _extends({}, location, {
@@ -3956,50 +3818,35 @@ var BaseRouter = function () {
         });
       }
 
-      _this2.history = new History({
-        location: location,
-        key: key
-      });
+      _this2.latestState = (_this2$latestState = {}, _this2$latestState[_this2.name] = routeState, _this2$latestState);
       return routeState;
     };
 
     if (isPromise(locationOrPromise)) {
-      this.initRouteState = locationOrPromise.then(callback);
+      _this2.initialize = locationOrPromise.then(callback);
     } else {
-      this.initRouteState = callback(locationOrPromise);
+      _this2.initialize = Promise.resolve(callback(locationOrPromise));
     }
+
+    return _this2;
   }
 
   var _proto2 = BaseRouter.prototype;
 
-  _proto2.addListener = function addListener(callback) {
-    this._lid++;
-    var id = "" + this._lid;
-    var listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
+  _proto2.startup = function startup(store) {
+    var historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
+    this.history.startup(historyRecord);
   };
 
-  _proto2.dispatch = function dispatch(data) {
-    var listenerMap = this.listenerMap;
-    var arr = Object.keys(listenerMap).map(function (id) {
-      return listenerMap[id](data);
+  _proto2.getCurrentStore = function getCurrentStore() {
+    return this.history.getCurrentRecord().store;
+  };
+
+  _proto2.getStoreList = function getStoreList() {
+    return this.history.getRecords().map(function (_ref) {
+      var store = _ref.store;
+      return store;
     });
-    return Promise.all(arr);
-  };
-
-  _proto2.getRouteState = function getRouteState() {
-    return this.routeState;
-  };
-
-  _proto2.getPagename = function getPagename() {
-    return this.routeState.pagename;
-  };
-
-  _proto2.getParams = function getParams() {
-    return this.routeState.params;
   };
 
   _proto2.getInternalUrl = function getInternalUrl() {
@@ -4022,16 +3869,12 @@ var BaseRouter = function () {
     return this._nativeData.nativeUrl;
   };
 
-  _proto2.setStore = function setStore(_store) {
-    this.store = _store;
+  _proto2.getHistory = function getHistory(root) {
+    return root ? this.history : this.history.getCurrentSubHistory();
   };
 
-  _proto2.getCurKey = function getCurKey() {
-    return this.routeState.key;
-  };
-
-  _proto2.findHistoryIndexByKey = function findHistoryIndexByKey(key) {
-    return this.history.findIndex(key);
+  _proto2.getHistoryLength = function getHistoryLength(root) {
+    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
   };
 
   _proto2.locationToNativeData = function locationToNativeData(location) {
@@ -4097,23 +3940,23 @@ var BaseRouter = function () {
     return this.locationTransform.eluxLocationToLocation(eluxLocation);
   };
 
-  _proto2.relaunch = function relaunch(data, internal, disableNative) {
-    if (internal === void 0) {
-      internal = false;
+  _proto2.relaunch = function relaunch(data, root, nativeCaller) {
+    if (root === void 0) {
+      root = false;
     }
 
-    if (disableNative === void 0) {
-      disableNative = routeConfig.disableNativeRoute;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    this.addTask(this._relaunch.bind(this, data, internal, disableNative));
+    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
   };
 
   _proto2._relaunch = function () {
-    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee(data, internal, disableNative) {
+    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee(data, root, nativeCaller) {
       var _this3 = this;
 
-      var preData, location, key, routeState, nativeData;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return regenerator.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -4139,42 +3982,50 @@ var BaseRouter = function () {
                 key: key
               });
               _context.next = 10;
-              return this.store.dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context.next = 12;
-              return this.dispatch(routeState);
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
-              if (!(!disableNative && !internal)) {
-                _context.next = 16;
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context.next = 17;
                 break;
               }
 
-              _context.next = 15;
+              _context.next = 16;
               return this.nativeRouter.execute('relaunch', function () {
                 return _this3.locationToNativeData(routeState);
               }, key);
 
-            case 15:
+            case 16:
               nativeData = _context.sent;
 
-            case 16:
+            case 17:
               this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
-              this.store.dispatch(routeChangeAction(routeState));
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().relaunch(location, key);
-              } else {
+              if (root) {
                 this.history.relaunch(location, key);
+              } else {
+                this.history.getCurrentSubHistory().relaunch(location, key);
               }
 
-            case 21:
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
+
+            case 24:
             case "end":
               return _context.stop();
           }
@@ -4189,23 +4040,23 @@ var BaseRouter = function () {
     return _relaunch;
   }();
 
-  _proto2.push = function push(data, internal, disableNative) {
-    if (internal === void 0) {
-      internal = false;
+  _proto2.push = function push(data, root, nativeCaller) {
+    if (root === void 0) {
+      root = false;
     }
 
-    if (disableNative === void 0) {
-      disableNative = routeConfig.disableNativeRoute;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    this.addTask(this._push.bind(this, data, internal, disableNative));
+    this.addTask(this._push.bind(this, data, root, nativeCaller));
   };
 
   _proto2._push = function () {
-    var _push2 = _asyncToGenerator(regenerator.mark(function _callee2(data, internal, disableNative) {
+    var _push2 = _asyncToGenerator(regenerator.mark(function _callee2(data, root, nativeCaller) {
       var _this4 = this;
 
-      var preData, location, key, routeState, nativeData;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return regenerator.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -4231,43 +4082,50 @@ var BaseRouter = function () {
                 key: key
               });
               _context2.next = 10;
-              return this.store.dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context2.next = 12;
-              return this.dispatch(routeState);
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
-              if (!(!disableNative && !internal)) {
-                _context2.next = 16;
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context2.next = 17;
                 break;
               }
 
-              _context2.next = 15;
+              _context2.next = 16;
               return this.nativeRouter.execute('push', function () {
                 return _this4.locationToNativeData(routeState);
               }, key);
 
-            case 15:
+            case 16:
               nativeData = _context2.sent;
 
-            case 16:
-              this._nativeData = nativeData || undefined;
+            case 17:
+              this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().push(location, key);
-              } else {
+              if (root) {
                 this.history.push(location, key);
+              } else {
+                this.history.getCurrentSubHistory().push(location, key);
               }
 
-              this.store.dispatch(routeChangeAction(routeState));
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
 
-            case 21:
+            case 24:
             case "end":
               return _context2.stop();
           }
@@ -4282,23 +4140,23 @@ var BaseRouter = function () {
     return _push;
   }();
 
-  _proto2.replace = function replace(data, internal, disableNative) {
-    if (internal === void 0) {
-      internal = false;
+  _proto2.replace = function replace(data, root, nativeCaller) {
+    if (root === void 0) {
+      root = false;
     }
 
-    if (disableNative === void 0) {
-      disableNative = routeConfig.disableNativeRoute;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    this.addTask(this._replace.bind(this, data, internal, disableNative));
+    this.addTask(this._replace.bind(this, data, root, nativeCaller));
   };
 
   _proto2._replace = function () {
-    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee3(data, internal, disableNative) {
+    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee3(data, root, nativeCaller) {
       var _this5 = this;
 
-      var preData, location, key, routeState, nativeData;
+      var preData, location, key, routeState, nativeData, notifyNativeRouter, cloneState;
       return regenerator.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
@@ -4324,43 +4182,50 @@ var BaseRouter = function () {
                 key: key
               });
               _context3.next = 10;
-              return this.store.dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 10:
               _context3.next = 12;
-              return this.dispatch(routeState);
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
             case 12:
-              if (!(!disableNative && !internal)) {
-                _context3.next = 16;
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context3.next = 17;
                 break;
               }
 
-              _context3.next = 15;
+              _context3.next = 16;
               return this.nativeRouter.execute('replace', function () {
                 return _this5.locationToNativeData(routeState);
               }, key);
 
-            case 15:
+            case 16:
               nativeData = _context3.sent;
 
-            case 16:
-              this._nativeData = nativeData || undefined;
+            case 17:
+              this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().replace(location, key);
-              } else {
+              if (root) {
                 this.history.replace(location, key);
+              } else {
+                this.history.getCurrentSubHistory().replace(location, key);
               }
 
-              this.store.dispatch(routeChangeAction(routeState));
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              this.dispatch('change', {
+                routeState: cloneState,
+                root: root
+              });
 
-            case 21:
+            case 24:
             case "end":
               return _context3.stop();
           }
@@ -4375,32 +4240,27 @@ var BaseRouter = function () {
     return _replace;
   }();
 
-  _proto2.back = function back(n, indexUrl, internal, disableNative) {
+  _proto2.back = function back(n, root, options, nativeCaller) {
     if (n === void 0) {
       n = 1;
     }
 
-    if (indexUrl === void 0) {
-      indexUrl = 'index';
+    if (root === void 0) {
+      root = false;
     }
 
-    if (internal === void 0) {
-      internal = false;
+    if (nativeCaller === void 0) {
+      nativeCaller = false;
     }
 
-    if (disableNative === void 0) {
-      disableNative = routeConfig.disableNativeRoute;
-    }
-
-    this.addTask(this._back.bind(this, n, indexUrl === 'index' ? routeConfig.indexUrl : indexUrl, internal, disableNative));
+    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
   };
 
   _proto2._back = function () {
-    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, indexUrl, internal, disableNative) {
+    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(n, root, options, nativeCaller) {
       var _this6 = this;
 
-      var stack, uri, _uriToLocation, key, location, routeState, nativeData;
-
+      var didOverflowRedirect, overflowRedirectUrl, historyRecord, key, pagename, params, routeState, nativeData, notifyNativeRouter, cloneState;
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -4409,72 +4269,79 @@ var BaseRouter = function () {
                 n = 1;
               }
 
-              stack = internal ? this.history.getCurrentInternalHistory().getRecord(n - 1) : this.history.getRecord(n - 1);
-
-              if (stack) {
-                _context4.next = 6;
+              if (!(n < 1)) {
+                _context4.next = 3;
                 break;
               }
 
-              if (!indexUrl) {
-                _context4.next = 5;
+              return _context4.abrupt("return", undefined);
+
+            case 3:
+              didOverflowRedirect = !!options.overflowRedirect;
+              overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
+              historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
+
+              if (historyRecord) {
+                _context4.next = 8;
                 break;
               }
 
-              return _context4.abrupt("return", this._relaunch(indexUrl || routeConfig.indexUrl, internal, disableNative));
+              return _context4.abrupt("return", this.relaunch(overflowRedirectUrl, root));
 
-            case 5:
-              throw {
-                code: '1',
-                message: 'history not found'
+            case 8:
+              key = historyRecord.key, pagename = historyRecord.pagename;
+              params = deepMerge({}, historyRecord.params, options.payload);
+              routeState = {
+                key: key,
+                pagename: pagename,
+                params: params,
+                action: 'BACK'
               };
-
-            case 6:
-              uri = stack.uri;
-              _uriToLocation = uriToLocation(uri), key = _uriToLocation.key, location = _uriToLocation.location;
-              routeState = _extends({}, location, {
-                action: 'BACK',
-                key: key
-              });
-              _context4.next = 11;
-              return this.store.dispatch(testRouteChangeAction(routeState));
-
-            case 11:
               _context4.next = 13;
-              return this.dispatch(routeState);
+              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
             case 13:
-              if (!(!disableNative && !internal)) {
-                _context4.next = 17;
+              _context4.next = 15;
+              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+            case 15:
+              notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+              if (!(!nativeCaller && notifyNativeRouter)) {
+                _context4.next = 20;
                 break;
               }
 
-              _context4.next = 16;
+              _context4.next = 19;
               return this.nativeRouter.execute('back', function () {
                 return _this6.locationToNativeData(routeState);
               }, n, key);
 
-            case 16:
+            case 19:
               nativeData = _context4.sent;
 
-            case 17:
-              this._nativeData = nativeData || undefined;
+            case 20:
+              this._nativeData = nativeData;
               this.routeState = routeState;
               this.internalUrl = eluxLocationToEluxUrl({
                 pathname: routeState.pagename,
                 params: routeState.params
               });
 
-              if (internal) {
-                this.history.getCurrentInternalHistory().back(n);
-              } else {
+              if (root) {
                 this.history.back(n);
+              } else {
+                this.history.getCurrentSubHistory().back(n);
               }
 
-              this.store.dispatch(routeChangeAction(routeState));
-              return _context4.abrupt("return", undefined);
+              cloneState = deepClone(routeState);
+              this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+              this.dispatch('change', {
+                routeState: routeState,
+                root: root
+              });
 
-            case 23:
+            case 27:
             case "end":
               return _context4.stop();
           }
@@ -4517,32 +4384,76 @@ var BaseRouter = function () {
   };
 
   return BaseRouter;
-}();
+}(MultipleDispatcher);
+var RouteActionTypes = {
+  TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",
+  BeforeRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "BeforeRouteChange"
+};
+function beforeRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
+    payload: [routeState]
+  };
+}
+var defaultNativeLocationMap = {
+  in: function _in(nativeLocation) {
+    return nativeLocation;
+  },
+  out: function out(nativeLocation) {
+    return nativeLocation;
+  }
+};
+function createRouteModule(moduleName, pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
+  if (nativeLocationMap === void 0) {
+    nativeLocationMap = defaultNativeLocationMap;
+  }
+
+  if (notfoundPagename === void 0) {
+    notfoundPagename = '/404';
+  }
+
+  if (paramsKey === void 0) {
+    paramsKey = '_';
+  }
+
+  var locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
+  var routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
+  return _extends({}, routeModule, {
+    locationTransform: locationTransform
+  });
+}
 
 var appMeta = {
   router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
 };
 var appConfig = {
-  loadComponent: null
+  loadComponent: null,
+  useRouter: null,
+  useStore: null
 };
 var setAppConfig = buildConfigSetter(appConfig);
 function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
 }
-function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+function createBaseMP(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter, appModuleName);
-  var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule('route');
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
   return {
     useStore: function useStore(_ref) {
-      var storeOptions = _ref.storeOptions,
-          storeCreator = _ref.storeCreator;
+      var storeCreator = _ref.storeCreator,
+          storeOptions = _ref.storeOptions;
       return Object.assign(ins, {
         render: function (_render) {
           function render() {
@@ -4557,21 +4468,13 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
         }(function () {
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          var routeState = router.initRouteState;
+          var baseStore = storeCreator(storeOptions);
 
-          var initState = _extends({}, storeOptions.initState, {
-            route: routeState
-          });
+          var _initApp = initApp(router, baseStore, middlewares),
+              store = _initApp.store;
 
-          var baseStore = storeCreator(_extends({}, storeOptions, {
-            initState: initState
-          }));
-          var store = initApp(baseStore, istoreMiddleware);
-          routeModule.model(store);
-          router.setStore(store);
           var context = render(store, {
             deps: {},
-            store: store,
             router: router,
             documentHead: ''
           }, ins);
@@ -4584,18 +4487,17 @@ function createBaseMP(ins, createRouter, render, moduleGetter, middlewares, appM
     }
   };
 }
-function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+function createBaseApp(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter, appModuleName);
-  var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule('route');
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
   return {
     useStore: function useStore(_ref2) {
-      var storeOptions = _ref2.storeOptions,
-          storeCreator = _ref2.storeCreator;
+      var storeCreator = _ref2.storeCreator,
+          storeOptions = _ref2.storeOptions;
       return Object.assign(ins, {
         render: function (_render2) {
           function render(_x) {
@@ -4613,56 +4515,50 @@ function createBaseApp(ins, createRouter, render, moduleGetter, middlewares, app
               id = _ref3$id === void 0 ? 'root' : _ref3$id,
               _ref3$ssrKey = _ref3.ssrKey,
               ssrKey = _ref3$ssrKey === void 0 ? 'eluxInitStore' : _ref3$ssrKey,
-              viewName = _ref3.viewName;
-
-          var router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
+              _ref3$viewName = _ref3.viewName,
+              viewName = _ref3$viewName === void 0 ? 'main' : _ref3$viewName;
 
           var _ref4 = env[ssrKey] || {},
               state = _ref4.state,
               _ref4$components = _ref4.components,
               components = _ref4$components === void 0 ? [] : _ref4$components;
 
-          var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
-          return roterStatePromise.then(function (routeState) {
-            var initState = _extends({}, storeOptions.initState, {
-              route: routeState
-            }, state);
+          var router = createRouter(routeModule.locationTransform);
+          appMeta.router = router;
 
-            var baseStore = storeCreator(_extends({}, storeOptions, {
-              initState: initState
-            }));
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(function (_ref5) {
-              var store = _ref5.store,
-                  AppView = _ref5.AppView;
-              routeModule.model(store);
-              router.setStore(store);
-              render(id, AppView, store, {
-                deps: {},
-                store: store,
-                router: router,
-                documentHead: ''
-              }, !!env[ssrKey], ins);
-              return store;
-            });
+          if (state) {
+            storeOptions.initState = _extends({}, storeOptions.initState, state);
+          }
+
+          var baseStore = storeCreator(storeOptions);
+          return router.initialize.then(function () {
+            var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
+                store = _initApp2.store,
+                AppView = _initApp2.AppView;
+
+            render(id, AppView, store, {
+              deps: {},
+              router: router,
+              documentHead: ''
+            }, !!env[ssrKey], ins);
+            return store;
           });
         })
       });
     }
   };
 }
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, appModuleName) {
+function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares) {
   if (middlewares === void 0) {
     middlewares = [];
   }
 
-  defineModuleGetter(moduleGetter, appModuleName);
-  var istoreMiddleware = [routeMiddleware].concat(middlewares);
-  var routeModule = getModule('route');
+  defineModuleGetter(moduleGetter);
+  var routeModule = getModule(routeConfig.RouteModuleName);
   return {
-    useStore: function useStore(_ref6) {
-      var storeOptions = _ref6.storeOptions,
-          storeCreator = _ref6.storeCreator;
+    useStore: function useStore(_ref5) {
+      var storeCreator = _ref5.storeCreator,
+          storeOptions = _ref5.storeOptions;
       return Object.assign(ins, {
         render: function (_render3) {
           function render(_x2) {
@@ -4675,31 +4571,27 @@ function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares, app
 
           return render;
         }(function (_temp2) {
-          var _ref7 = _temp2 === void 0 ? {} : _temp2,
-              _ref7$id = _ref7.id,
-              id = _ref7$id === void 0 ? 'root' : _ref7$id,
-              _ref7$ssrKey = _ref7.ssrKey,
-              ssrKey = _ref7$ssrKey === void 0 ? 'eluxInitStore' : _ref7$ssrKey,
-              viewName = _ref7.viewName;
+          var _ref6 = _temp2 === void 0 ? {} : _temp2,
+              _ref6$id = _ref6.id,
+              id = _ref6$id === void 0 ? 'root' : _ref6$id,
+              _ref6$ssrKey = _ref6.ssrKey,
+              ssrKey = _ref6$ssrKey === void 0 ? 'eluxInitStore' : _ref6$ssrKey,
+              _ref6$viewName = _ref6.viewName,
+              viewName = _ref6$viewName === void 0 ? 'main' : _ref6$viewName;
 
           var router = createRouter(routeModule.locationTransform);
           appMeta.router = router;
-          var roterStatePromise = isPromise(router.initRouteState) ? router.initRouteState : Promise.resolve(router.initRouteState);
-          return roterStatePromise.then(function (routeState) {
-            var initState = _extends({}, storeOptions.initState, {
-              route: routeState
-            });
+          var baseStore = storeCreator(storeOptions);
+          return router.initialize.then(function () {
+            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
+                store = _initApp3.store,
+                AppView = _initApp3.AppView,
+                setup = _initApp3.setup;
 
-            var baseStore = storeCreator(_extends({}, storeOptions, {
-              initState: initState
-            }));
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(function (_ref8) {
-              var store = _ref8.store,
-                  AppView = _ref8.AppView;
+            return setup.then(function () {
               var state = store.getState();
               var eluxContext = {
                 deps: {},
-                store: store,
                 router: router,
                 documentHead: ''
               };
@@ -4740,6 +4632,11 @@ function getApp() {
         return prev;
       }, {});
     },
+    useRouter: appConfig.useRouter,
+    useStore: appConfig.useStore,
+    getRouter: function getRouter(moduleHandler) {
+      return moduleHandler.router;
+    },
     GetRouter: function GetRouter() {
       return appMeta.router;
     },
@@ -4749,6 +4646,23 @@ function getApp() {
   };
 }
 
+function renderToMP(store, eluxContext) {
+  var Component = function Component(_ref) {
+    var children = _ref.children;
+    return React__default['default'].createElement(EluxContextComponent.Provider, {
+      value: eluxContext
+    }, children);
+  };
+
+  return Component;
+}
+
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  }
+});
 var MPNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(MPNativeRouter, _BaseNativeRouter);
 
@@ -4761,35 +4675,34 @@ var MPNativeRouter = function (_BaseNativeRouter) {
 
     _this.routeENV = routeENV;
     _this.tabPages = tabPages;
-    _this._unlistenHistory = routeENV.onRouteChange(function (pathname, searchData, action) {
-      var key = searchData ? searchData['__key__'] : '';
+    _this._unlistenHistory = routeENV.onRouteChange(function (pathname, search, action) {
+      var nativeUrl = [pathname, search].filter(Boolean).join('?');
+      var arr = search.match(/__key__=(\w+)/);
+      var key = arr ? arr[1] : '';
 
       if (action === 'POP' && !key) {
-        key = _this.router.history.getRecord(-1).key;
+        key = _this.router.getHistory(true).findRecord(-1).key;
       }
-
-      var nativeLocation = {
-        pathname: pathname,
-        searchData: searchData
-      };
 
       var changed = _this.onChange(key);
 
       if (changed) {
-        var index = -1;
+        var index = 0;
 
         if (action === 'POP') {
-          index = _this.router.findHistoryIndexByKey(key);
+          index = _this.router.getHistory(true).findIndex(key);
         }
 
-        if (index > -1) {
-          _this.router.back(index + 1, '', false, true);
+        if (index > 0) {
+          _this.router.back(index, routeConfig.notifyNativeRouter.root, {
+            overflowRedirect: true
+          }, true);
         } else if (action === 'REPLACE') {
-          _this.router.replace(nativeLocation, false, true);
+          _this.router.replace(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         } else if (action === 'PUSH') {
-          _this.router.push(nativeLocation, false, true);
+          _this.router.push(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         } else {
-          _this.router.relaunch(nativeLocation, false, true);
+          _this.router.relaunch(nativeUrl, routeConfig.notifyNativeRouter.root, true);
         }
       }
     });
@@ -4887,36 +4800,23 @@ function createRouter(locationTransform, routeENV, tabPages) {
 var eventBus = new SingleDispatcher();
 var tabPages = {};
 
-function queryToData(query) {
-  if (query === void 0) {
-    query = {};
-  }
-
-  return Object.keys(query).reduce(function (params, key) {
-    if (!params) {
-      params = {};
-    }
-
-    params[key] = decodeURIComponent(query[key]);
-    return params;
-  }, undefined);
+function routeToPathname(route) {
+  return "/" + route.replace(/^\/+|\/+$/g, '');
 }
 
-function routeToUrl(path, query) {
+function queryTosearch(query) {
   if (query === void 0) {
     query = {};
   }
 
-  path = "/" + path.replace(/^\/+|\/+$/g, '');
   var parts = [];
   Object.keys(query).forEach(function (key) {
     parts.push(key + "=" + query[key]);
   });
-  var queryString = parts.join('&');
-  return queryString ? path + "?" + queryString : path;
+  return parts.join('&');
 }
 
-var prevPagesInfo;
+var prevPageInfo;
 
 function patchPageOptions(pageOptions) {
   var onShow = pageOptions.onShow;
@@ -4924,19 +4824,19 @@ function patchPageOptions(pageOptions) {
   pageOptions.onShow = function () {
     var arr = Taro__default['default'].getCurrentPages();
     var currentPage = arr[arr.length - 1];
-    var currentPagesInfo = {
+    var currentPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options)
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
     };
 
-    if (prevPagesInfo) {
+    if (prevPageInfo) {
       var _action = 'PUSH';
-      var curPathname = "/" + currentPage.route.replace(/^\/+|\/+$/g, '');
 
-      if (currentPagesInfo.count < prevPagesInfo.count) {
+      if (currentPageInfo.count < prevPageInfo.count) {
         _action = 'POP';
-      } else if (currentPagesInfo.count === prevPagesInfo.count) {
-        if (currentPagesInfo.count === 1) {
+      } else if (currentPageInfo.count === prevPageInfo.count) {
+        if (currentPageInfo.count === 1) {
           _action = 'RELAUNCH';
         } else {
           _action = 'REPLACE';
@@ -4944,8 +4844,8 @@ function patchPageOptions(pageOptions) {
       }
 
       eventBus.dispatch({
-        pathname: curPathname,
-        searchData: queryToData(currentPage.options),
+        pathname: currentPageInfo.pathname,
+        search: currentPageInfo.search,
         action: _action
       });
     }
@@ -4958,9 +4858,10 @@ function patchPageOptions(pageOptions) {
   pageOptions.onHide = function () {
     var arr = Taro__default['default'].getCurrentPages();
     var currentPage = arr[arr.length - 1];
-    prevPagesInfo = {
+    prevPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options)
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
     };
     return onHide == null ? void 0 : onHide.call(this);
   };
@@ -4970,9 +4871,10 @@ function patchPageOptions(pageOptions) {
   pageOptions.onUnload = function () {
     var arr = Taro__default['default'].getCurrentPages();
     var currentPage = arr[arr.length - 1];
-    prevPagesInfo = {
+    prevPageInfo = {
       count: arr.length,
-      lastPageUrl: routeToUrl(currentPage.route, currentPage.options)
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
     };
     return onUnload == null ? void 0 : onUnload.call(this);
   };
@@ -5001,16 +4903,16 @@ var routeENV = {
     }
 
     return {
-      pathname: "/" + path.replace(/^\/+|\/+$/g, ''),
-      searchData: queryToData(query)
+      pathname: routeToPathname(path),
+      search: queryTosearch(query)
     };
   },
   onRouteChange: function onRouteChange(callback) {
     return eventBus.addListener(function (data) {
       var pathname = data.pathname,
-          searchData = data.searchData,
+          search = data.search,
           action = data.action;
-      callback(pathname, searchData, action);
+      callback(pathname, search, action);
     });
   }
 };
@@ -5022,23 +4924,23 @@ if (process.env.TARO_ENV === 'h5') {
     var _taroRouter$history$l = taroRouter.history.location,
         pathname = _taroRouter$history$l.pathname,
         search = _taroRouter$history$l.search;
-    var nativeLocation = nativeUrlToNativeLocation(pathname + search);
     return {
-      pathname: nativeLocation.pathname,
-      searchData: nativeLocation.searchData
+      pathname: pathname,
+      search: search.replace(/^\?/, '')
     };
   };
 
   routeENV.onRouteChange = function (callback) {
-    var unhandle = taroRouter.history.listen(function (location, action) {
-      var nativeLocation = nativeUrlToNativeLocation([location.pathname, location.search].join(''));
+    var unhandle = taroRouter.history.listen(function (_ref) {
+      var location = _ref.location,
+          action = _ref.action;
       var routeAction = action;
 
-      if (action !== 'POP' && tabPages[nativeLocation.pathname]) {
+      if (action !== 'POP' && tabPages[location.pathname]) {
         routeAction = 'RELAUNCH';
       }
 
-      callback(nativeLocation.pathname, nativeLocation.searchData, routeAction);
+      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
     });
     return unhandle;
   };
@@ -5065,8 +4967,20 @@ if (process.env.TARO_ENV === 'h5') {
   };
 }
 
+function getTabPages() {
+  if (env.__taroAppConfig.tabBar) {
+    env.__taroAppConfig.tabBar.list.forEach(function (_ref2) {
+      var pagePath = _ref2.pagePath;
+      tabPages[routeToPathname(pagePath)] = true;
+    });
+  }
+
+  return tabPages;
+}
+
 setAppConfig({
-  loadComponent: loadComponent
+  loadComponent: loadComponent,
+  useRouter: useRouter
 });
 function setConfig(conf) {
   setReactComponentsConfig(conf);
@@ -5079,17 +4993,11 @@ setReactComponentsConfig({
     });
   }
 });
-var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
-  if (env.__taroAppConfig.tabBar) {
-    env.__taroAppConfig.tabBar.list.forEach(function (_ref) {
-      var pagePath = _ref.pagePath;
-      tabPages["/" + pagePath.replace(/^\/+|\/+$/g, '')] = true;
-    });
-  }
-
+var createMP = function createMP(moduleGetter, middlewares) {
+  var tabPages = getTabPages();
   return createBaseMP({}, function (locationTransform) {
     return createRouter(locationTransform, routeENV, tabPages);
-  }, renderToMP, moduleGetter, middlewares, appModuleName);
+  }, renderToMP, moduleGetter, middlewares);
 };
 
 /** @license React v16.13.1
@@ -7489,6 +7397,46 @@ function useReduxContext() {
   return contextValue;
 }
 
+/**
+ * Hook factory, which creates a `useStore` hook bound to a given context.
+ *
+ * @param {React.Context} [context=ReactReduxContext] Context passed to your `<Provider>`.
+ * @returns {Function} A `useStore` hook bound to the specified context.
+ */
+
+function createStoreHook(context) {
+  if (context === void 0) {
+    context = ReactReduxContext;
+  }
+
+  var useReduxContext$1 = context === ReactReduxContext ? useReduxContext : function () {
+    return React.useContext(context);
+  };
+  return function useStore() {
+    var _useReduxContext = useReduxContext$1(),
+        store = _useReduxContext.store;
+
+    return store;
+  };
+}
+/**
+ * A hook to access the redux store.
+ *
+ * @returns {any} the redux store
+ *
+ * @example
+ *
+ * import React from 'react'
+ * import { useStore } from 'react-redux'
+ *
+ * export const ExampleComponent = () => {
+ *   const store = useStore()
+ *   return <div>{store.getState()}</div>
+ * }
+ */
+
+var useStore = /*#__PURE__*/createStoreHook();
+
 var refEquality = function refEquality(a, b) {
   return a === b;
 };
@@ -8177,7 +8125,11 @@ var reduxReducer = function reduxReducer(state, action) {
   return _extends({}, state, action.state);
 };
 
-function storeCreator(storeOptions) {
+function storeCreator(storeOptions, id) {
+  if (id === void 0) {
+    id = 0;
+  }
+
   var _storeOptions$initSta = storeOptions.initState,
       initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta,
       _storeOptions$enhance = storeOptions.enhancers,
@@ -8189,13 +8141,18 @@ function storeCreator(storeOptions) {
     enhancers.push(middlewareEnhancer);
   }
 
-  if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__(env.__REDUX_DEVTOOLS_EXTENSION__OPTIONS));
+  if (id === 0 && process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__());
   }
 
   var store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose.apply(void 0, enhancers) : enhancers[0]);
   var dispatch = store.dispatch;
   var reduxStore = store;
+  reduxStore.id = id;
+  reduxStore.builder = {
+    storeCreator: storeCreator,
+    storeOptions: storeOptions
+  };
 
   reduxStore.update = function (actionName, state, actionData) {
     dispatch({
@@ -8203,6 +8160,10 @@ function storeCreator(storeOptions) {
       state: state,
       payload: actionData
     });
+  };
+
+  reduxStore.destroy = function () {
+    return;
   };
 
   return reduxStore;
@@ -8228,8 +8189,12 @@ var connectRedux = function connectRedux() {
   };
 };
 
+setAppConfig({
+  useStore: useStore
+});
 setReactComponentsConfig({
-  Provider: Provider
+  Provider: Provider,
+  useStore: useStore
 });
 
 Object.defineProperty(exports, 'batch', {
@@ -8239,13 +8204,15 @@ Object.defineProperty(exports, 'batch', {
   }
 });
 exports.ActionTypes = ActionTypes$1;
-exports.BaseModuleHandlers = ModuleWithRouteHandlers;
+exports.BaseModuleHandlers = CoreModuleHandlers;
 exports.DocumentHead = DocumentHead;
 exports.Else = Else;
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 exports.Link = Link;
+exports.Page = Page$1;
 exports.Provider = Provider;
 exports.RouteActionTypes = RouteActionTypes;
+exports.Router = Router$1;
 exports.Switch = Switch;
 exports.action = action;
 exports.appConfig = appConfig;
@@ -8274,10 +8241,12 @@ exports.isProcessedError = isProcessedError;
 exports.isServer = isServer;
 exports.loadComponent = loadComponent;
 exports.logger = logger;
+exports.modelHotReplacement = modelHotReplacement;
 exports.mutation = mutation;
 exports.patchActions = patchActions;
 exports.reactComponentsConfig = reactComponentsConfig;
 exports.reducer = reducer;
+exports.routeENV = routeENV;
 exports.serverSide = serverSide;
 exports.setAppConfig = setAppConfig;
 exports.setConfig = setConfig;
@@ -8286,4 +8255,6 @@ exports.setProcessedError = setProcessedError;
 exports.setReactComponentsConfig = setReactComponentsConfig;
 exports.setUserConfig = setUserConfig;
 exports.shallowEqual = shallowEqual;
+exports.useRouter = useRouter;
 exports.useSelector = useSelector;
+exports.useStore = useStore;

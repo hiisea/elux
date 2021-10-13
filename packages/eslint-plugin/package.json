@@ -1,6 +1,6 @@
 {
   "name": "@elux/eslint-plugin",
-  "version": "0.1.11",
+  "version": "0.1.14",
   "main": "index.js",
   "description": "Common development tools",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/eslint-plugin",
@@ -29,12 +29,9 @@
     "eslint-plugin-react-hooks": "~4.2.0",
     "eslint-plugin-vue": "~7.13.0",
     "eslint-config-prettier": "~8.3.0",
-    "eslint-plugin-prettier": "~3.4.0"
-  },
-  "peerDependencies": {
-    "typescript": "^4.0.0",
-    "eslint": "^7.25.0",
-    "prettier": "^2.2.0"
+    "eslint-plugin-prettier": "~3.4.0",
+    "eslint": "~7.30.0",
+    "prettier": "~2.3.0"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
 }

@@ -1,30 +1,34 @@
 import { createSSRApp, createApp as createVue } from 'vue';
-import { setCoreConfig } from '@elux/core';
-import { setVueComponentsConfig, loadComponent } from '@elux/vue-components';
-import { renderToString, renderToDocument, RootComponent } from '@elux/vue-components/stage';
+import { setCoreConfig, defineModuleGetter } from '@elux/core';
+import { setVueComponentsConfig, loadComponent, useRouter, useStore } from '@elux/vue-components';
+import { renderToString, renderToDocument, Router } from '@elux/vue-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
-import { createRouter } from '@elux/route-browser';
-export * from '@elux/vue-components';
+import { createRouter, createBrowserHistory, createServerHistory } from '@elux/route-browser';
+export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/vue-components';
 export * from '@elux/app';
 setCoreConfig({
   MutableData: true
 });
 setAppConfig({
-  loadComponent: loadComponent
+  loadComponent: loadComponent,
+  useRouter: useRouter,
+  useStore: useStore
 });
 export function setConfig(conf) {
   setVueComponentsConfig(conf);
   setUserConfig(conf);
 }
-export var createApp = function createApp(moduleGetter, middlewares, appModuleName) {
-  var app = createVue(RootComponent);
-  return createBaseApp(app, function (locationTransform) {
-    return createRouter('Browser', locationTransform);
-  }, renderToDocument, moduleGetter, middlewares, appModuleName);
+export var createApp = function createApp(moduleGetter, middlewares) {
+  defineModuleGetter(moduleGetter);
+  var app = createVue(Router);
+  var history = createBrowserHistory();
+  var router = createRouter(history, {});
+  return createBaseApp(app, router, renderToDocument, middlewares);
 };
-export var createSSR = function createSSR(moduleGetter, url, middlewares, appModuleName) {
-  var app = createSSRApp(RootComponent);
-  return createBaseSSR(app, function (locationTransform) {
-    return createRouter(url, locationTransform);
-  }, renderToString, moduleGetter, middlewares, appModuleName);
+export var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+  defineModuleGetter(moduleGetter);
+  var app = createSSRApp(Router);
+  var history = createServerHistory(url);
+  var router = createRouter(history, nativeData);
+  return createBaseSSR(app, router, renderToString, middlewares);
 };

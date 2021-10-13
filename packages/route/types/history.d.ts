@@ -1,40 +1,63 @@
-import { Location, RootParams } from './basic';
-export declare function locationToUri(location: Location, key: string): {
-    uri: string;
-    pagename: string;
-    query: string;
-    key: string;
-};
-export declare function uriToLocation<P extends RootParams>(uri: string): {
-    key: string;
-    location: Location<P>;
-};
-interface HistoryRecord {
-    uri: string;
-    pagename: string;
-    query: string;
-    key: string;
-    sub?: History;
+import { IStore } from '@elux/core';
+import { ILocationTransform } from './transform';
+declare class RouteStack<T extends {
+    destroy?: () => void;
+}> {
+    protected limit: number;
+    records: T[];
+    constructor(limit: number);
+    startup(record: T): void;
+    getCurrentItem(): T;
+    getEarliestItem(): T;
+    getItemAt(n: number): T | undefined;
+    getItems(): T[];
+    getLength(): number;
+    protected _push(item: T): void;
+    protected _replace(item: T): void;
+    protected _relaunch(item: T): void;
+    back(delta: number): void;
 }
-export declare class History {
-    private parent?;
-    private curRecord;
-    private pages;
-    private actions;
-    constructor(data: HistoryRecord | {
-        location: Location;
-        key: string;
-    }, parent?: History | undefined);
-    getLength(): Number;
-    getRecord(keyOrIndex: number | string): HistoryRecord | undefined;
-    findIndex(key: string): number;
-    getCurrentInternalHistory(): History | undefined;
-    getStack(): HistoryRecord[];
-    getUriStack(): string[];
-    getPageStack(): HistoryRecord[];
-    push(location: Location, key: string): void;
-    replace(location: Location, key: string): void;
-    relaunch(location: Location, key: string): void;
-    back(delta: number): boolean;
+export declare class HistoryRecord {
+    readonly location: ILocationTransform;
+    readonly historyStack: HistoryStack;
+    static id: number;
+    readonly destroy: undefined;
+    readonly key: string;
+    readonly recordKey: string;
+    constructor(location: ILocationTransform, historyStack: HistoryStack);
+}
+export declare class HistoryStack extends RouteStack<HistoryRecord> {
+    readonly rootStack: RootStack;
+    readonly store: IStore;
+    static id: number;
+    readonly stackkey: string;
+    constructor(rootStack: RootStack, store: IStore);
+    push(location: ILocationTransform): HistoryRecord;
+    replace(location: ILocationTransform): HistoryRecord;
+    relaunch(location: ILocationTransform): HistoryRecord;
+    findRecordByKey(recordKey: string): [HistoryRecord, number] | undefined;
+    destroy(): void;
+}
+export declare class RootStack extends RouteStack<HistoryStack> {
+    constructor();
+    getCurrentPages(): {
+        pagename: string;
+        store: IStore;
+        page?: any;
+    }[];
+    push(location: ILocationTransform): HistoryRecord;
+    replace(location: ILocationTransform): HistoryRecord;
+    relaunch(location: ILocationTransform): HistoryRecord;
+    private countBack;
+    testBack(stepOrKey: number | string, rootOnly: boolean): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    findRecordByKey(key: string): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
 }
 export {};

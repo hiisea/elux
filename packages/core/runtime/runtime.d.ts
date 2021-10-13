@@ -10,6 +10,7 @@ declare namespace EluxRuntime {
 }
 declare interface ProcessEnv {
   NODE_ENV: 'development' | 'production';
+  PROJ_ENV: any;
 }
 declare interface Process {
   env: ProcessEnv;

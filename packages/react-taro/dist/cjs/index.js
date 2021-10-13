@@ -5,7 +5,8 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 exports.__esModule = true;
 var _exportNames = {
   setConfig: true,
-  createMP: true
+  createMP: true,
+  taroHistory: true
 };
 exports.setConfig = setConfig;
 exports.createMP = void 0;
@@ -23,8 +24,6 @@ Object.keys(_reactComponents).forEach(function (key) {
   exports[key] = _reactComponents[key];
 });
 
-var _stage = require("@elux/react-components/stage");
-
 var _app = require("@elux/app");
 
 Object.keys(_app).forEach(function (key) {
@@ -34,12 +33,16 @@ Object.keys(_app).forEach(function (key) {
   exports[key] = _app[key];
 });
 
+var _stage = require("@elux/react-components/stage");
+
 var _routeMp = require("@elux/route-mp");
 
-var _patch = require("./patch");
+var _taro2 = require("@elux/taro");
 
+exports.taroHistory = _taro2.taroHistory;
 (0, _app.setAppConfig)({
-  loadComponent: _reactComponents.loadComponent
+  loadComponent: _reactComponents.loadComponent,
+  useRouter: _reactComponents.useRouter
 });
 
 function setConfig(conf) {
@@ -55,17 +58,11 @@ function setConfig(conf) {
   }
 });
 
-var createMP = function createMP(moduleGetter, middlewares, appModuleName) {
-  if (_core.env.__taroAppConfig.tabBar) {
-    _core.env.__taroAppConfig.tabBar.list.forEach(function (_ref) {
-      var pagePath = _ref.pagePath;
-      _patch.tabPages["/" + pagePath.replace(/^\/+|\/+$/g, '')] = true;
-    });
-  }
-
-  return (0, _app.createBaseMP)({}, function (locationTransform) {
-    return (0, _routeMp.createRouter)(locationTransform, _patch.routeENV, _patch.tabPages);
-  }, _stage.renderToMP, moduleGetter, middlewares, appModuleName);
+var createMP = function createMP(moduleGetter, middlewares) {
+  (0, _core.defineModuleGetter)(moduleGetter);
+  var tabPages = (0, _taro2.getTabPages)();
+  var router = (0, _routeMp.createRouter)(_taro2.taroHistory, tabPages);
+  return (0, _app.createBaseMP)({}, router, _stage.renderToMP, middlewares);
 };
 
 exports.createMP = createMP;

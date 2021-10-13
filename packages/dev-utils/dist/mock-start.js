@@ -5,6 +5,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = __importDefault(require("http"));
 const chalk_1 = __importDefault(require("chalk"));
+const os_1 = require("os");
+function getLocalIP() {
+    let result = 'localhost';
+    const interfaces = os_1.networkInterfaces();
+    for (const devName in interfaces) {
+        const isEnd = interfaces[devName]?.some((item) => {
+            if (item.family === 'IPv4' && item.address !== '127.0.0.1' && !item.internal) {
+                result = item.address;
+                return true;
+            }
+            return false;
+        });
+        if (isEnd) {
+            break;
+        }
+    }
+    return result;
+}
+const localIP = getLocalIP();
 const port = process.env.PORT;
 const src = process.env.SRC;
 const app = require(src);
@@ -28,7 +47,8 @@ server.on('error', (error) => {
     }
 });
 server.on('listening', () => {
-    console.info(`\n.....${chalk_1.default.blue('MockServer')} running at ${chalk_1.default.blue.underline(`http://localhost:${port}/`)}\n`);
+    console.info(`\n.....${chalk_1.default.blue('MockServer')} running at ${chalk_1.default.blue.underline(`http://localhost:${port}/`)}`);
+    console.info(`.....${chalk_1.default.blue('MockServer')} running at ${chalk_1.default.blue.underline(`http://${localIP}:${port}/`)}\n`);
 });
 ['SIGINT', 'SIGTERM'].forEach((signal) => {
     process.on(signal, () => {

@@ -1,184 +1,110 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { BaseRouter, BaseNativeRouter } from '@elux/route';
-import { createBrowserHistory, createHashHistory, createMemoryHistory } from 'history';
+import { BaseEluxRouter, BaseNativeRouter, setRouteConfig, routeConfig, urlParser } from '@elux/route';
 import { env } from '@elux/core';
+import { createBrowserHistory as _createBrowserHistory } from 'history';
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: true
+  }
+});
+export function createServerHistory(url) {
+  const [pathname, search] = url.split('?');
+  return {
+    push() {
+      return undefined;
+    },
+
+    replace() {
+      return undefined;
+    },
+
+    block() {
+      return () => undefined;
+    },
+
+    location: {
+      pathname,
+      search
+    }
+  };
+}
+export function createBrowserHistory() {
+  return _createBrowserHistory();
+}
 export class BrowserNativeRouter extends BaseNativeRouter {
-  constructor(createHistory) {
+  constructor(_history) {
     super();
 
     _defineProperty(this, "_unlistenHistory", void 0);
 
-    _defineProperty(this, "history", void 0);
-
-    _defineProperty(this, "serverSide", false);
-
-    if (createHistory === 'Hash') {
-      this.history = createHashHistory();
-    } else if (createHistory === 'Memory') {
-      this.history = createMemoryHistory();
-    } else if (createHistory === 'Browser') {
-      this.history = createBrowserHistory();
-    } else {
-      this.serverSide = true;
-      const [pathname, search = ''] = createHistory.split('?');
-      this.history = {
-        action: 'PUSH',
-        length: 0,
-
-        listen() {
-          return () => undefined;
-        },
-
-        createHref() {
-          return '';
-        },
-
-        push() {
-          return undefined;
-        },
-
-        replace() {
-          return undefined;
-        },
-
-        go() {
-          return undefined;
-        },
-
-        goBack() {
-          return undefined;
-        },
-
-        goForward() {
-          return undefined;
-        },
-
-        block() {
-          return () => undefined;
-        },
-
-        location: {
-          pathname,
-          search: search && `?${search}`,
-          hash: ''
-        }
-      };
-    }
-
-    this._unlistenHistory = this.history.block((location, action) => {
-      const {
-        pathname = '',
-        search = '',
-        hash = ''
-      } = location;
-      const url = [pathname, search, hash].join('');
-      const key = this.getKey(location);
-      const changed = this.onChange(key);
-
-      if (changed) {
-        let index = -1;
-        let callback;
-
-        if (action === 'POP') {
-          index = this.router.findHistoryIndexByKey(key);
-        }
-
-        if (index > -1) {
-          callback = () => this.router.back(index + 1, '', false, false);
-        } else if (action === 'REPLACE') {
-          callback = () => this.router.replace(url, false, false);
-        } else if (action === 'PUSH') {
-          callback = () => this.router.push(url, false, false);
-        } else {
-          callback = () => this.router.relaunch(url, false, false);
-        }
-
-        callback && env.setTimeout(callback, 50);
-        return false;
-      }
-
-      return undefined;
-    });
-  }
-
-  getUrl() {
+    this._history = _history;
     const {
-      pathname = '',
-      search = '',
-      hash = ''
-    } = this.history.location;
-    return [pathname, search, hash].join('');
+      root,
+      internal
+    } = routeConfig.notifyNativeRouter;
+
+    if (root || internal) {
+      this._unlistenHistory = this._history.block((locationData, action) => {
+        if (action === 'POP') {
+          env.setTimeout(() => this.eluxRouter.back(1), 100);
+          return false;
+        }
+
+        return undefined;
+      });
+    }
   }
 
-  getKey(location) {
-    return location.state || '';
-  }
-
-  passive(url, key, action) {
-    return true;
-  }
-
-  refresh() {
-    this.history.go(0);
-  }
-
-  push(getNativeData, key) {
-    if (!this.serverSide) {
-      const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
-      return nativeData;
+  push(location, key) {
+    if (!env.isServer) {
+      this._history.push(location.getNativeUrl(true));
     }
 
     return undefined;
   }
 
-  replace(getNativeData, key) {
-    if (!this.serverSide) {
-      const nativeData = getNativeData();
-      this.history.replace(nativeData.nativeUrl, key);
-      return nativeData;
+  replace(location, key) {
+    if (!env.isServer) {
+      this._history.push(location.getNativeUrl(true));
     }
 
     return undefined;
   }
 
-  relaunch(getNativeData, key) {
-    if (!this.serverSide) {
-      const nativeData = getNativeData();
-      this.history.push(nativeData.nativeUrl, key);
-      return nativeData;
+  relaunch(location, key) {
+    if (!env.isServer) {
+      this._history.push(location.getNativeUrl(true));
     }
 
     return undefined;
   }
 
-  back(getNativeData, n, key) {
-    if (!this.serverSide) {
-      const nativeData = getNativeData();
-      this.history.go(-n);
-      return nativeData;
+  back(location, index, key) {
+    if (!env.isServer) {
+      this._history.replace(location.getNativeUrl(true));
     }
 
     return undefined;
-  }
-
-  toOutside(url) {
-    this.history.push(url);
   }
 
   destroy() {
-    this._unlistenHistory();
+    this._unlistenHistory && this._unlistenHistory();
   }
 
 }
-export class Router extends BaseRouter {
-  constructor(browserNativeRouter, locationTransform) {
-    super(browserNativeRouter.getUrl(), browserNativeRouter, locationTransform);
+export class EluxRouter extends BaseEluxRouter {
+  constructor(nativeUrl, browserNativeRouter, nativeData) {
+    super(nativeUrl, browserNativeRouter, nativeData);
   }
 
 }
-export function createRouter(createHistory, locationTransform) {
-  const browserNativeRouter = new BrowserNativeRouter(createHistory);
-  const router = new Router(browserNativeRouter, locationTransform);
+export function createRouter(browserHistory, nativeData) {
+  const browserNativeRouter = new BrowserNativeRouter(browserHistory);
+  const {
+    pathname,
+    search
+  } = browserHistory.location;
+  const router = new EluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
   return router;
 }

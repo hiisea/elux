@@ -1,23 +1,17 @@
-import {getComponet, ModuleGetter, defineModuleGetter, renderApp, BStore, BStoreOptions, IStore, IStoreMiddleware, StoreBuilder} from '@elux/core';
+import {getComponet, ModuleGetter, defineModuleGetter, initApp, BStore, IStore, IStoreMiddleware, StoreBuilder, setCoreConfig} from '@elux/core';
 import {createRedux} from 'src/index';
-import {messages} from './utils';
+import {messages, router} from './utils';
 import {App, moduleGetter} from './modules';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createAppWithRedux(
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  moduleGetter: ModuleGetter,
-  middlewares?: IStoreMiddleware[],
-  appModuleName?: string,
-  appViewName?: string
-) {
-  defineModuleGetter(moduleGetter, appModuleName);
+export function createAppWithRedux(moduleGetter: ModuleGetter, middlewares: IStoreMiddleware[], AppModuleName: string, appViewName: string) {
+  setCoreConfig({AppModuleName});
+  defineModuleGetter(moduleGetter);
   return {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
+    useStore<O, B extends BStore = BStore>(storeBuilder: StoreBuilder<O, B>) {
       return {
         render() {
-          const baseStore = storeCreator(storeOptions);
-          return renderApp(baseStore, [], [], middlewares, appViewName);
+          return initApp(router, storeBuilder, middlewares, appViewName);
         },
       };
     },
@@ -34,18 +28,16 @@ describe('init', () => {
   };
 
   beforeAll(() => {
-    return createAppWithRedux(moduleGetter, [storeMiddlewares], 'moduleA', 'Main')
+    const {store, AppView} = createAppWithRedux(moduleGetter, [storeMiddlewares], 'moduleA', 'Main')
       .useStore(
         createRedux({
           enhancers: [],
           initState: {thirdParty: 123},
         })
       )
-      .render()
-      .then(({store, AppView}) => {
-        mockStore = store;
-        (AppView as any)();
-      });
+      .render();
+    mockStore = store;
+    (AppView as any)();
   });
   beforeEach(() => {
     actionLogs.length = 0;

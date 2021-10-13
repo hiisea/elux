@@ -16,7 +16,11 @@ var _sprite = require("./sprite");
 
 var _basic = require("./basic");
 
+var _actions = require("./actions");
+
 var _inject = require("./inject");
+
+var _router = require("./router");
 
 var errorProcessed = '__eluxProcessed__';
 
@@ -65,11 +69,7 @@ function compose() {
   });
 }
 
-function enhanceStore(baseStore, middlewares, injectedModules) {
-  if (injectedModules === void 0) {
-    injectedModules = {};
-  }
-
+function enhanceStore(baseStore, router, middlewares) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -79,13 +79,35 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.router = router;
   store.getState = getState;
-  store.injectedModules = injectedModules;
+  store.loadingGroups = {};
+  store.injectedModules = {};
+  var injectedModules = store.injectedModules;
+  store.options = {
+    middlewares: middlewares
+  };
+  var _destroy = baseStore.destroy;
+
+  store.destroy = function () {
+    _destroy();
+
+    Object.keys(injectedModules).forEach(function (moduleName) {
+      injectedModules[moduleName].destroy();
+    });
+  };
+
   var currentData = {
     actionName: '',
     prevState: {}
   };
-  var update = baseStore.update;
+  var _update = baseStore.update;
+
+  baseStore.update = function (actionName, state, actionData) {
+    _update(actionName, state, actionData);
+
+    router.latestState = (0, _extends2.default)({}, router.latestState, state);
+  };
 
   store.getCurrentActionName = function () {
     return currentData.actionName;
@@ -101,6 +123,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
   };
 
   var middlewareAPI = {
+    store: store,
     getState: getState,
     dispatch: function dispatch(action) {
       return _dispatch2(action);
@@ -110,7 +133,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
   var preMiddleware = function preMiddleware() {
     return function (next) {
       return function (action) {
-        if (action.type === _basic.ActionTypes.Error) {
+        if (action.type === _actions.ActionTypes.Error) {
           var actionData = getActionData(action);
 
           if (isProcessedError(actionData[0])) {
@@ -124,7 +147,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
             moduleName = _action$type$split[0],
             actionName = _action$type$split[1];
 
-        if (_env.default.isServer && actionName === _basic.ActionTypes.MLoading) {
+        if (_env.default.isServer && actionName === _actions.ActionTypes.MLoading) {
           return undefined;
         }
 
@@ -185,7 +208,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
       if (isProcessedError(error)) {
         throw error;
       } else {
-        return _dispatch2((0, _basic.errorAction)(setProcessedError(error, false)));
+        return _dispatch2((0, _actions.errorAction)(setProcessedError(error, false)));
       }
     });
   }
@@ -206,7 +229,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     if (handlerModuleNames.length > 0) {
       var orderList = [];
       handlerModuleNames.forEach(function (moduleName) {
-        if (moduleName === _basic.MetaData.appModuleName) {
+        if (moduleName === _basic.coreConfig.AppModuleName) {
           orderList.unshift(moduleName);
         } else if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
@@ -237,7 +260,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
             }
           }
         });
-        update(actionName, newState, actionData);
+        store.update(actionName, newState, actionData);
       } else {
         var result = [];
         orderList.forEach(function (moduleName) {
@@ -265,8 +288,7 @@ function enhanceStore(baseStore, middlewares, injectedModules) {
     return respondHandler(action, false, prevData);
   }
 
-  var arr = middlewares ? [preMiddleware].concat(middlewares) : [preMiddleware];
-  var chain = arr.map(function (middleware) {
+  var chain = [preMiddleware, _router.routeMiddleware].concat(middlewares || []).map(function (middleware) {
     return middleware(middlewareAPI);
   });
   _dispatch2 = compose.apply(void 0, chain)(_dispatch);

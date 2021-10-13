@@ -46,10 +46,10 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
   protected listenerId = 0;
 
   protected listenerMap: {
-    [N in keyof T]?: {[id: string]: (data: T[N]) => void};
+    [N in keyof T]?: {[id: string]: (data: T[N]) => void | Promise<void>};
   } = {};
 
-  addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void): () => void {
+  addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void | Promise<void>): () => void {
     this.listenerId++;
     const id = `${this.listenerId}`;
     if (!this.listenerMap[name]) {
@@ -64,14 +64,20 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
     };
   }
 
-  dispatch<N extends keyof T>(name: N, data: T[N]): void {
+  dispatch<N extends keyof T>(name: N, data: T[N]): void | Promise<void[]> {
     const listenerMap = this.listenerMap[name] as {
-      [id: string]: (data: T[N]) => void;
+      [id: string]: (data: T[N]) => void | Promise<void>;
     };
     if (listenerMap) {
-      Object.keys(listenerMap).forEach((id) => {
-        listenerMap[id](data);
+      let hasPromise = false;
+      const arr = Object.keys(listenerMap).map((id) => {
+        const result = listenerMap[id](data);
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   }
 }
@@ -119,7 +125,11 @@ export class TaskCounter extends SingleDispatcher<LoadingState> {
   }
 }
 
-export function isPlainObject(obj: any): Boolean {
+export function deepClone<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function isObject(obj: any): Boolean {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
 
@@ -127,8 +137,8 @@ function __deepMerge(optimize: boolean | null, target: {[key: string]: any}, inj
   Object.keys(inject).forEach(function (key) {
     const src = target[key];
     const val = inject[key];
-    if (isPlainObject(val)) {
-      if (isPlainObject(src)) {
+    if (isObject(val)) {
+      if (isObject(src)) {
         target[key] = __deepMerge(optimize, src, val);
       } else {
         target[key] = optimize ? val : __deepMerge(optimize, {}, val);
@@ -141,36 +151,34 @@ function __deepMerge(optimize: boolean | null, target: {[key: string]: any}, inj
 }
 
 export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
-  if (!isPlainObject(target)) {
-    target = {};
-  }
-  args = args.filter((item) => isPlainObject(item) && Object.keys(item).length);
-  if (args.length < 1) {
+  args = args.filter((item) => isObject(item) && Object.keys(item).length);
+  if (args.length === 0) {
     return target;
   }
+  if (!isObject(target)) {
+    target = {};
+  }
   args.forEach(function (inject, index) {
-    if (isPlainObject(inject)) {
-      let lastArg = false;
-      let last2Arg: any = null;
-      if (index === args.length - 1) {
-        lastArg = true;
-      } else if (index === args.length - 2) {
-        last2Arg = args[index + 1];
-      }
-      Object.keys(inject).forEach(function (key) {
-        const src = target[key];
-        const val = inject[key];
-        if (isPlainObject(val)) {
-          if (isPlainObject(src)) {
-            target[key] = __deepMerge(lastArg, src, val);
-          } else {
-            target[key] = lastArg || (last2Arg && !last2Arg[key]) ? val : __deepMerge(lastArg, {}, val);
-          }
-        } else {
-          target[key] = val;
-        }
-      });
+    let lastArg = false;
+    let last2Arg: any = null;
+    if (index === args.length - 1) {
+      lastArg = true;
+    } else if (index === args.length - 2) {
+      last2Arg = args[index + 1];
     }
+    Object.keys(inject).forEach(function (key) {
+      const src = target[key];
+      const val = inject[key];
+      if (isObject(val)) {
+        if (isObject(src)) {
+          target[key] = __deepMerge(lastArg, src, val);
+        } else {
+          target[key] = lastArg || (last2Arg && !last2Arg[key]) ? val : __deepMerge(lastArg, {}, val);
+        }
+      } else {
+        target[key] = val;
+      }
+    });
   });
   return target;
 }

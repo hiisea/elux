@@ -8,9 +8,28 @@ const fs_extra_1 = __importDefault(require("fs-extra"));
 const path_1 = __importDefault(require("path"));
 const webpack_dev_server_1 = __importDefault(require("webpack-dev-server"));
 const terser_webpack_plugin_1 = __importDefault(require("terser-webpack-plugin"));
+const os_1 = require("os");
 const chalk_1 = __importDefault(require("chalk"));
 const webpack_1 = __importDefault(require("webpack"));
 const gen_1 = __importDefault(require("./gen"));
+function getLocalIP() {
+    let result = 'localhost';
+    const interfaces = os_1.networkInterfaces();
+    for (const devName in interfaces) {
+        const isEnd = interfaces[devName]?.some((item) => {
+            if (item.family === 'IPv4' && item.address !== '127.0.0.1' && !item.internal) {
+                result = item.address;
+                return true;
+            }
+            return false;
+        });
+        if (isEnd) {
+            break;
+        }
+    }
+    return result;
+}
+const localIP = getLocalIP();
 function dev(projEnvName, port) {
     const config = gen_1.default(process.cwd(), projEnvName, 'development', port);
     const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { cache, sourceMap, projectType, serverPort, nodeEnv, envPath, projEnv, envConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, useSSR, onCompiled, }, } = config;
@@ -48,6 +67,7 @@ function dev(projEnvName, port) {
     const host = devServerConfig.host || '0.0.0.0';
     const publicPath = devServerConfig.dev?.publicPath || '/';
     const localUrl = `${protocol}://localhost:${serverPort}${publicPath}`;
+    const localIpUrl = `${protocol}://${localIP}:${serverPort}${publicPath}`;
     const devServer = new webpack_dev_server_1.default(webpackCompiler, devServerConfig);
     ['SIGINT', 'SIGTERM'].forEach((signal) => {
         process.on(signal, () => {
@@ -71,7 +91,8 @@ function dev(projEnvName, port) {
 *                                     *
 ***************************************
 `);
-            console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta.underline(localUrl)} \n`);
+            console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta.underline(localUrl)}`);
+            console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta.underline(localIpUrl)} \n`);
             console.info(`WebpackCache: ${chalk_1.default.blue(cache)}`);
             if (cache !== 'filesystem') {
                 console.info(`${chalk_1.default.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);

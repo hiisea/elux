@@ -1,6 +1,6 @@
 import { loadComponet, isPromise, env } from '@elux/core';
 import { defineAsyncComponent, h, inject } from 'vue';
-import { EluxContextKey, vueComponentsConfig } from './base';
+import { EluxContextKey, EluxStoreContextKey, vueComponentsConfig } from './base';
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
@@ -14,8 +14,12 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     var _inject = inject(EluxContextKey, {
       documentHead: ''
     }),
-        deps = _inject.deps,
-        store = _inject.store;
+        deps = _inject.deps;
+
+    var _inject2 = inject(EluxStoreContextKey, {
+      store: null
+    }),
+        store = _inject2.store;
 
     var result;
     var errorMessage = '';

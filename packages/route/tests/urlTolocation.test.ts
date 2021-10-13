@@ -11,7 +11,7 @@ describe('init', () => {
       searchData: undefined,
       hashData: undefined,
     });
-    expect(router.getRouteState()).toEqual({
+    expect(router.routeState).toEqual({
       pagename: '/admin/member',
       params: {
         admin: {},
@@ -24,7 +24,7 @@ describe('init', () => {
           _itemVerPre: 0,
         },
       },
-      key: '1',
+      key: '1-1',
       action: 'RELAUNCH',
     });
   });

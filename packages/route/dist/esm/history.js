@@ -1,298 +1,345 @@
-import _extends from "@babel/runtime/helpers/esm/extends";
+import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
+import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { routeConfig } from './basic';
-export function locationToUri(location, key) {
-  var pagename = location.pagename,
-      params = location.params;
-  var query = params ? JSON.stringify(params) : '';
-  return {
-    uri: [key, pagename, query].join('|'),
-    pagename: pagename,
-    query: query,
-    key: key
-  };
-}
+import { env, forkStore } from '@elux/core';
+import { routeMeta } from './basic';
 
-function isHistoryRecord(data) {
-  return data['uri'];
-}
+var RouteStack = function () {
+  function RouteStack(limit) {
+    _defineProperty(this, "records", []);
 
-function splitUri() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
+    this.limit = limit;
   }
 
-  var _args$ = args[0],
-      uri = _args$ === void 0 ? '' : _args$,
-      name = args[1];
+  var _proto = RouteStack.prototype;
 
-  var _uri$split = uri.split('|'),
-      key = _uri$split[0],
-      pagename = _uri$split[1],
-      others = _uri$split.slice(2);
-
-  var arr = [key, pagename, others.join('|')];
-  var index = {
-    key: 0,
-    pagename: 1,
-    query: 2
+  _proto.startup = function startup(record) {
+    this.records = [record];
   };
 
-  if (name) {
-    return arr[index[name]];
-  }
-
-  return arr;
-}
-
-export function uriToLocation(uri) {
-  var _splitUri = splitUri(uri),
-      key = _splitUri[0],
-      pagename = _splitUri[1],
-      query = _splitUri[2];
-
-  var location = {
-    pagename: pagename,
-    params: JSON.parse(query)
+  _proto.getCurrentItem = function getCurrentItem() {
+    return this.records[0];
   };
-  return {
-    key: key,
-    location: location
+
+  _proto.getEarliestItem = function getEarliestItem() {
+    return this.records[this.records.length - 1];
   };
-}
-export var History = function () {
-  function History(data, parent) {
-    _defineProperty(this, "curRecord", void 0);
 
-    _defineProperty(this, "pages", []);
+  _proto.getItemAt = function getItemAt(n) {
+    return this.records[n];
+  };
 
-    _defineProperty(this, "actions", []);
-
-    this.parent = parent;
-
-    if (isHistoryRecord(data)) {
-      this.curRecord = data;
-    } else {
-      var _locationToUri = locationToUri(data.location, data.key),
-          _uri = _locationToUri.uri,
-          pagename = _locationToUri.pagename,
-          query = _locationToUri.query;
-
-      this.curRecord = {
-        uri: _uri,
-        pagename: pagename,
-        query: query,
-        key: data.key,
-        sub: new History({
-          uri: _uri,
-          pagename: pagename,
-          query: query,
-          key: data.key
-        }, this)
-      };
-    }
-  }
-
-  var _proto = History.prototype;
+  _proto.getItems = function getItems() {
+    return [].concat(this.records);
+  };
 
   _proto.getLength = function getLength() {
-    return this.actions.length;
+    return this.records.length;
   };
 
-  _proto.getRecord = function getRecord(keyOrIndex) {
-    if (typeof keyOrIndex === 'number') {
-      if (keyOrIndex === -1) {
-        keyOrIndex = this.actions.length - 1;
+  _proto._push = function _push(item) {
+    var records = this.records;
+    records.unshift(item);
+    var delItem = records.splice(this.limit)[0];
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  };
+
+  _proto._replace = function _replace(item) {
+    var records = this.records;
+    var delItem = records[0];
+    records[0] = item;
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  };
+
+  _proto._relaunch = function _relaunch(item) {
+    var delList = this.records;
+    this.records = [item];
+    delList.forEach(function (delItem) {
+      if (delItem !== item && delItem.destroy) {
+        delItem.destroy();
       }
-
-      return this.actions[keyOrIndex];
-    }
-
-    return this.actions.find(function (item) {
-      return item.key === keyOrIndex;
     });
-  };
-
-  _proto.findIndex = function findIndex(key) {
-    return this.actions.findIndex(function (item) {
-      return item.key === key;
-    });
-  };
-
-  _proto.getCurrentInternalHistory = function getCurrentInternalHistory() {
-    return this.curRecord.sub;
-  };
-
-  _proto.getStack = function getStack() {
-    return this.actions;
-  };
-
-  _proto.getUriStack = function getUriStack() {
-    return this.actions.map(function (item) {
-      return item.uri;
-    });
-  };
-
-  _proto.getPageStack = function getPageStack() {
-    return this.pages;
-  };
-
-  _proto.push = function push(location, key) {
-    var _pages$;
-
-    var historyRecord = this.curRecord;
-
-    var _locationToUri2 = locationToUri(location, key),
-        uri = _locationToUri2.uri,
-        pagename = _locationToUri2.pagename,
-        query = _locationToUri2.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-    var pages = [].concat(this.pages);
-    var actions = [].concat(this.actions);
-    var actionsMax = routeConfig.actionMaxHistory;
-    var pagesMax = routeConfig.pagesMaxHistory;
-    actions.unshift(historyRecord);
-
-    if (actions.length > actionsMax) {
-      actions.length = actionsMax;
-    }
-
-    if (splitUri((_pages$ = pages[0]) == null ? void 0 : _pages$.uri, 'pagename') !== pagename) {
-      pages.unshift(historyRecord);
-
-      if (pages.length > pagesMax) {
-        pages.length = pagesMax;
-      }
-    } else {
-      pages[0] = historyRecord;
-    }
-
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
-  };
-
-  _proto.replace = function replace(location, key) {
-    var _locationToUri3 = locationToUri(location, key),
-        uri = _locationToUri3.uri,
-        pagename = _locationToUri3.pagename,
-        query = _locationToUri3.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
-  };
-
-  _proto.relaunch = function relaunch(location, key) {
-    var _locationToUri4 = locationToUri(location, key),
-        uri = _locationToUri4.uri,
-        pagename = _locationToUri4.pagename,
-        query = _locationToUri4.query;
-
-    this.curRecord = {
-      uri: uri,
-      pagename: pagename,
-      query: query,
-      key: key,
-      sub: new History({
-        uri: uri,
-        pagename: pagename,
-        query: query,
-        key: key
-      }, this)
-    };
-    this.actions = [];
-    this.pages = [];
-
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
   };
 
   _proto.back = function back(delta) {
-    var _actions$;
+    var delList = this.records.splice(0, delta);
 
-    var historyRecord = this.getRecord(delta - 1);
-
-    if (!historyRecord) {
-      return false;
+    if (this.records.length === 0) {
+      var last = delList.pop();
+      this.records.push(last);
     }
 
-    this.curRecord = historyRecord;
-    var uri = historyRecord.uri,
-        pagename = historyRecord.pagename,
-        query = historyRecord.query;
-    var pages = [].concat(this.pages);
-    var actions = [].concat(this.actions);
-    var deleteActions = actions.splice(0, delta);
-    var arr = deleteActions.reduce(function (pre, curStack) {
-      var ctag = splitUri(curStack.uri, 'pagename');
-
-      if (pre[pre.length - 1] !== ctag) {
-        pre.push(ctag);
+    delList.forEach(function (delItem) {
+      if (delItem.destroy) {
+        delItem.destroy();
       }
-
-      return pre;
-    }, []);
-
-    if (arr[arr.length - 1] === splitUri((_actions$ = actions[0]) == null ? void 0 : _actions$.uri, 'pagename')) {
-      arr.pop();
-    }
-
-    pages.splice(0, arr.length);
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = _extends({}, this.parent.curRecord, {
-        uri: uri,
-        pagename: pagename,
-        query: query
-      });
-    }
-
-    return true;
+    });
   };
 
-  return History;
+  return RouteStack;
 }();
+
+export var HistoryRecord = function HistoryRecord(location, historyStack) {
+  _defineProperty(this, "destroy", void 0);
+
+  _defineProperty(this, "key", void 0);
+
+  _defineProperty(this, "recordKey", void 0);
+
+  this.location = location;
+  this.historyStack = historyStack;
+  this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
+  this.key = [historyStack.stackkey, this.recordKey].join('-');
+};
+
+_defineProperty(HistoryRecord, "id", 0);
+
+export var HistoryStack = function (_RouteStack) {
+  _inheritsLoose(HistoryStack, _RouteStack);
+
+  function HistoryStack(rootStack, store) {
+    var _this;
+
+    _this = _RouteStack.call(this, 20) || this;
+
+    _defineProperty(_assertThisInitialized(_this), "stackkey", void 0);
+
+    _this.rootStack = rootStack;
+    _this.store = store;
+    _this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+    return _this;
+  }
+
+  var _proto2 = HistoryStack.prototype;
+
+  _proto2.push = function push(location) {
+    var newRecord = new HistoryRecord(location, this);
+
+    this._push(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.replace = function replace(location) {
+    var newRecord = new HistoryRecord(location, this);
+
+    this._replace(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.relaunch = function relaunch(location) {
+    var newRecord = new HistoryRecord(location, this);
+
+    this._relaunch(newRecord);
+
+    return newRecord;
+  };
+
+  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
+    for (var i = 0, k = this.records.length; i < k; i++) {
+      var item = this.records[i];
+
+      if (item.recordKey === recordKey) {
+        return [item, i];
+      }
+    }
+
+    return undefined;
+  };
+
+  _proto2.destroy = function destroy() {
+    this.store.destroy();
+  };
+
+  return HistoryStack;
+}(RouteStack);
+
+_defineProperty(HistoryStack, "id", 0);
+
+export var RootStack = function (_RouteStack2) {
+  _inheritsLoose(RootStack, _RouteStack2);
+
+  function RootStack() {
+    return _RouteStack2.call(this, 10) || this;
+  }
+
+  var _proto3 = RootStack.prototype;
+
+  _proto3.getCurrentPages = function getCurrentPages() {
+    return this.records.map(function (item) {
+      var store = item.store;
+      var record = item.getCurrentItem();
+      var pagename = record.location.getPagename();
+      return {
+        pagename: pagename,
+        store: store,
+        page: routeMeta.pages[pagename]
+      };
+    });
+  };
+
+  _proto3.push = function push(location) {
+    var curHistory = this.getCurrentItem();
+    var routeState = {
+      pagename: location.getPagename(),
+      params: location.getParams(),
+      action: 'RELAUNCH',
+      key: ''
+    };
+    var store = forkStore(curHistory.store, routeState);
+    var newHistory = new HistoryStack(this, store);
+    var newRecord = new HistoryRecord(location, newHistory);
+    newHistory.startup(newRecord);
+
+    this._push(newHistory);
+
+    return newRecord;
+  };
+
+  _proto3.replace = function replace(location) {
+    var curHistory = this.getCurrentItem();
+    return curHistory.relaunch(location);
+  };
+
+  _proto3.relaunch = function relaunch(location) {
+    var curHistory = this.getCurrentItem();
+    var newRecord = curHistory.relaunch(location);
+
+    this._relaunch(curHistory);
+
+    return newRecord;
+  };
+
+  _proto3.countBack = function countBack(delta) {
+    var historyStacks = this.records;
+    var backSteps = [0, 0];
+
+    for (var i = 0, k = historyStacks.length; i < k; i++) {
+      var _historyStack = historyStacks[i];
+
+      var recordNum = _historyStack.getLength();
+
+      delta = delta - recordNum;
+
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
+      } else {
+        backSteps[1] = recordNum + delta;
+        break;
+      }
+    }
+
+    return backSteps;
+  };
+
+  _proto3.testBack = function testBack(stepOrKey, rootOnly) {
+    if (typeof stepOrKey === 'string') {
+      return this.findRecordByKey(stepOrKey);
+    }
+
+    var delta = stepOrKey;
+
+    if (delta === 0) {
+      var record = this.getCurrentItem().getCurrentItem();
+      return {
+        record: record,
+        overflow: false,
+        index: [0, 0]
+      };
+    }
+
+    if (rootOnly) {
+      if (delta < 0 || delta >= this.records.length) {
+        var _record = this.getEarliestItem().getCurrentItem();
+
+        return {
+          record: _record,
+          overflow: !(delta < 0),
+          index: [this.records.length - 1, 0]
+        };
+      } else {
+        var _record2 = this.getItemAt(delta).getCurrentItem();
+
+        return {
+          record: _record2,
+          overflow: false,
+          index: [delta, 0]
+        };
+      }
+    }
+
+    if (delta < 0) {
+      var _historyStack2 = this.getEarliestItem();
+
+      var _record3 = _historyStack2.getEarliestItem();
+
+      return {
+        record: _record3,
+        overflow: false,
+        index: [this.records.length - 1, _historyStack2.records.length - 1]
+      };
+    }
+
+    var _this$countBack = this.countBack(delta),
+        rootDelta = _this$countBack[0],
+        recordDelta = _this$countBack[1];
+
+    if (rootDelta < this.records.length) {
+      var _record4 = this.getItemAt(rootDelta).getItemAt(recordDelta);
+
+      return {
+        record: _record4,
+        overflow: false,
+        index: [rootDelta, recordDelta]
+      };
+    } else {
+      var _historyStack3 = this.getEarliestItem();
+
+      var _record5 = _historyStack3.getEarliestItem();
+
+      return {
+        record: _record5,
+        overflow: true,
+        index: [this.records.length - 1, _historyStack3.records.length - 1]
+      };
+    }
+  };
+
+  _proto3.findRecordByKey = function findRecordByKey(key) {
+    var arr = key.split('-');
+
+    for (var i = 0, k = this.records.length; i < k; i++) {
+      var _historyStack4 = this.records[i];
+
+      if (_historyStack4.stackkey === arr[0]) {
+        var item = _historyStack4.findRecordByKey(arr[1]);
+
+        if (item) {
+          return {
+            record: item[0],
+            index: [i, item[1]],
+            overflow: false
+          };
+        }
+      }
+    }
+
+    return {
+      record: this.getCurrentItem().getCurrentItem(),
+      index: [0, 0],
+      overflow: true
+    };
+  };
+
+  return RootStack;
+}(RouteStack);

@@ -1,150 +1,258 @@
 "use strict";
 
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
 exports.__esModule = true;
-exports.assignDefaultData = assignDefaultData;
-exports.nativeUrlToNativeLocation = nativeUrlToNativeLocation;
-exports.eluxUrlToEluxLocation = eluxUrlToEluxLocation;
-exports.nativeLocationToNativeUrl = nativeLocationToNativeUrl;
-exports.eluxLocationToEluxUrl = eluxLocationToEluxUrl;
-exports.createLocationTransform = createLocationTransform;
+exports.location = location;
+exports.createRouteModule = createRouteModule;
+exports.urlParser = void 0;
+
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
 var _core = require("@elux/core");
 
-var _deepExtend = require("./deep-extend");
-
 var _basic = require("./basic");
 
-function assignDefaultData(data) {
-  var def = _basic.routeConfig.defaultParams;
-  return Object.keys(data).reduce(function (params, moduleName) {
-    if (def[moduleName]) {
-      params[moduleName] = (0, _deepExtend.extendDefault)(data[moduleName], def[moduleName]);
+var _deepExtend = require("./deep-extend");
+
+var LocationCaches = function () {
+  function LocationCaches(limit) {
+    (0, _defineProperty2.default)(this, "length", 0);
+    (0, _defineProperty2.default)(this, "first", void 0);
+    (0, _defineProperty2.default)(this, "last", void 0);
+    (0, _defineProperty2.default)(this, "data", {});
+    this.limit = limit;
+  }
+
+  var _proto = LocationCaches.prototype;
+
+  _proto.getItem = function getItem(key) {
+    var data = this.data;
+    var cache = data[key];
+
+    if (cache && cache.next) {
+      var nextCache = cache.next;
+      delete data[key];
+      data[key] = cache;
+      nextCache.prev = cache.prev;
+      cache.prev = this.last;
+      cache.next = undefined;
+      this.last = cache;
+
+      if (this.first === cache) {
+        this.first = nextCache;
+      }
     }
 
-    return params;
-  }, {});
-}
+    return cache == null ? void 0 : cache.payload;
+  };
 
-function splitQuery(query) {
-  return (query || '').split('&').reduce(function (params, str) {
-    var sections = str.split('=');
+  _proto.setItem = function setItem(key, item) {
+    var data = this.data;
 
-    if (sections.length > 1) {
-      var key = sections[0],
-          arr = sections.slice(1);
+    if (data[key]) {
+      data[key].payload = item;
+      return;
+    }
 
-      if (!params) {
-        params = {};
+    var cache = {
+      key: key,
+      prev: this.last,
+      next: undefined,
+      payload: item
+    };
+    data[key] = cache;
+
+    if (this.last) {
+      this.last.next = cache;
+    }
+
+    this.last = cache;
+
+    if (!this.first) {
+      this.first = cache;
+    }
+
+    var length = this.length + 1;
+
+    if (length > this.limit) {
+      var firstCache = this.first;
+      delete data[firstCache.key];
+      this.first = firstCache.next;
+    } else {
+      this.length = length;
+    }
+
+    return;
+  };
+
+  return LocationCaches;
+}();
+
+var locationCaches = new LocationCaches(_basic.routeConfig.maxLocationCache);
+var urlParser = {
+  type: {
+    e: 'e',
+    s: 's',
+    n: 'n'
+  },
+  getNativeUrl: function getNativeUrl(pathname, query) {
+    return this.getUrl('n', pathname, query ? _basic.routeConfig.paramsKey + "=" + encodeURIComponent(query) : '');
+  },
+  getEluxUrl: function getEluxUrl(pathmatch, args) {
+    var search = this.stringifySearch(args);
+    return this.getUrl('e', pathmatch, search);
+  },
+  getStateUrl: function getStateUrl(pagename, payload) {
+    var search = this.stringifySearch(payload);
+    return this.getUrl('s', pagename, search);
+  },
+  parseNativeUrl: function parseNativeUrl(nurl) {
+    var pathname = this.getPath(nurl);
+    var arr = nurl.split(_basic.routeConfig.paramsKey + "=");
+    var query = arr[1] || '';
+    return {
+      pathname: pathname,
+      query: decodeURIComponent(query)
+    };
+  },
+  parseStateUrl: function parseStateUrl(surl) {
+    var pagename = this.getPath(surl);
+    var search = this.getSearch(surl);
+    var payload = this.parseSearch(search);
+    return {
+      pagename: pagename,
+      payload: payload
+    };
+  },
+  getUrl: function getUrl(type, path, search) {
+    return [type, ':/', path, search && search !== '{}' ? "?" + search : ''].join('');
+  },
+  getPath: function getPath(url) {
+    return url.substr(3).split('?', 1)[0];
+  },
+  getSearch: function getSearch(url) {
+    return url.replace(/^.+?(\?|$)/, '');
+  },
+  stringifySearch: function stringifySearch(data) {
+    return Object.keys(data).length ? JSON.stringify(data) : '';
+  },
+  parseSearch: function parseSearch(search) {
+    return (0, _basic.safeJsonParse)(search);
+  },
+  checkUrl: function checkUrl(url) {
+    var type = this.type[url.charAt(0)] || 'e';
+    var path, search;
+    var arr = url.split('://', 2);
+
+    if (arr.length > 1) {
+      arr.shift();
+    }
+
+    path = arr[0].split('?', 1)[0];
+    path = this.checkPath(path);
+
+    if (type === 'e' || type === 's') {
+      search = url.replace(/^.+?(\?|$)/, '');
+
+      if (search === '{}' || search.charAt(0) !== '{' || search.charAt(search.length - 1) !== '}') {
+        search = '';
+      }
+    } else {
+      var _arr = url.split(_basic.routeConfig.paramsKey + "=", 2);
+
+      if (_arr[1]) {
+        _arr = _arr[1].split('&', 1);
+
+        if (_arr[0]) {
+          search = _basic.routeConfig.paramsKey + "=" + _arr[0];
+        } else {
+          search = '';
+        }
+      } else {
+        search = '';
+      }
+    }
+
+    return this.getUrl(type, path, search);
+  },
+  checkPath: function checkPath(path) {
+    path = "/" + path.replace(/^\/+|\/+$/g, '');
+
+    if (path === '/') {
+      path = '/index';
+    }
+
+    return path;
+  },
+  withoutProtocol: function withoutProtocol(url) {
+    return url.replace(/^[^/]+?:\//, '');
+  }
+};
+exports.urlParser = urlParser;
+
+var LocationTransform = function () {
+  function LocationTransform(url, data) {
+    (0, _defineProperty2.default)(this, "_pagename", void 0);
+    (0, _defineProperty2.default)(this, "_payload", void 0);
+    (0, _defineProperty2.default)(this, "_params", void 0);
+    (0, _defineProperty2.default)(this, "_eurl", void 0);
+    (0, _defineProperty2.default)(this, "_nurl", void 0);
+    (0, _defineProperty2.default)(this, "_minData", void 0);
+    this.url = url;
+    data && this.update(data);
+  }
+
+  var _proto2 = LocationTransform.prototype;
+
+  _proto2.getPayload = function getPayload() {
+    if (!this._payload) {
+      var search = urlParser.getSearch(this.url);
+      var args = urlParser.parseSearch(search);
+      var notfoundPagename = _basic.routeConfig.notfoundPagename;
+      var pagenameMap = _basic.routeMeta.pagenameMap;
+      var pagename = this.getPagename();
+      var pathmatch = urlParser.getPath(this.url);
+
+      var _pagename = pagename + "/";
+
+      var arrArgs;
+
+      if (pagename === notfoundPagename) {
+        arrArgs = [pathmatch];
+      } else {
+        var _pathmatch = pathmatch + "/";
+
+        arrArgs = _pathmatch.replace(_pagename, '').split('/').map(function (item) {
+          return item ? decodeURIComponent(item) : undefined;
+        });
       }
 
-      params[key] = decodeURIComponent(arr.join('='));
+      var pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+      this._payload = (0, _core.deepMerge)({}, pathArgs, args);
     }
 
-    return params;
-  }, undefined);
-}
-
-function joinQuery(params) {
-  return Object.keys(params || {}).map(function (key) {
-    return key + "=" + encodeURIComponent(params[key]);
-  }).join('&');
-}
-
-function isEluxLocation(data) {
-  return data['params'];
-}
-
-function nativeUrlToNativeLocation(url) {
-  if (!url) {
-    return {
-      pathname: '/',
-      searchData: undefined,
-      hashData: undefined
-    };
-  }
-
-  var arr = url.split(/[?#]/);
-
-  if (arr.length === 2 && url.indexOf('?') < 0) {
-    arr.splice(1, 0, '');
-  }
-
-  var path = arr[0],
-      search = arr[1],
-      hash = arr[2];
-  return {
-    pathname: "/" + path.replace(/^\/+|\/+$/g, ''),
-    searchData: splitQuery(search),
-    hashData: splitQuery(hash)
+    return this._payload;
   };
-}
 
-function eluxUrlToEluxLocation(url) {
-  if (!url) {
-    return {
-      pathname: '/',
-      params: {}
-    };
-  }
+  _proto2.getMinData = function getMinData() {
+    if (!this._minData) {
+      var eluxUrl = this.getEluxUrl();
 
-  var _url$split = url.split('?'),
-      pathname = _url$split[0],
-      others = _url$split.slice(1);
-
-  var query = others.join('?');
-  var params = {};
-
-  if (query && query.charAt(0) === '{' && query.charAt(query.length - 1) === '}') {
-    try {
-      params = JSON.parse(query);
-    } catch (e) {
-      _core.env.console.error(e);
+      if (!this._minData) {
+        var pathmatch = urlParser.getPath(eluxUrl);
+        var search = urlParser.getSearch(eluxUrl);
+        this._minData = {
+          pathmatch: pathmatch,
+          args: urlParser.parseSearch(search)
+        };
+      }
     }
-  }
 
-  return {
-    pathname: "/" + pathname.replace(/^\/+|\/+$/g, ''),
-    params: params
+    return this._minData;
   };
-}
 
-function nativeLocationToNativeUrl(_ref) {
-  var pathname = _ref.pathname,
-      searchData = _ref.searchData,
-      hashData = _ref.hashData;
-  var search = joinQuery(searchData);
-  var hash = joinQuery(hashData);
-  return ["/" + pathname.replace(/^\/+|\/+$/g, ''), search && "?" + search, hash && "#" + hash].join('');
-}
-
-function eluxLocationToEluxUrl(location) {
-  return [location.pathname, JSON.stringify(location.params || {})].join('?');
-}
-
-function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey) {
-  if (notfoundPagename === void 0) {
-    notfoundPagename = '/404';
-  }
-
-  if (paramsKey === void 0) {
-    paramsKey = '_';
-  }
-
-  var pagenames = Object.keys(pagenameMap);
-  pagenameMap = pagenames.sort(function (a, b) {
-    return b.length - a.length;
-  }).reduce(function (map, pagename) {
-    var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
-    map[fullPagename] = pagenameMap[pagename];
-    return map;
-  }, {});
-  _basic.routeMeta.pagenames = pagenames.reduce(function (obj, key) {
-    obj[key] = key;
-    return obj;
-  }, {});
-  pagenames = Object.keys(pagenameMap);
-
-  function toStringArgs(arr) {
+  _proto2.toStringArgs = function toStringArgs(arr) {
     return arr.map(function (item) {
       if (item === null || item === undefined) {
         return undefined;
@@ -152,133 +260,93 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
 
       return item.toString();
     });
-  }
+  };
 
-  return {
-    urlToLocation: function urlToLocation(url) {
-      return this.partialLocationToLocation(this.urlToToPartialLocation(url));
-    },
-    urlToToPartialLocation: function urlToToPartialLocation(url) {
-      var givenLocation = this.urlToGivenLocation(url);
+  _proto2.update = function update(data) {
+    var _this = this;
 
-      if (isEluxLocation(givenLocation)) {
-        return this.eluxLocationToPartialLocation(givenLocation);
+    Object.keys(data).forEach(function (key) {
+      if (data[key] && !_this[key]) {
+        _this[key] = data[key];
       }
+    });
+  };
 
-      return this.nativeLocationToPartialLocation(givenLocation);
-    },
-    urlToEluxLocation: function urlToEluxLocation(url) {
-      var givenLocation = this.urlToGivenLocation(url);
+  _proto2.getPagename = function getPagename() {
+    if (!this._pagename) {
+      var notfoundPagename = _basic.routeConfig.notfoundPagename;
+      var pagenameList = _basic.routeMeta.pagenameList;
+      var pathmatch = urlParser.getPath(this.url);
 
-      if (isEluxLocation(givenLocation)) {
-        return givenLocation;
-      }
+      var __pathmatch = pathmatch + "/";
 
-      return this.nativeLocationToEluxLocation(givenLocation);
-    },
-    urlToGivenLocation: function urlToGivenLocation(url) {
-      var _url$split2 = url.split('?', 2),
-          query = _url$split2[1];
-
-      if (query && query.charAt(0) === '{') {
-        return eluxUrlToEluxLocation(url);
-      }
-
-      return nativeUrlToNativeLocation(url);
-    },
-    nativeLocationToLocation: function nativeLocationToLocation(nativeLocation) {
-      return this.partialLocationToLocation(this.nativeLocationToPartialLocation(nativeLocation));
-    },
-    nativeLocationToPartialLocation: function nativeLocationToPartialLocation(nativeLocation) {
-      var eluxLocation = this.nativeLocationToEluxLocation(nativeLocation);
-      return this.eluxLocationToPartialLocation(eluxLocation);
-    },
-    nativeLocationToEluxLocation: function nativeLocationToEluxLocation(nativeLocation) {
-      nativeLocation = nativeLocationMap.in(nativeLocation);
-      var searchParams;
-      var hashParams;
-
-      try {
-        searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
-        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
-      } catch (e) {
-        _core.env.console.error(e);
-      }
-
-      return {
-        pathname: nativeLocation.pathname,
-        params: (0, _core.deepMerge)(searchParams, hashParams)
-      };
-    },
-    eluxLocationToNativeLocation: function eluxLocationToNativeLocation(eluxLocation) {
-      var _ref2, _ref3;
-
-      var pathname = ("/" + eluxLocation.pathname + "/").replace(/^\/+|\/+$/g, '/');
-      var pagename = pagenames.find(function (name) {
-        return pathname.startsWith(name);
+      var __pagename = pagenameList.find(function (name) {
+        return __pathmatch.startsWith(name);
       });
-      var pathParams = {};
 
-      if (pagename) {
-        var _pathArgs = pathname.replace(pagename, '').split('/').map(function (item) {
-          return item ? decodeURIComponent(item) : undefined;
-        });
+      this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+    }
 
-        pathParams = pagenameMap[pagename].argsToParams(_pathArgs);
+    return this._pagename;
+  };
+
+  _proto2.getEluxUrl = function getEluxUrl() {
+    if (!this._eurl) {
+      var payload = this.getPayload();
+      var minPayload = (0, _deepExtend.excludeDefault)(payload, _basic.routeMeta.defaultParams, true);
+      var pagename = this.getPagename();
+      var pagenameMap = _basic.routeMeta.pagenameMap;
+
+      var _pagename = pagename + "/";
+
+      var pathmatch;
+      var pathArgs;
+
+      if (pagenameMap[_pagename]) {
+        var pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
+        pathmatch = _pagename + pathArgsArr.map(function (item) {
+          return item ? encodeURIComponent(item) : '';
+        }).join('/');
+        pathmatch = pathmatch.replace(/\/*$/, '');
+        pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
       } else {
-        pagename = notfoundPagename + "/";
-
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
+        pathmatch = '/index';
+        pathArgs = {};
       }
 
-      var result = (0, _deepExtend.splitPrivate)(eluxLocation.params, pathParams);
-      var nativeLocation = {
-        pathname: pathname,
-        searchData: result[0] ? (_ref2 = {}, _ref2[paramsKey] = JSON.stringify(result[0]), _ref2) : undefined,
-        hashData: result[1] ? (_ref3 = {}, _ref3[paramsKey] = JSON.stringify(result[1]), _ref3) : undefined
+      var args = (0, _deepExtend.excludeDefault)(minPayload, pathArgs, false);
+      this._minData = {
+        pathmatch: pathmatch,
+        args: args
       };
-      return nativeLocationMap.out(nativeLocation);
-    },
-    eluxLocationToPartialLocation: function eluxLocationToPartialLocation(eluxLocation) {
-      var pathname = ("/" + eluxLocation.pathname + "/").replace(/^\/+|\/+$/g, '/');
-      var pagename = pagenames.find(function (name) {
-        return pathname.startsWith(name);
-      });
-      var pathParams = {};
+      this._eurl = urlParser.getEluxUrl(pathmatch, args);
+    }
 
-      if (pagename) {
-        var _pathArgs2 = pathname.replace(pagename, '').split('/').map(function (item) {
-          return item ? decodeURIComponent(item) : undefined;
-        });
+    return this._eurl;
+  };
 
-        pathParams = pagenameMap[pagename].argsToParams(_pathArgs2);
-      } else {
-        pagename = notfoundPagename + "/";
+  _proto2.getNativeUrl = function getNativeUrl(withoutProtocol) {
+    if (!this._nurl) {
+      var nativeLocationMap = _basic.routeMeta.nativeLocationMap;
+      var minData = this.getMinData();
 
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
-      }
+      var _nativeLocationMap$ou = nativeLocationMap.out(minData),
+          pathname = _nativeLocationMap$ou.pathname,
+          query = _nativeLocationMap$ou.query;
 
-      var params = (0, _core.deepMerge)({}, pathParams, eluxLocation.params);
-      var moduleGetter = (0, _core.getModuleGetter)();
-      Object.keys(params).forEach(function (moduleName) {
-        if (!moduleGetter[moduleName]) {
-          delete params[moduleName];
-        }
-      });
-      return {
-        pagename: "/" + pagename.replace(/^\/+|\/+$/g, ''),
-        params: params
-      };
-    },
-    partialLocationToLocation: function partialLocationToLocation(partialLocation) {
-      var pagename = partialLocation.pagename,
-          params = partialLocation.params;
-      var def = _basic.routeConfig.defaultParams;
-      var asyncLoadModules = Object.keys(params).filter(function (moduleName) {
+      this._nurl = urlParser.getNativeUrl(pathname, query);
+    }
+
+    return withoutProtocol ? urlParser.withoutProtocol(this._nurl) : this._nurl;
+  };
+
+  _proto2.getParams = function getParams() {
+    var _this2 = this;
+
+    if (!this._params) {
+      var payload = this.getPayload();
+      var def = _basic.routeMeta.defaultParams;
+      var asyncLoadModules = Object.keys(payload).filter(function (moduleName) {
         return def[moduleName] === undefined;
       });
       var modulesOrPromise = (0, _core.getModuleList)(asyncLoadModules);
@@ -288,10 +356,17 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
           modules.forEach(function (module) {
             def[module.moduleName] = module.params;
           });
-          return {
-            pagename: pagename,
-            params: assignDefaultData(params)
-          };
+
+          var _params = assignDefaultData(payload);
+
+          var modulesMap = (0, _core.moduleExists)();
+          Object.keys(_params).forEach(function (moduleName) {
+            if (!modulesMap[moduleName]) {
+              delete _params[moduleName];
+            }
+          });
+          _this2._params = _params;
+          return _params;
         });
       }
 
@@ -299,64 +374,176 @@ function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagenam
       modules.forEach(function (module) {
         def[module.moduleName] = module.params;
       });
-      return {
-        pagename: pagename,
-        params: assignDefaultData(params)
-      };
-    },
-    eluxLocationToLocation: function eluxLocationToLocation(eluxLocation) {
-      return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
-    },
-    partialLocationToMinData: function partialLocationToMinData(partialLocation) {
-      var params = (0, _deepExtend.excludeDefault)(partialLocation.params, _basic.routeConfig.defaultParams, true);
-      var pathParams;
-      var pathname;
-      var pagename = ("/" + partialLocation.pagename + "/").replace(/^\/+|\/+$/g, '/');
 
-      if (pagenameMap[pagename]) {
-        var _pathArgs3 = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
+      var _params = assignDefaultData(payload);
 
-        pathname = pagename + _pathArgs3.map(function (item) {
-          return item ? encodeURIComponent(item) : '';
-        }).join('/').replace(/\/*$/, '');
-        pathParams = pagenameMap[pagename].argsToParams(_pathArgs3);
-      } else {
-        pathname = pagename;
-        pathParams = {};
-      }
-
-      params = (0, _deepExtend.excludeDefault)(params, pathParams, false);
-      return {
-        pathname: "/" + pathname.replace(/^\/+|\/+$/g, ''),
-        params: params,
-        pathParams: pathParams
-      };
-    },
-    partialLocationToEluxLocation: function partialLocationToEluxLocation(partialLocation) {
-      var _this$partialLocation = this.partialLocationToMinData(partialLocation),
-          pathname = _this$partialLocation.pathname,
-          params = _this$partialLocation.params;
-
-      return {
-        pathname: pathname,
-        params: params
-      };
-    },
-    partialLocationToNativeLocation: function partialLocationToNativeLocation(partialLocation) {
-      var _ref4, _ref5;
-
-      var _this$partialLocation2 = this.partialLocationToMinData(partialLocation),
-          pathname = _this$partialLocation2.pathname,
-          params = _this$partialLocation2.params,
-          pathParams = _this$partialLocation2.pathParams;
-
-      var result = (0, _deepExtend.splitPrivate)(params, pathParams);
-      var nativeLocation = {
-        pathname: pathname,
-        searchData: result[0] ? (_ref4 = {}, _ref4[paramsKey] = JSON.stringify(result[0]), _ref4) : undefined,
-        hashData: result[1] ? (_ref5 = {}, _ref5[paramsKey] = JSON.stringify(result[1]), _ref5) : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
+      var modulesMap = (0, _core.moduleExists)();
+      Object.keys(_params).forEach(function (moduleName) {
+        if (!modulesMap[moduleName]) {
+          delete _params[moduleName];
+        }
+      });
+      this._params = _params;
+      return _params;
+    } else {
+      return this._params;
     }
   };
+
+  return LocationTransform;
+}();
+
+function location(dataOrUrl) {
+  if (typeof dataOrUrl === 'string') {
+    var _url = urlParser.checkUrl(dataOrUrl);
+
+    var type = _url.charAt(0);
+
+    if (type === 'e') {
+      return createFromElux(_url);
+    } else if (type === 's') {
+      return createFromState(_url);
+    } else {
+      return createFromNative(_url);
+    }
+  } else if (dataOrUrl['pathmatch']) {
+    var _ref = dataOrUrl,
+        pathmatch = _ref.pathmatch,
+        args = _ref.args;
+    var eurl = urlParser.getEluxUrl(urlParser.checkPath(pathmatch), args);
+    return createFromElux(eurl);
+  } else if (dataOrUrl['pagename']) {
+    var data = dataOrUrl;
+    var pagename = data.pagename,
+        payload = data.payload;
+    var surl = urlParser.getStateUrl(urlParser.checkPath(pagename), payload);
+    return createFromState(surl, data);
+  } else {
+    var _data = dataOrUrl;
+    var pathname = _data.pathname,
+        query = _data.query;
+    var nurl = urlParser.getNativeUrl(urlParser.checkPath(pathname), query);
+    return createFromNative(nurl, _data);
+  }
+}
+
+function createFromElux(eurl, data) {
+  var item = locationCaches.getItem(eurl);
+
+  if (!item) {
+    item = new LocationTransform(eurl, {
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
+    locationCaches.setItem(eurl, item);
+  } else if (!item._eurl || !item._nurl) {
+    item.update({
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
+  }
+
+  return item;
+}
+
+function createFromNative(nurl, data) {
+  var eurl = locationCaches.getItem(nurl);
+
+  if (!eurl) {
+    var nativeLocationMap = _basic.routeMeta.nativeLocationMap;
+    data = data || urlParser.parseNativeUrl(nurl);
+
+    var _nativeLocationMap$in = nativeLocationMap.in(data),
+        pathmatch = _nativeLocationMap$in.pathmatch,
+        args = _nativeLocationMap$in.args;
+
+    eurl = urlParser.getEluxUrl(pathmatch, args);
+    locationCaches.setItem(nurl, eurl);
+  }
+
+  return createFromElux(eurl, {
+    nurl: nurl
+  });
+}
+
+function createFromState(surl, data) {
+  var eurl = "e" + surl.substr(1);
+  var item = locationCaches.getItem(eurl);
+
+  if (!item) {
+    data = data || urlParser.parseStateUrl(surl);
+    item = new LocationTransform(eurl, {
+      _pagename: data.pagename,
+      _payload: data.payload
+    });
+    locationCaches.setItem(eurl, item);
+  } else if (!item._pagename || !item._payload) {
+    data = data || urlParser.parseStateUrl(surl);
+    item.update({
+      _pagename: data.pagename,
+      _payload: data.payload
+    });
+  }
+
+  return item;
+}
+
+function assignDefaultData(data) {
+  var def = _basic.routeMeta.defaultParams;
+  return Object.keys(data).reduce(function (params, moduleName) {
+    if (def[moduleName]) {
+      params[moduleName] = (0, _deepExtend.extendDefault)(data[moduleName], def[moduleName]);
+    }
+
+    return params;
+  }, {});
+}
+
+var defaultNativeLocationMap = {
+  in: function _in(nativeLocation) {
+    var pathname = nativeLocation.pathname,
+        query = nativeLocation.query;
+    return {
+      pathmatch: pathname,
+      args: urlParser.parseSearch(query)
+    };
+  },
+  out: function out(eluxLocation) {
+    var pathmatch = eluxLocation.pathmatch,
+        args = eluxLocation.args;
+    return {
+      pathname: pathmatch,
+      query: urlParser.stringifySearch(args)
+    };
+  }
+};
+
+function createRouteModule(pagenameMap, nativeLocationMap) {
+  if (nativeLocationMap === void 0) {
+    nativeLocationMap = defaultNativeLocationMap;
+  }
+
+  var pagenames = Object.keys(pagenameMap);
+
+  var _pagenameMap = pagenames.sort(function (a, b) {
+    return b.length - a.length;
+  }).reduce(function (map, pagename) {
+    var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
+    var _pagenameMap$pagename = pagenameMap[pagename],
+        argsToParams = _pagenameMap$pagename.argsToParams,
+        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        page = _pagenameMap$pagename.page;
+    map[fullPagename] = {
+      argsToParams: argsToParams,
+      paramsToArgs: paramsToArgs
+    };
+    _basic.routeMeta.pagenames[pagename] = pagename;
+    _basic.routeMeta.pages[pagename] = page;
+    return map;
+  }, {});
+
+  _basic.routeMeta.pagenameMap = _pagenameMap;
+  _basic.routeMeta.pagenameList = Object.keys(_pagenameMap);
+  _basic.routeMeta.nativeLocationMap = nativeLocationMap;
+  return (0, _core.exportModule)(_basic.routeConfig.RouteModuleName, _core.RouteModuleHandlers, {}, {});
 }

@@ -1,44 +1,61 @@
+export declare type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
+export declare type RootParams = Record<string, any>;
+export declare type DeepPartial<T> = {
+    [P in keyof T]?: DeepPartial<T[P]>;
+};
+export interface EluxLocation<P extends RootParams = any> {
+    pathmatch: string;
+    args: DeepPartial<P>;
+}
+export interface NativeLocation {
+    pathname: string;
+    query: string;
+}
+export interface StateLocation<P extends RootParams = any, N extends string = string> {
+    pagename: N;
+    payload: DeepPartial<P>;
+}
+export interface LocationState<P extends RootParams = any> {
+    pagename: string;
+    params: Partial<P>;
+}
+export interface RouteState<P extends RootParams = any> {
+    action: HistoryAction;
+    key: string;
+    pagename: string;
+    params: Partial<P>;
+}
+export interface NativeLocationMap {
+    in(nativeLocation: NativeLocation): EluxLocation;
+    out(eluxLocation: EluxLocation): NativeLocation;
+}
+export interface PagenameMap {
+    [pageName: string]: {
+        argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
+        paramsToArgs: Function;
+        page?: any;
+    };
+}
 export interface RouteConfig {
-    actionMaxHistory: number;
-    pagesMaxHistory: number;
-    disableNativeRoute: boolean;
+    RouteModuleName: string;
+    maxHistory: number;
+    maxLocationCache: number;
+    notifyNativeRouter: {
+        root: boolean;
+        internal: boolean;
+    };
     indexUrl: string;
-    defaultParams: Record<string, any>;
+    notfoundPagename: string;
+    paramsKey: string;
 }
 export declare const routeConfig: RouteConfig;
 export declare const setRouteConfig: (config: Partial<RouteConfig>) => void;
 export declare const routeMeta: {
     pagenames: Record<string, string>;
+    defaultParams: Record<string, any>;
+    pages: Record<string, any>;
+    pagenameMap: Record<string, any>;
+    pagenameList: string[];
+    nativeLocationMap: NativeLocationMap;
 };
-export declare type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
-export declare type ModuleParams = Record<string, any>;
-export declare type RootParams = Record<string, ModuleParams>;
-export interface Location<P extends RootParams = {}> {
-    pagename: string;
-    params: Partial<P>;
-}
-export interface PayloadLocation<P extends RootParams = {}, N extends string = string> {
-    pathname?: N;
-    params?: DeepPartial<P>;
-    extendParams?: DeepPartial<P> | 'current';
-}
-export declare type RouteState<P extends RootParams = {}> = Location<P> & {
-    action: HistoryAction;
-    key: string;
-};
-export declare type DeepPartial<T> = {
-    [P in keyof T]?: DeepPartial<T[P]>;
-};
-export interface PartialLocation {
-    pagename: string;
-    params: Record<string, any>;
-}
-export interface EluxLocation {
-    pathname: string;
-    params: Record<string, any>;
-}
-export interface NativeLocation {
-    pathname: string;
-    searchData?: Record<string, string>;
-    hashData?: Record<string, string>;
-}
+export declare function safeJsonParse(json: string): Record<string, any>;

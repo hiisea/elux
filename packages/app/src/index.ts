@@ -3,25 +3,21 @@ import {
   getRootModuleAPI,
   buildConfigSetter,
   initApp,
-  renderApp,
-  ssrApp,
-  isPromise,
-  defineModuleGetter,
   setCoreConfig,
-  getModule,
   IStore,
   LoadComponent,
   ModuleGetter,
   IStoreMiddleware,
   StoreBuilder,
-  BStoreOptions,
   BStore,
   RootModuleFacade,
   RootModuleAPI,
   RootModuleActions,
+  ICoreRouter,
+  StoreOptions,
 } from '@elux/core';
 
-import {routeMiddleware, setRouteConfig, IBaseRouter, RouteModule, LocationTransform, routeMeta, RouteState} from '@elux/route';
+import {setRouteConfig, IEluxRouter, routeConfig, routeMeta, RouteState} from '@elux/route';
 
 export {
   ActionTypes,
@@ -37,6 +33,7 @@ export {
   isServer,
   serverSide,
   clientSide,
+  deepClone,
   deepMerge,
   deepMergeState,
   exportModule,
@@ -45,16 +42,28 @@ export {
   delayPromise,
   exportView,
   exportComponent,
+  modelHotReplacement,
   EmptyModuleHandlers,
+  CoreModuleHandlers as BaseModuleHandlers,
 } from '@elux/core';
-export {ModuleWithRouteHandlers as BaseModuleHandlers, RouteActionTypes, createRouteModule} from '@elux/route';
+export {RouteActionTypes, location, createRouteModule, safeJsonParse} from '@elux/route';
 
 export type {RootModuleFacade as Facade, Dispatch, IStore, EluxComponent} from '@elux/core';
-export type {RouteState, PayloadLocation, LocationTransform, NativeLocation, PagenameMap, HistoryAction, Location, DeepPartial} from '@elux/route';
+export type {
+  LocationState,
+  PagenameMap,
+  NativeLocationMap,
+  HistoryAction,
+  EluxLocation,
+  NativeLocation,
+  StateLocation,
+  RouteState,
+  DeepPartial,
+} from '@elux/route';
 
 const appMeta: {
   SSRTPL: string;
-  router: IBaseRouter<any, string>;
+  router: IEluxRouter;
 } = {
   router: null as any,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
@@ -62,21 +71,33 @@ const appMeta: {
 
 export const appConfig: {
   loadComponent: LoadComponent;
+  useRouter: () => ICoreRouter;
+  useStore: () => IStore;
 } = {
   loadComponent: null as any,
+  useRouter: null as any,
+  useStore: null as any,
 };
 export const setAppConfig = buildConfigSetter(appConfig);
 export interface UserConfig {
-  actionMaxHistory?: number;
-  pagesMaxHistory?: number;
+  maxHistory?: number;
+  maxLocationCache?: number;
   NSP?: string;
   MSP?: string;
   DepthTimeOnLoading?: number;
-  disableNativeRoute?: boolean;
+  indexUrl?: string;
+  notfoundPagename: string;
+  paramsKey: string;
+  AppModuleName?: string;
+  RouteModuleName?: string;
+  disableNativeRouter?: boolean;
 }
 export function setUserConfig(conf: UserConfig): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
+  if (conf.disableNativeRouter) {
+    setRouteConfig({notifyNativeRouter: {root: false, internal: false}});
+  }
 }
 
 export interface RenderOptions {
@@ -86,31 +107,43 @@ export interface RenderOptions {
 }
 
 export interface ContextWrap {}
-export interface CreateMP<INS = {}> {
-  (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
+
+export interface AttachMP<App> {
+  (app: App, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
-    }: StoreBuilder<O, B>): INS & {
-      render(): {store: IStore<any> & B; context: ContextWrap};
+    }: StoreBuilder<O, B>): App & {
+      render(): {store: IStore & B; context: ContextWrap};
+    };
+  };
+}
+
+export interface CreateMP {
+  (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
+      storeOptions,
+      storeCreator,
+    }: StoreBuilder<O, B>): {
+      render(): {store: IStore & B; context: ContextWrap};
     };
   };
 }
 
 export interface CreateApp<INS = {}> {
-  (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[], appModuleName?: string): {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
+  (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
     }: StoreBuilder<O, B>): INS & {
-      render({id, ssrKey, viewName}?: RenderOptions): Promise<IStore<any> & B>;
+      render({id, ssrKey, viewName}?: RenderOptions): Promise<IStore & B>;
     };
   };
 }
 
 export interface CreateSSR<INS = {}> {
-  (moduleGetter: ModuleGetter, url: string, middlewares?: IStoreMiddleware[], appModuleName?: string): {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
+  (moduleGetter: ModuleGetter, url: string, nativeData: any, middlewares?: IStoreMiddleware[]): {
+    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
     }: StoreBuilder<O, B>): INS & {
@@ -122,41 +155,29 @@ export interface CreateSSR<INS = {}> {
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
-  store?: IStore;
-  router?: IBaseRouter<any, string>;
+  router?: IEluxRouter<any, string>;
 }
 
 export function createBaseMP<INS = {}>(
   ins: INS,
-  createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>,
-  render: (store: IStore, eluxContext: EluxContext, ins: INS) => any,
-  moduleGetter: ModuleGetter,
-  middlewares: IStoreMiddleware[] = [],
-  appModuleName?: string
+  router: IEluxRouter,
+  render: (eluxContext: EluxContext, ins: INS) => any,
+  middlewares: IStoreMiddleware[] = []
 ): {
-  useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
-    storeOptions,
-    storeCreator,
-  }: StoreBuilder<O, B>): INS & {
-    render(): {store: IStore<any> & B; context: ContextWrap};
+  useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
+    storeBuilder: StoreBuilder<O, B>
+  ): INS & {
+    render(): {store: IStore & B; context: ContextWrap};
   };
 } {
-  defineModuleGetter(moduleGetter, appModuleName);
-  const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const routeModule = getModule('route') as RouteModule;
+  appMeta.router = router;
   return {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
+    useStore<O extends StoreOptions, B extends BStore = BStore>({storeCreator, storeOptions}: StoreBuilder<O, B>) {
       return Object.assign(ins, {
         render() {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          const routeState = router.initRouteState as RouteState;
-          const initState = {...storeOptions.initState, route: routeState};
-          const baseStore = storeCreator({...storeOptions, initState});
-          const store = initApp(baseStore, istoreMiddleware);
-          routeModule.model(store);
-          router.setStore(store);
-          const context: ContextWrap = render(store, {deps: {}, store, router, documentHead: ''}, ins);
+          const baseStore = storeCreator(storeOptions);
+          const {store} = initApp<B>(router, baseStore, middlewares);
+          const context: ContextWrap = render({deps: {}, router, documentHead: ''}, ins);
           return {store, context};
         },
       });
@@ -166,39 +187,28 @@ export function createBaseMP<INS = {}>(
 
 export function createBaseApp<INS = {}>(
   ins: INS,
-  createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>,
-  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void,
-  moduleGetter: ModuleGetter,
-  middlewares: IStoreMiddleware[] = [],
-  appModuleName?: string
+  router: IEluxRouter,
+  render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void,
+  middlewares: IStoreMiddleware[] = []
 ): {
-  useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
-    storeOptions,
-    storeCreator,
-  }: StoreBuilder<O, B>): INS & {
-    render({id, ssrKey, viewName}?: RenderOptions): Promise<IStore<any> & B>;
+  useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
+    storeBuilder: StoreBuilder<O, B>
+  ): INS & {
+    render({id, ssrKey, viewName}?: RenderOptions): Promise<IStore & B>;
   };
 } {
-  defineModuleGetter(moduleGetter, appModuleName);
-  const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const routeModule = getModule('route') as RouteModule;
+  appMeta.router = router;
   return {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
+    useStore<O extends StoreOptions, B extends BStore = BStore>({storeCreator, storeOptions}: StoreBuilder<O, B>) {
       return Object.assign(ins, {
-        render({id = 'root', ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          const {state, components = []}: {state: any; components: string[]} = env[ssrKey] || {};
-          const roterStatePromise: Promise<RouteState> = isPromise(router.initRouteState)
-            ? router.initRouteState
-            : Promise.resolve(router.initRouteState);
-          return roterStatePromise.then((routeState) => {
-            const initState = {...storeOptions.initState, route: routeState, ...state};
-            const baseStore = storeCreator({...storeOptions, initState});
-            return renderApp(baseStore, Object.keys(initState), components, istoreMiddleware, viewName).then(({store, AppView}) => {
-              routeModule.model(store);
-              router.setStore(store);
-              render(id, AppView, store, {deps: {}, store, router, documentHead: ''}, !!env[ssrKey], ins);
+        render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
+          const {state, components = []}: {state?: Record<string, any>; components: string[]} = env[ssrKey] || {};
+          return router.initialize.then((routeState) => {
+            storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState, ...state};
+            const baseStore = storeCreator(storeOptions);
+            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName, components);
+            return setup.then(() => {
+              render(id, AppView, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
               return store;
             });
           });
@@ -210,45 +220,36 @@ export function createBaseApp<INS = {}>(
 
 export function createBaseSSR<INS = {}>(
   ins: INS,
-  createRouter: (locationTransform: LocationTransform) => IBaseRouter<any, string>,
-  render: (id: string, component: any, store: IStore, eluxContext: EluxContext, ins: INS) => Promise<string>,
-  moduleGetter: ModuleGetter,
-  middlewares: IStoreMiddleware[] = [],
-  appModuleName?: string
+  router: IEluxRouter,
+  render: (id: string, component: any, eluxContext: EluxContext, ins: INS) => Promise<string>,
+  middlewares: IStoreMiddleware[] = []
 ): {
-  useStore<O extends BStoreOptions = BStoreOptions, B extends BStore<{}> = BStore<{}>>({
-    storeOptions,
-    storeCreator,
-  }: StoreBuilder<O, B>): INS & {
+  useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
+    storeBuilder: StoreBuilder<O, B>
+  ): INS & {
     render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
   };
 } {
-  defineModuleGetter(moduleGetter, appModuleName);
-  const istoreMiddleware = [routeMiddleware, ...middlewares];
-  const routeModule = getModule('route') as RouteModule;
+  appMeta.router = router;
   return {
-    useStore<O extends BStoreOptions = BStoreOptions, B extends BStore = BStore>({storeOptions, storeCreator}: StoreBuilder<O, B>) {
+    useStore<O extends StoreOptions, B extends BStore = BStore>({storeCreator, storeOptions}: StoreBuilder<O, B>) {
       return Object.assign(ins, {
-        render({id = 'root', ssrKey = 'eluxInitStore', viewName}: RenderOptions = {}) {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          const roterStatePromise: Promise<RouteState> = isPromise(router.initRouteState)
-            ? router.initRouteState
-            : Promise.resolve(router.initRouteState);
-          return roterStatePromise.then((routeState) => {
-            const initState = {...storeOptions.initState, route: routeState};
-            const baseStore = storeCreator({...storeOptions, initState});
-            return ssrApp(baseStore, Object.keys(routeState.params), istoreMiddleware, viewName).then(({store, AppView}) => {
+        render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
+          return router.initialize.then((routeState) => {
+            storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState};
+            const baseStore = storeCreator(storeOptions);
+            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName);
+            return setup.then(() => {
               const state = store.getState();
-              const eluxContext = {deps: {}, store, router, documentHead: ''};
-              return render(id, AppView, store, eluxContext, ins).then((html) => {
+              const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
+              return render(id, AppView, eluxContext, ins).then((html) => {
                 const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
                 if (match) {
                   return appMeta.SSRTPL.replace(
                     '</head>',
                     `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
                       state,
-                      components: Object.keys(eluxContext.deps),
+                      components: Object.keys(eluxContext.deps!),
                     })};</script>\r\n</head>`
                   ).replace(match[0], match[0] + html);
                 }
@@ -267,21 +268,26 @@ export function patchActions(typeName: string, json?: string): void {
   }
 }
 
-export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions> = {
+export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', NT = unknown> = {
   State: {[M in keyof A]: A[M]['state']};
   RouteParams: {[M in keyof A]?: A[M]['params']};
-  GetRouter: () => IBaseRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A['route']['components'], string>>;
+  RouteState: RouteState<{[M in keyof A]?: A[M]['params']}>;
+  Router: IEluxRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A[R]['components'], string>, NT>;
   GetActions<N extends keyof A>(...args: N[]): {[K in N]: A[K]['actions']};
   LoadComponent: LoadComponent<A, LoadComponentOptions>;
   Modules: RootModuleAPI<A>;
   Actions: RootModuleActions<A>;
-  Pagenames: {[K in keyof A['route']['components']]: K};
+  Pagenames: {[K in keyof A[R]['components']]: K};
 };
 
-export function getApp<T extends {GetActions: any; GetRouter: any; LoadComponent: any; Modules: any; Pagenames: any}>(): Pick<
+export function getApp<T extends {State: any; GetActions: any; LoadComponent: any; Modules: any; Pagenames: any; Router: any}>(): Pick<
   T,
-  'GetActions' | 'GetRouter' | 'LoadComponent' | 'Modules' | 'Pagenames'
-> {
+  'GetActions' | 'LoadComponent' | 'Modules' | 'Pagenames'
+> & {
+  GetRouter: () => T['Router'];
+  useRouter: () => T['Router'];
+  useStore: () => IStore<T['State']>;
+} {
   const modules = getRootModuleAPI();
   return {
     GetActions: (...args: string[]) => {
@@ -290,7 +296,14 @@ export function getApp<T extends {GetActions: any; GetRouter: any; LoadComponent
         return prev;
       }, {});
     },
-    GetRouter: () => appMeta.router,
+    useRouter: appConfig.useRouter,
+    useStore: appConfig.useStore,
+    GetRouter: () => {
+      if (env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
+      }
+      return appMeta.router;
+    },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
     Pagenames: routeMeta.pagenames,

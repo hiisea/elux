@@ -1,11 +1,12 @@
 import React, { ComponentType } from 'react';
 import { IStore } from '@elux/core';
-import { IBaseRouter } from '@elux/route';
+import { IEluxRouter } from '@elux/route';
 export declare const reactComponentsConfig: {
     setPageTitle(title: string): void;
     Provider: ComponentType<{
         store: IStore;
     }>;
+    useStore(): IStore;
     LoadComponentOnError: ComponentType<{
         message: string;
     }>;
@@ -16,6 +17,7 @@ export declare const setReactComponentsConfig: (config: Partial<{
     Provider: ComponentType<{
         store: IStore;
     }>;
+    useStore(): IStore;
     LoadComponentOnError: ComponentType<{
         message: string;
     }>;
@@ -24,7 +26,6 @@ export declare const setReactComponentsConfig: (config: Partial<{
 export interface EluxContext {
     deps?: Record<string, boolean>;
     documentHead: string;
-    store?: IStore;
-    router?: IBaseRouter<any, string>;
+    router?: IEluxRouter;
 }
 export declare const EluxContextComponent: React.Context<EluxContext>;

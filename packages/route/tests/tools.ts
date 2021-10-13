@@ -1,5 +1,5 @@
-import {defineModuleGetter, exportModule, CoreModuleHandlers} from '@elux/core';
-import {BaseRouter, BaseNativeRouter, createLocationTransform, DeepPartial, RootParams, NativeData, PagenameMap} from 'src/index';
+import {defineModuleGetter, exportModule, CoreModuleHandlers, IStore} from '@elux/core';
+import {BaseEluxRouter, BaseNativeRouter, DeepPartial, RootParams, NativeData, PagenameMap, createRouteModule} from 'src/index';
 
 import nativeRouterMock from './nativeRouter';
 
@@ -48,19 +48,10 @@ const defaultArticleRouteParams: ArticleRouteParams = {
 };
 
 class ModuleHandlers extends CoreModuleHandlers {
-  constructor(moduleName: string) {
-    super(moduleName, {});
+  constructor(moduleName: string, store: IStore) {
+    super(moduleName, store, {});
   }
 }
-
-defineModuleGetter(
-  {
-    admin: () => exportModule('admin', ModuleHandlers, {}, {}),
-    member: () => exportModule('member', ModuleHandlers, defaultMemberRouteParams, {}),
-    article: () => exportModule('article', ModuleHandlers, defaultArticleRouteParams, {}),
-  },
-  'admin'
-);
 
 type RouteParams = {admin: {}; member: MemberRouteParams; article: ArticleRouteParams};
 type PartialRouteParams = DeepPartial<RouteParams>;
@@ -105,7 +96,7 @@ const pagenameMap: PagenameMap = {
 
 export type Pagename = keyof typeof pagenameMap;
 
-export const locationTransform = createLocationTransform(pagenameMap, {
+const routeModule = createRouteModule('route', pagenameMap, {
   in(nativeLocation) {
     let pathname = nativeLocation.pathname;
     if (pathname === '/' || pathname === '/admin2') {
@@ -118,11 +109,13 @@ export const locationTransform = createLocationTransform(pagenameMap, {
     return {...nativeLocation, pathname: pathname.replace('/member', '/member2')};
   },
 });
-export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> {
-  destroy(): void {
-    return undefined;
-  }
-}
+defineModuleGetter({
+  route: () => routeModule,
+  admin: () => exportModule('admin', ModuleHandlers, {}, {}),
+  member: () => exportModule('member', ModuleHandlers, defaultMemberRouteParams, {}),
+  article: () => exportModule('article', ModuleHandlers, defaultArticleRouteParams, {}),
+});
+export class Router<P extends RootParams, N extends string> extends BaseEluxRouter<P, N> {}
 
 export class NativeRouter extends BaseNativeRouter {
   protected push(getNativeData: () => NativeData, key: string): NativeData {
@@ -159,9 +152,10 @@ export class NativeRouter extends BaseNativeRouter {
 }
 export const nativeRouter: NativeRouter = new NativeRouter();
 
-export const router = new Router('/', nativeRouter, locationTransform);
-router.setStore({
+const store = {
   dispatch() {
     return undefined;
   },
-});
+} as any;
+export const router = new Router('/', nativeRouter, routeModule.locationTransform, {});
+router.startup(store);

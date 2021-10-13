@@ -1,25 +1,33 @@
-import React, {useContext} from 'react';
+import React, {useContext, useCallback} from 'react';
 import {EluxContextComponent} from './base';
 
 export interface Props extends React.HTMLAttributes<HTMLDivElement> {
-  url: string;
+  route?: string;
   onClick?(event: React.MouseEvent): void;
   href?: string;
-  replace?: boolean;
+  action?: 'push' | 'replace' | 'relaunch';
+  root?: boolean;
 }
 
-export default React.forwardRef<HTMLAnchorElement, Props>(({onClick, href, url, replace, ...rest}, ref) => {
+export default React.forwardRef<HTMLAnchorElement, Props>(({onClick: _onClick, href, route, root, action = 'push', ...props}, ref) => {
   const eluxContext = useContext(EluxContextComponent);
-  const props = {
-    ...rest,
-    onClick: (event: React.MouseEvent) => {
+  const router = eluxContext.router!;
+  const onClick = useCallback(
+    (event: React.MouseEvent) => {
       event.preventDefault();
-      onClick && onClick(event);
-      replace ? eluxContext.router!.replace(url) : eluxContext.router!.push(url);
+      _onClick && _onClick(event);
+      route && router[action](route, root);
     },
-  };
+    [_onClick, action, root, route, router]
+  );
+  props['onClick'] = onClick;
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
+
   if (href) {
-    return <a {...props} href={href} ref={ref} />;
+    return <a {...props} ref={ref} />;
   } else {
     return <div {...props} ref={ref} />;
   }

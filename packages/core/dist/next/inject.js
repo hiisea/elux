@@ -1,12 +1,8 @@
-import _decorate from "@babel/runtime/helpers/esm/decorate";
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise } from './sprite';
-import { isEluxComponent, injectActions, MetaData, coreConfig, reducer, mergeState, moduleInitAction, moduleReInitAction } from './basic';
+import { isPromise, warn, deepClone } from './sprite';
+import { isEluxComponent, MetaData, coreConfig } from './basic';
+import { moduleInitAction } from './actions';
 import env from './env';
-export function getModuleGetter() {
-  return MetaData.moduleGetter;
-}
-export function exportModule(moduleName, ModuleHandles, params, components) {
+export function exportModule(moduleName, ModuleHandlers, params, components) {
   Object.keys(components).forEach(key => {
     const component = components[key];
 
@@ -17,18 +13,15 @@ export function exportModule(moduleName, ModuleHandles, params, components) {
 
   const model = store => {
     if (!store.injectedModules[moduleName]) {
-      const moduleHandles = new ModuleHandles(moduleName);
+      const {
+        latestState
+      } = store.router;
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
-      moduleHandles.store = store;
       injectActions(moduleName, moduleHandles);
-      const initState = moduleHandles.initState;
-      const preModuleState = store.getState(moduleName);
-
-      if (preModuleState) {
-        return store.dispatch(moduleReInitAction(moduleName, initState));
-      }
-
-      return store.dispatch(moduleInitAction(moduleName, initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
 
     return undefined;
@@ -42,6 +35,46 @@ export function exportModule(moduleName, ModuleHandles, params, components) {
     params,
     actions: undefined
   };
+}
+export function modelHotReplacement(moduleName, ModuleHandlers) {
+  const model = store => {
+    if (!store.injectedModules[moduleName]) {
+      const {
+        latestState
+      } = store.router;
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
+      store.injectedModules[moduleName] = moduleHandles;
+      injectActions(moduleName, moduleHandles);
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
+    }
+
+    return undefined;
+  };
+
+  const moduleCache = MetaData.moduleCaches[moduleName];
+
+  if (moduleCache && moduleCache['model']) {
+    moduleCache.model = model;
+  }
+
+  const store = MetaData.currentRouter.getCurrentStore();
+
+  if (MetaData.injectedModules[moduleName]) {
+    MetaData.injectedModules[moduleName] = false;
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}), true);
+  }
+
+  const stores = MetaData.currentRouter.getStoreList();
+  stores.forEach(store => {
+    if (store.injectedModules[moduleName]) {
+      const ins = new ModuleHandlers(moduleName, store, {}, {});
+      ins.initState = store.injectedModules[moduleName].initState;
+      store.injectedModules[moduleName] = ins;
+    }
+  });
+  env.console.log(`[HMR] @medux Updated model: ${moduleName}`);
 }
 export function getModule(moduleName) {
   if (MetaData.moduleCaches[moduleName]) {
@@ -86,8 +119,7 @@ export function getModuleList(moduleNames) {
     return list;
   }
 }
-
-function _loadModel(moduleName, store) {
+export function loadModel(moduleName, store) {
   const moduleOrPromise = getModule(moduleName);
 
   if (isPromise(moduleOrPromise)) {
@@ -96,8 +128,6 @@ function _loadModel(moduleName, store) {
 
   return moduleOrPromise.model(store);
 }
-
-export { _loadModel as loadModel };
 export function getComponet(moduleName, componentName) {
   const key = [moduleName, componentName].join(coreConfig.NSP);
 
@@ -153,7 +183,7 @@ export function loadComponet(moduleName, componentName, store, deps) {
   const promiseOrComponent = getComponet(moduleName, componentName);
 
   const callback = component => {
-    if (component.__elux_component__ === 'view' && !store.getState(moduleName)) {
+    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
       if (env.isServer) {
         return null;
       }
@@ -179,115 +209,6 @@ export function loadComponet(moduleName, componentName, store, deps) {
 export function getCachedModules() {
   return MetaData.moduleCaches;
 }
-export class EmptyModuleHandlers {
-  constructor(moduleName) {
-    _defineProperty(this, "store", void 0);
-
-    _defineProperty(this, "initState", void 0);
-
-    this.moduleName = moduleName;
-    this.initState = {};
-  }
-
-}
-export let CoreModuleHandlers = _decorate(null, function (_initialize) {
-  class CoreModuleHandlers {
-    constructor(moduleName, initState) {
-      _initialize(this);
-
-      this.moduleName = moduleName;
-      this.initState = initState;
-    }
-
-  }
-
-  return {
-    F: CoreModuleHandlers,
-    d: [{
-      kind: "field",
-      key: "store",
-      value: void 0
-    }, {
-      kind: "get",
-      key: "actions",
-      value: function actions() {
-        return MetaData.facadeMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "method",
-      key: "getPrivateActions",
-      value: function getPrivateActions(actionsMap) {
-        return MetaData.facadeMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "get",
-      key: "state",
-      value: function state() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "get",
-      key: "rootState",
-      value: function rootState() {
-        return this.store.getState();
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentActionName",
-      value: function getCurrentActionName() {
-        return this.store.getCurrentActionName();
-      }
-    }, {
-      kind: "get",
-      key: "currentRootState",
-      value: function currentRootState() {
-        return this.store.getCurrentState();
-      }
-    }, {
-      kind: "get",
-      key: "currentState",
-      value: function currentState() {
-        return this.store.getCurrentState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "dispatch",
-      value: function dispatch(action) {
-        return this.store.dispatch(action);
-      }
-    }, {
-      kind: "method",
-      key: "loadModel",
-      value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "Init",
-      value: function Init(initState) {
-        return initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "Update",
-      value: function Update(payload, key) {
-        return mergeState(this.state, payload);
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: "Loading",
-      value: function Loading(payload) {
-        const loading = mergeState(this.state.loading, payload);
-        return mergeState(this.state, {
-          loading
-        });
-      }
-    }]
-  };
-});
 export function getRootModuleAPI(data) {
   if (!MetaData.facadeMap) {
     if (data) {
@@ -364,4 +285,52 @@ export function exportView(component) {
   const eluxComponent = component;
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;
+}
+
+function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
+  }
+
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    warn(`Action duplicate : ${actionName}.`);
+  }
+
+  actionHandlerMap[actionName][listenerModule] = handler;
+}
+
+export function injectActions(moduleName, handlers, hmr) {
+  const injectedModules = MetaData.injectedModules;
+
+  if (injectedModules[moduleName]) {
+    return;
+  }
+
+  injectedModules[moduleName] = true;
+
+  for (const actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      const handler = handlers[actionNames];
+
+      if (handler.__isReducer__ || handler.__isEffect__) {
+        actionNames.split(coreConfig.MSP).forEach(actionName => {
+          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+          const arr = actionName.split(coreConfig.NSP);
+
+          if (arr[1]) {
+            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          } else {
+            transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          }
+        });
+      }
+    }
+  }
+}
+export function defineModuleGetter(moduleGetter) {
+  MetaData.moduleGetter = moduleGetter;
+  MetaData.moduleExists = Object.keys(moduleGetter).reduce((data, moduleName) => {
+    data[moduleName] = true;
+    return data;
+  }, {});
 }

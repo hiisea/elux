@@ -1,276 +1,319 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { routeConfig } from './basic';
-export function locationToUri(location, key) {
-  const {
-    pagename,
-    params
-  } = location;
-  const query = params ? JSON.stringify(params) : '';
-  return {
-    uri: [key, pagename, query].join('|'),
-    pagename,
-    query,
-    key
-  };
-}
+import { env, forkStore } from '@elux/core';
+import { routeMeta } from './basic';
 
-function isHistoryRecord(data) {
-  return data['uri'];
-}
+class RouteStack {
+  constructor(limit) {
+    _defineProperty(this, "records", []);
 
-function splitUri(...args) {
-  const [uri = '', name] = args;
-  const [key, pagename, ...others] = uri.split('|');
-  const arr = [key, pagename, others.join('|')];
-  const index = {
-    key: 0,
-    pagename: 1,
-    query: 2
-  };
-
-  if (name) {
-    return arr[index[name]];
+    this.limit = limit;
   }
 
-  return arr;
-}
+  startup(record) {
+    this.records = [record];
+  }
 
-export function uriToLocation(uri) {
-  const [key, pagename, query] = splitUri(uri);
-  const location = {
-    pagename,
-    params: JSON.parse(query)
-  };
-  return {
-    key,
-    location
-  };
-}
-export class History {
-  constructor(data, parent) {
-    _defineProperty(this, "curRecord", void 0);
+  getCurrentItem() {
+    return this.records[0];
+  }
 
-    _defineProperty(this, "pages", []);
+  getEarliestItem() {
+    return this.records[this.records.length - 1];
+  }
 
-    _defineProperty(this, "actions", []);
+  getItemAt(n) {
+    return this.records[n];
+  }
 
-    this.parent = parent;
-
-    if (isHistoryRecord(data)) {
-      this.curRecord = data;
-    } else {
-      const {
-        uri,
-        pagename,
-        query
-      } = locationToUri(data.location, data.key);
-      this.curRecord = {
-        uri,
-        pagename,
-        query,
-        key: data.key,
-        sub: new History({
-          uri,
-          pagename,
-          query,
-          key: data.key
-        }, this)
-      };
-    }
+  getItems() {
+    return [...this.records];
   }
 
   getLength() {
-    return this.actions.length;
+    return this.records.length;
   }
 
-  getRecord(keyOrIndex) {
-    if (typeof keyOrIndex === 'number') {
-      if (keyOrIndex === -1) {
-        keyOrIndex = this.actions.length - 1;
+  _push(item) {
+    const records = this.records;
+    records.unshift(item);
+    const delItem = records.splice(this.limit)[0];
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _replace(item) {
+    const records = this.records;
+    const delItem = records[0];
+    records[0] = item;
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _relaunch(item) {
+    const delList = this.records;
+    this.records = [item];
+    delList.forEach(delItem => {
+      if (delItem !== item && delItem.destroy) {
+        delItem.destroy();
       }
-
-      return this.actions[keyOrIndex];
-    }
-
-    return this.actions.find(item => item.key === keyOrIndex);
-  }
-
-  findIndex(key) {
-    return this.actions.findIndex(item => item.key === key);
-  }
-
-  getCurrentInternalHistory() {
-    return this.curRecord.sub;
-  }
-
-  getStack() {
-    return this.actions;
-  }
-
-  getUriStack() {
-    return this.actions.map(item => item.uri);
-  }
-
-  getPageStack() {
-    return this.pages;
-  }
-
-  push(location, key) {
-    var _pages$;
-
-    const historyRecord = this.curRecord;
-    const {
-      uri,
-      pagename,
-      query
-    } = locationToUri(location, key);
-    this.curRecord = {
-      uri,
-      pagename,
-      query,
-      key,
-      sub: new History({
-        uri,
-        pagename,
-        query,
-        key
-      }, this)
-    };
-    const pages = [...this.pages];
-    const actions = [...this.actions];
-    const actionsMax = routeConfig.actionMaxHistory;
-    const pagesMax = routeConfig.pagesMaxHistory;
-    actions.unshift(historyRecord);
-
-    if (actions.length > actionsMax) {
-      actions.length = actionsMax;
-    }
-
-    if (splitUri((_pages$ = pages[0]) == null ? void 0 : _pages$.uri, 'pagename') !== pagename) {
-      pages.unshift(historyRecord);
-
-      if (pages.length > pagesMax) {
-        pages.length = pagesMax;
-      }
-    } else {
-      pages[0] = historyRecord;
-    }
-
-    this.actions = actions;
-    this.pages = pages;
-
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
-        pagename,
-        query
-      };
-    }
-  }
-
-  replace(location, key) {
-    const {
-      uri,
-      pagename,
-      query
-    } = locationToUri(location, key);
-    this.curRecord = {
-      uri,
-      pagename,
-      query,
-      key,
-      sub: new History({
-        uri,
-        pagename,
-        query,
-        key
-      }, this)
-    };
-
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
-        pagename,
-        query
-      };
-    }
-  }
-
-  relaunch(location, key) {
-    const {
-      uri,
-      pagename,
-      query
-    } = locationToUri(location, key);
-    this.curRecord = {
-      uri,
-      pagename,
-      query,
-      key,
-      sub: new History({
-        uri,
-        pagename,
-        query,
-        key
-      }, this)
-    };
-    this.actions = [];
-    this.pages = [];
-
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
-        pagename,
-        query
-      };
-    }
+    });
   }
 
   back(delta) {
-    var _actions$;
+    const delList = this.records.splice(0, delta);
 
-    const historyRecord = this.getRecord(delta - 1);
-
-    if (!historyRecord) {
-      return false;
+    if (this.records.length === 0) {
+      const last = delList.pop();
+      this.records.push(last);
     }
 
-    this.curRecord = historyRecord;
-    const {
-      uri,
-      pagename,
-      query
-    } = historyRecord;
-    const pages = [...this.pages];
-    const actions = [...this.actions];
-    const deleteActions = actions.splice(0, delta);
-    const arr = deleteActions.reduce((pre, curStack) => {
-      const ctag = splitUri(curStack.uri, 'pagename');
-
-      if (pre[pre.length - 1] !== ctag) {
-        pre.push(ctag);
+    delList.forEach(delItem => {
+      if (delItem.destroy) {
+        delItem.destroy();
       }
+    });
+  }
 
-      return pre;
-    }, []);
+}
 
-    if (arr[arr.length - 1] === splitUri((_actions$ = actions[0]) == null ? void 0 : _actions$.uri, 'pagename')) {
-      arr.pop();
+export class HistoryRecord {
+  constructor(location, historyStack) {
+    _defineProperty(this, "destroy", void 0);
+
+    _defineProperty(this, "key", void 0);
+
+    _defineProperty(this, "recordKey", void 0);
+
+    this.location = location;
+    this.historyStack = historyStack;
+    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
+    this.key = [historyStack.stackkey, this.recordKey].join('-');
+  }
+
+}
+
+_defineProperty(HistoryRecord, "id", 0);
+
+export class HistoryStack extends RouteStack {
+  constructor(rootStack, store) {
+    super(20);
+
+    _defineProperty(this, "stackkey", void 0);
+
+    this.rootStack = rootStack;
+    this.store = store;
+    this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+  }
+
+  push(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._push(newRecord);
+
+    return newRecord;
+  }
+
+  replace(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._replace(newRecord);
+
+    return newRecord;
+  }
+
+  relaunch(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._relaunch(newRecord);
+
+    return newRecord;
+  }
+
+  findRecordByKey(recordKey) {
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const item = this.records[i];
+
+      if (item.recordKey === recordKey) {
+        return [item, i];
+      }
     }
 
-    pages.splice(0, arr.length);
-    this.actions = actions;
-    this.pages = pages;
+    return undefined;
+  }
 
-    if (this.parent) {
-      this.parent.curRecord = { ...this.parent.curRecord,
-        uri,
+  destroy() {
+    this.store.destroy();
+  }
+
+}
+
+_defineProperty(HistoryStack, "id", 0);
+
+export class RootStack extends RouteStack {
+  constructor() {
+    super(10);
+  }
+
+  getCurrentPages() {
+    return this.records.map(item => {
+      const store = item.store;
+      const record = item.getCurrentItem();
+      const pagename = record.location.getPagename();
+      return {
         pagename,
-        query
+        store,
+        page: routeMeta.pages[pagename]
+      };
+    });
+  }
+
+  push(location) {
+    const curHistory = this.getCurrentItem();
+    const routeState = {
+      pagename: location.getPagename(),
+      params: location.getParams(),
+      action: 'RELAUNCH',
+      key: ''
+    };
+    const store = forkStore(curHistory.store, routeState);
+    const newHistory = new HistoryStack(this, store);
+    const newRecord = new HistoryRecord(location, newHistory);
+    newHistory.startup(newRecord);
+
+    this._push(newHistory);
+
+    return newRecord;
+  }
+
+  replace(location) {
+    const curHistory = this.getCurrentItem();
+    return curHistory.relaunch(location);
+  }
+
+  relaunch(location) {
+    const curHistory = this.getCurrentItem();
+    const newRecord = curHistory.relaunch(location);
+
+    this._relaunch(curHistory);
+
+    return newRecord;
+  }
+
+  countBack(delta) {
+    const historyStacks = this.records;
+    const backSteps = [0, 0];
+
+    for (let i = 0, k = historyStacks.length; i < k; i++) {
+      const historyStack = historyStacks[i];
+      const recordNum = historyStack.getLength();
+      delta = delta - recordNum;
+
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
+      } else {
+        backSteps[1] = recordNum + delta;
+        break;
+      }
+    }
+
+    return backSteps;
+  }
+
+  testBack(stepOrKey, rootOnly) {
+    if (typeof stepOrKey === 'string') {
+      return this.findRecordByKey(stepOrKey);
+    }
+
+    const delta = stepOrKey;
+
+    if (delta === 0) {
+      const record = this.getCurrentItem().getCurrentItem();
+      return {
+        record,
+        overflow: false,
+        index: [0, 0]
       };
     }
 
-    return true;
+    if (rootOnly) {
+      if (delta < 0 || delta >= this.records.length) {
+        const record = this.getEarliestItem().getCurrentItem();
+        return {
+          record,
+          overflow: !(delta < 0),
+          index: [this.records.length - 1, 0]
+        };
+      } else {
+        const record = this.getItemAt(delta).getCurrentItem();
+        return {
+          record,
+          overflow: false,
+          index: [delta, 0]
+        };
+      }
+    }
+
+    if (delta < 0) {
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {
+        record,
+        overflow: false,
+        index: [this.records.length - 1, historyStack.records.length - 1]
+      };
+    }
+
+    const [rootDelta, recordDelta] = this.countBack(delta);
+
+    if (rootDelta < this.records.length) {
+      const record = this.getItemAt(rootDelta).getItemAt(recordDelta);
+      return {
+        record,
+        overflow: false,
+        index: [rootDelta, recordDelta]
+      };
+    } else {
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {
+        record,
+        overflow: true,
+        index: [this.records.length - 1, historyStack.records.length - 1]
+      };
+    }
+  }
+
+  findRecordByKey(key) {
+    const arr = key.split('-');
+
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const historyStack = this.records[i];
+
+      if (historyStack.stackkey === arr[0]) {
+        const item = historyStack.findRecordByKey(arr[1]);
+
+        if (item) {
+          return {
+            record: item[0],
+            index: [i, item[1]],
+            overflow: false
+          };
+        }
+      }
+    }
+
+    return {
+      record: this.getCurrentItem().getCurrentItem(),
+      index: [0, 0],
+      overflow: true
+    };
   }
 
 }

@@ -1,17 +1,16 @@
-/// <reference path="../runtime/runtime.d.ts" />
 import {ComponentType} from 'react';
 import Taro from '@tarojs/taro';
-import {RootModuleFacade, env} from '@elux/core';
-import {setReactComponentsConfig, loadComponent, LoadComponentOptions} from '@elux/react-components';
+import {RootModuleFacade, defineModuleGetter} from '@elux/core';
+import {setReactComponentsConfig, loadComponent, LoadComponentOptions, useRouter} from '@elux/react-components';
+import {setAppConfig, setUserConfig, UserConfig, GetBaseAPP, createBaseMP, CreateMP} from '@elux/app';
 import {renderToMP} from '@elux/react-components/stage';
-import {createBaseMP, setAppConfig, setUserConfig, CreateMP, LocationTransform, UserConfig, GetBaseAPP} from '@elux/app';
 import {createRouter} from '@elux/route-mp';
-import {routeENV, tabPages} from './patch';
-
+import {taroHistory, getTabPages} from '@elux/taro';
+export {taroHistory} from '@elux/taro';
 export * from '@elux/react-components';
 export * from '@elux/app';
 
-setAppConfig({loadComponent});
+setAppConfig({loadComponent, useRouter});
 
 export type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
 
@@ -23,18 +22,10 @@ export function setConfig(
 }
 
 setReactComponentsConfig({setPageTitle: (title) => Taro.setNavigationBarTitle({title})});
-export const createMP: CreateMP = (moduleGetter, middlewares, appModuleName) => {
-  if (env.__taroAppConfig.tabBar) {
-    env.__taroAppConfig.tabBar.list.forEach(({pagePath}) => {
-      tabPages[`/${pagePath.replace(/^\/+|\/+$/g, '')}`] = true;
-    });
-  }
-  return createBaseMP(
-    {},
-    (locationTransform: LocationTransform) => createRouter(locationTransform, routeENV, tabPages),
-    renderToMP,
-    moduleGetter,
-    middlewares,
-    appModuleName
-  );
+
+export const createMP: CreateMP = (moduleGetter, middlewares) => {
+  defineModuleGetter(moduleGetter);
+  const tabPages = getTabPages();
+  const router = createRouter(taroHistory, tabPages);
+  return createBaseMP({}, router, renderToMP, middlewares);
 };

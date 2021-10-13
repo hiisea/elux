@@ -36,7 +36,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   var Loader = function (_Component) {
     (0, _inheritsLoose2.default)(Loader, _Component);
 
-    function Loader(props, context) {
+    function Loader(props) {
       var _this;
 
       _this = _Component.call(this, props) || this;
@@ -47,7 +47,6 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "state", {
         ver: 0
       });
-      _this.context = context;
 
       _this.execute();
 
@@ -73,15 +72,14 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       var _this2 = this;
 
       if (!this.view && !this.loading && !this.error) {
-        var _ref = this.context || {},
-            deps = _ref.deps,
-            store = _ref.store;
-
+        var _this$props = this.props,
+            deps = _this$props.deps,
+            store = _this$props.store;
         this.loading = true;
         var result;
 
         try {
-          result = (0, _core.loadComponet)(moduleName, componentName, store, deps || {});
+          result = (0, _core.loadComponet)(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -115,9 +113,11 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     };
 
     _proto.render = function render() {
-      var _this$props = this.props,
-          forwardedRef = _this$props.forwardedRef,
-          rest = (0, _objectWithoutPropertiesLoose2.default)(_this$props, ["forwardedRef"]);
+      var _this$props2 = this.props,
+          forwardedRef = _this$props2.forwardedRef,
+          deps = _this$props2.deps,
+          store = _this$props2.store,
+          rest = (0, _objectWithoutPropertiesLoose2.default)(_this$props2, ["forwardedRef", "deps", "store"]);
 
       if (this.view) {
         var View = this.view;
@@ -139,9 +139,16 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     return Loader;
   }(_react.Component);
 
-  (0, _defineProperty2.default)(Loader, "contextType", _base.EluxContextComponent);
   return _react.default.forwardRef(function (props, ref) {
+    var _useContext = (0, _react.useContext)(_base.EluxContextComponent),
+        _useContext$deps = _useContext.deps,
+        deps = _useContext$deps === void 0 ? {} : _useContext$deps;
+
+    var store = _base.reactComponentsConfig.useStore();
+
     return _react.default.createElement(Loader, (0, _extends2.default)({}, props, {
+      store: store,
+      deps: deps,
       forwardedRef: ref
     }));
   });

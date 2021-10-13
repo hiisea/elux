@@ -1,120 +1,116 @@
-import { PartialLocation, NativeLocation, RootParams, Location, RouteState, PayloadLocation } from './basic';
-import { History } from './history';
-import { LocationTransform } from './transform';
-export { setRouteConfig, routeConfig, routeMeta } from './basic';
-export { createLocationTransform, nativeUrlToNativeLocation, nativeLocationToNativeUrl } from './transform';
-export { routeMiddleware, createRouteModule, RouteActionTypes, ModuleWithRouteHandlers } from './module';
-export type { RouteModule } from './module';
-export type { PagenameMap, LocationTransform } from './transform';
-export type { RootParams, Location, RouteState, HistoryAction, DeepPartial, PayloadLocation, NativeLocation } from './basic';
-interface Store {
-    dispatch(action: {
-        type: string;
-    }): any;
-}
-export declare type NativeData = {
-    nativeLocation: NativeLocation;
-    nativeUrl: string;
-};
-interface RouterTask {
-    method: string;
-}
-interface NativeRouterTask {
-    resolve: (nativeData: NativeData | undefined) => void;
-    reject: () => void;
-    nativeData: undefined | NativeData;
-}
+import { IStore, ICoreRouter, IModuleHandlers, MultipleDispatcher, Action } from '@elux/core';
+import { RootParams, DeepPartial, EluxLocation, NativeLocation, StateLocation, RouteState } from './basic';
+import { RootStack, HistoryRecord } from './history';
+import { ILocationTransform } from './transform';
+export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
+export { location, createRouteModule, urlParser } from './transform';
+export type { ILocationTransform } from './transform';
+export type { RootParams, EluxLocation, NativeLocation, StateLocation, LocationState, RouteState, HistoryAction, PagenameMap, DeepPartial, NativeLocationMap, } from './basic';
 export declare abstract class BaseNativeRouter {
-    protected curTask?: NativeRouterTask;
-    protected taskList: RouterTask[];
-    protected router: BaseRouter<any, string>;
-    protected abstract push(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
-    protected abstract replace(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
-    protected abstract relaunch(getNativeData: () => NativeData, key: string): void | NativeData | Promise<NativeData>;
-    protected abstract back(getNativeData: () => NativeData, n: number, key: string): void | NativeData | Promise<NativeData>;
-    abstract toOutside(url: string): void;
+    protected curTask?: () => void;
+    protected eluxRouter: IEluxRouter;
+    protected abstract push(location: ILocationTransform, key: string): void | true | Promise<void>;
+    protected abstract replace(location: ILocationTransform, key: string): void | true | Promise<void>;
+    protected abstract relaunch(location: ILocationTransform, key: string): void | true | Promise<void>;
+    protected abstract back(location: ILocationTransform, index: [number, number], key: string): void | true | Promise<void>;
     abstract destroy(): void;
     protected onChange(key: string): boolean;
-    setRouter(router: BaseRouter<any, string>): void;
-    execute(method: 'relaunch' | 'push' | 'replace' | 'back', getNativeData: () => NativeData, ...args: any[]): Promise<NativeData | undefined>;
+    startup(router: IEluxRouter): void;
+    execute(method: 'relaunch' | 'push' | 'replace' | 'back', location: ILocationTransform, ...args: any[]): Promise<void>;
 }
-export declare abstract class BaseRouter<P extends RootParams, N extends string> implements IBaseRouter<P, N> {
-    nativeRouter: BaseNativeRouter;
-    protected locationTransform: LocationTransform;
-    private _tid;
-    private curTask?;
-    private taskList;
-    private _nativeData;
-    private routeState;
-    private internalUrl;
-    protected store: Store;
-    history: History;
-    private _lid;
-    protected readonly listenerMap: {
-        [id: string]: (data: RouteState<P>) => void | Promise<void>;
+export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends MultipleDispatcher<{
+    change: {
+        routeState: RouteState<P>;
+        root: boolean;
     };
-    initRouteState: RouteState<P> | Promise<RouteState<P>>;
-    constructor(url: string, nativeRouter: BaseNativeRouter, locationTransform: LocationTransform);
-    addListener(callback: (data: RouteState<P>) => void | Promise<void>): () => void;
-    protected dispatch(data: RouteState<P>): Promise<void[]>;
-    getRouteState(): RouteState<P>;
-    getPagename(): string;
-    getParams(): Partial<P>;
-    getInternalUrl(): string;
-    getNativeLocation(): NativeLocation;
-    getNativeUrl(): string;
-    setStore(_store: Store): void;
-    getCurKey(): string;
-    findHistoryIndexByKey(key: string): number;
-    locationToNativeData(location: PartialLocation): {
-        nativeUrl: string;
-        nativeLocation: NativeLocation;
+}> implements IEluxRouter<P, N, NT> {
+    protected nativeRouter: BaseNativeRouter;
+    nativeData: NT;
+    private _curTask?;
+    private _taskList;
+    location: ILocationTransform;
+    routeState: RouteState<P>;
+    readonly name: string;
+    initialize: Promise<RouteState<P>>;
+    readonly injectedModules: {
+        [moduleName: string]: IModuleHandlers;
     };
-    urlToLocation(url: string): Location<P> | Promise<Location<P>>;
-    payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
-    payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
-    nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
-    private _createKey;
-    private payloadToEluxLocation;
-    private preAdditions;
-    relaunch(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
+    readonly rootStack: RootStack;
+    latestState: Record<string, any>;
+    constructor(nativeUrl: string, nativeRouter: BaseNativeRouter, nativeData: NT);
+    startup(store: IStore): void;
+    getCurrentPages(): {
+        pagename: string;
+        store: IStore;
+        page?: any;
+    }[];
+    getCurrentStore(): IStore;
+    getStoreList(): IStore[];
+    getHistoryLength(root?: boolean): number;
+    findRecordByKey(key: string): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    findRecordByStep(delta: number, rootOnly: boolean): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N>;
+    relaunch(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _relaunch;
-    push(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
+    push(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _push;
-    replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
+    replace(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _replace;
-    back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
+    back(stepOrKey?: number | string, root?: boolean, options?: {
+        overflowRedirect?: string;
+        payload?: any;
+    }, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _back;
-    private taskComplete;
+    private _taskComplete;
     private executeTask;
     private addTask;
     destroy(): void;
 }
-export interface IBaseRouter<P extends RootParams, N extends string> {
-    initRouteState: RouteState<P> | Promise<RouteState<P>>;
-    history: History;
-    nativeRouter: any;
-    addListener(callback: (data: RouteState<P>) => void | Promise<void>): void;
-    getRouteState(): RouteState<P>;
-    getPagename(): string;
-    getParams(): Partial<P>;
-    getInternalUrl(): string;
-    getNativeLocation(): NativeLocation;
-    getNativeUrl(): string;
-    nativeLocationToNativeUrl(nativeLocation: NativeLocation): string;
-    locationToNativeData(location: PartialLocation): {
-        nativeUrl: string;
-        nativeLocation: NativeLocation;
+export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>> {
+    initialize: Promise<RouteState<P>>;
+    nativeData: NT;
+    location: ILocationTransform;
+    addListener(name: 'change', callback: (data: {
+        routeState: RouteState<P>;
+        root: boolean;
+    }) => void | Promise<void>): () => void;
+    getCurrentPages(): {
+        pagename: string;
+        store: IStore;
+        page?: any;
+    }[];
+    findRecordByKey(key: string): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
     };
-    setStore(_store: Store): void;
-    getCurKey(): string;
-    findHistoryIndexByKey(key: string): number;
-    relaunch(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
-    push(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
-    replace(data: PayloadLocation<P, N> | string, internal?: boolean, disableNative?: boolean): void;
-    back(n?: number, indexUrl?: string, internal?: boolean, disableNative?: boolean): void;
+    findRecordByStep(delta: number, rootOnly: boolean): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N>;
+    relaunch(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+    push(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+    replace(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
+    back(stepOrKey?: number | string, root?: boolean, options?: {
+        overflowRedirect?: string;
+        payload?: any;
+    }, nonblocking?: boolean): void | Promise<void>;
+    getHistoryLength(root?: boolean): number;
     destroy(): void;
-    urlToLocation(url: string): Location<P> | Promise<Location<P>>;
-    payloadLocationToEluxUrl(data: PayloadLocation<P, N>): string;
-    payloadLocationToNativeUrl(data: PayloadLocation<P, N>): string;
 }
+export declare const RouteActionTypes: {
+    TestRouteChange: string;
+    BeforeRouteChange: string;
+};
+export declare function beforeRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
+export declare function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;

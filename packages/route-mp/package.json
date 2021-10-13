@@ -1,6 +1,6 @@
 {
   "name": "@elux/route-mp",
-  "version": "0.1.12",
+  "version": "0.1.118",
   "description": "Using @elux/route in mini-program",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route-mp",
   "author": "hiisea <hiisea@qq.com>",
@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@babel/runtime": "~7.12.18",
-    "@elux/route": "^0.1.12"
+    "@elux/route": "^0.1.118"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }
