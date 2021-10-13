@@ -19,7 +19,7 @@ import {RootStack, HistoryStack, HistoryRecord} from './history';
 import {location as createLocationTransform, ILocationTransform} from './transform';
 
 export {setRouteConfig, routeConfig, routeMeta, safeJsonParse} from './basic';
-export {location, createRouteModule} from './transform';
+export {location, createRouteModule, urlParser} from './transform';
 
 export type {ILocationTransform} from './transform';
 export type {
@@ -42,13 +42,13 @@ export abstract class BaseNativeRouter {
 
   // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
 
-  protected abstract push(location: ILocationTransform, key: string): void | true | Promise<true>;
+  protected abstract push(location: ILocationTransform, key: string): void | true | Promise<void>;
 
-  protected abstract replace(location: ILocationTransform, key: string): void | true | Promise<true>;
+  protected abstract replace(location: ILocationTransform, key: string): void | true | Promise<void>;
 
-  protected abstract relaunch(location: ILocationTransform, key: string): void | true | Promise<true>;
+  protected abstract relaunch(location: ILocationTransform, key: string): void | true | Promise<void>;
 
-  protected abstract back(location: ILocationTransform, n: number, key: string): void | true | Promise<true>;
+  protected abstract back(location: ILocationTransform, index: [number, number], key: string): void | true | Promise<void>;
 
   public abstract destroy(): void;
 
@@ -68,7 +68,7 @@ export abstract class BaseNativeRouter {
   public execute(method: 'relaunch' | 'push' | 'replace' | 'back', location: ILocationTransform, ...args: any[]): Promise<void> {
     return new Promise((resolve, reject) => {
       this.curTask = resolve;
-      const result: void | true | Promise<true> = this[method as string](location, ...args);
+      const result: void | true | Promise<void> = this[method as string](location, ...args);
       if (!result) {
         // 表示native不做任何处理，也不会触发onChange
         resolve();
@@ -77,6 +77,7 @@ export abstract class BaseNativeRouter {
         // 存在错误时，不会触发onChange，需要手动触发，否则都会触发onChange
         result.catch((e) => {
           reject(e);
+          env.console.error(e);
           this.curTask = undefined;
         });
       }
@@ -142,10 +143,10 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
   getHistoryLength(root?: boolean): number {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
-  findRecordByKey(key: string): HistoryRecord | undefined {
+  findRecordByKey(key: string): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
     return this.rootStack.findRecordByKey(key);
   }
-  findRecordByStep(delta: number, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; steps: [number, number]} {
+  findRecordByStep(delta: number, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
     return this.rootStack.testBack(delta, rootOnly);
   }
   extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N> {
@@ -258,18 +259,27 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
     await this.dispatch('change', {routeState: cloneState, root});
   }
 
-  back(n = 1, root = false, options?: {overflowRedirect?: string; payload?: any}, nonblocking?: boolean, nativeCaller = false): void | Promise<void> {
-    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
-  }
-
-  private async _back(n = 1, root: boolean, options: {overflowRedirect?: string; payload?: any}, nativeCaller: boolean) {
-    if (n < 1) {
+  back(
+    stepOrKey: number | string = 1,
+    root = false,
+    options?: {overflowRedirect?: string; payload?: any},
+    nonblocking?: boolean,
+    nativeCaller = false
+  ): void | Promise<void> {
+    if (!stepOrKey) {
       return;
     }
-    const {record, overflow, steps} = this.rootStack.testBack(n, root);
+    return this.addTask(this._back.bind(this, stepOrKey, root, options || {}, nativeCaller), nonblocking);
+  }
+
+  private async _back(stepOrKey: number | string, root: boolean, options: {overflowRedirect?: string; payload?: any}, nativeCaller: boolean) {
+    const {record, overflow, index} = this.rootStack.testBack(stepOrKey, root);
     if (overflow) {
       const url = options.overflowRedirect || routeConfig.indexUrl;
       env.setTimeout(() => this.relaunch(url, root), 0);
+      return;
+    }
+    if (!index[0] && !index[1]) {
       return;
     }
     const key = record.key;
@@ -280,16 +290,16 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
     //const prevRootState = this.getCurrentStore().getState();
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    if (steps[0]) {
+    if (index[0]) {
       root = true;
-      this.rootStack.back(steps[0]);
+      this.rootStack.back(index[0]);
     }
-    if (steps[1]) {
-      this.rootStack.getCurrentItem().back(steps[1]);
+    if (index[1]) {
+      this.rootStack.getCurrentItem().back(index[1]);
     }
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
     if (!nativeCaller && notifyNativeRouter) {
-      await this.nativeRouter.execute('back', location, n, key);
+      await this.nativeRouter.execute('back', location, index, key);
     }
     this.location = location;
     this.routeState = routeState;
@@ -340,12 +350,18 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
   location: ILocationTransform;
   addListener(name: 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void | Promise<void>): () => void;
   getCurrentPages(): {pagename: string; store: IStore; page?: any}[];
-  findRecordByKey(key: string): HistoryRecord | undefined;
+  findRecordByKey(key: string): {record: HistoryRecord; overflow: boolean; index: [number, number]};
+  findRecordByStep(delta: number, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; index: [number, number]};
   extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N>;
   relaunch(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
   push(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
   replace(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
-  back(n?: number, root?: boolean, options?: {overflowRedirect?: string; payload?: any}, nonblocking?: boolean): void | Promise<void>;
+  back(
+    stepOrKey?: number | string,
+    root?: boolean,
+    options?: {overflowRedirect?: string; payload?: any},
+    nonblocking?: boolean
+  ): void | Promise<void>;
   getHistoryLength(root?: boolean): number;
   destroy(): void;
 }

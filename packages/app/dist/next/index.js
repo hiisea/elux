@@ -15,6 +15,15 @@ export const setAppConfig = buildConfigSetter(appConfig);
 export function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
+
+  if (conf.disableNativeRouter) {
+    setRouteConfig({
+      notifyNativeRouter: {
+        root: false,
+        internal: false
+      }
+    });
+  }
 }
 export function createBaseMP(ins, router, render, middlewares = []) {
   appMeta.router = router;

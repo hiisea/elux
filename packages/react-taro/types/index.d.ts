@@ -2,7 +2,7 @@ import { ComponentType } from 'react';
 import { RootModuleFacade } from '@elux/core';
 import { LoadComponentOptions } from '@elux/react-components';
 import { UserConfig, GetBaseAPP, CreateMP } from '@elux/app';
-export { routeENV } from '@elux/taro';
+export { taroHistory } from '@elux/taro';
 export * from '@elux/react-components';
 export * from '@elux/app';
 export declare type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;

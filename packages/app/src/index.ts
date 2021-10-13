@@ -90,10 +90,14 @@ export interface UserConfig {
   paramsKey: string;
   AppModuleName?: string;
   RouteModuleName?: string;
+  disableNativeRouter?: boolean;
 }
 export function setUserConfig(conf: UserConfig): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
+  if (conf.disableNativeRouter) {
+    setRouteConfig({notifyNativeRouter: {root: false, internal: false}});
+  }
 }
 
 export interface RenderOptions {

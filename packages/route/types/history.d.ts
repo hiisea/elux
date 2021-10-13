@@ -4,13 +4,14 @@ declare class RouteStack<T extends {
     destroy?: () => void;
 }> {
     protected limit: number;
-    protected records: T[];
+    records: T[];
     constructor(limit: number);
     startup(record: T): void;
     getCurrentItem(): T;
+    getEarliestItem(): T;
+    getItemAt(n: number): T | undefined;
     getItems(): T[];
     getLength(): number;
-    getRecordAt(n: number): T | undefined;
     protected _push(item: T): void;
     protected _replace(item: T): void;
     protected _relaunch(item: T): void;
@@ -34,7 +35,7 @@ export declare class HistoryStack extends RouteStack<HistoryRecord> {
     push(location: ILocationTransform): HistoryRecord;
     replace(location: ILocationTransform): HistoryRecord;
     relaunch(location: ILocationTransform): HistoryRecord;
-    findRecordByKey(recordKey: string): HistoryRecord | undefined;
+    findRecordByKey(recordKey: string): [HistoryRecord, number] | undefined;
     destroy(): void;
 }
 export declare class RootStack extends RouteStack<HistoryStack> {
@@ -48,11 +49,15 @@ export declare class RootStack extends RouteStack<HistoryStack> {
     replace(location: ILocationTransform): HistoryRecord;
     relaunch(location: ILocationTransform): HistoryRecord;
     private countBack;
-    testBack(delta: number, rootOnly: boolean): {
+    testBack(stepOrKey: number | string, rootOnly: boolean): {
         record: HistoryRecord;
         overflow: boolean;
-        steps: [number, number];
+        index: [number, number];
     };
-    findRecordByKey(key: string): HistoryRecord | undefined;
+    findRecordByKey(key: string): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
 }
 export {};

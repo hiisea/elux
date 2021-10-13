@@ -476,7 +476,8 @@ function exportModule(moduleName, ModuleHandlers, params, components) {
       const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
-      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(moduleHandles.initState) : moduleHandles.initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
 
     return undefined;
@@ -501,7 +502,8 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
       const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
-      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(moduleHandles.initState) : moduleHandles.initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
 
     return undefined;
@@ -5400,20 +5402,20 @@ class RouteStack {
     return this.records[0];
   }
 
+  getEarliestItem() {
+    return this.records[this.records.length - 1];
+  }
+
+  getItemAt(n) {
+    return this.records[n];
+  }
+
   getItems() {
     return [...this.records];
   }
 
   getLength() {
     return this.records.length;
-  }
-
-  getRecordAt(n) {
-    if (n < 0) {
-      return this.records[this.records.length + n];
-    } else {
-      return this.records[n];
-    }
   }
 
   _push(item) {
@@ -5517,7 +5519,15 @@ class HistoryStack extends RouteStack {
   }
 
   findRecordByKey(recordKey) {
-    return this.records.find(item => item.recordKey === recordKey);
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const item = this.records[i];
+
+      if (item.recordKey === recordKey) {
+        return [item, i];
+      }
+    }
+
+    return undefined;
   }
 
   destroy() {
@@ -5601,48 +5611,94 @@ class RootStack extends RouteStack {
     return backSteps;
   }
 
-  testBack(delta, rootOnly) {
-    let overflow = false;
-    let record;
-    const steps = [0, 0];
+  testBack(stepOrKey, rootOnly) {
+    if (typeof stepOrKey === 'string') {
+      return this.findRecordByKey(stepOrKey);
+    }
+
+    const delta = stepOrKey;
+
+    if (delta === 0) {
+      const record = this.getCurrentItem().getCurrentItem();
+      return {
+        record,
+        overflow: false,
+        index: [0, 0]
+      };
+    }
 
     if (rootOnly) {
-      if (delta < this.records.length) {
-        record = this.getRecordAt(delta).getCurrentItem();
-        steps[0] = delta;
+      if (delta < 0 || delta >= this.records.length) {
+        const record = this.getEarliestItem().getCurrentItem();
+        return {
+          record,
+          overflow: !(delta < 0),
+          index: [this.records.length - 1, 0]
+        };
       } else {
-        record = this.getRecordAt(-1).getCurrentItem();
-        overflow = true;
-      }
-    } else {
-      const [rootDelta, recordDelta] = this.countBack(delta);
-
-      if (rootDelta < this.records.length) {
-        record = this.getRecordAt(rootDelta).getRecordAt(recordDelta);
-        steps[0] = rootDelta;
-        steps[1] = recordDelta;
-      } else {
-        record = this.getRecordAt(-1).getRecordAt(-1);
-        overflow = true;
+        const record = this.getItemAt(delta).getCurrentItem();
+        return {
+          record,
+          overflow: false,
+          index: [delta, 0]
+        };
       }
     }
 
-    return {
-      record,
-      overflow,
-      steps
-    };
+    if (delta < 0) {
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {
+        record,
+        overflow: false,
+        index: [this.records.length - 1, historyStack.records.length - 1]
+      };
+    }
+
+    const [rootDelta, recordDelta] = this.countBack(delta);
+
+    if (rootDelta < this.records.length) {
+      const record = this.getItemAt(rootDelta).getItemAt(recordDelta);
+      return {
+        record,
+        overflow: false,
+        index: [rootDelta, recordDelta]
+      };
+    } else {
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {
+        record,
+        overflow: true,
+        index: [this.records.length - 1, historyStack.records.length - 1]
+      };
+    }
   }
 
   findRecordByKey(key) {
     const arr = key.split('-');
-    const historyStack = this.records.find(item => item.stackkey === arr[0]);
 
-    if (historyStack) {
-      return historyStack.findRecordByKey(arr[1]);
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const historyStack = this.records[i];
+
+      if (historyStack.stackkey === arr[0]) {
+        const item = historyStack.findRecordByKey(arr[1]);
+
+        if (item) {
+          return {
+            record: item[0],
+            index: [i, item[1]],
+            overflow: false
+          };
+        }
+      }
     }
 
-    return undefined;
+    return {
+      record: this.getCurrentItem().getCurrentItem(),
+      index: [0, 0],
+      overflow: true
+    };
   }
 
 }
@@ -6118,7 +6174,7 @@ class LocationTransform {
 
 }
 
-function location$1(dataOrUrl) {
+function location(dataOrUrl) {
   if (typeof dataOrUrl === 'string') {
     const url = urlParser.checkUrl(dataOrUrl);
     const type = url.charAt(0);
@@ -6310,6 +6366,7 @@ class BaseNativeRouter {
       } else if (isPromise(result)) {
         result.catch(e => {
           reject(e);
+          env.console.error(e);
           this.curTask = undefined;
         });
       }
@@ -6352,10 +6409,10 @@ class BaseEluxRouter extends MultipleDispatcher {
     this.nativeRouter = nativeRouter;
     this.nativeData = nativeData;
     nativeRouter.startup(this);
-    const location = location$1(nativeUrl);
-    this.location = location;
-    const pagename = location.getPagename();
-    const paramsOrPromise = location.getParams();
+    const location$1 = location(nativeUrl);
+    this.location = location$1;
+    const pagename = location$1.getPagename();
+    const paramsOrPromise = location$1.getParams();
 
     const callback = params => {
       const routeState = {
@@ -6421,9 +6478,9 @@ class BaseEluxRouter extends MultipleDispatcher {
   }
 
   async _relaunch(dataOrUrl, root, nativeCaller) {
-    const location = location$1(dataOrUrl);
-    const pagename = location.getPagename();
-    const params = await location.getParams();
+    const location$1 = location(dataOrUrl);
+    const pagename = location$1.getPagename();
+    const params = await location$1.getParams();
     let key = '';
     const routeState = {
       pagename,
@@ -6435,19 +6492,19 @@ class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.relaunch(location).key;
+      key = this.rootStack.relaunch(location$1).key;
     } else {
-      key = this.rootStack.getCurrentItem().relaunch(location).key;
+      key = this.rootStack.getCurrentItem().relaunch(location$1).key;
     }
 
     routeState.key = key;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      await this.nativeRouter.execute('relaunch', location, key);
+      await this.nativeRouter.execute('relaunch', location$1, key);
     }
 
-    this.location = location;
+    this.location = location$1;
     this.routeState = routeState;
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
@@ -6462,9 +6519,9 @@ class BaseEluxRouter extends MultipleDispatcher {
   }
 
   async _push(dataOrUrl, root, nativeCaller) {
-    const location = location$1(dataOrUrl);
-    const pagename = location.getPagename();
-    const params = await location.getParams();
+    const location$1 = location(dataOrUrl);
+    const pagename = location$1.getPagename();
+    const params = await location$1.getParams();
     let key = '';
     const routeState = {
       pagename,
@@ -6476,19 +6533,19 @@ class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.push(location).key;
+      key = this.rootStack.push(location$1).key;
     } else {
-      key = this.rootStack.getCurrentItem().push(location).key;
+      key = this.rootStack.getCurrentItem().push(location$1).key;
     }
 
     routeState.key = key;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      await this.nativeRouter.execute('push', location, key);
+      await this.nativeRouter.execute('push', location$1, key);
     }
 
-    this.location = location;
+    this.location = location$1;
     this.routeState = routeState;
     const cloneState = deepClone(routeState);
 
@@ -6509,9 +6566,9 @@ class BaseEluxRouter extends MultipleDispatcher {
   }
 
   async _replace(dataOrUrl, root, nativeCaller) {
-    const location = location$1(dataOrUrl);
-    const pagename = location.getPagename();
-    const params = await location.getParams();
+    const location$1 = location(dataOrUrl);
+    const pagename = location$1.getPagename();
+    const params = await location$1.getParams();
     let key = '';
     const routeState = {
       pagename,
@@ -6523,19 +6580,19 @@ class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.replace(location).key;
+      key = this.rootStack.replace(location$1).key;
     } else {
-      key = this.rootStack.getCurrentItem().replace(location).key;
+      key = this.rootStack.getCurrentItem().replace(location$1).key;
     }
 
     routeState.key = key;
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      await this.nativeRouter.execute('replace', location, key);
+      await this.nativeRouter.execute('replace', location$1, key);
     }
 
-    this.location = location;
+    this.location = location$1;
     this.routeState = routeState;
     const cloneState = deepClone(routeState);
     this.getCurrentStore().dispatch(routeChangeAction(cloneState));
@@ -6545,24 +6602,28 @@ class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  back(n = 1, root = false, options, nonblocking, nativeCaller = false) {
-    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
-  }
-
-  async _back(n = 1, root, options, nativeCaller) {
-    if (n < 1) {
+  back(stepOrKey = 1, root = false, options, nonblocking, nativeCaller = false) {
+    if (!stepOrKey) {
       return;
     }
 
+    return this.addTask(this._back.bind(this, stepOrKey, root, options || {}, nativeCaller), nonblocking);
+  }
+
+  async _back(stepOrKey, root, options, nativeCaller) {
     const {
       record,
       overflow,
-      steps
-    } = this.rootStack.testBack(n, root);
+      index
+    } = this.rootStack.testBack(stepOrKey, root);
 
     if (overflow) {
       const url = options.overflowRedirect || routeConfig.indexUrl;
       env.setTimeout(() => this.relaunch(url, root), 0);
+      return;
+    }
+
+    if (!index[0] && !index[1]) {
       return;
     }
 
@@ -6579,19 +6640,19 @@ class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-    if (steps[0]) {
+    if (index[0]) {
       root = true;
-      this.rootStack.back(steps[0]);
+      this.rootStack.back(index[0]);
     }
 
-    if (steps[1]) {
-      this.rootStack.getCurrentItem().back(steps[1]);
+    if (index[1]) {
+      this.rootStack.getCurrentItem().back(index[1]);
     }
 
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      await this.nativeRouter.execute('back', location, n, key);
+      await this.nativeRouter.execute('back', location, index, key);
     }
 
     this.location = location;
@@ -6664,6 +6725,15 @@ const setAppConfig = buildConfigSetter(appConfig);
 function setUserConfig(conf) {
   setCoreConfig(conf);
   setRouteConfig(conf);
+
+  if (conf.disableNativeRouter) {
+    setRouteConfig({
+      notifyNativeRouter: {
+        root: false,
+        internal: false
+      }
+    });
+  }
 }
 function createBaseMP(ins, router, render, middlewares = []) {
   appMeta.router = router;
@@ -7170,7 +7240,7 @@ function getHistoryState() {
  */
 
 
-function createBrowserHistory(props) {
+function createBrowserHistory$1(props) {
   if (props === void 0) {
     props = {};
   }
@@ -7420,8 +7490,8 @@ setRouteConfig({
     internal: true
   }
 });
-
-function createServerHistory() {
+function createServerHistory(url) {
+  const [pathname, search] = url.split('?');
   return {
     push() {
       return undefined;
@@ -7431,71 +7501,46 @@ function createServerHistory() {
       return undefined;
     },
 
-    go() {
-      return undefined;
-    },
-
     block() {
       return () => undefined;
-    }
+    },
 
+    location: {
+      pathname,
+      search
+    }
   };
 }
-
+function createBrowserHistory() {
+  return createBrowserHistory$1();
+}
 class BrowserNativeRouter extends BaseNativeRouter {
-  constructor() {
+  constructor(_history) {
     super();
 
     _defineProperty(this, "_unlistenHistory", void 0);
 
-    _defineProperty(this, "_history", void 0);
+    this._history = _history;
+    const {
+      root,
+      internal
+    } = routeConfig.notifyNativeRouter;
 
-    if (env.isServer) {
-      this._history = createServerHistory();
-    } else {
-      this._history = createBrowserHistory();
-    }
-
-    this._unlistenHistory = this._history.block((locationData, action) => {
-      if (action === 'POP') {
-        env.setTimeout(() => this.eluxRouter.back(1), 100);
-        return false;
-      }
-
-      const key = this.getKey(locationData);
-      const changed = this.onChange(key);
-
-      if (changed) {
-        const {
-          pathname = '',
-          search = ''
-        } = locationData;
-        const url = ['n:/', pathname, search].join('');
-        let callback;
-
-        if (action === 'REPLACE') {
-          callback = () => this.eluxRouter.replace(url);
-        } else if (action === 'PUSH') {
-          callback = () => this.eluxRouter.push(url);
-        } else {
-          callback = () => this.eluxRouter.relaunch(url);
+    if (root || internal) {
+      this._unlistenHistory = this._history.block((locationData, action) => {
+        if (action === 'POP') {
+          env.setTimeout(() => this.eluxRouter.back(1), 100);
+          return false;
         }
 
-        env.setTimeout(callback, 100);
-        return false;
-      }
-
-      return undefined;
-    });
-  }
-
-  getKey(locationData) {
-    return locationData.state || '';
+        return undefined;
+      });
+    }
   }
 
   push(location, key) {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true), key);
+      this._history.push(location.getNativeUrl(true));
 
       return true;
     }
@@ -7505,7 +7550,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
   replace(location, key) {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true), key);
+      this._history.push(location.getNativeUrl(true));
 
       return true;
     }
@@ -7515,7 +7560,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
   relaunch(location, key) {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true), key);
+      this._history.push(location.getNativeUrl(true));
 
       return true;
     }
@@ -7523,9 +7568,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
     return undefined;
   }
 
-  back(location, n, key) {
+  back(location, index, key) {
     if (!env.isServer) {
-      this._history.replace(location.getNativeUrl(true), key);
+      this._history.replace(location.getNativeUrl(true));
 
       return true;
     }
@@ -7534,7 +7579,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   destroy() {
-    this._unlistenHistory();
+    this._unlistenHistory && this._unlistenHistory();
   }
 
 }
@@ -7544,9 +7589,13 @@ class EluxRouter extends BaseEluxRouter {
   }
 
 }
-function createRouter(nativeUrl, nativeData) {
-  const browserNativeRouter = new BrowserNativeRouter();
-  const router = new EluxRouter(nativeUrl, browserNativeRouter, nativeData);
+function createRouter(browserHistory, nativeData) {
+  const browserNativeRouter = new BrowserNativeRouter(browserHistory);
+  const {
+    pathname,
+    search
+  } = browserHistory.location;
+  const router = new EluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
   return router;
 }
 
@@ -7560,13 +7609,14 @@ function setConfig(conf) {
 }
 const createApp = (moduleGetter, middlewares) => {
   defineModuleGetter(moduleGetter);
-  const url = ['n:/', location.pathname, location.search].join('');
-  const router = createRouter(url, {});
+  const history = createBrowserHistory();
+  const router = createRouter(history, {});
   return createBaseApp({}, router, renderToDocument, middlewares);
 };
 const createSSR = (moduleGetter, url, nativeData, middlewares) => {
   defineModuleGetter(moduleGetter);
-  const router = createRouter('n:/' + url, nativeData);
+  const history = createServerHistory(url);
+  const router = createRouter(history, nativeData);
   return createBaseSSR({}, router, renderToString, middlewares);
 };
 
@@ -7578,4 +7628,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepClone, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, location$1 as location, logger, modelHotReplacement, mutation, patchActions, reducer, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepClone, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, location, logger, modelHotReplacement, mutation, patchActions, reducer, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };

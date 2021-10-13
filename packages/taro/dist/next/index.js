@@ -79,7 +79,7 @@ function patchPageOptions(pageOptions) {
   };
 }
 
-export const routeENV = {
+export const taroHistory = {
   reLaunch: Taro.reLaunch,
   redirectTo: Taro.redirectTo,
   navigateTo: Taro.navigateTo,
@@ -123,7 +123,7 @@ export const routeENV = {
 if (process.env.TARO_ENV === 'h5') {
   const taroRouter = require('@tarojs/router');
 
-  routeENV.getLocation = () => {
+  taroHistory.getLocation = () => {
     const {
       pathname,
       search
@@ -134,7 +134,7 @@ if (process.env.TARO_ENV === 'h5') {
     };
   };
 
-  routeENV.onRouteChange = callback => {
+  taroHistory.onRouteChange = callback => {
     const unhandle = taroRouter.history.listen(({
       location,
       action

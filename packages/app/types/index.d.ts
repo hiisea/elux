@@ -25,6 +25,7 @@ export interface UserConfig {
     paramsKey: string;
     AppModuleName?: string;
     RouteModuleName?: string;
+    disableNativeRouter?: boolean;
 }
 export declare function setUserConfig(conf: UserConfig): void;
 export interface RenderOptions {

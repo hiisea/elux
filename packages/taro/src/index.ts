@@ -2,7 +2,7 @@
 
 import Taro from '@tarojs/taro';
 import {env, SingleDispatcher} from '@elux/core';
-import {RouteENV} from '@elux/route-mp';
+import {IHistory} from '@elux/route-mp';
 
 declare const window: any;
 
@@ -92,8 +92,7 @@ function patchPageOptions(pageOptions: PageConfig) {
     return onUnload?.call(this);
   };
 }
-
-export const routeENV: RouteENV = {
+export const taroHistory: IHistory = {
   reLaunch: Taro.reLaunch,
   redirectTo: Taro.redirectTo,
   navigateTo: Taro.navigateTo,
@@ -130,11 +129,11 @@ if (process.env.TARO_ENV === 'h5') {
       listen: (callback: (data: {location: {pathname: string; search: string}; action: 'POP' | 'PUSH' | 'REPLACE'}) => void) => () => void;
     };
   } = require('@tarojs/router');
-  routeENV.getLocation = () => {
+  taroHistory.getLocation = () => {
     const {pathname, search} = taroRouter.history.location;
     return {pathname, search: search.replace(/^\?/, '')};
   };
-  routeENV.onRouteChange = (callback) => {
+  taroHistory.onRouteChange = (callback) => {
     const unhandle = taroRouter.history.listen(({location, action}) => {
       let routeAction: 'POP' | 'PUSH' | 'REPLACE' | 'RELAUNCH' = action;
       if (action !== 'POP' && tabPages[location.pathname]) {

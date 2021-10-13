@@ -49,8 +49,8 @@ function setConfig(conf) {
 
 var createApp = function createApp(moduleGetter, middlewares) {
   (0, _core.defineModuleGetter)(moduleGetter);
-  var url = ['n:/', location.pathname, location.search].join('');
-  var router = (0, _routeBrowser.createRouter)(url, {});
+  var history = (0, _routeBrowser.createBrowserHistory)();
+  var router = (0, _routeBrowser.createRouter)(history, {});
   return (0, _app.createBaseApp)({}, router, _stage.renderToDocument, middlewares);
 };
 
@@ -58,7 +58,8 @@ exports.createApp = createApp;
 
 var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
   (0, _core.defineModuleGetter)(moduleGetter);
-  var router = (0, _routeBrowser.createRouter)('n:/' + url, nativeData);
+  var history = (0, _routeBrowser.createServerHistory)(url);
+  var router = (0, _routeBrowser.createRouter)(history, nativeData);
   return (0, _app.createBaseSSR)({}, router, _stage.renderToString, middlewares);
 };
 

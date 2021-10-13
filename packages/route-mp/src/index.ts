@@ -1,14 +1,4 @@
-import {
-  nativeLocationToNativeUrl,
-  BaseRouter,
-  BaseNativeRouter,
-  NativeLocation,
-  NativeData,
-  RootParams,
-  LocationTransform,
-  setRouteConfig,
-  routeConfig,
-} from '@elux/route';
+import {ILocationTransform, BaseEluxRouter, BaseNativeRouter, RootParams, setRouteConfig, routeConfig, urlParser} from '@elux/route';
 
 setRouteConfig({notifyNativeRouter: {root: true, internal: false}});
 
@@ -20,111 +10,103 @@ interface NavigateBackOption {
   delta?: number;
 }
 
-export interface RouteENV {
+export interface IHistory {
   onRouteChange(callback: (pathname: string, search: string, action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH') => void): () => void;
-  getLocation(): {pathname: string; search: string};
   reLaunch(option: RouteOption): Promise<any>;
   redirectTo(option: RouteOption): Promise<any>;
   navigateTo(option: RouteOption): Promise<any>;
   navigateBack(option: NavigateBackOption): Promise<any>;
   switchTab(option: RouteOption): Promise<any>;
+  getLocation(): {pathname: string; search: string};
 }
 
 export class MPNativeRouter extends BaseNativeRouter {
-  private _unlistenHistory: UnregisterCallback;
+  private _unlistenHistory?: UnregisterCallback;
 
-  protected declare router: Router<any, string>;
+  protected declare router: EluxRouter<any, string>;
 
-  constructor(public routeENV: RouteENV, protected tabPages: Record<string, boolean>) {
+  constructor(public _history: IHistory, protected tabPages: Record<string, boolean>) {
     super();
-    this._unlistenHistory = routeENV.onRouteChange((pathname: string, search: string, action) => {
-      const nativeUrl = [pathname, search].filter(Boolean).join('?');
-      const arr = search.match(/__key__=(\w+)/);
-      let key = arr ? arr[1] : '';
-      if (action === 'POP' && !key) {
-        key = this.router.getHistory(true).findRecord(-1)!.key;
-      }
-      const changed = this.onChange(key);
-      if (changed) {
-        let index = 0;
-        if (action === 'POP') {
-          index = this.router.getHistory(true).findIndex(key);
+    const {root, internal} = routeConfig.notifyNativeRouter;
+    if (root || internal) {
+      this._unlistenHistory = _history.onRouteChange((pathname: string, search: string, action) => {
+        const nativeUrl = [pathname, search].filter(Boolean).join('?');
+        const arr = search.match(/__key__=(\w+)/);
+        let key = arr ? arr[1] : '';
+        //key不存在一定是TabPage，TabPage一定是只有一条栈
+        if (action === 'POP' && !key) {
+          const {record} = this.router.findRecordByStep(-1, false);
+          key = record.key;
         }
-        if (index > 0) {
-          this.router.back(index, routeConfig.notifyNativeRouter.root, {overflowRedirect: true}, true);
-        } else if (action === 'REPLACE') {
-          this.router.replace(nativeUrl, routeConfig.notifyNativeRouter.root, true);
-        } else if (action === 'PUSH') {
-          this.router.push(nativeUrl, routeConfig.notifyNativeRouter.root, true);
-        } else {
-          this.router.relaunch(nativeUrl, routeConfig.notifyNativeRouter.root, true);
+        const changed = this.onChange(key);
+        if (changed) {
+          if (action === 'POP') {
+            this.router.back(key, true, {}, true, true);
+          } else if (action === 'REPLACE') {
+            this.router.replace(nativeUrl, true, true, true);
+          } else if (action === 'PUSH') {
+            this.router.push(nativeUrl, true, true, true);
+          } else {
+            this.router.relaunch(nativeUrl, true, true, true);
+          }
         }
-      }
-    });
+      });
+    }
   }
 
-  getLocation(): NativeLocation {
-    return this.routeENV.getLocation();
-  }
-
-  protected toUrl(url: string, key: string): string {
+  protected addKey(url: string, key: string): string {
     return url.indexOf('?') > -1 ? `${url}&__key__=${key}` : `${url}?__key__=${key}`;
   }
 
-  protected push(getNativeData: () => NativeData, key: string): Promise<NativeData> {
-    const nativeData = getNativeData();
-    if (this.tabPages[nativeData.nativeUrl]) {
-      throw `Replacing 'push' with 'relaunch' for TabPage: ${nativeData.nativeUrl}`;
+  protected push(location: ILocationTransform, key: string): void | true | Promise<void> {
+    const nativeUrl = location.getNativeUrl(true);
+    const [pathname] = nativeUrl.split('?');
+    if (this.tabPages[pathname]) {
+      return Promise.reject(`Replacing 'push' with 'relaunch' for TabPage: ${pathname}`);
     }
-    return this.routeENV.navigateTo({url: this.toUrl(nativeData.nativeUrl, key)}).then(() => nativeData);
+    return this._history.navigateTo({url: this.addKey(nativeUrl, key)});
   }
 
-  protected replace(getNativeData: () => NativeData, key: string): Promise<NativeData> {
-    const nativeData = getNativeData();
-    if (this.tabPages[nativeData.nativeUrl]) {
-      throw `Replacing 'push' with 'relaunch' for TabPage: ${nativeData.nativeUrl}`;
+  protected replace(location: ILocationTransform, key: string): void | true | Promise<void> {
+    const nativeUrl = location.getNativeUrl(true);
+    const [pathname] = nativeUrl.split('?');
+    if (this.tabPages[pathname]) {
+      return Promise.reject(`Replacing 'replace' with 'relaunch' for TabPage: ${pathname}`);
     }
-    return this.routeENV.redirectTo({url: this.toUrl(nativeData.nativeUrl, key)}).then(() => nativeData);
+    return this._history.redirectTo({url: this.addKey(nativeUrl, key)});
   }
 
-  protected relaunch(getNativeData: () => NativeData, key: string): Promise<NativeData> {
-    const nativeData = getNativeData();
-    if (this.tabPages[nativeData.nativeUrl]) {
-      return this.routeENV.switchTab({url: nativeData.nativeUrl}).then(() => nativeData);
+  protected relaunch(location: ILocationTransform, key: string): void | true | Promise<void> {
+    const nativeUrl = location.getNativeUrl(true);
+    const [pathname] = nativeUrl.split('?');
+    if (this.tabPages[pathname]) {
+      return this._history.switchTab({url: pathname});
     }
-    return this.routeENV.reLaunch({url: this.toUrl(nativeData.nativeUrl, key)}).then(() => nativeData);
+    return this._history.reLaunch({url: this.addKey(nativeUrl, key)});
   }
 
-  // 只有当native不处理时返回void，否则必须返回NativeData，返回void会导致不依赖onChange来关闭task
+  // 只有当native不处理时返回undefined，否则必须返回true，返回undefined会导致不依赖onChange来关闭task
   // history.go会触发onChange，所以必须返回NativeData
-  protected back(getNativeData: () => NativeData, n: number, key: string): Promise<NativeData> {
-    const nativeData = getNativeData();
-    return this.routeENV.navigateBack({delta: n}).then(() => nativeData);
+  protected back(location: ILocationTransform, index: [number, number], key: string): void | true | Promise<void> {
+    return this._history.navigateBack({delta: index[0]});
   }
 
-  toOutside(url: string): void {
-    // this.history.push(url);
-  }
-
-  destroy(): void {
-    this._unlistenHistory();
+  public destroy(): void {
+    this._unlistenHistory && this._unlistenHistory();
   }
 }
 
-export class Router<P extends RootParams, N extends string> extends BaseRouter<P, N> {
+export class EluxRouter<P extends RootParams, N extends string> extends BaseEluxRouter<P, N> {
   public declare nativeRouter: MPNativeRouter;
 
-  constructor(mpNativeRouter: MPNativeRouter, locationTransform: LocationTransform) {
-    super(nativeLocationToNativeUrl(mpNativeRouter.getLocation()), mpNativeRouter, locationTransform);
+  constructor(nativeUrl: string, mpNativeRouter: MPNativeRouter) {
+    super(nativeUrl, mpNativeRouter, {});
   }
 }
 
-export function createRouter<P extends RootParams, N extends string>(
-  locationTransform: LocationTransform,
-  routeENV: RouteENV,
-  tabPages: Record<string, boolean>
-): Router<P, N> {
-  const mpNativeRouter = new MPNativeRouter(routeENV, tabPages);
-  const router = new Router<P, N>(mpNativeRouter, locationTransform);
+export function createRouter<P extends RootParams, N extends string>(mpHistory: IHistory, tabPages: Record<string, boolean>): EluxRouter<P, N> {
+  const mpNativeRouter = new MPNativeRouter(mpHistory, tabPages);
+  const {pathname, search} = mpHistory.getLocation();
+  const router = new EluxRouter<P, N>(urlParser.getUrl('n', pathname, search), mpNativeRouter);
   return router;
 }

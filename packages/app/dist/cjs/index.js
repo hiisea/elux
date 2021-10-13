@@ -63,6 +63,15 @@ exports.setAppConfig = setAppConfig;
 function setUserConfig(conf) {
   (0, _core.setCoreConfig)(conf);
   (0, _route.setRouteConfig)(conf);
+
+  if (conf.disableNativeRouter) {
+    (0, _route.setRouteConfig)({
+      notifyNativeRouter: {
+        root: false,
+        internal: false
+      }
+    });
+  }
 }
 
 function createBaseMP(ins, router, render, middlewares) {

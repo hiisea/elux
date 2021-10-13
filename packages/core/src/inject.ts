@@ -68,7 +68,8 @@ export function exportModule<
       const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
-      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(moduleHandles.initState) : moduleHandles.initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
     return undefined;
   };
@@ -89,7 +90,8 @@ export function modelHotReplacement(moduleName: string, ModuleHandlers: IModuleH
       const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles as any);
-      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(moduleHandles.initState) : moduleHandles.initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
     return undefined;
   };

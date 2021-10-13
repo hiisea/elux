@@ -83,7 +83,7 @@ function patchPageOptions(pageOptions) {
   };
 }
 
-export var routeENV = {
+export var taroHistory = {
   reLaunch: Taro.reLaunch,
   redirectTo: Taro.redirectTo,
   navigateTo: Taro.navigateTo,
@@ -123,7 +123,7 @@ export var routeENV = {
 if (process.env.TARO_ENV === 'h5') {
   var taroRouter = require('@tarojs/router');
 
-  routeENV.getLocation = function () {
+  taroHistory.getLocation = function () {
     var _taroRouter$history$l = taroRouter.history.location,
         pathname = _taroRouter$history$l.pathname,
         search = _taroRouter$history$l.search;
@@ -133,7 +133,7 @@ if (process.env.TARO_ENV === 'h5') {
     };
   };
 
-  routeENV.onRouteChange = function (callback) {
+  taroHistory.onRouteChange = function (callback) {
     var unhandle = taroRouter.history.listen(function (_ref) {
       var location = _ref.location,
           action = _ref.action;

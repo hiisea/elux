@@ -8,7 +8,7 @@ import { routeConfig } from './basic';
 import { RootStack, HistoryStack, HistoryRecord } from './history';
 import { location as createLocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
-export { location, createRouteModule } from './transform';
+export { location, createRouteModule, urlParser } from './transform';
 export var BaseNativeRouter = function () {
   function BaseNativeRouter() {
     _defineProperty(this, "curTask", void 0);
@@ -50,6 +50,7 @@ export var BaseNativeRouter = function () {
       } else if (isPromise(result)) {
         result.catch(function (e) {
           reject(e);
+          env.console.error(e);
           _this.curTask = undefined;
         });
       }
@@ -434,9 +435,9 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
     return _replace;
   }();
 
-  _proto2.back = function back(n, root, options, nonblocking, nativeCaller) {
-    if (n === void 0) {
-      n = 1;
+  _proto2.back = function back(stepOrKey, root, options, nonblocking, nativeCaller) {
+    if (stepOrKey === void 0) {
+      stepOrKey = 1;
     }
 
     if (root === void 0) {
@@ -447,35 +448,27 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
       nativeCaller = false;
     }
 
-    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
+    if (!stepOrKey) {
+      return;
+    }
+
+    return this.addTask(this._back.bind(this, stepOrKey, root, options || {}, nativeCaller), nonblocking);
   };
 
   _proto2._back = function () {
-    var _back2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee4(n, root, options, nativeCaller) {
+    var _back2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee4(stepOrKey, root, options, nativeCaller) {
       var _this3 = this;
 
-      var _this$rootStack$testB, record, overflow, steps, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
+      var _this$rootStack$testB, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
 
       return _regeneratorRuntime.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              if (n === void 0) {
-                n = 1;
-              }
-
-              if (!(n < 1)) {
-                _context4.next = 3;
-                break;
-              }
-
-              return _context4.abrupt("return");
-
-            case 3:
-              _this$rootStack$testB = this.rootStack.testBack(n, root), record = _this$rootStack$testB.record, overflow = _this$rootStack$testB.overflow, steps = _this$rootStack$testB.steps;
+              _this$rootStack$testB = this.rootStack.testBack(stepOrKey, root), record = _this$rootStack$testB.record, overflow = _this$rootStack$testB.overflow, index = _this$rootStack$testB.index;
 
               if (!overflow) {
-                _context4.next = 8;
+                _context4.next = 5;
                 break;
               }
 
@@ -485,7 +478,15 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
               }, 0);
               return _context4.abrupt("return");
 
-            case 8:
+            case 5:
+              if (!(!index[0] && !index[1])) {
+                _context4.next = 7;
+                break;
+              }
+
+              return _context4.abrupt("return");
+
+            case 7:
               key = record.key;
               location = record.location;
               pagename = location.getPagename();
@@ -496,45 +497,45 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
                 params: params,
                 action: 'BACK'
               };
-              _context4.next = 15;
+              _context4.next = 14;
               return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
 
-            case 15:
-              _context4.next = 17;
+            case 14:
+              _context4.next = 16;
               return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-            case 17:
-              if (steps[0]) {
+            case 16:
+              if (index[0]) {
                 root = true;
-                this.rootStack.back(steps[0]);
+                this.rootStack.back(index[0]);
               }
 
-              if (steps[1]) {
-                this.rootStack.getCurrentItem().back(steps[1]);
+              if (index[1]) {
+                this.rootStack.getCurrentItem().back(index[1]);
               }
 
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
               if (!(!nativeCaller && notifyNativeRouter)) {
-                _context4.next = 23;
+                _context4.next = 22;
                 break;
               }
 
-              _context4.next = 23;
-              return this.nativeRouter.execute('back', location, n, key);
+              _context4.next = 22;
+              return this.nativeRouter.execute('back', location, index, key);
 
-            case 23:
+            case 22:
               this.location = location;
               this.routeState = routeState;
               cloneState = deepClone(routeState);
               this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-              _context4.next = 29;
+              _context4.next = 28;
               return this.dispatch('change', {
                 routeState: routeState,
                 root: root
               });
 
-            case 29:
+            case 28:
             case "end":
               return _context4.stop();
           }

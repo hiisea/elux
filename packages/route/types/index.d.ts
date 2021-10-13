@@ -3,16 +3,16 @@ import { RootParams, DeepPartial, EluxLocation, NativeLocation, StateLocation, R
 import { RootStack, HistoryRecord } from './history';
 import { ILocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
-export { location, createRouteModule } from './transform';
+export { location, createRouteModule, urlParser } from './transform';
 export type { ILocationTransform } from './transform';
 export type { RootParams, EluxLocation, NativeLocation, StateLocation, LocationState, RouteState, HistoryAction, PagenameMap, DeepPartial, NativeLocationMap, } from './basic';
 export declare abstract class BaseNativeRouter {
     protected curTask?: () => void;
     protected eluxRouter: IEluxRouter;
-    protected abstract push(location: ILocationTransform, key: string): void | true | Promise<true>;
-    protected abstract replace(location: ILocationTransform, key: string): void | true | Promise<true>;
-    protected abstract relaunch(location: ILocationTransform, key: string): void | true | Promise<true>;
-    protected abstract back(location: ILocationTransform, n: number, key: string): void | true | Promise<true>;
+    protected abstract push(location: ILocationTransform, key: string): void | true | Promise<void>;
+    protected abstract replace(location: ILocationTransform, key: string): void | true | Promise<void>;
+    protected abstract relaunch(location: ILocationTransform, key: string): void | true | Promise<void>;
+    protected abstract back(location: ILocationTransform, index: [number, number], key: string): void | true | Promise<void>;
     abstract destroy(): void;
     protected onChange(key: string): boolean;
     startup(router: IEluxRouter): void;
@@ -47,11 +47,15 @@ export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extend
     getCurrentStore(): IStore;
     getStoreList(): IStore[];
     getHistoryLength(root?: boolean): number;
-    findRecordByKey(key: string): HistoryRecord | undefined;
+    findRecordByKey(key: string): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
     findRecordByStep(delta: number, rootOnly: boolean): {
         record: HistoryRecord;
         overflow: boolean;
-        steps: [number, number];
+        index: [number, number];
     };
     extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N>;
     relaunch(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
@@ -60,7 +64,7 @@ export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extend
     private _push;
     replace(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
     private _replace;
-    back(n?: number, root?: boolean, options?: {
+    back(stepOrKey?: number | string, root?: boolean, options?: {
         overflowRedirect?: string;
         payload?: any;
     }, nonblocking?: boolean, nativeCaller?: boolean): void | Promise<void>;
@@ -83,12 +87,21 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
         store: IStore;
         page?: any;
     }[];
-    findRecordByKey(key: string): HistoryRecord | undefined;
+    findRecordByKey(key: string): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    findRecordByStep(delta: number, rootOnly: boolean): {
+        record: HistoryRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
     extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N>;
     relaunch(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
     push(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
     replace(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
-    back(n?: number, root?: boolean, options?: {
+    back(stepOrKey?: number | string, root?: boolean, options?: {
         overflowRedirect?: string;
         payload?: any;
     }, nonblocking?: boolean): void | Promise<void>;

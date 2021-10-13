@@ -4,7 +4,7 @@ import { routeConfig } from './basic';
 import { RootStack, HistoryStack, HistoryRecord } from './history';
 import { location as createLocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
-export { location, createRouteModule } from './transform';
+export { location, createRouteModule, urlParser } from './transform';
 export class BaseNativeRouter {
   constructor() {
     _defineProperty(this, "curTask", void 0);
@@ -37,6 +37,7 @@ export class BaseNativeRouter {
       } else if (isPromise(result)) {
         result.catch(e => {
           reject(e);
+          env.console.error(e);
           this.curTask = undefined;
         });
       }
@@ -272,24 +273,28 @@ export class BaseEluxRouter extends MultipleDispatcher {
     });
   }
 
-  back(n = 1, root = false, options, nonblocking, nativeCaller = false) {
-    return this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller), nonblocking);
-  }
-
-  async _back(n = 1, root, options, nativeCaller) {
-    if (n < 1) {
+  back(stepOrKey = 1, root = false, options, nonblocking, nativeCaller = false) {
+    if (!stepOrKey) {
       return;
     }
 
+    return this.addTask(this._back.bind(this, stepOrKey, root, options || {}, nativeCaller), nonblocking);
+  }
+
+  async _back(stepOrKey, root, options, nativeCaller) {
     const {
       record,
       overflow,
-      steps
-    } = this.rootStack.testBack(n, root);
+      index
+    } = this.rootStack.testBack(stepOrKey, root);
 
     if (overflow) {
       const url = options.overflowRedirect || routeConfig.indexUrl;
       env.setTimeout(() => this.relaunch(url, root), 0);
+      return;
+    }
+
+    if (!index[0] && !index[1]) {
       return;
     }
 
@@ -306,19 +311,19 @@ export class BaseEluxRouter extends MultipleDispatcher {
     await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
     await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
 
-    if (steps[0]) {
+    if (index[0]) {
       root = true;
-      this.rootStack.back(steps[0]);
+      this.rootStack.back(index[0]);
     }
 
-    if (steps[1]) {
-      this.rootStack.getCurrentItem().back(steps[1]);
+    if (index[1]) {
+      this.rootStack.getCurrentItem().back(index[1]);
     }
 
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
 
     if (!nativeCaller && notifyNativeRouter) {
-      await this.nativeRouter.execute('back', location, n, key);
+      await this.nativeRouter.execute('back', location, index, key);
     }
 
     this.location = location;

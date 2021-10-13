@@ -3,6 +3,8 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 exports.__esModule = true;
+exports.createServerHistory = createServerHistory;
+exports.createBrowserHistory = createBrowserHistory;
 exports.createRouter = createRouter;
 exports.EluxRouter = exports.BrowserNativeRouter = void 0;
 
@@ -14,9 +16,9 @@ var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/de
 
 var _route = require("@elux/route");
 
-var _history = require("history");
-
 var _core = require("@elux/core");
+
+var _history2 = require("history");
 
 (0, _route.setRouteConfig)({
   notifyNativeRouter: {
@@ -25,7 +27,11 @@ var _core = require("@elux/core");
   }
 });
 
-function createServerHistory() {
+function createServerHistory(url) {
+  var _url$split = url.split('?'),
+      pathname = _url$split[0],
+      search = _url$split[1];
+
   return {
     push: function push() {
       return undefined;
@@ -33,89 +39,57 @@ function createServerHistory() {
     replace: function replace() {
       return undefined;
     },
-    go: function go() {
-      return undefined;
-    },
     block: function block() {
       return function () {
         return undefined;
       };
+    },
+    location: {
+      pathname: pathname,
+      search: search
     }
   };
+}
+
+function createBrowserHistory() {
+  return (0, _history2.createBrowserHistory)();
 }
 
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   (0, _inheritsLoose2.default)(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter() {
+  function BrowserNativeRouter(_history) {
     var _this;
 
     _this = _BaseNativeRouter.call(this) || this;
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "_unlistenHistory", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "_history", void 0);
+    _this._history = _history;
+    var _routeConfig$notifyNa = _route.routeConfig.notifyNativeRouter,
+        root = _routeConfig$notifyNa.root,
+        internal = _routeConfig$notifyNa.internal;
 
-    if (_core.env.isServer) {
-      _this._history = createServerHistory();
-    } else {
-      _this._history = (0, _history.createBrowserHistory)();
-    }
+    if (root || internal) {
+      _this._unlistenHistory = _this._history.block(function (locationData, action) {
+        if (action === 'POP') {
+          _core.env.setTimeout(function () {
+            return _this.eluxRouter.back(1);
+          }, 100);
 
-    _this._unlistenHistory = _this._history.block(function (locationData, action) {
-      if (action === 'POP') {
-        _core.env.setTimeout(function () {
-          return _this.eluxRouter.back(1);
-        }, 100);
-
-        return false;
-      }
-
-      var key = _this.getKey(locationData);
-
-      var changed = _this.onChange(key);
-
-      if (changed) {
-        var _locationData$pathnam = locationData.pathname,
-            pathname = _locationData$pathnam === void 0 ? '' : _locationData$pathnam,
-            _locationData$search = locationData.search,
-            search = _locationData$search === void 0 ? '' : _locationData$search;
-
-        var _url = ['n:/', pathname, search].join('');
-
-        var _callback;
-
-        if (action === 'REPLACE') {
-          _callback = function _callback() {
-            return _this.eluxRouter.replace(_url);
-          };
-        } else if (action === 'PUSH') {
-          _callback = function _callback() {
-            return _this.eluxRouter.push(_url);
-          };
-        } else {
-          _callback = function _callback() {
-            return _this.eluxRouter.relaunch(_url);
-          };
+          return false;
         }
 
-        _core.env.setTimeout(_callback, 100);
+        return undefined;
+      });
+    }
 
-        return false;
-      }
-
-      return undefined;
-    });
     return _this;
   }
 
   var _proto = BrowserNativeRouter.prototype;
 
-  _proto.getKey = function getKey(locationData) {
-    return locationData.state || '';
-  };
-
   _proto.push = function push(location, key) {
     if (!_core.env.isServer) {
-      this._history.push(location.getNativeUrl(true), key);
+      this._history.push(location.getNativeUrl(true));
 
       return true;
     }
@@ -125,7 +99,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   _proto.replace = function replace(location, key) {
     if (!_core.env.isServer) {
-      this._history.push(location.getNativeUrl(true), key);
+      this._history.push(location.getNativeUrl(true));
 
       return true;
     }
@@ -135,7 +109,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   _proto.relaunch = function relaunch(location, key) {
     if (!_core.env.isServer) {
-      this._history.push(location.getNativeUrl(true), key);
+      this._history.push(location.getNativeUrl(true));
 
       return true;
     }
@@ -143,9 +117,9 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     return undefined;
   };
 
-  _proto.back = function back(location, n, key) {
+  _proto.back = function back(location, index, key) {
     if (!_core.env.isServer) {
-      this._history.replace(location.getNativeUrl(true), key);
+      this._history.replace(location.getNativeUrl(true));
 
       return true;
     }
@@ -154,7 +128,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.destroy = function destroy() {
-    this._unlistenHistory();
+    this._unlistenHistory && this._unlistenHistory();
   };
 
   return BrowserNativeRouter;
@@ -174,8 +148,11 @@ var EluxRouter = function (_BaseEluxRouter) {
 
 exports.EluxRouter = EluxRouter;
 
-function createRouter(nativeUrl, nativeData) {
-  var browserNativeRouter = new BrowserNativeRouter();
-  var router = new EluxRouter(nativeUrl, browserNativeRouter, nativeData);
+function createRouter(browserHistory, nativeData) {
+  var browserNativeRouter = new BrowserNativeRouter(browserHistory);
+  var _browserHistory$locat = browserHistory.location,
+      pathname = _browserHistory$locat.pathname,
+      search = _browserHistory$locat.search;
+  var router = new EluxRouter(_route.urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
   return router;
 }

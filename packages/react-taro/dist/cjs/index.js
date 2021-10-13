@@ -6,12 +6,14 @@ exports.__esModule = true;
 var _exportNames = {
   setConfig: true,
   createMP: true,
-  routeENV: true
+  taroHistory: true
 };
 exports.setConfig = setConfig;
 exports.createMP = void 0;
 
 var _taro = _interopRequireDefault(require("@tarojs/taro"));
+
+var _core = require("@elux/core");
 
 var _reactComponents = require("@elux/react-components");
 
@@ -37,7 +39,7 @@ var _routeMp = require("@elux/route-mp");
 
 var _taro2 = require("@elux/taro");
 
-exports.routeENV = _taro2.routeENV;
+exports.taroHistory = _taro2.taroHistory;
 (0, _app.setAppConfig)({
   loadComponent: _reactComponents.loadComponent,
   useRouter: _reactComponents.useRouter
@@ -57,10 +59,10 @@ function setConfig(conf) {
 });
 
 var createMP = function createMP(moduleGetter, middlewares) {
+  (0, _core.defineModuleGetter)(moduleGetter);
   var tabPages = (0, _taro2.getTabPages)();
-  return (0, _app.createBaseMP)({}, function (locationTransform) {
-    return (0, _routeMp.createRouter)(locationTransform, _taro2.routeENV, tabPages);
-  }, _stage.renderToMP, moduleGetter, middlewares);
+  var router = (0, _routeMp.createRouter)(_taro2.taroHistory, tabPages);
+  return (0, _app.createBaseMP)({}, router, _stage.renderToMP, middlewares);
 };
 
 exports.createMP = createMP;

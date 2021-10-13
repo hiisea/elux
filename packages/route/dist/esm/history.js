@@ -21,20 +21,20 @@ var RouteStack = function () {
     return this.records[0];
   };
 
+  _proto.getEarliestItem = function getEarliestItem() {
+    return this.records[this.records.length - 1];
+  };
+
+  _proto.getItemAt = function getItemAt(n) {
+    return this.records[n];
+  };
+
   _proto.getItems = function getItems() {
     return [].concat(this.records);
   };
 
   _proto.getLength = function getLength() {
     return this.records.length;
-  };
-
-  _proto.getRecordAt = function getRecordAt(n) {
-    if (n < 0) {
-      return this.records[this.records.length + n];
-    } else {
-      return this.records[n];
-    }
   };
 
   _proto._push = function _push(item) {
@@ -143,9 +143,15 @@ export var HistoryStack = function (_RouteStack) {
   };
 
   _proto2.findRecordByKey = function findRecordByKey(recordKey) {
-    return this.records.find(function (item) {
-      return item.recordKey === recordKey;
-    });
+    for (var i = 0, k = this.records.length; i < k; i++) {
+      var item = this.records[i];
+
+      if (item.recordKey === recordKey) {
+        return [item, i];
+      }
+    }
+
+    return undefined;
   };
 
   _proto2.destroy = function destroy() {
@@ -236,52 +242,103 @@ export var RootStack = function (_RouteStack2) {
     return backSteps;
   };
 
-  _proto3.testBack = function testBack(delta, rootOnly) {
-    var overflow = false;
-    var record;
-    var steps = [0, 0];
+  _proto3.testBack = function testBack(stepOrKey, rootOnly) {
+    if (typeof stepOrKey === 'string') {
+      return this.findRecordByKey(stepOrKey);
+    }
+
+    var delta = stepOrKey;
+
+    if (delta === 0) {
+      var record = this.getCurrentItem().getCurrentItem();
+      return {
+        record: record,
+        overflow: false,
+        index: [0, 0]
+      };
+    }
 
     if (rootOnly) {
-      if (delta < this.records.length) {
-        record = this.getRecordAt(delta).getCurrentItem();
-        steps[0] = delta;
-      } else {
-        record = this.getRecordAt(-1).getCurrentItem();
-        overflow = true;
-      }
-    } else {
-      var _this$countBack = this.countBack(delta),
-          rootDelta = _this$countBack[0],
-          recordDelta = _this$countBack[1];
+      if (delta < 0 || delta >= this.records.length) {
+        var _record = this.getEarliestItem().getCurrentItem();
 
-      if (rootDelta < this.records.length) {
-        record = this.getRecordAt(rootDelta).getRecordAt(recordDelta);
-        steps[0] = rootDelta;
-        steps[1] = recordDelta;
+        return {
+          record: _record,
+          overflow: !(delta < 0),
+          index: [this.records.length - 1, 0]
+        };
       } else {
-        record = this.getRecordAt(-1).getRecordAt(-1);
-        overflow = true;
+        var _record2 = this.getItemAt(delta).getCurrentItem();
+
+        return {
+          record: _record2,
+          overflow: false,
+          index: [delta, 0]
+        };
       }
     }
 
-    return {
-      record: record,
-      overflow: overflow,
-      steps: steps
-    };
+    if (delta < 0) {
+      var _historyStack2 = this.getEarliestItem();
+
+      var _record3 = _historyStack2.getEarliestItem();
+
+      return {
+        record: _record3,
+        overflow: false,
+        index: [this.records.length - 1, _historyStack2.records.length - 1]
+      };
+    }
+
+    var _this$countBack = this.countBack(delta),
+        rootDelta = _this$countBack[0],
+        recordDelta = _this$countBack[1];
+
+    if (rootDelta < this.records.length) {
+      var _record4 = this.getItemAt(rootDelta).getItemAt(recordDelta);
+
+      return {
+        record: _record4,
+        overflow: false,
+        index: [rootDelta, recordDelta]
+      };
+    } else {
+      var _historyStack3 = this.getEarliestItem();
+
+      var _record5 = _historyStack3.getEarliestItem();
+
+      return {
+        record: _record5,
+        overflow: true,
+        index: [this.records.length - 1, _historyStack3.records.length - 1]
+      };
+    }
   };
 
   _proto3.findRecordByKey = function findRecordByKey(key) {
     var arr = key.split('-');
-    var historyStack = this.records.find(function (item) {
-      return item.stackkey === arr[0];
-    });
 
-    if (historyStack) {
-      return historyStack.findRecordByKey(arr[1]);
+    for (var i = 0, k = this.records.length; i < k; i++) {
+      var _historyStack4 = this.records[i];
+
+      if (_historyStack4.stackkey === arr[0]) {
+        var item = _historyStack4.findRecordByKey(arr[1]);
+
+        if (item) {
+          return {
+            record: item[0],
+            index: [i, item[1]],
+            overflow: false
+          };
+        }
+      }
     }
 
-    return undefined;
+    return {
+      record: this.getCurrentItem().getCurrentItem(),
+      index: [0, 0],
+      overflow: true
+    };
   };
 
   return RootStack;

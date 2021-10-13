@@ -4,7 +4,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 exports.__esModule = true;
 exports.getTabPages = getTabPages;
-exports.routeENV = exports.tabPages = exports.eventBus = void 0;
+exports.taroHistory = exports.tabPages = exports.eventBus = void 0;
 
 var _taro = _interopRequireDefault(require("@tarojs/taro"));
 
@@ -98,7 +98,7 @@ function patchPageOptions(pageOptions) {
   };
 }
 
-var routeENV = {
+var taroHistory = {
   reLaunch: _taro.default.reLaunch,
   redirectTo: _taro.default.redirectTo,
   navigateTo: _taro.default.navigateTo,
@@ -135,12 +135,12 @@ var routeENV = {
     });
   }
 };
-exports.routeENV = routeENV;
+exports.taroHistory = taroHistory;
 
 if (process.env.TARO_ENV === 'h5') {
   var taroRouter = require('@tarojs/router');
 
-  routeENV.getLocation = function () {
+  taroHistory.getLocation = function () {
     var _taroRouter$history$l = taroRouter.history.location,
         pathname = _taroRouter$history$l.pathname,
         search = _taroRouter$history$l.search;
@@ -150,7 +150,7 @@ if (process.env.TARO_ENV === 'h5') {
     };
   };
 
-  routeENV.onRouteChange = function (callback) {
+  taroHistory.onRouteChange = function (callback) {
     var unhandle = taroRouter.history.listen(function (_ref) {
       var location = _ref.location,
           action = _ref.action;

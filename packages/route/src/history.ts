@@ -2,7 +2,7 @@ import {env, IStore, forkStore} from '@elux/core';
 import {routeMeta, RouteState} from './basic';
 import {ILocationTransform} from './transform';
 class RouteStack<T extends {destroy?: () => void}> {
-  protected records: T[] = [];
+  public records: T[] = [];
   constructor(protected limit: number) {}
 
   startup(record: T): void {
@@ -11,19 +11,25 @@ class RouteStack<T extends {destroy?: () => void}> {
   getCurrentItem(): T {
     return this.records[0];
   }
+  getEarliestItem(): T {
+    return this.records[this.records.length - 1];
+  }
+  getItemAt(n: number): T | undefined {
+    return this.records[n];
+  }
   getItems(): T[] {
     return [...this.records];
   }
   getLength(): number {
     return this.records.length;
   }
-  getRecordAt(n: number): T | undefined {
-    if (n < 0) {
-      return this.records[this.records.length + n];
-    } else {
-      return this.records[n];
-    }
-  }
+  // getRecordAt(n: number): T | undefined {
+  //   if (n < 0) {
+  //     return this.records[this.records.length + n];
+  //   } else {
+  //     return this.records[n];
+  //   }
+  // }
   protected _push(item: T): void {
     const records = this.records;
     records.unshift(item);
@@ -110,8 +116,14 @@ export class HistoryStack extends RouteStack<HistoryRecord> {
     this._relaunch(newRecord);
     return newRecord;
   }
-  findRecordByKey(recordKey: string): HistoryRecord | undefined {
-    return this.records.find((item) => item.recordKey === recordKey);
+  findRecordByKey(recordKey: string): [HistoryRecord, number] | undefined {
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const item = this.records[i];
+      if (item.recordKey === recordKey) {
+        return [item, i];
+      }
+    }
+    return undefined;
   }
   destroy(): void {
     this.store.destroy();
@@ -168,37 +180,50 @@ export class RootStack extends RouteStack<HistoryStack> {
     }
     return backSteps;
   }
-  testBack(delta: number, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; steps: [number, number]} {
-    let overflow = false;
-    let record: HistoryRecord;
-    const steps: [number, number] = [0, 0];
+  testBack(stepOrKey: number | string, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
+    if (typeof stepOrKey === 'string') {
+      return this.findRecordByKey(stepOrKey);
+    }
+    const delta = stepOrKey;
+    if (delta === 0) {
+      const record = this.getCurrentItem().getCurrentItem();
+      return {record, overflow: false, index: [0, 0]};
+    }
     if (rootOnly) {
-      if (delta < this.records.length) {
-        record = this.getRecordAt(delta)!.getCurrentItem();
-        steps[0] = delta;
+      if (delta < 0 || delta >= this.records.length) {
+        const record = this.getEarliestItem().getCurrentItem();
+        return {record, overflow: !(delta < 0), index: [this.records.length - 1, 0]};
       } else {
-        record = this.getRecordAt(-1)!.getCurrentItem();
-        overflow = true;
+        const record = this.getItemAt(delta)!.getCurrentItem();
+        return {record, overflow: false, index: [delta, 0]};
       }
+    }
+    if (delta < 0) {
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {record, overflow: false, index: [this.records.length - 1, historyStack.records.length - 1]};
+    }
+    const [rootDelta, recordDelta] = this.countBack(delta);
+    if (rootDelta < this.records.length) {
+      const record = this.getItemAt(rootDelta)!.getItemAt(recordDelta)!;
+      return {record, overflow: false, index: [rootDelta, recordDelta]};
     } else {
-      const [rootDelta, recordDelta] = this.countBack(delta);
-      if (rootDelta < this.records.length) {
-        record = this.getRecordAt(rootDelta)!.getRecordAt(recordDelta)!;
-        steps[0] = rootDelta;
-        steps[1] = recordDelta;
-      } else {
-        record = this.getRecordAt(-1)!.getRecordAt(-1)!;
-        overflow = true;
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {record, overflow: true, index: [this.records.length - 1, historyStack.records.length - 1]};
+    }
+  }
+  findRecordByKey(key: string): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
+    const arr = key.split('-');
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const historyStack = this.records[i];
+      if (historyStack.stackkey === arr[0]) {
+        const item = historyStack.findRecordByKey(arr[1]);
+        if (item) {
+          return {record: item[0], index: [i, item[1]], overflow: false};
+        }
       }
     }
-    return {record, overflow, steps};
-  }
-  findRecordByKey(key: string): HistoryRecord | undefined {
-    const arr = key.split('-');
-    const historyStack = this.records.find((item) => item.stackkey === arr[0]);
-    if (historyStack) {
-      return historyStack.findRecordByKey(arr[1]);
-    }
-    return undefined;
+    return {record: this.getCurrentItem().getCurrentItem(), index: [0, 0], overflow: true};
   }
 }
