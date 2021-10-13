@@ -7541,8 +7541,6 @@ class BrowserNativeRouter extends BaseNativeRouter {
   push(location, key) {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;
@@ -7551,8 +7549,6 @@ class BrowserNativeRouter extends BaseNativeRouter {
   replace(location, key) {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;
@@ -7561,8 +7557,6 @@ class BrowserNativeRouter extends BaseNativeRouter {
   relaunch(location, key) {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;
@@ -7571,8 +7565,6 @@ class BrowserNativeRouter extends BaseNativeRouter {
   back(location, index, key) {
     if (!env.isServer) {
       this._history.replace(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;

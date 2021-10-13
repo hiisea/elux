@@ -39,32 +39,6 @@ export class BrowserNativeRouter extends BaseNativeRouter {
 
   constructor(public _history: IHistory) {
     super();
-    //   this._unlistenHistory = this.history.block((location, action) => {
-    //     const {pathname = '', search = '', hash = ''} = location;
-    //     const url = [pathname, search, hash].join('');
-    //     const key = this.getKey(location);
-    //     const changed = this.onChange(key);
-    //     if (changed) {
-    //       let index = 0;
-    //       let callback: () => void;
-    //       if (action === 'POP') {
-    //         index = this.router.getHistory(routeConfig.notifyNativeRouter.root).findIndex(key);
-    //       }
-    //       if (index > 0) {
-    //         callback = () => this.router.back(index, routeConfig.notifyNativeRouter.root);
-    //       } else if (action === 'REPLACE') {
-    //         callback = () => this.router.replace(url, routeConfig.notifyNativeRouter.root);
-    //       } else if (action === 'PUSH') {
-    //         callback = () => this.router.push(url, routeConfig.notifyNativeRouter.root);
-    //       } else {
-    //         callback = () => this.router.relaunch(url, routeConfig.notifyNativeRouter.root);
-    //       }
-    //       callback && env.setTimeout(callback, 50);
-    //       return false;
-    //     }
-    //     return undefined;
-    //   });
-    // }
     const {root, internal} = routeConfig.notifyNativeRouter;
     if (root || internal) {
       this._unlistenHistory = this._history.block((locationData, action) => {
@@ -73,35 +47,14 @@ export class BrowserNativeRouter extends BaseNativeRouter {
           env.setTimeout(() => this.eluxRouter.back(1), 100);
           return false;
         }
-        // const key = this.getKey(locationData);
-        // const changed = this.onChange(key);
-        // if (changed) {
-        //   const {pathname = '', search = ''} = locationData;
-        //   const url = ['n:/', pathname, search].join('');
-        //   let callback: () => void;
-        //   if (action === 'REPLACE') {
-        //     callback = () => this.eluxRouter.replace(url);
-        //   } else if (action === 'PUSH') {
-        //     callback = () => this.eluxRouter.push(url);
-        //   } else {
-        //     callback = () => this.eluxRouter.relaunch(url);
-        //   }
-        //   env.setTimeout(callback, 100);
-        //   return false;
-        // }
         return undefined;
       });
     }
   }
 
-  // private getKey(locationData: LocationData): string {
-  //   return locationData.state || '';
-  // }
-
   protected push(location: ILocationTransform, key: string): void | true | Promise<void> {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-      return true;
     }
     return undefined;
   }
@@ -109,7 +62,6 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   protected replace(location: ILocationTransform, key: string): void | true | Promise<void> {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-      return true;
     }
     return undefined;
   }
@@ -117,18 +69,13 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   protected relaunch(location: ILocationTransform, key: string): void | true | Promise<void> {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-      return true;
     }
     return undefined;
   }
 
-  // 只有当native不处理时返回undefined，否则必须返回true，返回undefined会导致不依赖onChange来关闭task
-  // history.go会触发onChange，所以必须返回true
   protected back(location: ILocationTransform, index: [number, number], key: string): void | true | Promise<void> {
     if (!env.isServer) {
-      // this.history.go(-n);
       this._history.replace(location.getNativeUrl(true));
-      return true;
     }
     return undefined;
   }

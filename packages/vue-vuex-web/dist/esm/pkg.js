@@ -6911,8 +6911,6 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.push = function push(location, key) {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;
@@ -6921,8 +6919,6 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.replace = function replace(location, key) {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;
@@ -6931,8 +6927,6 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.relaunch = function relaunch(location, key) {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;
@@ -6941,8 +6935,6 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.back = function back(location, index, key) {
     if (!env.isServer) {
       this._history.replace(location.getNativeUrl(true));
-
-      return true;
     }
 
     return undefined;
