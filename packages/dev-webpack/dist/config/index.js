@@ -122,7 +122,7 @@ function build(projEnvName, port) {
     fs_extra_1.default.emptyDirSync(distPath);
     fs_extra_1.default.copySync(publicPath, distPath, { dereference: true });
     if (fs_extra_1.default.existsSync(envPath)) {
-        fs_extra_1.default.copySync(envPath, distPath, { dereference: true });
+        fs_extra_1.default.copySync(envPath, distPath, { dereference: true, filter: () => true });
     }
     fs_extra_1.default.outputFileSync(path_1.default.join(distPath, 'config.js'), `module.exports = ${JSON.stringify({ projectType, port: serverPort, proxy: apiProxy, clientGlobalVar, serverGlobalVar }, null, 4)}`);
     const webpackCompiler = useSSR ? webpack_1.default([clientWebpackConfig, serverWebpackConfig]) : webpack_1.default(clientWebpackConfig);

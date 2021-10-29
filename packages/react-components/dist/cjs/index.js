@@ -1,9 +1,9 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.reactComponentsConfig = exports.setReactComponentsConfig = exports.useRouter = exports.Router = exports.Page = exports.loadComponent = exports.Link = exports.Switch = exports.Else = exports.DocumentHead = void 0;
+exports.useRouter = exports.setReactComponentsConfig = exports.reactComponentsConfig = exports.loadComponent = exports.Switch = exports.Router = exports.Page = exports.Link = exports.Else = exports.DocumentHead = void 0;
 
 var _DocumentHead = _interopRequireDefault(require("./DocumentHead"));
 

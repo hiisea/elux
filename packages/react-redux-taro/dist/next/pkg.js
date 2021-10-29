@@ -1,7 +1,7 @@
-import Taro from '@tarojs/taro';
-import React, { useContext, useEffect, useState, useRef, memo, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import React, { useContext, useEffect, useCallback, memo, Component as Component$3, useLayoutEffect, useMemo, useReducer, useRef, useDebugValue } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
+import Taro from '@tarojs/taro';
 
 function _defineProperty(obj, key, value) {
   if (key in obj) {
@@ -110,9 +110,17 @@ class MultipleDispatcher {
     const listenerMap = this.listenerMap[name];
 
     if (listenerMap) {
-      Object.keys(listenerMap).forEach(id => {
-        listenerMap[id](data);
+      let hasPromise = false;
+      const arr = Object.keys(listenerMap).map(id => {
+        const result = listenerMap[id](data);
+
+        if (!hasPromise && isPromise(result)) {
+          hasPromise = true;
+        }
+
+        return result;
       });
+      return hasPromise ? Promise.all(arr) : undefined;
     }
   }
 
@@ -465,10 +473,12 @@ function exportModule(moduleName, ModuleHandlers, params, components) {
       const {
         latestState
       } = store.router;
-      const moduleHandles = new ModuleHandlers(moduleName, store, latestState);
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
-      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
 
     return undefined;
@@ -489,10 +499,12 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
       const {
         latestState
       } = store.router;
-      const moduleHandles = new ModuleHandlers(moduleName, store, latestState);
+      const preState = store.getState();
+      const moduleHandles = new ModuleHandlers(moduleName, store, latestState, preState);
       store.injectedModules[moduleName] = moduleHandles;
       injectActions(moduleName, moduleHandles);
-      return store.dispatch(moduleInitAction(moduleName, moduleHandles.initState));
+      const initState = moduleHandles.initState || {};
+      return store.dispatch(moduleInitAction(moduleName, coreConfig.MutableData ? deepClone(initState) : initState));
     }
 
     return undefined;
@@ -508,13 +520,13 @@ function modelHotReplacement(moduleName, ModuleHandlers) {
 
   if (MetaData.injectedModules[moduleName]) {
     MetaData.injectedModules[moduleName] = false;
-    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}), true);
+    injectActions(moduleName, new ModuleHandlers(moduleName, store, {}, {}), true);
   }
 
   const stores = MetaData.currentRouter.getStoreList();
   stores.forEach(store => {
     if (store.injectedModules[moduleName]) {
-      const ins = new ModuleHandlers(moduleName, store, {});
+      const ins = new ModuleHandlers(moduleName, store, {}, {});
       ins.initState = store.injectedModules[moduleName].initState;
       store.injectedModules[moduleName] = ins;
     }
@@ -782,7 +794,7 @@ function _arrayWithHoles(arr) {
 }
 
 function _iterableToArray(iter) {
-  if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
+  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
 
 function _arrayLikeToArray(arr, len) {
@@ -1247,14 +1259,17 @@ const routeMiddleware = ({
   getState
 }) => next => action => {
   if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes$1.MRouteChange}`) {
+    const existsModules = Object.keys(getState()).reduce((obj, moduleName) => {
+      obj[moduleName] = true;
+      return obj;
+    }, {});
     const result = next(action);
     const [routeState] = action.payload;
-    const rootState = getState();
     Object.keys(routeState.params).forEach(moduleName => {
       const moduleState = routeState.params[moduleName];
 
       if (moduleState && Object.keys(moduleState).length > 0) {
-        if (rootState[moduleName]) {
+        if (existsModules[moduleName]) {
           dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
         }
       }
@@ -1279,12 +1294,12 @@ class EmptyModuleHandlers {
 }
 let RouteModuleHandlers = _decorate(null, function (_initialize) {
   class RouteModuleHandlers {
-    constructor(moduleName, store, latestState) {
+    constructor(moduleName, store, latestState, preState) {
       _initialize(this);
 
       this.moduleName = moduleName;
       this.store = store;
-      this.initState = latestState[moduleName];
+      this.initState = preState[moduleName];
     }
 
   }
@@ -1339,6 +1354,18 @@ let CoreModuleHandlers = _decorate(null, function (_initialize2) {
         return MetaData.facadeMap[this.moduleName].actions;
       }
     }, {
+      kind: "get",
+      key: "router",
+      value: function router() {
+        return this.store.router;
+      }
+    }, {
+      kind: "method",
+      key: "getLatestState",
+      value: function getLatestState() {
+        return this.store.router.latestState;
+      }
+    }, {
       kind: "method",
       key: "getPrivateActions",
       value: function getPrivateActions(actionsMap) {
@@ -1378,7 +1405,7 @@ let CoreModuleHandlers = _decorate(null, function (_initialize2) {
       kind: "method",
       key: "dispatch",
       value: function dispatch(action) {
-        return this.store.dispatch(action);
+        return this.router.getCurrentStore().dispatch(action);
       }
     }, {
       kind: "method",
@@ -1690,15 +1717,38 @@ function initApp(router, baseStore, middlewares, appViewName, preloadComponents 
 
     return data;
   }, {});
-  const setup = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  const results = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  let setup;
+
+  if (env.isServer) {
+    setup = results.then(([modules]) => {
+      return Promise.all(modules.map(mod => mod.model(store)));
+    });
+  } else {
+    setup = results;
+  }
+
   return {
     store,
     AppView,
     setup
   };
 }
+function reinitApp(store) {
+  const {
+    moduleGetter
+  } = MetaData;
+  const preloadModules = Object.keys(store.router.routeState.params).filter(moduleName => moduleGetter[moduleName] && moduleName !== AppModuleName);
+  const {
+    AppModuleName,
+    RouteModuleName
+  } = coreConfig;
+  const appModule = getModule(AppModuleName);
+  const routeModule = getModule(RouteModuleName);
+  return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
+}
 let ForkStoreId = 0;
-function forkStore(originalStore) {
+function forkStore(originalStore, routeState) {
   const {
     builder: {
       storeCreator,
@@ -1709,23 +1759,12 @@ function forkStore(originalStore) {
     },
     router
   } = originalStore;
-  const {
-    moduleGetter
-  } = MetaData;
   const baseStore = storeCreator({ ...storeOptions,
-    initState: undefined
+    initState: {
+      [coreConfig.RouteModuleName]: routeState
+    }
   }, ++ForkStoreId);
   const store = enhanceStore(baseStore, router, middlewares);
-  const {
-    AppModuleName,
-    RouteModuleName
-  } = coreConfig;
-  const appModule = getModule(AppModuleName);
-  const routeModule = getModule(RouteModuleName);
-  const preloadModules = Object.keys(router.routeState.params).filter(moduleName => moduleGetter[moduleName] && moduleName !== AppModuleName);
-  getModuleList(preloadModules);
-  routeModule.model(store);
-  appModule.model(store);
   return store;
 }
 
@@ -1751,6 +1790,7 @@ const EluxContextComponent = React.createContext({
 });
 
 let clientTimer = 0;
+let recoverLock = false;
 
 function setClientHead(eluxContext, documentHead) {
   eluxContext.documentHead = documentHead;
@@ -1758,6 +1798,7 @@ function setClientHead(eluxContext, documentHead) {
   if (!clientTimer) {
     clientTimer = env.setTimeout(() => {
       clientTimer = 0;
+      recoverLock = false;
       const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
@@ -1767,19 +1808,26 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
+function recoverClientHead(eluxContext, documentHead) {
+  if (!recoverLock) {
+    recoverLock = true;
+    setClientHead(eluxContext, documentHead);
+  }
+}
+
 const Component$2 = ({
-  title = '',
-  html = ''
+  title,
+  html
 }) => {
+  const eluxContext = useContext(EluxContextComponent);
+
   if (!html) {
-    html = `<title>${title}</title>`;
+    html = eluxContext.documentHead || '<title>Elux</title>';
   }
 
   if (title) {
     html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
   }
-
-  const eluxContext = useContext(EluxContextComponent);
 
   if (env.isServer) {
     eluxContext.documentHead = html;
@@ -1788,7 +1836,8 @@ const Component$2 = ({
   useEffect(() => {
     const raw = eluxContext.documentHead;
     setClientHead(eluxContext, html);
-    return () => setClientHead(eluxContext, raw);
+    recoverLock = false;
+    return () => recoverClientHead(eluxContext, raw);
   }, [eluxContext, html]);
   return null;
 };
@@ -1850,26 +1899,28 @@ function _extends() {
 }
 
 var Link = React.forwardRef(({
-  onClick,
+  onClick: _onClick,
   href,
-  url,
+  route,
   root,
   action = 'push',
-  ...rest
+  ...props
 }, ref) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router;
-  const props = { ...rest,
-    onClick: event => {
-      event.preventDefault();
-      onClick && onClick(event);
-      router[action](url, root);
-    }
-  };
+  const onClick = useCallback(event => {
+    event.preventDefault();
+    _onClick && _onClick(event);
+    route && router[action](route, root);
+  }, [_onClick, action, root, route, router]);
+  props['onClick'] = onClick;
+  href && (props['href'] = href);
+  route && (props['route'] = route);
+  action && (props['action'] = action);
+  root && (props['target'] = 'root');
 
   if (href) {
     return React.createElement("a", _extends({}, props, {
-      href: href,
       ref: ref
     }));
   } else {
@@ -1879,62 +1930,14 @@ var Link = React.forwardRef(({
   }
 });
 
-const Router$1 = props => {
-  const eluxContext = useContext(EluxContextComponent);
-  const router = eluxContext.router;
-  const [classname, setClassname] = useState('elux-app');
-  const pages = [...router.getHistory(true).getPages()].reverse();
-  const containerRef = useRef(null);
-  useEffect(() => {
-    return router.addListener('change', ({
-      routeState,
-      root
-    }) => {
-      if (root) {
-        if (routeState.action === 'PUSH') {
-          setClassname('elux-app elux-animation elux-change ' + Date.now());
-          env.setTimeout(() => {
-            containerRef.current.className = 'elux-app elux-animation';
-          }, 0);
-          env.setTimeout(() => {
-            containerRef.current.className = 'elux-app';
-          }, 1000);
-        } else if (routeState.action === 'BACK') {
-          containerRef.current.className = 'elux-app elux-animation elux-change';
-          env.setTimeout(() => {
-            setClassname('elux-app ' + Date.now());
-          }, 1000);
-        } else if (routeState.action === 'RELAUNCH') {
-          setClassname('elux-app ' + Date.now());
-        }
-      }
-    });
-  }, [router]);
-  const nodes = pages.map(item => {
-    const store = item.store;
-    const page = item.page ? React.createElement(item.page, {
-      key: store.id,
-      store: store
-    }) : React.createElement(Page$1, {
-      key: store.id,
-      store: store
-    }, props.children);
-    return page;
-  });
-  return React.createElement("div", {
-    ref: containerRef,
-    className: classname
-  }, nodes);
-};
-const Page$1 = memo(function ({
+memo(function ({
   store,
-  children
+  view
 }) {
+  const View = view;
   return React.createElement(reactComponentsConfig.Provider, {
     store: store
-  }, React.createElement("div", {
-    className: "elux-page"
-  }, children));
+  }, React.createElement(View, null));
 });
 function useRouter() {
   const eluxContext = useContext(EluxContextComponent);
@@ -2060,1647 +2063,6 @@ const loadComponent = (moduleName, componentName, options = {}) => {
   });
 };
 
-const routeConfig = {
-  RouteModuleName: 'route',
-  maxHistory: 10,
-  notifyNativeRouter: {
-    root: true,
-    internal: false
-  },
-  indexUrl: ''
-};
-const setRouteConfig = buildConfigSetter(routeConfig);
-const routeMeta = {
-  defaultParams: {},
-  pagenames: {},
-  pages: {}
-};
-
-class HistoryRecord {
-  constructor(location, key, history, store) {
-    _defineProperty(this, "pagename", void 0);
-
-    _defineProperty(this, "params", void 0);
-
-    _defineProperty(this, "sub", void 0);
-
-    this.key = key;
-    this.history = history;
-    this.store = store;
-    const {
-      pagename,
-      params
-    } = location;
-    this.pagename = pagename;
-    this.params = params;
-    this.sub = new History(history);
-    this.sub.startup(this);
-  }
-
-}
-class History {
-  constructor(parent) {
-    _defineProperty(this, "records", []);
-
-    this.parent = parent;
-  }
-
-  startup(record) {
-    this.records = [record];
-  }
-
-  getRecords() {
-    return [...this.records];
-  }
-
-  getLength() {
-    return this.records.length;
-  }
-
-  getPages() {
-    return this.records.map(({
-      pagename,
-      store
-    }) => {
-      return {
-        pagename,
-        store,
-        page: routeMeta.pages[pagename]
-      };
-    });
-  }
-
-  findRecord(keyOrIndex) {
-    if (typeof keyOrIndex === 'number') {
-      if (keyOrIndex === -1) {
-        keyOrIndex = this.records.length - 1;
-      }
-
-      return this.records[keyOrIndex];
-    }
-
-    return this.records.find(item => item.key === keyOrIndex);
-  }
-
-  findIndex(key) {
-    return this.records.findIndex(item => item.key === key);
-  }
-
-  getCurrentRecord() {
-    return this.records[0].sub.records[0];
-  }
-
-  getCurrentSubHistory() {
-    return this.records[0].sub;
-  }
-
-  push(location, key) {
-    const records = this.records;
-    let store = records[0].store;
-
-    if (!this.parent) {
-      store = forkStore(store);
-    }
-
-    const newRecord = new HistoryRecord(location, key, this, store);
-    const maxHistory = routeConfig.maxHistory;
-    records.unshift(newRecord);
-    const delList = records.splice(maxHistory);
-
-    if (!this.parent) {
-      delList.forEach(item => {
-        item.store.destroy();
-      });
-    }
-  }
-
-  replace(location, key) {
-    const records = this.records;
-    const store = records[0].store;
-    const newRecord = new HistoryRecord(location, key, this, store);
-    records[0] = newRecord;
-  }
-
-  relaunch(location, key) {
-    const records = this.records;
-    const store = records[0].store;
-    const newRecord = new HistoryRecord(location, key, this, store);
-    this.records = [newRecord];
-  }
-
-  preBack(delta, overflowRedirect = false) {
-    const records = this.records.slice(delta);
-
-    if (records.length === 0) {
-      if (overflowRedirect) {
-        return undefined;
-      } else {
-        records.push(this.records.pop());
-      }
-    }
-
-    return records[0];
-  }
-
-  back(delta, overflowRedirect = false) {
-    const delList = this.records.splice(0, delta);
-
-    if (this.records.length === 0) {
-      const last = delList.pop();
-      this.records.push(last);
-    }
-
-    if (!this.parent) {
-      delList.forEach(item => {
-        item.store.destroy();
-      });
-    }
-  }
-
-}
-
-function isPlainObject$2(obj) {
-  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
-}
-
-function __extendDefault(target, def) {
-  const clone = {};
-  Object.keys(def).forEach(function (key) {
-    if (target[key] === undefined) {
-      clone[key] = def[key];
-    } else {
-      const tval = target[key];
-      const dval = def[key];
-
-      if (isPlainObject$2(tval) && isPlainObject$2(dval) && tval !== dval) {
-        clone[key] = __extendDefault(tval, dval);
-      } else {
-        clone[key] = tval;
-      }
-    }
-  });
-  return clone;
-}
-
-function extendDefault(target, def) {
-  if (!isPlainObject$2(target)) {
-    target = {};
-  }
-
-  if (!isPlainObject$2(def)) {
-    def = {};
-  }
-
-  return __extendDefault(target, def);
-}
-
-function __excludeDefault(data, def) {
-  const result = {};
-  let hasSub = false;
-  Object.keys(data).forEach(key => {
-    let value = data[key];
-    const defaultValue = def[key];
-
-    if (value !== defaultValue) {
-      if (typeof value === typeof defaultValue && isPlainObject$2(value)) {
-        value = __excludeDefault(value, defaultValue);
-      }
-
-      if (value !== undefined) {
-        hasSub = true;
-        result[key] = value;
-      }
-    }
-  });
-
-  if (hasSub) {
-    return result;
-  }
-
-  return undefined;
-}
-
-function excludeDefault(data, def, keepTopLevel) {
-  if (!isPlainObject$2(data)) {
-    return {};
-  }
-
-  if (!isPlainObject$2(def)) {
-    return data;
-  }
-
-  const filtered = __excludeDefault(data, def);
-
-  if (keepTopLevel) {
-    const result = {};
-    Object.keys(data).forEach(function (key) {
-      result[key] = filtered && filtered[key] !== undefined ? filtered[key] : {};
-    });
-    return result;
-  }
-
-  return filtered || {};
-}
-
-function __splitPrivate(data) {
-  const keys = Object.keys(data);
-
-  if (keys.length === 0) {
-    return [undefined, undefined];
-  }
-
-  let publicData;
-  let privateData;
-  keys.forEach(key => {
-    const value = data[key];
-
-    if (key.startsWith('_')) {
-      if (!privateData) {
-        privateData = {};
-      }
-
-      privateData[key] = value;
-    } else if (isPlainObject$2(value)) {
-      const [subPublicData, subPrivateData] = __splitPrivate(value);
-
-      if (subPublicData) {
-        if (!publicData) {
-          publicData = {};
-        }
-
-        publicData[key] = subPublicData;
-      }
-
-      if (subPrivateData) {
-        if (!privateData) {
-          privateData = {};
-        }
-
-        privateData[key] = subPrivateData;
-      }
-    } else {
-      if (!publicData) {
-        publicData = {};
-      }
-
-      publicData[key] = value;
-    }
-  });
-  return [publicData, privateData];
-}
-
-function splitPrivate(data, deleteTopLevel) {
-  if (!isPlainObject$2(data)) {
-    return [undefined, undefined];
-  }
-
-  const keys = Object.keys(data);
-
-  if (keys.length === 0) {
-    return [undefined, undefined];
-  }
-
-  const result = __splitPrivate(data);
-
-  let publicData = result[0];
-  const privateData = result[1];
-  keys.forEach(function (key) {
-    if (!deleteTopLevel[key]) {
-      if (!publicData) {
-        publicData = {};
-      }
-
-      if (!publicData[key]) {
-        publicData[key] = {};
-      }
-    }
-  });
-  return [publicData, privateData];
-}
-
-function assignDefaultData(data) {
-  const def = routeMeta.defaultParams;
-  return Object.keys(data).reduce((params, moduleName) => {
-    if (def[moduleName]) {
-      params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
-    }
-
-    return params;
-  }, {});
-}
-
-function splitQuery(query) {
-  if (!query) {
-    return undefined;
-  }
-
-  return query.split('&').reduce((params, str) => {
-    const sections = str.split('=');
-
-    if (sections.length > 1) {
-      const [key, ...arr] = sections;
-
-      if (!params) {
-        params = {};
-      }
-
-      params[key] = decodeURIComponent(arr.join('='));
-    }
-
-    return params;
-  }, undefined);
-}
-
-function joinQuery(params) {
-  return Object.keys(params || {}).map(key => `${key}=${encodeURIComponent(params[key])}`).join('&');
-}
-
-function isEluxLocation(data) {
-  return data['params'];
-}
-
-function nativeUrlToNativeLocation(url) {
-  if (!url) {
-    return {
-      pathname: '/',
-      searchData: undefined,
-      hashData: undefined
-    };
-  }
-
-  const arr = url.split(/[?#]/);
-
-  if (arr.length === 2 && url.indexOf('?') < 0) {
-    arr.splice(1, 0, '');
-  }
-
-  const [path, search, hash] = arr;
-  return {
-    pathname: `/${path.replace(/^\/+|\/+$/g, '')}`,
-    searchData: splitQuery(search),
-    hashData: splitQuery(hash)
-  };
-}
-function eluxUrlToEluxLocation(url) {
-  if (!url) {
-    return {
-      pathname: '/',
-      params: {}
-    };
-  }
-
-  const [pathname, ...others] = url.split('?');
-  const query = others.join('?');
-  let params = {};
-
-  if (query && query.charAt(0) === '{' && query.charAt(query.length - 1) === '}') {
-    try {
-      params = JSON.parse(query);
-    } catch (e) {
-      env.console.error(e);
-    }
-  }
-
-  return {
-    pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`,
-    params
-  };
-}
-function nativeLocationToNativeUrl({
-  pathname,
-  searchData,
-  hashData
-}) {
-  const search = joinQuery(searchData);
-  const hash = joinQuery(hashData);
-  return [`/${pathname.replace(/^\/+|\/+$/g, '')}`, search && `?${search}`, hash && `#${hash}`].join('');
-}
-function eluxLocationToEluxUrl(location) {
-  return [location.pathname, JSON.stringify(location.params || {})].join('?');
-}
-function createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename = '/404', paramsKey = '_') {
-  let pagenames = Object.keys(pagenameMap);
-  pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
-    const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-    const {
-      argsToParams,
-      paramsToArgs,
-      page
-    } = pagenameMap[pagename];
-    map[fullPagename] = {
-      argsToParams,
-      paramsToArgs
-    };
-    routeMeta.pagenames[pagename] = pagename;
-    routeMeta.pages[pagename] = page;
-    return map;
-  }, {});
-  pagenames = Object.keys(pagenameMap);
-
-  function toStringArgs(arr) {
-    return arr.map(item => {
-      if (item === null || item === undefined) {
-        return undefined;
-      }
-
-      return item.toString();
-    });
-  }
-
-  return {
-    urlToLocation(url) {
-      return this.partialLocationToLocation(this.urlToToPartialLocation(url));
-    },
-
-    urlToToPartialLocation(url) {
-      const givenLocation = this.urlToGivenLocation(url);
-
-      if (isEluxLocation(givenLocation)) {
-        return this.eluxLocationToPartialLocation(givenLocation);
-      }
-
-      return this.nativeLocationToPartialLocation(givenLocation);
-    },
-
-    urlToEluxLocation(url) {
-      const givenLocation = this.urlToGivenLocation(url);
-
-      if (isEluxLocation(givenLocation)) {
-        return givenLocation;
-      }
-
-      return this.nativeLocationToEluxLocation(givenLocation);
-    },
-
-    urlToGivenLocation(url) {
-      const [, query] = url.split('?', 2);
-
-      if (query && query.charAt(0) === '{') {
-        return eluxUrlToEluxLocation(url);
-      }
-
-      return nativeUrlToNativeLocation(url);
-    },
-
-    nativeLocationToLocation(nativeLocation) {
-      return this.partialLocationToLocation(this.nativeLocationToPartialLocation(nativeLocation));
-    },
-
-    nativeLocationToPartialLocation(nativeLocation) {
-      const eluxLocation = this.nativeLocationToEluxLocation(nativeLocation);
-      return this.eluxLocationToPartialLocation(eluxLocation);
-    },
-
-    nativeLocationToEluxLocation(nativeLocation) {
-      nativeLocation = nativeLocationMap.in(nativeLocation);
-      let searchParams;
-      let hashParams;
-
-      try {
-        searchParams = nativeLocation.searchData && nativeLocation.searchData[paramsKey] ? JSON.parse(nativeLocation.searchData[paramsKey]) : undefined;
-        hashParams = nativeLocation.hashData && nativeLocation.hashData[paramsKey] ? JSON.parse(nativeLocation.hashData[paramsKey]) : undefined;
-      } catch (e) {
-        env.console.error(e);
-      }
-
-      return {
-        pathname: nativeLocation.pathname,
-        params: deepMerge(searchParams, hashParams) || {}
-      };
-    },
-
-    eluxLocationToNativeLocation(eluxLocation) {
-      const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
-      let pagename = pagenames.find(name => pathname.startsWith(name));
-      let pathParams = {};
-
-      if (pagename) {
-        const pathArgs = pathname.replace(pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-      } else {
-        pagename = `${notfoundPagename}/`;
-
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
-      }
-
-      const result = splitPrivate(eluxLocation.params, pathParams);
-      const nativeLocation = {
-        pathname,
-        searchData: result[0] ? {
-          [paramsKey]: JSON.stringify(result[0])
-        } : undefined,
-        hashData: result[1] ? {
-          [paramsKey]: JSON.stringify(result[1])
-        } : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
-    },
-
-    eluxLocationToPartialLocation(eluxLocation) {
-      const pathname = `/${eluxLocation.pathname}/`.replace(/^\/+|\/+$/g, '/');
-      let pagename = pagenames.find(name => pathname.startsWith(name));
-      let pathParams = {};
-
-      if (pagename) {
-        const pathArgs = pathname.replace(pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-      } else {
-        pagename = `${notfoundPagename}/`;
-
-        if (pagenameMap[pagename]) {
-          pathParams = pagenameMap[pagename].argsToParams([eluxLocation.pathname]);
-        }
-      }
-
-      const params = deepMerge({}, pathParams, eluxLocation.params);
-      const modules = moduleExists();
-      Object.keys(params).forEach(moduleName => {
-        if (!modules[moduleName]) {
-          delete params[moduleName];
-        }
-      });
-      return {
-        pagename: `/${pagename.replace(/^\/+|\/+$/g, '')}`,
-        params
-      };
-    },
-
-    partialLocationToLocation(partialLocation) {
-      const {
-        pagename,
-        params
-      } = partialLocation;
-      const def = routeMeta.defaultParams;
-      const asyncLoadModules = Object.keys(params).filter(moduleName => def[moduleName] === undefined);
-      const modulesOrPromise = getModuleList(asyncLoadModules);
-
-      if (isPromise(modulesOrPromise)) {
-        return modulesOrPromise.then(modules => {
-          modules.forEach(module => {
-            def[module.moduleName] = module.params;
-          });
-          return {
-            pagename,
-            params: assignDefaultData(params)
-          };
-        });
-      }
-
-      const modules = modulesOrPromise;
-      modules.forEach(module => {
-        def[module.moduleName] = module.params;
-      });
-      return {
-        pagename,
-        params: assignDefaultData(params)
-      };
-    },
-
-    eluxLocationToLocation(eluxLocation) {
-      return this.partialLocationToLocation(this.eluxLocationToPartialLocation(eluxLocation));
-    },
-
-    partialLocationToMinData(partialLocation) {
-      let params = excludeDefault(partialLocation.params, routeMeta.defaultParams, true);
-      let pathParams;
-      let pathname;
-      const pagename = `/${partialLocation.pagename}/`.replace(/^\/+|\/+$/g, '/');
-
-      if (pagenameMap[pagename]) {
-        const pathArgs = toStringArgs(pagenameMap[pagename].paramsToArgs(params));
-        pathname = pagename + pathArgs.map(item => item ? encodeURIComponent(item) : '').join('/').replace(/\/*$/, '');
-        pathParams = pagenameMap[pagename].argsToParams(pathArgs);
-      } else {
-        pathname = pagename;
-        pathParams = {};
-      }
-
-      params = excludeDefault(params, pathParams, false);
-      return {
-        pathname: `/${pathname.replace(/^\/+|\/+$/g, '')}`,
-        params,
-        pathParams
-      };
-    },
-
-    partialLocationToEluxLocation(partialLocation) {
-      const {
-        pathname,
-        params
-      } = this.partialLocationToMinData(partialLocation);
-      return {
-        pathname,
-        params
-      };
-    },
-
-    partialLocationToNativeLocation(partialLocation) {
-      const {
-        pathname,
-        params,
-        pathParams
-      } = this.partialLocationToMinData(partialLocation);
-      const result = splitPrivate(params, pathParams);
-      const nativeLocation = {
-        pathname,
-        searchData: result[0] ? {
-          [paramsKey]: JSON.stringify(result[0])
-        } : undefined,
-        hashData: result[1] ? {
-          [paramsKey]: JSON.stringify(result[1])
-        } : undefined
-      };
-      return nativeLocationMap.out(nativeLocation);
-    }
-
-  };
-}
-
-class BaseNativeRouter {
-  constructor() {
-    _defineProperty(this, "curTask", void 0);
-
-    _defineProperty(this, "taskList", []);
-
-    _defineProperty(this, "router", null);
-  }
-
-  onChange(key) {
-    if (this.curTask) {
-      this.curTask.resolve(this.curTask.nativeData);
-      this.curTask = undefined;
-      return false;
-    }
-
-    return key !== this.router.routeState.key;
-  }
-
-  setRouter(router) {
-    this.router = router;
-  }
-
-  execute(method, getNativeData, ...args) {
-    return new Promise((resolve, reject) => {
-      const task = {
-        resolve,
-        reject,
-        nativeData: undefined
-      };
-      this.curTask = task;
-      const result = this[method](() => {
-        const nativeData = getNativeData();
-        task.nativeData = nativeData;
-        return nativeData;
-      }, ...args);
-
-      if (!result) {
-        resolve(undefined);
-        this.curTask = undefined;
-      } else if (isPromise(result)) {
-        result.catch(e => {
-          reject(e);
-          this.curTask = undefined;
-        });
-      }
-    });
-  }
-
-}
-class BaseRouter extends MultipleDispatcher {
-  constructor(url, nativeRouter, locationTransform) {
-    super();
-
-    _defineProperty(this, "_tid", 0);
-
-    _defineProperty(this, "curTask", void 0);
-
-    _defineProperty(this, "taskList", []);
-
-    _defineProperty(this, "_nativeData", void 0);
-
-    _defineProperty(this, "internalUrl", void 0);
-
-    _defineProperty(this, "routeState", void 0);
-
-    _defineProperty(this, "name", routeConfig.RouteModuleName);
-
-    _defineProperty(this, "initialize", void 0);
-
-    _defineProperty(this, "injectedModules", {});
-
-    _defineProperty(this, "history", new History(null));
-
-    _defineProperty(this, "latestState", {});
-
-    this.nativeRouter = nativeRouter;
-    this.locationTransform = locationTransform;
-    nativeRouter.setRouter(this);
-    const locationOrPromise = locationTransform.urlToLocation(url);
-
-    const callback = location => {
-      const key = this._createKey();
-
-      const routeState = { ...location,
-        action: 'RELAUNCH',
-        key
-      };
-      this.routeState = routeState;
-      this.internalUrl = eluxLocationToEluxUrl({
-        pathname: routeState.pagename,
-        params: routeState.params
-      });
-
-      if (!routeConfig.indexUrl) {
-        setRouteConfig({
-          indexUrl: this.internalUrl
-        });
-      }
-
-      this.latestState = {
-        [this.name]: routeState
-      };
-      return routeState;
-    };
-
-    if (isPromise(locationOrPromise)) {
-      this.initialize = locationOrPromise.then(callback);
-    } else {
-      this.initialize = Promise.resolve(callback(locationOrPromise));
-    }
-  }
-
-  startup(store) {
-    const historyRecord = new HistoryRecord(this.routeState, this.routeState.key, this.history, store);
-    this.history.startup(historyRecord);
-  }
-
-  getCurrentStore() {
-    return this.history.getCurrentRecord().store;
-  }
-
-  getStoreList() {
-    return this.history.getRecords().map(({
-      store
-    }) => store);
-  }
-
-  getInternalUrl() {
-    return this.internalUrl;
-  }
-
-  getNativeLocation() {
-    if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeLocation;
-  }
-
-  getNativeUrl() {
-    if (!this._nativeData) {
-      this._nativeData = this.locationToNativeData(this.routeState);
-    }
-
-    return this._nativeData.nativeUrl;
-  }
-
-  getHistory(root) {
-    return root ? this.history : this.history.getCurrentSubHistory();
-  }
-
-  getHistoryLength(root) {
-    return root ? this.history.getLength() : this.history.getCurrentSubHistory().getLength();
-  }
-
-  locationToNativeData(location) {
-    const nativeLocation = this.locationTransform.partialLocationToNativeLocation(location);
-    const nativeUrl = this.nativeLocationToNativeUrl(nativeLocation);
-    return {
-      nativeUrl,
-      nativeLocation
-    };
-  }
-
-  urlToLocation(url) {
-    return this.locationTransform.urlToLocation(url);
-  }
-
-  payloadLocationToEluxUrl(data) {
-    const eluxLocation = this.payloadToEluxLocation(data);
-    return eluxLocationToEluxUrl(eluxLocation);
-  }
-
-  payloadLocationToNativeUrl(data) {
-    const eluxLocation = this.payloadToEluxLocation(data);
-    const nativeLocation = this.locationTransform.eluxLocationToNativeLocation(eluxLocation);
-    return this.nativeLocationToNativeUrl(nativeLocation);
-  }
-
-  nativeLocationToNativeUrl(nativeLocation) {
-    return nativeLocationToNativeUrl(nativeLocation);
-  }
-
-  _createKey() {
-    this._tid++;
-    return `${this._tid}`;
-  }
-
-  payloadToEluxLocation(payload) {
-    let params = payload.params || {};
-    const extendParams = payload.extendParams === 'current' ? this.routeState.params : payload.extendParams;
-
-    if (extendParams && params) {
-      params = deepMerge({}, extendParams, params);
-    } else if (extendParams) {
-      params = extendParams;
-    }
-
-    return {
-      pathname: payload.pathname || this.routeState.pagename,
-      params
-    };
-  }
-
-  preAdditions(data) {
-    if (typeof data === 'string') {
-      if (/^[\w:]*\/\//.test(data)) {
-        this.nativeRouter.toOutside(data);
-        return null;
-      }
-
-      return this.locationTransform.urlToLocation(data);
-    }
-
-    const eluxLocation = this.payloadToEluxLocation(data);
-    return this.locationTransform.eluxLocationToLocation(eluxLocation);
-  }
-
-  relaunch(data, root = false, nativeCaller = false) {
-    this.addTask(this._relaunch.bind(this, data, root, nativeCaller));
-  }
-
-  async _relaunch(data, root, nativeCaller) {
-    const preData = await this.preAdditions(data);
-
-    if (!preData) {
-      return;
-    }
-
-    const location = preData;
-
-    const key = this._createKey();
-
-    const routeState = { ...location,
-      action: 'RELAUNCH',
-      key
-    };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    let nativeData;
-    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-    if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('relaunch', () => this.locationToNativeData(routeState), key);
-    }
-
-    this._nativeData = nativeData;
-    this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
-
-    if (root) {
-      this.history.relaunch(location, key);
-    } else {
-      this.history.getCurrentSubHistory().relaunch(location, key);
-    }
-
-    const cloneState = deepClone(routeState);
-    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
-      routeState: cloneState,
-      root
-    });
-  }
-
-  push(data, root = false, nativeCaller = false) {
-    this.addTask(this._push.bind(this, data, root, nativeCaller));
-  }
-
-  async _push(data, root, nativeCaller) {
-    const preData = await this.preAdditions(data);
-
-    if (!preData) {
-      return;
-    }
-
-    const location = preData;
-
-    const key = this._createKey();
-
-    const routeState = { ...location,
-      action: 'PUSH',
-      key
-    };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    let nativeData;
-    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-    if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('push', () => this.locationToNativeData(routeState), key);
-    }
-
-    this._nativeData = nativeData;
-    this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
-
-    if (root) {
-      this.history.push(location, key);
-    } else {
-      this.history.getCurrentSubHistory().push(location, key);
-    }
-
-    const cloneState = deepClone(routeState);
-    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
-      routeState: cloneState,
-      root
-    });
-  }
-
-  replace(data, root = false, nativeCaller = false) {
-    this.addTask(this._replace.bind(this, data, root, nativeCaller));
-  }
-
-  async _replace(data, root, nativeCaller) {
-    const preData = await this.preAdditions(data);
-
-    if (!preData) {
-      return;
-    }
-
-    const location = preData;
-
-    const key = this._createKey();
-
-    const routeState = { ...location,
-      action: 'REPLACE',
-      key
-    };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    let nativeData;
-    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-    if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('replace', () => this.locationToNativeData(routeState), key);
-    }
-
-    this._nativeData = nativeData;
-    this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
-
-    if (root) {
-      this.history.replace(location, key);
-    } else {
-      this.history.getCurrentSubHistory().replace(location, key);
-    }
-
-    const cloneState = deepClone(routeState);
-    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
-      routeState: cloneState,
-      root
-    });
-  }
-
-  back(n = 1, root = false, options, nativeCaller = false) {
-    this.addTask(this._back.bind(this, n, root, options || {}, nativeCaller));
-  }
-
-  async _back(n = 1, root, options, nativeCaller) {
-    if (n < 1) {
-      return undefined;
-    }
-
-    const didOverflowRedirect = !!options.overflowRedirect;
-    const overflowRedirectUrl = typeof options.overflowRedirect === 'string' ? options.overflowRedirect : routeConfig.indexUrl;
-    const historyRecord = root ? this.history.preBack(n, didOverflowRedirect) : this.history.getCurrentSubHistory().preBack(n, didOverflowRedirect);
-
-    if (!historyRecord) {
-      return this.relaunch(overflowRedirectUrl, root);
-    }
-
-    const {
-      key,
-      pagename
-    } = historyRecord;
-    const params = deepMerge({}, historyRecord.params, options.payload);
-    const routeState = {
-      key,
-      pagename,
-      params,
-      action: 'BACK'
-    };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
-    let nativeData;
-    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
-
-    if (!nativeCaller && notifyNativeRouter) {
-      nativeData = await this.nativeRouter.execute('back', () => this.locationToNativeData(routeState), n, key);
-    }
-
-    this._nativeData = nativeData;
-    this.routeState = routeState;
-    this.internalUrl = eluxLocationToEluxUrl({
-      pathname: routeState.pagename,
-      params: routeState.params
-    });
-
-    if (root) {
-      this.history.back(n);
-    } else {
-      this.history.getCurrentSubHistory().back(n);
-    }
-
-    const cloneState = deepClone(routeState);
-    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
-    this.dispatch('change', {
-      routeState,
-      root
-    });
-  }
-
-  taskComplete() {
-    const task = this.taskList.shift();
-
-    if (task) {
-      this.executeTask(task);
-    } else {
-      this.curTask = undefined;
-    }
-  }
-
-  executeTask(task) {
-    this.curTask = task;
-    task().finally(this.taskComplete.bind(this));
-  }
-
-  addTask(task) {
-    if (this.curTask) {
-      this.taskList.push(task);
-    } else {
-      this.executeTask(task);
-    }
-  }
-
-  destroy() {
-    this.nativeRouter.destroy();
-  }
-
-}
-const RouteActionTypes = {
-  TestRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}TestRouteChange`,
-  BeforeRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}BeforeRouteChange`
-};
-function beforeRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.BeforeRouteChange,
-    payload: [routeState]
-  };
-}
-function testRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
-  };
-}
-const defaultNativeLocationMap = {
-  in(nativeLocation) {
-    return nativeLocation;
-  },
-
-  out(nativeLocation) {
-    return nativeLocation;
-  }
-
-};
-function createRouteModule(moduleName, pagenameMap, nativeLocationMap = defaultNativeLocationMap, notfoundPagename = '/404', paramsKey = '_') {
-  const locationTransform = createLocationTransform(pagenameMap, nativeLocationMap, notfoundPagename, paramsKey);
-  const routeModule = exportModule(moduleName, RouteModuleHandlers, {}, {});
-  return { ...routeModule,
-    locationTransform
-  };
-}
-
-const appMeta = {
-  router: null,
-  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
-};
-const appConfig = {
-  loadComponent: null,
-  useRouter: null,
-  useStore: null
-};
-const setAppConfig = buildConfigSetter(appConfig);
-function setUserConfig(conf) {
-  setCoreConfig(conf);
-  setRouteConfig(conf);
-}
-function createBaseMP(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render() {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          const baseStore = storeCreator(storeOptions);
-          const {
-            store
-          } = initApp(router, baseStore, middlewares);
-          const context = render(store, {
-            deps: {},
-            router,
-            documentHead: ''
-          }, ins);
-          return {
-            store,
-            context
-          };
-        }
-
-      });
-    }
-
-  };
-}
-function createBaseApp(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName = 'main'
-        } = {}) {
-          const {
-            state,
-            components = []
-          } = env[ssrKey] || {};
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-
-          if (state) {
-            storeOptions.initState = { ...storeOptions.initState,
-              ...state
-            };
-          }
-
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
-            const {
-              store,
-              AppView
-            } = initApp(router, baseStore, middlewares, viewName, components);
-            render(id, AppView, store, {
-              deps: {},
-              router,
-              documentHead: ''
-            }, !!env[ssrKey], ins);
-            return store;
-          });
-        }
-
-      });
-    }
-
-  };
-}
-function createBaseSSR(ins, createRouter, render, moduleGetter, middlewares = []) {
-  defineModuleGetter(moduleGetter);
-  const routeModule = getModule(routeConfig.RouteModuleName);
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName = 'main'
-        } = {}) {
-          const router = createRouter(routeModule.locationTransform);
-          appMeta.router = router;
-          const baseStore = storeCreator(storeOptions);
-          return router.initialize.then(() => {
-            const {
-              store,
-              AppView,
-              setup
-            } = initApp(router, baseStore, middlewares, viewName);
-            return setup.then(() => {
-              const state = store.getState();
-              const eluxContext = {
-                deps: {},
-                router,
-                documentHead: ''
-              };
-              return render(id, AppView, store, eluxContext, ins).then(html => {
-                const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-
-                if (match) {
-                  return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                    state,
-                    components: Object.keys(eluxContext.deps)
-                  })};</script>\r\n</head>`).replace(match[0], match[0] + html);
-                }
-
-                return html;
-              });
-            });
-          });
-        }
-
-      });
-    }
-
-  };
-}
-function patchActions(typeName, json) {
-  if (json) {
-    getRootModuleAPI(JSON.parse(json));
-  }
-}
-function getApp() {
-  const modules = getRootModuleAPI();
-  return {
-    GetActions: (...args) => {
-      return args.reduce((prev, moduleName) => {
-        prev[moduleName] = modules[moduleName].actions;
-        return prev;
-      }, {});
-    },
-    useRouter: appConfig.useRouter,
-    useStore: appConfig.useStore,
-    getRouter: moduleHandler => moduleHandler.router,
-    GetRouter: () => appMeta.router,
-    LoadComponent: appConfig.loadComponent,
-    Modules: modules,
-    Pagenames: routeMeta.pagenames
-  };
-}
-
-function renderToMP(store, eluxContext) {
-  const Component = ({
-    children
-  }) => React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, children);
-
-  return Component;
-}
-
-setRouteConfig({
-  notifyNativeRouter: {
-    root: true,
-    internal: false
-  }
-});
-class MPNativeRouter extends BaseNativeRouter {
-  constructor(routeENV, tabPages) {
-    super();
-
-    _defineProperty(this, "_unlistenHistory", void 0);
-
-    this.routeENV = routeENV;
-    this.tabPages = tabPages;
-    this._unlistenHistory = routeENV.onRouteChange((pathname, search, action) => {
-      const nativeUrl = [pathname, search].filter(Boolean).join('?');
-      const arr = search.match(/__key__=(\w+)/);
-      let key = arr ? arr[1] : '';
-
-      if (action === 'POP' && !key) {
-        key = this.router.getHistory(true).findRecord(-1).key;
-      }
-
-      const changed = this.onChange(key);
-
-      if (changed) {
-        let index = 0;
-
-        if (action === 'POP') {
-          index = this.router.getHistory(true).findIndex(key);
-        }
-
-        if (index > 0) {
-          this.router.back(index, routeConfig.notifyNativeRouter.root, {
-            overflowRedirect: true
-          }, true);
-        } else if (action === 'REPLACE') {
-          this.router.replace(nativeUrl, routeConfig.notifyNativeRouter.root, true);
-        } else if (action === 'PUSH') {
-          this.router.push(nativeUrl, routeConfig.notifyNativeRouter.root, true);
-        } else {
-          this.router.relaunch(nativeUrl, routeConfig.notifyNativeRouter.root, true);
-        }
-      }
-    });
-  }
-
-  getLocation() {
-    return this.routeENV.getLocation();
-  }
-
-  toUrl(url, key) {
-    return url.indexOf('?') > -1 ? `${url}&__key__=${key}` : `${url}?__key__=${key}`;
-  }
-
-  push(getNativeData, key) {
-    const nativeData = getNativeData();
-
-    if (this.tabPages[nativeData.nativeUrl]) {
-      throw `Replacing 'push' with 'relaunch' for TabPage: ${nativeData.nativeUrl}`;
-    }
-
-    return this.routeENV.navigateTo({
-      url: this.toUrl(nativeData.nativeUrl, key)
-    }).then(() => nativeData);
-  }
-
-  replace(getNativeData, key) {
-    const nativeData = getNativeData();
-
-    if (this.tabPages[nativeData.nativeUrl]) {
-      throw `Replacing 'push' with 'relaunch' for TabPage: ${nativeData.nativeUrl}`;
-    }
-
-    return this.routeENV.redirectTo({
-      url: this.toUrl(nativeData.nativeUrl, key)
-    }).then(() => nativeData);
-  }
-
-  relaunch(getNativeData, key) {
-    const nativeData = getNativeData();
-
-    if (this.tabPages[nativeData.nativeUrl]) {
-      return this.routeENV.switchTab({
-        url: nativeData.nativeUrl
-      }).then(() => nativeData);
-    }
-
-    return this.routeENV.reLaunch({
-      url: this.toUrl(nativeData.nativeUrl, key)
-    }).then(() => nativeData);
-  }
-
-  back(getNativeData, n, key) {
-    const nativeData = getNativeData();
-    return this.routeENV.navigateBack({
-      delta: n
-    }).then(() => nativeData);
-  }
-
-  toOutside(url) {}
-
-  destroy() {
-    this._unlistenHistory();
-  }
-
-}
-class Router extends BaseRouter {
-  constructor(mpNativeRouter, locationTransform) {
-    super(nativeLocationToNativeUrl(mpNativeRouter.getLocation()), mpNativeRouter, locationTransform);
-  }
-
-}
-function createRouter(locationTransform, routeENV, tabPages) {
-  const mpNativeRouter = new MPNativeRouter(routeENV, tabPages);
-  const router = new Router(mpNativeRouter, locationTransform);
-  return router;
-}
-
-const eventBus = new SingleDispatcher();
-const tabPages = {};
-
-function routeToPathname(route) {
-  return `/${route.replace(/^\/+|\/+$/g, '')}`;
-}
-
-function queryTosearch(query = {}) {
-  const parts = [];
-  Object.keys(query).forEach(key => {
-    parts.push(`${key}=${query[key]}`);
-  });
-  return parts.join('&');
-}
-
-let prevPageInfo;
-
-function patchPageOptions(pageOptions) {
-  const onShow = pageOptions.onShow;
-
-  pageOptions.onShow = function () {
-    const arr = Taro.getCurrentPages();
-    const currentPage = arr[arr.length - 1];
-    const currentPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-
-    if (prevPageInfo) {
-      let action = 'PUSH';
-
-      if (currentPageInfo.count < prevPageInfo.count) {
-        action = 'POP';
-      } else if (currentPageInfo.count === prevPageInfo.count) {
-        if (currentPageInfo.count === 1) {
-          action = 'RELAUNCH';
-        } else {
-          action = 'REPLACE';
-        }
-      }
-
-      eventBus.dispatch({
-        pathname: currentPageInfo.pathname,
-        search: currentPageInfo.search,
-        action
-      });
-    }
-
-    return onShow == null ? void 0 : onShow.call(this);
-  };
-
-  const onHide = pageOptions.onHide;
-
-  pageOptions.onHide = function () {
-    const arr = Taro.getCurrentPages();
-    const currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onHide == null ? void 0 : onHide.call(this);
-  };
-
-  const onUnload = pageOptions.onUnload;
-
-  pageOptions.onUnload = function () {
-    const arr = Taro.getCurrentPages();
-    const currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onUnload == null ? void 0 : onUnload.call(this);
-  };
-}
-
-const routeENV = {
-  reLaunch: Taro.reLaunch,
-  redirectTo: Taro.redirectTo,
-  navigateTo: Taro.navigateTo,
-  navigateBack: Taro.navigateBack,
-  switchTab: Taro.switchTab,
-  getLocation: () => {
-    const arr = Taro.getCurrentPages();
-    let path;
-    let query;
-
-    if (arr.length === 0) {
-      ({
-        path,
-        query
-      } = Taro.getLaunchOptionsSync());
-    } else {
-      const current = arr[arr.length - 1];
-      path = current.route;
-      query = current.options;
-    }
-
-    return {
-      pathname: routeToPathname(path),
-      search: queryTosearch(query)
-    };
-  },
-
-  onRouteChange(callback) {
-    return eventBus.addListener(data => {
-      const {
-        pathname,
-        search,
-        action
-      } = data;
-      callback(pathname, search, action);
-    });
-  }
-
-};
-
-if (process.env.TARO_ENV === 'h5') {
-  const taroRouter = require('@tarojs/router');
-
-  routeENV.getLocation = () => {
-    const {
-      pathname,
-      search
-    } = taroRouter.history.location;
-    return {
-      pathname,
-      search: search.replace(/^\?/, '')
-    };
-  };
-
-  routeENV.onRouteChange = callback => {
-    const unhandle = taroRouter.history.listen(({
-      location,
-      action
-    }) => {
-      let routeAction = action;
-
-      if (action !== 'POP' && tabPages[location.pathname]) {
-        routeAction = 'RELAUNCH';
-      }
-
-      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
-    });
-    return unhandle;
-  };
-
-  Taro.onUnhandledRejection = callback => {
-    window.addEventListener('unhandledrejection', callback, false);
-  };
-
-  Taro.onError = callback => {
-    window.addEventListener('error', callback, false);
-  };
-} else {
-  if (!Taro.onUnhandledRejection) {
-    Taro.onUnhandledRejection = () => undefined;
-  }
-
-  const originalPage = Page;
-
-  Page = function (pageOptions) {
-    patchPageOptions(pageOptions);
-    return originalPage(pageOptions);
-  };
-}
-
-function getTabPages() {
-  if (env.__taroAppConfig.tabBar) {
-    env.__taroAppConfig.tabBar.list.forEach(({
-      pagePath
-    }) => {
-      tabPages[routeToPathname(pagePath)] = true;
-    });
-  }
-
-  return tabPages;
-}
-
-setAppConfig({
-  loadComponent,
-  useRouter
-});
-function setConfig(conf) {
-  setReactComponentsConfig(conf);
-  setUserConfig(conf);
-}
-setReactComponentsConfig({
-  setPageTitle: title => Taro.setNavigationBarTitle({
-    title
-  })
-});
-const createMP = (moduleGetter, middlewares) => {
-  const tabPages = getTabPages();
-  return createBaseMP({}, locationTransform => createRouter(locationTransform, routeENV, tabPages), renderToMP, moduleGetter, middlewares);
-};
-
 function createCommonjsModule(fn) {
   var module = { exports: {} };
 	return fn(module, module.exports), module.exports;
@@ -3715,48 +2077,48 @@ function createCommonjsModule(fn) {
  * LICENSE file in the root directory of this source tree.
  */
 
-var b = "function" === typeof Symbol && Symbol.for,
-    c = b ? Symbol.for("react.element") : 60103,
-    d = b ? Symbol.for("react.portal") : 60106,
-    e = b ? Symbol.for("react.fragment") : 60107,
-    f = b ? Symbol.for("react.strict_mode") : 60108,
-    g = b ? Symbol.for("react.profiler") : 60114,
-    h = b ? Symbol.for("react.provider") : 60109,
-    k = b ? Symbol.for("react.context") : 60110,
-    l = b ? Symbol.for("react.async_mode") : 60111,
-    m = b ? Symbol.for("react.concurrent_mode") : 60111,
-    n = b ? Symbol.for("react.forward_ref") : 60112,
-    p = b ? Symbol.for("react.suspense") : 60113,
-    q = b ? Symbol.for("react.suspense_list") : 60120,
-    r = b ? Symbol.for("react.memo") : 60115,
-    t = b ? Symbol.for("react.lazy") : 60116,
-    v = b ? Symbol.for("react.block") : 60121,
-    w = b ? Symbol.for("react.fundamental") : 60117,
-    x = b ? Symbol.for("react.responder") : 60118,
-    y = b ? Symbol.for("react.scope") : 60119;
+var b$1 = "function" === typeof Symbol && Symbol.for,
+    c$1 = b$1 ? Symbol.for("react.element") : 60103,
+    d$1 = b$1 ? Symbol.for("react.portal") : 60106,
+    e$1 = b$1 ? Symbol.for("react.fragment") : 60107,
+    f$1 = b$1 ? Symbol.for("react.strict_mode") : 60108,
+    g$1 = b$1 ? Symbol.for("react.profiler") : 60114,
+    h$1 = b$1 ? Symbol.for("react.provider") : 60109,
+    k$1 = b$1 ? Symbol.for("react.context") : 60110,
+    l$1 = b$1 ? Symbol.for("react.async_mode") : 60111,
+    m$1 = b$1 ? Symbol.for("react.concurrent_mode") : 60111,
+    n$1 = b$1 ? Symbol.for("react.forward_ref") : 60112,
+    p$1 = b$1 ? Symbol.for("react.suspense") : 60113,
+    q$1 = b$1 ? Symbol.for("react.suspense_list") : 60120,
+    r$1 = b$1 ? Symbol.for("react.memo") : 60115,
+    t = b$1 ? Symbol.for("react.lazy") : 60116,
+    v$1 = b$1 ? Symbol.for("react.block") : 60121,
+    w$1 = b$1 ? Symbol.for("react.fundamental") : 60117,
+    x$1 = b$1 ? Symbol.for("react.responder") : 60118,
+    y$1 = b$1 ? Symbol.for("react.scope") : 60119;
 
-function z(a) {
+function z$1(a) {
   if ("object" === typeof a && null !== a) {
     var u = a.$$typeof;
 
     switch (u) {
-      case c:
+      case c$1:
         switch (a = a.type, a) {
-          case l:
-          case m:
-          case e:
-          case g:
-          case f:
-          case p:
+          case l$1:
+          case m$1:
+          case e$1:
+          case g$1:
+          case f$1:
+          case p$1:
             return a;
 
           default:
             switch (a = a && a.$$typeof, a) {
-              case k:
-              case n:
+              case k$1:
+              case n$1:
               case t:
-              case r:
-              case h:
+              case r$1:
+              case h$1:
                 return a;
 
               default:
@@ -3765,115 +2127,115 @@ function z(a) {
 
         }
 
-      case d:
+      case d$1:
         return u;
     }
   }
 }
 
-function A(a) {
-  return z(a) === m;
+function A$1(a) {
+  return z$1(a) === m$1;
 }
 
-var AsyncMode = l;
-var ConcurrentMode = m;
-var ContextConsumer = k;
-var ContextProvider = h;
-var Element = c;
-var ForwardRef = n;
-var Fragment = e;
-var Lazy = t;
-var Memo = r;
-var Portal = d;
-var Profiler = g;
-var StrictMode = f;
-var Suspense = p;
+var AsyncMode = l$1;
+var ConcurrentMode = m$1;
+var ContextConsumer$1 = k$1;
+var ContextProvider$1 = h$1;
+var Element$1 = c$1;
+var ForwardRef$1 = n$1;
+var Fragment$1 = e$1;
+var Lazy$1 = t;
+var Memo$1 = r$1;
+var Portal$1 = d$1;
+var Profiler$1 = g$1;
+var StrictMode$1 = f$1;
+var Suspense$1 = p$1;
 
-var isAsyncMode = function (a) {
-  return A(a) || z(a) === l;
+var isAsyncMode$1 = function (a) {
+  return A$1(a) || z$1(a) === l$1;
 };
 
-var isConcurrentMode = A;
+var isConcurrentMode$1 = A$1;
 
-var isContextConsumer = function (a) {
-  return z(a) === k;
+var isContextConsumer$1 = function (a) {
+  return z$1(a) === k$1;
 };
 
-var isContextProvider = function (a) {
-  return z(a) === h;
+var isContextProvider$1 = function (a) {
+  return z$1(a) === h$1;
 };
 
-var isElement = function (a) {
-  return "object" === typeof a && null !== a && a.$$typeof === c;
+var isElement$1 = function (a) {
+  return "object" === typeof a && null !== a && a.$$typeof === c$1;
 };
 
-var isForwardRef = function (a) {
-  return z(a) === n;
+var isForwardRef$1 = function (a) {
+  return z$1(a) === n$1;
 };
 
-var isFragment = function (a) {
-  return z(a) === e;
+var isFragment$1 = function (a) {
+  return z$1(a) === e$1;
 };
 
-var isLazy = function (a) {
-  return z(a) === t;
+var isLazy$1 = function (a) {
+  return z$1(a) === t;
 };
 
-var isMemo = function (a) {
-  return z(a) === r;
+var isMemo$1 = function (a) {
+  return z$1(a) === r$1;
 };
 
-var isPortal = function (a) {
-  return z(a) === d;
+var isPortal$1 = function (a) {
+  return z$1(a) === d$1;
 };
 
-var isProfiler = function (a) {
-  return z(a) === g;
+var isProfiler$1 = function (a) {
+  return z$1(a) === g$1;
 };
 
-var isStrictMode = function (a) {
-  return z(a) === f;
+var isStrictMode$1 = function (a) {
+  return z$1(a) === f$1;
 };
 
-var isSuspense = function (a) {
-  return z(a) === p;
+var isSuspense$1 = function (a) {
+  return z$1(a) === p$1;
 };
 
-var isValidElementType = function (a) {
-  return "string" === typeof a || "function" === typeof a || a === e || a === m || a === g || a === f || a === p || a === q || "object" === typeof a && null !== a && (a.$$typeof === t || a.$$typeof === r || a.$$typeof === h || a.$$typeof === k || a.$$typeof === n || a.$$typeof === w || a.$$typeof === x || a.$$typeof === y || a.$$typeof === v);
+var isValidElementType$1 = function (a) {
+  return "string" === typeof a || "function" === typeof a || a === e$1 || a === m$1 || a === g$1 || a === f$1 || a === p$1 || a === q$1 || "object" === typeof a && null !== a && (a.$$typeof === t || a.$$typeof === r$1 || a.$$typeof === h$1 || a.$$typeof === k$1 || a.$$typeof === n$1 || a.$$typeof === w$1 || a.$$typeof === x$1 || a.$$typeof === y$1 || a.$$typeof === v$1);
 };
 
-var typeOf = z;
+var typeOf$1 = z$1;
 
-var reactIs_production_min = {
+var reactIs_production_min$1 = {
 	AsyncMode: AsyncMode,
 	ConcurrentMode: ConcurrentMode,
-	ContextConsumer: ContextConsumer,
-	ContextProvider: ContextProvider,
-	Element: Element,
-	ForwardRef: ForwardRef,
-	Fragment: Fragment,
-	Lazy: Lazy,
-	Memo: Memo,
-	Portal: Portal,
-	Profiler: Profiler,
-	StrictMode: StrictMode,
-	Suspense: Suspense,
-	isAsyncMode: isAsyncMode,
-	isConcurrentMode: isConcurrentMode,
-	isContextConsumer: isContextConsumer,
-	isContextProvider: isContextProvider,
-	isElement: isElement,
-	isForwardRef: isForwardRef,
-	isFragment: isFragment,
-	isLazy: isLazy,
-	isMemo: isMemo,
-	isPortal: isPortal,
-	isProfiler: isProfiler,
-	isStrictMode: isStrictMode,
-	isSuspense: isSuspense,
-	isValidElementType: isValidElementType,
-	typeOf: typeOf
+	ContextConsumer: ContextConsumer$1,
+	ContextProvider: ContextProvider$1,
+	Element: Element$1,
+	ForwardRef: ForwardRef$1,
+	Fragment: Fragment$1,
+	Lazy: Lazy$1,
+	Memo: Memo$1,
+	Portal: Portal$1,
+	Profiler: Profiler$1,
+	StrictMode: StrictMode$1,
+	Suspense: Suspense$1,
+	isAsyncMode: isAsyncMode$1,
+	isConcurrentMode: isConcurrentMode$1,
+	isContextConsumer: isContextConsumer$1,
+	isContextProvider: isContextProvider$1,
+	isElement: isElement$1,
+	isForwardRef: isForwardRef$1,
+	isFragment: isFragment$1,
+	isLazy: isLazy$1,
+	isMemo: isMemo$1,
+	isPortal: isPortal$1,
+	isProfiler: isProfiler$1,
+	isStrictMode: isStrictMode$1,
+	isSuspense: isSuspense$1,
+	isValidElementType: isValidElementType$1,
+	typeOf: typeOf$1
 };
 
 /** @license React v16.13.1
@@ -3885,7 +2247,7 @@ var reactIs_production_min = {
  * LICENSE file in the root directory of this source tree.
  */
 
-var reactIs_development = createCommonjsModule(function (module, exports) {
+var reactIs_development$1 = createCommonjsModule(function (module, exports) {
 
 if (process.env.NODE_ENV !== "production") {
   (function () {
@@ -4067,12 +2429,12 @@ if (process.env.NODE_ENV !== "production") {
 }
 });
 
-var reactIs = createCommonjsModule(function (module) {
+var reactIs$1 = createCommonjsModule(function (module) {
 
 if (process.env.NODE_ENV === 'production') {
-  module.exports = reactIs_production_min;
+  module.exports = reactIs_production_min$1;
 } else {
-  module.exports = reactIs_development;
+  module.exports = reactIs_development$1;
 }
 });
 
@@ -4569,7 +2931,7 @@ var factoryWithTypeCheckers = function (isValidElement, throwOnDirectAccess) {
     function validate(props, propName, componentName, location, propFullName) {
       var propValue = props[propName];
 
-      if (!reactIs.isValidElementType(propValue)) {
+      if (!reactIs$1.isValidElementType(propValue)) {
         var propType = getPropType(propValue);
         return new PropTypeError('Invalid ' + location + ' `' + propFullName + '` of type ' + ('`' + propType + '` supplied to `' + componentName + '`, expected a single ReactElement type.'));
       }
@@ -4987,7 +3349,7 @@ var factoryWithThrowingShims = function () {
 
 var propTypes = createCommonjsModule(function (module) {
 if (process.env.NODE_ENV !== 'production') {
-  var ReactIs = reactIs; // By explicitly using `prop-types` you are opting into new development behavior.
+  var ReactIs = reactIs$1; // By explicitly using `prop-types` you are opting into new development behavior.
   // http://fb.me/prop-types-in-prod
 
 
@@ -5023,10 +3385,6 @@ var getBatch = function getBatch() {
 
 // well as nesting subscriptions of descendant components, so that we can ensure the
 // ancestor components re-render before descendants
-
-var nullListeners = {
-  notify: function notify() {}
-};
 
 function createListenerCollection() {
   var batch = getBatch();
@@ -5092,54 +3450,64 @@ function createListenerCollection() {
   };
 }
 
-var Subscription = /*#__PURE__*/function () {
-  function Subscription(store, parentSub) {
-    this.store = store;
-    this.parentSub = parentSub;
-    this.unsubscribe = null;
-    this.listeners = nullListeners;
-    this.handleChangeWrapper = this.handleChangeWrapper.bind(this);
+var nullListeners = {
+  notify: function notify() {},
+  get: function get() {
+    return [];
+  }
+};
+function createSubscription(store, parentSub) {
+  var unsubscribe;
+  var listeners = nullListeners;
+
+  function addNestedSub(listener) {
+    trySubscribe();
+    return listeners.subscribe(listener);
   }
 
-  var _proto = Subscription.prototype;
+  function notifyNestedSubs() {
+    listeners.notify();
+  }
 
-  _proto.addNestedSub = function addNestedSub(listener) {
-    this.trySubscribe();
-    return this.listeners.subscribe(listener);
-  };
+  function handleChangeWrapper() {
+    if (subscription.onStateChange) {
+      subscription.onStateChange();
+    }
+  }
 
-  _proto.notifyNestedSubs = function notifyNestedSubs() {
-    this.listeners.notify();
-  };
+  function isSubscribed() {
+    return Boolean(unsubscribe);
+  }
 
-  _proto.handleChangeWrapper = function handleChangeWrapper() {
-    if (this.onStateChange) {
-      this.onStateChange();
+  function trySubscribe() {
+    if (!unsubscribe) {
+      unsubscribe = parentSub ? parentSub.addNestedSub(handleChangeWrapper) : store.subscribe(handleChangeWrapper);
+      listeners = createListenerCollection();
+    }
+  }
+
+  function tryUnsubscribe() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = undefined;
+      listeners.clear();
+      listeners = nullListeners;
+    }
+  }
+
+  var subscription = {
+    addNestedSub: addNestedSub,
+    notifyNestedSubs: notifyNestedSubs,
+    handleChangeWrapper: handleChangeWrapper,
+    isSubscribed: isSubscribed,
+    trySubscribe: trySubscribe,
+    tryUnsubscribe: tryUnsubscribe,
+    getListeners: function getListeners() {
+      return listeners;
     }
   };
-
-  _proto.isSubscribed = function isSubscribed() {
-    return Boolean(this.unsubscribe);
-  };
-
-  _proto.trySubscribe = function trySubscribe() {
-    if (!this.unsubscribe) {
-      this.unsubscribe = this.parentSub ? this.parentSub.addNestedSub(this.handleChangeWrapper) : this.store.subscribe(this.handleChangeWrapper);
-      this.listeners = createListenerCollection();
-    }
-  };
-
-  _proto.tryUnsubscribe = function tryUnsubscribe() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
-      this.unsubscribe = null;
-      this.listeners.clear();
-      this.listeners = nullListeners;
-    }
-  };
-
-  return Subscription;
-}();
+  return subscription;
+}
 
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser. We need useLayoutEffect to ensure the store
@@ -5156,7 +3524,7 @@ function Provider(_ref) {
       context = _ref.context,
       children = _ref.children;
   var contextValue = useMemo(function () {
-    var subscription = new Subscription(store);
+    var subscription = createSubscription(store);
     subscription.onStateChange = subscription.notifyNestedSubs;
     return {
       store: store,
@@ -5256,12 +3624,12 @@ var MEMO_STATICS = {
   type: true
 };
 var TYPE_STATICS = {};
-TYPE_STATICS[reactIs.ForwardRef] = FORWARD_REF_STATICS;
-TYPE_STATICS[reactIs.Memo] = MEMO_STATICS;
+TYPE_STATICS[reactIs$1.ForwardRef] = FORWARD_REF_STATICS;
+TYPE_STATICS[reactIs$1.Memo] = MEMO_STATICS;
 
 function getStatics(component) {
   // React v16.11 and below
-  if (reactIs.isMemo(component)) {
+  if (reactIs$1.isMemo(component)) {
     return MEMO_STATICS;
   } // React v16.12 and above
 
@@ -5314,6 +3682,443 @@ function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
 }
 
 var hoistNonReactStatics_cjs = hoistNonReactStatics;
+
+/** @license React v17.0.2
+ * react-is.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var b = 60103,
+    c = 60106,
+    d = 60107,
+    e = 60108,
+    f = 60114,
+    g = 60109,
+    h = 60110,
+    k = 60112,
+    l = 60113,
+    m = 60120,
+    n = 60115,
+    p = 60116,
+    q = 60121,
+    r = 60122,
+    u = 60117,
+    v = 60129,
+    w = 60131;
+
+if ("function" === typeof Symbol && Symbol.for) {
+  var x = Symbol.for;
+  b = x("react.element");
+  c = x("react.portal");
+  d = x("react.fragment");
+  e = x("react.strict_mode");
+  f = x("react.profiler");
+  g = x("react.provider");
+  h = x("react.context");
+  k = x("react.forward_ref");
+  l = x("react.suspense");
+  m = x("react.suspense_list");
+  n = x("react.memo");
+  p = x("react.lazy");
+  q = x("react.block");
+  r = x("react.server.block");
+  u = x("react.fundamental");
+  v = x("react.debug_trace_mode");
+  w = x("react.legacy_hidden");
+}
+
+function y(a) {
+  if ("object" === typeof a && null !== a) {
+    var t = a.$$typeof;
+
+    switch (t) {
+      case b:
+        switch (a = a.type, a) {
+          case d:
+          case f:
+          case e:
+          case l:
+          case m:
+            return a;
+
+          default:
+            switch (a = a && a.$$typeof, a) {
+              case h:
+              case k:
+              case p:
+              case n:
+              case g:
+                return a;
+
+              default:
+                return t;
+            }
+
+        }
+
+      case c:
+        return t;
+    }
+  }
+}
+
+var z = g,
+    A = b,
+    B = k,
+    C = d,
+    D = p,
+    E = n,
+    F = c,
+    G = f,
+    H = e,
+    I = l;
+var ContextConsumer = h;
+var ContextProvider = z;
+var Element = A;
+var ForwardRef = B;
+var Fragment = C;
+var Lazy = D;
+var Memo = E;
+var Portal = F;
+var Profiler = G;
+var StrictMode = H;
+var Suspense = I;
+
+var isAsyncMode = function () {
+  return !1;
+};
+
+var isConcurrentMode = function () {
+  return !1;
+};
+
+var isContextConsumer = function (a) {
+  return y(a) === h;
+};
+
+var isContextProvider = function (a) {
+  return y(a) === g;
+};
+
+var isElement = function (a) {
+  return "object" === typeof a && null !== a && a.$$typeof === b;
+};
+
+var isForwardRef = function (a) {
+  return y(a) === k;
+};
+
+var isFragment = function (a) {
+  return y(a) === d;
+};
+
+var isLazy = function (a) {
+  return y(a) === p;
+};
+
+var isMemo = function (a) {
+  return y(a) === n;
+};
+
+var isPortal = function (a) {
+  return y(a) === c;
+};
+
+var isProfiler = function (a) {
+  return y(a) === f;
+};
+
+var isStrictMode = function (a) {
+  return y(a) === e;
+};
+
+var isSuspense = function (a) {
+  return y(a) === l;
+};
+
+var isValidElementType = function (a) {
+  return "string" === typeof a || "function" === typeof a || a === d || a === f || a === v || a === e || a === l || a === m || a === w || "object" === typeof a && null !== a && (a.$$typeof === p || a.$$typeof === n || a.$$typeof === g || a.$$typeof === h || a.$$typeof === k || a.$$typeof === u || a.$$typeof === q || a[0] === r) ? !0 : !1;
+};
+
+var typeOf = y;
+
+var reactIs_production_min = {
+	ContextConsumer: ContextConsumer,
+	ContextProvider: ContextProvider,
+	Element: Element,
+	ForwardRef: ForwardRef,
+	Fragment: Fragment,
+	Lazy: Lazy,
+	Memo: Memo,
+	Portal: Portal,
+	Profiler: Profiler,
+	StrictMode: StrictMode,
+	Suspense: Suspense,
+	isAsyncMode: isAsyncMode,
+	isConcurrentMode: isConcurrentMode,
+	isContextConsumer: isContextConsumer,
+	isContextProvider: isContextProvider,
+	isElement: isElement,
+	isForwardRef: isForwardRef,
+	isFragment: isFragment,
+	isLazy: isLazy,
+	isMemo: isMemo,
+	isPortal: isPortal,
+	isProfiler: isProfiler,
+	isStrictMode: isStrictMode,
+	isSuspense: isSuspense,
+	isValidElementType: isValidElementType,
+	typeOf: typeOf
+};
+
+/** @license React v17.0.2
+ * react-is.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var reactIs_development = createCommonjsModule(function (module, exports) {
+
+if (process.env.NODE_ENV !== "production") {
+  (function () {
+    // When adding new symbols to this file,
+    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+    // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+    // nor polyfill, then a plain number is used for performance.
+
+    var REACT_ELEMENT_TYPE = 0xeac7;
+    var REACT_PORTAL_TYPE = 0xeaca;
+    var REACT_FRAGMENT_TYPE = 0xeacb;
+    var REACT_STRICT_MODE_TYPE = 0xeacc;
+    var REACT_PROFILER_TYPE = 0xead2;
+    var REACT_PROVIDER_TYPE = 0xeacd;
+    var REACT_CONTEXT_TYPE = 0xeace;
+    var REACT_FORWARD_REF_TYPE = 0xead0;
+    var REACT_SUSPENSE_TYPE = 0xead1;
+    var REACT_SUSPENSE_LIST_TYPE = 0xead8;
+    var REACT_MEMO_TYPE = 0xead3;
+    var REACT_LAZY_TYPE = 0xead4;
+    var REACT_BLOCK_TYPE = 0xead9;
+    var REACT_SERVER_BLOCK_TYPE = 0xeada;
+    var REACT_FUNDAMENTAL_TYPE = 0xead5;
+    var REACT_DEBUG_TRACING_MODE_TYPE = 0xeae1;
+    var REACT_LEGACY_HIDDEN_TYPE = 0xeae3;
+
+    if (typeof Symbol === 'function' && Symbol.for) {
+      var symbolFor = Symbol.for;
+      REACT_ELEMENT_TYPE = symbolFor('react.element');
+      REACT_PORTAL_TYPE = symbolFor('react.portal');
+      REACT_FRAGMENT_TYPE = symbolFor('react.fragment');
+      REACT_STRICT_MODE_TYPE = symbolFor('react.strict_mode');
+      REACT_PROFILER_TYPE = symbolFor('react.profiler');
+      REACT_PROVIDER_TYPE = symbolFor('react.provider');
+      REACT_CONTEXT_TYPE = symbolFor('react.context');
+      REACT_FORWARD_REF_TYPE = symbolFor('react.forward_ref');
+      REACT_SUSPENSE_TYPE = symbolFor('react.suspense');
+      REACT_SUSPENSE_LIST_TYPE = symbolFor('react.suspense_list');
+      REACT_MEMO_TYPE = symbolFor('react.memo');
+      REACT_LAZY_TYPE = symbolFor('react.lazy');
+      REACT_BLOCK_TYPE = symbolFor('react.block');
+      REACT_SERVER_BLOCK_TYPE = symbolFor('react.server.block');
+      REACT_FUNDAMENTAL_TYPE = symbolFor('react.fundamental');
+      symbolFor('react.scope');
+      symbolFor('react.opaque.id');
+      REACT_DEBUG_TRACING_MODE_TYPE = symbolFor('react.debug_trace_mode');
+      symbolFor('react.offscreen');
+      REACT_LEGACY_HIDDEN_TYPE = symbolFor('react.legacy_hidden');
+    } // Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
+
+
+    var enableScopeAPI = false; // Experimental Create Event Handle API.
+
+    function isValidElementType(type) {
+      if (typeof type === 'string' || typeof type === 'function') {
+        return true;
+      } // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
+
+
+      if (type === REACT_FRAGMENT_TYPE || type === REACT_PROFILER_TYPE || type === REACT_DEBUG_TRACING_MODE_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || type === REACT_LEGACY_HIDDEN_TYPE || enableScopeAPI) {
+        return true;
+      }
+
+      if (typeof type === 'object' && type !== null) {
+        if (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || type.$$typeof === REACT_FUNDAMENTAL_TYPE || type.$$typeof === REACT_BLOCK_TYPE || type[0] === REACT_SERVER_BLOCK_TYPE) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function typeOf(object) {
+      if (typeof object === 'object' && object !== null) {
+        var $$typeof = object.$$typeof;
+
+        switch ($$typeof) {
+          case REACT_ELEMENT_TYPE:
+            var type = object.type;
+
+            switch (type) {
+              case REACT_FRAGMENT_TYPE:
+              case REACT_PROFILER_TYPE:
+              case REACT_STRICT_MODE_TYPE:
+              case REACT_SUSPENSE_TYPE:
+              case REACT_SUSPENSE_LIST_TYPE:
+                return type;
+
+              default:
+                var $$typeofType = type && type.$$typeof;
+
+                switch ($$typeofType) {
+                  case REACT_CONTEXT_TYPE:
+                  case REACT_FORWARD_REF_TYPE:
+                  case REACT_LAZY_TYPE:
+                  case REACT_MEMO_TYPE:
+                  case REACT_PROVIDER_TYPE:
+                    return $$typeofType;
+
+                  default:
+                    return $$typeof;
+                }
+
+            }
+
+          case REACT_PORTAL_TYPE:
+            return $$typeof;
+        }
+      }
+
+      return undefined;
+    }
+
+    var ContextConsumer = REACT_CONTEXT_TYPE;
+    var ContextProvider = REACT_PROVIDER_TYPE;
+    var Element = REACT_ELEMENT_TYPE;
+    var ForwardRef = REACT_FORWARD_REF_TYPE;
+    var Fragment = REACT_FRAGMENT_TYPE;
+    var Lazy = REACT_LAZY_TYPE;
+    var Memo = REACT_MEMO_TYPE;
+    var Portal = REACT_PORTAL_TYPE;
+    var Profiler = REACT_PROFILER_TYPE;
+    var StrictMode = REACT_STRICT_MODE_TYPE;
+    var Suspense = REACT_SUSPENSE_TYPE;
+    var hasWarnedAboutDeprecatedIsAsyncMode = false;
+    var hasWarnedAboutDeprecatedIsConcurrentMode = false; // AsyncMode should be deprecated
+
+    function isAsyncMode(object) {
+      {
+        if (!hasWarnedAboutDeprecatedIsAsyncMode) {
+          hasWarnedAboutDeprecatedIsAsyncMode = true; // Using console['warn'] to evade Babel and ESLint
+
+          console['warn']('The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 18+.');
+        }
+      }
+      return false;
+    }
+
+    function isConcurrentMode(object) {
+      {
+        if (!hasWarnedAboutDeprecatedIsConcurrentMode) {
+          hasWarnedAboutDeprecatedIsConcurrentMode = true; // Using console['warn'] to evade Babel and ESLint
+
+          console['warn']('The ReactIs.isConcurrentMode() alias has been deprecated, ' + 'and will be removed in React 18+.');
+        }
+      }
+      return false;
+    }
+
+    function isContextConsumer(object) {
+      return typeOf(object) === REACT_CONTEXT_TYPE;
+    }
+
+    function isContextProvider(object) {
+      return typeOf(object) === REACT_PROVIDER_TYPE;
+    }
+
+    function isElement(object) {
+      return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
+    }
+
+    function isForwardRef(object) {
+      return typeOf(object) === REACT_FORWARD_REF_TYPE;
+    }
+
+    function isFragment(object) {
+      return typeOf(object) === REACT_FRAGMENT_TYPE;
+    }
+
+    function isLazy(object) {
+      return typeOf(object) === REACT_LAZY_TYPE;
+    }
+
+    function isMemo(object) {
+      return typeOf(object) === REACT_MEMO_TYPE;
+    }
+
+    function isPortal(object) {
+      return typeOf(object) === REACT_PORTAL_TYPE;
+    }
+
+    function isProfiler(object) {
+      return typeOf(object) === REACT_PROFILER_TYPE;
+    }
+
+    function isStrictMode(object) {
+      return typeOf(object) === REACT_STRICT_MODE_TYPE;
+    }
+
+    function isSuspense(object) {
+      return typeOf(object) === REACT_SUSPENSE_TYPE;
+    }
+
+    exports.ContextConsumer = ContextConsumer;
+    exports.ContextProvider = ContextProvider;
+    exports.Element = Element;
+    exports.ForwardRef = ForwardRef;
+    exports.Fragment = Fragment;
+    exports.Lazy = Lazy;
+    exports.Memo = Memo;
+    exports.Portal = Portal;
+    exports.Profiler = Profiler;
+    exports.StrictMode = StrictMode;
+    exports.Suspense = Suspense;
+    exports.isAsyncMode = isAsyncMode;
+    exports.isConcurrentMode = isConcurrentMode;
+    exports.isContextConsumer = isContextConsumer;
+    exports.isContextProvider = isContextProvider;
+    exports.isElement = isElement;
+    exports.isForwardRef = isForwardRef;
+    exports.isFragment = isFragment;
+    exports.isLazy = isLazy;
+    exports.isMemo = isMemo;
+    exports.isPortal = isPortal;
+    exports.isProfiler = isProfiler;
+    exports.isStrictMode = isStrictMode;
+    exports.isSuspense = isSuspense;
+    exports.isValidElementType = isValidElementType;
+    exports.typeOf = typeOf;
+  })();
+}
+});
+
+var reactIs = createCommonjsModule(function (module) {
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = reactIs_production_min;
+} else {
+  module.exports = reactIs_development;
+}
+});
+
+var _excluded$2 = ["getDisplayName", "methodName", "renderCountProp", "shouldHandleStateChanges", "storeKey", "withRef", "forwardRef", "context"],
+    _excluded2 = ["reactReduxForwardedRef"];
 
 var EMPTY_ARRAY = [];
 var NO_SUBSCRIPTION_ARRAY = [null, null];
@@ -5435,14 +4240,14 @@ function connectAdvanced(
 /*
   selectorFactory is a func that is responsible for returning the selector function used to
   compute new props from state, props, and dispatch. For example:
-      export default connectAdvanced((dispatch, options) => (state, props) => ({
+     export default connectAdvanced((dispatch, options) => (state, props) => ({
       thing: state.things[props.thingId],
       saveThing: fields => dispatch(actionCreators.saveThing(props.thingId, fields)),
     }))(YourComponent)
-    Access to dispatch is provided to the factory so selectorFactories can bind actionCreators
+   Access to dispatch is provided to the factory so selectorFactories can bind actionCreators
   outside of their selector as an optimization. Options passed to connectAdvanced are passed to
   the selectorFactory, along with displayName and WrappedComponent, as the second argument.
-    Note that selectorFactory is responsible for all caching/memoization of inbound and outbound
+   Note that selectorFactory is responsible for all caching/memoization of inbound and outbound
   props. Do not use connectAdvanced directly without memoizing results between calls to your
   selector, otherwise the Connect component will re-render on every state or props change.
 */
@@ -5471,7 +4276,7 @@ _ref) {
       forwardRef = _ref2$forwardRef === void 0 ? false : _ref2$forwardRef,
       _ref2$context = _ref2.context,
       context = _ref2$context === void 0 ? ReactReduxContext : _ref2$context,
-      connectOptions = _objectWithoutPropertiesLoose(_ref2, ["getDisplayName", "methodName", "renderCountProp", "shouldHandleStateChanges", "storeKey", "withRef", "forwardRef", "context"]);
+      connectOptions = _objectWithoutPropertiesLoose(_ref2, _excluded$2);
 
   if (process.env.NODE_ENV !== 'production') {
     if (renderCountProp !== undefined) {
@@ -5528,7 +4333,7 @@ _ref) {
         // and values needed to control behavior (forwarded refs, alternate context instances).
         // To maintain the wrapperProps object reference, memoize this destructuring.
         var reactReduxForwardedRef = props.reactReduxForwardedRef,
-            wrapperProps = _objectWithoutPropertiesLoose(props, ["reactReduxForwardedRef"]);
+            wrapperProps = _objectWithoutPropertiesLoose(props, _excluded2);
 
         return [props.context, reactReduxForwardedRef, wrapperProps];
       }, [props]),
@@ -5564,8 +4369,14 @@ _ref) {
       var _useMemo2 = useMemo(function () {
         if (!shouldHandleStateChanges) return NO_SUBSCRIPTION_ARRAY; // This Subscription's source should match where store came from: props vs. context. A component
         // connected to the store via props shouldn't use subscription from context, or vice versa.
+        // This Subscription's source should match where store came from: props vs. context. A component
+        // connected to the store via props shouldn't use subscription from context, or vice versa.
 
-        var subscription = new Subscription(store, didStoreComeFromProps ? null : contextValue.subscription); // `notifyNestedSubs` is duplicated to handle the case where the component is unmounted in
+        var subscription = createSubscription(store, didStoreComeFromProps ? null : contextValue.subscription); // `notifyNestedSubs` is duplicated to handle the case where the component is unmounted in
+        // the middle of the notification loop, where `subscription` will then be null. This can
+        // probably be avoided if Subscription's listeners logic is changed to not call listeners
+        // that have been unsubscribed in the  middle of the notification loop.
+        // `notifyNestedSubs` is duplicated to handle the case where the component is unmounted in
         // the middle of the notification loop, where `subscription` will then be null. This can
         // probably be avoided if Subscription's listeners logic is changed to not call listeners
         // that have been unsubscribed in the  middle of the notification loop.
@@ -5728,7 +4539,7 @@ function bindActionCreators(actionCreators, dispatch) {
  * @param {any} obj The object to inspect.
  * @returns {boolean} True if the argument appears to be a plain object.
  */
-function isPlainObject$1(obj) {
+function isPlainObject$2(obj) {
   if (typeof obj !== 'object' || obj === null) return false;
   var proto = Object.getPrototypeOf(obj);
   if (proto === null) return true;
@@ -5767,7 +4578,7 @@ function warning$1(message) {
 }
 
 function verifyPlainObject(value, displayName, methodName) {
-  if (!isPlainObject$1(value)) {
+  if (!isPlainObject$2(value)) {
     warning$1(methodName + "() in " + displayName + " must return a plain object. Instead received " + value + ".");
   }
 }
@@ -5914,6 +4725,7 @@ function verifySubselectors(mapStateToProps, mapDispatchToProps, mergeProps, dis
   verify(mergeProps, 'mergeProps', displayName);
 }
 
+var _excluded$1 = ["initMapStateToProps", "initMapDispatchToProps", "initMergeProps"];
 function impureFinalPropsSelectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch) {
   return function impureFinalPropsSelector(state, ownProps) {
     return mergeProps(mapStateToProps(state, ownProps), mapDispatchToProps(dispatch, ownProps), ownProps);
@@ -5986,7 +4798,7 @@ function finalPropsSelectorFactory(dispatch, _ref2) {
   var initMapStateToProps = _ref2.initMapStateToProps,
       initMapDispatchToProps = _ref2.initMapDispatchToProps,
       initMergeProps = _ref2.initMergeProps,
-      options = _objectWithoutPropertiesLoose(_ref2, ["initMapStateToProps", "initMapDispatchToProps", "initMergeProps"]);
+      options = _objectWithoutPropertiesLoose(_ref2, _excluded$1);
 
   var mapStateToProps = initMapStateToProps(dispatch, options);
   var mapDispatchToProps = initMapDispatchToProps(dispatch, options);
@@ -6000,6 +4812,7 @@ function finalPropsSelectorFactory(dispatch, _ref2) {
   return selectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch, options);
 }
 
+var _excluded = ["pure", "areStatesEqual", "areOwnPropsEqual", "areStatePropsEqual", "areMergedPropsEqual"];
 /*
   connect is a facade over connectAdvanced. It turns its args into a compatible
   selectorFactory, which has the signature:
@@ -6063,7 +4876,7 @@ function createConnect(_temp) {
         areStatePropsEqual = _ref3$areStatePropsEq === void 0 ? shallowEqual : _ref3$areStatePropsEq,
         _ref3$areMergedPropsE = _ref3.areMergedPropsEqual,
         areMergedPropsEqual = _ref3$areMergedPropsE === void 0 ? shallowEqual : _ref3$areMergedPropsE,
-        extraOptions = _objectWithoutPropertiesLoose(_ref3, ["pure", "areStatesEqual", "areOwnPropsEqual", "areStatePropsEqual", "areMergedPropsEqual"]);
+        extraOptions = _objectWithoutPropertiesLoose(_ref3, _excluded);
 
     var initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps');
     var initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps');
@@ -6169,7 +4982,7 @@ function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contex
       forceRender = _useReducer[1];
 
   var subscription = useMemo(function () {
-    return new Subscription(store, contextSub);
+    return createSubscription(store, contextSub);
   }, [store, contextSub]);
   var latestSubscriptionCallbackError = useRef();
   var latestSelector = useRef();
@@ -6207,7 +5020,11 @@ function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contex
   useIsomorphicLayoutEffect(function () {
     function checkForUpdates() {
       try {
-        var newStoreState = store.getState();
+        var newStoreState = store.getState(); // Avoid calling selector multiple times if the store's state has not changed
+
+        if (newStoreState === latestStoreState.current) {
+          return;
+        }
 
         var _newSelectedState = latestSelector.current(newStoreState);
 
@@ -6307,6 +5124,8 @@ function createSelectorHook(context) {
 
 var useSelector = /*#__PURE__*/createSelectorHook();
 
+// with standard React renderers (ReactDOM, React Native)
+
 setBatch(unstable_batchedUpdates);
 
 function ownKeys(object, enumerableOnly) {
@@ -6314,9 +5133,13 @@ function ownKeys(object, enumerableOnly) {
 
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
     keys.push.apply(keys, symbols);
   }
 
@@ -6383,7 +5206,7 @@ var ActionTypes = {
  * @returns {boolean} True if the argument appears to be a plain object.
  */
 
-function isPlainObject(obj) {
+function isPlainObject$1(obj) {
   if (typeof obj !== 'object' || obj === null) return false;
   var proto = obj;
 
@@ -6392,61 +5215,61 @@ function isPlainObject(obj) {
   }
 
   return Object.getPrototypeOf(obj) === proto;
+} // Inlined / shortened version of `kindOf` from https://github.com/jonschlinkert/kind-of
+
+
+function miniKindOf(val) {
+  if (val === void 0) return 'undefined';
+  if (val === null) return 'null';
+  var type = typeof val;
+
+  switch (type) {
+    case 'boolean':
+    case 'string':
+    case 'number':
+    case 'symbol':
+    case 'function':
+      {
+        return type;
+      }
+  }
+
+  if (Array.isArray(val)) return 'array';
+  if (isDate(val)) return 'date';
+  if (isError(val)) return 'error';
+  var constructorName = ctorName(val);
+
+  switch (constructorName) {
+    case 'Symbol':
+    case 'Promise':
+    case 'WeakMap':
+    case 'WeakSet':
+    case 'Map':
+    case 'Set':
+      return constructorName;
+  } // other
+
+
+  return type.slice(8, -1).toLowerCase().replace(/\s/g, '');
+}
+
+function ctorName(val) {
+  return typeof val.constructor === 'function' ? val.constructor.name : null;
+}
+
+function isError(val) {
+  return val instanceof Error || typeof val.message === 'string' && val.constructor && typeof val.constructor.stackTraceLimit === 'number';
+}
+
+function isDate(val) {
+  if (val instanceof Date) return true;
+  return typeof val.toDateString === 'function' && typeof val.getDate === 'function' && typeof val.setDate === 'function';
 }
 
 function kindOf(val) {
   var typeOfVal = typeof val;
 
   if (process.env.NODE_ENV !== 'production') {
-    // Inlined / shortened version of `kindOf` from https://github.com/jonschlinkert/kind-of
-    function miniKindOf(val) {
-      if (val === void 0) return 'undefined';
-      if (val === null) return 'null';
-      var type = typeof val;
-
-      switch (type) {
-        case 'boolean':
-        case 'string':
-        case 'number':
-        case 'symbol':
-        case 'function':
-          {
-            return type;
-          }
-      }
-
-      if (Array.isArray(val)) return 'array';
-      if (isDate(val)) return 'date';
-      if (isError(val)) return 'error';
-      var constructorName = ctorName(val);
-
-      switch (constructorName) {
-        case 'Symbol':
-        case 'Promise':
-        case 'WeakMap':
-        case 'WeakSet':
-        case 'Map':
-        case 'Set':
-          return constructorName;
-      } // other
-
-
-      return type.slice(8, -1).toLowerCase().replace(/\s/g, '');
-    }
-
-    function ctorName(val) {
-      return typeof val.constructor === 'function' ? val.constructor.name : null;
-    }
-
-    function isError(val) {
-      return val instanceof Error || typeof val.message === 'string' && val.constructor && typeof val.constructor.stackTraceLimit === 'number';
-    }
-
-    function isDate(val) {
-      if (val instanceof Date) return true;
-      return typeof val.toDateString === 'function' && typeof val.getDate === 'function' && typeof val.setDate === 'function';
-    }
-
     typeOfVal = miniKindOf(val);
   }
 
@@ -6616,7 +5439,7 @@ function createStore(reducer, preloadedState, enhancer) {
 
 
   function dispatch(action) {
-    if (!isPlainObject(action)) {
+    if (!isPlainObject$1(action)) {
       throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(7) : "Actions must be plain objects. Instead, the actual type was: '" + kindOf(action) + "'. You may need to add middleware to your store setup to handle dispatching other values, such as 'redux-thunk' to handle dispatching functions. See https://redux.js.org/tutorials/fundamentals/part-4-store#middleware and https://redux.js.org/tutorials/fundamentals/part-6-async-logic#using-the-redux-thunk-middleware for examples.");
     }
 
@@ -6902,6 +5725,1877 @@ const connectRedux = function (...args) {
   };
 };
 
+const routeConfig = {
+  RouteModuleName: 'route',
+  maxHistory: 10,
+  maxLocationCache: env.isServer ? 10000 : 500,
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  },
+  indexUrl: '/index',
+  notfoundPagename: '/404',
+  paramsKey: '_'
+};
+const setRouteConfig = buildConfigSetter(routeConfig);
+const routeMeta = {
+  defaultParams: {},
+  pagenames: {},
+  pages: {},
+  pagenameMap: {},
+  pagenameList: [],
+  nativeLocationMap: {}
+};
+function safeJsonParse(json) {
+  if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
+    return {};
+  }
+
+  let args = {};
+
+  try {
+    args = JSON.parse(json);
+  } catch (error) {
+    args = {};
+  }
+
+  return args;
+}
+
+class RouteStack {
+  constructor(limit) {
+    _defineProperty(this, "records", []);
+
+    this.limit = limit;
+  }
+
+  startup(record) {
+    this.records = [record];
+  }
+
+  getCurrentItem() {
+    return this.records[0];
+  }
+
+  getEarliestItem() {
+    return this.records[this.records.length - 1];
+  }
+
+  getItemAt(n) {
+    return this.records[n];
+  }
+
+  getItems() {
+    return [...this.records];
+  }
+
+  getLength() {
+    return this.records.length;
+  }
+
+  _push(item) {
+    const records = this.records;
+    records.unshift(item);
+    const delItem = records.splice(this.limit)[0];
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _replace(item) {
+    const records = this.records;
+    const delItem = records[0];
+    records[0] = item;
+
+    if (delItem && delItem !== item && delItem.destroy) {
+      delItem.destroy();
+    }
+  }
+
+  _relaunch(item) {
+    const delList = this.records;
+    this.records = [item];
+    delList.forEach(delItem => {
+      if (delItem !== item && delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  }
+
+  back(delta) {
+    const delList = this.records.splice(0, delta);
+
+    if (this.records.length === 0) {
+      const last = delList.pop();
+      this.records.push(last);
+    }
+
+    delList.forEach(delItem => {
+      if (delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+  }
+
+}
+
+class HistoryRecord {
+  constructor(location, historyStack) {
+    _defineProperty(this, "destroy", void 0);
+
+    _defineProperty(this, "key", void 0);
+
+    _defineProperty(this, "recordKey", void 0);
+
+    this.location = location;
+    this.historyStack = historyStack;
+    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
+    this.key = [historyStack.stackkey, this.recordKey].join('-');
+  }
+
+}
+
+_defineProperty(HistoryRecord, "id", 0);
+
+class HistoryStack extends RouteStack {
+  constructor(rootStack, store) {
+    super(20);
+
+    _defineProperty(this, "stackkey", void 0);
+
+    this.rootStack = rootStack;
+    this.store = store;
+    this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+  }
+
+  push(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._push(newRecord);
+
+    return newRecord;
+  }
+
+  replace(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._replace(newRecord);
+
+    return newRecord;
+  }
+
+  relaunch(location) {
+    const newRecord = new HistoryRecord(location, this);
+
+    this._relaunch(newRecord);
+
+    return newRecord;
+  }
+
+  findRecordByKey(recordKey) {
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const item = this.records[i];
+
+      if (item.recordKey === recordKey) {
+        return [item, i];
+      }
+    }
+
+    return undefined;
+  }
+
+  destroy() {
+    this.store.destroy();
+  }
+
+}
+
+_defineProperty(HistoryStack, "id", 0);
+
+class RootStack extends RouteStack {
+  constructor() {
+    super(10);
+  }
+
+  getCurrentPages() {
+    return this.records.map(item => {
+      const store = item.store;
+      const record = item.getCurrentItem();
+      const pagename = record.location.getPagename();
+      return {
+        pagename,
+        store,
+        page: routeMeta.pages[pagename]
+      };
+    });
+  }
+
+  push(location) {
+    const curHistory = this.getCurrentItem();
+    const routeState = {
+      pagename: location.getPagename(),
+      params: location.getParams(),
+      action: 'RELAUNCH',
+      key: ''
+    };
+    const store = forkStore(curHistory.store, routeState);
+    const newHistory = new HistoryStack(this, store);
+    const newRecord = new HistoryRecord(location, newHistory);
+    newHistory.startup(newRecord);
+
+    this._push(newHistory);
+
+    return newRecord;
+  }
+
+  replace(location) {
+    const curHistory = this.getCurrentItem();
+    return curHistory.relaunch(location);
+  }
+
+  relaunch(location) {
+    const curHistory = this.getCurrentItem();
+    const newRecord = curHistory.relaunch(location);
+
+    this._relaunch(curHistory);
+
+    return newRecord;
+  }
+
+  countBack(delta) {
+    const historyStacks = this.records;
+    const backSteps = [0, 0];
+
+    for (let i = 0, k = historyStacks.length; i < k; i++) {
+      const historyStack = historyStacks[i];
+      const recordNum = historyStack.getLength();
+      delta = delta - recordNum;
+
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
+      } else {
+        backSteps[1] = recordNum + delta;
+        break;
+      }
+    }
+
+    return backSteps;
+  }
+
+  testBack(stepOrKey, rootOnly) {
+    if (typeof stepOrKey === 'string') {
+      return this.findRecordByKey(stepOrKey);
+    }
+
+    const delta = stepOrKey;
+
+    if (delta === 0) {
+      const record = this.getCurrentItem().getCurrentItem();
+      return {
+        record,
+        overflow: false,
+        index: [0, 0]
+      };
+    }
+
+    if (rootOnly) {
+      if (delta < 0 || delta >= this.records.length) {
+        const record = this.getEarliestItem().getCurrentItem();
+        return {
+          record,
+          overflow: !(delta < 0),
+          index: [this.records.length - 1, 0]
+        };
+      } else {
+        const record = this.getItemAt(delta).getCurrentItem();
+        return {
+          record,
+          overflow: false,
+          index: [delta, 0]
+        };
+      }
+    }
+
+    if (delta < 0) {
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {
+        record,
+        overflow: false,
+        index: [this.records.length - 1, historyStack.records.length - 1]
+      };
+    }
+
+    const [rootDelta, recordDelta] = this.countBack(delta);
+
+    if (rootDelta < this.records.length) {
+      const record = this.getItemAt(rootDelta).getItemAt(recordDelta);
+      return {
+        record,
+        overflow: false,
+        index: [rootDelta, recordDelta]
+      };
+    } else {
+      const historyStack = this.getEarliestItem();
+      const record = historyStack.getEarliestItem();
+      return {
+        record,
+        overflow: true,
+        index: [this.records.length - 1, historyStack.records.length - 1]
+      };
+    }
+  }
+
+  findRecordByKey(key) {
+    const arr = key.split('-');
+
+    for (let i = 0, k = this.records.length; i < k; i++) {
+      const historyStack = this.records[i];
+
+      if (historyStack.stackkey === arr[0]) {
+        const item = historyStack.findRecordByKey(arr[1]);
+
+        if (item) {
+          return {
+            record: item[0],
+            index: [i, item[1]],
+            overflow: false
+          };
+        }
+      }
+    }
+
+    return {
+      record: this.getCurrentItem().getCurrentItem(),
+      index: [0, 0],
+      overflow: true
+    };
+  }
+
+}
+
+function isPlainObject(obj) {
+  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+}
+
+function __extendDefault(target, def) {
+  const clone = {};
+  Object.keys(def).forEach(function (key) {
+    if (target[key] === undefined) {
+      clone[key] = def[key];
+    } else {
+      const tval = target[key];
+      const dval = def[key];
+
+      if (isPlainObject(tval) && isPlainObject(dval) && tval !== dval) {
+        clone[key] = __extendDefault(tval, dval);
+      } else {
+        clone[key] = tval;
+      }
+    }
+  });
+  return clone;
+}
+
+function extendDefault(target, def) {
+  if (!isPlainObject(target)) {
+    target = {};
+  }
+
+  if (!isPlainObject(def)) {
+    def = {};
+  }
+
+  return __extendDefault(target, def);
+}
+
+function __excludeDefault(data, def) {
+  const result = {};
+  let hasSub = false;
+  Object.keys(data).forEach(key => {
+    let value = data[key];
+    const defaultValue = def[key];
+
+    if (value !== defaultValue) {
+      if (typeof value === typeof defaultValue && isPlainObject(value)) {
+        value = __excludeDefault(value, defaultValue);
+      }
+
+      if (value !== undefined) {
+        hasSub = true;
+        result[key] = value;
+      }
+    }
+  });
+
+  if (hasSub) {
+    return result;
+  }
+
+  return undefined;
+}
+
+function excludeDefault(data, def, keepTopLevel) {
+  if (!isPlainObject(data)) {
+    return {};
+  }
+
+  if (!isPlainObject(def)) {
+    return data;
+  }
+
+  const filtered = __excludeDefault(data, def);
+
+  if (keepTopLevel) {
+    const result = {};
+    Object.keys(data).forEach(function (key) {
+      result[key] = filtered && filtered[key] !== undefined ? filtered[key] : {};
+    });
+    return result;
+  }
+
+  return filtered || {};
+}
+
+class LocationCaches {
+  constructor(limit) {
+    _defineProperty(this, "length", 0);
+
+    _defineProperty(this, "first", void 0);
+
+    _defineProperty(this, "last", void 0);
+
+    _defineProperty(this, "data", {});
+
+    this.limit = limit;
+  }
+
+  getItem(key) {
+    const data = this.data;
+    const cache = data[key];
+
+    if (cache && cache.next) {
+      const nextCache = cache.next;
+      delete data[key];
+      data[key] = cache;
+      nextCache.prev = cache.prev;
+      cache.prev = this.last;
+      cache.next = undefined;
+      this.last = cache;
+
+      if (this.first === cache) {
+        this.first = nextCache;
+      }
+    }
+
+    return cache == null ? void 0 : cache.payload;
+  }
+
+  setItem(key, item) {
+    const data = this.data;
+
+    if (data[key]) {
+      data[key].payload = item;
+      return;
+    }
+
+    const cache = {
+      key,
+      prev: this.last,
+      next: undefined,
+      payload: item
+    };
+    data[key] = cache;
+
+    if (this.last) {
+      this.last.next = cache;
+    }
+
+    this.last = cache;
+
+    if (!this.first) {
+      this.first = cache;
+    }
+
+    const length = this.length + 1;
+
+    if (length > this.limit) {
+      const firstCache = this.first;
+      delete data[firstCache.key];
+      this.first = firstCache.next;
+    } else {
+      this.length = length;
+    }
+
+    return;
+  }
+
+}
+
+const locationCaches = new LocationCaches(routeConfig.maxLocationCache);
+const urlParser = {
+  type: {
+    e: 'e',
+    s: 's',
+    n: 'n'
+  },
+
+  getNativeUrl(pathname, query) {
+    return this.getUrl('n', pathname, query ? `${routeConfig.paramsKey}=${encodeURIComponent(query)}` : '');
+  },
+
+  getEluxUrl(pathmatch, args) {
+    const search = this.stringifySearch(args);
+    return this.getUrl('e', pathmatch, search);
+  },
+
+  getStateUrl(pagename, payload) {
+    const search = this.stringifySearch(payload);
+    return this.getUrl('s', pagename, search);
+  },
+
+  parseNativeUrl(nurl) {
+    const pathname = this.getPath(nurl);
+    const arr = nurl.split(`${routeConfig.paramsKey}=`);
+    const query = arr[1] || '';
+    return {
+      pathname,
+      query: decodeURIComponent(query)
+    };
+  },
+
+  parseStateUrl(surl) {
+    const pagename = this.getPath(surl);
+    const search = this.getSearch(surl);
+    const payload = this.parseSearch(search);
+    return {
+      pagename,
+      payload
+    };
+  },
+
+  getUrl(type, path, search) {
+    return [type, ':/', path, search && search !== '{}' ? `?${search}` : ''].join('');
+  },
+
+  getPath(url) {
+    return url.substr(3).split('?', 1)[0];
+  },
+
+  getSearch(url) {
+    return url.replace(/^.+?(\?|$)/, '');
+  },
+
+  stringifySearch(data) {
+    return Object.keys(data).length ? JSON.stringify(data) : '';
+  },
+
+  parseSearch(search) {
+    return safeJsonParse(search);
+  },
+
+  checkUrl(url) {
+    const type = this.type[url.charAt(0)] || 'e';
+    let path, search;
+    const arr = url.split('://', 2);
+
+    if (arr.length > 1) {
+      arr.shift();
+    }
+
+    path = arr[0].split('?', 1)[0];
+    path = this.checkPath(path);
+
+    if (type === 'e' || type === 's') {
+      search = url.replace(/^.+?(\?|$)/, '');
+
+      if (search === '{}' || search.charAt(0) !== '{' || search.charAt(search.length - 1) !== '}') {
+        search = '';
+      }
+    } else {
+      let arr = url.split(`${routeConfig.paramsKey}=`, 2);
+
+      if (arr[1]) {
+        arr = arr[1].split('&', 1);
+
+        if (arr[0]) {
+          search = `${routeConfig.paramsKey}=${arr[0]}`;
+        } else {
+          search = '';
+        }
+      } else {
+        search = '';
+      }
+    }
+
+    return this.getUrl(type, path, search);
+  },
+
+  checkPath(path) {
+    path = `/${path.replace(/^\/+|\/+$/g, '')}`;
+
+    if (path === '/') {
+      path = '/index';
+    }
+
+    return path;
+  },
+
+  withoutProtocol(url) {
+    return url.replace(/^[^/]+?:\//, '');
+  }
+
+};
+
+class LocationTransform {
+  constructor(url, data) {
+    _defineProperty(this, "_pagename", void 0);
+
+    _defineProperty(this, "_payload", void 0);
+
+    _defineProperty(this, "_params", void 0);
+
+    _defineProperty(this, "_eurl", void 0);
+
+    _defineProperty(this, "_nurl", void 0);
+
+    _defineProperty(this, "_minData", void 0);
+
+    this.url = url;
+    data && this.update(data);
+  }
+
+  getPayload() {
+    if (!this._payload) {
+      const search = urlParser.getSearch(this.url);
+      const args = urlParser.parseSearch(search);
+      const {
+        notfoundPagename
+      } = routeConfig;
+      const {
+        pagenameMap
+      } = routeMeta;
+      const pagename = this.getPagename();
+      const pathmatch = urlParser.getPath(this.url);
+      const _pagename = `${pagename}/`;
+      let arrArgs;
+
+      if (pagename === notfoundPagename) {
+        arrArgs = [pathmatch];
+      } else {
+        const _pathmatch = `${pathmatch}/`;
+        arrArgs = _pathmatch.replace(_pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
+      }
+
+      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+      this._payload = deepMerge({}, pathArgs, args);
+    }
+
+    return this._payload;
+  }
+
+  getMinData() {
+    if (!this._minData) {
+      const eluxUrl = this.getEluxUrl();
+
+      if (!this._minData) {
+        const pathmatch = urlParser.getPath(eluxUrl);
+        const search = urlParser.getSearch(eluxUrl);
+        this._minData = {
+          pathmatch,
+          args: urlParser.parseSearch(search)
+        };
+      }
+    }
+
+    return this._minData;
+  }
+
+  toStringArgs(arr) {
+    return arr.map(item => {
+      if (item === null || item === undefined) {
+        return undefined;
+      }
+
+      return item.toString();
+    });
+  }
+
+  update(data) {
+    Object.keys(data).forEach(key => {
+      if (data[key] && !this[key]) {
+        this[key] = data[key];
+      }
+    });
+  }
+
+  getPagename() {
+    if (!this._pagename) {
+      const {
+        notfoundPagename
+      } = routeConfig;
+      const {
+        pagenameList
+      } = routeMeta;
+      const pathmatch = urlParser.getPath(this.url);
+      const __pathmatch = `${pathmatch}/`;
+
+      const __pagename = pagenameList.find(name => __pathmatch.startsWith(name));
+
+      this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
+    }
+
+    return this._pagename;
+  }
+
+  getEluxUrl() {
+    if (!this._eurl) {
+      const payload = this.getPayload();
+      const minPayload = excludeDefault(payload, routeMeta.defaultParams, true);
+      const pagename = this.getPagename();
+      const {
+        pagenameMap
+      } = routeMeta;
+      const _pagename = `${pagename}/`;
+      let pathmatch;
+      let pathArgs;
+
+      if (pagenameMap[_pagename]) {
+        const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
+        pathmatch = _pagename + pathArgsArr.map(item => item ? encodeURIComponent(item) : '').join('/');
+        pathmatch = pathmatch.replace(/\/*$/, '');
+        pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
+      } else {
+        pathmatch = '/index';
+        pathArgs = {};
+      }
+
+      const args = excludeDefault(minPayload, pathArgs, false);
+      this._minData = {
+        pathmatch,
+        args
+      };
+      this._eurl = urlParser.getEluxUrl(pathmatch, args);
+    }
+
+    return this._eurl;
+  }
+
+  getNativeUrl(withoutProtocol) {
+    if (!this._nurl) {
+      const {
+        nativeLocationMap
+      } = routeMeta;
+      const minData = this.getMinData();
+      const {
+        pathname,
+        query
+      } = nativeLocationMap.out(minData);
+      this._nurl = urlParser.getNativeUrl(pathname, query);
+    }
+
+    return withoutProtocol ? urlParser.withoutProtocol(this._nurl) : this._nurl;
+  }
+
+  getParams() {
+    if (!this._params) {
+      const payload = this.getPayload();
+      const def = routeMeta.defaultParams;
+      const asyncLoadModules = Object.keys(payload).filter(moduleName => def[moduleName] === undefined);
+      const modulesOrPromise = getModuleList(asyncLoadModules);
+
+      if (isPromise(modulesOrPromise)) {
+        return modulesOrPromise.then(modules => {
+          modules.forEach(module => {
+            def[module.moduleName] = module.params;
+          });
+
+          const _params = assignDefaultData(payload);
+
+          const modulesMap = moduleExists();
+          Object.keys(_params).forEach(moduleName => {
+            if (!modulesMap[moduleName]) {
+              delete _params[moduleName];
+            }
+          });
+          this._params = _params;
+          return _params;
+        });
+      }
+
+      const modules = modulesOrPromise;
+      modules.forEach(module => {
+        def[module.moduleName] = module.params;
+      });
+
+      const _params = assignDefaultData(payload);
+
+      const modulesMap = moduleExists();
+      Object.keys(_params).forEach(moduleName => {
+        if (!modulesMap[moduleName]) {
+          delete _params[moduleName];
+        }
+      });
+      this._params = _params;
+      return _params;
+    } else {
+      return this._params;
+    }
+  }
+
+}
+
+function location(dataOrUrl) {
+  if (typeof dataOrUrl === 'string') {
+    const url = urlParser.checkUrl(dataOrUrl);
+    const type = url.charAt(0);
+
+    if (type === 'e') {
+      return createFromElux(url);
+    } else if (type === 's') {
+      return createFromState(url);
+    } else {
+      return createFromNative(url);
+    }
+  } else if (dataOrUrl['pathmatch']) {
+    const {
+      pathmatch,
+      args
+    } = dataOrUrl;
+    const eurl = urlParser.getEluxUrl(urlParser.checkPath(pathmatch), args);
+    return createFromElux(eurl);
+  } else if (dataOrUrl['pagename']) {
+    const data = dataOrUrl;
+    const {
+      pagename,
+      payload
+    } = data;
+    const surl = urlParser.getStateUrl(urlParser.checkPath(pagename), payload);
+    return createFromState(surl, data);
+  } else {
+    const data = dataOrUrl;
+    const {
+      pathname,
+      query
+    } = data;
+    const nurl = urlParser.getNativeUrl(urlParser.checkPath(pathname), query);
+    return createFromNative(nurl, data);
+  }
+}
+
+function createFromElux(eurl, data) {
+  let item = locationCaches.getItem(eurl);
+
+  if (!item) {
+    item = new LocationTransform(eurl, {
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
+    locationCaches.setItem(eurl, item);
+  } else if (!item._eurl || !item._nurl) {
+    item.update({
+      _eurl: eurl,
+      _nurl: data == null ? void 0 : data.nurl
+    });
+  }
+
+  return item;
+}
+
+function createFromNative(nurl, data) {
+  let eurl = locationCaches.getItem(nurl);
+
+  if (!eurl) {
+    const {
+      nativeLocationMap
+    } = routeMeta;
+    data = data || urlParser.parseNativeUrl(nurl);
+    const {
+      pathmatch,
+      args
+    } = nativeLocationMap.in(data);
+    eurl = urlParser.getEluxUrl(pathmatch, args);
+    locationCaches.setItem(nurl, eurl);
+  }
+
+  return createFromElux(eurl, {
+    nurl
+  });
+}
+
+function createFromState(surl, data) {
+  const eurl = `e${surl.substr(1)}`;
+  let item = locationCaches.getItem(eurl);
+
+  if (!item) {
+    data = data || urlParser.parseStateUrl(surl);
+    item = new LocationTransform(eurl, {
+      _pagename: data.pagename,
+      _payload: data.payload
+    });
+    locationCaches.setItem(eurl, item);
+  } else if (!item._pagename || !item._payload) {
+    data = data || urlParser.parseStateUrl(surl);
+    item.update({
+      _pagename: data.pagename,
+      _payload: data.payload
+    });
+  }
+
+  return item;
+}
+
+function assignDefaultData(data) {
+  const def = routeMeta.defaultParams;
+  return Object.keys(data).reduce((params, moduleName) => {
+    if (def[moduleName]) {
+      params[moduleName] = extendDefault(data[moduleName], def[moduleName]);
+    }
+
+    return params;
+  }, {});
+}
+
+const defaultNativeLocationMap = {
+  in(nativeLocation) {
+    const {
+      pathname,
+      query
+    } = nativeLocation;
+    return {
+      pathmatch: pathname,
+      args: urlParser.parseSearch(query)
+    };
+  },
+
+  out(eluxLocation) {
+    const {
+      pathmatch,
+      args
+    } = eluxLocation;
+    return {
+      pathname: pathmatch,
+      query: urlParser.stringifySearch(args)
+    };
+  }
+
+};
+function createRouteModule(pagenameMap, nativeLocationMap = defaultNativeLocationMap) {
+  const pagenames = Object.keys(pagenameMap);
+
+  const _pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
+    const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
+    const {
+      argsToParams,
+      paramsToArgs,
+      page
+    } = pagenameMap[pagename];
+    map[fullPagename] = {
+      argsToParams,
+      paramsToArgs
+    };
+    routeMeta.pagenames[pagename] = pagename;
+    routeMeta.pages[pagename] = page;
+    return map;
+  }, {});
+
+  routeMeta.pagenameMap = _pagenameMap;
+  routeMeta.pagenameList = Object.keys(_pagenameMap);
+  routeMeta.nativeLocationMap = nativeLocationMap;
+  return exportModule(routeConfig.RouteModuleName, RouteModuleHandlers, {}, {});
+}
+
+class BaseNativeRouter {
+  constructor() {
+    _defineProperty(this, "curTask", void 0);
+
+    _defineProperty(this, "eluxRouter", void 0);
+  }
+
+  onChange(key) {
+    if (this.curTask) {
+      this.curTask();
+      this.curTask = undefined;
+      return false;
+    }
+
+    return key !== this.eluxRouter.routeState.key;
+  }
+
+  startup(router) {
+    this.eluxRouter = router;
+  }
+
+  execute(method, location, ...args) {
+    return new Promise((resolve, reject) => {
+      this.curTask = resolve;
+      const result = this[method](location, ...args);
+
+      if (!result) {
+        resolve();
+        this.curTask = undefined;
+      } else if (isPromise(result)) {
+        result.catch(e => {
+          reject(e);
+          env.console.error(e);
+          this.curTask = undefined;
+        });
+      }
+    });
+  }
+
+}
+class BaseEluxRouter extends MultipleDispatcher {
+  constructor(nativeUrl, nativeRouter, nativeData) {
+    super();
+
+    _defineProperty(this, "_curTask", void 0);
+
+    _defineProperty(this, "_taskList", []);
+
+    _defineProperty(this, "location", void 0);
+
+    _defineProperty(this, "routeState", void 0);
+
+    _defineProperty(this, "name", routeConfig.RouteModuleName);
+
+    _defineProperty(this, "initialize", void 0);
+
+    _defineProperty(this, "injectedModules", {});
+
+    _defineProperty(this, "rootStack", new RootStack());
+
+    _defineProperty(this, "latestState", {});
+
+    _defineProperty(this, "_taskComplete", () => {
+      const task = this._taskList.shift();
+
+      if (task) {
+        this.executeTask(task);
+      } else {
+        this._curTask = undefined;
+      }
+    });
+
+    this.nativeRouter = nativeRouter;
+    this.nativeData = nativeData;
+    nativeRouter.startup(this);
+    const location$1 = location(nativeUrl);
+    this.location = location$1;
+    const pagename = location$1.getPagename();
+    const paramsOrPromise = location$1.getParams();
+
+    const callback = params => {
+      const routeState = {
+        pagename,
+        params,
+        action: 'RELAUNCH',
+        key: ''
+      };
+      this.routeState = routeState;
+      return routeState;
+    };
+
+    if (isPromise(paramsOrPromise)) {
+      this.initialize = paramsOrPromise.then(callback);
+    } else {
+      this.initialize = Promise.resolve(callback(paramsOrPromise));
+    }
+  }
+
+  startup(store) {
+    const historyStack = new HistoryStack(this.rootStack, store);
+    const historyRecord = new HistoryRecord(this.location, historyStack);
+    historyStack.startup(historyRecord);
+    this.rootStack.startup(historyStack);
+    this.routeState.key = historyRecord.key;
+  }
+
+  getCurrentPages() {
+    return this.rootStack.getCurrentPages();
+  }
+
+  getCurrentStore() {
+    return this.rootStack.getCurrentItem().store;
+  }
+
+  getStoreList() {
+    return this.rootStack.getItems().map(({
+      store
+    }) => store);
+  }
+
+  getHistoryLength(root) {
+    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
+  }
+
+  findRecordByKey(key) {
+    return this.rootStack.findRecordByKey(key);
+  }
+
+  findRecordByStep(delta, rootOnly) {
+    return this.rootStack.testBack(delta, rootOnly);
+  }
+
+  extendCurrent(params, pagename) {
+    return {
+      payload: deepMerge({}, this.routeState.params, params),
+      pagename: pagename || this.routeState.pagename
+    };
+  }
+
+  relaunch(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._relaunch.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
+  }
+
+  async _relaunch(dataOrUrl, root, nativeCaller) {
+    const location$1 = location(dataOrUrl);
+    const pagename = location$1.getPagename();
+    const params = await location$1.getParams();
+    let key = '';
+    const routeState = {
+      pagename,
+      params,
+      action: 'RELAUNCH',
+      key
+    };
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.relaunch(location$1).key;
+    } else {
+      key = this.rootStack.getCurrentItem().relaunch(location$1).key;
+    }
+
+    routeState.key = key;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+    if (!nativeCaller && notifyNativeRouter) {
+      await this.nativeRouter.execute('relaunch', location$1, key);
+    }
+
+    this.location = location$1;
+    this.routeState = routeState;
+    const cloneState = deepClone(routeState);
+    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+    await this.dispatch('change', {
+      routeState: cloneState,
+      root
+    });
+  }
+
+  push(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._push.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
+  }
+
+  async _push(dataOrUrl, root, nativeCaller) {
+    const location$1 = location(dataOrUrl);
+    const pagename = location$1.getPagename();
+    const params = await location$1.getParams();
+    let key = '';
+    const routeState = {
+      pagename,
+      params,
+      action: 'PUSH',
+      key
+    };
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.push(location$1).key;
+    } else {
+      key = this.rootStack.getCurrentItem().push(location$1).key;
+    }
+
+    routeState.key = key;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+    if (!nativeCaller && notifyNativeRouter) {
+      await this.nativeRouter.execute('push', location$1, key);
+    }
+
+    this.location = location$1;
+    this.routeState = routeState;
+    const cloneState = deepClone(routeState);
+
+    if (root) {
+      await reinitApp(this.getCurrentStore());
+    } else {
+      this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+    }
+
+    await this.dispatch('change', {
+      routeState: cloneState,
+      root
+    });
+  }
+
+  replace(dataOrUrl, root = false, nonblocking, nativeCaller = false) {
+    return this.addTask(this._replace.bind(this, dataOrUrl, root, nativeCaller), nonblocking);
+  }
+
+  async _replace(dataOrUrl, root, nativeCaller) {
+    const location$1 = location(dataOrUrl);
+    const pagename = location$1.getPagename();
+    const params = await location$1.getParams();
+    let key = '';
+    const routeState = {
+      pagename,
+      params,
+      action: 'REPLACE',
+      key
+    };
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (root) {
+      key = this.rootStack.replace(location$1).key;
+    } else {
+      key = this.rootStack.getCurrentItem().replace(location$1).key;
+    }
+
+    routeState.key = key;
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+    if (!nativeCaller && notifyNativeRouter) {
+      await this.nativeRouter.execute('replace', location$1, key);
+    }
+
+    this.location = location$1;
+    this.routeState = routeState;
+    const cloneState = deepClone(routeState);
+    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+    await this.dispatch('change', {
+      routeState: cloneState,
+      root
+    });
+  }
+
+  back(stepOrKey = 1, root = false, options, nonblocking, nativeCaller = false) {
+    if (!stepOrKey) {
+      return;
+    }
+
+    return this.addTask(this._back.bind(this, stepOrKey, root, options || {}, nativeCaller), nonblocking);
+  }
+
+  async _back(stepOrKey, root, options, nativeCaller) {
+    const {
+      record,
+      overflow,
+      index
+    } = this.rootStack.testBack(stepOrKey, root);
+
+    if (overflow) {
+      const url = options.overflowRedirect || routeConfig.indexUrl;
+      env.setTimeout(() => this.relaunch(url, root), 0);
+      return;
+    }
+
+    if (!index[0] && !index[1]) {
+      return;
+    }
+
+    const key = record.key;
+    const location = record.location;
+    const pagename = location.getPagename();
+    const params = deepMerge({}, location.getParams(), options.payload);
+    const routeState = {
+      key,
+      pagename,
+      params,
+      action: 'BACK'
+    };
+    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+
+    if (index[0]) {
+      root = true;
+      this.rootStack.back(index[0]);
+    }
+
+    if (index[1]) {
+      this.rootStack.getCurrentItem().back(index[1]);
+    }
+
+    const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
+
+    if (!nativeCaller && notifyNativeRouter) {
+      await this.nativeRouter.execute('back', location, index, key);
+    }
+
+    this.location = location;
+    this.routeState = routeState;
+    const cloneState = deepClone(routeState);
+    this.getCurrentStore().dispatch(routeChangeAction(cloneState));
+    await this.dispatch('change', {
+      routeState,
+      root
+    });
+  }
+
+  executeTask(task) {
+    this._curTask = task;
+    task().finally(this._taskComplete);
+  }
+
+  addTask(execute, nonblocking) {
+    if (env.isServer) {
+      return;
+    }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const task = () => execute().then(resolve, reject);
+
+      if (this._curTask) {
+        this._taskList.push(task);
+      } else {
+        this.executeTask(task);
+      }
+    });
+  }
+
+  destroy() {
+    this.nativeRouter.destroy();
+  }
+
+}
+const RouteActionTypes = {
+  TestRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}TestRouteChange`,
+  BeforeRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}BeforeRouteChange`
+};
+function beforeRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.BeforeRouteChange,
+    payload: [routeState]
+  };
+}
+function testRouteChangeAction(routeState) {
+  return {
+    type: RouteActionTypes.TestRouteChange,
+    payload: [routeState]
+  };
+}
+
+const appMeta = {
+  router: null,
+  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
+};
+const appConfig = {
+  loadComponent: null,
+  useRouter: null,
+  useStore: null
+};
+const setAppConfig = buildConfigSetter(appConfig);
+function setUserConfig(conf) {
+  setCoreConfig(conf);
+  setRouteConfig(conf);
+
+  if (conf.disableNativeRouter) {
+    setRouteConfig({
+      notifyNativeRouter: {
+        root: false,
+        internal: false
+      }
+    });
+  }
+}
+function createBaseMP(ins, router, render, middlewares = []) {
+  appMeta.router = router;
+  return {
+    useStore({
+      storeCreator,
+      storeOptions
+    }) {
+      return Object.assign(ins, {
+        render() {
+          const baseStore = storeCreator(storeOptions);
+          const {
+            store
+          } = initApp(router, baseStore, middlewares);
+          const context = render({
+            deps: {},
+            router,
+            documentHead: ''
+          }, ins);
+          return {
+            store,
+            context
+          };
+        }
+
+      });
+    }
+
+  };
+}
+function createBaseApp(ins, router, render, middlewares = []) {
+  appMeta.router = router;
+  return {
+    useStore({
+      storeCreator,
+      storeOptions
+    }) {
+      return Object.assign(ins, {
+        render({
+          id = 'root',
+          ssrKey = 'eluxInitStore',
+          viewName = 'main'
+        } = {}) {
+          const {
+            state,
+            components = []
+          } = env[ssrKey] || {};
+          return router.initialize.then(routeState => {
+            storeOptions.initState = { ...storeOptions.initState,
+              [routeConfig.RouteModuleName]: routeState,
+              ...state
+            };
+            const baseStore = storeCreator(storeOptions);
+            const {
+              store,
+              AppView,
+              setup
+            } = initApp(router, baseStore, middlewares, viewName, components);
+            return setup.then(() => {
+              render(id, AppView, {
+                deps: {},
+                router,
+                documentHead: ''
+              }, !!env[ssrKey], ins);
+              return store;
+            });
+          });
+        }
+
+      });
+    }
+
+  };
+}
+function createBaseSSR(ins, router, render, middlewares = []) {
+  appMeta.router = router;
+  return {
+    useStore({
+      storeCreator,
+      storeOptions
+    }) {
+      return Object.assign(ins, {
+        render({
+          id = 'root',
+          ssrKey = 'eluxInitStore',
+          viewName = 'main'
+        } = {}) {
+          return router.initialize.then(routeState => {
+            storeOptions.initState = { ...storeOptions.initState,
+              [routeConfig.RouteModuleName]: routeState
+            };
+            const baseStore = storeCreator(storeOptions);
+            const {
+              store,
+              AppView,
+              setup
+            } = initApp(router, baseStore, middlewares, viewName);
+            return setup.then(() => {
+              const state = store.getState();
+              const eluxContext = {
+                deps: {},
+                router,
+                documentHead: ''
+              };
+              return render(id, AppView, eluxContext, ins).then(html => {
+                const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+
+                if (match) {
+                  return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                    state,
+                    components: Object.keys(eluxContext.deps)
+                  })};</script>\r\n</head>`).replace(match[0], match[0] + html);
+                }
+
+                return html;
+              });
+            });
+          });
+        }
+
+      });
+    }
+
+  };
+}
+function patchActions(typeName, json) {
+  if (json) {
+    getRootModuleAPI(JSON.parse(json));
+  }
+}
+function getApp() {
+  const modules = getRootModuleAPI();
+  return {
+    GetActions: (...args) => {
+      return args.reduce((prev, moduleName) => {
+        prev[moduleName] = modules[moduleName].actions;
+        return prev;
+      }, {});
+    },
+    useRouter: appConfig.useRouter,
+    useStore: appConfig.useStore,
+    GetRouter: () => {
+      if (env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
+      }
+
+      return appMeta.router;
+    },
+    LoadComponent: appConfig.loadComponent,
+    Modules: modules,
+    Pagenames: routeMeta.pagenames
+  };
+}
+
+function renderToMP(eluxContext) {
+  const Component = ({
+    children
+  }) => React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, children);
+
+  return Component;
+}
+
+setRouteConfig({
+  notifyNativeRouter: {
+    root: true,
+    internal: false
+  }
+});
+class MPNativeRouter extends BaseNativeRouter {
+  constructor(_history, tabPages) {
+    super();
+
+    _defineProperty(this, "_unlistenHistory", void 0);
+
+    this._history = _history;
+    this.tabPages = tabPages;
+    const {
+      root,
+      internal
+    } = routeConfig.notifyNativeRouter;
+
+    if (root || internal) {
+      this._unlistenHistory = _history.onRouteChange((pathname, search, action) => {
+        const nativeUrl = [pathname, search].filter(Boolean).join('?');
+        const arr = search.match(/__key__=(\w+)/);
+        let key = arr ? arr[1] : '';
+
+        if (action === 'POP' && !key) {
+          const {
+            record
+          } = this.router.findRecordByStep(-1, false);
+          key = record.key;
+        }
+
+        const changed = this.onChange(key);
+
+        if (changed) {
+          if (action === 'POP') {
+            this.router.back(key, true, {}, true, true);
+          } else if (action === 'REPLACE') {
+            this.router.replace(nativeUrl, true, true, true);
+          } else if (action === 'PUSH') {
+            this.router.push(nativeUrl, true, true, true);
+          } else {
+            this.router.relaunch(nativeUrl, true, true, true);
+          }
+        }
+      });
+    }
+  }
+
+  addKey(url, key) {
+    return url.indexOf('?') > -1 ? `${url}&__key__=${key}` : `${url}?__key__=${key}`;
+  }
+
+  push(location, key) {
+    const nativeUrl = location.getNativeUrl(true);
+    const [pathname] = nativeUrl.split('?');
+
+    if (this.tabPages[pathname]) {
+      return Promise.reject(`Replacing 'push' with 'relaunch' for TabPage: ${pathname}`);
+    }
+
+    return this._history.navigateTo({
+      url: this.addKey(nativeUrl, key)
+    });
+  }
+
+  replace(location, key) {
+    const nativeUrl = location.getNativeUrl(true);
+    const [pathname] = nativeUrl.split('?');
+
+    if (this.tabPages[pathname]) {
+      return Promise.reject(`Replacing 'replace' with 'relaunch' for TabPage: ${pathname}`);
+    }
+
+    return this._history.redirectTo({
+      url: this.addKey(nativeUrl, key)
+    });
+  }
+
+  relaunch(location, key) {
+    const nativeUrl = location.getNativeUrl(true);
+    const [pathname] = nativeUrl.split('?');
+
+    if (this.tabPages[pathname]) {
+      return this._history.switchTab({
+        url: pathname
+      });
+    }
+
+    return this._history.reLaunch({
+      url: this.addKey(nativeUrl, key)
+    });
+  }
+
+  back(location, index, key) {
+    return this._history.navigateBack({
+      delta: index[0]
+    });
+  }
+
+  destroy() {
+    this._unlistenHistory && this._unlistenHistory();
+  }
+
+}
+class EluxRouter extends BaseEluxRouter {
+  constructor(nativeUrl, mpNativeRouter) {
+    super(nativeUrl, mpNativeRouter, {});
+  }
+
+}
+function createRouter(mpHistory, tabPages) {
+  const mpNativeRouter = new MPNativeRouter(mpHistory, tabPages);
+  const {
+    pathname,
+    search
+  } = mpHistory.getLocation();
+  const router = new EluxRouter(urlParser.getUrl('n', pathname, search), mpNativeRouter);
+  return router;
+}
+
+const eventBus = new SingleDispatcher();
+const tabPages = {};
+
+function routeToPathname(route) {
+  return `/${route.replace(/^\/+|\/+$/g, '')}`;
+}
+
+function queryTosearch(query = {}) {
+  const parts = [];
+  Object.keys(query).forEach(key => {
+    parts.push(`${key}=${query[key]}`);
+  });
+  return parts.join('&');
+}
+
+let prevPageInfo;
+
+function patchPageOptions(pageOptions) {
+  const onShow = pageOptions.onShow;
+
+  pageOptions.onShow = function () {
+    const arr = Taro.getCurrentPages();
+    const currentPage = arr[arr.length - 1];
+    const currentPageInfo = {
+      count: arr.length,
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
+    };
+
+    if (prevPageInfo) {
+      let action = 'PUSH';
+
+      if (currentPageInfo.count < prevPageInfo.count) {
+        action = 'POP';
+      } else if (currentPageInfo.count === prevPageInfo.count) {
+        if (currentPageInfo.count === 1) {
+          action = 'RELAUNCH';
+        } else {
+          action = 'REPLACE';
+        }
+      }
+
+      eventBus.dispatch({
+        pathname: currentPageInfo.pathname,
+        search: currentPageInfo.search,
+        action
+      });
+    }
+
+    return onShow == null ? void 0 : onShow.call(this);
+  };
+
+  const onHide = pageOptions.onHide;
+
+  pageOptions.onHide = function () {
+    const arr = Taro.getCurrentPages();
+    const currentPage = arr[arr.length - 1];
+    prevPageInfo = {
+      count: arr.length,
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
+    };
+    return onHide == null ? void 0 : onHide.call(this);
+  };
+
+  const onUnload = pageOptions.onUnload;
+
+  pageOptions.onUnload = function () {
+    const arr = Taro.getCurrentPages();
+    const currentPage = arr[arr.length - 1];
+    prevPageInfo = {
+      count: arr.length,
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
+    };
+    return onUnload == null ? void 0 : onUnload.call(this);
+  };
+}
+
+const taroHistory = {
+  reLaunch: Taro.reLaunch,
+  redirectTo: Taro.redirectTo,
+  navigateTo: Taro.navigateTo,
+  navigateBack: Taro.navigateBack,
+  switchTab: Taro.switchTab,
+  getLocation: () => {
+    const arr = Taro.getCurrentPages();
+    let path;
+    let query;
+
+    if (arr.length === 0) {
+      ({
+        path,
+        query
+      } = Taro.getLaunchOptionsSync());
+    } else {
+      const current = arr[arr.length - 1];
+      path = current.route;
+      query = current.options;
+    }
+
+    return {
+      pathname: routeToPathname(path),
+      search: queryTosearch(query)
+    };
+  },
+
+  onRouteChange(callback) {
+    return eventBus.addListener(data => {
+      const {
+        pathname,
+        search,
+        action
+      } = data;
+      callback(pathname, search, action);
+    });
+  }
+
+};
+
+if (process.env.TARO_ENV === 'h5') {
+  const taroRouter = require('@tarojs/router');
+
+  taroHistory.getLocation = () => {
+    const {
+      pathname,
+      search
+    } = taroRouter.history.location;
+    return {
+      pathname,
+      search: search.replace(/^\?/, '')
+    };
+  };
+
+  taroHistory.onRouteChange = callback => {
+    const unhandle = taroRouter.history.listen(({
+      location,
+      action
+    }) => {
+      let routeAction = action;
+
+      if (action !== 'POP' && tabPages[location.pathname]) {
+        routeAction = 'RELAUNCH';
+      }
+
+      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
+    });
+    return unhandle;
+  };
+
+  Taro.onUnhandledRejection = callback => {
+    window.addEventListener('unhandledrejection', callback, false);
+  };
+
+  Taro.onError = callback => {
+    window.addEventListener('error', callback, false);
+  };
+} else {
+  if (!Taro.onUnhandledRejection) {
+    Taro.onUnhandledRejection = () => undefined;
+  }
+
+  const originalPage = Page;
+
+  Page = function (pageOptions) {
+    patchPageOptions(pageOptions);
+    return originalPage(pageOptions);
+  };
+}
+
+function getTabPages() {
+  if (env.__taroAppConfig.tabBar) {
+    env.__taroAppConfig.tabBar.list.forEach(({
+      pagePath
+    }) => {
+      tabPages[routeToPathname(pagePath)] = true;
+    });
+  }
+
+  return tabPages;
+}
+
+setAppConfig({
+  loadComponent,
+  useRouter
+});
+function setConfig(conf) {
+  setReactComponentsConfig(conf);
+  setUserConfig(conf);
+}
+setReactComponentsConfig({
+  setPageTitle: title => Taro.setNavigationBarTitle({
+    title
+  })
+});
+const createMP = (moduleGetter, middlewares) => {
+  defineModuleGetter(moduleGetter);
+  const tabPages = getTabPages();
+  const router = createRouter(taroHistory, tabPages);
+  return createBaseMP({}, router, renderToMP, middlewares);
+};
+
 setAppConfig({
   useStore: useStore
 });
@@ -6910,4 +7604,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Page$1 as Page, Provider, RouteActionTypes, Router$1 as Router, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, logger, modelHotReplacement, mutation, patchActions, reactComponentsConfig, reducer, routeENV, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setReactComponentsConfig, setUserConfig, shallowEqual, useRouter, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, Switch, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createBaseApp, createBaseMP, createBaseSSR, createMP, createRedux, createRouteModule, createSelectorHook, deepClone, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, location, logger, modelHotReplacement, mutation, patchActions, reducer, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };

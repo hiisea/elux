@@ -29,15 +29,15 @@
     "build:ts": "tsc -P ./src --module ESNext --isolatedModules false --noEmit false --outDir ./dist/ts",
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
+  "peerDependencies": {
+    "react": "^16.8.0 || ^17"
+  },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
+    "@elux/core": "^0.1.118",
+    "@elux/app": "^0.1.118",
     "@elux/react-components": "^0.1.118",
     "@elux/route-mp": "^0.1.118",
     "@elux/taro": "^0.1.118"
-  },
-  "devDependencies": {
-    "@types/react": "~17.0.0",
-    "react": "~17.0.0"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
 }

@@ -32,7 +32,7 @@
     "react-dom": "^16.8.0 || ^17"
   },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
+    "@elux/core": "^0.1.118",
     "@elux/core-redux": "^0.1.118",
     "@elux/react-components": "^0.1.118",
     "react-redux": "^7.2.2"

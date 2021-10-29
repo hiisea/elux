@@ -2,8 +2,7 @@ import { ComponentType } from 'react';
 import { RootModuleFacade } from '@elux/core';
 import { LoadComponentOptions } from '@elux/react-components';
 import { UserConfig, GetBaseAPP, CreateMP } from '@elux/app';
-export { taroHistory } from '@elux/taro';
-export * from '@elux/react-components';
+export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/react-components';
 export * from '@elux/app';
 export declare type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
 export declare function setConfig(conf: UserConfig & {

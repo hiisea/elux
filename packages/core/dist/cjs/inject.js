@@ -1,22 +1,22 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
+exports.defineModuleGetter = defineModuleGetter;
+exports.exportComponent = exportComponent;
 exports.exportModule = exportModule;
-exports.modelHotReplacement = modelHotReplacement;
+exports.exportView = exportView;
+exports.getCachedModules = getCachedModules;
+exports.getComponentList = getComponentList;
+exports.getComponet = getComponet;
 exports.getModule = getModule;
 exports.getModuleList = getModuleList;
-exports.loadModel = loadModel;
-exports.getComponet = getComponet;
-exports.getComponentList = getComponentList;
-exports.loadComponet = loadComponet;
-exports.getCachedModules = getCachedModules;
 exports.getRootModuleAPI = getRootModuleAPI;
-exports.exportComponent = exportComponent;
-exports.exportView = exportView;
 exports.injectActions = injectActions;
-exports.defineModuleGetter = defineModuleGetter;
+exports.loadComponet = loadComponet;
+exports.loadModel = loadModel;
+exports.modelHotReplacement = modelHotReplacement;
 
 var _sprite = require("./sprite");
 

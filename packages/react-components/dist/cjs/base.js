@@ -1,9 +1,9 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.EluxContextComponent = exports.setReactComponentsConfig = exports.reactComponentsConfig = void 0;
+exports.setReactComponentsConfig = exports.reactComponentsConfig = exports.EluxContextComponent = void 0;
 
 var _react = _interopRequireDefault(require("react"));
 

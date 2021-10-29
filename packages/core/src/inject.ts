@@ -18,9 +18,7 @@ import {moduleInitAction} from './actions';
 import env from './env';
 
 export type Handler<F> = F extends (...args: infer P) => any
-  ? (
-      ...args: P
-    ) => {
+  ? (...args: P) => {
       type: string;
     }
   : never;

@@ -39,9 +39,10 @@
     "react-dom": "^16.8.0 || ^17"
   },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
+    "@elux/app": "^0.1.118",
     "@elux/react-redux": "^0.1.118",
-    "@elux/react-web": "^0.1.118"
+    "@elux/react-web": "^0.1.118",
+    "@elux/react-components": "^0.1.118"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

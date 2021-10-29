@@ -34,13 +34,10 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
+    "@elux/core": "^0.1.118",
     "@elux/route": "^0.1.118",
     "@vue/server-renderer": "^3.0.0",
     "stream": "^0.0.2"
-  },
-  "devDependencies": {
-    "vue": "^3.0.0"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

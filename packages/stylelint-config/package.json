@@ -1,9 +1,9 @@
 {
   "name": "@elux/stylelint-config",
-  "version": "0.1.1",
+  "version": "0.1.7",
   "main": "index.js",
   "files": [
-    "index.js"
+    "less.js"
   ],
   "description": "Common development tools",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/stylelint-config",
@@ -16,15 +16,19 @@
     "node": ">=14.0.0"
   },
   "scripts": {
-    "eslint": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/eslint --fix --cache **/*.{js,ts}"
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}"
+  },
+  "peerDependencies": {
+    "prettier": "^2.4.0"
   },
   "dependencies": {
-    "stylelint-config-prettier": "~8.0.2",
-    "stylelint-config-standard": "~22.0.0",
-    "stylelint-declaration-block-no-ignored-properties": "~2.3.0",
-    "stylelint-prettier": "~1.2.0",
-    "stylelint": "~13.13.0",
-    "prettier": "~2.3.0"
+    "stylelint": "^14.0.0",
+    "stylelint-config-prettier": "^9.0.3",
+    "stylelint-config-rational-order": "^0.1.2",
+    "stylelint-config-standard": "^23.0.0",
+    "stylelint-declaration-block-no-ignored-properties": "^2.4.0",
+    "stylelint-order": "^5.0.0",
+    "stylelint-prettier": "^1.2.0"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
 }

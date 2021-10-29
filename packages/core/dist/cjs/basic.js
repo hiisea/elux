@@ -1,12 +1,14 @@
 "use strict";
 
 exports.__esModule = true;
+exports.MetaData = void 0;
 exports.buildConfigSetter = buildConfigSetter;
-exports.isEluxComponent = isEluxComponent;
-exports.moduleExists = moduleExists;
+exports.coreConfig = void 0;
 exports.deepMergeState = deepMergeState;
+exports.isEluxComponent = isEluxComponent;
 exports.mergeState = mergeState;
-exports.MetaData = exports.setCoreConfig = exports.coreConfig = void 0;
+exports.moduleExists = moduleExists;
+exports.setCoreConfig = void 0;
 
 var _sprite = require("./sprite");
 

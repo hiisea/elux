@@ -16,15 +16,11 @@ export const Page = defineComponent({
   },
 
   setup(props) {
-    const {
-      store,
-      view
-    } = props;
     const storeContext = {
-      store: store
+      store: props.store
     };
     provide(EluxStoreContextKey, storeContext);
-    return () => h(view, null);
+    return () => h(props.view, null);
   }
 
 });

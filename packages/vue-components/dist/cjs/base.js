@@ -1,9 +1,10 @@
 "use strict";
 
 exports.__esModule = true;
+exports.setVueComponentsConfig = exports.EluxStoreContextKey = exports.EluxContextKey = void 0;
 exports.useRouter = useRouter;
 exports.useStore = useStore;
-exports.EluxStoreContextKey = exports.EluxContextKey = exports.setVueComponentsConfig = exports.vueComponentsConfig = void 0;
+exports.vueComponentsConfig = void 0;
 
 var _vue = require("vue");
 

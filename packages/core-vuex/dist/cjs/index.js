@@ -1,11 +1,11 @@
 "use strict";
 
 exports.__esModule = true;
-exports.storeCreator = storeCreator;
 exports.createVuex = createVuex;
-exports.refStore = refStore;
 exports.getRefsValue = getRefsValue;
 exports.mapState = mapState;
+exports.refStore = refStore;
+exports.storeCreator = storeCreator;
 
 var _vuex = require("vuex");
 

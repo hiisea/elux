@@ -34,10 +34,10 @@
     "vue": true
   },
   "peerDependencies": {
-    "vue": "^3.0.0"
+    "vue": "^3.0.0",
+    "vuex": "^4.0.0"
   },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
     "@elux/core-vuex": "^0.1.118",
     "@elux/vue-web": "^0.1.118"
   },

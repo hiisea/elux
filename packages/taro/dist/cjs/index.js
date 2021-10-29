@@ -1,10 +1,11 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
+exports.eventBus = void 0;
 exports.getTabPages = getTabPages;
-exports.taroHistory = exports.tabPages = exports.eventBus = void 0;
+exports.taroHistory = exports.tabPages = void 0;
 
 var _taro = _interopRequireDefault(require("@tarojs/taro"));
 

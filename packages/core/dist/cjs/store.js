@@ -1,12 +1,12 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
+exports.enhanceStore = enhanceStore;
+exports.getActionData = getActionData;
 exports.isProcessedError = isProcessedError;
 exports.setProcessedError = setProcessedError;
-exports.getActionData = getActionData;
-exports.enhanceStore = enhanceStore;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 

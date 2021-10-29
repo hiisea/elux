@@ -1,6 +1,6 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
 exports.default = _default;
@@ -11,6 +11,8 @@ var _vue = require("vue");
 
 var _base = require("./base");
 
+var _excluded = ["onClick", "href", "route", "action", "root"];
+
 function _default(_ref, context) {
   var _onClick = _ref.onClick,
       href = _ref.href,
@@ -18,7 +20,7 @@ function _default(_ref, context) {
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
       root = _ref.root,
-      props = (0, _objectWithoutPropertiesLoose2.default)(_ref, ["onClick", "href", "route", "action", "root"]);
+      props = (0, _objectWithoutPropertiesLoose2.default)(_ref, _excluded);
 
   var _inject = (0, _vue.inject)(_base.EluxContextKey, {
     documentHead: ''

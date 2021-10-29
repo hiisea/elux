@@ -36,14 +36,14 @@
     "react-dom": true
   },
   "peerDependencies": {
-    "@tarojs/taro": "^3.3.0",
+    "@tarojs/taro": "^3.3.12",
     "react": "^16.8.0 || ^17"
   },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
+    "@elux/app": "^0.1.118",
     "@elux/react-redux": "^0.1.118",
     "@elux/react-taro": "^0.1.118",
-    "regenerator-runtime": "~0.11.1"
+    "@elux/react-components": "^0.1.118"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

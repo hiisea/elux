@@ -1,10 +1,10 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
+exports.MPNativeRouter = exports.EluxRouter = void 0;
 exports.createRouter = createRouter;
-exports.EluxRouter = exports.MPNativeRouter = void 0;
 
 var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/assertThisInitialized"));
 

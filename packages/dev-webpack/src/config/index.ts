@@ -168,7 +168,8 @@ export function build(projEnvName: string, port?: number): void {
   fs.emptyDirSync(distPath);
   fs.copySync(publicPath, distPath, {dereference: true});
   if (fs.existsSync(envPath)) {
-    fs.copySync(envPath, distPath, {dereference: true});
+    // todo 跳过elux.config.js
+    fs.copySync(envPath, distPath, {dereference: true, filter: () => true});
   }
   fs.outputFileSync(
     path.join(distPath, 'config.js'),

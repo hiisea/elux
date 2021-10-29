@@ -35,14 +35,8 @@
     "react-dom": "^16.8.0 || ^17"
   },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
+    "@elux/core": "^0.1.118",
     "@elux/route": "^0.1.118"
-  },
-  "devDependencies": {
-    "@types/react": "~17.0.0",
-    "@types/react-dom": "~17.0.0",
-    "react": "~17.0.0",
-    "react-dom": "~17.0.0"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

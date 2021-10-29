@@ -1,5 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
+var _excluded = ["onClick", "href", "route", "root", "action"];
 import React, { useContext, useCallback } from 'react';
 import { EluxContextComponent } from './base';
 export default React.forwardRef(function (_ref, ref) {
@@ -9,7 +10,7 @@ export default React.forwardRef(function (_ref, ref) {
       root = _ref.root,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
-      props = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "route", "root", "action"]);
+      props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
   var eluxContext = useContext(EluxContextComponent);
   var router = eluxContext.router;

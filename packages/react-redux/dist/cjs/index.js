@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.useStore = exports.Provider = exports.createSelectorHook = exports.useSelector = exports.batch = exports.connectAdvanced = exports.shallowEqual = exports.connectRedux = exports.createRedux = void 0;
+exports.useStore = exports.useSelector = exports.shallowEqual = exports.createSelectorHook = exports.createRedux = exports.connectRedux = exports.connectAdvanced = exports.batch = exports.Provider = void 0;
 
 var _reactRedux = require("react-redux");
 

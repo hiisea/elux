@@ -1,9 +1,9 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.CoreModuleHandlers = exports.RouteModuleHandlers = exports.EmptyModuleHandlers = exports.routeMiddleware = void 0;
+exports.routeMiddleware = exports.RouteModuleHandlers = exports.EmptyModuleHandlers = exports.CoreModuleHandlers = void 0;
 
 var _decorate2 = _interopRequireDefault(require("@babel/runtime/helpers/decorate"));
 
@@ -173,7 +173,7 @@ var CoreModuleHandlers = (0, _decorate2.default)(null, function (_initialize2) {
       kind: "method",
       key: "dispatch",
       value: function dispatch(action) {
-        return this.store.dispatch(action);
+        return this.router.getCurrentStore().dispatch(action);
       }
     }, {
       kind: "method",

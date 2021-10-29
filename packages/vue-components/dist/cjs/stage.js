@@ -1,10 +1,10 @@
 "use strict";
 
 exports.__esModule = true;
-exports.renderToMP = renderToMP;
-exports.renderToDocument = renderToDocument;
-exports.renderToString = renderToString;
 exports.Router = exports.Page = void 0;
+exports.renderToDocument = renderToDocument;
+exports.renderToMP = renderToMP;
+exports.renderToString = renderToString;
 
 var _vue = require("vue");
 
@@ -25,14 +25,12 @@ var Page = (0, _vue.defineComponent)({
     }
   },
   setup: function setup(props) {
-    var store = props.store,
-        view = props.view;
     var storeContext = {
-      store: store
+      store: props.store
     };
     (0, _vue.provide)(_base.EluxStoreContextKey, storeContext);
     return function () {
-      return (0, _vue.h)(view, null);
+      return (0, _vue.h)(props.view, null);
     };
   }
 });

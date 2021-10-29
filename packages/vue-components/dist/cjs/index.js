@@ -1,9 +1,9 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.useRouter = exports.useStore = exports.EluxStoreContextKey = exports.EluxContextKey = exports.vueComponentsConfig = exports.setVueComponentsConfig = exports.loadComponent = exports.Link = exports.Else = exports.Switch = exports.DocumentHead = void 0;
+exports.vueComponentsConfig = exports.useStore = exports.useRouter = exports.setVueComponentsConfig = exports.loadComponent = exports.Switch = exports.Link = exports.EluxStoreContextKey = exports.EluxContextKey = exports.Else = exports.DocumentHead = void 0;
 
 var _DocumentHead = _interopRequireDefault(require("./DocumentHead"));
 

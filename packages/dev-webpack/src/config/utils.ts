@@ -630,7 +630,7 @@ function moduleExports({
                 console.error(e);
                 res.status(500).end(`error: ${e.message}`);
               });
-          } catch (e) {
+          } catch (e: any) {
             console.error(e);
             res.status(500).end(`error: ${e.message}`);
           }

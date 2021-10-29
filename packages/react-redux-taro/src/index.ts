@@ -1,4 +1,4 @@
-import {setReactComponentsConfig} from '@elux/react-taro';
+import {setReactComponentsConfig} from '@elux/react-components';
 import {Provider, useStore} from '@elux/react-redux';
 import {setAppConfig} from '@elux/app';
 setAppConfig({useStore: useStore as any});

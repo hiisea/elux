@@ -1,3 +1,4 @@
+/* eslint-disable vue/one-component-per-file */
 import {h, provide, inject, defineComponent, DefineComponent, shallowRef, ref, onBeforeUnmount, PropType} from 'vue';
 import type {App} from 'vue';
 import {env, IStore} from '@elux/core';
@@ -17,10 +18,9 @@ export const Page = defineComponent({
     },
   },
   setup(props) {
-    const {store, view} = props;
-    const storeContext: EluxStoreContext = {store: store!};
+    const storeContext: EluxStoreContext = {store: props.store!};
     provide(EluxStoreContextKey, storeContext);
-    return () => h(view, null);
+    return () => h(props.view, null);
   },
 });
 

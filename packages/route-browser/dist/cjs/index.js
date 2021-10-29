@@ -1,12 +1,12 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.createServerHistory = createServerHistory;
+exports.EluxRouter = exports.BrowserNativeRouter = void 0;
 exports.createBrowserHistory = createBrowserHistory;
 exports.createRouter = createRouter;
-exports.EluxRouter = exports.BrowserNativeRouter = void 0;
+exports.createServerHistory = createServerHistory;
 
 var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/assertThisInitialized"));
 

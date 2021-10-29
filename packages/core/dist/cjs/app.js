@@ -1,11 +1,11 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
+exports.forkStore = forkStore;
 exports.initApp = initApp;
 exports.reinitApp = reinitApp;
-exports.forkStore = forkStore;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 

@@ -44,7 +44,11 @@ function compose(...funcs: Function[]) {
     return funcs[0];
   }
 
-  return funcs.reduce((a, b) => (...args: any[]) => a(b(...args)));
+  return funcs.reduce(
+    (a, b) =>
+      (...args: any[]) =>
+        a(b(...args))
+  );
 }
 
 export function enhanceStore<S extends State = any>(baseStore: BStore, router: ICoreRouter, middlewares?: IStoreMiddleware[]): IStore<S> {

@@ -1,4 +1,5 @@
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
+var _excluded = ["onClick", "href", "route", "action", "root"];
 import { h, inject } from 'vue';
 import { EluxContextKey } from './base';
 export default function (_ref, context) {
@@ -8,7 +9,7 @@ export default function (_ref, context) {
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
       root = _ref.root,
-      props = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "route", "action", "root"]);
+      props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
   var _inject = inject(EluxContextKey, {
     documentHead: ''

@@ -19,9 +19,9 @@
     "dist/"
   ],
   "scripts": {
-    "eslint": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/eslint --fix --cache **/*.{js,ts}",
-    "prebuild": "../../node_modules/.bin/rimraf ./dist && ../../node_modules/.bin/copyfiles -f ./src/*.d.ts ./dist",
-    "build": "../../node_modules/.bin/tsc --build ./src"
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "prebuild": "rimraf ./dist && copyfiles -f ./src/*.d.ts ./dist",
+    "build": "tsc --build ./src"
   },
   "peerDependencies": {
     "@elux/core": "^1.0.0"

@@ -36,18 +36,12 @@
     "build:ts": "tsc -P ./src --module ESNext --isolatedModules false --noEmit false --outDir ./dist/ts",
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
-  "dependencies": {
-    "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.118",
-    "vuex": "next"
-  },
-  "devDependencies": {
-    "@elux/dev-pkg": "~1.0.0",
-    "typescript": "~4.2.0",
-    "vue": "^3.0.0"
-  },
   "peerDependencies": {
     "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@elux/core": "^0.1.118",
+    "vuex": "^4.0.2"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

@@ -2,27 +2,30 @@ import {IStore, IModuleHandlers, mergeState, Action, MetaData, IStoreMiddleware,
 import {reducer, ActionTypes, moduleRouteChangeAction} from './actions';
 import {loadModel, Handler, IModuleHandlersClass} from './inject';
 
-export const routeMiddleware: IStoreMiddleware = ({store, dispatch, getState}) => (next) => (action) => {
-  if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`) {
-    const existsModules = Object.keys(getState()).reduce((obj, moduleName) => {
-      obj[moduleName] = true;
-      return obj;
-    }, {});
-    const result = next(action);
-    const [routeState] = action.payload as [ICoreRouteState];
-    Object.keys(routeState.params).forEach((moduleName) => {
-      const moduleState = routeState.params[moduleName];
-      if (moduleState && Object.keys(moduleState).length > 0) {
-        if (existsModules[moduleName]) {
-          dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
+export const routeMiddleware: IStoreMiddleware =
+  ({store, dispatch, getState}) =>
+  (next) =>
+  (action) => {
+    if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`) {
+      const existsModules = Object.keys(getState()).reduce((obj, moduleName) => {
+        obj[moduleName] = true;
+        return obj;
+      }, {});
+      const result = next(action);
+      const [routeState] = action.payload as [ICoreRouteState];
+      Object.keys(routeState.params).forEach((moduleName) => {
+        const moduleState = routeState.params[moduleName];
+        if (moduleState && Object.keys(moduleState).length > 0) {
+          if (existsModules[moduleName]) {
+            dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
+          }
         }
-      }
-    });
-    return result;
-  } else {
-    return next(action);
-  }
-};
+      });
+      return result;
+    } else {
+      return next(action);
+    }
+  };
 
 export class EmptyModuleHandlers implements IModuleHandlers {
   initState: any = {};
@@ -54,9 +57,7 @@ export class RouteModuleHandlers<S extends ICoreRouteState> implements IModuleHa
 export type IRouteModuleHandlersClass<S extends ICoreRouteState> = IModuleHandlersClass<IModuleHandlers<S>>;
 
 type HandlerThis<T> = T extends (...args: infer P) => any
-  ? (
-      ...args: P
-    ) => {
+  ? (...args: P) => {
       type: string;
     }
   : undefined;
@@ -68,7 +69,8 @@ type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
  * 所有ModuleHandlers必须继承此基类
  */
 export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Record<string, any> = {}, U extends ICoreRouter = ICoreRouter>
-  implements IModuleHandlers {
+  implements IModuleHandlers
+{
   constructor(public readonly moduleName: string, public store: IStore, public readonly initState: S) {}
 
   protected get actions(): ActionsThis<this> {
@@ -107,7 +109,7 @@ export class CoreModuleHandlers<S extends Record<string, any> = {}, R extends Re
   }
 
   protected dispatch(action: Action): void | Promise<void> {
-    return this.store.dispatch(action);
+    return this.router.getCurrentStore().dispatch(action);
   }
 
   protected loadModel(moduleName: string): void | Promise<void> {
