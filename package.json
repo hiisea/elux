@@ -18,30 +18,7 @@
     "node": ">=14.0.0"
   },
   "workspaces": [
-    "packages/core",
-    "packages/core-redux",
-    "packages/core-vuex",
-    "packages/route",
-    "packages/route-browser",
-    "packages/route-mp",
-    "packages/app",
-    "packages/taro",
-    "packages/react-components",
-    "packages/react-redux",
-    "packages/react-web",
-    "packages/react-redux-web",
-    "packages/react-taro",
-    "packages/react-redux-taro",
-    "packages/vue-components",
-    "packages/vue-web",
-    "packages/vue-taro",
-    "packages/vue-vuex",
-    "packages/vue-vuex-web",
-    "packages/vue-vuex-taro",
-    "packages/babel-preset",
-    "packages/dev-utils",
-    "packages/dev-webpack",
-    "packages/eslint-plugin"
+    "packages/*"
   ],
   "scripts": {
     "commit": "git-cz",

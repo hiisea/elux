@@ -5,7 +5,7 @@ const {dev, build, pack} = require('../dist/config');
 
 program
   .command('dev [env]')
-  .description('Use a preset env configurations to start the dev server. default env is "local"')
+  .description('Use a preset env configurations to start the dev server. default is "local"')
   .option('--port <value>', 'Normalize a port into a number')
   .action((env, options) => {
     dev(env || 'local', options.port);

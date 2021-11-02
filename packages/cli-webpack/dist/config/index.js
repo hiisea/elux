@@ -4,34 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.pack = exports.build = exports.dev = void 0;
-const fs_extra_1 = __importDefault(require("fs-extra"));
 const path_1 = __importDefault(require("path"));
 const webpack_dev_server_1 = __importDefault(require("webpack-dev-server"));
 const terser_webpack_plugin_1 = __importDefault(require("terser-webpack-plugin"));
-const os_1 = require("os");
-const chalk_1 = __importDefault(require("chalk"));
 const webpack_1 = __importDefault(require("webpack"));
+const cli_utils_1 = require("@elux/cli-utils");
 const gen_1 = __importDefault(require("./gen"));
-function getLocalIP() {
-    let result = 'localhost';
-    const interfaces = os_1.networkInterfaces();
-    for (const devName in interfaces) {
-        const isEnd = interfaces[devName]?.some((item) => {
-            if (item.family === 'IPv4' && item.address !== '127.0.0.1' && !item.internal) {
-                result = item.address;
-                return true;
-            }
-            return false;
-        });
-        if (isEnd) {
-            break;
-        }
-    }
-    return result;
-}
-const localIP = getLocalIP();
-function dev(projEnvName, port) {
-    const config = gen_1.default(process.cwd(), projEnvName, 'development', port);
+function dev(projPath, projEnvName, port) {
+    const config = gen_1.default(projPath, projEnvName, 'development', port);
     const { devServerConfig, clientWebpackConfig, serverWebpackConfig, projectConfig: { cache, sourceMap, projectType, serverPort, nodeEnv, envPath, projEnv, envConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, useSSR, onCompiled, }, } = config;
     const envInfo = {
         clientPublicPath,
@@ -40,17 +20,17 @@ function dev(projEnvName, port) {
     if (useSSR) {
         envInfo.serverGlobalVar = serverGlobalVar;
     }
-    console.info(`projectType: ${chalk_1.default.magenta(projectType)} runMode: ${chalk_1.default.magenta(nodeEnv)} sourceMap: ${chalk_1.default.magenta(sourceMap)}`);
-    console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvPath: ${chalk_1.default.magenta(envPath)} EnvInfo: \n${chalk_1.default.gray(JSON.stringify(envInfo, null, 4))} \n`);
+    cli_utils_1.log(`projectType: ${cli_utils_1.chalk.magenta(projectType)} runMode: ${cli_utils_1.chalk.magenta(nodeEnv)} sourceMap: ${cli_utils_1.chalk.magenta(sourceMap)}`);
+    cli_utils_1.log(`EnvName: ${cli_utils_1.chalk.magenta(projEnv)} EnvPath: ${cli_utils_1.chalk.magenta(envPath)} EnvInfo: \n${cli_utils_1.chalk.gray(JSON.stringify(envInfo, null, 4))} \n`);
     let webpackCompiler;
     if (useSSR) {
         const compiler = webpack_1.default([clientWebpackConfig, serverWebpackConfig]);
         compiler.compilers[0].hooks.failed.tap('elux-webpack-client dev', (msg) => {
-            console.error(msg);
+            cli_utils_1.err(msg.toString());
             process.exit(1);
         });
         compiler.compilers[1].hooks.failed.tap('elux-webpack-server dev', (msg) => {
-            console.error(msg);
+            cli_utils_1.err(msg.toString());
             process.exit(1);
         });
         webpackCompiler = compiler;
@@ -58,7 +38,7 @@ function dev(projEnvName, port) {
     else {
         const compiler = webpack_1.default(clientWebpackConfig);
         compiler.hooks.failed.tap('elux-webpack-client dev', (msg) => {
-            console.error(msg);
+            cli_utils_1.err(msg.toString());
             process.exit(1);
         });
         webpackCompiler = compiler;
@@ -66,7 +46,7 @@ function dev(projEnvName, port) {
     const protocol = devServerConfig.https ? 'https' : 'http';
     const publicPath = devServerConfig.dev?.publicPath || '/';
     const localUrl = `${protocol}://localhost:${serverPort}${publicPath}`;
-    const localIpUrl = `${protocol}://${localIP}:${serverPort}${publicPath}`;
+    const localIpUrl = `${protocol}://${cli_utils_1.localIP}:${serverPort}${publicPath}`;
     const devServer = new webpack_dev_server_1.default(devServerConfig, webpackCompiler);
     let isFirstCompile = true;
     webpackCompiler.hooks.done.tap('elux-webpack dev', (stats) => {
@@ -75,19 +55,19 @@ function dev(projEnvName, port) {
         }
         if (isFirstCompile) {
             isFirstCompile = false;
-            console.info(`
+            cli_utils_1.log(`
 
 ***************************************
 *                                     *
-*           ${chalk_1.default.green.bold('Welcome to Elux')}           *
+*           ${cli_utils_1.chalk.green.bold('Welcome to Elux')}           *
 *                                     *
 ***************************************
 `);
-            console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta.underline(localUrl)}`);
-            console.info(`.....${chalk_1.default.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk_1.default.magenta.underline(localIpUrl)} \n`);
-            console.info(`WebpackCache: ${chalk_1.default.blue(cache)}`);
+            cli_utils_1.log(`.....${cli_utils_1.chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${cli_utils_1.chalk.magenta.underline(localUrl)}`);
+            cli_utils_1.log(`.....${cli_utils_1.chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${cli_utils_1.chalk.magenta.underline(localIpUrl)} \n`);
+            cli_utils_1.log(`WebpackCache: ${cli_utils_1.chalk.blue(cache)}`);
             if (cache !== 'filesystem') {
-                console.info(`${chalk_1.default.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);
+                cli_utils_1.log(`${cli_utils_1.chalk.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);
             }
             onCompiled();
         }
@@ -100,23 +80,23 @@ function dev(projEnvName, port) {
     devServer.start().catch(() => process.exit(1));
 }
 exports.dev = dev;
-function build(projEnvName, port) {
-    const config = gen_1.default(process.cwd(), projEnvName, 'production', port);
+function build(projPath, projEnvName, port) {
+    const config = gen_1.default(projPath, projEnvName, 'production', port);
     const { clientWebpackConfig, serverWebpackConfig, projectConfig: { cache, sourceMap, envPath, publicPath, distPath, projectType, nodeEnv, projEnv, envConfig: { clientPublicPath, clientGlobalVar, serverGlobalVar }, useSSR, serverPort, apiProxy, onCompiled, }, } = config;
     const envInfo = {
         clientPublicPath,
         clientGlobalVar,
         serverGlobalVar,
     };
-    console.info(`projectType: ${chalk_1.default.magenta(projectType)} runMode: ${chalk_1.default.magenta(nodeEnv)} sourceMap: ${chalk_1.default.magenta(sourceMap)}`);
-    console.info(`EnvName: ${chalk_1.default.magenta(projEnv)} EnvPath: ${chalk_1.default.magenta(envPath)} EnvInfo: \n${chalk_1.default.blue(JSON.stringify(envInfo, null, 4))} \n`);
-    fs_extra_1.default.ensureDirSync(distPath);
-    fs_extra_1.default.emptyDirSync(distPath);
-    fs_extra_1.default.copySync(publicPath, distPath, { dereference: true });
-    if (fs_extra_1.default.existsSync(envPath)) {
-        fs_extra_1.default.copySync(envPath, distPath, { dereference: true, filter: () => true });
+    cli_utils_1.log(`projectType: ${cli_utils_1.chalk.magenta(projectType)} runMode: ${cli_utils_1.chalk.magenta(nodeEnv)} sourceMap: ${cli_utils_1.chalk.magenta(sourceMap)}`);
+    cli_utils_1.log(`EnvName: ${cli_utils_1.chalk.magenta(projEnv)} EnvPath: ${cli_utils_1.chalk.magenta(envPath)} EnvInfo: \n${cli_utils_1.chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
+    cli_utils_1.fs.ensureDirSync(distPath);
+    cli_utils_1.fs.emptyDirSync(distPath);
+    cli_utils_1.fs.copySync(publicPath, distPath, { dereference: true });
+    if (cli_utils_1.fs.existsSync(envPath)) {
+        cli_utils_1.fs.copySync(envPath, distPath, { dereference: true, filter: () => true });
     }
-    fs_extra_1.default.outputFileSync(path_1.default.join(distPath, 'config.js'), `module.exports = ${JSON.stringify({ projectType, port: serverPort, proxy: apiProxy, clientGlobalVar, serverGlobalVar }, null, 4)}`);
+    cli_utils_1.fs.outputFileSync(path_1.default.join(distPath, 'config.js'), `module.exports = ${JSON.stringify({ projectType, port: serverPort, proxy: apiProxy, clientGlobalVar, serverGlobalVar }, null, 4)}`);
     const webpackCompiler = useSSR ? webpack_1.default([clientWebpackConfig, serverWebpackConfig]) : webpack_1.default(clientWebpackConfig);
     webpackCompiler.run((err, stats) => {
         if (err)
@@ -128,7 +108,7 @@ function build(projEnvName, port) {
             chunks: false,
             chunkModules: false,
         })}\n\n`);
-        console.info(`WebpackCache: ${chalk_1.default.blue(cache)}`);
+        cli_utils_1.log(`WebpackCache: ${cli_utils_1.chalk.blue(cache)}`);
         onCompiled();
     });
 }

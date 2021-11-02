@@ -1,39 +1,12 @@
-/* eslint-disable no-console */
-import fs from 'fs-extra';
 import path from 'path';
-// import url from 'url';
-// import defaultGateway from 'default-gateway';
 import WebpackDevServer from 'webpack-dev-server';
 import TerserPlugin from 'terser-webpack-plugin';
-import {networkInterfaces} from 'os';
-import chalk from 'chalk';
 import webpack, {Compiler, MultiCompiler} from 'webpack';
+import {fs, chalk, localIP, log, err} from '@elux/cli-utils';
 import genConfig from './gen';
 
-function getLocalIP() {
-  let result = 'localhost';
-  const interfaces = networkInterfaces();
-  for (const devName in interfaces) {
-    const isEnd = interfaces[devName]?.some((item) => {
-      // 取IPv4, 不为127.0.0.1的内网ip
-      if (item.family === 'IPv4' && item.address !== '127.0.0.1' && !item.internal) {
-        result = item.address;
-        return true;
-      }
-      return false;
-    });
-    // 若获取到ip, 结束遍历
-    if (isEnd) {
-      break;
-    }
-  }
-  return result;
-}
-
-const localIP = getLocalIP();
-
-export function dev(projEnvName: string, port?: number): void {
-  const config = genConfig(process.cwd(), projEnvName, 'development', port);
+export function dev(projPath: string, projEnvName: string, port?: number): void {
+  const config = genConfig(projPath, projEnvName, 'development', port);
   const {
     devServerConfig,
     clientWebpackConfig,
@@ -58,25 +31,25 @@ export function dev(projEnvName: string, port?: number): void {
   if (useSSR) {
     envInfo.serverGlobalVar = serverGlobalVar;
   }
-  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} sourceMap: ${chalk.magenta(sourceMap)}`);
-  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.gray(JSON.stringify(envInfo, null, 4))} \n`);
+  log(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} sourceMap: ${chalk.magenta(sourceMap)}`);
+  log(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.gray(JSON.stringify(envInfo, null, 4))} \n`);
 
   let webpackCompiler: MultiCompiler | Compiler;
   if (useSSR) {
     const compiler = webpack([clientWebpackConfig, serverWebpackConfig]);
     compiler.compilers[0].hooks.failed.tap('elux-webpack-client dev', (msg) => {
-      console.error(msg);
+      err(msg.toString());
       process.exit(1);
     });
     compiler.compilers[1].hooks.failed.tap('elux-webpack-server dev', (msg) => {
-      console.error(msg);
+      err(msg.toString());
       process.exit(1);
     });
     webpackCompiler = compiler;
   } else {
     const compiler = webpack(clientWebpackConfig);
     compiler.hooks.failed.tap('elux-webpack-client dev', (msg) => {
-      console.error(msg);
+      err(msg.toString());
       process.exit(1);
     });
     webpackCompiler = compiler;
@@ -98,7 +71,7 @@ export function dev(projEnvName: string, port?: number): void {
 
     if (isFirstCompile) {
       isFirstCompile = false;
-      console.info(`
+      log(`
 
 ***************************************
 *                                     *
@@ -106,13 +79,11 @@ export function dev(projEnvName: string, port?: number): void {
 *                                     *
 ***************************************
 `);
-      console.info(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localUrl)}`);
-      console.info(
-        `.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localIpUrl)} \n`
-      );
-      console.info(`WebpackCache: ${chalk.blue(cache)}`);
+      log(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localUrl)}`);
+      log(`.....${chalk.magenta(useSSR ? 'Enabled Server-Side Rendering!' : 'DevServer')} running at ${chalk.magenta.underline(localIpUrl)} \n`);
+      log(`WebpackCache: ${chalk.blue(cache)}`);
       if (cache !== 'filesystem') {
-        console.info(`${chalk.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);
+        log(`${chalk.gray('You can set filesystem cache to speed up compilation: https://webpack.js.org/configuration/cache/')} \n`);
       }
       onCompiled();
     }
@@ -128,14 +99,14 @@ export function dev(projEnvName: string, port?: number): void {
 
   // devServer.startCallback((err: any) => {
   //   if (err) {
-  //     console.error(err);
+  //     err(err);
   //     process.exit(1);
   //   }
   // });
 }
 
-export function build(projEnvName: string, port?: number): void {
-  const config = genConfig(process.cwd(), projEnvName, 'production', port);
+export function build(projPath: string, projEnvName: string, port?: number): void {
+  const config = genConfig(projPath, projEnvName, 'production', port);
   const {
     clientWebpackConfig,
     serverWebpackConfig,
@@ -161,8 +132,8 @@ export function build(projEnvName: string, port?: number): void {
     clientGlobalVar,
     serverGlobalVar,
   };
-  console.info(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} sourceMap: ${chalk.magenta(sourceMap)}`);
-  console.info(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
+  log(`projectType: ${chalk.magenta(projectType)} runMode: ${chalk.magenta(nodeEnv)} sourceMap: ${chalk.magenta(sourceMap)}`);
+  log(`EnvName: ${chalk.magenta(projEnv)} EnvPath: ${chalk.magenta(envPath)} EnvInfo: \n${chalk.blue(JSON.stringify(envInfo, null, 4))} \n`);
 
   fs.ensureDirSync(distPath);
   fs.emptyDirSync(distPath);
@@ -188,7 +159,7 @@ export function build(projEnvName: string, port?: number): void {
         chunkModules: false,
       })}\n\n`
     );
-    console.info(`WebpackCache: ${chalk.blue(cache)}`);
+    log(`WebpackCache: ${chalk.blue(cache)}`);
     onCompiled();
   });
 }
@@ -237,58 +208,3 @@ export function pack(input: string, output: string, target: string): void {
     );
   });
 }
-
-// function prepareUrls(protocol: string, host: string, port: number, pathname = '/') {
-//   const formatUrl = (hostname: string) =>
-//     url.format({
-//       protocol,
-//       hostname,
-//       port,
-//       pathname,
-//     });
-//   const prettyPrintUrl = (hostname: string) =>
-//     url.format({
-//       protocol,
-//       hostname,
-//       port: chalk.bold(port),
-//       pathname,
-//     });
-
-//   const isUnspecifiedHost = host === '0.0.0.0' || host === '::';
-//   let prettyHost;
-//   let lanUrlForConfig;
-//   let lanUrlForTerminal = chalk.gray('unavailable');
-//   if (isUnspecifiedHost) {
-//     prettyHost = 'localhost';
-//     try {
-//       // This can only return an IPv4 address
-//       const result = defaultGateway.v4.sync();
-//       lanUrlForConfig = address.ip(result && result.interface);
-//       if (lanUrlForConfig) {
-//         // Check if the address is a private ip
-//         // https://en.wikipedia.org/wiki/Private_network#Private_IPv4_address_spaces
-//         if (/^10[.]|^172[.](1[6-9]|2[0-9]|3[0-1])[.]|^192[.]168[.]/.test(lanUrlForConfig)) {
-//           // Address is private, format it for later use
-//           lanUrlForTerminal = prettyPrintUrl(lanUrlForConfig);
-//         } else {
-//           // Address is not private, so we will discard it
-//           lanUrlForConfig = undefined;
-//         }
-//       }
-//     } catch (_e) {
-//       // ignored
-//     }
-//   } else {
-//     prettyHost = host;
-//     lanUrlForConfig = host;
-//     lanUrlForTerminal = prettyPrintUrl(lanUrlForConfig);
-//   }
-//   const localUrlForTerminal = prettyPrintUrl(prettyHost);
-//   const localUrlForBrowser = formatUrl(prettyHost);
-//   return {
-//     lanUrlForConfig,
-//     lanUrlForTerminal,
-//     localUrlForTerminal,
-//     localUrlForBrowser,
-//   };
-// }

@@ -5,16 +5,10 @@
 
 "use strict";
 
-
-//todo
-const path = require("path");
-const webpackDir = path.dirname(require.resolve('webpack'));
-const containerDir = path.join(webpackDir,'./container');
-
-const isValidExternalsType = require(path.join(containerDir, "../../schemas/plugins/container/ExternalsType.check.js"));
-const SharePlugin = require(path.join(containerDir, "../sharing/SharePlugin"));
-const createSchemaValidation = require(path.join(containerDir, "../util/create-schema-validation"));
-const ContainerPlugin = require(path.join(containerDir, "./ContainerPlugin"));
+const isValidExternalsType = require("../../schemas/plugins/container/ExternalsType.check.js");
+const SharePlugin = require("../sharing/SharePlugin");
+const createSchemaValidation = require("../util/create-schema-validation");
+const ContainerPlugin = require("./ContainerPlugin");
 const ContainerReferencePlugin = require("./ContainerReferencePlugin");
 
 /** @typedef {import("../../declarations/plugins/container/ModuleFederationPlugin").ExternalsType} ExternalsType */
@@ -23,8 +17,8 @@ const ContainerReferencePlugin = require("./ContainerReferencePlugin");
 /** @typedef {import("../Compiler")} Compiler */
 
 const validate = createSchemaValidation(
-	require(path.join(containerDir, "../../schemas/plugins/container/ModuleFederationPlugin.check.js")),
-	() => require(path.join(containerDir, "../../schemas/plugins/container/ModuleFederationPlugin.json")),
+	require("../../schemas/plugins/container/ModuleFederationPlugin.check.js"),
+	() => require("../../schemas/plugins/container/ModuleFederationPlugin.json"),
 	{
 		name: "Module Federation Plugin",
 		baseDataPath: "options"
@@ -70,7 +64,7 @@ class ModuleFederationPlugin {
 					name: options.name,
 					library,
 					filename: options.filename,
-          runtime: options.runtime,
+					runtime: options.runtime,
 					exposes: options.exposes
 				}).apply(compiler);
 			}

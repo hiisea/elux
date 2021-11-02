@@ -1,0 +1,32 @@
+{
+  "name": "@elux/cli-mock",
+  "version": "0.0.4",
+  "description": "development tools",
+  "repository": "https://github.com/hiisea/elux/tree/master/packages/cli-mock",
+  "author": "hiisea <hiisea@qq.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "prebuild": "rimraf ./dist && copyfiles -f ./src/*.d.ts ./dist",
+    "build": "tsc --build ./src"
+  },
+  "peerDependencies": {
+    "@elux/cli-utils": "*"
+  },
+  "dependencies": {
+    "nodemon": "^2.0.0",
+    "ts-node": "^10.0.0",
+    "tsconfig-paths": "^3.0.0"
+  },
+  "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
+}

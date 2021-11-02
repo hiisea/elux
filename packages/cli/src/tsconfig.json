@@ -1,0 +1,12 @@
+{
+  "extends": "@elux/babel-preset/tsconfig.src.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "../dist",
+    "module": "CommonJS",
+    "types": ["node"],
+    "emitDeclarationOnly": false
+  },
+  "include": ["./"],
+  "exclude": []
+}

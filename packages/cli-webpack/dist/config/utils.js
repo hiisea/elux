@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const webpack_1 = __importDefault(require("webpack"));
+const cli_utils_1 = require("@elux/cli-utils");
 const ssr_inject_1 = __importDefault(require("../plugin/ssr-inject"));
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -161,7 +162,7 @@ function oneOfTsLoader(isProdModel, isVue, isServer) {
         return [
             {
                 test: /[/\\]index\.ts$/,
-                use: [...loaders, { loader: '@elux/dev-webpack/dist/loader/server-module-loader' }],
+                use: [...loaders, { loader: '@elux/cli-webpack/dist/loader/server-module-loader' }],
             },
             { use: loaders },
         ];
@@ -169,7 +170,7 @@ function oneOfTsLoader(isProdModel, isVue, isServer) {
     return [
         {
             test: /[/\\]index\.ts$/,
-            use: [...loaders, { loader: '@elux/dev-webpack/dist/loader/client-module-loader' }],
+            use: [...loaders, { loader: '@elux/cli-webpack/dist/loader/client-module-loader' }],
         },
         { use: loaders },
     ];
@@ -524,12 +525,12 @@ function moduleExports({ cache, sourceMap, nodeEnv, rootPath, srcPath, distPath,
                             res.end(str);
                         })
                             .catch((e) => {
-                            console.error(e);
+                            cli_utils_1.err(e.toString());
                             res.status(500).end(`error: ${e.message}`);
                         });
                     }
                     catch (e) {
-                        console.error(e);
+                        cli_utils_1.err(e.toString());
                         res.status(500).end(`error: ${e.message}`);
                     }
                 }

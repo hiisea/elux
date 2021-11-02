@@ -1,9 +1,8 @@
-/* eslint-disable no-console */
 import {Express} from 'express';
-
 import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
+import {err} from '@elux/cli-utils';
 import getSsrInjectPlugin from '../plugin/ssr-inject';
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -194,7 +193,7 @@ function oneOfTsLoader(isProdModel: boolean, isVue: boolean, isServer: boolean):
     return [
       {
         test: /[/\\]index\.ts$/,
-        use: [...loaders, {loader: '@elux/dev-webpack/dist/loader/server-module-loader'}],
+        use: [...loaders, {loader: '@elux/cli-webpack/dist/loader/server-module-loader'}],
       },
       {use: loaders},
     ];
@@ -202,7 +201,7 @@ function oneOfTsLoader(isProdModel: boolean, isVue: boolean, isServer: boolean):
   return [
     {
       test: /[/\\]index\.ts$/,
-      use: [...loaders, {loader: '@elux/dev-webpack/dist/loader/client-module-loader'}],
+      use: [...loaders, {loader: '@elux/cli-webpack/dist/loader/client-module-loader'}],
     },
     {use: loaders},
   ];
@@ -626,11 +625,11 @@ function moduleExports({
                 res.end(str);
               })
               .catch((e: Error) => {
-                console.error(e);
+                err(e.toString());
                 res.status(500).end(`error: ${e.message}`);
               });
           } catch (e: any) {
-            console.error(e);
+            err(e.toString());
             res.status(500).end(`error: ${e.message}`);
           }
         }
