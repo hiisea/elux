@@ -5,6 +5,7 @@
     "**/dist": true,
     "**/docs": true,
     "**/types": true,
+    "**/storage": true,
     "**/.eslintcache": true
   },
   "files.eol": "\n",

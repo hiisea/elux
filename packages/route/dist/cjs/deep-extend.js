@@ -1,9 +1,9 @@
 "use strict";
 
 exports.__esModule = true;
-exports.isPlainObject = isPlainObject;
-exports.extendDefault = extendDefault;
 exports.excludeDefault = excludeDefault;
+exports.extendDefault = extendDefault;
+exports.isPlainObject = isPlainObject;
 exports.splitPrivate = splitPrivate;
 
 function isPlainObject(obj) {

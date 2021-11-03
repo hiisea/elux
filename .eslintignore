@@ -1,6 +1,4 @@
 dist/
-types/
 docs/
-libs/
-./storage
-*.d.ts
+types/
+storage/

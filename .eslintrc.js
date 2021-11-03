@@ -7,5 +7,5 @@ module.exports = {
     browser: false,
     node: true,
   },
-  ignorePatterns: tsconfig.exclude,
+  ignorePatterns: [...tsconfig.exclude, '**/types'],
 };

@@ -1,8 +1,9 @@
 {
-  "extends": "@elux/babel-preset/tsconfig.src.json",
+  "extends": "@elux/babel-preset/tsconfig.esm.json",
   "compilerOptions": {
     "rootDir": "./",
     "declarationDir": "../types",
+    "emitDeclarationOnly": true,
     "types": ["../global/global"]
   },
   "include": ["./"],
