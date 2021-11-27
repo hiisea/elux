@@ -61,6 +61,8 @@ export type {
   DeepPartial,
 } from '@elux/route';
 
+export type ComputedStore<T> = {[K in keyof T]-?: () => T[K]};
+
 const appMeta: {
   SSRTPL: string;
   router: IEluxRouter;
