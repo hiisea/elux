@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-vuex-taro",
-  "version": "0.1.118",
+  "version": "0.1.128",
   "description": "The practice of elux on vue-vuex-taro",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-vuex-taro",
   "author": "hiisea <hiisea@qq.com>",
@@ -39,8 +39,8 @@
     "vuex": "^4.0.0"
   },
   "dependencies": {
-    "@elux/core-vuex": "^0.1.118",
-    "@elux/vue-taro": "^0.1.118"
+    "@elux/core-vuex": "^0.1.128",
+    "@elux/vue-taro": "^0.1.128"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

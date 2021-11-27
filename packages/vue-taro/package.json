@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-taro",
-  "version": "0.1.118",
+  "version": "0.1.128",
   "description": "The practice of vue + taro",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-taro",
   "author": "hiisea <hiisea@qq.com>",
@@ -32,11 +32,11 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@elux/core": "^0.1.118",
-    "@elux/app": "^0.1.118",
-    "@elux/route-mp": "^0.1.118",
-    "@elux/taro": "^0.1.118",
-    "@elux/vue-components": "^0.1.118"
+    "@elux/app": "^0.1.128",
+    "@elux/core": "^0.1.128",
+    "@elux/route-mp": "^0.1.128",
+    "@elux/taro": "^0.1.128",
+    "@elux/vue-components": "^0.1.128"
   },
   "gitHead": "c2d8bb9ed8d10102413bdf655c7326e94f4a4464"
 }

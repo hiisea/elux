@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-components",
-  "version": "0.1.118",
+  "version": "0.1.128",
   "description": "The practice of elux on vue",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-components",
   "author": "hiisea <hiisea@qq.com>",
@@ -33,8 +33,8 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@elux/core": "^0.1.118",
-    "@elux/route": "^0.1.118",
+    "@elux/core": "^0.1.128",
+    "@elux/route": "^0.1.128",
     "@vue/server-renderer": "^3.0.0",
     "stream": "^0.0.2"
   },
