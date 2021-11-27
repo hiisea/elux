@@ -8,7 +8,7 @@ import {renderToMP} from '@elux/vue-components/stage';
 import {createRouter} from '@elux/route-mp';
 
 export {taroHistory} from '@elux/taro';
-export * from '@elux/vue-components';
+export {DocumentHead, Switch, Else, Link, loadComponent} from '@elux/vue-components';
 export * from '@elux/app';
 export {Page} from '@elux/vue-components/stage';
 

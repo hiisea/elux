@@ -1,18 +1,19 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
+exports.action = exports.ActionTypes = void 0;
+exports.effect = effect;
 exports.errorAction = errorAction;
-exports.routeChangeAction = routeChangeAction;
+exports.logger = logger;
 exports.moduleInitAction = moduleInitAction;
 exports.moduleLoadingAction = moduleLoadingAction;
 exports.moduleRouteChangeAction = moduleRouteChangeAction;
-exports.setLoading = setLoading;
+exports.mutation = void 0;
 exports.reducer = reducer;
-exports.effect = effect;
-exports.logger = logger;
-exports.action = exports.mutation = exports.ActionTypes = void 0;
+exports.routeChangeAction = routeChangeAction;
+exports.setLoading = setLoading;
 
 var _env = _interopRequireDefault(require("./env"));
 

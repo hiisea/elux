@@ -1,10 +1,10 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.renderToMP = renderToMP;
 exports.renderToDocument = renderToDocument;
+exports.renderToMP = renderToMP;
 exports.renderToString = renderToString;
 
 var _react = _interopRequireDefault(require("react"));

@@ -155,7 +155,7 @@ export let CoreModuleHandlers = _decorate(null, function (_initialize2) {
       kind: "method",
       key: "dispatch",
       value: function dispatch(action) {
-        return this.store.dispatch(action);
+        return this.router.getCurrentStore().dispatch(action);
       }
     }, {
       kind: "method",

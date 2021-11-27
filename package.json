@@ -18,26 +18,7 @@
     "node": ">=14.0.0"
   },
   "workspaces": [
-    "packages/core",
-    "packages/core-redux",
-    "packages/core-vuex",
-    "packages/route",
-    "packages/route-browser",
-    "packages/route-mp",
-    "packages/app",
-    "packages/taro",
-    "packages/react-components",
-    "packages/react-redux",
-    "packages/react-web",
-    "packages/react-redux-web",
-    "packages/react-taro",
-    "packages/react-redux-taro",
-    "packages/vue-components",
-    "packages/vue-web",
-    "packages/vue-taro",
-    "packages/vue-vuex",
-    "packages/vue-vuex-web",
-    "packages/vue-vuex-taro"
+    "packages/*"
   ],
   "scripts": {
     "commit": "git-cz",
@@ -62,42 +43,44 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,vue}": "cross-env NODE_ENV=production eslint  --ignore-pattern **/*.d.ts --fix --quiet --cache",
-    "*.{css,less,vue}": "cross-env NODE_ENV=production stylelint  --ignore-pattern **/*.d.ts --fix --quiet --cache",
+    "*.{js,jsx,ts,tsx,vue}": "cross-env NODE_ENV=production eslint --fix --quiet --cache",
+    "*.{css,less,vue}": "cross-env NODE_ENV=production stylelint --fix --quiet --cache",
     "*.json": "prettier --write"
   },
-  "resolutions": {
+  "dependencies": {
+    "@babel/runtime": "~7.15.4",
+    "react": "~17.0.1",
+    "vue": "~3.0.0"
+  },
+  "devDependencies": {
     "@types/node": "~14.14.7",
     "@types/jest": "~26.0.15",
     "@types/express": "~4.17.9",
     "@types/react": "~17.0.0",
     "@types/react-dom": "~17.0.0",
-    "@babel/runtime": "~7.12.0",
-    "@elux/dev-pkg": "~0.1.2",
-    "typescript": "~4.2.0",
-    "express": "^4.0.0",
-    "react": "~17.0.1",
-    "vue": "~3.0.0",
-    "jest": "~26.6.3"
-  },
-  "dependencies": {
-    "@elux/dev-pkg": "~1.0.0",
-    "typescript": "~4.2.0"
-  },
-  "devDependencies": {
     "@commitlint/cli": "~12.1.1",
     "@commitlint/config-conventional": "~12.1.1",
     "husky": "~4.3.8",
     "commitizen": "~4.2.3",
     "cz-lerna-changelog": "~2.0.3",
     "lint-staged": "~10.5.4",
+    "cross-env": "~7.0.0",
     "lerna": "~4.0.0",
     "rollup": "~2.45.0",
     "rollup-plugin-terser": "~7.0.0",
+    "chalk": "^4.0.0",
+    "replace-in-file": "~6.3.1",
+    "copyfiles": "^2.4.0",
+    "prettier": "^2.4.0",
     "@rollup/plugin-alias": "~3.1.0",
     "@rollup/plugin-babel": "~5.3.0",
     "@rollup/plugin-commonjs": "~18.1.0",
     "@rollup/plugin-node-resolve": "~11.2.0",
-    "@rollup/plugin-replace": "~2.4.0"
+    "@rollup/plugin-replace": "~2.4.0",
+    "@elux/babel-preset": "~0.1.6",
+    "@elux/eslint-plugin": "~0.1.20",
+    "@elux/stylelint-config": "~0.1.7",
+    "jest": "~26.6.3",
+    "typescript": "~4.2.0"
   }
 }

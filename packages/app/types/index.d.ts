@@ -4,6 +4,9 @@ export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, m
 export { RouteActionTypes, location, createRouteModule, safeJsonParse } from '@elux/route';
 export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent } from '@elux/core';
 export type { LocationState, PagenameMap, NativeLocationMap, HistoryAction, EluxLocation, NativeLocation, StateLocation, RouteState, DeepPartial, } from '@elux/route';
+export declare type ComputedStore<T> = {
+    [K in keyof T]-?: () => T[K];
+};
 export declare const appConfig: {
     loadComponent: LoadComponent;
     useRouter: () => ICoreRouter;

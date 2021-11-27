@@ -15,14 +15,12 @@ export var Page = defineComponent({
     }
   },
   setup: function setup(props) {
-    var store = props.store,
-        view = props.view;
     var storeContext = {
-      store: store
+      store: props.store
     };
     provide(EluxStoreContextKey, storeContext);
     return function () {
-      return h(view, null);
+      return h(props.view, null);
     };
   }
 });

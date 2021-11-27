@@ -1,6 +1,6 @@
 {
   "name": "@elux/route",
-  "version": "0.1.118",
+  "version": "0.1.128",
   "description": "",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route",
   "author": "hiisea <hiisea@qq.com>",
@@ -21,16 +21,15 @@
   ],
   "scripts": {
     "test": "jest",
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts} --ignore-pattern **/*.d.ts",
-    "prebuild": "node ../../preBuild && rimraf ./dist ./types && tsc --build ./src",
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "prebuild": "rimraf ./dist ./types && tsc --build ./src",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts\"",
     "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts\"",
     "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts\"",
     "build": "yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "dependencies": {
-    "@babel/runtime": "~7.12.18",
-    "@elux/core": "^0.1.118"
+    "@elux/core": "^0.1.128"
   },
   "gitHead": "7d6eb6d666143271ba0575fea99cf3f927fce764"
 }

@@ -1,8 +1,9 @@
 "use strict";
 
 exports.__esModule = true;
+exports.routeMeta = exports.routeConfig = void 0;
 exports.safeJsonParse = safeJsonParse;
-exports.routeMeta = exports.setRouteConfig = exports.routeConfig = void 0;
+exports.setRouteConfig = void 0;
 
 var _core = require("@elux/core");
 

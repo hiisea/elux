@@ -87,7 +87,8 @@ export abstract class BaseNativeRouter {
 
 export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown>
   extends MultipleDispatcher<{change: {routeState: RouteState<P>; root: boolean}}>
-  implements IEluxRouter<P, N, NT> {
+  implements IEluxRouter<P, N, NT>
+{
   private _curTask?: () => Promise<void>;
 
   private _taskList: Array<() => Promise<void>> = [];

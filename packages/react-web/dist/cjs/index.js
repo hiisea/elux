@@ -11,8 +11,8 @@ var _exportNames = {
   createSSR: true,
   loadComponent: true
 };
+exports.createSSR = exports.createApp = exports.Switch = exports.Link = exports.Else = exports.DocumentHead = void 0;
 exports.setConfig = setConfig;
-exports.createSSR = exports.createApp = exports.Link = exports.Else = exports.Switch = exports.DocumentHead = void 0;
 
 var _core = require("@elux/core");
 

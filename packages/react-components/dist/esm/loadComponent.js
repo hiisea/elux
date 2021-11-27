@@ -3,6 +3,7 @@ import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWith
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+var _excluded = ["forwardedRef", "deps", "store"];
 import React, { Component, useContext } from 'react';
 import { env, loadComponet, isPromise } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
@@ -103,7 +104,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
           forwardedRef = _this$props2.forwardedRef,
           deps = _this$props2.deps,
           store = _this$props2.store,
-          rest = _objectWithoutPropertiesLoose(_this$props2, ["forwardedRef", "deps", "store"]);
+          rest = _objectWithoutPropertiesLoose(_this$props2, _excluded);
 
       if (this.view) {
         var View = this.view;

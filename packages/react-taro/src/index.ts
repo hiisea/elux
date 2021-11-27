@@ -6,8 +6,8 @@ import {setAppConfig, setUserConfig, UserConfig, GetBaseAPP, createBaseMP, Creat
 import {renderToMP} from '@elux/react-components/stage';
 import {createRouter} from '@elux/route-mp';
 import {taroHistory, getTabPages} from '@elux/taro';
-export {taroHistory} from '@elux/taro';
-export * from '@elux/react-components';
+
+export {DocumentHead, Switch, Else, Link, loadComponent} from '@elux/react-components';
 export * from '@elux/app';
 
 setAppConfig({loadComponent, useRouter});

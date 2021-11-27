@@ -9,23 +9,134 @@ function getDevtoolsGlobalHook() {
 }
 function getTarget() {
   // @ts-ignore
-  return typeof navigator !== 'undefined' ? window : typeof global !== 'undefined' ? global : {};
+  return typeof navigator !== 'undefined' && typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : {};
 }
+const isProxyAvailable = typeof Proxy === 'function';
 
 const HOOK_SETUP = 'devtools-plugin:setup';
+const HOOK_PLUGIN_SETTINGS_SET = 'plugin:settings:set';
+
+class ApiProxy {
+  constructor(plugin, hook) {
+    this.target = null;
+    this.targetQueue = [];
+    this.onQueue = [];
+    this.plugin = plugin;
+    this.hook = hook;
+    const defaultSettings = {};
+
+    if (plugin.settings) {
+      for (const id in plugin.settings) {
+        const item = plugin.settings[id];
+        defaultSettings[id] = item.defaultValue;
+      }
+    }
+
+    const localSettingsSaveId = `__vue-devtools-plugin-settings__${plugin.id}`;
+    let currentSettings = { ...defaultSettings
+    };
+
+    try {
+      const raw = localStorage.getItem(localSettingsSaveId);
+      const data = JSON.parse(raw);
+      Object.assign(currentSettings, data);
+    } catch (e) {// noop
+    }
+
+    this.fallbacks = {
+      getSettings() {
+        return currentSettings;
+      },
+
+      setSettings(value) {
+        try {
+          localStorage.setItem(localSettingsSaveId, JSON.stringify(value));
+        } catch (e) {// noop
+        }
+
+        currentSettings = value;
+      }
+
+    };
+    hook.on(HOOK_PLUGIN_SETTINGS_SET, (pluginId, value) => {
+      if (pluginId === this.plugin.id) {
+        this.fallbacks.setSettings(value);
+      }
+    });
+    this.proxiedOn = new Proxy({}, {
+      get: (_target, prop) => {
+        if (this.target) {
+          return this.target.on[prop];
+        } else {
+          return (...args) => {
+            this.onQueue.push({
+              method: prop,
+              args
+            });
+          };
+        }
+      }
+    });
+    this.proxiedTarget = new Proxy({}, {
+      get: (_target, prop) => {
+        if (this.target) {
+          return this.target[prop];
+        } else if (prop === 'on') {
+          return this.proxiedOn;
+        } else if (Object.keys(this.fallbacks).includes(prop)) {
+          return (...args) => {
+            this.targetQueue.push({
+              method: prop,
+              args,
+              resolve: () => {}
+            });
+            return this.fallbacks[prop](...args);
+          };
+        } else {
+          return (...args) => {
+            return new Promise(resolve => {
+              this.targetQueue.push({
+                method: prop,
+                args,
+                resolve
+              });
+            });
+          };
+        }
+      }
+    });
+  }
+
+  async setRealTarget(target) {
+    this.target = target;
+
+    for (const item of this.onQueue) {
+      this.target.on[item.method](...item.args);
+    }
+
+    for (const item of this.targetQueue) {
+      item.resolve(await this.target[item.method](...item.args));
+    }
+  }
+
+}
 
 function setupDevtoolsPlugin(pluginDescriptor, setupFn) {
+  const target = getTarget();
   const hook = getDevtoolsGlobalHook();
+  const enableProxy = isProxyAvailable && pluginDescriptor.enableEarlyProxy;
 
-  if (hook) {
+  if (hook && (target.__VUE_DEVTOOLS_PLUGIN_API_AVAILABLE__ || !enableProxy)) {
     hook.emit(HOOK_SETUP, pluginDescriptor, setupFn);
   } else {
-    const target = getTarget();
+    const proxy = enableProxy ? new ApiProxy(pluginDescriptor, hook) : null;
     const list = target.__VUE_DEVTOOLS_PLUGINS__ = target.__VUE_DEVTOOLS_PLUGINS__ || [];
     list.push({
       pluginDescriptor,
-      setupFn
+      setupFn,
+      proxy
     });
+    if (proxy) setupFn(proxy.proxiedTarget);
   }
 }
 
@@ -2229,7 +2340,7 @@ function _arrayWithHoles(arr) {
 }
 
 function _iterableToArray(iter) {
-  if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
+  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
 
 function _arrayLikeToArray(arr, len) {
@@ -2841,7 +2952,7 @@ var CoreModuleHandlers = _decorate(null, function (_initialize2) {
       kind: "method",
       key: "dispatch",
       value: function dispatch(action) {
-        return this.store.dispatch(action);
+        return this.router.getCurrentStore().dispatch(action);
       }
     }, {
       kind: "method",
@@ -3463,6 +3574,7 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
+var _excluded = ["onClick", "href", "route", "action", "root"];
 function Link (_ref, context) {
   var _onClick = _ref.onClick,
       href = _ref.href,
@@ -3470,7 +3582,7 @@ function Link (_ref, context) {
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
       root = _ref.root,
-      props = _objectWithoutPropertiesLoose(_ref, ["onClick", "href", "route", "action", "root"]);
+      props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
   var _inject = vue.inject(EluxContextKey, {
     documentHead: ''
@@ -3561,14 +3673,12 @@ var Page = vue.defineComponent({
     }
   },
   setup: function setup(props) {
-    var store = props.store,
-        view = props.view;
     var storeContext = {
-      store: store
+      store: props.store
     };
     vue.provide(EluxStoreContextKey, storeContext);
     return function () {
-      return vue.h(view, null);
+      return vue.h(props.view, null);
     };
   }
 });
@@ -3684,6 +3794,42 @@ function renderToString(id, APPView, eluxContext, app) {
   return htmlPromise;
 }
 
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
 function createCommonjsModule(fn) {
   var module = { exports: {} };
 	return fn(module, module.exports), module.exports;
@@ -3783,11 +3929,9 @@ var runtime = function (exports) {
 
 
   var IteratorPrototype = {};
-
-  IteratorPrototype[iteratorSymbol] = function () {
+  define(IteratorPrototype, iteratorSymbol, function () {
     return this;
-  };
-
+  });
   var getProto = Object.getPrototypeOf;
   var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
 
@@ -3798,8 +3942,9 @@ var runtime = function (exports) {
   }
 
   var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
-  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
-  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+  GeneratorFunction.prototype = GeneratorFunctionPrototype;
+  define(Gp, "constructor", GeneratorFunctionPrototype);
+  define(GeneratorFunctionPrototype, "constructor", GeneratorFunction);
   GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"); // Helper for defining the .next, .throw, and .return methods of the
   // Iterator interface in terms of a single ._invoke method.
 
@@ -3904,11 +4049,9 @@ var runtime = function (exports) {
   }
 
   defineIteratorMethods(AsyncIterator.prototype);
-
-  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+  define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
     return this;
-  };
-
+  });
   exports.AsyncIterator = AsyncIterator; // Note that simple async functions are implemented on top of
   // AsyncIterator objects; they just return a Promise for the value of
   // the final result produced by the iterator.
@@ -4085,13 +4228,12 @@ var runtime = function (exports) {
   // object to not be returned from this call. This ensures that doesn't happen.
   // See https://github.com/facebook/regenerator/issues/274 for more details.
 
-  Gp[iteratorSymbol] = function () {
+  define(Gp, iteratorSymbol, function () {
     return this;
-  };
-
-  Gp.toString = function () {
+  });
+  define(Gp, "toString", function () {
     return "[object Generator]";
-  };
+  });
 
   function pushTryEntry(locs) {
     var entry = {
@@ -4403,54 +4545,23 @@ try {
 } catch (accidentalStrictMode) {
   // This module should not be running in strict mode, so the above
   // assignment should always work unless something is misconfigured. Just
-  // in case runtime.js accidentally runs in strict mode, we can escape
+  // in case runtime.js accidentally runs in strict mode, in modern engines
+  // we can explicitly access globalThis. In older engines we can escape
   // strict mode using a global Function call. This could conceivably fail
   // if a Content Security Policy forbids using Function, but in that case
   // the proper solution is to fix the accidental strict mode problem. If
   // you've misconfigured your bundler to force strict mode and applied a
   // CSP to forbid Function, and you're not willing to fix either of those
   // problems, please detail your unique predicament in a GitHub issue.
-  Function("r", "regeneratorRuntime = r")(runtime);
+  if (typeof globalThis === "object") {
+    globalThis.regeneratorRuntime = runtime;
+  } else {
+    Function("r", "regeneratorRuntime = r")(runtime);
+  }
 }
 });
 
 var regenerator = runtime_1;
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
 
 var routeConfig = {
   RouteModuleName: 'route',

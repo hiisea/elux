@@ -1,15 +1,19 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
 var _exportNames = {
+  DocumentHead: true,
+  Switch: true,
+  Else: true,
+  Link: true,
   setConfig: true,
   createMP: true,
-  taroHistory: true
+  loadComponent: true
 };
+exports.createMP = exports.Switch = exports.Link = exports.Else = exports.DocumentHead = void 0;
 exports.setConfig = setConfig;
-exports.createMP = void 0;
 
 var _taro = _interopRequireDefault(require("@tarojs/taro"));
 
@@ -17,12 +21,11 @@ var _core = require("@elux/core");
 
 var _reactComponents = require("@elux/react-components");
 
-Object.keys(_reactComponents).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _reactComponents[key]) return;
-  exports[key] = _reactComponents[key];
-});
+exports.loadComponent = _reactComponents.loadComponent;
+exports.DocumentHead = _reactComponents.DocumentHead;
+exports.Switch = _reactComponents.Switch;
+exports.Else = _reactComponents.Else;
+exports.Link = _reactComponents.Link;
 
 var _app = require("@elux/app");
 
@@ -39,7 +42,6 @@ var _routeMp = require("@elux/route-mp");
 
 var _taro2 = require("@elux/taro");
 
-exports.taroHistory = _taro2.taroHistory;
 (0, _app.setAppConfig)({
   loadComponent: _reactComponents.loadComponent,
   useRouter: _reactComponents.useRouter
