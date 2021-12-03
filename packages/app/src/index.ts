@@ -264,7 +264,7 @@ export function createBaseSSR<INS = {}>(
     },
   };
 }
-export function patchActions(typeName: string, json?: string): void {
+export function patchActions(json?: string): void {
   if (json) {
     getRootModuleAPI(JSON.parse(json));
   }

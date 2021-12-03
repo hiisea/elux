@@ -149,7 +149,7 @@ export function createBaseSSR(ins, router, render, middlewares = []) {
 
   };
 }
-export function patchActions(typeName, json) {
+export function patchActions(json) {
   if (json) {
     getRootModuleAPI(JSON.parse(json));
   }

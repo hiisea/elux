@@ -95,7 +95,7 @@ export declare function createBaseSSR<INS = {}>(ins: INS, router: IEluxRouter, r
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
     };
 };
-export declare function patchActions(typeName: string, json?: string): void;
+export declare function patchActions(json?: string): void;
 export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', NT = unknown> = {
     State: {
         [M in keyof A]: A[M]['state'];
