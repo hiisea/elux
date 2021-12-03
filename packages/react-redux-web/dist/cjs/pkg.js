@@ -8519,7 +8519,7 @@ function createBaseSSR(ins, router, render, middlewares) {
     }
   };
 }
-function patchActions(json) {
+function patchActions(typeName, json) {
   if (json) {
     getRootModuleAPI(JSON.parse(json));
   }

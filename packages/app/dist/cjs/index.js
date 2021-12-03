@@ -248,7 +248,7 @@ function createBaseSSR(ins, router, render, middlewares) {
   };
 }
 
-function patchActions(json) {
+function patchActions(typeName, json) {
   if (json) {
     (0, _core.getRootModuleAPI)(JSON.parse(json));
   }
