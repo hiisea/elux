@@ -5,7 +5,7 @@ export declare type Handler<F> = F extends (...args: infer P) => any ? (...args:
 declare type Actions<T> = Pick<{
     [K in keyof T]: Handler<T[K]>;
 }, {
-    [K in keyof T]: T[K] extends Function ? K : never;
+    [K in keyof T]: T[K] extends Function ? Exclude<K, 'destroy'> : never;
 }[keyof T]>;
 export interface IModuleHandlersClass<H = IModuleHandlers> {
     new (moduleName: string, store: IStore, latestState: any, preState: any): H;
