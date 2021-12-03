@@ -37,10 +37,6 @@ export declare function createRouteModule<G extends PagenameMap>(pagenameMap: G,
     model: (store: import("@elux/core").IStore<any>) => void | Promise<void>;
     state: RouteState<any>;
     params: {};
-    actions: {
-        destroy: () => {
-            type: string;
-        };
-    };
+    actions: {};
     components: { [k in keyof G]: any; };
 };
