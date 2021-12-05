@@ -154,8 +154,8 @@ export function patchActions(typeName, json) {
     getRootModuleAPI(JSON.parse(json));
   }
 }
-export function getApp(actions) {
-  const modules = getRootModuleAPI(actions);
+export function getApp(demoteForProductionOnly, injectActions) {
+  const modules = getRootModuleAPI(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   return {
     GetActions: (...args) => {
       return args.reduce((prev, moduleName) => {

@@ -6353,8 +6353,8 @@ function patchActions(typeName, json) {
     getRootModuleAPI(JSON.parse(json));
   }
 }
-function getApp(actions) {
-  var modules = getRootModuleAPI(actions);
+function getApp(demoteForProductionOnly, injectActions) {
+  var modules = getRootModuleAPI(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   return {
     GetActions: function GetActions() {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {

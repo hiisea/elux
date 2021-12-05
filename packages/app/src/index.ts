@@ -283,13 +283,14 @@ export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R exten
 };
 
 export function getApp<T extends {State: any; GetActions: any; LoadComponent: any; Modules: any; Pagenames: any; Router: any}>(
-  actions?: Record<string, string[]>
+  demoteForProductionOnly?: boolean,
+  injectActions?: Record<string, string[]>
 ): Pick<T, 'GetActions' | 'LoadComponent' | 'Modules' | 'Pagenames'> & {
   GetRouter: () => T['Router'];
   useRouter: () => T['Router'];
   useStore: () => IStore<T['State']>;
 } {
-  const modules = getRootModuleAPI(actions);
+  const modules = getRootModuleAPI(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   return {
     GetActions: (...args: string[]) => {
       return args.reduce((prev, moduleName) => {
