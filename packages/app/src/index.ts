@@ -282,15 +282,14 @@ export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R exten
   Pagenames: {[K in keyof A[R]['components']]: K};
 };
 
-export function getApp<T extends {State: any; GetActions: any; LoadComponent: any; Modules: any; Pagenames: any; Router: any}>(): Pick<
-  T,
-  'GetActions' | 'LoadComponent' | 'Modules' | 'Pagenames'
-> & {
+export function getApp<T extends {State: any; GetActions: any; LoadComponent: any; Modules: any; Pagenames: any; Router: any}>(
+  actions?: Record<string, string[]>
+): Pick<T, 'GetActions' | 'LoadComponent' | 'Modules' | 'Pagenames'> & {
   GetRouter: () => T['Router'];
   useRouter: () => T['Router'];
   useStore: () => IStore<T['State']>;
 } {
-  const modules = getRootModuleAPI();
+  const modules = getRootModuleAPI(actions);
   return {
     GetActions: (...args: string[]) => {
       return args.reduce((prev, moduleName) => {

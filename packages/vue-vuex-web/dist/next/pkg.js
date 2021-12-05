@@ -5140,8 +5140,8 @@ function patchActions(typeName, json) {
     getRootModuleAPI(JSON.parse(json));
   }
 }
-function getApp() {
-  const modules = getRootModuleAPI();
+function getApp(actions) {
+  const modules = getRootModuleAPI(actions);
   return {
     GetActions: (...args) => {
       return args.reduce((prev, moduleName) => {

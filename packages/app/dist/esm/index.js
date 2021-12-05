@@ -199,8 +199,8 @@ export function patchActions(typeName, json) {
     getRootModuleAPI(JSON.parse(json));
   }
 }
-export function getApp() {
-  var modules = getRootModuleAPI();
+export function getApp(actions) {
+  var modules = getRootModuleAPI(actions);
   return {
     GetActions: function GetActions() {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {

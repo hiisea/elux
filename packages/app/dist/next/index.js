@@ -154,8 +154,8 @@ export function patchActions(typeName, json) {
     getRootModuleAPI(JSON.parse(json));
   }
 }
-export function getApp() {
-  const modules = getRootModuleAPI();
+export function getApp(actions) {
+  const modules = getRootModuleAPI(actions);
   return {
     GetActions: (...args) => {
       return args.reduce((prev, moduleName) => {

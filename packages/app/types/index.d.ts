@@ -126,7 +126,7 @@ export declare function getApp<T extends {
     Modules: any;
     Pagenames: any;
     Router: any;
-}>(): Pick<T, 'GetActions' | 'LoadComponent' | 'Modules' | 'Pagenames'> & {
+}>(actions?: Record<string, string[]>): Pick<T, 'GetActions' | 'LoadComponent' | 'Modules' | 'Pagenames'> & {
     GetRouter: () => T['Router'];
     useRouter: () => T['Router'];
     useStore: () => IStore<T['State']>;

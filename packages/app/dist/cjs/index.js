@@ -254,8 +254,8 @@ function patchActions(typeName, json) {
   }
 }
 
-function getApp() {
-  var modules = (0, _core.getRootModuleAPI)();
+function getApp(actions) {
+  var modules = (0, _core.getRootModuleAPI)(actions);
   return {
     GetActions: function GetActions() {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
