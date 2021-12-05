@@ -25,7 +25,7 @@ export type Handler<F> = F extends (...args: infer P) => any
 type Actions<T> = Pick<
   {[K in keyof T]: Handler<T[K]>},
   {
-    [K in keyof T]: T[K] extends Function ? K : never;
+    [K in keyof T]: T[K] extends Function ? Exclude<K, 'destroy'> : never;
   }[keyof T]
 >;
 
