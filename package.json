@@ -28,7 +28,7 @@
     "jsonlint": "prettier --write **/*.json",
     "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
     "pre-lerna": "lerna publish --no-git-tag-version --registry=http://localhost:4873/",
-    "lerna": "lerna publish --registry=http://localhost:4873/",
+    "lerna": "lerna publish",
     "debug": "node --inspect=19248 --debug-brk"
   },
   "husky": {
