@@ -1,7 +1,7 @@
 {
   "npmClient": "yarn",
   "useWorkspaces": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     "packages/core",
     "packages/core-redux",
