@@ -27,7 +27,7 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
           const completePromise = new Promise<void>((resolve) => {
             completeCallback = resolve;
           });
-          setData({classname: 'elux-app elux-animation elux-change ' + Date.now(), pages});
+          setData({classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(), pages});
           env.setTimeout(() => {
             containerRef.current!.className = 'elux-app elux-animation';
           }, 100);
@@ -42,7 +42,7 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
           });
           setData({classname: 'elux-app ' + Date.now(), pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]});
           env.setTimeout(() => {
-            containerRef.current!.className = 'elux-app elux-animation elux-change';
+            containerRef.current!.className = 'elux-app elux-animation elux-change elux-back';
           }, 100);
           env.setTimeout(() => {
             setData({classname: 'elux-app ' + Date.now(), pages});

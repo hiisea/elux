@@ -419,7 +419,7 @@ function effect(loadingKey = 'app.loading.global') {
     descriptor.enumerable = true;
 
     if (loadingForModuleName && loadingForGroupName && !env.isServer) {
-      function injectLoading(curAction, promiseResult) {
+      const injectLoading = function (curAction, promiseResult) {
         if (loadingForModuleName === 'app') {
           loadingForModuleName = coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
@@ -427,7 +427,7 @@ function effect(loadingKey = 'app.loading.global') {
         }
 
         setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
-      }
+      };
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
@@ -1957,7 +1957,7 @@ const Router = props => {
             completeCallback = resolve;
           });
           setData({
-            classname: 'elux-app elux-animation elux-change ' + Date.now(),
+            classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
             pages
           });
           env.setTimeout(() => {
@@ -1977,7 +1977,7 @@ const Router = props => {
             pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]
           });
           env.setTimeout(() => {
-            containerRef.current.className = 'elux-app elux-animation elux-change';
+            containerRef.current.className = 'elux-app elux-animation elux-change elux-back';
           }, 100);
           env.setTimeout(() => {
             setData({

@@ -1,4 +1,7 @@
 {
+  "npmClient": "yarn",
+  "useWorkspaces": false,
+  "version": "1.0.0",
   "packages": [
     "packages/core",
     "packages/core-redux",
@@ -23,12 +26,13 @@
   ],
   "command": {
     "publish": {
-      "message": "chore(release): publish %s",
-      "npmClient": "npm",
-      "ignoreChanges": ["**/tests/**", "**/dist/**"]
+      "registry": "https://registry.npmjs.org/",
+      "message": "chore(release): publish %s"
+    },
+    "version": {
+      "allowBranch": "main",
+      "conventionalCommits": true
     }
   },
-  "npmClient": "yarn",
-  "useWorkspaces": false,
-  "version": "1.0.0"
+  "ignoreChanges": ["**/test/**", "**/*.md"]
 }

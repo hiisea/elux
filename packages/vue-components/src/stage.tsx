@@ -47,7 +47,7 @@ export const Router = defineComponent({
           const completePromise = new Promise<void>((resolve) => {
             completeCallback = resolve;
           });
-          data.value = {classname: 'elux-app elux-animation elux-change ' + Date.now(), pages};
+          data.value = {classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(), pages};
           env.setTimeout(() => {
             containerRef.value.className = 'elux-app elux-animation';
           }, 100);
@@ -62,7 +62,7 @@ export const Router = defineComponent({
           });
           data.value = {classname: 'elux-app ' + Date.now(), pages: [...pages, data.value.pages[data.value.pages.length - 1]]};
           env.setTimeout(() => {
-            containerRef.value.className = 'elux-app elux-animation elux-change';
+            containerRef.value.className = 'elux-app elux-animation elux-change elux-back';
           }, 100);
           env.setTimeout(() => {
             data.value = {classname: 'elux-app ' + Date.now(), pages};

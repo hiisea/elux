@@ -1844,7 +1844,7 @@ function effect(loadingKey = 'app.loading.global') {
     descriptor.enumerable = true;
 
     if (loadingForModuleName && loadingForGroupName && !env.isServer) {
-      function injectLoading(curAction, promiseResult) {
+      const injectLoading = function (curAction, promiseResult) {
         if (loadingForModuleName === 'app') {
           loadingForModuleName = coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
@@ -1852,7 +1852,7 @@ function effect(loadingKey = 'app.loading.global') {
         }
 
         setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
-      }
+      };
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
@@ -3538,7 +3538,7 @@ const Router = defineComponent({
             completeCallback = resolve;
           });
           data.value = {
-            classname: 'elux-app elux-animation elux-change ' + Date.now(),
+            classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
             pages
           };
           env.setTimeout(() => {
@@ -3558,7 +3558,7 @@ const Router = defineComponent({
             pages: [...pages, data.value.pages[data.value.pages.length - 1]]
           };
           env.setTimeout(() => {
-            containerRef.value.className = 'elux-app elux-animation elux-change';
+            containerRef.value.className = 'elux-app elux-animation elux-change elux-back';
           }, 100);
           env.setTimeout(() => {
             data.value = {

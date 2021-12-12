@@ -104,14 +104,14 @@ export function effect(loadingKey: string | null = 'app.loading.global'): Functi
     descriptor.enumerable = true;
     if (loadingForModuleName && loadingForGroupName && !env.isServer) {
       // eslint-disable-next-line no-inner-declarations
-      function injectLoading(this: IModuleHandlers, curAction: Action, promiseResult: Promise<any>) {
+      const injectLoading = function (this: IModuleHandlers, curAction: Action, promiseResult: Promise<any>) {
         if (loadingForModuleName === 'app') {
           loadingForModuleName = coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
         setLoading(this.store, promiseResult, loadingForModuleName!, loadingForGroupName!);
-      }
+      };
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
       }

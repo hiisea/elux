@@ -43,7 +43,7 @@ var Router = function Router(props) {
             completeCallback = resolve;
           });
           setData({
-            classname: 'elux-app elux-animation elux-change ' + Date.now(),
+            classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
             pages: _pages
           });
 
@@ -68,7 +68,7 @@ var Router = function Router(props) {
           });
 
           _core.env.setTimeout(function () {
-            containerRef.current.className = 'elux-app elux-animation elux-change';
+            containerRef.current.className = 'elux-app elux-animation elux-change elux-back';
           }, 100);
 
           _core.env.setTimeout(function () {

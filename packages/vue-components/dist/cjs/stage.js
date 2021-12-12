@@ -62,7 +62,7 @@ var Router = (0, _vue.defineComponent)({
             completeCallback = resolve;
           });
           data.value = {
-            classname: 'elux-app elux-animation elux-change ' + Date.now(),
+            classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
             pages: pages
           };
 
@@ -87,7 +87,7 @@ var Router = (0, _vue.defineComponent)({
           };
 
           _core.env.setTimeout(function () {
-            containerRef.value.className = 'elux-app elux-animation elux-change';
+            containerRef.value.className = 'elux-app elux-animation elux-change elux-back';
           }, 100);
 
           _core.env.setTimeout(function () {

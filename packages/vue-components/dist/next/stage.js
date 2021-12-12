@@ -51,7 +51,7 @@ export const Router = defineComponent({
             completeCallback = resolve;
           });
           data.value = {
-            classname: 'elux-app elux-animation elux-change ' + Date.now(),
+            classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
             pages
           };
           env.setTimeout(() => {
@@ -71,7 +71,7 @@ export const Router = defineComponent({
             pages: [...pages, data.value.pages[data.value.pages.length - 1]]
           };
           env.setTimeout(() => {
-            containerRef.value.className = 'elux-app elux-animation elux-change';
+            containerRef.value.className = 'elux-app elux-animation elux-change elux-back';
           }, 100);
           env.setTimeout(() => {
             data.value = {

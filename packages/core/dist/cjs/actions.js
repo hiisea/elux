@@ -121,7 +121,7 @@ function effect(loadingKey) {
     descriptor.enumerable = true;
 
     if (loadingForModuleName && loadingForGroupName && !_env.default.isServer) {
-      function injectLoading(curAction, promiseResult) {
+      var injectLoading = function injectLoading(curAction, promiseResult) {
         if (loadingForModuleName === 'app') {
           loadingForModuleName = _basic.coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
@@ -129,7 +129,7 @@ function effect(loadingKey) {
         }
 
         setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
-      }
+      };
 
       if (!fun.__decorators__) {
         fun.__decorators__ = [];
