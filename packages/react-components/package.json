@@ -1,6 +1,6 @@
 {
   "name": "@elux/react-components",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The practice of elux on react",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/react-components",
   "author": "hiisea <hiisea@qq.com>",
@@ -34,8 +34,8 @@
     "react-dom": "^16.8.0 || ^17"
   },
   "dependencies": {
-    "@elux/core": "^1.0.0",
-    "@elux/route": "^1.0.0"
+    "@elux/core": "^1.0.1",
+    "@elux/route": "^1.0.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-vuex-web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The practice of elux on vue-vuex-web",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-vuex-web",
   "author": "hiisea <hiisea@qq.com>",
@@ -37,8 +37,8 @@
     "vuex": "^4.0.0"
   },
   "dependencies": {
-    "@elux/core-vuex": "^1.0.0",
-    "@elux/vue-web": "^1.0.0"
+    "@elux/core-vuex": "^1.0.1",
+    "@elux/vue-web": "^1.0.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }
