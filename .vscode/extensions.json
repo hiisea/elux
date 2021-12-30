@@ -1,10 +1,4 @@
 {
-  "recommendations": [
-    "davidanson.vscode-markdownlint",
-    "dbaeumer.vscode-eslint",
-    "editorconfig.editorconfig",
-    "esbenp.prettier-vscode",
-    "stylelint.vscode-stylelint"
-  ],
+  "recommendations": ["davidanson.vscode-markdownlint", "dbaeumer.vscode-eslint", "stylelint.vscode-stylelint", "esbenp.prettier-vscode"],
   "unwantedRecommendations": []
 }

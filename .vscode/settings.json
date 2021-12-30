@@ -16,6 +16,7 @@
     "source.organizeImports": false,
     "source.fixAll": true
   },
+  "files.associations": {"*.json": "jsonc"},
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
