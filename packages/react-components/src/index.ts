@@ -7,4 +7,8 @@ export {default as Link} from './Link';
 export {Page, Router, useRouter} from './Router';
 export {default as loadComponent} from './loadComponent';
 export type {LoadComponentOptions} from './loadComponent';
+export type {DocumentHeadProps} from './DocumentHead';
+export type {ElseProps} from './Else';
+export type {SwitchProps} from './Switch';
+export type {LinkProps} from './Link';
 export {setReactComponentsConfig, reactComponentsConfig} from './base';

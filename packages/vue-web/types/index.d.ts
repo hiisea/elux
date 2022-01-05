@@ -14,3 +14,4 @@ export declare function setConfig(conf: UserConfig & {
 }): void;
 export declare const createApp: CreateApp<App>;
 export declare const createSSR: CreateSSR<App>;
+//# sourceMappingURL=index.d.ts.map

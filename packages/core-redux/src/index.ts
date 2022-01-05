@@ -2,11 +2,17 @@
 import {compose, createStore, applyMiddleware, Reducer, Unsubscribe, StoreEnhancer, Middleware} from 'redux';
 import {env, BStore, StoreBuilder, StoreOptions} from '@elux/core';
 
+/**
+ * @internal
+ */
 export interface ReduxOptions extends StoreOptions {
   enhancers?: StoreEnhancer[];
   middlewares?: Middleware[];
 }
 
+/**
+ * @internal
+ */
 export interface ReduxStore<S extends Record<string, any> = {}> extends BStore<S> {
   subscribe(listener: () => void): Unsubscribe;
 }
@@ -15,6 +21,9 @@ const reduxReducer: Reducer = (state, action) => {
   return {...state, ...action.state};
 };
 
+/**
+ * @internal
+ */
 export function storeCreator(storeOptions: ReduxOptions, id = 0): ReduxStore {
   const {initState = {}, enhancers = [], middlewares} = storeOptions;
   if (middlewares) {
@@ -38,6 +47,9 @@ export function storeCreator(storeOptions: ReduxOptions, id = 0): ReduxStore {
   return reduxStore;
 }
 
+/**
+ * @internal
+ */
 export function createRedux(storeOptions: ReduxOptions = {}): StoreBuilder<ReduxOptions, ReduxStore> {
   return {storeOptions, storeCreator};
 }

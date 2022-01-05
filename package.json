@@ -28,6 +28,7 @@
     "jsonlint": "prettier --write **/*.json",
     "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
     "recommit": "git commit --amend --no-edit",
+    "build:types": "lerna run build:types",
     "publish-lerna": "lerna publish",
     "publish-test": "lerna publish --registry=http://localhost:4873/ --no-git-tag-version",
     "publish-nopush": "lerna publish --no-push",

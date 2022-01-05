@@ -17,21 +17,35 @@ import {moduleInitAction} from './actions';
 
 import env from './env';
 
-export type Handler<F> = F extends (...args: infer P) => any
+/**
+ * @internal
+ */
+export type PickHandler<F> = F extends (...args: infer P) => any
   ? (...args: P) => {
       type: string;
     }
   : never;
-type Actions<T> = Pick<
-  {[K in keyof T]: Handler<T[K]>},
+
+/**
+ * @internal
+ */
+export type PickActions<T> = Pick<
+  {[K in keyof T]: PickHandler<T[K]>},
   {
     [K in keyof T]: T[K] extends Function ? Exclude<K, 'destroy'> : never;
   }[keyof T]
 >;
 
+/**
+ * @internal
+ */
 export interface IModuleHandlersClass<H = IModuleHandlers> {
   new (moduleName: string, store: IStore, latestState: any, preState: any): H;
 }
+
+/**
+ * @internal
+ */
 export function exportModule<
   N extends string,
   H extends IModuleHandlers,
@@ -47,7 +61,7 @@ export function exportModule<
   model: (store: IStore) => void | Promise<void>;
   state: H['initState'];
   params: P;
-  actions: Actions<H>;
+  actions: PickActions<H>;
   components: CS;
 } {
   Object.keys(components).forEach((key) => {
@@ -80,6 +94,10 @@ export function exportModule<
     actions: undefined as any,
   };
 }
+
+/**
+ * @internal
+ */
 export function modelHotReplacement(moduleName: string, ModuleHandlers: IModuleHandlersClass): void {
   const model = (store: IStore) => {
     if (!store.injectedModules[moduleName]) {
@@ -236,15 +254,25 @@ export function getCachedModules(): Record<string, undefined | CommonModule | Pr
   return MetaData.moduleCaches;
 }
 
-type GetPromiseComponent<T> = T extends () => Promise<{default: infer R}> ? R : T;
+/*** @internal */
+export type GetPromiseComponent<T> = T extends () => Promise<{default: infer R}> ? R : T;
 
-type ReturnComponents<CS extends Record<string, EluxComponent | (() => Promise<{default: EluxComponent}>)>> = {
+/**
+ * @internal
+ */
+export type ReturnComponents<CS extends Record<string, EluxComponent | (() => Promise<{default: EluxComponent}>)>> = {
   [K in keyof CS]: GetPromiseComponent<CS[K]>;
 };
 
-type GetPromiseModule<T> = T extends Promise<{default: infer R}> ? R : T;
+/**
+ * @internal
+ */
+export type GetPromiseModule<T> = T extends Promise<{default: infer R}> ? R : T;
 
-type ModuleFacade<M extends CommonModule> = {
+/**
+ * @internal
+ */
+export type ModuleFacade<M extends CommonModule> = {
   name: string;
   components: ReturnComponents<M['components']>;
   state: M['state'];
@@ -253,14 +281,23 @@ type ModuleFacade<M extends CommonModule> = {
   actionNames: {[K in keyof M['actions']]: string};
 };
 
+/**
+ * @internal
+ */
 export type RootModuleFacade<
   G extends {
     [N in Extract<keyof G, string>]: () => CommonModule<N> | Promise<{default: CommonModule<N>}>;
   } = any
 > = {[K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>};
 
+/**
+ * @internal
+ */
 export type RootModuleActions<A extends RootModuleFacade> = {[K in keyof A]: keyof A[K]['actions']};
 
+/**
+ * @internal
+ */
 export type RootModuleAPI<A extends RootModuleFacade = RootModuleFacade> = {[K in keyof A]: Pick<A[K], 'name' | 'actions' | 'actionNames'>};
 
 export type RootModuleParams<A extends RootModuleFacade = RootModuleFacade> = {[K in keyof A]: A[K]['params']};
@@ -323,16 +360,27 @@ export function getRootModuleAPI<T extends RootModuleFacade = any>(data?: Record
   return MetaData.facadeMap as any;
 }
 
+/**
+ * @internal
+ */
 export function exportComponent<T>(component: T): T & EluxComponent {
   const eluxComponent: EluxComponent & T = component as any;
   eluxComponent.__elux_component__ = 'component';
   return eluxComponent;
 }
+
+/**
+ * @internal
+ */
 export function exportView<T>(component: T): T & EluxComponent {
   const eluxComponent: EluxComponent & T = component as any;
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;
 }
+
+/**
+ * @internal
+ */
 export type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(
   moduleName: M,
   componentName: V,

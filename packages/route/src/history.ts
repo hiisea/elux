@@ -1,6 +1,7 @@
 import {env, IStore, forkStore} from '@elux/core';
 import {routeMeta, RouteState} from './basic';
 import {ILocationTransform} from './transform';
+
 class RouteStack<T extends {destroy?: () => void}> {
   public records: T[] = [];
   constructor(protected limit: number) {}
@@ -78,7 +79,13 @@ class RouteStack<T extends {destroy?: () => void}> {
   }
 }
 
-export class HistoryRecord {
+/*** @internal */
+export interface IHistoryRecord {
+  key: string;
+  location: ILocationTransform;
+}
+
+export class HistoryRecord implements IHistoryRecord {
   static id = 0;
   public readonly destroy: undefined;
   // public readonly pagename: string;
@@ -94,6 +101,7 @@ export class HistoryRecord {
     //this.query = JSON.stringify(params);
   }
 }
+
 export class HistoryStack extends RouteStack<HistoryRecord> {
   static id = 0;
   public readonly stackkey: string;
@@ -129,6 +137,8 @@ export class HistoryStack extends RouteStack<HistoryRecord> {
     this.store.destroy();
   }
 }
+
+/*** @internal */
 export class RootStack extends RouteStack<HistoryStack> {
   constructor() {
     super(10);

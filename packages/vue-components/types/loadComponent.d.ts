@@ -8,3 +8,4 @@ export interface LoadComponentOptions {
 }
 declare const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions>;
 export default loadComponent;
+//# sourceMappingURL=loadComponent.d.ts.map

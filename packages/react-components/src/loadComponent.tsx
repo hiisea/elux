@@ -2,11 +2,13 @@ import React, {ComponentType, Component, useContext} from 'react';
 import {env, loadComponet, isPromise, LoadComponent, EluxComponent, IStore} from '@elux/core';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
+/*** @internal */
 export interface LoadComponentOptions {
   OnError?: ComponentType<{message: string}>;
   OnLoading?: ComponentType<{}>;
 }
 
+/*** @internal */
 const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;

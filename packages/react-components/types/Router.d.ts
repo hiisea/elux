@@ -8,3 +8,4 @@ export declare const Page: React.FC<{
     view: React.ComponentType;
 }>;
 export declare function useRouter(): ICoreRouter;
+//# sourceMappingURL=Router.d.ts.map

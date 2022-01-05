@@ -20,3 +20,4 @@ export declare function getRefsValue<T extends Record<string, Ref<any>>>(refs: T
 export declare function mapState<S extends Record<string, any>, M extends Record<string, (state: S) => any>>(storeProperty: string, maps: M): {
     [K in keyof M]: () => ReturnType<M[K]>;
 };
+//# sourceMappingURL=index.d.ts.map

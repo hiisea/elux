@@ -1,6 +1,6 @@
 export {coreConfig, mergeState, deepMergeState, setCoreConfig, buildConfigSetter, moduleExists} from './basic';
 export {ActionTypes, reducer, effect, mutation, action, setLoading, logger, errorAction, routeChangeAction} from './actions';
-export {getActionData, setProcessedError, isProcessedError} from './store';
+export {getActionData, setProcessedError, isProcessedError, errorProcessed} from './store';
 export {initApp, reinitApp, forkStore} from './app';
 export {
   loadModel,
@@ -26,8 +26,8 @@ export {
   isServer,
   serverSide,
   clientSide,
-  delayPromise,
   deepClone,
+  TaskCounter,
 } from './sprite';
 
 export {default as env} from './env';
@@ -50,5 +50,18 @@ export type {
   StoreOptions,
 } from './basic';
 
-export type {RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, LoadComponent, IModuleHandlersClass} from './inject';
-export type {IRouteModuleHandlersClass} from './router';
+export type {
+  ReturnComponents,
+  GetPromiseModule,
+  ModuleFacade,
+  PickActions,
+  RootModuleAPI,
+  RootModuleParams,
+  RootModuleFacade,
+  RootModuleActions,
+  LoadComponent,
+  IModuleHandlersClass,
+  GetPromiseComponent,
+  PickHandler,
+} from './inject';
+export type {IRouteModuleHandlersClass, ActionsThis, HandlerThis} from './router';

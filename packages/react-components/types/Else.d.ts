@@ -1,7 +1,10 @@
 import React, { ReactNode } from 'react';
-interface Props {
+/*** @public */
+export interface ElseProps {
     elseView?: ReactNode;
     children: ReactNode;
 }
-declare const _default: React.NamedExoticComponent<Props>;
+declare const _default: React.NamedExoticComponent<ElseProps>;
+/*** @public */
 export default _default;
+//# sourceMappingURL=Else.d.ts.map

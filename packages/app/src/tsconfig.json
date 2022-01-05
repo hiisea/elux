@@ -3,7 +3,9 @@
   "compilerOptions": {
     "rootDir": "./",
     "declarationDir": "../types",
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "removeComments": false,
+    "declarationMap": true
   },
   "include": ["./"],
   "exclude": []

@@ -15,3 +15,4 @@ export default function ({ onClick: _onClick, href, route, action, root, ...prop
     [key: string]: any;
 }>;
 export {};
+//# sourceMappingURL=Link.d.ts.map

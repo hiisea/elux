@@ -11,3 +11,4 @@ export default function (props: Props, context: {
     [key: string]: any;
 }>;
 export {};
+//# sourceMappingURL=Switch.d.ts.map

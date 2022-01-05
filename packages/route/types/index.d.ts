@@ -1,9 +1,10 @@
 import { IStore, ICoreRouter, IModuleHandlers, MultipleDispatcher, Action } from '@elux/core';
 import { RootParams, DeepPartial, EluxLocation, NativeLocation, StateLocation, RouteState } from './basic';
-import { RootStack, HistoryRecord } from './history';
+import { RootStack, IHistoryRecord } from './history';
 import { ILocationTransform } from './transform';
 export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
 export { location, createRouteModule, urlParser } from './transform';
+export type { IHistoryRecord } from './history';
 export type { ILocationTransform } from './transform';
 export type { RootParams, EluxLocation, NativeLocation, StateLocation, LocationState, RouteState, HistoryAction, PagenameMap, DeepPartial, NativeLocationMap, } from './basic';
 export declare abstract class BaseNativeRouter {
@@ -48,12 +49,12 @@ export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extend
     getStoreList(): IStore[];
     getHistoryLength(root?: boolean): number;
     findRecordByKey(key: string): {
-        record: HistoryRecord;
+        record: IHistoryRecord;
         overflow: boolean;
         index: [number, number];
     };
     findRecordByStep(delta: number, rootOnly: boolean): {
-        record: HistoryRecord;
+        record: IHistoryRecord;
         overflow: boolean;
         index: [number, number];
     };
@@ -74,6 +75,7 @@ export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extend
     private addTask;
     destroy(): void;
 }
+/*** @internal */
 export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>> {
     initialize: Promise<RouteState<P>>;
     nativeData: NT;
@@ -88,12 +90,12 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
         page?: any;
     }[];
     findRecordByKey(key: string): {
-        record: HistoryRecord;
+        record: IHistoryRecord;
         overflow: boolean;
         index: [number, number];
     };
     findRecordByStep(delta: number, rootOnly: boolean): {
-        record: HistoryRecord;
+        record: IHistoryRecord;
         overflow: boolean;
         index: [number, number];
     };
@@ -108,9 +110,11 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
     getHistoryLength(root?: boolean): number;
     destroy(): void;
 }
+/*** @internal */
 export declare const RouteActionTypes: {
     TestRouteChange: string;
     BeforeRouteChange: string;
 };
 export declare function beforeRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
 export declare function testRouteChangeAction<P extends RootParams>(routeState: RouteState<P>): Action;
+//# sourceMappingURL=index.d.ts.map

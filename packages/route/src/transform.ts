@@ -164,6 +164,7 @@ interface LocationCache {
   _params?: Record<string, any>;
 }
 
+/*** @internal */
 export interface ILocationTransform<P extends RootParams = any> {
   getPagename(): string;
   getEluxUrl(): string;
@@ -318,6 +319,7 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
   }
 }
 
+/*** @internal */
 export function location<P extends RootParams = any>(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ILocationTransform<P> {
   if (typeof dataOrUrl === 'string') {
     const url = urlParser.checkUrl(dataOrUrl);
@@ -404,6 +406,7 @@ const defaultNativeLocationMap: NativeLocationMap = {
   },
 };
 
+/*** @internal */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeLocationMap: NativeLocationMap = defaultNativeLocationMap) {
   const pagenames = Object.keys(pagenameMap);

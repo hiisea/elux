@@ -1,10 +1,13 @@
 import React from 'react';
-export interface Props extends React.HTMLAttributes<HTMLDivElement> {
+/*** @public */
+export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
     route?: string;
     onClick?(event: React.MouseEvent): void;
     href?: string;
     action?: 'push' | 'replace' | 'relaunch';
     root?: boolean;
 }
-declare const _default: React.ForwardRefExoticComponent<Props & React.RefAttributes<HTMLAnchorElement>>;
+declare const _default: React.ForwardRefExoticComponent<LinkProps & React.RefAttributes<HTMLAnchorElement>>;
+/*** @public */
 export default _default;
+//# sourceMappingURL=Link.d.ts.map

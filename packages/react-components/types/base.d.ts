@@ -29,3 +29,4 @@ export interface EluxContext {
     router?: IEluxRouter;
 }
 export declare const EluxContextComponent: React.Context<EluxContext>;
+//# sourceMappingURL=base.d.ts.map

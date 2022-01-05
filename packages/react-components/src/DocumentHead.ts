@@ -2,7 +2,8 @@ import React, {useContext, useEffect} from 'react';
 import {env} from '@elux/core';
 import {EluxContext, EluxContextComponent, reactComponentsConfig} from './base';
 
-interface Props {
+/*** @public */
+export interface DocumentHeadProps {
   title?: string;
   html?: string;
 }
@@ -29,7 +30,8 @@ function recoverClientHead(eluxContext: EluxContext, documentHead: string) {
     setClientHead(eluxContext, documentHead);
   }
 }
-const Component: React.FC<Props> = ({title, html}) => {
+
+const Component: React.FC<DocumentHeadProps> = ({title, html}) => {
   const eluxContext = useContext(EluxContextComponent);
   if (!html) {
     html = eluxContext.documentHead || '<title>Elux</title>';
@@ -49,4 +51,5 @@ const Component: React.FC<Props> = ({title, html}) => {
   return null;
 };
 
+/*** @public */
 export default React.memo(Component);

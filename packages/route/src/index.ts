@@ -14,13 +14,14 @@ import {
 } from '@elux/core';
 
 import {routeConfig, RootParams, DeepPartial, EluxLocation, NativeLocation, StateLocation, RouteState} from './basic';
-import {RootStack, HistoryStack, HistoryRecord} from './history';
+import {RootStack, HistoryStack, HistoryRecord, IHistoryRecord} from './history';
 
 import {location as createLocationTransform, ILocationTransform} from './transform';
 
 export {setRouteConfig, routeConfig, routeMeta, safeJsonParse} from './basic';
 export {location, createRouteModule, urlParser} from './transform';
 
+export type {IHistoryRecord} from './history';
 export type {ILocationTransform} from './transform';
 export type {
   RootParams,
@@ -144,10 +145,10 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
   getHistoryLength(root?: boolean): number {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
-  findRecordByKey(key: string): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
+  findRecordByKey(key: string): {record: IHistoryRecord; overflow: boolean; index: [number, number]} {
     return this.rootStack.findRecordByKey(key);
   }
-  findRecordByStep(delta: number, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
+  findRecordByStep(delta: number, rootOnly: boolean): {record: IHistoryRecord; overflow: boolean; index: [number, number]} {
     return this.rootStack.testBack(delta, rootOnly);
   }
   extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N> {
@@ -345,14 +346,15 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
   }
 }
 
+/*** @internal */
 export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>> {
   initialize: Promise<RouteState<P>>;
   nativeData: NT;
   location: ILocationTransform;
   addListener(name: 'change', callback: (data: {routeState: RouteState<P>; root: boolean}) => void | Promise<void>): () => void;
   getCurrentPages(): {pagename: string; store: IStore; page?: any}[];
-  findRecordByKey(key: string): {record: HistoryRecord; overflow: boolean; index: [number, number]};
-  findRecordByStep(delta: number, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; index: [number, number]};
+  findRecordByKey(key: string): {record: IHistoryRecord; overflow: boolean; index: [number, number]};
+  findRecordByStep(delta: number, rootOnly: boolean): {record: IHistoryRecord; overflow: boolean; index: [number, number]};
   extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N>;
   relaunch(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
   push(dataOrUrl: string | EluxLocation<P> | StateLocation<P, N> | NativeLocation, root?: boolean, nonblocking?: boolean): void | Promise<void>;
@@ -367,6 +369,7 @@ export interface IEluxRouter<P extends RootParams = {}, N extends string = strin
   destroy(): void;
 }
 
+/*** @internal */
 export const RouteActionTypes = {
   TestRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}TestRouteChange`,
   BeforeRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}BeforeRouteChange`,

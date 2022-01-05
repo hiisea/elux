@@ -1,7 +1,10 @@
 import React from 'react';
-interface Props {
+/*** @public */
+export interface DocumentHeadProps {
     title?: string;
     html?: string;
 }
-declare const _default: React.NamedExoticComponent<Props>;
+declare const _default: React.NamedExoticComponent<DocumentHeadProps>;
+/*** @public */
 export default _default;
+//# sourceMappingURL=DocumentHead.d.ts.map

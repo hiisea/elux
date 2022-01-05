@@ -34,3 +34,4 @@ export declare class EluxRouter<P extends RootParams, N extends string, NT = unk
 }
 export declare function createRouter<P extends RootParams, N extends string, NT = unknown>(browserHistory: IHistory, nativeData: NT): EluxRouter<P, N, NT>;
 export {};
+//# sourceMappingURL=index.d.ts.map

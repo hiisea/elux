@@ -24,8 +24,7 @@ export function buildConfigSetter<T extends Record<string, any>>(data: T): (conf
 export const setCoreConfig = buildConfigSetter(coreConfig);
 
 /**
- *
- * 因为一个action可以触发多个模块的actionHandler，priority属性用来设置handlers的优先处理顺序，通常无需设置
+ * @internal
  */
 export interface Action {
   type: string;
@@ -59,6 +58,9 @@ export type ActionCreatorList = Record<string, ActionCreator>;
 
 export type ActionCreatorMap = Record<string, ActionCreatorList>;
 
+/**
+ * @internal
+ */
 export interface IModuleHandlers<S = any> {
   readonly moduleName: string;
   readonly initState: S;
@@ -66,23 +68,42 @@ export interface IModuleHandlers<S = any> {
   destroy(): void;
 }
 
+/**
+ * @internal
+ */
 export type Dispatch = (action: Action) => void | Promise<void>;
 
+/**
+ * @internal
+ */
 export type State = Record<string, Record<string, any>>;
 
+/**
+ * @internal
+ */
 export interface GetState<S extends State = {}> {
   (): S;
   (moduleName: string): Record<string, any> | undefined;
 }
 
+/**
+ * @internal
+ */
 export interface StoreOptions {
   initState?: Record<string, any>;
 }
+
+/**
+ * @internal
+ */
 export interface StoreBuilder<O extends StoreOptions = StoreOptions, B extends BStore = BStore> {
   storeOptions: O;
   storeCreator: (options: O, id?: number) => B;
 }
 
+/**
+ * @internal
+ */
 export interface BStore<S extends State = any> {
   id: number;
   builder: StoreBuilder;
@@ -92,12 +113,18 @@ export interface BStore<S extends State = any> {
   destroy(): void;
 }
 
+/**
+ * @internal
+ */
 export type IStoreMiddleware = (api: {
   store: IStore;
   getState: GetState;
   dispatch: Dispatch;
 }) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 
+/**
+ * @internal
+ */
 export interface IStore<S extends State = any> extends BStore<S> {
   router: ICoreRouter;
   getCurrentActionName: () => string;
@@ -109,10 +136,17 @@ export interface IStore<S extends State = any> extends BStore<S> {
   };
 }
 
+/**
+ * @internal
+ */
 export interface ICoreRouteState {
   action: string;
   params: any;
 }
+
+/**
+ * @internal
+ */
 export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
   routeState: ST;
   startup(store: IStore): void;
@@ -122,6 +156,9 @@ export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
   latestState: Record<string, any>;
 }
 
+/**
+ * @internal
+ */
 export interface CommonModule<ModuleName extends string = string> {
   moduleName: ModuleName;
   model: (store: IStore) => void | Promise<void>;
@@ -131,10 +168,16 @@ export interface CommonModule<ModuleName extends string = string> {
   components: Record<string, EluxComponent | (() => Promise<{default: EluxComponent}>)>;
 }
 
+/**
+ * @internal
+ */
 export type ModuleGetter = Record<string, () => CommonModule | Promise<{default: CommonModule}>>;
 
 export type FacadeMap = Record<string, {name: string; actions: ActionCreatorList; actionNames: Record<string, string>}>;
 
+/**
+ * @internal
+ */
 export interface EluxComponent {
   __elux_component__: 'view' | 'component';
 }
@@ -167,6 +210,9 @@ export function moduleExists(): Record<string, boolean> {
   return MetaData.moduleExists;
 }
 
+/**
+ * @internal
+ */
 export function deepMergeState(target: any = {}, ...args: any[]): any {
   if (coreConfig.MutableData) {
     return deepMerge(target, ...args);

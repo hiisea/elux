@@ -10,19 +10,14 @@
     "packages/route-browser",
     "packages/route-mp",
     "packages/app",
-    "packages/taro",
     "packages/react-components",
     "packages/react-redux",
     "packages/react-web",
     "packages/react-redux-web",
-    "packages/react-taro",
-    "packages/react-redux-taro",
     "packages/vue-components",
     "packages/vue-web",
-    "packages/vue-taro",
     "packages/vue-vuex",
-    "packages/vue-vuex-web",
-    "packages/vue-vuex-taro"
+    "packages/vue-vuex-web"
   ],
   "command": {
     "publish": {

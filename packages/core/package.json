@@ -31,11 +31,11 @@
   ],
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
-    "prebuild": "rimraf ./dist ./types && tsc --build ./src",
+    "build:types": "rimraf ./types && tsc --build ./src",
     "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts\"",
     "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts\"",
     "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts\"",
-    "build": "yarn build:next & yarn build:esm & yarn build:cjs"
+    "build": "yarn build:types && rimraf ./dist && yarn build:next & yarn build:esm & yarn build:cjs"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

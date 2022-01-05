@@ -12,3 +12,4 @@ export declare function setConfig(conf: UserConfig & {
     LoadComponentOnLoading?: ComponentType<{}>;
 }): void;
 export declare const createMP: CreateMP;
+//# sourceMappingURL=index.d.ts.map

@@ -18,11 +18,15 @@ import {ActionTypes, errorAction} from './actions';
 import {loadModel} from './inject';
 import {routeMiddleware} from './router';
 
-const errorProcessed = '__eluxProcessed__';
+/*** @internal */
+export const errorProcessed = '__eluxProcessed__';
+
+/*** @internal */
 export function isProcessedError(error: any): boolean {
   return error && !!error[errorProcessed];
 }
 
+/*** @internal */
 export function setProcessedError(error: any, processed: boolean): {[errorProcessed]: boolean; [key: string]: any} {
   if (typeof error !== 'object') {
     error = {message: error};

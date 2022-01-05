@@ -24,3 +24,4 @@ export declare function getTabPages(): {
     [path: string]: boolean;
 };
 export {};
+//# sourceMappingURL=index.d.ts.map

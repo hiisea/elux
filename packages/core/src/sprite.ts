@@ -1,8 +1,7 @@
 import env from './env';
 
 /**
- * Loading状态，可通过effect注入，也可通过setLoading注入
- * 同一时段同一分组的多个loading状态会自动合并
+ * @internal
  */
 export enum LoadingState {
   /**
@@ -19,6 +18,9 @@ export enum LoadingState {
   Depth = 'Depth',
 }
 
+/**
+ * @internal
+ */
 export class SingleDispatcher<T> {
   protected listenerId = 0;
 
@@ -82,6 +84,9 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
   }
 }
 
+/**
+ * @internal
+ */
 export class TaskCounter extends SingleDispatcher<LoadingState> {
   public readonly list: {promise: Promise<any>; note: string}[] = [];
 
@@ -125,6 +130,9 @@ export class TaskCounter extends SingleDispatcher<LoadingState> {
   }
 }
 
+/**
+ * @internal
+ */
 export function deepClone<T>(data: T): T {
   return JSON.parse(JSON.stringify(data));
 }
@@ -150,6 +158,9 @@ function __deepMerge(optimize: boolean | null, target: {[key: string]: any}, inj
   return target;
 }
 
+/**
+ * @internal
+ */
 export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
   args = args.filter((item) => isObject(item) && Object.keys(item).length);
   if (args.length === 0) {
@@ -191,27 +202,34 @@ export function warn(str: string): void {
 export function isPromise(data: any): data is Promise<any> {
   return typeof data === 'object' && typeof data.then === 'function';
 }
+
+/**
+ * @internal
+ */
 export function isServer(): boolean {
   return env.isServer;
 }
+
+/**
+ * @internal
+ */
 export function serverSide<T>(callback: () => T): any {
   if (env.isServer) {
     return callback();
   }
   return undefined;
 }
+
+/**
+ * @internal
+ */
 export function clientSide<T>(callback: () => T): any {
   if (!env.isServer) {
     return callback();
   }
   return undefined;
 }
-/**
- * 一个类方法的装饰器，将其延迟执行
- * - 可用来装饰effectHandler
- * - 也可以装饰其他类
- * @param second 延迟秒数
- */
+
 export function delayPromise(second: number) {
   return (target: any, key: string, descriptor: PropertyDescriptor): void => {
     if (!key && !descriptor) {

@@ -14,3 +14,4 @@ export declare function splitPrivate(data: {
 } | undefined, {
     [key: string]: any;
 } | undefined];
+//# sourceMappingURL=deep-extend.d.ts.map

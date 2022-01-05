@@ -25,3 +25,4 @@ declare const _default: import("vue").DefineComponent<{
     title: string;
 }>;
 export default _default;
+//# sourceMappingURL=DocumentHead.d.ts.map

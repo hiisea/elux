@@ -4,7 +4,9 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
 
-  "mainEntryPointFilePath": "types/index.d.ts",
+  "projectFolder": "./",
+
+  "mainEntryPointFilePath": "<projectFolder>/types/index.d.ts",
 
   "bundledPackages": [
     "@elux/core",
@@ -46,12 +48,15 @@
       "default": {
         "logLevel": "warning"
       },
-      "ae-missing-release-tag": {
-        "logLevel": "none"
-      },
-      "ae-forgotten-export": {
+      "ae-internal-missing-underscore": {
         "logLevel": "none"
       }
+      // "ae-missing-release-tag": {
+      //   "logLevel": "none"
+      // },
+      // "ae-forgotten-export": {
+      //   "logLevel": "none"
+      // }
     },
 
     "tsdocMessageReporting": {

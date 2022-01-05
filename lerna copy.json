@@ -1,0 +1,38 @@
+{
+  "npmClient": "yarn",
+  "useWorkspaces": false,
+  "version": "1.0.1",
+  "packages": [
+    "packages/core",
+    "packages/core-redux",
+    "packages/core-vuex",
+    "packages/route",
+    "packages/route-browser",
+    "packages/route-mp",
+    "packages/app",
+    //"packages/taro",
+    "packages/react-components",
+    "packages/react-redux",
+    "packages/react-web",
+    "packages/react-redux-web",
+    //"packages/react-taro",
+    //"packages/react-redux-taro",
+    "packages/vue-components",
+    "packages/vue-web",
+    //"packages/vue-taro",
+    "packages/vue-vuex",
+    "packages/vue-vuex-web"
+    //"packages/vue-vuex-taro"
+  ],
+  "command": {
+    "publish": {
+      "registry": "https://registry.npmjs.org/",
+      "message": "chore(release): publish %s"
+    },
+    "version": {
+      "allowBranch": "main",
+      "conventionalCommits": true
+    }
+  },
+  "ignoreChanges": ["**/test/**", "**/*.md"]
+}

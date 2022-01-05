@@ -17,7 +17,12 @@ declare class RouteStack<T extends {
     protected _relaunch(item: T): void;
     back(delta: number): void;
 }
-export declare class HistoryRecord {
+/*** @internal */
+export interface IHistoryRecord {
+    key: string;
+    location: ILocationTransform;
+}
+export declare class HistoryRecord implements IHistoryRecord {
     readonly location: ILocationTransform;
     readonly historyStack: HistoryStack;
     static id: number;
@@ -38,6 +43,7 @@ export declare class HistoryStack extends RouteStack<HistoryRecord> {
     findRecordByKey(recordKey: string): [HistoryRecord, number] | undefined;
     destroy(): void;
 }
+/*** @internal */
 export declare class RootStack extends RouteStack<HistoryStack> {
     constructor();
     getCurrentPages(): {
@@ -61,3 +67,4 @@ export declare class RootStack extends RouteStack<HistoryStack> {
     };
 }
 export {};
+//# sourceMappingURL=history.d.ts.map

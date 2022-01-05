@@ -1,7 +1,10 @@
 import React, { ReactNode } from 'react';
-interface Props {
+/*** @public */
+export interface SwitchProps {
     elseView?: ReactNode;
     children: ReactNode;
 }
-declare const _default: React.NamedExoticComponent<Props>;
+declare const _default: React.NamedExoticComponent<SwitchProps>;
+/*** @public */
 export default _default;
+//# sourceMappingURL=Switch.d.ts.map

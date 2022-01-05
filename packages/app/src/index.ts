@@ -39,16 +39,46 @@ export {
   exportModule,
   isProcessedError,
   setProcessedError,
-  delayPromise,
   exportView,
   exportComponent,
   modelHotReplacement,
   EmptyModuleHandlers,
+  TaskCounter,
+  SingleDispatcher,
   CoreModuleHandlers as BaseModuleHandlers,
+  errorProcessed,
 } from '@elux/core';
 export {RouteActionTypes, location, createRouteModule, safeJsonParse} from '@elux/route';
-
-export type {RootModuleFacade as Facade, Dispatch, IStore, EluxComponent} from '@elux/core';
+export type {
+  RootModuleFacade as Facade,
+  Dispatch,
+  IStore,
+  EluxComponent,
+  LoadComponent,
+  ICoreRouter,
+  ModuleGetter,
+  IStoreMiddleware,
+  StoreOptions,
+  BStore,
+  StoreBuilder,
+  RootModuleAPI,
+  RootModuleActions,
+  GetState,
+  State,
+  ICoreRouteState,
+  IModuleHandlersClass,
+  PickActions,
+  ModuleFacade,
+  GetPromiseModule,
+  ReturnComponents,
+  CommonModule,
+  IModuleHandlers,
+  GetPromiseComponent,
+  ActionsThis,
+  Action,
+  HandlerThis,
+  PickHandler,
+} from '@elux/core';
 export type {
   LocationState,
   PagenameMap,
@@ -59,8 +89,15 @@ export type {
   StateLocation,
   RouteState,
   DeepPartial,
+  IEluxRouter,
+  RootParams,
+  ILocationTransform,
+  IHistoryRecord,
 } from '@elux/route';
 
+/**
+ * @internal
+ */
 export type ComputedStore<T> = {[K in keyof T]-?: () => T[K]};
 
 const appMeta: {
@@ -71,6 +108,9 @@ const appMeta: {
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
 };
 
+/**
+ * @internal
+ */
 export const appConfig: {
   loadComponent: LoadComponent;
   useRouter: () => ICoreRouter;
@@ -80,7 +120,15 @@ export const appConfig: {
   useRouter: null as any,
   useStore: null as any,
 };
+
+/**
+ * @internal
+ */
 export const setAppConfig = buildConfigSetter(appConfig);
+
+/**
+ * @internal
+ */
 export interface UserConfig {
   maxHistory?: number;
   maxLocationCache?: number;
@@ -94,6 +142,10 @@ export interface UserConfig {
   RouteModuleName?: string;
   disableNativeRouter?: boolean;
 }
+
+/**
+ * @internal
+ */
 export function setUserConfig(conf: UserConfig): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
@@ -102,14 +154,23 @@ export function setUserConfig(conf: UserConfig): void {
   }
 }
 
+/**
+ * @internal
+ */
 export interface RenderOptions {
   viewName?: string;
   id?: string;
   ssrKey?: string;
 }
 
+/**
+ * @internal
+ */
 export interface ContextWrap {}
 
+/**
+ * @internal
+ */
 export interface AttachMP<App> {
   (app: App, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
@@ -121,6 +182,9 @@ export interface AttachMP<App> {
   };
 }
 
+/**
+ * @internal
+ */
 export interface CreateMP {
   (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
@@ -132,6 +196,9 @@ export interface CreateMP {
   };
 }
 
+/**
+ * @internal
+ */
 export interface CreateApp<INS = {}> {
   (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
@@ -143,6 +210,9 @@ export interface CreateApp<INS = {}> {
   };
 }
 
+/**
+ * @internal
+ */
 export interface CreateSSR<INS = {}> {
   (moduleGetter: ModuleGetter, url: string, nativeData: any, middlewares?: IStoreMiddleware[]): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
@@ -154,12 +224,18 @@ export interface CreateSSR<INS = {}> {
   };
 }
 
+/**
+ * @internal
+ */
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
   router?: IEluxRouter<any, string>;
 }
 
+/**
+ * @internal
+ */
 export function createBaseMP<INS = {}>(
   ins: INS,
   router: IEluxRouter,
@@ -187,6 +263,9 @@ export function createBaseMP<INS = {}>(
   };
 }
 
+/**
+ * @internal
+ */
 export function createBaseApp<INS = {}>(
   ins: INS,
   router: IEluxRouter,
@@ -220,6 +299,9 @@ export function createBaseApp<INS = {}>(
   };
 }
 
+/**
+ * @internal
+ */
 export function createBaseSSR<INS = {}>(
   ins: INS,
   router: IEluxRouter,
@@ -264,12 +346,19 @@ export function createBaseSSR<INS = {}>(
     },
   };
 }
+
+/**
+ * @internal
+ */
 export function patchActions(typeName: string, json?: string): void {
   if (json) {
     getRootModuleAPI(JSON.parse(json));
   }
 }
 
+/**
+ * @internal
+ */
 export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', NT = unknown> = {
   State: {[M in keyof A]: A[M]['state']};
   RouteParams: {[M in keyof A]?: A[M]['params']};
@@ -282,6 +371,9 @@ export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R exten
   Pagenames: {[K in keyof A[R]['components']]: K};
 };
 
+/**
+ * @internal
+ */
 export function getApp<T extends {State: any; GetActions: any; LoadComponent: any; Modules: any; Pagenames: any; Router: any}>(
   demoteForProductionOnly?: boolean,
   injectActions?: Record<string, string[]>

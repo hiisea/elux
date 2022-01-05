@@ -6,12 +6,15 @@ import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, CreateApp, Cr
 import {createRouter, createBrowserHistory, createServerHistory} from '@elux/route-browser';
 
 export {DocumentHead, Switch, Else, Link, loadComponent} from '@elux/react-components';
+export type {DocumentHeadProps, SwitchProps, ElseProps, LinkProps, LoadComponentOptions} from '@elux/react-components';
 export * from '@elux/app';
 
 setAppConfig({loadComponent, useRouter});
 
+/*** @internal */
 export type GetApp<A extends RootModuleFacade, R extends string = 'route', NT = unknown> = GetBaseAPP<A, LoadComponentOptions, R, NT>;
 
+/*** @internal */
 export function setConfig(
   conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
 ): void {
@@ -19,12 +22,15 @@ export function setConfig(
   setUserConfig(conf);
 }
 
+/*** @internal */
 export const createApp: CreateApp = (moduleGetter, middlewares) => {
   defineModuleGetter(moduleGetter);
   const history = createBrowserHistory();
   const router = createRouter(history, {});
   return createBaseApp({}, router, renderToDocument, middlewares);
 };
+
+/*** @internal */
 export const createSSR: CreateSSR = (moduleGetter, url, nativeData, middlewares) => {
   defineModuleGetter(moduleGetter);
   const history = createServerHistory(url);

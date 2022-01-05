@@ -25,18 +25,22 @@ export declare const urlParser: {
     checkPath(path: string): string;
     withoutProtocol(url: string): string;
 };
+/*** @internal */
 export interface ILocationTransform<P extends RootParams = any> {
     getPagename(): string;
     getEluxUrl(): string;
     getNativeUrl(withoutProtocol?: boolean): string;
     getParams(): Partial<P> | Promise<Partial<P>>;
 }
+/*** @internal */
 export declare function location<P extends RootParams = any>(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ILocationTransform<P>;
+/*** @internal */
 export declare function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeLocationMap?: NativeLocationMap): {
     moduleName: any;
     model: (store: import("@elux/core").IStore<any>) => void | Promise<void>;
     state: RouteState<any>;
     params: {};
-    actions: {};
+    actions: import("@elux/core").PickActions<import("@elux/core").IModuleHandlers<RouteState<any>>>;
     components: { [k in keyof G]: any; };
 };
+//# sourceMappingURL=transform.d.ts.map

@@ -21,3 +21,4 @@ export declare const Router: DefineComponent<{}, () => JSX.Element, {}, {}, {}, 
 export declare function renderToMP(eluxContext: EluxContext, app: App): void;
 export declare function renderToDocument(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, fromSSR: boolean, app: App): void;
 export declare function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App): Promise<string>;
+//# sourceMappingURL=stage.d.ts.map

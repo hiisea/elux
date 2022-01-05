@@ -33,3 +33,4 @@ export declare const EluxContextKey = "__EluxContext__";
 export declare const EluxStoreContextKey = "__EluxStoreContext__";
 export declare function useRouter(): ICoreRouter;
 export declare function useStore(): IStore;
+//# sourceMappingURL=base.d.ts.map

@@ -1,27 +1,39 @@
 import {buildConfigSetter, env} from '@elux/core';
 
+/*** @internal */
 export type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
 
+/*** @internal */
 export type RootParams = Record<string, any>;
 
+/*** @internal */
 export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
 
+/*** @internal */
 export interface EluxLocation<P extends RootParams = any> {
   pathmatch: string;
   args: DeepPartial<P>;
 }
+
+/*** @internal */
 export interface NativeLocation {
   pathname: string;
   query: string;
 }
+
+/*** @internal */
 export interface StateLocation<P extends RootParams = any, N extends string = string> {
   pagename: N;
   payload: DeepPartial<P>;
 }
+
+/*** @internal */
 export interface LocationState<P extends RootParams = any> {
   pagename: string;
   params: Partial<P>;
 }
+
+/*** @internal */
 export interface RouteState<P extends RootParams = any> {
   action: HistoryAction;
   key: string;
@@ -29,10 +41,13 @@ export interface RouteState<P extends RootParams = any> {
   params: Partial<P>;
 }
 
+/*** @internal */
 export interface NativeLocationMap {
   in(nativeLocation: NativeLocation): EluxLocation;
   out(eluxLocation: EluxLocation): NativeLocation;
 }
+
+/*** @internal */
 export interface PagenameMap {
   [pageName: string]: {
     argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
@@ -82,6 +97,8 @@ export const routeMeta: {
   pagenameList: [],
   nativeLocationMap: {} as any,
 };
+
+/*** @internal */
 export function safeJsonParse(json: string): Record<string, any> {
   if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
     return {};
