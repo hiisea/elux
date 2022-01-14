@@ -7,6 +7,7 @@ var _excluded = ["forwardedRef", "deps", "store"];
 import React, { Component, useContext } from 'react';
 import { env, loadComponet, isPromise } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
+import { jsx as _jsx } from "react/jsx-runtime";
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
@@ -108,17 +109,17 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 
       if (this.view) {
         var View = this.view;
-        return React.createElement(View, _extends({
+        return _jsx(View, _extends({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
         var Loading = OnLoading;
-        return React.createElement(Loading, null);
+        return _jsx(Loading, {});
       }
 
-      return React.createElement(OnError, {
+      return _jsx(OnError, {
         message: this.error
       });
     };
@@ -132,7 +133,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
         deps = _useContext$deps === void 0 ? {} : _useContext$deps;
 
     var store = reactComponentsConfig.useStore();
-    return React.createElement(Loader, _extends({}, props, {
+    return _jsx(Loader, _extends({}, props, {
       store: store,
       deps: deps,
       forwardedRef: ref

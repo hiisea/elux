@@ -1,10 +1,12 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
-var _excluded = ["onClick", "href", "route", "root", "action"];
+var _excluded = ["onClick", "disabled", "href", "route", "root", "action"];
 import React, { useContext, useCallback } from 'react';
 import { EluxContextComponent } from './base';
+import { jsx as _jsx } from "react/jsx-runtime";
 export default React.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
+      disabled = _ref.disabled,
       href = _ref.href,
       route = _ref.route,
       root = _ref.root,
@@ -19,18 +21,19 @@ export default React.forwardRef(function (_ref, ref) {
     _onClick && _onClick(event);
     route && router[action](route, root);
   }, [_onClick, action, root, route, router]);
-  props['onClick'] = onClick;
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');
 
   if (href) {
-    return React.createElement("a", _extends({}, props, {
+    return _jsx("a", _extends({}, props, {
       ref: ref
     }));
   } else {
-    return React.createElement("div", _extends({}, props, {
+    return _jsx("div", _extends({}, props, {
       ref: ref
     }));
   }

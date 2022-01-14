@@ -3,6 +3,7 @@ import {EluxContextComponent} from './base';
 
 /*** @public */
 export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
+  disabled?: boolean;
   route?: string;
   onClick?(event: React.MouseEvent): void;
   href?: string;
@@ -11,7 +12,7 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /*** @public */
-export default React.forwardRef<HTMLAnchorElement, LinkProps>(({onClick: _onClick, href, route, root, action = 'push', ...props}, ref) => {
+export default React.forwardRef<HTMLAnchorElement, LinkProps>(({onClick: _onClick, disabled, href, route, root, action = 'push', ...props}, ref) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router!;
   const onClick = useCallback(
@@ -22,8 +23,9 @@ export default React.forwardRef<HTMLAnchorElement, LinkProps>(({onClick: _onClic
     },
     [_onClick, action, root, route, router]
   );
-  props['onClick'] = onClick;
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');

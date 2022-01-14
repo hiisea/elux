@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useCallback, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import { unstable_batchedUpdates, hydrate, render } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
@@ -1755,12 +1756,14 @@ const reactComponentsConfig = {
   useStore: null,
   LoadComponentOnError: ({
     message
-  }) => React.createElement("div", {
-    className: "g-component-error"
-  }, message),
-  LoadComponentOnLoading: () => React.createElement("div", {
-    className: "g-component-loading"
-  }, "loading...")
+  }) => jsx("div", {
+    className: "g-component-error",
+    children: message
+  }),
+  LoadComponentOnLoading: () => jsx("div", {
+    className: "g-component-loading",
+    children: "loading..."
+  })
 };
 const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
 const EluxContextComponent = React.createContext({
@@ -1832,10 +1835,14 @@ const Component$1 = ({
   });
 
   if (arr.length > 0) {
-    return React.createElement(React.Fragment, null, arr);
+    return jsx(Fragment$2, {
+      children: arr
+    });
   }
 
-  return React.createElement(React.Fragment, null, elseView);
+  return jsx(Fragment$2, {
+    children: elseView
+  });
 };
 
 var Else = React.memo(Component$1);
@@ -1850,34 +1857,21 @@ const Component = ({
   });
 
   if (arr.length > 0) {
-    return React.createElement(React.Fragment, null, arr[0]);
+    return jsx(Fragment$2, {
+      children: arr[0]
+    });
   }
 
-  return React.createElement(React.Fragment, null, elseView);
+  return jsx(Fragment$2, {
+    children: elseView
+  });
 };
 
 var Switch = React.memo(Component);
 
-function _extends() {
-  _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends.apply(this, arguments);
-}
-
 var Link = React.forwardRef(({
   onClick: _onClick,
+  disabled,
   href,
   route,
   root,
@@ -1891,20 +1885,21 @@ var Link = React.forwardRef(({
     _onClick && _onClick(event);
     route && router[action](route, root);
   }, [_onClick, action, root, route, router]);
-  props['onClick'] = onClick;
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');
 
   if (href) {
-    return React.createElement("a", _extends({}, props, {
+    return jsx("a", { ...props,
       ref: ref
-    }));
+    });
   } else {
-    return React.createElement("div", _extends({}, props, {
+    return jsx("div", { ...props,
       ref: ref
-    }));
+    });
   }
 });
 
@@ -1977,32 +1972,34 @@ const Router = props => {
       return;
     });
   }, [router]);
-  return React.createElement("div", {
+  return jsx("div", {
     ref: containerRef,
-    className: classname
-  }, pages.map(item => {
-    const {
-      store,
-      pagename
-    } = item;
-    return React.createElement("div", {
-      key: store.id,
-      className: "elux-page",
-      "data-pagename": pagename
-    }, React.createElement(Page, {
-      store: store,
-      view: item.page || props.page
-    }));
-  }));
+    className: classname,
+    children: pages.map(item => {
+      const {
+        store,
+        pagename
+      } = item;
+      return jsx("div", {
+        className: "elux-page",
+        "data-pagename": pagename,
+        children: jsx(Page, {
+          store: store,
+          view: item.page || props.page
+        })
+      }, store.id);
+    })
+  });
 };
 const Page = memo(function ({
   store,
   view
 }) {
   const View = view;
-  return React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement(View, null));
+  return jsx(reactComponentsConfig.Provider, {
+    store: store,
+    children: jsx(View, {})
+  });
 });
 function useRouter() {
   const eluxContext = useContext(EluxContextComponent);
@@ -2098,17 +2095,18 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
       if (this.view) {
         const View = this.view;
-        return React.createElement(View, _extends({
-          ref: forwardedRef
-        }, rest));
+        return jsx(View, {
+          ref: forwardedRef,
+          ...rest
+        });
       }
 
       if (this.loading) {
         const Loading = OnLoading;
-        return React.createElement(Loading, null);
+        return jsx(Loading, {});
       }
 
-      return React.createElement(OnError, {
+      return jsx(OnError, {
         message: this.error
       });
     }
@@ -2120,11 +2118,11 @@ const loadComponent = (moduleName, componentName, options = {}) => {
       deps = {}
     } = useContext(EluxContextComponent);
     const store = reactComponentsConfig.useStore();
-    return React.createElement(Loader, _extends({}, props, {
+    return jsx(Loader, { ...props,
       store: store,
       deps: deps,
       forwardedRef: ref
-    }));
+    });
   });
 };
 
@@ -3628,6 +3626,24 @@ if (process.env.NODE_ENV !== 'production') {
     context: propTypes.object,
     children: propTypes.any
   };
+}
+
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
 }
 
 function _objectWithoutPropertiesLoose(source, excluded) {
@@ -7331,18 +7347,20 @@ function getApp(demoteForProductionOnly, injectActions) {
 function renderToDocument(id, APPView, eluxContext, fromSSR) {
   const renderFun = fromSSR ? hydrate : render;
   const panel = env.document.getElementById(id);
-  renderFun(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(Router, {
-    page: APPView
-  })), panel);
+  renderFun(jsx(EluxContextComponent.Provider, {
+    value: eluxContext,
+    children: jsx(Router, {
+      page: APPView
+    })
+  }), panel);
 }
 function renderToString(id, APPView, eluxContext) {
-  const html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(Router, {
-    page: APPView
-  })));
+  const html = require('react-dom/server').renderToString(jsx(EluxContextComponent.Provider, {
+    value: eluxContext,
+    children: jsx(Router, {
+      page: APPView
+    })
+  }));
 
   return Promise.resolve(html);
 }

@@ -7,6 +7,8 @@ exports.default = void 0;
 
 var _react = _interopRequireDefault(require("react"));
 
+var _jsxRuntime = require("react/jsx-runtime");
+
 var Component = function Component(_ref) {
   var children = _ref.children,
       elseView = _ref.elseView;
@@ -17,10 +19,14 @@ var Component = function Component(_ref) {
   });
 
   if (arr.length > 0) {
-    return _react.default.createElement(_react.default.Fragment, null, arr);
+    return (0, _jsxRuntime.jsx)(_jsxRuntime.Fragment, {
+      children: arr
+    });
   }
 
-  return _react.default.createElement(_react.default.Fragment, null, elseView);
+  return (0, _jsxRuntime.jsx)(_jsxRuntime.Fragment, {
+    children: elseView
+  });
 };
 
 var _default = _react.default.memo(Component);

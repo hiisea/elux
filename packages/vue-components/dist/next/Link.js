@@ -2,6 +2,7 @@ import { h, inject } from 'vue';
 import { EluxContextKey } from './base';
 export default function ({
   onClick: _onClick,
+  disabled,
   href,
   route,
   action = 'push',
@@ -14,13 +15,15 @@ export default function ({
     documentHead: ''
   });
 
-  props['onClick'] = event => {
+  const onClick = event => {
     event.preventDefault();
     _onClick && _onClick(event);
     route && router[action](route, root);
   };
 
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');

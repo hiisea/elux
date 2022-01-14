@@ -1692,27 +1692,6 @@ function clientSide(callback) {
 
   return undefined;
 }
-function delayPromise(second) {
-  return (target, key, descriptor) => {
-    if (!key && !descriptor) {
-      key = target.key;
-      descriptor = target.descriptor;
-    }
-
-    const fun = descriptor.value;
-
-    descriptor.value = (...args) => {
-      const delay = new Promise(resolve => {
-        env.setTimeout(() => {
-          resolve(true);
-        }, second * 1000);
-      });
-      return Promise.all([delay, fun.apply(target, args)]).then(items => {
-        return items[1];
-      });
-    };
-  };
-}
 
 const coreConfig = {
   NSP: '.',
@@ -3412,6 +3391,7 @@ function Else (props, context) {
 
 function Link ({
   onClick: _onClick,
+  disabled,
   href,
   route,
   action = 'push',
@@ -3424,13 +3404,15 @@ function Link ({
     documentHead: ''
   });
 
-  props['onClick'] = event => {
+  const onClick = event => {
     event.preventDefault();
     _onClick && _onClick(event);
     route && router[action](route, root);
   };
 
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');
@@ -5893,4 +5875,4 @@ const createSSR = (moduleGetter, url, nativeData, middlewares) => {
   return createBaseSSR(app, router, renderToString, middlewares);
 };
 
-export { ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, Switch, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepClone, deepMerge, deepMergeState, delayPromise, effect, env, errorAction, exportComponent, exportModule, exportView, getApp, getRefsValue, isProcessedError, isServer, loadComponent, location, logger, mapState, modelHotReplacement, mutation, patchActions, reducer, refStore, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, storeCreator };
+export { ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, SingleDispatcher, Switch, TaskCounter, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createLogger, createRouteModule, createSSR, createVuex, deepClone, deepMerge, deepMergeState, effect, env, errorAction, errorProcessed, exportComponent, exportModule, exportView, getApp, getRefsValue, isProcessedError, isServer, loadComponent, location, logger, mapState, modelHotReplacement, mutation, patchActions, reducer, refStore, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, storeCreator };

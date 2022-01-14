@@ -25,7 +25,6 @@
       "message": "chore(release): publish %s"
     },
     "version": {
-      "allowBranch": "main",
       "conventionalCommits": true,
       "createRelease": "github"
     }

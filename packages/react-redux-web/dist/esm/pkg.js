@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useCallback, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import { unstable_batchedUpdates, hydrate, render } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
@@ -1891,14 +1892,16 @@ var reactComponentsConfig = {
   useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
-    return React.createElement("div", {
-      className: "g-component-error"
-    }, message);
+    return jsx("div", {
+      className: "g-component-error",
+      children: message
+    });
   },
   LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return React.createElement("div", {
-      className: "g-component-loading"
-    }, "loading...");
+    return jsx("div", {
+      className: "g-component-loading",
+      children: "loading..."
+    });
   }
 };
 var setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
@@ -1971,10 +1974,14 @@ var Component$1 = function Component(_ref) {
   });
 
   if (arr.length > 0) {
-    return React.createElement(React.Fragment, null, arr);
+    return jsx(Fragment$2, {
+      children: arr
+    });
   }
 
-  return React.createElement(React.Fragment, null, elseView);
+  return jsx(Fragment$2, {
+    children: elseView
+  });
 };
 
 var Else = React.memo(Component$1);
@@ -1988,10 +1995,14 @@ var Component = function Component(_ref) {
   });
 
   if (arr.length > 0) {
-    return React.createElement(React.Fragment, null, arr[0]);
+    return jsx(Fragment$2, {
+      children: arr[0]
+    });
   }
 
-  return React.createElement(React.Fragment, null, elseView);
+  return jsx(Fragment$2, {
+    children: elseView
+  });
 };
 
 var Switch = React.memo(Component);
@@ -2011,9 +2022,10 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
-var _excluded$4 = ["onClick", "href", "route", "root", "action"];
+var _excluded$4 = ["onClick", "disabled", "href", "route", "root", "action"];
 var Link = React.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
+      disabled = _ref.disabled,
       href = _ref.href,
       route = _ref.route,
       root = _ref.root,
@@ -2028,18 +2040,19 @@ var Link = React.forwardRef(function (_ref, ref) {
     _onClick && _onClick(event);
     route && router[action](route, root);
   }, [_onClick, action, root, route, router]);
-  props['onClick'] = onClick;
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');
 
   if (href) {
-    return React.createElement("a", _extends({}, props, {
+    return jsx("a", _extends({}, props, {
       ref: ref
     }));
   } else {
-    return React.createElement("div", _extends({}, props, {
+    return jsx("div", _extends({}, props, {
       ref: ref
     }));
   }
@@ -2118,29 +2131,31 @@ var Router = function Router(props) {
       return;
     });
   }, [router]);
-  return React.createElement("div", {
+  return jsx("div", {
     ref: containerRef,
-    className: classname
-  }, pages.map(function (item) {
-    var store = item.store,
-        pagename = item.pagename;
-    return React.createElement("div", {
-      key: store.id,
-      className: "elux-page",
-      "data-pagename": pagename
-    }, React.createElement(Page, {
-      store: store,
-      view: item.page || props.page
-    }));
-  }));
+    className: classname,
+    children: pages.map(function (item) {
+      var store = item.store,
+          pagename = item.pagename;
+      return jsx("div", {
+        className: "elux-page",
+        "data-pagename": pagename,
+        children: jsx(Page, {
+          store: store,
+          view: item.page || props.page
+        })
+      }, store.id);
+    })
+  });
 };
 var Page = memo(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
-  return React.createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React.createElement(View, null));
+  return jsx(reactComponentsConfig.Provider, {
+    store: store,
+    children: jsx(View, {})
+  });
 });
 function useRouter() {
   var eluxContext = useContext(EluxContextComponent);
@@ -2250,17 +2265,17 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 
       if (this.view) {
         var View = this.view;
-        return React.createElement(View, _extends({
+        return jsx(View, _extends({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
         var Loading = OnLoading;
-        return React.createElement(Loading, null);
+        return jsx(Loading, {});
       }
 
-      return React.createElement(OnError, {
+      return jsx(OnError, {
         message: this.error
       });
     };
@@ -2274,7 +2289,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
         deps = _useContext$deps === void 0 ? {} : _useContext$deps;
 
     var store = reactComponentsConfig.useStore();
-    return React.createElement(Loader, _extends({}, props, {
+    return jsx(Loader, _extends({}, props, {
       store: store,
       deps: deps,
       forwardedRef: ref
@@ -8522,18 +8537,20 @@ function getApp(demoteForProductionOnly, injectActions) {
 function renderToDocument(id, APPView, eluxContext, fromSSR) {
   var renderFun = fromSSR ? hydrate : render;
   var panel = env.document.getElementById(id);
-  renderFun(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(Router, {
-    page: APPView
-  })), panel);
+  renderFun(jsx(EluxContextComponent.Provider, {
+    value: eluxContext,
+    children: jsx(Router, {
+      page: APPView
+    })
+  }), panel);
 }
 function renderToString(id, APPView, eluxContext) {
-  var html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React.createElement(Router, {
-    page: APPView
-  })));
+  var html = require('react-dom/server').renderToString(jsx(EluxContextComponent.Provider, {
+    value: eluxContext,
+    children: jsx(Router, {
+      page: APPView
+    })
+  }));
 
   return Promise.resolve(html);
 }

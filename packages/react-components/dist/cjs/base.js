@@ -9,6 +9,8 @@ var _react = _interopRequireDefault(require("react"));
 
 var _core = require("@elux/core");
 
+var _jsxRuntime = require("react/jsx-runtime");
+
 var reactComponentsConfig = {
   setPageTitle: function setPageTitle(title) {
     return _core.env.document.title = title;
@@ -17,14 +19,16 @@ var reactComponentsConfig = {
   useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
-    return _react.default.createElement("div", {
-      className: "g-component-error"
-    }, message);
+    return (0, _jsxRuntime.jsx)("div", {
+      className: "g-component-error",
+      children: message
+    });
   },
   LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return _react.default.createElement("div", {
-      className: "g-component-loading"
-    }, "loading...");
+    return (0, _jsxRuntime.jsx)("div", {
+      className: "g-component-loading",
+      children: "loading..."
+    });
   }
 };
 exports.reactComponentsConfig = reactComponentsConfig;

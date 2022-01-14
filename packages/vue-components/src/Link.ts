@@ -4,6 +4,7 @@ import {EluxContext, EluxContextKey} from './base';
 type MouseEvent = any;
 
 export interface Props extends HTMLAttributes {
+  disabled?: boolean;
   route?: string;
   onClick?(event: MouseEvent): void;
   href?: string;
@@ -12,14 +13,19 @@ export interface Props extends HTMLAttributes {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function ({onClick: _onClick, href, route, action = 'push', root, ...props}: Props, context: {slots: {default?: () => VNode[]}}) {
+export default function (
+  {onClick: _onClick, disabled, href, route, action = 'push', root, ...props}: Props,
+  context: {slots: {default?: () => VNode[]}}
+) {
   const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
-  props['onClick'] = (event: MouseEvent) => {
+  const onClick = (event: MouseEvent) => {
     event.preventDefault();
     _onClick && _onClick(event);
     route && router![action](route, root);
   };
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');

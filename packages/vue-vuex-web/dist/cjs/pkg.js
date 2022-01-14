@@ -1751,32 +1751,6 @@ function clientSide(callback) {
 
   return undefined;
 }
-function delayPromise(second) {
-  return function (target, key, descriptor) {
-    if (!key && !descriptor) {
-      key = target.key;
-      descriptor = target.descriptor;
-    }
-
-    var fun = descriptor.value;
-
-    descriptor.value = function () {
-      var delay = new Promise(function (resolve) {
-        env.setTimeout(function () {
-          resolve(true);
-        }, second * 1000);
-      });
-
-      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
-      return Promise.all([delay, fun.apply(target, args)]).then(function (items) {
-        return items[1];
-      });
-    };
-  };
-}
 
 var coreConfig = {
   NSP: '.',
@@ -3574,9 +3548,10 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
-var _excluded = ["onClick", "href", "route", "action", "root"];
+var _excluded = ["onClick", "disabled", "href", "route", "action", "root"];
 function Link (_ref, context) {
   var _onClick = _ref.onClick,
+      disabled = _ref.disabled,
       href = _ref.href,
       route = _ref.route,
       _ref$action = _ref.action,
@@ -3589,13 +3564,15 @@ function Link (_ref, context) {
   }),
       router = _inject.router;
 
-  props['onClick'] = function (event) {
+  var onClick = function onClick(event) {
     event.preventDefault();
     _onClick && _onClick(event);
     route && router[action](route, root);
   };
 
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');
@@ -7113,7 +7090,9 @@ exports.Else = Else;
 exports.EmptyModuleHandlers = EmptyModuleHandlers;
 exports.Link = Link;
 exports.RouteActionTypes = RouteActionTypes;
+exports.SingleDispatcher = SingleDispatcher;
 exports.Switch = Switch;
+exports.TaskCounter = TaskCounter;
 exports.action = action;
 exports.appConfig = appConfig;
 exports.clientSide = clientSide;
@@ -7128,10 +7107,10 @@ exports.createVuex = createVuex;
 exports.deepClone = deepClone;
 exports.deepMerge = deepMerge;
 exports.deepMergeState = deepMergeState;
-exports.delayPromise = delayPromise;
 exports.effect = effect;
 exports.env = env;
 exports.errorAction = errorAction;
+exports.errorProcessed = errorProcessed;
 exports.exportComponent = exportComponent;
 exports.exportModule = exportModule;
 exports.exportView = exportView;

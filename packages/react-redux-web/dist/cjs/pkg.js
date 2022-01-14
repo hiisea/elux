@@ -3,6 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var React = require('react');
+var jsxRuntime = require('react/jsx-runtime');
 var reactDom = require('react-dom');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -1898,14 +1899,16 @@ var reactComponentsConfig = {
   useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
-    return React__default['default'].createElement("div", {
-      className: "g-component-error"
-    }, message);
+    return jsxRuntime.jsx("div", {
+      className: "g-component-error",
+      children: message
+    });
   },
   LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return React__default['default'].createElement("div", {
-      className: "g-component-loading"
-    }, "loading...");
+    return jsxRuntime.jsx("div", {
+      className: "g-component-loading",
+      children: "loading..."
+    });
   }
 };
 var setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
@@ -1978,10 +1981,14 @@ var Component$1 = function Component(_ref) {
   });
 
   if (arr.length > 0) {
-    return React__default['default'].createElement(React__default['default'].Fragment, null, arr);
+    return jsxRuntime.jsx(jsxRuntime.Fragment, {
+      children: arr
+    });
   }
 
-  return React__default['default'].createElement(React__default['default'].Fragment, null, elseView);
+  return jsxRuntime.jsx(jsxRuntime.Fragment, {
+    children: elseView
+  });
 };
 
 var Else = React__default['default'].memo(Component$1);
@@ -1995,10 +2002,14 @@ var Component = function Component(_ref) {
   });
 
   if (arr.length > 0) {
-    return React__default['default'].createElement(React__default['default'].Fragment, null, arr[0]);
+    return jsxRuntime.jsx(jsxRuntime.Fragment, {
+      children: arr[0]
+    });
   }
 
-  return React__default['default'].createElement(React__default['default'].Fragment, null, elseView);
+  return jsxRuntime.jsx(jsxRuntime.Fragment, {
+    children: elseView
+  });
 };
 
 var Switch = React__default['default'].memo(Component);
@@ -2018,9 +2029,10 @@ function _objectWithoutPropertiesLoose(source, excluded) {
   return target;
 }
 
-var _excluded$4 = ["onClick", "href", "route", "root", "action"];
+var _excluded$4 = ["onClick", "disabled", "href", "route", "root", "action"];
 var Link = React__default['default'].forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
+      disabled = _ref.disabled,
       href = _ref.href,
       route = _ref.route,
       root = _ref.root,
@@ -2035,18 +2047,19 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
     _onClick && _onClick(event);
     route && router[action](route, root);
   }, [_onClick, action, root, route, router]);
-  props['onClick'] = onClick;
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');
 
   if (href) {
-    return React__default['default'].createElement("a", _extends({}, props, {
+    return jsxRuntime.jsx("a", _extends({}, props, {
       ref: ref
     }));
   } else {
-    return React__default['default'].createElement("div", _extends({}, props, {
+    return jsxRuntime.jsx("div", _extends({}, props, {
       ref: ref
     }));
   }
@@ -2125,29 +2138,31 @@ var Router = function Router(props) {
       return;
     });
   }, [router]);
-  return React__default['default'].createElement("div", {
+  return jsxRuntime.jsx("div", {
     ref: containerRef,
-    className: classname
-  }, pages.map(function (item) {
-    var store = item.store,
-        pagename = item.pagename;
-    return React__default['default'].createElement("div", {
-      key: store.id,
-      className: "elux-page",
-      "data-pagename": pagename
-    }, React__default['default'].createElement(Page, {
-      store: store,
-      view: item.page || props.page
-    }));
-  }));
+    className: classname,
+    children: pages.map(function (item) {
+      var store = item.store,
+          pagename = item.pagename;
+      return jsxRuntime.jsx("div", {
+        className: "elux-page",
+        "data-pagename": pagename,
+        children: jsxRuntime.jsx(Page, {
+          store: store,
+          view: item.page || props.page
+        })
+      }, store.id);
+    })
+  });
 };
 var Page = React.memo(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
-  return React__default['default'].createElement(reactComponentsConfig.Provider, {
-    store: store
-  }, React__default['default'].createElement(View, null));
+  return jsxRuntime.jsx(reactComponentsConfig.Provider, {
+    store: store,
+    children: jsxRuntime.jsx(View, {})
+  });
 });
 function useRouter() {
   var eluxContext = React.useContext(EluxContextComponent);
@@ -2257,17 +2272,17 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 
       if (this.view) {
         var View = this.view;
-        return React__default['default'].createElement(View, _extends({
+        return jsxRuntime.jsx(View, _extends({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
         var Loading = OnLoading;
-        return React__default['default'].createElement(Loading, null);
+        return jsxRuntime.jsx(Loading, {});
       }
 
-      return React__default['default'].createElement(OnError, {
+      return jsxRuntime.jsx(OnError, {
         message: this.error
       });
     };
@@ -2281,7 +2296,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
         deps = _useContext$deps === void 0 ? {} : _useContext$deps;
 
     var store = reactComponentsConfig.useStore();
-    return React__default['default'].createElement(Loader, _extends({}, props, {
+    return jsxRuntime.jsx(Loader, _extends({}, props, {
       store: store,
       deps: deps,
       forwardedRef: ref
@@ -8529,18 +8544,20 @@ function getApp(demoteForProductionOnly, injectActions) {
 function renderToDocument(id, APPView, eluxContext, fromSSR) {
   var renderFun = fromSSR ? reactDom.hydrate : reactDom.render;
   var panel = env.document.getElementById(id);
-  renderFun(React__default['default'].createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React__default['default'].createElement(Router, {
-    page: APPView
-  })), panel);
+  renderFun(jsxRuntime.jsx(EluxContextComponent.Provider, {
+    value: eluxContext,
+    children: jsxRuntime.jsx(Router, {
+      page: APPView
+    })
+  }), panel);
 }
 function renderToString(id, APPView, eluxContext) {
-  var html = require('react-dom/server').renderToString(React__default['default'].createElement(EluxContextComponent.Provider, {
-    value: eluxContext
-  }, React__default['default'].createElement(Router, {
-    page: APPView
-  })));
+  var html = require('react-dom/server').renderToString(jsxRuntime.jsx(EluxContextComponent.Provider, {
+    value: eluxContext,
+    children: jsxRuntime.jsx(Router, {
+      page: APPView
+    })
+  }));
 
   return Promise.resolve(html);
 }

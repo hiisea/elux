@@ -1,8 +1,9 @@
-import _extends from "@babel/runtime/helpers/esm/extends";
 import React, { useContext, useCallback } from 'react';
 import { EluxContextComponent } from './base';
+import { jsx as _jsx } from "react/jsx-runtime";
 export default React.forwardRef(({
   onClick: _onClick,
+  disabled,
   href,
   route,
   root,
@@ -16,19 +17,20 @@ export default React.forwardRef(({
     _onClick && _onClick(event);
     route && router[action](route, root);
   }, [_onClick, action, root, route, router]);
-  props['onClick'] = onClick;
-  href && (props['href'] = href);
+  !disabled && (props['onClick'] = onClick);
+  disabled && (props['disabled'] = true);
+  !disabled && href && (props['href'] = href);
   route && (props['route'] = route);
   action && (props['action'] = action);
   root && (props['target'] = 'root');
 
   if (href) {
-    return React.createElement("a", _extends({}, props, {
+    return _jsx("a", { ...props,
       ref: ref
-    }));
+    });
   } else {
-    return React.createElement("div", _extends({}, props, {
+    return _jsx("div", { ...props,
       ref: ref
-    }));
+    });
   }
 });
