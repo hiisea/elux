@@ -166,6 +166,7 @@ export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions,
     LoadComponent: LoadComponent<A, LoadComponentOptions>;
     Modules: RootModuleAPI<A>;
     Actions: RootModuleActions<A>;
+    Pagename: keyof A[R]['components'];
     Pagenames: {
         [K in keyof A[R]['components']]: K;
     };
