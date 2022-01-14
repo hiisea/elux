@@ -170,6 +170,165 @@
       "name": "",
       "members": [
         {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!Action:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface Action "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Action",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!Action#payload:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "payload?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "any[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "payload",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!Action#priority:member",
+              "docComment": "/**\n * priority属性用来设置handlers的优先处理顺序，值为moduleName[]\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "priority?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "priority",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!Action#type:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "type",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@elux/react-redux-web!connectRedux:var",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "connectRedux: "
+            },
+            {
+              "kind": "Reference",
+              "text": "IConnectRedux",
+              "canonicalReference": "@elux/react-redux-web!IConnectRedux:interface"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "connectRedux",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!Dispatch:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type Dispatch = "
+            },
+            {
+              "kind": "Content",
+              "text": "(action: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Action",
+              "canonicalReference": "@elux/react-redux-web!Action:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => void | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<void>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Dispatch",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 6
+          }
+        },
+        {
           "kind": "Variable",
           "canonicalReference": "@elux/react-redux-web!DocumentHead:var",
           "docComment": "",
@@ -376,6 +535,329 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!EluxComponent:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface EluxComponent "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "EluxComponent",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!EluxComponent#__elux_component__:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "__elux_component__: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "'view' | 'component'"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "__elux_component__",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!GetProps:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type GetProps<C> = "
+            },
+            {
+              "kind": "Content",
+              "text": "C extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "FunctionComponent",
+              "canonicalReference": "@types/react!~React.FunctionComponent:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<infer P> ? P : C extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "ComponentClass",
+              "canonicalReference": "@types/react!~React.ComponentClass:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<infer P> ? P : never"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "GetProps",
+          "typeParameters": [
+            {
+              "typeParameterName": "C",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 6
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!IConnectRedux:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface IConnectRedux "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "IConnectRedux",
+          "members": [
+            {
+              "kind": "CallSignature",
+              "canonicalReference": "@elux/react-redux-web!IConnectRedux:call(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "<S = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{}"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", D = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{}"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", W = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{}"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">(mapStateToProps?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(state: any, owner: W) => S"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", options?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Options",
+                  "canonicalReference": "@types/react-redux!Options:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<any, S, W>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "InferableComponentEnhancerWithProps",
+                  "canonicalReference": "@elux/react-redux-web!InferableComponentEnhancerWithProps:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<S & D & {\n        dispatch: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Dispatch",
+                  "canonicalReference": "@elux/react-redux-web!Dispatch:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 12,
+                "endIndex": 16
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "mapStateToProps",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 7,
+                    "endIndex": 8
+                  }
+                },
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 9,
+                    "endIndex": 11
+                  }
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "S",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "typeParameterName": "D",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                },
+                {
+                  "typeParameterName": "W",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 5,
+                    "endIndex": 6
+                  }
+                }
+              ]
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!InferableComponentEnhancerWithProps:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type InferableComponentEnhancerWithProps<TInjectedProps> = "
+            },
+            {
+              "kind": "Content",
+              "text": "<C>(component: C) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "EluxComponent",
+              "canonicalReference": "@elux/react-redux-web!EluxComponent:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " & "
+            },
+            {
+              "kind": "Reference",
+              "text": "ComponentType",
+              "canonicalReference": "@types/react!~React.ComponentType:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "Omit",
+              "canonicalReference": "!Omit:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "GetProps",
+              "canonicalReference": "@elux/react-redux-web!GetProps:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<C>, keyof TInjectedProps>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "InferableComponentEnhancerWithProps",
+          "typeParameters": [
+            {
+              "typeParameterName": "TInjectedProps",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 10
+          }
         },
         {
           "kind": "Variable",

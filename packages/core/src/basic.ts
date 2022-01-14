@@ -24,7 +24,7 @@ export function buildConfigSetter<T extends Record<string, any>>(data: T): (conf
 export const setCoreConfig = buildConfigSetter(coreConfig);
 
 /**
- * @internal
+ * @public
  */
 export interface Action {
   type: string;
@@ -69,7 +69,7 @@ export interface IModuleHandlers<S = any> {
 }
 
 /**
- * @internal
+ * @public
  */
 export type Dispatch = (action: Action) => void | Promise<void>;
 
@@ -176,7 +176,7 @@ export type ModuleGetter = Record<string, () => CommonModule | Promise<{default:
 export type FacadeMap = Record<string, {name: string; actions: ActionCreatorList; actionNames: Record<string, string>}>;
 
 /**
- * @internal
+ * @public
  */
 export interface EluxComponent {
   __elux_component__: 'view' | 'component';

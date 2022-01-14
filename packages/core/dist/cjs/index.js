@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.setProcessedError = exports.setLoading = exports.setCoreConfig = exports.serverSide = exports.routeChangeAction = exports.reinitApp = exports.reducer = exports.mutation = exports.moduleExists = exports.modelHotReplacement = exports.mergeState = exports.logger = exports.loadModel = exports.loadComponet = exports.isServer = exports.isPromise = exports.isProcessedError = exports.initApp = exports.getRootModuleAPI = exports.getModuleList = exports.getModule = exports.getComponet = exports.getCachedModules = exports.getActionData = exports.forkStore = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effect = exports.delayPromise = exports.defineModuleGetter = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.coreConfig = exports.clientSide = exports.buildConfigSetter = exports.action = exports.SingleDispatcher = exports.RouteModuleHandlers = exports.MultipleDispatcher = exports.LoadingState = exports.EmptyModuleHandlers = exports.CoreModuleHandlers = exports.ActionTypes = void 0;
+exports.setProcessedError = exports.setLoading = exports.setCoreConfig = exports.serverSide = exports.routeChangeAction = exports.reinitApp = exports.reducer = exports.mutation = exports.moduleExists = exports.modelHotReplacement = exports.mergeState = exports.logger = exports.loadModel = exports.loadComponet = exports.isServer = exports.isPromise = exports.isProcessedError = exports.initApp = exports.getRootModuleAPI = exports.getModuleList = exports.getModule = exports.getComponet = exports.getCachedModules = exports.getActionData = exports.forkStore = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorProcessed = exports.errorAction = exports.env = exports.effect = exports.defineModuleGetter = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.coreConfig = exports.clientSide = exports.buildConfigSetter = exports.action = exports.TaskCounter = exports.SingleDispatcher = exports.RouteModuleHandlers = exports.MultipleDispatcher = exports.LoadingState = exports.EmptyModuleHandlers = exports.CoreModuleHandlers = exports.ActionTypes = void 0;
 
 var _basic = require("./basic");
 
@@ -31,6 +31,7 @@ var _store = require("./store");
 exports.getActionData = _store.getActionData;
 exports.setProcessedError = _store.setProcessedError;
 exports.isProcessedError = _store.isProcessedError;
+exports.errorProcessed = _store.errorProcessed;
 
 var _app = require("./app");
 
@@ -69,8 +70,8 @@ exports.isPromise = _sprite.isPromise;
 exports.isServer = _sprite.isServer;
 exports.serverSide = _sprite.serverSide;
 exports.clientSide = _sprite.clientSide;
-exports.delayPromise = _sprite.delayPromise;
 exports.deepClone = _sprite.deepClone;
+exports.TaskCounter = _sprite.TaskCounter;
 
 var _env = _interopRequireDefault(require("./env"));
 

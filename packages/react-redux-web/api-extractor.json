@@ -43,7 +43,6 @@
         "logLevel": "warning"
       }
     },
-
     "extractorMessageReporting": {
       "default": {
         "logLevel": "warning"

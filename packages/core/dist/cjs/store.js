@@ -4,6 +4,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 exports.__esModule = true;
 exports.enhanceStore = enhanceStore;
+exports.errorProcessed = void 0;
 exports.getActionData = getActionData;
 exports.isProcessedError = isProcessedError;
 exports.setProcessedError = setProcessedError;
@@ -23,6 +24,7 @@ var _inject = require("./inject");
 var _router = require("./router");
 
 var errorProcessed = '__eluxProcessed__';
+exports.errorProcessed = errorProcessed;
 
 function isProcessedError(error) {
   return error && !!error[errorProcessed];

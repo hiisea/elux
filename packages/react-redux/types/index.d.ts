@@ -3,17 +3,25 @@ import { Options } from 'react-redux';
 import { Dispatch, EluxComponent } from '@elux/core';
 export type { ReduxStore, ReduxOptions } from '@elux/core-redux';
 export { createRedux } from '@elux/core-redux';
-/*** @internal */
+/**
+ *  @public
+ */
 export declare type GetProps<C> = C extends FunctionComponent<infer P> ? P : C extends ComponentClass<infer P> ? P : never;
-/*** @internal */
+/**
+ *  @public
+ */
 export declare type InferableComponentEnhancerWithProps<TInjectedProps> = <C>(component: C) => EluxComponent & ComponentType<Omit<GetProps<C>, keyof TInjectedProps>>;
-/*** @internal */
-export interface ConnectRedux {
+/**
+ *  @public
+ */
+export interface IConnectRedux {
     <S = {}, D = {}, W = {}>(mapStateToProps?: (state: any, owner: W) => S, options?: Options<any, S, W>): InferableComponentEnhancerWithProps<S & D & {
         dispatch: Dispatch;
     }>;
 }
-/*** @internal */
-export declare const connectRedux: ConnectRedux;
+/**
+ *  @public
+ */
+export declare const connectRedux: IConnectRedux;
 export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect, useStore } from 'react-redux';
 //# sourceMappingURL=index.d.ts.map

@@ -2146,10 +2146,10 @@
     npmlog "^4.1.2"
     write-file-atomic "^3.0.3"
 
-"@microsoft/api-documenter@^7.13.78":
-  version "7.13.78"
-  resolved "https://registry.npmmirror.com/@microsoft/api-documenter/download/@microsoft/api-documenter-7.13.78.tgz#4308de73e9f1a85bf187387897865fc0281df8d5"
-  integrity sha512-6WdTtzgp30hLgClTRu1uAGoYJ5hKkSjvDRINY5usTekECpf81HwMrj3nUT4aX3zNMxH6YwdTHV7ttvvW0BVQIg==
+"@microsoft/api-documenter@^7.14.0":
+  version "7.14.0"
+  resolved "https://registry.npmmirror.com/@microsoft/api-documenter/download/@microsoft/api-documenter-7.14.0.tgz#19efeacc892b152a4c76e88206863f38245cbea4"
+  integrity sha512-ujhERX/ehqcy8swkesW9Xswyb+dJWXgS/xogsFmKszNl1b1HHBEzg1xfdY/m17IEs7oBCJyUS1n7V1OulcKozw==
   dependencies:
     "@microsoft/api-extractor-model" "7.15.2"
     "@microsoft/tsdoc" "0.13.2"
@@ -2168,7 +2168,7 @@
     "@microsoft/tsdoc-config" "~0.15.2"
     "@rushstack/node-core-library" "3.44.3"
 
-"@microsoft/api-extractor@^ 7.19.3":
+"@microsoft/api-extractor@^7.19.3":
   version "7.19.3"
   resolved "https://registry.npmmirror.com/@microsoft/api-extractor/download/@microsoft/api-extractor-7.19.3.tgz#ef1d04794c7417aa1ca75afecef9fba8b8216bb5"
   integrity sha512-GZe+R3K4kh2X425iOHkPbByysB7FN0592mPPA6vNj5IhyhlPHgdZS6m6AmOZOIxMS4euM+SBKzEJEp3oC+WsOQ==

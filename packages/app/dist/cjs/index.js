@@ -3,11 +3,11 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.clientSide = exports.appConfig = exports.action = exports.RouteActionTypes = exports.LoadingState = exports.EmptyModuleHandlers = exports.BaseModuleHandlers = exports.ActionTypes = void 0;
+exports.clientSide = exports.appConfig = exports.action = exports.TaskCounter = exports.SingleDispatcher = exports.RouteActionTypes = exports.LoadingState = exports.EmptyModuleHandlers = exports.BaseModuleHandlers = exports.ActionTypes = void 0;
 exports.createBaseApp = createBaseApp;
 exports.createBaseMP = createBaseMP;
 exports.createBaseSSR = createBaseSSR;
-exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.effect = exports.delayPromise = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.createRouteModule = void 0;
+exports.exportView = exports.exportModule = exports.exportComponent = exports.errorProcessed = exports.errorAction = exports.effect = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.createRouteModule = void 0;
 exports.getApp = getApp;
 exports.mutation = exports.modelHotReplacement = exports.logger = exports.location = exports.isServer = exports.isProcessedError = void 0;
 exports.patchActions = patchActions;
@@ -37,12 +37,14 @@ exports.deepMergeState = _core.deepMergeState;
 exports.exportModule = _core.exportModule;
 exports.isProcessedError = _core.isProcessedError;
 exports.setProcessedError = _core.setProcessedError;
-exports.delayPromise = _core.delayPromise;
 exports.exportView = _core.exportView;
 exports.exportComponent = _core.exportComponent;
 exports.modelHotReplacement = _core.modelHotReplacement;
 exports.EmptyModuleHandlers = _core.EmptyModuleHandlers;
+exports.TaskCounter = _core.TaskCounter;
+exports.SingleDispatcher = _core.SingleDispatcher;
 exports.BaseModuleHandlers = _core.CoreModuleHandlers;
+exports.errorProcessed = _core.errorProcessed;
 
 var _route = require("@elux/route");
 

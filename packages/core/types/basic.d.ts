@@ -17,7 +17,7 @@ export declare const setCoreConfig: (config: Partial<{
     RouteModuleName: string;
 }>) => void;
 /**
- * @internal
+ * @public
  */
 export interface Action {
     type: string;
@@ -52,7 +52,7 @@ export interface IModuleHandlers<S = any> {
     destroy(): void;
 }
 /**
- * @internal
+ * @public
  */
 export declare type Dispatch = (action: Action) => void | Promise<void>;
 /**
@@ -156,7 +156,7 @@ export declare type FacadeMap = Record<string, {
     actionNames: Record<string, string>;
 }>;
 /**
- * @internal
+ * @public
  */
 export interface EluxComponent {
     __elux_component__: 'view' | 'component';

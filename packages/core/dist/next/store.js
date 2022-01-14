@@ -4,7 +4,7 @@ import { coreConfig, MetaData } from './basic';
 import { ActionTypes, errorAction } from './actions';
 import { loadModel } from './inject';
 import { routeMiddleware } from './router';
-const errorProcessed = '__eluxProcessed__';
+export const errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error) {
   return error && !!error[errorProcessed];
 }
