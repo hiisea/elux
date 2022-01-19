@@ -172,12 +172,40 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   };
 
-  _proto2.findRecordByKey = function findRecordByKey(key) {
-    return this.rootStack.findRecordByKey(key);
+  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
+    var _this$rootStack$findR = this.rootStack.findRecordByKey(recordKey),
+        _this$rootStack$findR2 = _this$rootStack$findR.record,
+        key = _this$rootStack$findR2.key,
+        location = _this$rootStack$findR2.location,
+        overflow = _this$rootStack$findR.overflow,
+        index = _this$rootStack$findR.index;
+
+    return {
+      overflow: overflow,
+      index: index,
+      record: {
+        key: key,
+        location: location
+      }
+    };
   };
 
   _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
-    return this.rootStack.testBack(delta, rootOnly);
+    var _this$rootStack$testB = this.rootStack.testBack(delta, rootOnly),
+        _this$rootStack$testB2 = _this$rootStack$testB.record,
+        key = _this$rootStack$testB2.key,
+        location = _this$rootStack$testB2.location,
+        overflow = _this$rootStack$testB.overflow,
+        index = _this$rootStack$testB.index;
+
+    return {
+      overflow: overflow,
+      index: index,
+      record: {
+        key: key,
+        location: location
+      }
+    };
   };
 
   _proto2.extendCurrent = function extendCurrent(params, pagename) {
@@ -479,13 +507,13 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     var _back2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee4(stepOrKey, root, options, nativeCaller) {
       var _this3 = this;
 
-      var _this$rootStack$testB, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
+      var _this$rootStack$testB3, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
 
       return _regenerator.default.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              _this$rootStack$testB = this.rootStack.testBack(stepOrKey, root), record = _this$rootStack$testB.record, overflow = _this$rootStack$testB.overflow, index = _this$rootStack$testB.index;
+              _this$rootStack$testB3 = this.rootStack.testBack(stepOrKey, root), record = _this$rootStack$testB3.record, overflow = _this$rootStack$testB3.overflow, index = _this$rootStack$testB3.index;
 
               if (!overflow) {
                 _context4.next = 5;

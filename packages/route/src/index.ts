@@ -145,11 +145,21 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
   getHistoryLength(root?: boolean): number {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
-  findRecordByKey(key: string): {record: IHistoryRecord; overflow: boolean; index: [number, number]} {
-    return this.rootStack.findRecordByKey(key);
+  findRecordByKey(recordKey: string): {record: IHistoryRecord; overflow: boolean; index: [number, number]} {
+    const {
+      record: {key, location},
+      overflow,
+      index,
+    } = this.rootStack.findRecordByKey(recordKey);
+    return {overflow, index, record: {key, location}};
   }
   findRecordByStep(delta: number, rootOnly: boolean): {record: IHistoryRecord; overflow: boolean; index: [number, number]} {
-    return this.rootStack.testBack(delta, rootOnly);
+    const {
+      record: {key, location},
+      overflow,
+      index,
+    } = this.rootStack.testBack(delta, rootOnly);
+    return {overflow, index, record: {key, location}};
   }
   extendCurrent(params: DeepPartial<P>, pagename?: N): StateLocation<P, N> {
     return {payload: deepMerge({}, this.routeState.params, params), pagename: (pagename || this.routeState.pagename) as N};

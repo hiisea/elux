@@ -48,7 +48,7 @@ export declare abstract class BaseEluxRouter<P extends RootParams = {}, N extend
     getCurrentStore(): IStore;
     getStoreList(): IStore[];
     getHistoryLength(root?: boolean): number;
-    findRecordByKey(key: string): {
+    findRecordByKey(recordKey: string): {
         record: IHistoryRecord;
         overflow: boolean;
         index: [number, number];

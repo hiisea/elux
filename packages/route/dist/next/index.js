@@ -129,12 +129,42 @@ export class BaseEluxRouter extends MultipleDispatcher {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
 
-  findRecordByKey(key) {
-    return this.rootStack.findRecordByKey(key);
+  findRecordByKey(recordKey) {
+    const {
+      record: {
+        key,
+        location
+      },
+      overflow,
+      index
+    } = this.rootStack.findRecordByKey(recordKey);
+    return {
+      overflow,
+      index,
+      record: {
+        key,
+        location
+      }
+    };
   }
 
   findRecordByStep(delta, rootOnly) {
-    return this.rootStack.testBack(delta, rootOnly);
+    const {
+      record: {
+        key,
+        location
+      },
+      overflow,
+      index
+    } = this.rootStack.testBack(delta, rootOnly);
+    return {
+      overflow,
+      index,
+      record: {
+        key,
+        location
+      }
+    };
   }
 
   extendCurrent(params, pagename) {
