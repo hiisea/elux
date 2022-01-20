@@ -15,8 +15,6 @@ var _react = _interopRequireWildcard(require("react"));
 
 var _base = require("./base");
 
-var _jsxRuntime = require("react/jsx-runtime");
-
 var _excluded = ["onClick", "disabled", "href", "route", "root", "action"];
 
 var _default = _react.default.forwardRef(function (_ref, ref) {
@@ -43,11 +41,11 @@ var _default = _react.default.forwardRef(function (_ref, ref) {
   root && (props['target'] = 'root');
 
   if (href) {
-    return (0, _jsxRuntime.jsx)("a", (0, _extends2.default)({}, props, {
+    return _react.default.createElement("a", (0, _extends2.default)({}, props, {
       ref: ref
     }));
   } else {
-    return (0, _jsxRuntime.jsx)("div", (0, _extends2.default)({}, props, {
+    return _react.default.createElement("div", (0, _extends2.default)({}, props, {
       ref: ref
     }));
   }

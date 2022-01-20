@@ -46,6 +46,7 @@ export type {
   GetState,
   State,
   IStoreMiddleware,
+  IStoreLogger,
   StoreBuilder,
   StoreOptions,
 } from './basic';

@@ -1,8 +1,8 @@
+import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component, useContext } from 'react';
 import { env, loadComponet, isPromise } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
-import { jsx as _jsx } from "react/jsx-runtime";
 
 const loadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
@@ -92,18 +92,17 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
       if (this.view) {
         const View = this.view;
-        return _jsx(View, {
-          ref: forwardedRef,
-          ...rest
-        });
+        return React.createElement(View, _extends({
+          ref: forwardedRef
+        }, rest));
       }
 
       if (this.loading) {
         const Loading = OnLoading;
-        return _jsx(Loading, {});
+        return React.createElement(Loading, null);
       }
 
-      return _jsx(OnError, {
+      return React.createElement(OnError, {
         message: this.error
       });
     }
@@ -115,11 +114,11 @@ const loadComponent = (moduleName, componentName, options = {}) => {
       deps = {}
     } = useContext(EluxContextComponent);
     const store = reactComponentsConfig.useStore();
-    return _jsx(Loader, { ...props,
+    return React.createElement(Loader, _extends({}, props, {
       store: store,
       deps: deps,
       forwardedRef: ref
-    });
+    }));
   });
 };
 

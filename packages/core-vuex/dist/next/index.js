@@ -1,54 +1,16 @@
-import { createStore } from 'vuex';
-import { computed } from 'vue';
-import { mergeState } from '@elux/core';
-
-const updateMutation = (state, {
-  newState
-}) => {
-  mergeState(state, newState);
-};
-
-const UpdateMutationName = 'update';
-export function storeCreator(storeOptions, id = 0) {
+import { reactive, computed } from 'vue';
+import { Store } from './store';
+export function storeCreator(storeOptions) {
   const {
-    initState = {},
-    plugins
+    initState = {}
   } = storeOptions;
-  const devtools = id === 0 && process.env.NODE_ENV === 'development';
-  const store = createStore({
-    state: initState,
-    mutations: {
-      [UpdateMutationName]: updateMutation
-    },
-    plugins,
-    devtools
-  });
-  const vuexStore = store;
-  vuexStore.id = id;
-  vuexStore.builder = {
+  const state = reactive(initState);
+  return new Store(state, {
     storeCreator,
     storeOptions
-  };
-
-  vuexStore.getState = () => {
-    return store.state;
-  };
-
-  vuexStore.update = (actionName, newState, actionData) => {
-    store.commit(UpdateMutationName, {
-      actionName,
-      newState,
-      actionData
-    });
-  };
-
-  vuexStore.destroy = () => {
-    return;
-  };
-
-  return vuexStore;
+  });
 }
-export function createVuex(storeOptions = {}) {
+export function createStore(storeOptions = {}) {
   return {
     storeOptions,
     storeCreator

@@ -108,7 +108,8 @@ export const Router = defineComponent({
           pagename
         } = item;
         return _createVNode("div", {
-          "key": store.id,
+          "key": store.sid,
+          "data-sid": store.sid,
           "class": "elux-page",
           "data-pagename": pagename
         }, [_createVNode(Page, {
@@ -127,7 +128,7 @@ export function renderToMP(eluxContext, app) {
     env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
   }
 }
-export function renderToDocument(id, APPView, eluxContext, fromSSR, app) {
+export function renderToDocument(id, APPView, eluxContext, fromSSR, app, store) {
   StageView = APPView;
   app.provide(EluxContextKey, eluxContext);
 
@@ -137,7 +138,7 @@ export function renderToDocument(id, APPView, eluxContext, fromSSR, app) {
 
   app.mount(`#${id}`);
 }
-export function renderToString(id, APPView, eluxContext, app) {
+export function renderToString(id, APPView, eluxContext, app, store) {
   StageView = APPView;
   app.provide(EluxContextKey, eluxContext);
 

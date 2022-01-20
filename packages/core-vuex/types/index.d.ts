@@ -1,16 +1,7 @@
-import { Plugin, MutationPayload, SubscribeOptions } from 'vuex';
-import { WatchOptions, ComputedRef, Ref } from 'vue';
+import { ComputedRef, Ref } from 'vue';
 import { BStore, StoreOptions, StoreBuilder } from '@elux/core';
-export interface VuexOptions extends StoreOptions {
-    plugins?: Plugin<any>[];
-}
-export interface VuexStore<S extends Record<string, any> = {}> extends BStore<S> {
-    state: S;
-    subscribe<P extends MutationPayload>(fn: (mutation: P, state: S) => any, options?: SubscribeOptions): () => void;
-    watch<T>(getter: (state: S, getters: any) => T, cb: (value: T, oldValue: T) => void, options?: WatchOptions): () => void;
-}
-export declare function storeCreator(storeOptions: VuexOptions, id?: number): VuexStore;
-export declare function createVuex(storeOptions?: VuexOptions): StoreBuilder<VuexOptions, VuexStore>;
+export declare function storeCreator(storeOptions: StoreOptions): BStore;
+export declare function createStore(storeOptions?: StoreOptions): StoreBuilder<StoreOptions, BStore>;
 export declare function refStore<S extends Record<string, any>, M extends Record<string, (state: S) => any>>(store: BStore<S>, maps: M): {
     [K in keyof M]: ComputedRef<ReturnType<M[K]>>;
 };

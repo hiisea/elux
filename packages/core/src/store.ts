@@ -13,10 +13,12 @@ import {
   GetState,
   State,
   ICoreRouter,
+  IStoreLogger,
 } from './basic';
 import {ActionTypes, errorAction} from './actions';
 import {loadModel} from './inject';
 import {routeMiddleware} from './router';
+import {devLogger} from './devtools';
 
 /*** @internal */
 export const errorProcessed = '__eluxProcessed__';
@@ -55,13 +57,20 @@ function compose(...funcs: Function[]) {
   );
 }
 
-export function enhanceStore<S extends State = any>(baseStore: BStore, router: ICoreRouter, middlewares?: IStoreMiddleware[]): IStore<S> {
+export function enhanceStore<S extends State = any>(
+  sid: number,
+  baseStore: BStore,
+  router: ICoreRouter,
+  middlewares?: IStoreMiddleware[],
+  logger?: IStoreLogger
+): IStore<S> {
   const store: IStore<S> = baseStore as any;
   const _getState = baseStore.getState;
   const getState: GetState<S> = (moduleName?: string) => {
     const state = _getState();
     return moduleName ? state[moduleName] : state;
   };
+  store.sid = sid;
   store.router = router;
   store.getState = getState;
   store.loadingGroups = {};
@@ -79,8 +88,8 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, router: I
   };
   const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
   const _update = baseStore.update;
-  baseStore.update = (actionName: string, state: Partial<S>, actionData: any[]) => {
-    _update(actionName, state, actionData);
+  baseStore.update = (actionName: string, state: Partial<S>) => {
+    _update(actionName, state);
     router.latestState = {...router.latestState, ...state};
   };
   store.getCurrentActionName = () => currentData.actionName;
@@ -88,7 +97,15 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, router: I
     const state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
   };
-
+  let isActive = false;
+  store.isActive = (): boolean => {
+    return isActive;
+  };
+  store.setActive = (status: boolean): void => {
+    if (isActive !== status) {
+      isActive = status;
+    }
+  };
   let dispatch = (action: Action) => {
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
   };
@@ -161,6 +178,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, router: I
     );
   }
   function respondHandler(action: Action, isReducer: boolean, prevData: {actionName: string; prevState: S}): void | Promise<void> {
+    let logs: [{id: number; isActive: boolean}, string, any[], string[], string[], object, 'start' | 'end' | undefined];
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
     const [actionModuleName] = actionName.split(coreConfig.NSP);
@@ -185,6 +203,7 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, router: I
       }
       const implemented: {[key: string]: boolean} = {};
       const actionData = getActionData(action);
+
       if (isReducer) {
         Object.assign(currentData, prevData);
         const newState = {};
@@ -199,8 +218,23 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, router: I
             }
           }
         });
-        store.update(actionName, newState as S, actionData);
+        logs = [
+          {id: sid, isActive},
+          actionName,
+          actionData,
+          action.priority || [],
+          orderList,
+          Object.assign({}, prevData.prevState, newState),
+          undefined,
+        ];
+        devLogger(...logs);
+        logger && logger(...logs);
+        //logger前置更符合日志逻辑，store.update可能同步引起ui更新、同步引起另一个action
+        store.update(actionName, newState as S);
       } else {
+        logs = [{id: sid, isActive}, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+        devLogger(...logs);
+        logger && logger(...logs);
         const result: Promise<any>[] = [];
         orderList.forEach((moduleName) => {
           if (!implemented[moduleName]) {
@@ -211,7 +245,14 @@ export function enhanceStore<S extends State = any>(baseStore: BStore, router: I
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
-        return result.length === 1 ? result[0] : Promise.all(result);
+        const task = result.length === 1 ? result[0] : Promise.all(result);
+        task.then(() => {
+          logs[5] = getState();
+          logs[6] = 'end';
+          devLogger(...logs);
+          logger && logger(...logs);
+        });
+        return task;
       }
     }
     return undefined;

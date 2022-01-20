@@ -18,17 +18,17 @@ export function setConfig(conf) {
   setVueComponentsConfig(conf);
   setUserConfig(conf);
 }
-export var createApp = function createApp(moduleGetter, middlewares) {
+export var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var app = createVue(Router);
   var history = createBrowserHistory();
   var router = createRouter(history, {});
-  return createBaseApp(app, router, renderToDocument, middlewares);
+  return createBaseApp(app, router, renderToDocument, storeMiddlewares, storeLogger);
 };
-export var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+export var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var app = createSSRApp(Router);
   var history = createServerHistory(url);
   var router = createRouter(history, nativeData);
-  return createBaseSSR(app, router, renderToString, middlewares);
+  return createBaseSSR(app, router, renderToString, storeMiddlewares, storeLogger);
 };

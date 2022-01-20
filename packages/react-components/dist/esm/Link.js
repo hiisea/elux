@@ -3,7 +3,6 @@ import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWith
 var _excluded = ["onClick", "disabled", "href", "route", "root", "action"];
 import React, { useContext, useCallback } from 'react';
 import { EluxContextComponent } from './base';
-import { jsx as _jsx } from "react/jsx-runtime";
 export default React.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
@@ -29,11 +28,11 @@ export default React.forwardRef(function (_ref, ref) {
   root && (props['target'] = 'root');
 
   if (href) {
-    return _jsx("a", _extends({}, props, {
+    return React.createElement("a", _extends({}, props, {
       ref: ref
     }));
   } else {
-    return _jsx("div", _extends({}, props, {
+    return React.createElement("div", _extends({}, props, {
       ref: ref
     }));
   }

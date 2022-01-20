@@ -3,7 +3,6 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var React = require('react');
-var jsxRuntime = require('react/jsx-runtime');
 var reactDom = require('react-dom');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -1548,6 +1547,48 @@ var CoreModuleHandlers = _decorate(null, function (_initialize2) {
   };
 });
 
+var reduxDevTools;
+
+if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+  reduxDevTools = env.__REDUX_DEVTOOLS_EXTENSION__.connect({
+    features: {}
+  });
+  reduxDevTools.init({});
+  reduxDevTools.subscribe(function (_ref) {
+    var type = _ref.type,
+        payload = _ref.payload;
+
+    if (type === 'DISPATCH' && payload.type === 'COMMIT') {
+      reduxDevTools.init({});
+    }
+  });
+}
+
+var effects = [];
+var devLogger = function devLogger(_ref2, actionName, payload, priority, handers, state, effectStatus) {
+  var id = _ref2.id,
+      isActive = _ref2.isActive;
+
+  if (reduxDevTools) {
+    var flag = effectStatus === 'start' ? '+' : effectStatus === 'end' ? '-' : '';
+    var type = [flag, actionName, " (" + (isActive ? '' : '*') + id + ")"].join('');
+    var _logItem = {
+      type: type,
+      payload: payload,
+      priority: priority,
+      handers: handers
+    };
+
+    if (flag) {
+      effects.push(_logItem);
+    } else {
+      _logItem.effects = [].concat(effects);
+      effects.length = 0;
+      reduxDevTools.send(_logItem, state);
+    }
+  }
+};
+
 var errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
   return error && !!error[errorProcessed];
@@ -1570,7 +1611,7 @@ function getActionData(action) {
   return Array.isArray(action.payload) ? action.payload : [];
 }
 
-function compose$1() {
+function compose() {
   for (var _len = arguments.length, funcs = new Array(_len), _key = 0; _key < _len; _key++) {
     funcs[_key] = arguments[_key];
   }
@@ -1592,7 +1633,7 @@ function compose$1() {
   });
 }
 
-function enhanceStore(baseStore, router, middlewares) {
+function enhanceStore(sid, baseStore, router, middlewares, logger) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -1602,6 +1643,7 @@ function enhanceStore(baseStore, router, middlewares) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.sid = sid;
   store.router = router;
   store.getState = getState;
   store.loadingGroups = {};
@@ -1626,8 +1668,8 @@ function enhanceStore(baseStore, router, middlewares) {
   };
   var _update = baseStore.update;
 
-  baseStore.update = function (actionName, state, actionData) {
-    _update(actionName, state, actionData);
+  baseStore.update = function (actionName, state) {
+    _update(actionName, state);
 
     router.latestState = _extends({}, router.latestState, state);
   };
@@ -1639,6 +1681,18 @@ function enhanceStore(baseStore, router, middlewares) {
   store.getCurrentState = function (moduleName) {
     var state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
+  };
+
+  var isActive = false;
+
+  store.isActive = function () {
+    return isActive;
+  };
+
+  store.setActive = function (status) {
+    if (isActive !== status) {
+      isActive = status;
+    }
   };
 
   var _dispatch2 = function dispatch(action) {
@@ -1737,6 +1791,7 @@ function enhanceStore(baseStore, router, middlewares) {
   }
 
   function respondHandler(action, isReducer, prevData) {
+    var logs;
     var handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     var actionName = action.type;
 
@@ -1785,8 +1840,20 @@ function enhanceStore(baseStore, router, middlewares) {
             }
           }
         });
-        store.update(actionName, newState, actionData);
+        logs = [{
+          id: sid,
+          isActive: isActive
+        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), undefined];
+        devLogger.apply(void 0, logs);
+        logger && logger.apply(void 0, logs);
+        store.update(actionName, newState);
       } else {
+        logs = [{
+          id: sid,
+          isActive: isActive
+        }, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+        devLogger.apply(void 0, logs);
+        logger && logger.apply(void 0, logs);
         var result = [];
         orderList.forEach(function (moduleName) {
           if (!implemented[moduleName]) {
@@ -1797,7 +1864,14 @@ function enhanceStore(baseStore, router, middlewares) {
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
-        return result.length === 1 ? result[0] : Promise.all(result);
+        var task = result.length === 1 ? result[0] : Promise.all(result);
+        task.then(function () {
+          logs[5] = getState();
+          logs[6] = 'end';
+          devLogger.apply(void 0, logs);
+          logger && logger.apply(void 0, logs);
+        });
+        return task;
       }
     }
 
@@ -1816,18 +1890,18 @@ function enhanceStore(baseStore, router, middlewares) {
   var chain = [preMiddleware, routeMiddleware].concat(middlewares || []).map(function (middleware) {
     return middleware(middlewareAPI);
   });
-  _dispatch2 = compose$1.apply(void 0, chain)(_dispatch);
+  _dispatch2 = compose.apply(void 0, chain)(_dispatch);
   store.dispatch = _dispatch2;
   return store;
 }
 
-function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   MetaData.currentRouter = router;
-  var store = enhanceStore(baseStore, router, middlewares);
+  var store = enhanceStore(0, baseStore, router, middlewares, storeLogger);
   router.startup(store);
   var AppModuleName = coreConfig.AppModuleName,
       RouteModuleName = coreConfig.RouteModuleName;
@@ -1875,19 +1949,21 @@ function reinitApp(store) {
   var routeModule = getModule(RouteModuleName);
   return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
 }
-var ForkStoreId = 0;
 function forkStore(originalStore, routeState) {
   var _initState;
 
-  var _originalStore$builde = originalStore.builder,
+  var sid = originalStore.sid,
+      _originalStore$builde = originalStore.builder,
       storeCreator = _originalStore$builde.storeCreator,
       storeOptions = _originalStore$builde.storeOptions,
-      middlewares = originalStore.options.middlewares,
+      _originalStore$option = originalStore.options,
+      middlewares = _originalStore$option.middlewares,
+      logger = _originalStore$option.logger,
       router = originalStore.router;
   var baseStore = storeCreator(_extends({}, storeOptions, {
     initState: (_initState = {}, _initState[coreConfig.RouteModuleName] = routeState, _initState)
-  }), ++ForkStoreId);
-  var store = enhanceStore(baseStore, router, middlewares);
+  }));
+  var store = enhanceStore(sid + 1, baseStore, router, middlewares, logger);
   return store;
 }
 
@@ -1899,16 +1975,14 @@ var reactComponentsConfig = {
   useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
-    return jsxRuntime.jsx("div", {
-      className: "g-component-error",
-      children: message
-    });
+    return React__default['default'].createElement("div", {
+      className: "g-component-error"
+    }, message);
   },
   LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return jsxRuntime.jsx("div", {
-      className: "g-component-loading",
-      children: "loading..."
-    });
+    return React__default['default'].createElement("div", {
+      className: "g-component-loading"
+    }, "loading...");
   }
 };
 var setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
@@ -1981,14 +2055,10 @@ var Component$1 = function Component(_ref) {
   });
 
   if (arr.length > 0) {
-    return jsxRuntime.jsx(jsxRuntime.Fragment, {
-      children: arr
-    });
+    return React__default['default'].createElement(React__default['default'].Fragment, null, arr);
   }
 
-  return jsxRuntime.jsx(jsxRuntime.Fragment, {
-    children: elseView
-  });
+  return React__default['default'].createElement(React__default['default'].Fragment, null, elseView);
 };
 
 var Else = React__default['default'].memo(Component$1);
@@ -2002,14 +2072,10 @@ var Component = function Component(_ref) {
   });
 
   if (arr.length > 0) {
-    return jsxRuntime.jsx(jsxRuntime.Fragment, {
-      children: arr[0]
-    });
+    return React__default['default'].createElement(React__default['default'].Fragment, null, arr[0]);
   }
 
-  return jsxRuntime.jsx(jsxRuntime.Fragment, {
-    children: elseView
-  });
+  return React__default['default'].createElement(React__default['default'].Fragment, null, elseView);
 };
 
 var Switch = React__default['default'].memo(Component);
@@ -2055,11 +2121,11 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
   root && (props['target'] = 'root');
 
   if (href) {
-    return jsxRuntime.jsx("a", _extends({}, props, {
+    return React__default['default'].createElement("a", _extends({}, props, {
       ref: ref
     }));
   } else {
-    return jsxRuntime.jsx("div", _extends({}, props, {
+    return React__default['default'].createElement("div", _extends({}, props, {
       ref: ref
     }));
   }
@@ -2138,31 +2204,30 @@ var Router = function Router(props) {
       return;
     });
   }, [router]);
-  return jsxRuntime.jsx("div", {
+  return React__default['default'].createElement("div", {
     ref: containerRef,
-    className: classname,
-    children: pages.map(function (item) {
-      var store = item.store,
-          pagename = item.pagename;
-      return jsxRuntime.jsx("div", {
-        className: "elux-page",
-        "data-pagename": pagename,
-        children: jsxRuntime.jsx(Page, {
-          store: store,
-          view: item.page || props.page
-        })
-      }, store.id);
-    })
-  });
+    className: classname
+  }, pages.map(function (item) {
+    var store = item.store,
+        pagename = item.pagename;
+    return React__default['default'].createElement("div", {
+      key: store.sid,
+      "data-sid": store.sid,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, React__default['default'].createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 var Page = React.memo(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
-  return jsxRuntime.jsx(reactComponentsConfig.Provider, {
-    store: store,
-    children: jsxRuntime.jsx(View, {})
-  });
+  return React__default['default'].createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, React__default['default'].createElement(View, null));
 });
 function useRouter() {
   var eluxContext = React.useContext(EluxContextComponent);
@@ -2272,17 +2337,17 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 
       if (this.view) {
         var View = this.view;
-        return jsxRuntime.jsx(View, _extends({
+        return React__default['default'].createElement(View, _extends({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
         var Loading = OnLoading;
-        return jsxRuntime.jsx(Loading, {});
+        return React__default['default'].createElement(Loading, null);
       }
 
-      return jsxRuntime.jsx(OnError, {
+      return React__default['default'].createElement(OnError, {
         message: this.error
       });
     };
@@ -2296,7 +2361,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
         deps = _useContext$deps === void 0 ? {} : _useContext$deps;
 
     var store = reactComponentsConfig.useStore();
-    return jsxRuntime.jsx(Loader, _extends({}, props, {
+    return React__default['default'].createElement(Loader, _extends({}, props, {
       store: store,
       deps: deps,
       forwardedRef: ref
@@ -5354,44 +5419,6 @@ var useSelector = /*#__PURE__*/createSelectorHook();
 
 setBatch(reactDom.unstable_batchedUpdates);
 
-function ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-
-    if (enumerableOnly) {
-      symbols = symbols.filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-      });
-    }
-
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function _objectSpread2(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      ownKeys(Object(source), true).forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
-
 /**
  * Adapted from React: https://github.com/facebook/react/blob/master/packages/shared/formatProdErrorMessage.js
  *
@@ -5528,7 +5555,7 @@ function kindOf(val) {
  */
 
 
-function createStore(reducer, preloadedState, enhancer) {
+function createStore$1(reducer, preloadedState, enhancer) {
   var _ref2;
 
   if (typeof preloadedState === 'function' && typeof enhancer === 'function' || typeof enhancer === 'function' && typeof arguments[3] === 'function') {
@@ -5545,7 +5572,7 @@ function createStore(reducer, preloadedState, enhancer) {
       throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(1) : "Expected the enhancer to be a function. Instead, received: '" + kindOf(enhancer) + "'");
     }
 
-    return enhancer(createStore)(reducer, preloadedState);
+    return enhancer(createStore$1)(reducer, preloadedState);
   }
 
   if (typeof reducer !== 'function') {
@@ -5799,86 +5826,6 @@ function warning$1(message) {
   } catch (e) {} // eslint-disable-line no-empty
 
 }
-/**
- * Composes single-argument functions from right to left. The rightmost
- * function can take multiple arguments as it provides the signature for
- * the resulting composite function.
- *
- * @param {...Function} funcs The functions to compose.
- * @returns {Function} A function obtained by composing the argument functions
- * from right to left. For example, compose(f, g, h) is identical to doing
- * (...args) => f(g(h(...args))).
- */
-
-
-function compose() {
-  for (var _len = arguments.length, funcs = new Array(_len), _key = 0; _key < _len; _key++) {
-    funcs[_key] = arguments[_key];
-  }
-
-  if (funcs.length === 0) {
-    return function (arg) {
-      return arg;
-    };
-  }
-
-  if (funcs.length === 1) {
-    return funcs[0];
-  }
-
-  return funcs.reduce(function (a, b) {
-    return function () {
-      return a(b.apply(void 0, arguments));
-    };
-  });
-}
-/**
- * Creates a store enhancer that applies middleware to the dispatch method
- * of the Redux store. This is handy for a variety of tasks, such as expressing
- * asynchronous actions in a concise manner, or logging every action payload.
- *
- * See `redux-thunk` package as an example of the Redux middleware.
- *
- * Because middleware is potentially asynchronous, this should be the first
- * store enhancer in the composition chain.
- *
- * Note that each middleware will be given the `dispatch` and `getState` functions
- * as named arguments.
- *
- * @param {...Function} middlewares The middleware chain to be applied.
- * @returns {Function} A store enhancer applying the middleware.
- */
-
-
-function applyMiddleware() {
-  for (var _len = arguments.length, middlewares = new Array(_len), _key = 0; _key < _len; _key++) {
-    middlewares[_key] = arguments[_key];
-  }
-
-  return function (createStore) {
-    return function () {
-      var store = createStore.apply(void 0, arguments);
-
-      var _dispatch = function dispatch() {
-        throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(15) : 'Dispatching while constructing your middleware is not allowed. ' + 'Other middleware would not be applied to this dispatch.');
-      };
-
-      var middlewareAPI = {
-        getState: store.getState,
-        dispatch: function dispatch() {
-          return _dispatch.apply(void 0, arguments);
-        }
-      };
-      var chain = middlewares.map(function (middleware) {
-        return middleware(middlewareAPI);
-      });
-      _dispatch = compose.apply(void 0, chain)(store.dispatch);
-      return _objectSpread2(_objectSpread2({}, store), {}, {
-        dispatch: _dispatch
-      });
-    };
-  };
-}
 /*
  * This is a dummy function to check if the function name has been altered by minification.
  * If the function has been minified and NODE_ENV !== 'production', warn the user.
@@ -5891,54 +5838,50 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
   warning$1('You are currently using minified code outside of NODE_ENV === "production". ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or setting mode to production in webpack (https://webpack.js.org/concepts/mode/) ' + 'to ensure you have the correct code for your production build.');
 }
 
+var Store = function () {
+  function Store(_redux, builder) {
+    var _this = this;
+
+    _defineProperty(this, "subscribe", void 0);
+
+    _defineProperty(this, "getState", void 0);
+
+    _defineProperty(this, "update", function (actionName, state) {
+      _this._redux.dispatch({
+        type: actionName,
+        state: state
+      });
+    });
+
+    this._redux = _redux;
+    this.builder = builder;
+    this.getState = _redux.getState;
+    this.subscribe = _redux.subscribe;
+  }
+
+  var _proto = Store.prototype;
+
+  _proto.destroy = function destroy() {
+    return;
+  };
+
+  return Store;
+}();
+
 var reduxReducer = function reduxReducer(state, action) {
   return _extends({}, state, action.state);
 };
 
-function storeCreator(storeOptions, id) {
-  if (id === void 0) {
-    id = 0;
-  }
-
+function storeCreator(storeOptions) {
   var _storeOptions$initSta = storeOptions.initState,
-      initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta,
-      _storeOptions$enhance = storeOptions.enhancers,
-      enhancers = _storeOptions$enhance === void 0 ? [] : _storeOptions$enhance,
-      middlewares = storeOptions.middlewares;
-
-  if (middlewares) {
-    var middlewareEnhancer = applyMiddleware.apply(void 0, middlewares);
-    enhancers.push(middlewareEnhancer);
-  }
-
-  if (id === 0 && process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__());
-  }
-
-  var store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose.apply(void 0, enhancers) : enhancers[0]);
-  var dispatch = store.dispatch;
-  var reduxStore = store;
-  reduxStore.id = id;
-  reduxStore.builder = {
+      initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta;
+  var baseStore = createStore$1(reduxReducer, initState);
+  return new Store(baseStore, {
     storeCreator: storeCreator,
     storeOptions: storeOptions
-  };
-
-  reduxStore.update = function (actionName, state, actionData) {
-    dispatch({
-      type: actionName,
-      state: state,
-      payload: actionData
-    });
-  };
-
-  reduxStore.destroy = function () {
-    return;
-  };
-
-  return reduxStore;
+  });
 }
-function createRedux(storeOptions) {
+function createStore(storeOptions) {
   if (storeOptions === void 0) {
     storeOptions = {};
   }
@@ -6770,7 +6713,9 @@ var RouteStack = function () {
   var _proto = RouteStack.prototype;
 
   _proto.startup = function startup(record) {
+    var oItem = this.records[0];
     this.records = [record];
+    this.setActive(oItem);
   };
 
   _proto.getCurrentItem = function getCurrentItem() {
@@ -6795,12 +6740,15 @@ var RouteStack = function () {
 
   _proto._push = function _push(item) {
     var records = this.records;
+    var oItem = records[0];
     records.unshift(item);
     var delItem = records.splice(this.limit)[0];
 
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(oItem);
   };
 
   _proto._replace = function _replace(item) {
@@ -6811,19 +6759,24 @@ var RouteStack = function () {
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(delItem);
   };
 
   _proto._relaunch = function _relaunch(item) {
     var delList = this.records;
+    var oItem = delList[0];
     this.records = [item];
     delList.forEach(function (delItem) {
       if (delItem !== item && delItem.destroy) {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
   };
 
   _proto.back = function back(delta) {
+    var oItem = this.records[0];
     var delList = this.records.splice(0, delta);
 
     if (this.records.length === 0) {
@@ -6836,6 +6789,21 @@ var RouteStack = function () {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
+  };
+
+  _proto.setActive = function setActive(oItem) {
+    var _this$records$;
+
+    var oStore = oItem == null ? void 0 : oItem.store;
+    var store = (_this$records$ = this.records[0]) == null ? void 0 : _this$records$.store;
+
+    if (store === oStore) {
+      store == null ? void 0 : store.setActive(true);
+    } else {
+      oStore == null ? void 0 : oStore.setActive(false);
+      store == null ? void 0 : store.setActive(true);
+    }
   };
 
   return RouteStack;
@@ -7867,12 +7835,40 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   };
 
-  _proto2.findRecordByKey = function findRecordByKey(key) {
-    return this.rootStack.findRecordByKey(key);
+  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
+    var _this$rootStack$findR = this.rootStack.findRecordByKey(recordKey),
+        _this$rootStack$findR2 = _this$rootStack$findR.record,
+        key = _this$rootStack$findR2.key,
+        location = _this$rootStack$findR2.location,
+        overflow = _this$rootStack$findR.overflow,
+        index = _this$rootStack$findR.index;
+
+    return {
+      overflow: overflow,
+      index: index,
+      record: {
+        key: key,
+        location: location
+      }
+    };
   };
 
   _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
-    return this.rootStack.testBack(delta, rootOnly);
+    var _this$rootStack$testB = this.rootStack.testBack(delta, rootOnly),
+        _this$rootStack$testB2 = _this$rootStack$testB.record,
+        key = _this$rootStack$testB2.key,
+        location = _this$rootStack$testB2.location,
+        overflow = _this$rootStack$testB.overflow,
+        index = _this$rootStack$testB.index;
+
+    return {
+      overflow: overflow,
+      index: index,
+      record: {
+        key: key,
+        location: location
+      }
+    };
   };
 
   _proto2.extendCurrent = function extendCurrent(params, pagename) {
@@ -8174,13 +8170,13 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(stepOrKey, root, options, nativeCaller) {
       var _this3 = this;
 
-      var _this$rootStack$testB, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
+      var _this$rootStack$testB3, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
 
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              _this$rootStack$testB = this.rootStack.testBack(stepOrKey, root), record = _this$rootStack$testB.record, overflow = _this$rootStack$testB.overflow, index = _this$rootStack$testB.index;
+              _this$rootStack$testB3 = this.rootStack.testBack(stepOrKey, root), record = _this$rootStack$testB3.record, overflow = _this$rootStack$testB3.overflow, index = _this$rootStack$testB3.index;
 
               if (!overflow) {
                 _context4.next = 5;
@@ -8340,9 +8336,9 @@ function setUserConfig(conf) {
     });
   }
 }
-function createBaseMP(ins, router, render, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
+function createBaseMP(ins, router, render, storeMiddlewares, storeLogger) {
+  if (storeMiddlewares === void 0) {
+    storeMiddlewares = [];
   }
 
   appMeta.router = router;
@@ -8364,7 +8360,7 @@ function createBaseMP(ins, router, render, middlewares) {
         }(function () {
           var baseStore = storeCreator(storeOptions);
 
-          var _initApp = initApp(router, baseStore, middlewares),
+          var _initApp = initApp(router, baseStore, storeMiddlewares, storeLogger),
               store = _initApp.store;
 
           var context = render({
@@ -8381,9 +8377,9 @@ function createBaseMP(ins, router, render, middlewares) {
     }
   };
 }
-function createBaseApp(ins, router, render, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
+function createBaseApp(ins, router, render, storeMiddlewares, storeLogger) {
+  if (storeMiddlewares === void 0) {
+    storeMiddlewares = [];
   }
 
   appMeta.router = router;
@@ -8422,7 +8418,7 @@ function createBaseApp(ins, router, render, middlewares) {
             storeOptions.initState = _extends({}, storeOptions.initState, (_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
             var baseStore = storeCreator(storeOptions);
 
-            var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
+            var _initApp2 = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName, components),
                 store = _initApp2.store,
                 AppView = _initApp2.AppView,
                 setup = _initApp2.setup;
@@ -8432,7 +8428,7 @@ function createBaseApp(ins, router, render, middlewares) {
                 deps: {},
                 router: router,
                 documentHead: ''
-              }, !!env[ssrKey], ins);
+              }, !!env[ssrKey], ins, store);
               return store;
             });
           });
@@ -8441,9 +8437,9 @@ function createBaseApp(ins, router, render, middlewares) {
     }
   };
 }
-function createBaseSSR(ins, router, render, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
+function createBaseSSR(ins, router, render, storeMiddlewares, storeLogger) {
+  if (storeMiddlewares === void 0) {
+    storeMiddlewares = [];
   }
 
   appMeta.router = router;
@@ -8477,7 +8473,7 @@ function createBaseSSR(ins, router, render, middlewares) {
             storeOptions.initState = _extends({}, storeOptions.initState, (_extends3 = {}, _extends3[routeConfig.RouteModuleName] = routeState, _extends3));
             var baseStore = storeCreator(storeOptions);
 
-            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
+            var _initApp3 = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName),
                 store = _initApp3.store,
                 AppView = _initApp3.AppView,
                 setup = _initApp3.setup;
@@ -8489,7 +8485,7 @@ function createBaseSSR(ins, router, render, middlewares) {
                 router: router,
                 documentHead: ''
               };
-              return render(id, AppView, eluxContext, ins).then(function (html) {
+              return render(id, AppView, eluxContext, ins, store).then(function (html) {
                 var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
                 if (match) {
@@ -8541,23 +8537,21 @@ function getApp(demoteForProductionOnly, injectActions) {
   };
 }
 
-function renderToDocument(id, APPView, eluxContext, fromSSR) {
+function renderToDocument(id, APPView, eluxContext, fromSSR, app, store) {
   var renderFun = fromSSR ? reactDom.hydrate : reactDom.render;
   var panel = env.document.getElementById(id);
-  renderFun(jsxRuntime.jsx(EluxContextComponent.Provider, {
-    value: eluxContext,
-    children: jsxRuntime.jsx(Router, {
-      page: APPView
-    })
-  }), panel);
+  renderFun(React__default['default'].createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React__default['default'].createElement(Router, {
+    page: APPView
+  })), panel);
 }
-function renderToString(id, APPView, eluxContext) {
-  var html = require('react-dom/server').renderToString(jsxRuntime.jsx(EluxContextComponent.Provider, {
-    value: eluxContext,
-    children: jsxRuntime.jsx(Router, {
-      page: APPView
-    })
-  }));
+function renderToString(id, APPView, eluxContext, app, store) {
+  var html = require('react-dom/server').renderToString(React__default['default'].createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React__default['default'].createElement(Router, {
+    page: APPView
+  })));
 
   return Promise.resolve(html);
 }
@@ -9268,17 +9262,17 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
-var createApp = function createApp(moduleGetter, middlewares) {
+var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createBrowserHistory();
   var router = createRouter(history, {});
-  return createBaseApp({}, router, renderToDocument, middlewares);
+  return createBaseApp({}, router, renderToDocument, storeMiddlewares, storeLogger);
 };
-var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createServerHistory(url);
   var router = createRouter(history, nativeData);
-  return createBaseSSR({}, router, renderToString, middlewares);
+  return createBaseSSR({}, router, renderToString, storeMiddlewares, storeLogger);
 };
 
 setAppConfig({
@@ -9316,10 +9310,10 @@ exports.createApp = createApp;
 exports.createBaseApp = createBaseApp;
 exports.createBaseMP = createBaseMP;
 exports.createBaseSSR = createBaseSSR;
-exports.createRedux = createRedux;
 exports.createRouteModule = createRouteModule;
 exports.createSSR = createSSR;
 exports.createSelectorHook = createSelectorHook;
+exports.createStore = createStore;
 exports.deepClone = deepClone;
 exports.deepMerge = deepMerge;
 exports.deepMergeState = deepMergeState;

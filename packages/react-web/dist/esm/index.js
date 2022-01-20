@@ -13,15 +13,15 @@ export function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
-export var createApp = function createApp(moduleGetter, middlewares) {
+export var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createBrowserHistory();
   var router = createRouter(history, {});
-  return createBaseApp({}, router, renderToDocument, middlewares);
+  return createBaseApp({}, router, renderToDocument, storeMiddlewares, storeLogger);
 };
-export var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+export var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createServerHistory(url);
   var router = createRouter(history, nativeData);
-  return createBaseSSR({}, router, renderToString, middlewares);
+  return createBaseSSR({}, router, renderToString, storeMiddlewares, storeLogger);
 };

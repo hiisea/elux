@@ -19,17 +19,17 @@ export function setConfig(conf: UserConfig & {LoadComponentOnError?: Component<{
   setUserConfig(conf);
 }
 
-export const createApp: CreateApp<App> = (moduleGetter, middlewares) => {
+export const createApp: CreateApp<App> = (moduleGetter, storeMiddlewares, storeLogger) => {
   defineModuleGetter(moduleGetter);
   const app = createVue(Router);
   const history = createBrowserHistory();
   const router = createRouter(history, {});
-  return createBaseApp(app, router, renderToDocument, middlewares);
+  return createBaseApp(app, router, renderToDocument, storeMiddlewares, storeLogger);
 };
-export const createSSR: CreateSSR<App> = (moduleGetter, url, nativeData, middlewares) => {
+export const createSSR: CreateSSR<App> = (moduleGetter, url, nativeData, storeMiddlewares, storeLogger) => {
   defineModuleGetter(moduleGetter);
   const app = createSSRApp(Router);
   const history = createServerHistory(url);
   const router = createRouter(history, nativeData);
-  return createBaseSSR(app, router, renderToString, middlewares);
+  return createBaseSSR(app, router, renderToString, storeMiddlewares, storeLogger);
 };

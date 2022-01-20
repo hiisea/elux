@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useCallback, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
-import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import { unstable_batchedUpdates, hydrate, render } from 'react-dom';
 export { unstable_batchedUpdates as batch } from 'react-dom';
 
@@ -1427,6 +1426,48 @@ let CoreModuleHandlers = _decorate(null, function (_initialize2) {
   };
 });
 
+let reduxDevTools;
+
+if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+  reduxDevTools = env.__REDUX_DEVTOOLS_EXTENSION__.connect({
+    features: {}
+  });
+  reduxDevTools.init({});
+  reduxDevTools.subscribe(({
+    type,
+    payload
+  }) => {
+    if (type === 'DISPATCH' && payload.type === 'COMMIT') {
+      reduxDevTools.init({});
+    }
+  });
+}
+
+const effects = [];
+const devLogger = ({
+  id,
+  isActive
+}, actionName, payload, priority, handers, state, effectStatus) => {
+  if (reduxDevTools) {
+    const flag = effectStatus === 'start' ? '+' : effectStatus === 'end' ? '-' : '';
+    const type = [flag, actionName, ` (${isActive ? '' : '*'}${id})`].join('');
+    const logItem = {
+      type,
+      payload,
+      priority,
+      handers
+    };
+
+    if (flag) {
+      effects.push(logItem);
+    } else {
+      logItem.effects = [...effects];
+      effects.length = 0;
+      reduxDevTools.send(logItem, state);
+    }
+  }
+};
+
 const errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
   return error && !!error[errorProcessed];
@@ -1449,7 +1490,7 @@ function getActionData(action) {
   return Array.isArray(action.payload) ? action.payload : [];
 }
 
-function compose$1(...funcs) {
+function compose(...funcs) {
   if (funcs.length === 0) {
     return arg => arg;
   }
@@ -1461,7 +1502,7 @@ function compose$1(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-function enhanceStore(baseStore, router, middlewares) {
+function enhanceStore(sid, baseStore, router, middlewares, logger) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -1471,6 +1512,7 @@ function enhanceStore(baseStore, router, middlewares) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.sid = sid;
   store.router = router;
   store.getState = getState;
   store.loadingGroups = {};
@@ -1495,8 +1537,8 @@ function enhanceStore(baseStore, router, middlewares) {
   };
   const _update = baseStore.update;
 
-  baseStore.update = (actionName, state, actionData) => {
-    _update(actionName, state, actionData);
+  baseStore.update = (actionName, state) => {
+    _update(actionName, state);
 
     router.latestState = { ...router.latestState,
       ...state
@@ -1508,6 +1550,18 @@ function enhanceStore(baseStore, router, middlewares) {
   store.getCurrentState = moduleName => {
     const state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
+  };
+
+  let isActive = false;
+
+  store.isActive = () => {
+    return isActive;
+  };
+
+  store.setActive = status => {
+    if (isActive !== status) {
+      isActive = status;
+    }
   };
 
   let dispatch = action => {
@@ -1594,6 +1648,7 @@ function enhanceStore(baseStore, router, middlewares) {
   }
 
   function respondHandler(action, isReducer, prevData) {
+    let logs;
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
     const [actionModuleName] = actionName.split(coreConfig.NSP);
@@ -1639,8 +1694,20 @@ function enhanceStore(baseStore, router, middlewares) {
             }
           }
         });
-        store.update(actionName, newState, actionData);
+        logs = [{
+          id: sid,
+          isActive
+        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), undefined];
+        devLogger(...logs);
+        logger && logger(...logs);
+        store.update(actionName, newState);
       } else {
+        logs = [{
+          id: sid,
+          isActive
+        }, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+        devLogger(...logs);
+        logger && logger(...logs);
         const result = [];
         orderList.forEach(moduleName => {
           if (!implemented[moduleName]) {
@@ -1651,7 +1718,14 @@ function enhanceStore(baseStore, router, middlewares) {
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
-        return result.length === 1 ? result[0] : Promise.all(result);
+        const task = result.length === 1 ? result[0] : Promise.all(result);
+        task.then(() => {
+          logs[5] = getState();
+          logs[6] = 'end';
+          devLogger(...logs);
+          logger && logger(...logs);
+        });
+        return task;
       }
     }
 
@@ -1668,14 +1742,14 @@ function enhanceStore(baseStore, router, middlewares) {
   }
 
   const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map(middleware => middleware(middlewareAPI));
-  dispatch = compose$1(...chain)(_dispatch);
+  dispatch = compose(...chain)(_dispatch);
   store.dispatch = dispatch;
   return store;
 }
 
-function initApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
+function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents = []) {
   MetaData.currentRouter = router;
-  const store = enhanceStore(baseStore, router, middlewares);
+  const store = enhanceStore(0, baseStore, router, middlewares, storeLogger);
   router.startup(store);
   const {
     AppModuleName,
@@ -1726,15 +1800,16 @@ function reinitApp(store) {
   const routeModule = getModule(RouteModuleName);
   return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
 }
-let ForkStoreId = 0;
 function forkStore(originalStore, routeState) {
   const {
+    sid,
     builder: {
       storeCreator,
       storeOptions
     },
     options: {
-      middlewares
+      middlewares,
+      logger
     },
     router
   } = originalStore;
@@ -1742,8 +1817,8 @@ function forkStore(originalStore, routeState) {
     initState: {
       [coreConfig.RouteModuleName]: routeState
     }
-  }, ++ForkStoreId);
-  const store = enhanceStore(baseStore, router, middlewares);
+  });
+  const store = enhanceStore(sid + 1, baseStore, router, middlewares, logger);
   return store;
 }
 
@@ -1756,14 +1831,12 @@ const reactComponentsConfig = {
   useStore: null,
   LoadComponentOnError: ({
     message
-  }) => jsx("div", {
-    className: "g-component-error",
-    children: message
-  }),
-  LoadComponentOnLoading: () => jsx("div", {
-    className: "g-component-loading",
-    children: "loading..."
-  })
+  }) => React.createElement("div", {
+    className: "g-component-error"
+  }, message),
+  LoadComponentOnLoading: () => React.createElement("div", {
+    className: "g-component-loading"
+  }, "loading...")
 };
 const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
 const EluxContextComponent = React.createContext({
@@ -1835,14 +1908,10 @@ const Component$1 = ({
   });
 
   if (arr.length > 0) {
-    return jsx(Fragment$2, {
-      children: arr
-    });
+    return React.createElement(React.Fragment, null, arr);
   }
 
-  return jsx(Fragment$2, {
-    children: elseView
-  });
+  return React.createElement(React.Fragment, null, elseView);
 };
 
 var Else = React.memo(Component$1);
@@ -1857,17 +1926,31 @@ const Component = ({
   });
 
   if (arr.length > 0) {
-    return jsx(Fragment$2, {
-      children: arr[0]
-    });
+    return React.createElement(React.Fragment, null, arr[0]);
   }
 
-  return jsx(Fragment$2, {
-    children: elseView
-  });
+  return React.createElement(React.Fragment, null, elseView);
 };
 
 var Switch = React.memo(Component);
+
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
 
 var Link = React.forwardRef(({
   onClick: _onClick,
@@ -1893,13 +1976,13 @@ var Link = React.forwardRef(({
   root && (props['target'] = 'root');
 
   if (href) {
-    return jsx("a", { ...props,
+    return React.createElement("a", _extends({}, props, {
       ref: ref
-    });
+    }));
   } else {
-    return jsx("div", { ...props,
+    return React.createElement("div", _extends({}, props, {
       ref: ref
-    });
+    }));
   }
 });
 
@@ -1972,34 +2055,33 @@ const Router = props => {
       return;
     });
   }, [router]);
-  return jsx("div", {
+  return React.createElement("div", {
     ref: containerRef,
-    className: classname,
-    children: pages.map(item => {
-      const {
-        store,
-        pagename
-      } = item;
-      return jsx("div", {
-        className: "elux-page",
-        "data-pagename": pagename,
-        children: jsx(Page, {
-          store: store,
-          view: item.page || props.page
-        })
-      }, store.id);
-    })
-  });
+    className: classname
+  }, pages.map(item => {
+    const {
+      store,
+      pagename
+    } = item;
+    return React.createElement("div", {
+      key: store.sid,
+      "data-sid": store.sid,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, React.createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 const Page = memo(function ({
   store,
   view
 }) {
   const View = view;
-  return jsx(reactComponentsConfig.Provider, {
-    store: store,
-    children: jsx(View, {})
-  });
+  return React.createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, React.createElement(View, null));
 });
 function useRouter() {
   const eluxContext = useContext(EluxContextComponent);
@@ -2095,18 +2177,17 @@ const loadComponent = (moduleName, componentName, options = {}) => {
 
       if (this.view) {
         const View = this.view;
-        return jsx(View, {
-          ref: forwardedRef,
-          ...rest
-        });
+        return React.createElement(View, _extends({
+          ref: forwardedRef
+        }, rest));
       }
 
       if (this.loading) {
         const Loading = OnLoading;
-        return jsx(Loading, {});
+        return React.createElement(Loading, null);
       }
 
-      return jsx(OnError, {
+      return React.createElement(OnError, {
         message: this.error
       });
     }
@@ -2118,11 +2199,11 @@ const loadComponent = (moduleName, componentName, options = {}) => {
       deps = {}
     } = useContext(EluxContextComponent);
     const store = reactComponentsConfig.useStore();
-    return jsx(Loader, { ...props,
+    return React.createElement(Loader, _extends({}, props, {
       store: store,
       deps: deps,
       forwardedRef: ref
-    });
+    }));
   });
 };
 
@@ -3626,24 +3707,6 @@ if (process.env.NODE_ENV !== 'production') {
     context: propTypes.object,
     children: propTypes.any
   };
-}
-
-function _extends() {
-  _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends.apply(this, arguments);
 }
 
 function _objectWithoutPropertiesLoose(source, excluded) {
@@ -5209,44 +5272,6 @@ var useSelector = /*#__PURE__*/createSelectorHook();
 
 setBatch(unstable_batchedUpdates);
 
-function ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-
-    if (enumerableOnly) {
-      symbols = symbols.filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-      });
-    }
-
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function _objectSpread2(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      ownKeys(Object(source), true).forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
-
 /**
  * Adapted from React: https://github.com/facebook/react/blob/master/packages/shared/formatProdErrorMessage.js
  *
@@ -5383,7 +5408,7 @@ function kindOf(val) {
  */
 
 
-function createStore(reducer, preloadedState, enhancer) {
+function createStore$1(reducer, preloadedState, enhancer) {
   var _ref2;
 
   if (typeof preloadedState === 'function' && typeof enhancer === 'function' || typeof enhancer === 'function' && typeof arguments[3] === 'function') {
@@ -5400,7 +5425,7 @@ function createStore(reducer, preloadedState, enhancer) {
       throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(1) : "Expected the enhancer to be a function. Instead, received: '" + kindOf(enhancer) + "'");
     }
 
-    return enhancer(createStore)(reducer, preloadedState);
+    return enhancer(createStore$1)(reducer, preloadedState);
   }
 
   if (typeof reducer !== 'function') {
@@ -5654,86 +5679,6 @@ function warning$1(message) {
   } catch (e) {} // eslint-disable-line no-empty
 
 }
-/**
- * Composes single-argument functions from right to left. The rightmost
- * function can take multiple arguments as it provides the signature for
- * the resulting composite function.
- *
- * @param {...Function} funcs The functions to compose.
- * @returns {Function} A function obtained by composing the argument functions
- * from right to left. For example, compose(f, g, h) is identical to doing
- * (...args) => f(g(h(...args))).
- */
-
-
-function compose() {
-  for (var _len = arguments.length, funcs = new Array(_len), _key = 0; _key < _len; _key++) {
-    funcs[_key] = arguments[_key];
-  }
-
-  if (funcs.length === 0) {
-    return function (arg) {
-      return arg;
-    };
-  }
-
-  if (funcs.length === 1) {
-    return funcs[0];
-  }
-
-  return funcs.reduce(function (a, b) {
-    return function () {
-      return a(b.apply(void 0, arguments));
-    };
-  });
-}
-/**
- * Creates a store enhancer that applies middleware to the dispatch method
- * of the Redux store. This is handy for a variety of tasks, such as expressing
- * asynchronous actions in a concise manner, or logging every action payload.
- *
- * See `redux-thunk` package as an example of the Redux middleware.
- *
- * Because middleware is potentially asynchronous, this should be the first
- * store enhancer in the composition chain.
- *
- * Note that each middleware will be given the `dispatch` and `getState` functions
- * as named arguments.
- *
- * @param {...Function} middlewares The middleware chain to be applied.
- * @returns {Function} A store enhancer applying the middleware.
- */
-
-
-function applyMiddleware() {
-  for (var _len = arguments.length, middlewares = new Array(_len), _key = 0; _key < _len; _key++) {
-    middlewares[_key] = arguments[_key];
-  }
-
-  return function (createStore) {
-    return function () {
-      var store = createStore.apply(void 0, arguments);
-
-      var _dispatch = function dispatch() {
-        throw new Error(process.env.NODE_ENV === "production" ? formatProdErrorMessage(15) : 'Dispatching while constructing your middleware is not allowed. ' + 'Other middleware would not be applied to this dispatch.');
-      };
-
-      var middlewareAPI = {
-        getState: store.getState,
-        dispatch: function dispatch() {
-          return _dispatch.apply(void 0, arguments);
-        }
-      };
-      var chain = middlewares.map(function (middleware) {
-        return middleware(middlewareAPI);
-      });
-      _dispatch = compose.apply(void 0, chain)(store.dispatch);
-      return _objectSpread2(_objectSpread2({}, store), {}, {
-        dispatch: _dispatch
-      });
-    };
-  };
-}
 /*
  * This is a dummy function to check if the function name has been altered by minification.
  * If the function has been minified and NODE_ENV !== 'production', warn the user.
@@ -5746,54 +5691,48 @@ if (process.env.NODE_ENV !== 'production' && typeof isCrushed.name === 'string' 
   warning$1('You are currently using minified code outside of NODE_ENV === "production". ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or setting mode to production in webpack (https://webpack.js.org/concepts/mode/) ' + 'to ensure you have the correct code for your production build.');
 }
 
+class Store {
+  constructor(_redux, builder) {
+    _defineProperty(this, "subscribe", void 0);
+
+    _defineProperty(this, "getState", void 0);
+
+    _defineProperty(this, "update", (actionName, state) => {
+      this._redux.dispatch({
+        type: actionName,
+        state
+      });
+    });
+
+    this._redux = _redux;
+    this.builder = builder;
+    this.getState = _redux.getState;
+    this.subscribe = _redux.subscribe;
+  }
+
+  destroy() {
+    return;
+  }
+
+}
+
 const reduxReducer = (state, action) => {
   return { ...state,
     ...action.state
   };
 };
 
-function storeCreator(storeOptions, id = 0) {
+function storeCreator(storeOptions) {
   const {
-    initState = {},
-    enhancers = [],
-    middlewares
+    initState = {}
   } = storeOptions;
-
-  if (middlewares) {
-    const middlewareEnhancer = applyMiddleware(...middlewares);
-    enhancers.push(middlewareEnhancer);
-  }
-
-  if (id === 0 && process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__());
-  }
-
-  const store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose(...enhancers) : enhancers[0]);
-  const {
-    dispatch
-  } = store;
-  const reduxStore = store;
-  reduxStore.id = id;
-  reduxStore.builder = {
+  const baseStore = createStore$1(reduxReducer, initState);
+  return new Store(baseStore, {
     storeCreator,
     storeOptions
-  };
-
-  reduxStore.update = (actionName, state, actionData) => {
-    dispatch({
-      type: actionName,
-      state,
-      payload: actionData
-    });
-  };
-
-  reduxStore.destroy = () => {
-    return;
-  };
-
-  return reduxStore;
+  });
 }
-function createRedux(storeOptions = {}) {
+function createStore(storeOptions = {}) {
   return {
     storeOptions,
     storeCreator
@@ -5851,7 +5790,9 @@ class RouteStack {
   }
 
   startup(record) {
+    const oItem = this.records[0];
     this.records = [record];
+    this.setActive(oItem);
   }
 
   getCurrentItem() {
@@ -5876,12 +5817,15 @@ class RouteStack {
 
   _push(item) {
     const records = this.records;
+    const oItem = records[0];
     records.unshift(item);
     const delItem = records.splice(this.limit)[0];
 
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(oItem);
   }
 
   _replace(item) {
@@ -5892,19 +5836,24 @@ class RouteStack {
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(delItem);
   }
 
   _relaunch(item) {
     const delList = this.records;
+    const oItem = delList[0];
     this.records = [item];
     delList.forEach(delItem => {
       if (delItem !== item && delItem.destroy) {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
   }
 
   back(delta) {
+    const oItem = this.records[0];
     const delList = this.records.splice(0, delta);
 
     if (this.records.length === 0) {
@@ -5917,6 +5866,21 @@ class RouteStack {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
+  }
+
+  setActive(oItem) {
+    var _this$records$;
+
+    const oStore = oItem == null ? void 0 : oItem.store;
+    const store = (_this$records$ = this.records[0]) == null ? void 0 : _this$records$.store;
+
+    if (store === oStore) {
+      store == null ? void 0 : store.setActive(true);
+    } else {
+      oStore == null ? void 0 : oStore.setActive(false);
+      store == null ? void 0 : store.setActive(true);
+    }
   }
 
 }
@@ -6914,12 +6878,42 @@ class BaseEluxRouter extends MultipleDispatcher {
     return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
   }
 
-  findRecordByKey(key) {
-    return this.rootStack.findRecordByKey(key);
+  findRecordByKey(recordKey) {
+    const {
+      record: {
+        key,
+        location
+      },
+      overflow,
+      index
+    } = this.rootStack.findRecordByKey(recordKey);
+    return {
+      overflow,
+      index,
+      record: {
+        key,
+        location
+      }
+    };
   }
 
   findRecordByStep(delta, rootOnly) {
-    return this.rootStack.testBack(delta, rootOnly);
+    const {
+      record: {
+        key,
+        location
+      },
+      overflow,
+      index
+    } = this.rootStack.testBack(delta, rootOnly);
+    return {
+      overflow,
+      index,
+      record: {
+        key,
+        location
+      }
+    };
   }
 
   extendCurrent(params, pagename) {
@@ -7191,7 +7185,7 @@ function setUserConfig(conf) {
     });
   }
 }
-function createBaseMP(ins, router, render, middlewares = []) {
+function createBaseMP(ins, router, render, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
   return {
     useStore({
@@ -7203,7 +7197,7 @@ function createBaseMP(ins, router, render, middlewares = []) {
           const baseStore = storeCreator(storeOptions);
           const {
             store
-          } = initApp(router, baseStore, middlewares);
+          } = initApp(router, baseStore, storeMiddlewares, storeLogger);
           const context = render({
             deps: {},
             router,
@@ -7220,7 +7214,7 @@ function createBaseMP(ins, router, render, middlewares = []) {
 
   };
 }
-function createBaseApp(ins, router, render, middlewares = []) {
+function createBaseApp(ins, router, render, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
   return {
     useStore({
@@ -7247,13 +7241,13 @@ function createBaseApp(ins, router, render, middlewares = []) {
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName, components);
+            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName, components);
             return setup.then(() => {
               render(id, AppView, {
                 deps: {},
                 router,
                 documentHead: ''
-              }, !!env[ssrKey], ins);
+              }, !!env[ssrKey], ins, store);
               return store;
             });
           });
@@ -7264,7 +7258,7 @@ function createBaseApp(ins, router, render, middlewares = []) {
 
   };
 }
-function createBaseSSR(ins, router, render, middlewares = []) {
+function createBaseSSR(ins, router, render, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
   return {
     useStore({
@@ -7286,7 +7280,7 @@ function createBaseSSR(ins, router, render, middlewares = []) {
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName);
+            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {
@@ -7294,7 +7288,7 @@ function createBaseSSR(ins, router, render, middlewares = []) {
                 router,
                 documentHead: ''
               };
-              return render(id, AppView, eluxContext, ins).then(html => {
+              return render(id, AppView, eluxContext, ins, store).then(html => {
                 const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
                 if (match) {
@@ -7344,23 +7338,21 @@ function getApp(demoteForProductionOnly, injectActions) {
   };
 }
 
-function renderToDocument(id, APPView, eluxContext, fromSSR) {
+function renderToDocument(id, APPView, eluxContext, fromSSR, app, store) {
   const renderFun = fromSSR ? hydrate : render;
   const panel = env.document.getElementById(id);
-  renderFun(jsx(EluxContextComponent.Provider, {
-    value: eluxContext,
-    children: jsx(Router, {
-      page: APPView
-    })
-  }), panel);
+  renderFun(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Router, {
+    page: APPView
+  })), panel);
 }
-function renderToString(id, APPView, eluxContext) {
-  const html = require('react-dom/server').renderToString(jsx(EluxContextComponent.Provider, {
-    value: eluxContext,
-    children: jsx(Router, {
-      page: APPView
-    })
-  }));
+function renderToString(id, APPView, eluxContext, app, store) {
+  const html = require('react-dom/server').renderToString(React.createElement(EluxContextComponent.Provider, {
+    value: eluxContext
+  }, React.createElement(Router, {
+    page: APPView
+  })));
 
   return Promise.resolve(html);
 }
@@ -8057,17 +8049,17 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
-const createApp = (moduleGetter, middlewares) => {
+const createApp = (moduleGetter, storeMiddlewares, storeLogger) => {
   defineModuleGetter(moduleGetter);
   const history = createBrowserHistory();
   const router = createRouter(history, {});
-  return createBaseApp({}, router, renderToDocument, middlewares);
+  return createBaseApp({}, router, renderToDocument, storeMiddlewares, storeLogger);
 };
-const createSSR = (moduleGetter, url, nativeData, middlewares) => {
+const createSSR = (moduleGetter, url, nativeData, storeMiddlewares, storeLogger) => {
   defineModuleGetter(moduleGetter);
   const history = createServerHistory(url);
   const router = createRouter(history, nativeData);
-  return createBaseSSR({}, router, renderToString, middlewares);
+  return createBaseSSR({}, router, renderToString, storeMiddlewares, storeLogger);
 };
 
 setAppConfig({
@@ -8078,4 +8070,4 @@ setReactComponentsConfig({
   useStore: useStore
 });
 
-export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, SingleDispatcher, Switch, TaskCounter, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRedux, createRouteModule, createSSR, createSelectorHook, deepClone, deepMerge, deepMergeState, effect, env, errorAction, errorProcessed, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, location, logger, modelHotReplacement, mutation, patchActions, reducer, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };
+export { ActionTypes$1 as ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, Provider, RouteActionTypes, SingleDispatcher, Switch, TaskCounter, action, appConfig, clientSide, connect, connectAdvanced, connectRedux, createApp, createBaseApp, createBaseMP, createBaseSSR, createRouteModule, createSSR, createSelectorHook, createStore, deepClone, deepMerge, deepMergeState, effect, env, errorAction, errorProcessed, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, location, logger, modelHotReplacement, mutation, patchActions, reducer, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, shallowEqual, useSelector, useStore };

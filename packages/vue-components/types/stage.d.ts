@@ -19,6 +19,6 @@ export declare const Page: DefineComponent<{
 } & {}>, {}>;
 export declare const Router: DefineComponent<{}, () => JSX.Element, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, import("vue").EmitsOptions, string, import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, Readonly<{} & {}>, {}>;
 export declare function renderToMP(eluxContext: EluxContext, app: App): void;
-export declare function renderToDocument(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, fromSSR: boolean, app: App): void;
-export declare function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App): Promise<string>;
+export declare function renderToDocument(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, fromSSR: boolean, app: App, store: IStore): void;
+export declare function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App, store: IStore): Promise<string>;
 //# sourceMappingURL=stage.d.ts.map

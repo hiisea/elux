@@ -25,7 +25,7 @@ export function setUserConfig(conf) {
     });
   }
 }
-export function createBaseMP(ins, router, render, middlewares = []) {
+export function createBaseMP(ins, router, render, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
   return {
     useStore({
@@ -37,7 +37,7 @@ export function createBaseMP(ins, router, render, middlewares = []) {
           const baseStore = storeCreator(storeOptions);
           const {
             store
-          } = initApp(router, baseStore, middlewares);
+          } = initApp(router, baseStore, storeMiddlewares, storeLogger);
           const context = render({
             deps: {},
             router,
@@ -54,7 +54,7 @@ export function createBaseMP(ins, router, render, middlewares = []) {
 
   };
 }
-export function createBaseApp(ins, router, render, middlewares = []) {
+export function createBaseApp(ins, router, render, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
   return {
     useStore({
@@ -81,13 +81,13 @@ export function createBaseApp(ins, router, render, middlewares = []) {
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName, components);
+            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName, components);
             return setup.then(() => {
               render(id, AppView, {
                 deps: {},
                 router,
                 documentHead: ''
-              }, !!env[ssrKey], ins);
+              }, !!env[ssrKey], ins, store);
               return store;
             });
           });
@@ -98,7 +98,7 @@ export function createBaseApp(ins, router, render, middlewares = []) {
 
   };
 }
-export function createBaseSSR(ins, router, render, middlewares = []) {
+export function createBaseSSR(ins, router, render, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
   return {
     useStore({
@@ -120,7 +120,7 @@ export function createBaseSSR(ins, router, render, middlewares = []) {
               store,
               AppView,
               setup
-            } = initApp(router, baseStore, middlewares, viewName);
+            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext = {
@@ -128,7 +128,7 @@ export function createBaseSSR(ins, router, render, middlewares = []) {
                 router,
                 documentHead: ''
               };
-              return render(id, AppView, eluxContext, ins).then(html => {
+              return render(id, AppView, eluxContext, ins, store).then(html => {
                 const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
                 if (match) {

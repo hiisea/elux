@@ -23,8 +23,6 @@ var _core = require("@elux/core");
 
 var _base = require("./base");
 
-var _jsxRuntime = require("react/jsx-runtime");
-
 var _excluded = ["forwardedRef", "deps", "store"];
 
 var loadComponent = function loadComponent(moduleName, componentName, options) {
@@ -123,17 +121,17 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 
       if (this.view) {
         var View = this.view;
-        return (0, _jsxRuntime.jsx)(View, (0, _extends2.default)({
+        return _react.default.createElement(View, (0, _extends2.default)({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
         var Loading = OnLoading;
-        return (0, _jsxRuntime.jsx)(Loading, {});
+        return _react.default.createElement(Loading, null);
       }
 
-      return (0, _jsxRuntime.jsx)(OnError, {
+      return _react.default.createElement(OnError, {
         message: this.error
       });
     };
@@ -148,7 +146,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
 
     var store = _base.reactComponentsConfig.useStore();
 
-    return (0, _jsxRuntime.jsx)(Loader, (0, _extends2.default)({}, props, {
+    return _react.default.createElement(Loader, (0, _extends2.default)({}, props, {
       store: store,
       deps: deps,
       forwardedRef: ref

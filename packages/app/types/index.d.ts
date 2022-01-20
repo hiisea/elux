@@ -1,8 +1,8 @@
-import { IStore, LoadComponent, ModuleGetter, IStoreMiddleware, StoreBuilder, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions, ICoreRouter, StoreOptions } from '@elux/core';
+import { IStore, LoadComponent, ModuleGetter, IStoreMiddleware, IStoreLogger, StoreBuilder, BStore, RootModuleFacade, RootModuleAPI, RootModuleActions, ICoreRouter, StoreOptions } from '@elux/core';
 import { IEluxRouter, RouteState } from '@elux/route';
 export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepClone, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, TaskCounter, SingleDispatcher, CoreModuleHandlers as BaseModuleHandlers, errorProcessed, } from '@elux/core';
 export { RouteActionTypes, location, createRouteModule, safeJsonParse } from '@elux/route';
-export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent, LoadComponent, ICoreRouter, ModuleGetter, IStoreMiddleware, StoreOptions, BStore, StoreBuilder, RootModuleAPI, RootModuleActions, GetState, State, ICoreRouteState, IModuleHandlersClass, PickActions, ModuleFacade, GetPromiseModule, ReturnComponents, CommonModule, IModuleHandlers, GetPromiseComponent, ActionsThis, Action, HandlerThis, PickHandler, } from '@elux/core';
+export type { RootModuleFacade as Facade, Dispatch, IStore, EluxComponent, LoadComponent, ICoreRouter, ModuleGetter, IStoreMiddleware, IStoreLogger, StoreOptions, BStore, StoreBuilder, RootModuleAPI, RootModuleActions, GetState, State, ICoreRouteState, IModuleHandlersClass, PickActions, ModuleFacade, GetPromiseModule, ReturnComponents, CommonModule, IModuleHandlers, GetPromiseComponent, ActionsThis, Action, HandlerThis, PickHandler, } from '@elux/core';
 export type { LocationState, PagenameMap, NativeLocationMap, HistoryAction, EluxLocation, NativeLocation, StateLocation, RouteState, DeepPartial, IEluxRouter, RootParams, ILocationTransform, IHistoryRecord, } from '@elux/route';
 /**
  * @internal
@@ -63,7 +63,7 @@ export interface ContextWrap {
  * @internal
  */
 export interface AttachMP<App> {
-    (app: App, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+    (app: App, moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
         useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): App & {
             render(): {
                 store: IStore & B;
@@ -76,7 +76,7 @@ export interface AttachMP<App> {
  * @internal
  */
 export interface CreateMP {
-    (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+    (moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
         useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): {
             render(): {
                 store: IStore & B;
@@ -89,7 +89,7 @@ export interface CreateMP {
  * @internal
  */
 export interface CreateApp<INS = {}> {
-    (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+    (moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
         useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
             render({ id, ssrKey, viewName }?: RenderOptions): Promise<IStore & B>;
         };
@@ -99,7 +99,7 @@ export interface CreateApp<INS = {}> {
  * @internal
  */
 export interface CreateSSR<INS = {}> {
-    (moduleGetter: ModuleGetter, url: string, nativeData: any, middlewares?: IStoreMiddleware[]): {
+    (moduleGetter: ModuleGetter, url: string, nativeData: any, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
         useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({ storeOptions, storeCreator, }: StoreBuilder<O, B>): INS & {
             render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
         };
@@ -116,7 +116,7 @@ export interface EluxContext {
 /**
  * @internal
  */
-export declare function createBaseMP<INS = {}>(ins: INS, router: IEluxRouter, render: (eluxContext: EluxContext, ins: INS) => any, middlewares?: IStoreMiddleware[]): {
+export declare function createBaseMP<INS = {}>(ins: INS, router: IEluxRouter, render: (eluxContext: EluxContext, ins: INS) => any, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(storeBuilder: StoreBuilder<O, B>): INS & {
         render(): {
             store: IStore & B;
@@ -127,7 +127,7 @@ export declare function createBaseMP<INS = {}>(ins: INS, router: IEluxRouter, re
 /**
  * @internal
  */
-export declare function createBaseApp<INS = {}>(ins: INS, router: IEluxRouter, render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void, middlewares?: IStoreMiddleware[]): {
+export declare function createBaseApp<INS = {}>(ins: INS, router: IEluxRouter, render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS, store: IStore) => void, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(storeBuilder: StoreBuilder<O, B>): INS & {
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<IStore & B>;
     };
@@ -135,7 +135,7 @@ export declare function createBaseApp<INS = {}>(ins: INS, router: IEluxRouter, r
 /**
  * @internal
  */
-export declare function createBaseSSR<INS = {}>(ins: INS, router: IEluxRouter, render: (id: string, component: any, eluxContext: EluxContext, ins: INS) => Promise<string>, middlewares?: IStoreMiddleware[]): {
+export declare function createBaseSSR<INS = {}>(ins: INS, router: IEluxRouter, render: (id: string, component: any, eluxContext: EluxContext, ins: INS, store: IStore) => Promise<string>, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(storeBuilder: StoreBuilder<O, B>): INS & {
         render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
     };

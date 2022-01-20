@@ -23,6 +23,8 @@ var _inject = require("./inject");
 
 var _router = require("./router");
 
+var _devtools = require("./devtools");
+
 var errorProcessed = '__eluxProcessed__';
 exports.errorProcessed = errorProcessed;
 
@@ -71,7 +73,7 @@ function compose() {
   });
 }
 
-function enhanceStore(baseStore, router, middlewares) {
+function enhanceStore(sid, baseStore, router, middlewares, logger) {
   var store = baseStore;
   var _getState = baseStore.getState;
 
@@ -81,6 +83,7 @@ function enhanceStore(baseStore, router, middlewares) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.sid = sid;
   store.router = router;
   store.getState = getState;
   store.loadingGroups = {};
@@ -105,8 +108,8 @@ function enhanceStore(baseStore, router, middlewares) {
   };
   var _update = baseStore.update;
 
-  baseStore.update = function (actionName, state, actionData) {
-    _update(actionName, state, actionData);
+  baseStore.update = function (actionName, state) {
+    _update(actionName, state);
 
     router.latestState = (0, _extends2.default)({}, router.latestState, state);
   };
@@ -118,6 +121,18 @@ function enhanceStore(baseStore, router, middlewares) {
   store.getCurrentState = function (moduleName) {
     var state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
+  };
+
+  var isActive = false;
+
+  store.isActive = function () {
+    return isActive;
+  };
+
+  store.setActive = function (status) {
+    if (isActive !== status) {
+      isActive = status;
+    }
   };
 
   var _dispatch2 = function dispatch(action) {
@@ -216,6 +231,7 @@ function enhanceStore(baseStore, router, middlewares) {
   }
 
   function respondHandler(action, isReducer, prevData) {
+    var logs;
     var handlersMap = isReducer ? _basic.MetaData.reducersMap : _basic.MetaData.effectsMap;
     var actionName = action.type;
 
@@ -262,8 +278,24 @@ function enhanceStore(baseStore, router, middlewares) {
             }
           }
         });
-        store.update(actionName, newState, actionData);
+        logs = [{
+          id: sid,
+          isActive: isActive
+        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), undefined];
+
+        _devtools.devLogger.apply(void 0, logs);
+
+        logger && logger.apply(void 0, logs);
+        store.update(actionName, newState);
       } else {
+        logs = [{
+          id: sid,
+          isActive: isActive
+        }, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+
+        _devtools.devLogger.apply(void 0, logs);
+
+        logger && logger.apply(void 0, logs);
         var result = [];
         orderList.forEach(function (moduleName) {
           if (!implemented[moduleName]) {
@@ -274,7 +306,16 @@ function enhanceStore(baseStore, router, middlewares) {
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
-        return result.length === 1 ? result[0] : Promise.all(result);
+        var task = result.length === 1 ? result[0] : Promise.all(result);
+        task.then(function () {
+          logs[5] = getState();
+          logs[6] = 'end';
+
+          _devtools.devLogger.apply(void 0, logs);
+
+          logger && logger.apply(void 0, logs);
+        });
+        return task;
       }
     }
 

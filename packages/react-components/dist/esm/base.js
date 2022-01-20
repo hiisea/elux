@@ -1,6 +1,5 @@
 import React from 'react';
 import { env, buildConfigSetter } from '@elux/core';
-import { jsx as _jsx } from "react/jsx-runtime";
 export var reactComponentsConfig = {
   setPageTitle: function setPageTitle(title) {
     return env.document.title = title;
@@ -9,16 +8,14 @@ export var reactComponentsConfig = {
   useStore: null,
   LoadComponentOnError: function LoadComponentOnError(_ref) {
     var message = _ref.message;
-    return _jsx("div", {
-      className: "g-component-error",
-      children: message
-    });
+    return React.createElement("div", {
+      className: "g-component-error"
+    }, message);
   },
   LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return _jsx("div", {
-      className: "g-component-loading",
-      children: "loading..."
-    });
+    return React.createElement("div", {
+      className: "g-component-loading"
+    }, "loading...");
   }
 };
 export var setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);

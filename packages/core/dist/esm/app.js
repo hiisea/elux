@@ -3,13 +3,13 @@ import { MetaData, coreConfig } from './basic';
 import { getModule, getComponet, getModuleList, getComponentList } from './inject';
 import { enhanceStore } from './store';
 import env from './env';
-export function initApp(router, baseStore, middlewares, appViewName, preloadComponents) {
+export function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   MetaData.currentRouter = router;
-  var store = enhanceStore(baseStore, router, middlewares);
+  var store = enhanceStore(0, baseStore, router, middlewares, storeLogger);
   router.startup(store);
   var AppModuleName = coreConfig.AppModuleName,
       RouteModuleName = coreConfig.RouteModuleName;
@@ -57,18 +57,20 @@ export function reinitApp(store) {
   var routeModule = getModule(RouteModuleName);
   return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
 }
-var ForkStoreId = 0;
 export function forkStore(originalStore, routeState) {
   var _initState;
 
-  var _originalStore$builde = originalStore.builder,
+  var sid = originalStore.sid,
+      _originalStore$builde = originalStore.builder,
       storeCreator = _originalStore$builde.storeCreator,
       storeOptions = _originalStore$builde.storeOptions,
-      middlewares = originalStore.options.middlewares,
+      _originalStore$option = originalStore.options,
+      middlewares = _originalStore$option.middlewares,
+      logger = _originalStore$option.logger,
       router = originalStore.router;
   var baseStore = storeCreator(_extends({}, storeOptions, {
     initState: (_initState = {}, _initState[coreConfig.RouteModuleName] = routeState, _initState)
-  }), ++ForkStoreId);
-  var store = enhanceStore(baseStore, router, middlewares);
+  }));
+  var store = enhanceStore(sid + 1, baseStore, router, middlewares, logger);
   return store;
 }

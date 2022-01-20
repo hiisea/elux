@@ -61,7 +61,7 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
       {pages.map((item) => {
         const {store, pagename} = item;
         return (
-          <div key={store.id} className="elux-page" data-pagename={pagename}>
+          <div key={store.sid} data-sid={store.sid} className="elux-page" data-pagename={pagename}>
             <Page store={store} view={item.page || props.page}></Page>
           </div>
         );

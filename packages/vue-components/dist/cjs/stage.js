@@ -123,7 +123,8 @@ var Router = (0, _vue.defineComponent)({
         var store = item.store,
             pagename = item.pagename;
         return (0, _vue.createVNode)("div", {
-          "key": store.id,
+          "key": store.sid,
+          "data-sid": store.sid,
           "class": "elux-page",
           "data-pagename": pagename
         }, [(0, _vue.createVNode)(Page, {
@@ -144,7 +145,7 @@ function renderToMP(eluxContext, app) {
   }
 }
 
-function renderToDocument(id, APPView, eluxContext, fromSSR, app) {
+function renderToDocument(id, APPView, eluxContext, fromSSR, app, store) {
   StageView = APPView;
   app.provide(_base.EluxContextKey, eluxContext);
 
@@ -155,7 +156,7 @@ function renderToDocument(id, APPView, eluxContext, fromSSR, app) {
   app.mount("#" + id);
 }
 
-function renderToString(id, APPView, eluxContext, app) {
+function renderToString(id, APPView, eluxContext, app, store) {
   StageView = APPView;
   app.provide(_base.EluxContextKey, eluxContext);
 

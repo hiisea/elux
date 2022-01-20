@@ -26,9 +26,9 @@ export function setUserConfig(conf) {
     });
   }
 }
-export function createBaseMP(ins, router, render, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
+export function createBaseMP(ins, router, render, storeMiddlewares, storeLogger) {
+  if (storeMiddlewares === void 0) {
+    storeMiddlewares = [];
   }
 
   appMeta.router = router;
@@ -50,7 +50,7 @@ export function createBaseMP(ins, router, render, middlewares) {
         }(function () {
           var baseStore = storeCreator(storeOptions);
 
-          var _initApp = initApp(router, baseStore, middlewares),
+          var _initApp = initApp(router, baseStore, storeMiddlewares, storeLogger),
               store = _initApp.store;
 
           var context = render({
@@ -67,9 +67,9 @@ export function createBaseMP(ins, router, render, middlewares) {
     }
   };
 }
-export function createBaseApp(ins, router, render, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
+export function createBaseApp(ins, router, render, storeMiddlewares, storeLogger) {
+  if (storeMiddlewares === void 0) {
+    storeMiddlewares = [];
   }
 
   appMeta.router = router;
@@ -108,7 +108,7 @@ export function createBaseApp(ins, router, render, middlewares) {
             storeOptions.initState = _extends({}, storeOptions.initState, (_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
             var baseStore = storeCreator(storeOptions);
 
-            var _initApp2 = initApp(router, baseStore, middlewares, viewName, components),
+            var _initApp2 = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName, components),
                 store = _initApp2.store,
                 AppView = _initApp2.AppView,
                 setup = _initApp2.setup;
@@ -118,7 +118,7 @@ export function createBaseApp(ins, router, render, middlewares) {
                 deps: {},
                 router: router,
                 documentHead: ''
-              }, !!env[ssrKey], ins);
+              }, !!env[ssrKey], ins, store);
               return store;
             });
           });
@@ -127,9 +127,9 @@ export function createBaseApp(ins, router, render, middlewares) {
     }
   };
 }
-export function createBaseSSR(ins, router, render, middlewares) {
-  if (middlewares === void 0) {
-    middlewares = [];
+export function createBaseSSR(ins, router, render, storeMiddlewares, storeLogger) {
+  if (storeMiddlewares === void 0) {
+    storeMiddlewares = [];
   }
 
   appMeta.router = router;
@@ -163,7 +163,7 @@ export function createBaseSSR(ins, router, render, middlewares) {
             storeOptions.initState = _extends({}, storeOptions.initState, (_extends3 = {}, _extends3[routeConfig.RouteModuleName] = routeState, _extends3));
             var baseStore = storeCreator(storeOptions);
 
-            var _initApp3 = initApp(router, baseStore, middlewares, viewName),
+            var _initApp3 = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName),
                 store = _initApp3.store,
                 AppView = _initApp3.AppView,
                 setup = _initApp3.setup;
@@ -175,7 +175,7 @@ export function createBaseSSR(ins, router, render, middlewares) {
                 router: router,
                 documentHead: ''
               };
-              return render(id, AppView, eluxContext, ins).then(function (html) {
+              return render(id, AppView, eluxContext, ins, store).then(function (html) {
                 var match = appMeta.SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
 
                 if (match) {

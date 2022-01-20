@@ -6,6 +6,13 @@ declare namespace EluxRuntime {
     isServer: boolean;
     encodeBas64(str: string): string;
     decodeBas64(str: string): string;
+    __REDUX_DEVTOOLS_EXTENSION__?: {
+      connect: (options?: any) => {
+        init(state: any): void;
+        subscribe(action: any): void;
+        send(action: {type: string; payload: any[]}, state: any): void;
+      };
+    };
   }
 }
 declare interface ProcessEnv {

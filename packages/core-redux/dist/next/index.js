@@ -1,5 +1,5 @@
-import { compose, createStore, applyMiddleware } from 'redux';
-import { env } from '@elux/core';
+import { createStore as createRedux } from 'redux';
+import { Store } from './store';
 
 const reduxReducer = (state, action) => {
   return { ...state,
@@ -7,48 +7,17 @@ const reduxReducer = (state, action) => {
   };
 };
 
-export function storeCreator(storeOptions, id = 0) {
+export function storeCreator(storeOptions) {
   const {
-    initState = {},
-    enhancers = [],
-    middlewares
+    initState = {}
   } = storeOptions;
-
-  if (middlewares) {
-    const middlewareEnhancer = applyMiddleware(...middlewares);
-    enhancers.push(middlewareEnhancer);
-  }
-
-  if (id === 0 && process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-    enhancers.push(env.__REDUX_DEVTOOLS_EXTENSION__());
-  }
-
-  const store = createStore(reduxReducer, initState, enhancers.length > 1 ? compose(...enhancers) : enhancers[0]);
-  const {
-    dispatch
-  } = store;
-  const reduxStore = store;
-  reduxStore.id = id;
-  reduxStore.builder = {
+  const baseStore = createRedux(reduxReducer, initState);
+  return new Store(baseStore, {
     storeCreator,
     storeOptions
-  };
-
-  reduxStore.update = (actionName, state, actionData) => {
-    dispatch({
-      type: actionName,
-      state,
-      payload: actionData
-    });
-  };
-
-  reduxStore.destroy = () => {
-    return;
-  };
-
-  return reduxStore;
+  });
 }
-export function createRedux(storeOptions = {}) {
+export function createStore(storeOptions = {}) {
   return {
     storeOptions,
     storeCreator

@@ -2,9 +2,9 @@ import { MetaData, coreConfig } from './basic';
 import { getModule, getComponet, getModuleList, getComponentList } from './inject';
 import { enhanceStore } from './store';
 import env from './env';
-export function initApp(router, baseStore, middlewares, appViewName, preloadComponents = []) {
+export function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents = []) {
   MetaData.currentRouter = router;
-  const store = enhanceStore(baseStore, router, middlewares);
+  const store = enhanceStore(0, baseStore, router, middlewares, storeLogger);
   router.startup(store);
   const {
     AppModuleName,
@@ -55,15 +55,16 @@ export function reinitApp(store) {
   const routeModule = getModule(RouteModuleName);
   return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
 }
-let ForkStoreId = 0;
 export function forkStore(originalStore, routeState) {
   const {
+    sid,
     builder: {
       storeCreator,
       storeOptions
     },
     options: {
-      middlewares
+      middlewares,
+      logger
     },
     router
   } = originalStore;
@@ -71,7 +72,7 @@ export function forkStore(originalStore, routeState) {
     initState: {
       [coreConfig.RouteModuleName]: routeState
     }
-  }, ++ForkStoreId);
-  const store = enhanceStore(baseStore, router, middlewares);
+  });
+  const store = enhanceStore(sid + 1, baseStore, router, middlewares, logger);
   return store;
 }

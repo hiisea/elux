@@ -82,12 +82,18 @@ export interface StoreBuilder<O extends StoreOptions = StoreOptions, B extends B
 /**
  * @internal
  */
-export interface BStore<S extends State = any> {
+export declare type IStoreLogger = ({ id, isActive }: {
     id: number;
+    isActive: boolean;
+}, actionName: string, payload: any[], priority: string[], handers: string[], state: object, effectStatus?: 'start' | 'end') => void;
+/**
+ * @internal
+ */
+export interface BStore<S extends State = any> {
     builder: StoreBuilder;
-    dispatch: Dispatch;
     getState: GetState<S>;
-    update: (actionName: string, state: Partial<S>, actionData: any[]) => void;
+    update: (actionName: string, state: Partial<S>) => void;
+    subscribe(listener: () => void): () => void;
     destroy(): void;
 }
 /**
@@ -102,6 +108,8 @@ export declare type IStoreMiddleware = (api: {
  * @internal
  */
 export interface IStore<S extends State = any> extends BStore<S> {
+    sid: number;
+    dispatch: Dispatch;
     router: ICoreRouter;
     getCurrentActionName: () => string;
     getCurrentState: GetState<S>;
@@ -109,8 +117,11 @@ export interface IStore<S extends State = any> extends BStore<S> {
         [moduleName: string]: IModuleHandlers;
     };
     loadingGroups: Record<string, TaskCounter>;
+    isActive(): boolean;
+    setActive(status: boolean): void;
     options: {
         middlewares?: IStoreMiddleware[];
+        logger?: IStoreLogger;
     };
 }
 /**

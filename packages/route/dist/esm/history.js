@@ -14,7 +14,9 @@ var RouteStack = function () {
   var _proto = RouteStack.prototype;
 
   _proto.startup = function startup(record) {
+    var oItem = this.records[0];
     this.records = [record];
+    this.setActive(oItem);
   };
 
   _proto.getCurrentItem = function getCurrentItem() {
@@ -39,12 +41,15 @@ var RouteStack = function () {
 
   _proto._push = function _push(item) {
     var records = this.records;
+    var oItem = records[0];
     records.unshift(item);
     var delItem = records.splice(this.limit)[0];
 
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(oItem);
   };
 
   _proto._replace = function _replace(item) {
@@ -55,19 +60,24 @@ var RouteStack = function () {
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(delItem);
   };
 
   _proto._relaunch = function _relaunch(item) {
     var delList = this.records;
+    var oItem = delList[0];
     this.records = [item];
     delList.forEach(function (delItem) {
       if (delItem !== item && delItem.destroy) {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
   };
 
   _proto.back = function back(delta) {
+    var oItem = this.records[0];
     var delList = this.records.splice(0, delta);
 
     if (this.records.length === 0) {
@@ -80,6 +90,21 @@ var RouteStack = function () {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
+  };
+
+  _proto.setActive = function setActive(oItem) {
+    var _this$records$;
+
+    var oStore = oItem == null ? void 0 : oItem.store;
+    var store = (_this$records$ = this.records[0]) == null ? void 0 : _this$records$.store;
+
+    if (store === oStore) {
+      store == null ? void 0 : store.setActive(true);
+    } else {
+      oStore == null ? void 0 : oStore.setActive(false);
+      store == null ? void 0 : store.setActive(true);
+    }
   };
 
   return RouteStack;

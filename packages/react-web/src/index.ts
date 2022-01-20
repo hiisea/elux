@@ -23,17 +23,17 @@ export function setConfig(
 }
 
 /*** @internal */
-export const createApp: CreateApp = (moduleGetter, middlewares) => {
+export const createApp: CreateApp = (moduleGetter, storeMiddlewares, storeLogger) => {
   defineModuleGetter(moduleGetter);
   const history = createBrowserHistory();
   const router = createRouter(history, {});
-  return createBaseApp({}, router, renderToDocument, middlewares);
+  return createBaseApp({}, router, renderToDocument, storeMiddlewares, storeLogger);
 };
 
 /*** @internal */
-export const createSSR: CreateSSR = (moduleGetter, url, nativeData, middlewares) => {
+export const createSSR: CreateSSR = (moduleGetter, url, nativeData, storeMiddlewares, storeLogger) => {
   defineModuleGetter(moduleGetter);
   const history = createServerHistory(url);
   const router = createRouter(history, nativeData);
-  return createBaseSSR({}, router, renderToString, middlewares);
+  return createBaseSSR({}, router, renderToString, storeMiddlewares, storeLogger);
 };

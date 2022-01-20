@@ -10,7 +10,9 @@ class RouteStack {
   }
 
   startup(record) {
+    const oItem = this.records[0];
     this.records = [record];
+    this.setActive(oItem);
   }
 
   getCurrentItem() {
@@ -35,12 +37,15 @@ class RouteStack {
 
   _push(item) {
     const records = this.records;
+    const oItem = records[0];
     records.unshift(item);
     const delItem = records.splice(this.limit)[0];
 
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(oItem);
   }
 
   _replace(item) {
@@ -51,19 +56,24 @@ class RouteStack {
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+
+    this.setActive(delItem);
   }
 
   _relaunch(item) {
     const delList = this.records;
+    const oItem = delList[0];
     this.records = [item];
     delList.forEach(delItem => {
       if (delItem !== item && delItem.destroy) {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
   }
 
   back(delta) {
+    const oItem = this.records[0];
     const delList = this.records.splice(0, delta);
 
     if (this.records.length === 0) {
@@ -76,6 +86,21 @@ class RouteStack {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
+  }
+
+  setActive(oItem) {
+    var _this$records$;
+
+    const oStore = oItem == null ? void 0 : oItem.store;
+    const store = (_this$records$ = this.records[0]) == null ? void 0 : _this$records$.store;
+
+    if (store === oStore) {
+      store == null ? void 0 : store.setActive(true);
+    } else {
+      oStore == null ? void 0 : oStore.setActive(false);
+      store == null ? void 0 : store.setActive(true);
+    }
   }
 
 }

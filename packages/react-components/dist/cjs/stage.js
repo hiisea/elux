@@ -17,40 +17,35 @@ var _base = require("./base");
 
 var _Router = require("./Router");
 
-var _jsxRuntime = require("react/jsx-runtime");
-
 function renderToMP(eluxContext) {
   var Component = function Component(_ref) {
     var children = _ref.children;
-    return (0, _jsxRuntime.jsx)(_base.EluxContextComponent.Provider, {
-      value: eluxContext,
-      children: children
-    });
+    return _react.default.createElement(_base.EluxContextComponent.Provider, {
+      value: eluxContext
+    }, children);
   };
 
   return Component;
 }
 
-function renderToDocument(id, APPView, eluxContext, fromSSR) {
+function renderToDocument(id, APPView, eluxContext, fromSSR, app, store) {
   var renderFun = fromSSR ? _reactDom.hydrate : _reactDom.render;
 
   var panel = _core.env.document.getElementById(id);
 
-  renderFun((0, _jsxRuntime.jsx)(_base.EluxContextComponent.Provider, {
-    value: eluxContext,
-    children: (0, _jsxRuntime.jsx)(_Router.Router, {
-      page: APPView
-    })
-  }), panel);
+  renderFun(_react.default.createElement(_base.EluxContextComponent.Provider, {
+    value: eluxContext
+  }, _react.default.createElement(_Router.Router, {
+    page: APPView
+  })), panel);
 }
 
-function renderToString(id, APPView, eluxContext) {
-  var html = require('react-dom/server').renderToString((0, _jsxRuntime.jsx)(_base.EluxContextComponent.Provider, {
-    value: eluxContext,
-    children: (0, _jsxRuntime.jsx)(_Router.Router, {
-      page: APPView
-    })
-  }));
+function renderToString(id, APPView, eluxContext, app, store) {
+  var html = require('react-dom/server').renderToString(_react.default.createElement(_base.EluxContextComponent.Provider, {
+    value: eluxContext
+  }, _react.default.createElement(_Router.Router, {
+    page: APPView
+  })));
 
   return Promise.resolve(html);
 }

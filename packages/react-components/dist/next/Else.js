@@ -1,6 +1,4 @@
 import React from 'react';
-import { Fragment as _Fragment } from "react/jsx-runtime";
-import { jsx as _jsx } from "react/jsx-runtime";
 
 const Component = ({
   children,
@@ -12,14 +10,10 @@ const Component = ({
   });
 
   if (arr.length > 0) {
-    return _jsx(_Fragment, {
-      children: arr
-    });
+    return React.createElement(React.Fragment, null, arr);
   }
 
-  return _jsx(_Fragment, {
-    children: elseView
-  });
+  return React.createElement(React.Fragment, null, elseView);
 };
 
 export default React.memo(Component);

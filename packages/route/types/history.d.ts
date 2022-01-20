@@ -2,6 +2,7 @@ import { IStore } from '@elux/core';
 import { ILocationTransform } from './transform';
 declare class RouteStack<T extends {
     destroy?: () => void;
+    store?: IStore;
 }> {
     protected limit: number;
     records: T[];
@@ -16,6 +17,7 @@ declare class RouteStack<T extends {
     protected _replace(item: T): void;
     protected _relaunch(item: T): void;
     back(delta: number): void;
+    protected setActive(oItem: T | undefined): void;
 }
 /*** @internal */
 export interface IHistoryRecord {

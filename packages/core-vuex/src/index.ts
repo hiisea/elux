@@ -1,43 +1,15 @@
-import {Plugin, MutationPayload, SubscribeOptions, Mutation, createStore} from 'vuex';
-import {WatchOptions, computed, ComputedRef, Ref} from 'vue';
-import {mergeState, BStore, StoreOptions, StoreBuilder} from '@elux/core';
+import {reactive, computed, ComputedRef, Ref} from 'vue';
+import {BStore, StoreOptions, StoreBuilder} from '@elux/core';
+import {Store} from './store';
 
-export interface VuexOptions extends StoreOptions {
-  plugins?: Plugin<any>[];
+export function storeCreator(storeOptions: StoreOptions): BStore {
+  const {initState = {}} = storeOptions;
+  const state = reactive(initState);
+
+  return new Store(state, {storeCreator, storeOptions});
 }
 
-export interface VuexStore<S extends Record<string, any> = {}> extends BStore<S> {
-  state: S;
-  subscribe<P extends MutationPayload>(fn: (mutation: P, state: S) => any, options?: SubscribeOptions): () => void;
-  watch<T>(getter: (state: S, getters: any) => T, cb: (value: T, oldValue: T) => void, options?: WatchOptions): () => void;
-}
-
-const updateMutation: Mutation<any> = (state, {newState}) => {
-  mergeState(state, newState);
-};
-
-const UpdateMutationName = 'update';
-
-export function storeCreator(storeOptions: VuexOptions, id = 0): VuexStore {
-  const {initState = {}, plugins} = storeOptions;
-  const devtools = id === 0 && process.env.NODE_ENV === 'development';
-  const store = createStore({state: initState, mutations: {[UpdateMutationName]: updateMutation}, plugins, devtools});
-  const vuexStore: VuexStore = store as any;
-  vuexStore.id = id;
-  vuexStore.builder = {storeCreator, storeOptions};
-  vuexStore.getState = () => {
-    return store.state;
-  };
-  vuexStore.update = (actionName: string, newState: any, actionData: any[]) => {
-    store.commit(UpdateMutationName, {actionName, newState, actionData});
-  };
-  vuexStore.destroy = () => {
-    return;
-  };
-  return vuexStore;
-}
-
-export function createVuex(storeOptions: VuexOptions = {}): StoreBuilder<VuexOptions, VuexStore> {
+export function createStore(storeOptions: StoreOptions = {}): StoreBuilder<StoreOptions, BStore> {
   return {storeOptions, storeCreator};
 }
 

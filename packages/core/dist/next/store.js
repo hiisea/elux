@@ -4,6 +4,7 @@ import { coreConfig, MetaData } from './basic';
 import { ActionTypes, errorAction } from './actions';
 import { loadModel } from './inject';
 import { routeMiddleware } from './router';
+import { devLogger } from './devtools';
 export const errorProcessed = '__eluxProcessed__';
 export function isProcessedError(error) {
   return error && !!error[errorProcessed];
@@ -38,7 +39,7 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-export function enhanceStore(baseStore, router, middlewares) {
+export function enhanceStore(sid, baseStore, router, middlewares, logger) {
   const store = baseStore;
   const _getState = baseStore.getState;
 
@@ -48,6 +49,7 @@ export function enhanceStore(baseStore, router, middlewares) {
     return moduleName ? state[moduleName] : state;
   };
 
+  store.sid = sid;
   store.router = router;
   store.getState = getState;
   store.loadingGroups = {};
@@ -72,8 +74,8 @@ export function enhanceStore(baseStore, router, middlewares) {
   };
   const _update = baseStore.update;
 
-  baseStore.update = (actionName, state, actionData) => {
-    _update(actionName, state, actionData);
+  baseStore.update = (actionName, state) => {
+    _update(actionName, state);
 
     router.latestState = { ...router.latestState,
       ...state
@@ -85,6 +87,18 @@ export function enhanceStore(baseStore, router, middlewares) {
   store.getCurrentState = moduleName => {
     const state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
+  };
+
+  let isActive = false;
+
+  store.isActive = () => {
+    return isActive;
+  };
+
+  store.setActive = status => {
+    if (isActive !== status) {
+      isActive = status;
+    }
   };
 
   let dispatch = action => {
@@ -171,6 +185,7 @@ export function enhanceStore(baseStore, router, middlewares) {
   }
 
   function respondHandler(action, isReducer, prevData) {
+    let logs;
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
     const [actionModuleName] = actionName.split(coreConfig.NSP);
@@ -216,8 +231,20 @@ export function enhanceStore(baseStore, router, middlewares) {
             }
           }
         });
-        store.update(actionName, newState, actionData);
+        logs = [{
+          id: sid,
+          isActive
+        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), undefined];
+        devLogger(...logs);
+        logger && logger(...logs);
+        store.update(actionName, newState);
       } else {
+        logs = [{
+          id: sid,
+          isActive
+        }, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+        devLogger(...logs);
+        logger && logger(...logs);
         const result = [];
         orderList.forEach(moduleName => {
           if (!implemented[moduleName]) {
@@ -228,7 +255,14 @@ export function enhanceStore(baseStore, router, middlewares) {
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
-        return result.length === 1 ? result[0] : Promise.all(result);
+        const task = result.length === 1 ? result[0] : Promise.all(result);
+        task.then(() => {
+          logs[5] = getState();
+          logs[6] = 'end';
+          devLogger(...logs);
+          logger && logger(...logs);
+        });
+        return task;
       }
     }
 

@@ -53,22 +53,22 @@ function setConfig(conf) {
   (0, _app.setUserConfig)(conf);
 }
 
-var createApp = function createApp(moduleGetter, middlewares) {
+var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   (0, _core.defineModuleGetter)(moduleGetter);
   var app = (0, _vue.createApp)(_stage.Router);
   var history = (0, _routeBrowser.createBrowserHistory)();
   var router = (0, _routeBrowser.createRouter)(history, {});
-  return (0, _app.createBaseApp)(app, router, _stage.renderToDocument, middlewares);
+  return (0, _app.createBaseApp)(app, router, _stage.renderToDocument, storeMiddlewares, storeLogger);
 };
 
 exports.createApp = createApp;
 
-var createSSR = function createSSR(moduleGetter, url, nativeData, middlewares) {
+var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   (0, _core.defineModuleGetter)(moduleGetter);
   var app = (0, _vue.createSSRApp)(_stage.Router);
   var history = (0, _routeBrowser.createServerHistory)(url);
   var router = (0, _routeBrowser.createRouter)(history, nativeData);
-  return (0, _app.createBaseSSR)(app, router, _stage.renderToString, middlewares);
+  return (0, _app.createBaseSSR)(app, router, _stage.renderToString, storeMiddlewares, storeLogger);
 };
 
 exports.createSSR = createSSR;

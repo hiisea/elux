@@ -2,12 +2,14 @@ import {env, IStore, forkStore} from '@elux/core';
 import {routeMeta, RouteState} from './basic';
 import {ILocationTransform} from './transform';
 
-class RouteStack<T extends {destroy?: () => void}> {
+class RouteStack<T extends {destroy?: () => void; store?: IStore}> {
   public records: T[] = [];
   constructor(protected limit: number) {}
 
   startup(record: T): void {
+    const oItem = this.records[0];
     this.records = [record];
+    this.setActive(oItem);
   }
   getCurrentItem(): T {
     return this.records[0];
@@ -33,11 +35,13 @@ class RouteStack<T extends {destroy?: () => void}> {
   // }
   protected _push(item: T): void {
     const records = this.records;
+    const oItem = records[0];
     records.unshift(item);
     const delItem = records.splice(this.limit)[0];
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+    this.setActive(oItem);
   }
   protected _replace(item: T): void {
     const records = this.records;
@@ -46,15 +50,18 @@ class RouteStack<T extends {destroy?: () => void}> {
     if (delItem && delItem !== item && delItem.destroy) {
       delItem.destroy();
     }
+    this.setActive(delItem);
   }
   protected _relaunch(item: T): void {
     const delList = this.records;
+    const oItem = delList[0];
     this.records = [item];
     delList.forEach((delItem) => {
       if (delItem !== item && delItem.destroy) {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
   }
   // protected _preBack(delta: number): {item: T; overflow: number} {
   //   let overflow = 0;
@@ -66,6 +73,7 @@ class RouteStack<T extends {destroy?: () => void}> {
   //   return {item: records[0], overflow};
   // }
   back(delta: number): void {
+    const oItem = this.records[0];
     const delList = this.records.splice(0, delta);
     if (this.records.length === 0) {
       const last = delList.pop()!;
@@ -76,6 +84,17 @@ class RouteStack<T extends {destroy?: () => void}> {
         delItem.destroy();
       }
     });
+    this.setActive(oItem);
+  }
+  protected setActive(oItem: T | undefined) {
+    const oStore = oItem?.store;
+    const store = this.records[0]?.store;
+    if (store === oStore) {
+      store?.setActive(true);
+    } else {
+      oStore?.setActive(false);
+      store?.setActive(true);
+    }
   }
 }
 

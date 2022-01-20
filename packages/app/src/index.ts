@@ -8,6 +8,7 @@ import {
   LoadComponent,
   ModuleGetter,
   IStoreMiddleware,
+  IStoreLogger,
   StoreBuilder,
   BStore,
   RootModuleFacade,
@@ -58,6 +59,7 @@ export type {
   ICoreRouter,
   ModuleGetter,
   IStoreMiddleware,
+  IStoreLogger,
   StoreOptions,
   BStore,
   StoreBuilder,
@@ -172,7 +174,7 @@ export interface ContextWrap {}
  * @internal
  */
 export interface AttachMP<App> {
-  (app: App, moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+  (app: App, moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
@@ -186,7 +188,7 @@ export interface AttachMP<App> {
  * @internal
  */
 export interface CreateMP {
-  (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+  (moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
@@ -200,7 +202,7 @@ export interface CreateMP {
  * @internal
  */
 export interface CreateApp<INS = {}> {
-  (moduleGetter: ModuleGetter, middlewares?: IStoreMiddleware[]): {
+  (moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
@@ -214,7 +216,7 @@ export interface CreateApp<INS = {}> {
  * @internal
  */
 export interface CreateSSR<INS = {}> {
-  (moduleGetter: ModuleGetter, url: string, nativeData: any, middlewares?: IStoreMiddleware[]): {
+  (moduleGetter: ModuleGetter, url: string, nativeData: any, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
     useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
       storeOptions,
       storeCreator,
@@ -240,7 +242,8 @@ export function createBaseMP<INS = {}>(
   ins: INS,
   router: IEluxRouter,
   render: (eluxContext: EluxContext, ins: INS) => any,
-  middlewares: IStoreMiddleware[] = []
+  storeMiddlewares: IStoreMiddleware[] = [],
+  storeLogger?: IStoreLogger
 ): {
   useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
     storeBuilder: StoreBuilder<O, B>
@@ -254,7 +257,7 @@ export function createBaseMP<INS = {}>(
       return Object.assign(ins, {
         render() {
           const baseStore = storeCreator(storeOptions);
-          const {store} = initApp<B>(router, baseStore, middlewares);
+          const {store} = initApp<B>(router, baseStore, storeMiddlewares, storeLogger);
           const context: ContextWrap = render({deps: {}, router, documentHead: ''}, ins);
           return {store, context};
         },
@@ -269,8 +272,9 @@ export function createBaseMP<INS = {}>(
 export function createBaseApp<INS = {}>(
   ins: INS,
   router: IEluxRouter,
-  render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS) => void,
-  middlewares: IStoreMiddleware[] = []
+  render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS, store: IStore) => void,
+  storeMiddlewares: IStoreMiddleware[] = [],
+  storeLogger?: IStoreLogger
 ): {
   useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
     storeBuilder: StoreBuilder<O, B>
@@ -287,9 +291,9 @@ export function createBaseApp<INS = {}>(
           return router.initialize.then((routeState) => {
             storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState, ...state};
             const baseStore = storeCreator(storeOptions);
-            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName, components);
+            const {store, AppView, setup} = initApp<B>(router, baseStore, storeMiddlewares, storeLogger, viewName, components);
             return setup.then(() => {
-              render(id, AppView, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins);
+              render(id, AppView, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins, store);
               return store;
             });
           });
@@ -305,8 +309,9 @@ export function createBaseApp<INS = {}>(
 export function createBaseSSR<INS = {}>(
   ins: INS,
   router: IEluxRouter,
-  render: (id: string, component: any, eluxContext: EluxContext, ins: INS) => Promise<string>,
-  middlewares: IStoreMiddleware[] = []
+  render: (id: string, component: any, eluxContext: EluxContext, ins: INS, store: IStore) => Promise<string>,
+  storeMiddlewares: IStoreMiddleware[] = [],
+  storeLogger?: IStoreLogger
 ): {
   useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
     storeBuilder: StoreBuilder<O, B>
@@ -322,11 +327,11 @@ export function createBaseSSR<INS = {}>(
           return router.initialize.then((routeState) => {
             storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState};
             const baseStore = storeCreator(storeOptions);
-            const {store, AppView, setup} = initApp<B>(router, baseStore, middlewares, viewName);
+            const {store, AppView, setup} = initApp<B>(router, baseStore, storeMiddlewares, storeLogger, viewName);
             return setup.then(() => {
               const state = store.getState();
               const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
-              return render(id, AppView, eluxContext, ins).then((html) => {
+              return render(id, AppView, eluxContext, ins, store).then((html) => {
                 const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
                 if (match) {
                   return appMeta.SSRTPL.replace(

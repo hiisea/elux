@@ -1,56 +1,15 @@
-import { createStore } from 'vuex';
-import { computed } from 'vue';
-import { mergeState } from '@elux/core';
-
-var updateMutation = function updateMutation(state, _ref) {
-  var newState = _ref.newState;
-  mergeState(state, newState);
-};
-
-var UpdateMutationName = 'update';
-export function storeCreator(storeOptions, id) {
-  var _mutations;
-
-  if (id === void 0) {
-    id = 0;
-  }
-
+import { reactive, computed } from 'vue';
+import { Store } from './store';
+export function storeCreator(storeOptions) {
   var _storeOptions$initSta = storeOptions.initState,
-      initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta,
-      plugins = storeOptions.plugins;
-  var devtools = id === 0 && process.env.NODE_ENV === 'development';
-  var store = createStore({
-    state: initState,
-    mutations: (_mutations = {}, _mutations[UpdateMutationName] = updateMutation, _mutations),
-    plugins: plugins,
-    devtools: devtools
-  });
-  var vuexStore = store;
-  vuexStore.id = id;
-  vuexStore.builder = {
+      initState = _storeOptions$initSta === void 0 ? {} : _storeOptions$initSta;
+  var state = reactive(initState);
+  return new Store(state, {
     storeCreator: storeCreator,
     storeOptions: storeOptions
-  };
-
-  vuexStore.getState = function () {
-    return store.state;
-  };
-
-  vuexStore.update = function (actionName, newState, actionData) {
-    store.commit(UpdateMutationName, {
-      actionName: actionName,
-      newState: newState,
-      actionData: actionData
-    });
-  };
-
-  vuexStore.destroy = function () {
-    return;
-  };
-
-  return vuexStore;
+  });
 }
-export function createVuex(storeOptions) {
+export function createStore(storeOptions) {
   if (storeOptions === void 0) {
     storeOptions = {};
   }

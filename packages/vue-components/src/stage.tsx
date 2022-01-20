@@ -85,7 +85,7 @@ export const Router = defineComponent({
           {pages.map((item) => {
             const {store, pagename} = item;
             return (
-              <div key={store.id} class="elux-page" data-pagename={pagename}>
+              <div key={store.sid} data-sid={store.sid} class="elux-page" data-pagename={pagename}>
                 <Page store={store} view={item.page || StageView} />
               </div>
             );
@@ -102,7 +102,14 @@ export function renderToMP(eluxContext: EluxContext, app: App): void {
     env.__VUE_DEVTOOLS_GLOBAL_HOOK__.Vue = app;
   }
 }
-export function renderToDocument(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, fromSSR: boolean, app: App): void {
+export function renderToDocument(
+  id: string,
+  APPView: DefineComponent<{}>,
+  eluxContext: EluxContext,
+  fromSSR: boolean,
+  app: App,
+  store: IStore
+): void {
   StageView = APPView;
   app.provide<EluxContext>(EluxContextKey, eluxContext);
   if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
@@ -110,7 +117,7 @@ export function renderToDocument(id: string, APPView: DefineComponent<{}>, eluxC
   }
   app.mount(`#${id}`);
 }
-export function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App): Promise<string> {
+export function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App, store: IStore): Promise<string> {
   StageView = APPView;
   app.provide<EluxContext>(EluxContextKey, eluxContext);
   const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);

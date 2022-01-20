@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState, useRef, memo } from 'react';
 import { env } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
-import { jsx as _jsx } from "react/jsx-runtime";
 export var Router = function Router(props) {
   var eluxContext = useContext(EluxContextComponent);
   var router = eluxContext.router;
@@ -75,31 +74,30 @@ export var Router = function Router(props) {
       return;
     });
   }, [router]);
-  return _jsx("div", {
+  return React.createElement("div", {
     ref: containerRef,
-    className: classname,
-    children: pages.map(function (item) {
-      var store = item.store,
-          pagename = item.pagename;
-      return _jsx("div", {
-        className: "elux-page",
-        "data-pagename": pagename,
-        children: _jsx(Page, {
-          store: store,
-          view: item.page || props.page
-        })
-      }, store.id);
-    })
-  });
+    className: classname
+  }, pages.map(function (item) {
+    var store = item.store,
+        pagename = item.pagename;
+    return React.createElement("div", {
+      key: store.sid,
+      "data-sid": store.sid,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, React.createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 export var Page = memo(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
-  return _jsx(reactComponentsConfig.Provider, {
-    store: store,
-    children: _jsx(View, {})
-  });
+  return React.createElement(reactComponentsConfig.Provider, {
+    store: store
+  }, React.createElement(View, null));
 });
 export function useRouter() {
   var eluxContext = useContext(EluxContextComponent);

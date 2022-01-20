@@ -12,8 +12,6 @@ var _core = require("@elux/core");
 
 var _base = require("./base");
 
-var _jsxRuntime = require("react/jsx-runtime");
-
 var Router = function Router(props) {
   var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);
   var router = eluxContext.router;
@@ -93,22 +91,22 @@ var Router = function Router(props) {
       return;
     });
   }, [router]);
-  return (0, _jsxRuntime.jsx)("div", {
+  return _react.default.createElement("div", {
     ref: containerRef,
-    className: classname,
-    children: pages.map(function (item) {
-      var store = item.store,
-          pagename = item.pagename;
-      return (0, _jsxRuntime.jsx)("div", {
-        className: "elux-page",
-        "data-pagename": pagename,
-        children: (0, _jsxRuntime.jsx)(Page, {
-          store: store,
-          view: item.page || props.page
-        })
-      }, store.id);
-    })
-  });
+    className: classname
+  }, pages.map(function (item) {
+    var store = item.store,
+        pagename = item.pagename;
+    return _react.default.createElement("div", {
+      key: store.sid,
+      "data-sid": store.sid,
+      className: "elux-page",
+      "data-pagename": pagename
+    }, _react.default.createElement(Page, {
+      store: store,
+      view: item.page || props.page
+    }));
+  }));
 };
 
 exports.Router = Router;
@@ -116,10 +114,9 @@ var Page = (0, _react.memo)(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
-  return (0, _jsxRuntime.jsx)(_base.reactComponentsConfig.Provider, {
-    store: store,
-    children: (0, _jsxRuntime.jsx)(View, {})
-  });
+  return _react.default.createElement(_base.reactComponentsConfig.Provider, {
+    store: store
+  }, _react.default.createElement(View, null));
 });
 exports.Page = Page;
 
