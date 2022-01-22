@@ -1,6 +1,7 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import env from './env';
 import { isPromise } from './sprite';
+import { createRedux } from './redux';
 import { coreConfig, MetaData } from './basic';
 import { ActionTypes, errorAction } from './actions';
 import { loadModel } from './inject';
@@ -50,116 +51,57 @@ function compose() {
   });
 }
 
-export function enhanceStore(sid, baseStore, router, middlewares, logger) {
-  var store = baseStore;
-  var _getState = baseStore.getState;
+export function createStore(sid, router, data, initState, middlewares, logger) {
+  var redux = createRedux(initState(data));
+  var getState = redux.getState,
+      subscribe = redux.subscribe,
+      _update = redux.update;
+  var options = {
+    initState: initState,
+    logger: logger,
+    middlewares: middlewares
+  };
+  var loadingGroups = {};
+  var injectedModules = {};
+  var currentData = {
+    actionName: '',
+    prevState: {}
+  };
+  var _isActive = false;
 
-  var getState = function getState(moduleName) {
-    var state = _getState();
+  var isActive = function isActive() {
+    return _isActive;
+  };
 
+  var setActive = function setActive(status) {
+    if (_isActive !== status) {
+      _isActive = status;
+    }
+  };
+
+  var getCurrentActionName = function getCurrentActionName() {
+    return currentData.actionName;
+  };
+
+  var getCurrentState = function getCurrentState(moduleName) {
+    var state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
   };
 
-  store.sid = sid;
-  store.router = router;
-  store.getState = getState;
-  store.loadingGroups = {};
-  store.injectedModules = {};
-  var injectedModules = store.injectedModules;
-  store.options = {
-    middlewares: middlewares
-  };
-  var _destroy = baseStore.destroy;
-
-  store.destroy = function () {
-    _destroy();
-
+  var destroy = function destroy() {
     Object.keys(injectedModules).forEach(function (moduleName) {
       injectedModules[moduleName].destroy();
     });
   };
 
-  var currentData = {
-    actionName: '',
-    prevState: {}
-  };
-  var _update = baseStore.update;
-
-  baseStore.update = function (actionName, state) {
+  var update = function update(actionName, state) {
     _update(actionName, state);
 
     router.latestState = _extends({}, router.latestState, state);
   };
 
-  store.getCurrentActionName = function () {
-    return currentData.actionName;
-  };
-
-  store.getCurrentState = function (moduleName) {
-    var state = currentData.prevState;
-    return moduleName ? state[moduleName] : state;
-  };
-
-  var isActive = false;
-
-  store.isActive = function () {
-    return isActive;
-  };
-
-  store.setActive = function (status) {
-    if (isActive !== status) {
-      isActive = status;
-    }
-  };
-
   var _dispatch2 = function dispatch(action) {
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
-  };
-
-  var middlewareAPI = {
-    store: store,
-    getState: getState,
-    dispatch: function dispatch(action) {
-      return _dispatch2(action);
-    }
-  };
-
-  var preMiddleware = function preMiddleware() {
-    return function (next) {
-      return function (action) {
-        if (action.type === ActionTypes.Error) {
-          var actionData = getActionData(action);
-
-          if (isProcessedError(actionData[0])) {
-            return undefined;
-          }
-
-          actionData[0] = setProcessedError(actionData[0], true);
-        }
-
-        var _action$type$split = action.type.split(coreConfig.NSP),
-            moduleName = _action$type$split[0],
-            actionName = _action$type$split[1];
-
-        if (env.isServer && actionName === ActionTypes.MLoading) {
-          return undefined;
-        }
-
-        if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-          if (!injectedModules[moduleName]) {
-            var result = loadModel(moduleName, store);
-
-            if (isPromise(result)) {
-              return result.then(function () {
-                return next(action);
-              });
-            }
-          }
-        }
-
-        return next(action);
-      };
-    };
   };
 
   function applyEffect(moduleName, handler, modelInstance, action, actionData) {
@@ -259,16 +201,16 @@ export function enhanceStore(sid, baseStore, router, middlewares, logger) {
         });
         logs = [{
           id: sid,
-          isActive: isActive
-        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), undefined];
+          isActive: _isActive
+        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), false];
         devLogger.apply(void 0, logs);
         logger && logger.apply(void 0, logs);
-        store.update(actionName, newState);
+        update(actionName, newState);
       } else {
         logs = [{
           id: sid,
-          isActive: isActive
-        }, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+          isActive: _isActive
+        }, actionName, actionData, action.priority || [], orderList, getState(), true];
         devLogger.apply(void 0, logs);
         logger && logger.apply(void 0, logs);
         var result = [];
@@ -282,12 +224,6 @@ export function enhanceStore(sid, baseStore, router, middlewares, logger) {
           }
         });
         var task = result.length === 1 ? result[0] : Promise.all(result);
-        task.then(function () {
-          logs[5] = getState();
-          logs[6] = 'end';
-          devLogger.apply(void 0, logs);
-          logger && logger.apply(void 0, logs);
-        });
         return task;
       }
     }
@@ -304,10 +240,70 @@ export function enhanceStore(sid, baseStore, router, middlewares, logger) {
     return respondHandler(action, false, prevData);
   }
 
+  var middlewareAPI = {
+    getState: getState,
+    dispatch: function dispatch(action) {
+      return _dispatch2(action);
+    }
+  };
+
+  var preMiddleware = function preMiddleware() {
+    return function (next) {
+      return function (action) {
+        if (action.type === ActionTypes.Error) {
+          var actionData = getActionData(action);
+
+          if (isProcessedError(actionData[0])) {
+            return undefined;
+          }
+
+          actionData[0] = setProcessedError(actionData[0], true);
+        }
+
+        var _action$type$split = action.type.split(coreConfig.NSP),
+            moduleName = _action$type$split[0],
+            actionName = _action$type$split[1];
+
+        if (env.isServer && actionName === ActionTypes.MLoading) {
+          return undefined;
+        }
+
+        if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
+          if (!injectedModules[moduleName]) {
+            var result = loadModel(moduleName, store);
+
+            if (isPromise(result)) {
+              return result.then(function () {
+                return next(action);
+              });
+            }
+          }
+        }
+
+        return next(action);
+      };
+    };
+  };
+
   var chain = [preMiddleware, routeMiddleware].concat(middlewares || []).map(function (middleware) {
     return middleware(middlewareAPI);
   });
   _dispatch2 = compose.apply(void 0, chain)(_dispatch);
-  store.dispatch = _dispatch2;
+  var store = {
+    sid: sid,
+    getState: getState,
+    subscribe: subscribe,
+    dispatch: _dispatch2,
+    router: router,
+    loadingGroups: loadingGroups,
+    injectedModules: injectedModules,
+    destroy: destroy,
+    getCurrentActionName: getCurrentActionName,
+    getCurrentState: getCurrentState,
+    update: update,
+    isActive: isActive,
+    setActive: setActive,
+    options: options
+  };
   return store;
 }

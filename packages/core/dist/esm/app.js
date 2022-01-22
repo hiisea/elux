@@ -1,15 +1,14 @@
-import _extends from "@babel/runtime/helpers/esm/extends";
 import { MetaData, coreConfig } from './basic';
 import { getModule, getComponet, getModuleList, getComponentList } from './inject';
-import { enhanceStore } from './store';
+import { createStore } from './store';
 import env from './env';
-export function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents) {
+export function initApp(router, data, initState, middlewares, storeLogger, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   MetaData.currentRouter = router;
-  var store = enhanceStore(0, baseStore, router, middlewares, storeLogger);
+  var store = createStore(0, router, data, initState, middlewares, storeLogger);
   router.startup(store);
   var AppModuleName = coreConfig.AppModuleName,
       RouteModuleName = coreConfig.RouteModuleName;
@@ -19,7 +18,7 @@ export function initApp(router, baseStore, middlewares, storeLogger, appViewName
   var AppView = appViewName ? getComponet(AppModuleName, appViewName) : {
     __elux_component__: 'view'
   };
-  var preloadModules = Object.keys(router.routeState.params).concat(Object.keys(baseStore.getState())).reduce(function (data, moduleName) {
+  var preloadModules = Object.keys(router.routeState.params).concat(Object.keys(store.getState())).reduce(function (data, moduleName) {
     if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
       data[moduleName] = true;
     }
@@ -58,19 +57,13 @@ export function reinitApp(store) {
   return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
 }
 export function forkStore(originalStore, routeState) {
-  var _initState;
+  var _createStore;
 
   var sid = originalStore.sid,
-      _originalStore$builde = originalStore.builder,
-      storeCreator = _originalStore$builde.storeCreator,
-      storeOptions = _originalStore$builde.storeOptions,
       _originalStore$option = originalStore.options,
+      initState = _originalStore$option.initState,
       middlewares = _originalStore$option.middlewares,
       logger = _originalStore$option.logger,
       router = originalStore.router;
-  var baseStore = storeCreator(_extends({}, storeOptions, {
-    initState: (_initState = {}, _initState[coreConfig.RouteModuleName] = routeState, _initState)
-  }));
-  var store = enhanceStore(sid + 1, baseStore, router, middlewares, logger);
-  return store;
+  return createStore(sid + 1, router, (_createStore = {}, _createStore[coreConfig.RouteModuleName] = routeState, _createStore), initState, middlewares, logger);
 }

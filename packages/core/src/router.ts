@@ -3,7 +3,7 @@ import {reducer, ActionTypes, moduleRouteChangeAction} from './actions';
 import {loadModel, PickHandler, IModuleHandlersClass} from './inject';
 
 export const routeMiddleware: IStoreMiddleware =
-  ({store, dispatch, getState}) =>
+  ({dispatch, getState}) =>
   (next) =>
   (action) => {
     if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`) {

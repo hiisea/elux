@@ -33,12 +33,13 @@
     "vue": true
   },
   "peerDependencies": {
-    "vue": "^3.0.0",
-    "vuex": "^4.0.0"
+    "vue": "^3.0.0"
   },
   "dependencies": {
-    "@elux/core-vuex": "^1.0.1",
-    "@elux/vue-web": "^1.0.1"
+    "@elux/core": "^1.0.1",
+    "@elux/app": "^1.0.1",
+    "@elux/route-browser": "^1.0.1",
+    "@elux/vue-components": "^1.0.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

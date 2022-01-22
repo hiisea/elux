@@ -9,13 +9,11 @@ import {
   ModuleGetter,
   IStoreMiddleware,
   IStoreLogger,
-  StoreBuilder,
-  BStore,
   RootModuleFacade,
   RootModuleAPI,
   RootModuleActions,
   ICoreRouter,
-  StoreOptions,
+  State,
 } from '@elux/core';
 
 import {setRouteConfig, IEluxRouter, routeConfig, routeMeta, RouteState} from '@elux/route';
@@ -60,9 +58,7 @@ export type {
   ModuleGetter,
   IStoreMiddleware,
   IStoreLogger,
-  StoreOptions,
-  BStore,
-  StoreBuilder,
+  IFlux,
   RootModuleAPI,
   RootModuleActions,
   GetState,
@@ -173,58 +169,49 @@ export interface ContextWrap {}
 /**
  * @internal
  */
-export interface AttachMP<App> {
-  (app: App, moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
-    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
-      storeOptions,
-      storeCreator,
-    }: StoreBuilder<O, B>): App & {
-      render(): {store: IStore & B; context: ContextWrap};
-    };
-  };
-}
+export type AttachMP<App> = (
+  app: App,
+  moduleGetter: ModuleGetter,
+  storeMiddlewares?: IStoreMiddleware[],
+  storeLogger?: IStoreLogger
+) => App & {
+  render(): {store: IStore; context: ContextWrap};
+};
 
 /**
  * @internal
  */
-export interface CreateMP {
-  (moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
-    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
-      storeOptions,
-      storeCreator,
-    }: StoreBuilder<O, B>): {
-      render(): {store: IStore & B; context: ContextWrap};
-    };
-  };
-}
+export type CreateMP = (
+  moduleGetter: ModuleGetter,
+  storeMiddlewares?: IStoreMiddleware[],
+  storeLogger?: IStoreLogger
+) => {
+  render(): {store: IStore; context: ContextWrap};
+};
 
 /**
  * @internal
  */
-export interface CreateApp<INS = {}> {
-  (moduleGetter: ModuleGetter, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
-    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
-      storeOptions,
-      storeCreator,
-    }: StoreBuilder<O, B>): INS & {
-      render({id, ssrKey, viewName}?: RenderOptions): Promise<IStore & B>;
-    };
-  };
-}
+export type CreateApp<INS = {}> = (
+  moduleGetter: ModuleGetter,
+  storeMiddlewares?: IStoreMiddleware[],
+  storeLogger?: IStoreLogger
+) => INS & {
+  render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
+};
 
 /**
  * @internal
  */
-export interface CreateSSR<INS = {}> {
-  (moduleGetter: ModuleGetter, url: string, nativeData: any, storeMiddlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger): {
-    useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>({
-      storeOptions,
-      storeCreator,
-    }: StoreBuilder<O, B>): INS & {
-      render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
-    };
-  };
-}
+export type CreateSSR<INS = {}> = (
+  moduleGetter: ModuleGetter,
+  url: string,
+  nativeData: any,
+  storeMiddlewares?: IStoreMiddleware[],
+  storeLogger?: IStoreLogger
+) => INS & {
+  render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
+};
 
 /**
  * @internal
@@ -238,118 +225,95 @@ export interface EluxContext {
 /**
  * @internal
  */
-export function createBaseMP<INS = {}>(
+export function createBaseMP<INS = {}, S extends State = any>(
   ins: INS,
   router: IEluxRouter,
   render: (eluxContext: EluxContext, ins: INS) => any,
+  storeInitState: (data: S) => S,
   storeMiddlewares: IStoreMiddleware[] = [],
   storeLogger?: IStoreLogger
-): {
-  useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
-    storeBuilder: StoreBuilder<O, B>
-  ): INS & {
-    render(): {store: IStore & B; context: ContextWrap};
-  };
+): INS & {
+  render(): {store: IStore; context: ContextWrap};
 } {
   appMeta.router = router;
-  return {
-    useStore<O extends StoreOptions, B extends BStore = BStore>({storeCreator, storeOptions}: StoreBuilder<O, B>) {
-      return Object.assign(ins, {
-        render() {
-          const baseStore = storeCreator(storeOptions);
-          const {store} = initApp<B>(router, baseStore, storeMiddlewares, storeLogger);
-          const context: ContextWrap = render({deps: {}, router, documentHead: ''}, ins);
-          return {store, context};
-        },
-      });
+  return Object.assign(ins, {
+    render() {
+      const storeData = {} as S;
+      const {store} = initApp<S>(router, storeData, storeInitState, storeMiddlewares, storeLogger);
+      const context: ContextWrap = render({deps: {}, router, documentHead: ''}, ins);
+      return {store, context};
     },
-  };
+  });
 }
 
 /**
  * @internal
  */
-export function createBaseApp<INS = {}>(
+export function createBaseApp<INS = {}, S extends State = any>(
   ins: INS,
   router: IEluxRouter,
   render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS, store: IStore) => void,
+  storeInitState: (data: S) => S,
   storeMiddlewares: IStoreMiddleware[] = [],
   storeLogger?: IStoreLogger
-): {
-  useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
-    storeBuilder: StoreBuilder<O, B>
-  ): INS & {
-    render({id, ssrKey, viewName}?: RenderOptions): Promise<IStore & B>;
-  };
+): INS & {
+  render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
 } {
   appMeta.router = router;
-  return {
-    useStore<O extends StoreOptions, B extends BStore = BStore>({storeCreator, storeOptions}: StoreBuilder<O, B>) {
-      return Object.assign(ins, {
-        render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
-          const {state, components = []}: {state?: Record<string, any>; components: string[]} = env[ssrKey] || {};
-          return router.initialize.then((routeState) => {
-            storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState, ...state};
-            const baseStore = storeCreator(storeOptions);
-            const {store, AppView, setup} = initApp<B>(router, baseStore, storeMiddlewares, storeLogger, viewName, components);
-            return setup.then(() => {
-              render(id, AppView, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins, store);
-              return store;
-            });
-          });
-        },
+  return Object.assign(ins, {
+    render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
+      const {state, components = []}: {state?: Record<string, any>; components: string[]} = env[ssrKey] || {};
+      return router.initialize.then((routeState) => {
+        const storeData = {[routeConfig.RouteModuleName]: routeState, ...state} as S;
+        const {store, AppView, setup} = initApp<S>(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components);
+        return setup.then(() => {
+          render(id, AppView, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins, store);
+          //return store;
+        });
       });
     },
-  };
+  });
 }
 
 /**
  * @internal
  */
-export function createBaseSSR<INS = {}>(
+export function createBaseSSR<INS = {}, S extends State = any>(
   ins: INS,
   router: IEluxRouter,
   render: (id: string, component: any, eluxContext: EluxContext, ins: INS, store: IStore) => Promise<string>,
+  storeInitState: (data: S) => S,
   storeMiddlewares: IStoreMiddleware[] = [],
   storeLogger?: IStoreLogger
-): {
-  useStore<O extends StoreOptions, B extends BStore<{}> = BStore<{}>>(
-    storeBuilder: StoreBuilder<O, B>
-  ): INS & {
-    render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
-  };
+): INS & {
+  render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
 } {
   appMeta.router = router;
-  return {
-    useStore<O extends StoreOptions, B extends BStore = BStore>({storeCreator, storeOptions}: StoreBuilder<O, B>) {
-      return Object.assign(ins, {
-        render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
-          return router.initialize.then((routeState) => {
-            storeOptions.initState = {...storeOptions.initState, [routeConfig.RouteModuleName]: routeState};
-            const baseStore = storeCreator(storeOptions);
-            const {store, AppView, setup} = initApp<B>(router, baseStore, storeMiddlewares, storeLogger, viewName);
-            return setup.then(() => {
-              const state = store.getState();
-              const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
-              return render(id, AppView, eluxContext, ins, store).then((html) => {
-                const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-                if (match) {
-                  return appMeta.SSRTPL.replace(
-                    '</head>',
-                    `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                      state,
-                      components: Object.keys(eluxContext.deps!),
-                    })};</script>\r\n</head>`
-                  ).replace(match[0], match[0] + html);
-                }
-                return html;
-              });
-            });
+  return Object.assign(ins, {
+    render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
+      return router.initialize.then((routeState) => {
+        const storeData: S = {[routeConfig.RouteModuleName]: routeState} as any;
+        const {store, AppView, setup} = initApp<S>(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName);
+        return setup.then(() => {
+          const state = store.getState();
+          const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
+          return render(id, AppView, eluxContext, ins, store).then((html) => {
+            const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+            if (match) {
+              return appMeta.SSRTPL.replace(
+                '</head>',
+                `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                  state,
+                  components: Object.keys(eluxContext.deps!),
+                })};</script>\r\n</head>`
+              ).replace(match[0], match[0] + html);
+            }
+            return html;
           });
-        },
+        });
       });
     },
-  };
+  });
 }
 
 /**

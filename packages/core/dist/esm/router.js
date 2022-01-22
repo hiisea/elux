@@ -4,8 +4,7 @@ import { mergeState, MetaData, coreConfig } from './basic';
 import { reducer, ActionTypes, moduleRouteChangeAction } from './actions';
 import { loadModel as _loadModel } from './inject';
 export var routeMiddleware = function routeMiddleware(_ref) {
-  var store = _ref.store,
-      dispatch = _ref.dispatch,
+  var dispatch = _ref.dispatch,
       getState = _ref.getState;
   return function (next) {
     return function (action) {

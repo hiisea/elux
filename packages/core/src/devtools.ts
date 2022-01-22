@@ -30,13 +30,12 @@ export const devLogger: IStoreLogger = (
   priority: string[],
   handers: string[],
   state: object,
-  effectStatus?: 'start' | 'end'
+  effect: boolean
 ): void => {
   if (reduxDevTools) {
-    const flag: string = effectStatus === 'start' ? '+' : effectStatus === 'end' ? '-' : '';
-    const type = [flag, actionName, ` (${isActive ? '' : '*'}${id})`].join('');
+    const type = [actionName, ` (${isActive ? '' : '*'}${id})`].join('');
     const logItem: LogItem = {type, payload, priority, handers};
-    if (flag) {
+    if (effect) {
       effects.push(logItem);
     } else {
       logItem.effects = [...effects];

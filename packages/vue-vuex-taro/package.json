@@ -35,11 +35,9 @@
   },
   "peerDependencies": {
     "@tarojs/taro": "^3.3.12",
-    "vue": "^3.0.0",
-    "vuex": "^4.0.0"
+    "vue": "^3.0.0"
   },
   "dependencies": {
-    "@elux/core-vuex": "^1.0.1",
     "@elux/vue-taro": "^1.0.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"

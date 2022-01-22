@@ -89,21 +89,6 @@ export interface GetState<S extends State = {}> {
 /**
  * @internal
  */
-export interface StoreOptions {
-  initState?: Record<string, any>;
-}
-
-/**
- * @internal
- */
-export interface StoreBuilder<O extends StoreOptions = StoreOptions, B extends BStore = BStore> {
-  storeOptions: O;
-  storeCreator: (options: O, id?: number) => B;
-}
-
-/**
- * @internal
- */
 export type IStoreLogger = (
   {id, isActive}: {id: number; isActive: boolean},
   actionName: string,
@@ -111,33 +96,22 @@ export type IStoreLogger = (
   priority: string[],
   handers: string[],
   state: object,
-  effectStatus?: 'start' | 'end'
+  effect: boolean
 ) => void;
 
 /**
  * @internal
  */
-export interface BStore<S extends State = any> {
-  builder: StoreBuilder;
+export interface IFlux<S extends State = any> {
   getState: GetState<S>;
   update: (actionName: string, state: Partial<S>) => void;
   subscribe(listener: () => void): () => void;
-  destroy(): void;
 }
 
 /**
  * @internal
  */
-export type IStoreMiddleware = (api: {
-  store: IStore;
-  getState: GetState;
-  dispatch: Dispatch;
-}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
-
-/**
- * @internal
- */
-export interface IStore<S extends State = any> extends BStore<S> {
+export interface IStore<S extends State = any> extends IFlux<S> {
   sid: number;
   dispatch: Dispatch;
   router: ICoreRouter;
@@ -147,11 +121,18 @@ export interface IStore<S extends State = any> extends BStore<S> {
   loadingGroups: Record<string, TaskCounter>;
   isActive(): boolean;
   setActive(status: boolean): void;
+  destroy(): void;
   options: {
+    initState: (data: S) => S;
     middlewares?: IStoreMiddleware[];
     logger?: IStoreLogger;
   };
 }
+
+/**
+ * @internal
+ */
+export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 
 /**
  * @internal

@@ -40,15 +40,13 @@ export type {
   ICoreRouter,
   ICoreRouteState,
   IStore,
-  BStore,
+  IFlux,
   IModuleHandlers,
   Dispatch,
   GetState,
   State,
   IStoreMiddleware,
   IStoreLogger,
-  StoreBuilder,
-  StoreOptions,
 } from './basic';
 
 export type {

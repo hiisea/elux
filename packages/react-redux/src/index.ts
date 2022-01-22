@@ -1,7 +1,6 @@
 import {ComponentType, FunctionComponent, ComponentClass} from 'react';
 import {connect, Options} from 'react-redux';
 import {exportView, Dispatch, EluxComponent} from '@elux/core';
-export {createStore} from '@elux/core-redux';
 
 /**
  *  @public

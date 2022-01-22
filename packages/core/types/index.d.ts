@@ -6,7 +6,7 @@ export { loadModel, exportModule, loadComponet, getRootModuleAPI, getModule, get
 export { CoreModuleHandlers, RouteModuleHandlers, EmptyModuleHandlers } from './router';
 export { LoadingState, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise, isServer, serverSide, clientSide, deepClone, TaskCounter, } from './sprite';
 export { default as env } from './env';
-export type { Action, EluxComponent, CommonModule, ModuleGetter, ICoreRouter, ICoreRouteState, IStore, BStore, IModuleHandlers, Dispatch, GetState, State, IStoreMiddleware, IStoreLogger, StoreBuilder, StoreOptions, } from './basic';
+export type { Action, EluxComponent, CommonModule, ModuleGetter, ICoreRouter, ICoreRouteState, IStore, IFlux, IModuleHandlers, Dispatch, GetState, State, IStoreMiddleware, IStoreLogger, } from './basic';
 export type { ReturnComponents, GetPromiseModule, ModuleFacade, PickActions, RootModuleAPI, RootModuleParams, RootModuleFacade, RootModuleActions, LoadComponent, IModuleHandlersClass, GetPromiseComponent, PickHandler, } from './inject';
 export type { IRouteModuleHandlersClass, ActionsThis, HandlerThis } from './router';
 //# sourceMappingURL=index.d.ts.map

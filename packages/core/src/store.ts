@@ -1,5 +1,6 @@
 import env from './env';
 import {isPromise} from './sprite';
+import {createRedux} from './redux';
 import {
   Action,
   ActionHandler,
@@ -7,10 +8,8 @@ import {
   coreConfig,
   MetaData,
   IModuleHandlers,
-  BStore,
   IStore,
   IStoreMiddleware,
-  GetState,
   State,
   ICoreRouter,
   IStoreLogger,
@@ -57,85 +56,53 @@ function compose(...funcs: Function[]) {
   );
 }
 
-export function enhanceStore<S extends State = any>(
+export function createStore<S extends State = any>(
   sid: number,
-  baseStore: BStore,
   router: ICoreRouter,
+  data: S,
+  initState: (data: S) => S,
   middlewares?: IStoreMiddleware[],
   logger?: IStoreLogger
 ): IStore<S> {
-  const store: IStore<S> = baseStore as any;
-  const _getState = baseStore.getState;
-  const getState: GetState<S> = (moduleName?: string) => {
-    const state = _getState();
-    return moduleName ? state[moduleName] : state;
-  };
-  store.sid = sid;
-  store.router = router;
-  store.getState = getState;
-  store.loadingGroups = {};
-  store.injectedModules = {};
-  const injectedModules = store.injectedModules;
-  store.options = {
+  const redux = createRedux(initState(data));
+  const {getState, subscribe, update: _update} = redux;
+  const options = {
+    initState,
+    logger,
     middlewares,
   };
-  const _destroy = baseStore.destroy;
-  store.destroy = () => {
-    _destroy();
+  const loadingGroups = {};
+  const injectedModules = {};
+  const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
+  let _isActive = false;
+  const isActive = (): boolean => {
+    return _isActive;
+  };
+  const setActive = (status: boolean): void => {
+    if (_isActive !== status) {
+      _isActive = status;
+    }
+  };
+  const getCurrentActionName = () => currentData.actionName;
+  const getCurrentState = (moduleName?: string) => {
+    const state = currentData.prevState;
+    return moduleName ? state[moduleName] : state;
+  };
+
+  const destroy = () => {
     Object.keys(injectedModules).forEach((moduleName) => {
       injectedModules[moduleName].destroy();
     });
   };
-  const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
-  const _update = baseStore.update;
-  baseStore.update = (actionName: string, state: Partial<S>) => {
+  const update = (actionName: string, state: Partial<S>) => {
     _update(actionName, state);
     router.latestState = {...router.latestState, ...state};
   };
-  store.getCurrentActionName = () => currentData.actionName;
-  store.getCurrentState = (moduleName?: string) => {
-    const state = currentData.prevState;
-    return moduleName ? state[moduleName] : state;
-  };
-  let isActive = false;
-  store.isActive = (): boolean => {
-    return isActive;
-  };
-  store.setActive = (status: boolean): void => {
-    if (isActive !== status) {
-      isActive = status;
-    }
-  };
+
   let dispatch = (action: Action) => {
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
   };
-  const middlewareAPI = {
-    store,
-    getState,
-    dispatch: (action: Action) => dispatch(action),
-  };
-  const preMiddleware: IStoreMiddleware = () => (next) => (action) => {
-    if (action.type === ActionTypes.Error) {
-      const actionData = getActionData(action);
-      if (isProcessedError(actionData[0])) {
-        return undefined;
-      }
-      actionData[0] = setProcessedError(actionData[0], true);
-    }
-    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
-    if (env.isServer && actionName === ActionTypes.MLoading) {
-      return undefined;
-    }
-    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!injectedModules[moduleName]) {
-        const result: void | Promise<void> = loadModel(moduleName, store);
-        if (isPromise(result)) {
-          return result.then(() => next(action));
-        }
-      }
-    }
-    return next(action);
-  };
+
   function applyEffect(moduleName: string, handler: ActionHandler, modelInstance: IModuleHandlers, action: Action, actionData: any[]) {
     const effectResult: Promise<any> = handler.apply(modelInstance, actionData);
     const decorators = handler.__decorators__;
@@ -178,7 +145,7 @@ export function enhanceStore<S extends State = any>(
     );
   }
   function respondHandler(action: Action, isReducer: boolean, prevData: {actionName: string; prevState: S}): void | Promise<void> {
-    let logs: [{id: number; isActive: boolean}, string, any[], string[], string[], object, 'start' | 'end' | undefined];
+    let logs: [{id: number; isActive: boolean}, string, any[], string[], string[], object, boolean];
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
     const [actionModuleName] = actionName.split(coreConfig.NSP);
@@ -219,20 +186,20 @@ export function enhanceStore<S extends State = any>(
           }
         });
         logs = [
-          {id: sid, isActive},
+          {id: sid, isActive: _isActive},
           actionName,
           actionData,
           action.priority || [],
           orderList,
           Object.assign({}, prevData.prevState, newState),
-          undefined,
+          false,
         ];
+        //logger前置更符合日志逻辑，store.update可能同步引起ui更新、同步引起另一个action
         devLogger(...logs);
         logger && logger(...logs);
-        //logger前置更符合日志逻辑，store.update可能同步引起ui更新、同步引起另一个action
-        store.update(actionName, newState as S);
+        update(actionName, newState as S);
       } else {
-        logs = [{id: sid, isActive}, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+        logs = [{id: sid, isActive: _isActive}, actionName, actionData, action.priority || [], orderList, getState(), true];
         devLogger(...logs);
         logger && logger(...logs);
         const result: Promise<any>[] = [];
@@ -246,12 +213,6 @@ export function enhanceStore<S extends State = any>(
           }
         });
         const task = result.length === 1 ? result[0] : Promise.all(result);
-        task.then(() => {
-          logs[5] = getState();
-          logs[6] = 'end';
-          devLogger(...logs);
-          logger && logger(...logs);
-        });
         return task;
       }
     }
@@ -263,8 +224,51 @@ export function enhanceStore<S extends State = any>(
     return respondHandler(action, false, prevData);
   }
 
+  const middlewareAPI = {
+    getState,
+    dispatch: (action: Action) => dispatch(action),
+  };
+
+  const preMiddleware: IStoreMiddleware = () => (next) => (action) => {
+    if (action.type === ActionTypes.Error) {
+      const actionData = getActionData(action);
+      if (isProcessedError(actionData[0])) {
+        return undefined;
+      }
+      actionData[0] = setProcessedError(actionData[0], true);
+    }
+    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
+    if (env.isServer && actionName === ActionTypes.MLoading) {
+      return undefined;
+    }
+    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
+      if (!injectedModules[moduleName]) {
+        const result: void | Promise<void> = loadModel(moduleName, store);
+        if (isPromise(result)) {
+          return result.then(() => next(action));
+        }
+      }
+    }
+    return next(action);
+  };
   const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map((middleware) => middleware(middlewareAPI));
   dispatch = compose(...chain)(_dispatch);
-  store.dispatch = dispatch;
+
+  const store: IStore<S> = {
+    sid,
+    getState,
+    subscribe,
+    dispatch,
+    router,
+    loadingGroups,
+    injectedModules,
+    destroy,
+    getCurrentActionName,
+    getCurrentState,
+    update,
+    isActive,
+    setActive,
+    options,
+  };
   return store;
 }

@@ -20,10 +20,9 @@ const effects = [];
 export const devLogger = ({
   id,
   isActive
-}, actionName, payload, priority, handers, state, effectStatus) => {
+}, actionName, payload, priority, handers, state, effect) => {
   if (reduxDevTools) {
-    const flag = effectStatus === 'start' ? '+' : effectStatus === 'end' ? '-' : '';
-    const type = [flag, actionName, ` (${isActive ? '' : '*'}${id})`].join('');
+    const type = [actionName, ` (${isActive ? '' : '*'}${id})`].join('');
     const logItem = {
       type,
       payload,
@@ -31,7 +30,7 @@ export const devLogger = ({
       handers
     };
 
-    if (flag) {
+    if (effect) {
       effects.push(logItem);
     } else {
       logItem.effects = [...effects];

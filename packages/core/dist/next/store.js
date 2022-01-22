@@ -1,5 +1,6 @@
 import env from './env';
 import { isPromise } from './sprite';
+import { createRedux } from './redux';
 import { coreConfig, MetaData } from './basic';
 import { ActionTypes, errorAction } from './actions';
 import { loadModel } from './inject';
@@ -39,42 +40,50 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-export function enhanceStore(sid, baseStore, router, middlewares, logger) {
-  const store = baseStore;
-  const _getState = baseStore.getState;
+export function createStore(sid, router, data, initState, middlewares, logger) {
+  const redux = createRedux(initState(data));
+  const {
+    getState,
+    subscribe,
+    update: _update
+  } = redux;
+  const options = {
+    initState,
+    logger,
+    middlewares
+  };
+  const loadingGroups = {};
+  const injectedModules = {};
+  const currentData = {
+    actionName: '',
+    prevState: {}
+  };
+  let _isActive = false;
 
-  const getState = moduleName => {
-    const state = _getState();
+  const isActive = () => {
+    return _isActive;
+  };
 
+  const setActive = status => {
+    if (_isActive !== status) {
+      _isActive = status;
+    }
+  };
+
+  const getCurrentActionName = () => currentData.actionName;
+
+  const getCurrentState = moduleName => {
+    const state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
   };
 
-  store.sid = sid;
-  store.router = router;
-  store.getState = getState;
-  store.loadingGroups = {};
-  store.injectedModules = {};
-  const injectedModules = store.injectedModules;
-  store.options = {
-    middlewares
-  };
-  const _destroy = baseStore.destroy;
-
-  store.destroy = () => {
-    _destroy();
-
+  const destroy = () => {
     Object.keys(injectedModules).forEach(moduleName => {
       injectedModules[moduleName].destroy();
     });
   };
 
-  const currentData = {
-    actionName: '',
-    prevState: {}
-  };
-  const _update = baseStore.update;
-
-  baseStore.update = (actionName, state) => {
+  const update = (actionName, state) => {
     _update(actionName, state);
 
     router.latestState = { ...router.latestState,
@@ -82,63 +91,8 @@ export function enhanceStore(sid, baseStore, router, middlewares, logger) {
     };
   };
 
-  store.getCurrentActionName = () => currentData.actionName;
-
-  store.getCurrentState = moduleName => {
-    const state = currentData.prevState;
-    return moduleName ? state[moduleName] : state;
-  };
-
-  let isActive = false;
-
-  store.isActive = () => {
-    return isActive;
-  };
-
-  store.setActive = status => {
-    if (isActive !== status) {
-      isActive = status;
-    }
-  };
-
   let dispatch = action => {
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
-  };
-
-  const middlewareAPI = {
-    store,
-    getState,
-    dispatch: action => dispatch(action)
-  };
-
-  const preMiddleware = () => next => action => {
-    if (action.type === ActionTypes.Error) {
-      const actionData = getActionData(action);
-
-      if (isProcessedError(actionData[0])) {
-        return undefined;
-      }
-
-      actionData[0] = setProcessedError(actionData[0], true);
-    }
-
-    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
-
-    if (env.isServer && actionName === ActionTypes.MLoading) {
-      return undefined;
-    }
-
-    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!injectedModules[moduleName]) {
-        const result = loadModel(moduleName, store);
-
-        if (isPromise(result)) {
-          return result.then(() => next(action));
-        }
-      }
-    }
-
-    return next(action);
   };
 
   function applyEffect(moduleName, handler, modelInstance, action, actionData) {
@@ -233,16 +187,16 @@ export function enhanceStore(sid, baseStore, router, middlewares, logger) {
         });
         logs = [{
           id: sid,
-          isActive
-        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), undefined];
+          isActive: _isActive
+        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), false];
         devLogger(...logs);
         logger && logger(...logs);
-        store.update(actionName, newState);
+        update(actionName, newState);
       } else {
         logs = [{
           id: sid,
-          isActive
-        }, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+          isActive: _isActive
+        }, actionName, actionData, action.priority || [], orderList, getState(), true];
         devLogger(...logs);
         logger && logger(...logs);
         const result = [];
@@ -256,12 +210,6 @@ export function enhanceStore(sid, baseStore, router, middlewares, logger) {
           }
         });
         const task = result.length === 1 ? result[0] : Promise.all(result);
-        task.then(() => {
-          logs[5] = getState();
-          logs[6] = 'end';
-          devLogger(...logs);
-          logger && logger(...logs);
-        });
         return task;
       }
     }
@@ -278,8 +226,58 @@ export function enhanceStore(sid, baseStore, router, middlewares, logger) {
     return respondHandler(action, false, prevData);
   }
 
+  const middlewareAPI = {
+    getState,
+    dispatch: action => dispatch(action)
+  };
+
+  const preMiddleware = () => next => action => {
+    if (action.type === ActionTypes.Error) {
+      const actionData = getActionData(action);
+
+      if (isProcessedError(actionData[0])) {
+        return undefined;
+      }
+
+      actionData[0] = setProcessedError(actionData[0], true);
+    }
+
+    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
+
+    if (env.isServer && actionName === ActionTypes.MLoading) {
+      return undefined;
+    }
+
+    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
+      if (!injectedModules[moduleName]) {
+        const result = loadModel(moduleName, store);
+
+        if (isPromise(result)) {
+          return result.then(() => next(action));
+        }
+      }
+    }
+
+    return next(action);
+  };
+
   const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map(middleware => middleware(middlewareAPI));
   dispatch = compose(...chain)(_dispatch);
-  store.dispatch = dispatch;
+  const store = {
+    sid,
+    getState,
+    subscribe,
+    dispatch,
+    router,
+    loadingGroups,
+    injectedModules,
+    destroy,
+    getCurrentActionName,
+    getCurrentState,
+    update,
+    isActive,
+    setActive,
+    options
+  };
   return store;
 }

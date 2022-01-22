@@ -41,10 +41,11 @@
     "react-dom": "^16.8.0 || ^17"
   },
   "dependencies": {
+    "@elux/core": "^1.0.1",
     "@elux/app": "^1.0.1",
     "@elux/react-components": "^1.0.1",
-    "@elux/react-redux": "^1.0.1",
-    "@elux/react-web": "^1.0.1"
+    "@elux/route-browser": "^1.0.1",
+    "@elux/react-redux": "^1.0.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

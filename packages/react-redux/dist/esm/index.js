@@ -1,6 +1,5 @@
 import { connect } from 'react-redux';
 import { exportView } from '@elux/core';
-export { createStore } from '@elux/core-redux';
 export var connectRedux = function connectRedux() {
   for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
     args[_key] = arguments[_key];

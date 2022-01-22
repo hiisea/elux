@@ -25,129 +25,102 @@ export function setUserConfig(conf) {
     });
   }
 }
-export function createBaseMP(ins, router, render, storeMiddlewares = [], storeLogger) {
+export function createBaseMP(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render() {
-          const baseStore = storeCreator(storeOptions);
-          const {
-            store
-          } = initApp(router, baseStore, storeMiddlewares, storeLogger);
-          const context = render({
+  return Object.assign(ins, {
+    render() {
+      const storeData = {};
+      const {
+        store
+      } = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger);
+      const context = render({
+        deps: {},
+        router,
+        documentHead: ''
+      }, ins);
+      return {
+        store,
+        context
+      };
+    }
+
+  });
+}
+export function createBaseApp(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
+  appMeta.router = router;
+  return Object.assign(ins, {
+    render({
+      id = 'root',
+      ssrKey = 'eluxInitStore',
+      viewName = 'main'
+    } = {}) {
+      const {
+        state,
+        components = []
+      } = env[ssrKey] || {};
+      return router.initialize.then(routeState => {
+        const storeData = {
+          [routeConfig.RouteModuleName]: routeState,
+          ...state
+        };
+        const {
+          store,
+          AppView,
+          setup
+        } = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components);
+        return setup.then(() => {
+          render(id, AppView, {
             deps: {},
             router,
             documentHead: ''
-          }, ins);
-          return {
-            store,
-            context
+          }, !!env[ssrKey], ins, store);
+        });
+      });
+    }
+
+  });
+}
+export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
+  appMeta.router = router;
+  return Object.assign(ins, {
+    render({
+      id = 'root',
+      ssrKey = 'eluxInitStore',
+      viewName = 'main'
+    } = {}) {
+      return router.initialize.then(routeState => {
+        const storeData = {
+          [routeConfig.RouteModuleName]: routeState
+        };
+        const {
+          store,
+          AppView,
+          setup
+        } = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName);
+        return setup.then(() => {
+          const state = store.getState();
+          const eluxContext = {
+            deps: {},
+            router,
+            documentHead: ''
           };
-        }
+          return render(id, AppView, eluxContext, ins, store).then(html => {
+            const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
-      });
-    }
+            if (match) {
+              return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                state,
+                components: Object.keys(eluxContext.deps)
+              })};</script>\r\n</head>`).replace(match[0], match[0] + html);
+            }
 
-  };
-}
-export function createBaseApp(ins, router, render, storeMiddlewares = [], storeLogger) {
-  appMeta.router = router;
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName = 'main'
-        } = {}) {
-          const {
-            state,
-            components = []
-          } = env[ssrKey] || {};
-          return router.initialize.then(routeState => {
-            storeOptions.initState = { ...storeOptions.initState,
-              [routeConfig.RouteModuleName]: routeState,
-              ...state
-            };
-            const baseStore = storeCreator(storeOptions);
-            const {
-              store,
-              AppView,
-              setup
-            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName, components);
-            return setup.then(() => {
-              render(id, AppView, {
-                deps: {},
-                router,
-                documentHead: ''
-              }, !!env[ssrKey], ins, store);
-              return store;
-            });
+            return html;
           });
-        }
-
+        });
       });
     }
 
-  };
-}
-export function createBaseSSR(ins, router, render, storeMiddlewares = [], storeLogger) {
-  appMeta.router = router;
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName = 'main'
-        } = {}) {
-          return router.initialize.then(routeState => {
-            storeOptions.initState = { ...storeOptions.initState,
-              [routeConfig.RouteModuleName]: routeState
-            };
-            const baseStore = storeCreator(storeOptions);
-            const {
-              store,
-              AppView,
-              setup
-            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName);
-            return setup.then(() => {
-              const state = store.getState();
-              const eluxContext = {
-                deps: {},
-                router,
-                documentHead: ''
-              };
-              return render(id, AppView, eluxContext, ins, store).then(html => {
-                const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-
-                if (match) {
-                  return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                    state,
-                    components: Object.keys(eluxContext.deps)
-                  })};</script>\r\n</head>`).replace(match[0], match[0] + html);
-                }
-
-                return html;
-              });
-            });
-          });
-        }
-
-      });
-    }
-
-  };
+  });
 }
 export function patchActions(typeName, json) {
   if (json) {

@@ -1,4 +1,4 @@
-import { reactive, computed, createVNode, createTextVNode, inject, defineComponent, Comment, h, Fragment, defineAsyncComponent, provide, shallowRef, ref, onBeforeUnmount, createApp as createApp$1, createSSRApp } from 'vue';
+import { createVNode, createTextVNode, inject, defineComponent, Comment, h, Fragment, defineAsyncComponent, provide, shallowRef, ref, onBeforeUnmount, createApp as createApp$1, reactive, createSSRApp } from 'vue';
 
 function _defineProperty(obj, key, value) {
   if (key in obj) {
@@ -432,6 +432,92 @@ function logger(before, after) {
     }
 
     fun.__decorators__.push([before, after]);
+  };
+}
+
+function createRedux(initState) {
+  let currentState = initState;
+  let currentListeners = [];
+  let nextListeners = currentListeners;
+  let isDispatching = false;
+
+  function ensureCanMutateNextListeners() {
+    if (nextListeners === currentListeners) {
+      nextListeners = currentListeners.slice();
+    }
+  }
+
+  function getState(moduleName) {
+    if (isDispatching) {
+      throw new Error('You may not call store.getState() while the reducer is executing. ');
+    }
+
+    const result = moduleName ? currentState[moduleName] : currentState;
+    return result;
+  }
+
+  function subscribe(listener) {
+    if (typeof listener !== 'function') {
+      throw new Error('Expected the listener to be a function.');
+    }
+
+    if (isDispatching) {
+      throw new Error('You may not call store.subscribe() while the reducer is executing.');
+    }
+
+    let isSubscribed = true;
+    ensureCanMutateNextListeners();
+    nextListeners.push(listener);
+    return function unsubscribe() {
+      if (!isSubscribed) {
+        return;
+      }
+
+      if (isDispatching) {
+        throw new Error('You may not unsubscribe from a store listener while the reducer is executing. ');
+      }
+
+      isSubscribed = false;
+      ensureCanMutateNextListeners();
+      const index = nextListeners.indexOf(listener);
+      nextListeners.splice(index, 1);
+      currentListeners = null;
+    };
+  }
+
+  function dispatch(action) {
+    if (isDispatching) {
+      throw new Error('Reducers may not dispatch actions.');
+    }
+
+    try {
+      isDispatching = true;
+      currentState = mergeState(currentState, action.state);
+    } finally {
+      isDispatching = false;
+    }
+
+    const listeners = currentListeners = nextListeners;
+
+    for (let i = 0; i < listeners.length; i++) {
+      const listener = listeners[i];
+      listener();
+    }
+
+    return action;
+  }
+
+  function update(actionName, state) {
+    dispatch({
+      type: actionName,
+      state
+    });
+  }
+
+  return {
+    update,
+    subscribe,
+    getState
   };
 }
 
@@ -1230,7 +1316,6 @@ function _optionalCallableProperty(obj, name) {
 }
 
 const routeMiddleware = ({
-  store,
   dispatch,
   getState
 }) => next => action => {
@@ -1445,10 +1530,9 @@ const effects = [];
 const devLogger = ({
   id,
   isActive
-}, actionName, payload, priority, handers, state, effectStatus) => {
+}, actionName, payload, priority, handers, state, effect) => {
   if (reduxDevTools) {
-    const flag = effectStatus === 'start' ? '+' : effectStatus === 'end' ? '-' : '';
-    const type = [flag, actionName, ` (${isActive ? '' : '*'}${id})`].join('');
+    const type = [actionName, ` (${isActive ? '' : '*'}${id})`].join('');
     const logItem = {
       type,
       payload,
@@ -1456,7 +1540,7 @@ const devLogger = ({
       handers
     };
 
-    if (flag) {
+    if (effect) {
       effects.push(logItem);
     } else {
       logItem.effects = [...effects];
@@ -1500,42 +1584,50 @@ function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
 }
 
-function enhanceStore(sid, baseStore, router, middlewares, logger) {
-  const store = baseStore;
-  const _getState = baseStore.getState;
+function createStore(sid, router, data, initState, middlewares, logger) {
+  const redux = createRedux(initState(data));
+  const {
+    getState,
+    subscribe,
+    update: _update
+  } = redux;
+  const options = {
+    initState,
+    logger,
+    middlewares
+  };
+  const loadingGroups = {};
+  const injectedModules = {};
+  const currentData = {
+    actionName: '',
+    prevState: {}
+  };
+  let _isActive = false;
 
-  const getState = moduleName => {
-    const state = _getState();
+  const isActive = () => {
+    return _isActive;
+  };
 
+  const setActive = status => {
+    if (_isActive !== status) {
+      _isActive = status;
+    }
+  };
+
+  const getCurrentActionName = () => currentData.actionName;
+
+  const getCurrentState = moduleName => {
+    const state = currentData.prevState;
     return moduleName ? state[moduleName] : state;
   };
 
-  store.sid = sid;
-  store.router = router;
-  store.getState = getState;
-  store.loadingGroups = {};
-  store.injectedModules = {};
-  const injectedModules = store.injectedModules;
-  store.options = {
-    middlewares
-  };
-  const _destroy = baseStore.destroy;
-
-  store.destroy = () => {
-    _destroy();
-
+  const destroy = () => {
     Object.keys(injectedModules).forEach(moduleName => {
       injectedModules[moduleName].destroy();
     });
   };
 
-  const currentData = {
-    actionName: '',
-    prevState: {}
-  };
-  const _update = baseStore.update;
-
-  baseStore.update = (actionName, state) => {
+  const update = (actionName, state) => {
     _update(actionName, state);
 
     router.latestState = { ...router.latestState,
@@ -1543,63 +1635,8 @@ function enhanceStore(sid, baseStore, router, middlewares, logger) {
     };
   };
 
-  store.getCurrentActionName = () => currentData.actionName;
-
-  store.getCurrentState = moduleName => {
-    const state = currentData.prevState;
-    return moduleName ? state[moduleName] : state;
-  };
-
-  let isActive = false;
-
-  store.isActive = () => {
-    return isActive;
-  };
-
-  store.setActive = status => {
-    if (isActive !== status) {
-      isActive = status;
-    }
-  };
-
   let dispatch = action => {
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
-  };
-
-  const middlewareAPI = {
-    store,
-    getState,
-    dispatch: action => dispatch(action)
-  };
-
-  const preMiddleware = () => next => action => {
-    if (action.type === ActionTypes.Error) {
-      const actionData = getActionData(action);
-
-      if (isProcessedError(actionData[0])) {
-        return undefined;
-      }
-
-      actionData[0] = setProcessedError(actionData[0], true);
-    }
-
-    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
-
-    if (env.isServer && actionName === ActionTypes.MLoading) {
-      return undefined;
-    }
-
-    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!injectedModules[moduleName]) {
-        const result = loadModel(moduleName, store);
-
-        if (isPromise(result)) {
-          return result.then(() => next(action));
-        }
-      }
-    }
-
-    return next(action);
   };
 
   function applyEffect(moduleName, handler, modelInstance, action, actionData) {
@@ -1694,16 +1731,16 @@ function enhanceStore(sid, baseStore, router, middlewares, logger) {
         });
         logs = [{
           id: sid,
-          isActive
-        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), undefined];
+          isActive: _isActive
+        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), false];
         devLogger(...logs);
         logger && logger(...logs);
-        store.update(actionName, newState);
+        update(actionName, newState);
       } else {
         logs = [{
           id: sid,
-          isActive
-        }, actionName, actionData, action.priority || [], orderList, getState(), 'start'];
+          isActive: _isActive
+        }, actionName, actionData, action.priority || [], orderList, getState(), true];
         devLogger(...logs);
         logger && logger(...logs);
         const result = [];
@@ -1717,12 +1754,6 @@ function enhanceStore(sid, baseStore, router, middlewares, logger) {
           }
         });
         const task = result.length === 1 ? result[0] : Promise.all(result);
-        task.then(() => {
-          logs[5] = getState();
-          logs[6] = 'end';
-          devLogger(...logs);
-          logger && logger(...logs);
-        });
         return task;
       }
     }
@@ -1739,15 +1770,65 @@ function enhanceStore(sid, baseStore, router, middlewares, logger) {
     return respondHandler(action, false, prevData);
   }
 
+  const middlewareAPI = {
+    getState,
+    dispatch: action => dispatch(action)
+  };
+
+  const preMiddleware = () => next => action => {
+    if (action.type === ActionTypes.Error) {
+      const actionData = getActionData(action);
+
+      if (isProcessedError(actionData[0])) {
+        return undefined;
+      }
+
+      actionData[0] = setProcessedError(actionData[0], true);
+    }
+
+    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
+
+    if (env.isServer && actionName === ActionTypes.MLoading) {
+      return undefined;
+    }
+
+    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
+      if (!injectedModules[moduleName]) {
+        const result = loadModel(moduleName, store);
+
+        if (isPromise(result)) {
+          return result.then(() => next(action));
+        }
+      }
+    }
+
+    return next(action);
+  };
+
   const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map(middleware => middleware(middlewareAPI));
   dispatch = compose(...chain)(_dispatch);
-  store.dispatch = dispatch;
+  const store = {
+    sid,
+    getState,
+    subscribe,
+    dispatch,
+    router,
+    loadingGroups,
+    injectedModules,
+    destroy,
+    getCurrentActionName,
+    getCurrentState,
+    update,
+    isActive,
+    setActive,
+    options
+  };
   return store;
 }
 
-function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents = []) {
+function initApp(router, data, initState, middlewares, storeLogger, appViewName, preloadComponents = []) {
   MetaData.currentRouter = router;
-  const store = enhanceStore(0, baseStore, router, middlewares, storeLogger);
+  const store = createStore(0, router, data, initState, middlewares, storeLogger);
   router.startup(store);
   const {
     AppModuleName,
@@ -1761,7 +1842,7 @@ function initApp(router, baseStore, middlewares, storeLogger, appViewName, prelo
   const AppView = appViewName ? getComponet(AppModuleName, appViewName) : {
     __elux_component__: 'view'
   };
-  const preloadModules = Object.keys(router.routeState.params).concat(Object.keys(baseStore.getState())).reduce((data, moduleName) => {
+  const preloadModules = Object.keys(router.routeState.params).concat(Object.keys(store.getState())).reduce((data, moduleName) => {
     if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
       data[moduleName] = true;
     }
@@ -1801,88 +1882,16 @@ function reinitApp(store) {
 function forkStore(originalStore, routeState) {
   const {
     sid,
-    builder: {
-      storeCreator,
-      storeOptions
-    },
     options: {
+      initState,
       middlewares,
       logger
     },
     router
   } = originalStore;
-  const baseStore = storeCreator({ ...storeOptions,
-    initState: {
-      [coreConfig.RouteModuleName]: routeState
-    }
-  });
-  const store = enhanceStore(sid + 1, baseStore, router, middlewares, logger);
-  return store;
-}
-
-class Store {
-  constructor(_state, builder) {
-    _defineProperty(this, "subscribe", listener => {
-      return () => undefined;
-    });
-
-    _defineProperty(this, "getState", () => {
-      return this._state;
-    });
-
-    _defineProperty(this, "update", (actionName, state) => {
-      mergeState(this._state, state);
-    });
-
-    this._state = _state;
-    this.builder = builder;
-  }
-
-  destroy() {
-    return;
-  }
-
-}
-
-function storeCreator(storeOptions) {
-  const {
-    initState = {}
-  } = storeOptions;
-  const state = reactive(initState);
-  return new Store(state, {
-    storeCreator,
-    storeOptions
-  });
-}
-function createStore(storeOptions = {}) {
-  return {
-    storeOptions,
-    storeCreator
-  };
-}
-function refStore(store, maps) {
-  const state = store.getState();
-  return Object.keys(maps).reduce((data, prop) => {
-    data[prop] = computed(() => maps[prop](state));
-    return data;
-  }, {});
-}
-function getRefsValue(refs, keys) {
-  return (keys || Object.keys(refs)).reduce((data, key) => {
-    data[key] = refs[key].value;
-    return data;
-  }, {});
-}
-function mapState(storeProperty, maps) {
-  return Object.keys(maps).reduce((data, prop) => {
-    data[prop] = function () {
-      const store = this[storeProperty];
-      const state = store.getState();
-      return maps[prop].call(this, state);
-    };
-
-    return data;
-  }, {});
+  return createStore(sid + 1, router, {
+    [coreConfig.RouteModuleName]: routeState
+  }, initState, middlewares, logger);
 }
 
 const vueComponentsConfig = {
@@ -3686,129 +3695,102 @@ function setUserConfig(conf) {
     });
   }
 }
-function createBaseMP(ins, router, render, storeMiddlewares = [], storeLogger) {
+function createBaseMP(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
   appMeta.router = router;
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render() {
-          const baseStore = storeCreator(storeOptions);
-          const {
-            store
-          } = initApp(router, baseStore, storeMiddlewares, storeLogger);
-          const context = render({
+  return Object.assign(ins, {
+    render() {
+      const storeData = {};
+      const {
+        store
+      } = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger);
+      const context = render({
+        deps: {},
+        router,
+        documentHead: ''
+      }, ins);
+      return {
+        store,
+        context
+      };
+    }
+
+  });
+}
+function createBaseApp(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
+  appMeta.router = router;
+  return Object.assign(ins, {
+    render({
+      id = 'root',
+      ssrKey = 'eluxInitStore',
+      viewName = 'main'
+    } = {}) {
+      const {
+        state,
+        components = []
+      } = env[ssrKey] || {};
+      return router.initialize.then(routeState => {
+        const storeData = {
+          [routeConfig.RouteModuleName]: routeState,
+          ...state
+        };
+        const {
+          store,
+          AppView,
+          setup
+        } = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components);
+        return setup.then(() => {
+          render(id, AppView, {
             deps: {},
             router,
             documentHead: ''
-          }, ins);
-          return {
-            store,
-            context
+          }, !!env[ssrKey], ins, store);
+        });
+      });
+    }
+
+  });
+}
+function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
+  appMeta.router = router;
+  return Object.assign(ins, {
+    render({
+      id = 'root',
+      ssrKey = 'eluxInitStore',
+      viewName = 'main'
+    } = {}) {
+      return router.initialize.then(routeState => {
+        const storeData = {
+          [routeConfig.RouteModuleName]: routeState
+        };
+        const {
+          store,
+          AppView,
+          setup
+        } = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName);
+        return setup.then(() => {
+          const state = store.getState();
+          const eluxContext = {
+            deps: {},
+            router,
+            documentHead: ''
           };
-        }
+          return render(id, AppView, eluxContext, ins, store).then(html => {
+            const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
 
-      });
-    }
+            if (match) {
+              return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
+                state,
+                components: Object.keys(eluxContext.deps)
+              })};</script>\r\n</head>`).replace(match[0], match[0] + html);
+            }
 
-  };
-}
-function createBaseApp(ins, router, render, storeMiddlewares = [], storeLogger) {
-  appMeta.router = router;
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName = 'main'
-        } = {}) {
-          const {
-            state,
-            components = []
-          } = env[ssrKey] || {};
-          return router.initialize.then(routeState => {
-            storeOptions.initState = { ...storeOptions.initState,
-              [routeConfig.RouteModuleName]: routeState,
-              ...state
-            };
-            const baseStore = storeCreator(storeOptions);
-            const {
-              store,
-              AppView,
-              setup
-            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName, components);
-            return setup.then(() => {
-              render(id, AppView, {
-                deps: {},
-                router,
-                documentHead: ''
-              }, !!env[ssrKey], ins, store);
-              return store;
-            });
+            return html;
           });
-        }
-
+        });
       });
     }
 
-  };
-}
-function createBaseSSR(ins, router, render, storeMiddlewares = [], storeLogger) {
-  appMeta.router = router;
-  return {
-    useStore({
-      storeCreator,
-      storeOptions
-    }) {
-      return Object.assign(ins, {
-        render({
-          id = 'root',
-          ssrKey = 'eluxInitStore',
-          viewName = 'main'
-        } = {}) {
-          return router.initialize.then(routeState => {
-            storeOptions.initState = { ...storeOptions.initState,
-              [routeConfig.RouteModuleName]: routeState
-            };
-            const baseStore = storeCreator(storeOptions);
-            const {
-              store,
-              AppView,
-              setup
-            } = initApp(router, baseStore, storeMiddlewares, storeLogger, viewName);
-            return setup.then(() => {
-              const state = store.getState();
-              const eluxContext = {
-                deps: {},
-                router,
-                documentHead: ''
-              };
-              return render(id, AppView, eluxContext, ins, store).then(html => {
-                const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-
-                if (match) {
-                  return appMeta.SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                    state,
-                    components: Object.keys(eluxContext.deps)
-                  })};</script>\r\n</head>`).replace(match[0], match[0] + html);
-                }
-
-                return html;
-              });
-            });
-          });
-        }
-
-      });
-    }
-
-  };
+  });
 }
 function patchActions(typeName, json) {
   if (json) {
@@ -4558,14 +4540,14 @@ const createApp = (moduleGetter, storeMiddlewares, storeLogger) => {
   const app = createApp$1(Router);
   const history = createBrowserHistory();
   const router = createRouter(history, {});
-  return createBaseApp(app, router, renderToDocument, storeMiddlewares, storeLogger);
+  return createBaseApp(app, router, renderToDocument, reactive, storeMiddlewares, storeLogger);
 };
 const createSSR = (moduleGetter, url, nativeData, storeMiddlewares, storeLogger) => {
   defineModuleGetter(moduleGetter);
   const app = createSSRApp(Router);
   const history = createServerHistory(url);
   const router = createRouter(history, nativeData);
-  return createBaseSSR(app, router, renderToString, storeMiddlewares, storeLogger);
+  return createBaseSSR(app, router, renderToString, reactive, storeMiddlewares, storeLogger);
 };
 
-export { ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, SingleDispatcher, Switch, TaskCounter, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createRouteModule, createSSR, createStore, deepClone, deepMerge, deepMergeState, effect, env, errorAction, errorProcessed, exportComponent, exportModule, exportView, getApp, getRefsValue, isProcessedError, isServer, loadComponent, location, logger, mapState, modelHotReplacement, mutation, patchActions, reducer, refStore, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig, storeCreator };
+export { ActionTypes, CoreModuleHandlers as BaseModuleHandlers, DocumentHead, Else, EmptyModuleHandlers, Link, LoadingState, RouteActionTypes, SingleDispatcher, Switch, TaskCounter, action, appConfig, clientSide, createApp, createBaseApp, createBaseMP, createBaseSSR, createRouteModule, createSSR, deepClone, deepMerge, deepMergeState, effect, env, errorAction, errorProcessed, exportComponent, exportModule, exportView, getApp, isProcessedError, isServer, loadComponent, location, logger, modelHotReplacement, mutation, patchActions, reducer, safeJsonParse, serverSide, setAppConfig, setConfig, setLoading, setProcessedError, setUserConfig };

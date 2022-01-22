@@ -3,7 +3,7 @@ import {
   CommonModule,
   MetaData,
   IStore,
-  BStore,
+  State,
   IStoreMiddleware,
   ICoreRouter,
   ICoreRouteState,
@@ -11,19 +11,20 @@ import {
   IStoreLogger,
 } from './basic';
 import {getModule, getComponet, getModuleList, getComponentList} from './inject';
-import {enhanceStore} from './store';
+import {createStore} from './store';
 import env from './env';
 
-export function initApp<ST extends BStore = BStore>(
+export function initApp<S extends State>(
   router: ICoreRouter,
-  baseStore: ST,
+  data: S,
+  initState: (data: S) => S,
   middlewares?: IStoreMiddleware[],
   storeLogger?: IStoreLogger,
   appViewName?: string,
   preloadComponents: string[] = []
-): {store: IStore & ST; AppView: EluxComponent; setup: Promise<void>} {
+): {store: IStore<S>; AppView: EluxComponent; setup: Promise<void>} {
   MetaData.currentRouter = router;
-  const store = enhanceStore(0, baseStore, router, middlewares, storeLogger) as IStore & ST;
+  const store = createStore(0, router, data, initState, middlewares, storeLogger);
   router.startup(store);
   const {AppModuleName, RouteModuleName} = coreConfig;
   const {moduleGetter} = MetaData;
@@ -32,7 +33,7 @@ export function initApp<ST extends BStore = BStore>(
   const AppView: EluxComponent = appViewName ? (getComponet(AppModuleName, appViewName) as EluxComponent) : {__elux_component__: 'view'};
   // 防止view中瀑布式懒加载
   const preloadModules: Record<string, boolean> = Object.keys(router.routeState.params)
-    .concat(Object.keys(baseStore.getState()))
+    .concat(Object.keys(store.getState()))
     .reduce((data, moduleName) => {
       if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
         data[moduleName] = true;
@@ -68,16 +69,12 @@ export function reinitApp(store: IStore): Promise<void> {
   return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]) as Promise<any>;
 }
 
-export function forkStore<T extends IStore, S extends ICoreRouteState>(originalStore: T, routeState: S): T {
+export function forkStore<T extends IStore, R extends ICoreRouteState>(originalStore: T, routeState: R): T {
   const {
     sid,
-    builder: {storeCreator, storeOptions},
-    options: {middlewares, logger},
+    options: {initState, middlewares, logger},
     router,
   } = originalStore;
 
-  const baseStore = storeCreator({...storeOptions, initState: {[coreConfig.RouteModuleName]: routeState}});
-  const store = enhanceStore(sid + 1, baseStore, router, middlewares, logger) as T;
-
-  return store;
+  return createStore(sid + 1, router, {[coreConfig.RouteModuleName]: routeState}, initState, middlewares, logger) as T;
 }

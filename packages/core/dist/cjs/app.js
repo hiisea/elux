@@ -7,8 +7,6 @@ exports.forkStore = forkStore;
 exports.initApp = initApp;
 exports.reinitApp = reinitApp;
 
-var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
-
 var _basic = require("./basic");
 
 var _inject = require("./inject");
@@ -17,13 +15,13 @@ var _store = require("./store");
 
 var _env = _interopRequireDefault(require("./env"));
 
-function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents) {
+function initApp(router, data, initState, middlewares, storeLogger, appViewName, preloadComponents) {
   if (preloadComponents === void 0) {
     preloadComponents = [];
   }
 
   _basic.MetaData.currentRouter = router;
-  var store = (0, _store.enhanceStore)(0, baseStore, router, middlewares, storeLogger);
+  var store = (0, _store.createStore)(0, router, data, initState, middlewares, storeLogger);
   router.startup(store);
   var AppModuleName = _basic.coreConfig.AppModuleName,
       RouteModuleName = _basic.coreConfig.RouteModuleName;
@@ -33,7 +31,7 @@ function initApp(router, baseStore, middlewares, storeLogger, appViewName, prelo
   var AppView = appViewName ? (0, _inject.getComponet)(AppModuleName, appViewName) : {
     __elux_component__: 'view'
   };
-  var preloadModules = Object.keys(router.routeState.params).concat(Object.keys(baseStore.getState())).reduce(function (data, moduleName) {
+  var preloadModules = Object.keys(router.routeState.params).concat(Object.keys(store.getState())).reduce(function (data, moduleName) {
     if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
       data[moduleName] = true;
     }
@@ -74,19 +72,13 @@ function reinitApp(store) {
 }
 
 function forkStore(originalStore, routeState) {
-  var _initState;
+  var _createStore;
 
   var sid = originalStore.sid,
-      _originalStore$builde = originalStore.builder,
-      storeCreator = _originalStore$builde.storeCreator,
-      storeOptions = _originalStore$builde.storeOptions,
       _originalStore$option = originalStore.options,
+      initState = _originalStore$option.initState,
       middlewares = _originalStore$option.middlewares,
       logger = _originalStore$option.logger,
       router = originalStore.router;
-  var baseStore = storeCreator((0, _extends2.default)({}, storeOptions, {
-    initState: (_initState = {}, _initState[_basic.coreConfig.RouteModuleName] = routeState, _initState)
-  }));
-  var store = (0, _store.enhanceStore)(sid + 1, baseStore, router, middlewares, logger);
-  return store;
+  return (0, _store.createStore)(sid + 1, router, (_createStore = {}, _createStore[_basic.coreConfig.RouteModuleName] = routeState, _createStore), initState, middlewares, logger);
 }

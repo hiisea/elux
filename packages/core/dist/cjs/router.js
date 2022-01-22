@@ -16,8 +16,7 @@ var _actions = require("./actions");
 var _inject = require("./inject");
 
 var routeMiddleware = function routeMiddleware(_ref) {
-  var store = _ref.store,
-      dispatch = _ref.dispatch,
+  var dispatch = _ref.dispatch,
       getState = _ref.getState;
   return function (next) {
     return function (action) {

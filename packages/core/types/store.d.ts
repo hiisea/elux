@@ -1,4 +1,4 @@
-import { Action, BStore, IStore, IStoreMiddleware, State, ICoreRouter, IStoreLogger } from './basic';
+import { Action, IStore, IStoreMiddleware, State, ICoreRouter, IStoreLogger } from './basic';
 /*** @internal */
 export declare const errorProcessed = "__eluxProcessed__";
 /*** @internal */
@@ -9,5 +9,5 @@ export declare function setProcessedError(error: any, processed: boolean): {
     [key: string]: any;
 };
 export declare function getActionData(action: Action): any[];
-export declare function enhanceStore<S extends State = any>(sid: number, baseStore: BStore, router: ICoreRouter, middlewares?: IStoreMiddleware[], logger?: IStoreLogger): IStore<S>;
+export declare function createStore<S extends State = any>(sid: number, router: ICoreRouter, data: S, initState: (data: S) => S, middlewares?: IStoreMiddleware[], logger?: IStoreLogger): IStore<S>;
 //# sourceMappingURL=store.d.ts.map

@@ -1,9 +1,9 @@
-import { EluxComponent, IStore, BStore, IStoreMiddleware, ICoreRouter, ICoreRouteState, IStoreLogger } from './basic';
-export declare function initApp<ST extends BStore = BStore>(router: ICoreRouter, baseStore: ST, middlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger, appViewName?: string, preloadComponents?: string[]): {
-    store: IStore & ST;
+import { EluxComponent, IStore, State, IStoreMiddleware, ICoreRouter, ICoreRouteState, IStoreLogger } from './basic';
+export declare function initApp<S extends State>(router: ICoreRouter, data: S, initState: (data: S) => S, middlewares?: IStoreMiddleware[], storeLogger?: IStoreLogger, appViewName?: string, preloadComponents?: string[]): {
+    store: IStore<S>;
     AppView: EluxComponent;
     setup: Promise<void>;
 };
 export declare function reinitApp(store: IStore): Promise<void>;
-export declare function forkStore<T extends IStore, S extends ICoreRouteState>(originalStore: T, routeState: S): T;
+export declare function forkStore<T extends IStore, R extends ICoreRouteState>(originalStore: T, routeState: R): T;
 //# sourceMappingURL=app.d.ts.map

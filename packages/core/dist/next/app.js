@@ -1,10 +1,10 @@
 import { MetaData, coreConfig } from './basic';
 import { getModule, getComponet, getModuleList, getComponentList } from './inject';
-import { enhanceStore } from './store';
+import { createStore } from './store';
 import env from './env';
-export function initApp(router, baseStore, middlewares, storeLogger, appViewName, preloadComponents = []) {
+export function initApp(router, data, initState, middlewares, storeLogger, appViewName, preloadComponents = []) {
   MetaData.currentRouter = router;
-  const store = enhanceStore(0, baseStore, router, middlewares, storeLogger);
+  const store = createStore(0, router, data, initState, middlewares, storeLogger);
   router.startup(store);
   const {
     AppModuleName,
@@ -18,7 +18,7 @@ export function initApp(router, baseStore, middlewares, storeLogger, appViewName
   const AppView = appViewName ? getComponet(AppModuleName, appViewName) : {
     __elux_component__: 'view'
   };
-  const preloadModules = Object.keys(router.routeState.params).concat(Object.keys(baseStore.getState())).reduce((data, moduleName) => {
+  const preloadModules = Object.keys(router.routeState.params).concat(Object.keys(store.getState())).reduce((data, moduleName) => {
     if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
       data[moduleName] = true;
     }
@@ -58,21 +58,14 @@ export function reinitApp(store) {
 export function forkStore(originalStore, routeState) {
   const {
     sid,
-    builder: {
-      storeCreator,
-      storeOptions
-    },
     options: {
+      initState,
       middlewares,
       logger
     },
     router
   } = originalStore;
-  const baseStore = storeCreator({ ...storeOptions,
-    initState: {
-      [coreConfig.RouteModuleName]: routeState
-    }
-  });
-  const store = enhanceStore(sid + 1, baseStore, router, middlewares, logger);
-  return store;
+  return createStore(sid + 1, router, {
+    [coreConfig.RouteModuleName]: routeState
+  }, initState, middlewares, logger);
 }
