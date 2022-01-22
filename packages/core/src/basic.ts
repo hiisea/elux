@@ -59,7 +59,7 @@ export type ActionCreatorList = Record<string, ActionCreator>;
 export type ActionCreatorMap = Record<string, ActionCreatorList>;
 
 /**
- * @internal
+ * @public
  */
 export interface IModuleHandlers<S = any> {
   readonly moduleName: string;
@@ -74,12 +74,12 @@ export interface IModuleHandlers<S = any> {
 export type Dispatch = (action: Action) => void | Promise<void>;
 
 /**
- * @internal
+ * @public
  */
 export type State = Record<string, Record<string, any>>;
 
 /**
- * @internal
+ * @public
  */
 export interface GetState<S extends State = {}> {
   (): S;
@@ -87,7 +87,7 @@ export interface GetState<S extends State = {}> {
 }
 
 /**
- * @internal
+ * @public
  */
 export type IStoreLogger = (
   {id, isActive}: {id: number; isActive: boolean},
@@ -100,7 +100,7 @@ export type IStoreLogger = (
 ) => void;
 
 /**
- * @internal
+ * @public
  */
 export interface IFlux<S extends State = any> {
   getState: GetState<S>;
@@ -109,7 +109,7 @@ export interface IFlux<S extends State = any> {
 }
 
 /**
- * @internal
+ * @public
  */
 export interface IStore<S extends State = any> extends IFlux<S> {
   sid: number;
@@ -130,12 +130,12 @@ export interface IStore<S extends State = any> extends IFlux<S> {
 }
 
 /**
- * @internal
+ * @public
  */
 export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 
 /**
- * @internal
+ * @public
  */
 export interface ICoreRouteState {
   action: string;
@@ -143,7 +143,7 @@ export interface ICoreRouteState {
 }
 
 /**
- * @internal
+ * @public
  */
 export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
   routeState: ST;
@@ -155,7 +155,7 @@ export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
 }
 
 /**
- * @internal
+ * @public
  */
 export interface CommonModule<ModuleName extends string = string> {
   moduleName: ModuleName;

@@ -19,7 +19,7 @@ declare class RouteStack<T extends {
     back(delta: number): void;
     protected setActive(oItem: T | undefined): void;
 }
-/*** @internal */
+/*** @public */
 export interface IHistoryRecord {
     key: string;
     location: ILocationTransform;

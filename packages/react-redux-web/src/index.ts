@@ -15,10 +15,10 @@ export * from '@elux/react-redux';
 setAppConfig({loadComponent, useRouter, useStore: useStore as any});
 setReactComponentsConfig({Provider: Provider as any, useStore: useStore as any});
 
-/*** @internal */
+/*** @public */
 export type GetApp<A extends RootModuleFacade, R extends string = 'route', NT = unknown> = GetBaseAPP<A, LoadComponentOptions, R, NT>;
 
-/*** @internal */
+/*** @public */
 export function setConfig(
   conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
 ): void {

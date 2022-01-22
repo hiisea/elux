@@ -1,7 +1,7 @@
 import env from './env';
 
 /**
- * @internal
+ * @public
  */
 export enum LoadingState {
   /**
@@ -19,7 +19,7 @@ export enum LoadingState {
 }
 
 /**
- * @internal
+ * @public
  */
 export class SingleDispatcher<T> {
   protected listenerId = 0;
@@ -85,7 +85,7 @@ export class MultipleDispatcher<T extends Record<string, any> = {}> {
 }
 
 /**
- * @internal
+ * @public
  */
 export class TaskCounter extends SingleDispatcher<LoadingState> {
   public readonly list: {promise: Promise<any>; note: string}[] = [];

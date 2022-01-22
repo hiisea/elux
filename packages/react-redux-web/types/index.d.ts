@@ -6,9 +6,9 @@ export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/react-com
 export type { DocumentHeadProps, SwitchProps, ElseProps, LinkProps, LoadComponentOptions } from '@elux/react-components';
 export * from '@elux/app';
 export * from '@elux/react-redux';
-/*** @internal */
+/*** @public */
 export declare type GetApp<A extends RootModuleFacade, R extends string = 'route', NT = unknown> = GetBaseAPP<A, LoadComponentOptions, R, NT>;
-/*** @internal */
+/*** @public */
 export declare function setConfig(conf: UserConfig & {
     LoadComponentOnError?: ComponentType<{
         message: string;

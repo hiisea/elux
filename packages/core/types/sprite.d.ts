@@ -1,5 +1,5 @@
 /**
- * @internal
+ * @public
  */
 export declare enum LoadingState {
     /**
@@ -16,7 +16,7 @@ export declare enum LoadingState {
     Depth = "Depth"
 }
 /**
- * @internal
+ * @public
  */
 export declare class SingleDispatcher<T> {
     protected listenerId: number;
@@ -35,7 +35,7 @@ export declare class MultipleDispatcher<T extends Record<string, any> = {}> {
     dispatch<N extends keyof T>(name: N, data: T[N]): void | Promise<void[]>;
 }
 /**
- * @internal
+ * @public
  */
 export declare class TaskCounter extends SingleDispatcher<LoadingState> {
     deferSecond: number;

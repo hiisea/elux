@@ -1,6 +1,6 @@
 import { ComponentType } from 'react';
 import { LoadComponent } from '@elux/core';
-/*** @internal */
+/*** @public */
 export interface LoadComponentOptions {
     OnError?: ComponentType<{
         message: string;

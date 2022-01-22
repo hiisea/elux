@@ -2,7 +2,7 @@ import React, {ComponentType, Component, useContext} from 'react';
 import {env, loadComponet, isPromise, LoadComponent, EluxComponent, IStore} from '@elux/core';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
-/*** @internal */
+/*** @public */
 export interface LoadComponentOptions {
   OnError?: ComponentType<{message: string}>;
   OnLoading?: ComponentType<{}>;

@@ -43,7 +43,7 @@ export declare type ActionCreator = (...args: any[]) => Action;
 export declare type ActionCreatorList = Record<string, ActionCreator>;
 export declare type ActionCreatorMap = Record<string, ActionCreatorList>;
 /**
- * @internal
+ * @public
  */
 export interface IModuleHandlers<S = any> {
     readonly moduleName: string;
@@ -56,25 +56,25 @@ export interface IModuleHandlers<S = any> {
  */
 export declare type Dispatch = (action: Action) => void | Promise<void>;
 /**
- * @internal
+ * @public
  */
 export declare type State = Record<string, Record<string, any>>;
 /**
- * @internal
+ * @public
  */
 export interface GetState<S extends State = {}> {
     (): S;
     (moduleName: string): Record<string, any> | undefined;
 }
 /**
- * @internal
+ * @public
  */
 export declare type IStoreLogger = ({ id, isActive }: {
     id: number;
     isActive: boolean;
 }, actionName: string, payload: any[], priority: string[], handers: string[], state: object, effect: boolean) => void;
 /**
- * @internal
+ * @public
  */
 export interface IFlux<S extends State = any> {
     getState: GetState<S>;
@@ -82,7 +82,7 @@ export interface IFlux<S extends State = any> {
     subscribe(listener: () => void): () => void;
 }
 /**
- * @internal
+ * @public
  */
 export interface IStore<S extends State = any> extends IFlux<S> {
     sid: number;
@@ -104,21 +104,21 @@ export interface IStore<S extends State = any> extends IFlux<S> {
     };
 }
 /**
- * @internal
+ * @public
  */
 export declare type IStoreMiddleware = (api: {
     getState: GetState;
     dispatch: Dispatch;
 }) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 /**
- * @internal
+ * @public
  */
 export interface ICoreRouteState {
     action: string;
     params: any;
 }
 /**
- * @internal
+ * @public
  */
 export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
     routeState: ST;
@@ -129,7 +129,7 @@ export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
     latestState: Record<string, any>;
 }
 /**
- * @internal
+ * @public
  */
 export interface CommonModule<ModuleName extends string = string> {
     moduleName: ModuleName;

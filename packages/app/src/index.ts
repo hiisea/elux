@@ -125,7 +125,7 @@ export const appConfig: {
 export const setAppConfig = buildConfigSetter(appConfig);
 
 /**
- * @internal
+ * @public
  */
 export interface UserConfig {
   maxHistory?: number;
@@ -326,7 +326,7 @@ export function patchActions(typeName: string, json?: string): void {
 }
 
 /**
- * @internal
+ * @public
  */
 export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', NT = unknown> = {
   State: {[M in keyof A]: A[M]['state']};

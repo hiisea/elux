@@ -164,7 +164,7 @@ interface LocationCache {
   _params?: Record<string, any>;
 }
 
-/*** @internal */
+/*** @public */
 export interface ILocationTransform<P extends RootParams = any> {
   getPagename(): string;
   getEluxUrl(): string;

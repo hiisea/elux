@@ -25,7 +25,7 @@ export declare const urlParser: {
     checkPath(path: string): string;
     withoutProtocol(url: string): string;
 };
-/*** @internal */
+/*** @public */
 export interface ILocationTransform<P extends RootParams = any> {
     getPagename(): string;
     getEluxUrl(): string;

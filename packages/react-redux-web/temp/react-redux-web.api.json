@@ -264,6 +264,281 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!CommonModule:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface CommonModule<ModuleName extends "
+            },
+            {
+              "kind": "Content",
+              "text": "string "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "ModuleName",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            }
+          ],
+          "name": "CommonModule",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!CommonModule#actions:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "actions: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, (...args: any[]) => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Action",
+                  "canonicalReference": "@elux/react-redux-web!Action:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "actions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!CommonModule#components:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "components: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EluxComponent",
+                  "canonicalReference": "@elux/react-redux-web!EluxComponent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | (() => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        default: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EluxComponent",
+                  "canonicalReference": "@elux/react-redux-web!EluxComponent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>)>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "components",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 9
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!CommonModule#model:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "model: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(store: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-redux-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "model",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!CommonModule#moduleName:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "moduleName: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "ModuleName"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "moduleName",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!CommonModule#params:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "params: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, any>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "params",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!CommonModule#state:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "state: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, any>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "state",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Variable",
           "canonicalReference": "@elux/react-redux-web!connectRedux:var",
           "docComment": "/**\n * @public\n */\n",
@@ -283,6 +558,53 @@
           "variableTypeTokenRange": {
             "startIndex": 1,
             "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!DeepPartial:type",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type DeepPartial<T> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    [P in keyof T]?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "DeepPartial",
+              "canonicalReference": "@elux/react-redux-web!DeepPartial:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<T[P]>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "DeepPartial",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
           }
         },
         {
@@ -579,6 +901,598 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!EluxLocation:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface EluxLocation<P extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootParams",
+              "canonicalReference": "@elux/react-redux-web!RootParams:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "P",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "EluxLocation",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!EluxLocation#args:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "args: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DeepPartial",
+                  "canonicalReference": "@elux/react-redux-web!DeepPartial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "args",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!EluxLocation#pathmatch:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pathmatch: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "pathmatch",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!Facade:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type RootModuleFacade<G extends "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    [N in "
+            },
+            {
+              "kind": "Reference",
+              "text": "Extract",
+              "canonicalReference": "!Extract:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<keyof G, string>]: () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "CommonModule",
+              "canonicalReference": "@elux/react-redux-web!CommonModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<N> | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n        default: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CommonModule",
+              "canonicalReference": "@elux/react-redux-web!CommonModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<N>;\n    }>;\n} "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    [K in "
+            },
+            {
+              "kind": "Reference",
+              "text": "Extract",
+              "canonicalReference": "!Extract:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<keyof G, string>]: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ModuleFacade",
+              "canonicalReference": "@elux/react-redux-web!ModuleFacade:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "GetPromiseModule",
+              "canonicalReference": "@elux/react-redux-web!GetPromiseModule:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "ReturnType",
+              "canonicalReference": "!ReturnType:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<G[K]>>>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Facade",
+          "typeParameters": [
+            {
+              "typeParameterName": "G",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 10
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 11,
+                "endIndex": 12
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 13,
+            "endIndex": 22
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!GetApp:type",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type GetApp<A extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleFacade",
+              "canonicalReference": "@elux/react-redux-web!RootModuleFacade:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", R extends "
+            },
+            {
+              "kind": "Content",
+              "text": "string "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "'route'"
+            },
+            {
+              "kind": "Content",
+              "text": ", NT = "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Reference",
+              "text": "GetBaseAPP",
+              "canonicalReference": "@elux/react-redux-web!GetBaseAPP:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<A, "
+            },
+            {
+              "kind": "Reference",
+              "text": "LoadComponentOptions",
+              "canonicalReference": "@elux/react-redux-web!LoadComponentOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", R, NT>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "GetApp",
+          "typeParameters": [
+            {
+              "typeParameterName": "A",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "R",
+              "constraintTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              }
+            },
+            {
+              "typeParameterName": "NT",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 8
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 9,
+            "endIndex": 13
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!GetBaseAPP:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type GetBaseAPP<A extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleFacade",
+              "canonicalReference": "@elux/react-redux-web!RootModuleFacade:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", LoadComponentOptions, R extends "
+            },
+            {
+              "kind": "Content",
+              "text": "string "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "'route'"
+            },
+            {
+              "kind": "Content",
+              "text": ", NT = "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    State: {\n        [M in keyof A]: A[M]['state'];\n    };\n    RouteParams: {\n        [M in keyof A]?: A[M]['params'];\n    };\n    RouteState: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RouteState",
+              "canonicalReference": "@elux/react-redux-web!RouteState:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n        [M in keyof A]?: A[M]['params'];\n    }>;\n    Router: "
+            },
+            {
+              "kind": "Reference",
+              "text": "IEluxRouter",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n        [M in keyof A]: A[M]['params'];\n    }, "
+            },
+            {
+              "kind": "Reference",
+              "text": "Extract",
+              "canonicalReference": "!Extract:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<keyof A[R]['components'], string>, NT>;\n    GetActions<N extends keyof A>(...args: N[]): {\n        [K in N]: A[K]['actions'];\n    };\n    LoadComponent: "
+            },
+            {
+              "kind": "Reference",
+              "text": "LoadComponent",
+              "canonicalReference": "@elux/react-redux-web!LoadComponent:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<A, LoadComponentOptions>;\n    Modules: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleAPI",
+              "canonicalReference": "@elux/react-redux-web!RootModuleAPI:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<A>;\n    Actions: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleActions",
+              "canonicalReference": "@elux/react-redux-web!RootModuleActions:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<A>;\n    Pagename: keyof A[R]['components'];\n    Pagenames: {\n        [K in keyof A[R]['components']]: K;\n    };\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "GetBaseAPP",
+          "typeParameters": [
+            {
+              "typeParameterName": "A",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "LoadComponentOptions",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "R",
+              "constraintTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              }
+            },
+            {
+              "typeParameterName": "NT",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 8
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 9,
+            "endIndex": 22
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!GetPromiseComponent:type",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type GetPromiseComponent<T> = "
+            },
+            {
+              "kind": "Content",
+              "text": "T extends () => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    default: infer R;\n}> ? R : T"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "GetPromiseComponent",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!GetPromiseModule:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type GetPromiseModule<T> = "
+            },
+            {
+              "kind": "Content",
+              "text": "T extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    default: infer R;\n}> ? R : T"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "GetPromiseModule",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/react-redux-web!GetProps:type",
           "docComment": "/**\n * @public\n */\n",
@@ -632,6 +1546,154 @@
           "typeTokenRange": {
             "startIndex": 1,
             "endIndex": 6
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!GetState:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface GetState<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "State",
+              "canonicalReference": "@elux/react-redux-web!State:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "{}"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "GetState",
+          "members": [
+            {
+              "kind": "CallSignature",
+              "canonicalReference": "@elux/react-redux-web!GetState:call(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "S"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": []
+            },
+            {
+              "kind": "CallSignature",
+              "canonicalReference": "@elux/react-redux-web!GetState:call(2)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "(moduleName: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, any> | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 2,
+              "parameters": [
+                {
+                  "parameterName": "moduleName",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!HistoryAction:type",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type HistoryAction = "
+            },
+            {
+              "kind": "Content",
+              "text": "'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH'"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "HistoryAction",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
           }
         },
         {
@@ -786,6 +1848,1893 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!ICoreRouter:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ICoreRouter<ST extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "ICoreRouteState",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouteState:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Reference",
+              "text": "ICoreRouteState",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouteState:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "ST",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "ICoreRouter",
+          "members": [
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouter#getCurrentStore:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getCurrentStore(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-redux-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getCurrentStore"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouter#getStoreList:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getStoreList(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-redux-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getStoreList"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouter#latestState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "latestState: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, any>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "latestState",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouter#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouter#routeState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "routeState: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "ST"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "routeState",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouter#startup:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "startup(store: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-redux-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "store",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "startup"
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!ICoreRouteState:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ICoreRouteState "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "ICoreRouteState",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouteState#action:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "action: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "action",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouteState#params:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "params: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "any"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "params",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!IEluxRouter:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface IEluxRouter<P extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootParams",
+              "canonicalReference": "@elux/react-redux-web!RootParams:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "{}"
+            },
+            {
+              "kind": "Content",
+              "text": ", N extends "
+            },
+            {
+              "kind": "Content",
+              "text": "string "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ", NT = "
+            },
+            {
+              "kind": "Content",
+              "text": "unknown"
+            },
+            {
+              "kind": "Content",
+              "text": "> extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "ICoreRouter",
+              "canonicalReference": "@elux/react-redux-web!ICoreRouter:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "RouteState",
+              "canonicalReference": "@elux/react-redux-web!RouteState:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<P>> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "P",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            },
+            {
+              "typeParameterName": "N",
+              "constraintTokenRange": {
+                "startIndex": 6,
+                "endIndex": 7
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 8,
+                "endIndex": 9
+              }
+            },
+            {
+              "typeParameterName": "NT",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 10,
+                "endIndex": 11
+              }
+            }
+          ],
+          "name": "IEluxRouter",
+          "members": [
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#addListener:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addListener(name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "'change'"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", callback: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(data: {\n        routeState: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteState",
+                  "canonicalReference": "@elux/react-redux-web!RouteState:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>;\n        root: boolean;\n    }) => void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 9,
+                "endIndex": 10
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "name",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "callback",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 8
+                  }
+                }
+              ],
+              "name": "addListener"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#back:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "back(stepOrKey?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number | string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", root?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", options?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        overflowRedirect?: string;\n        payload?: any;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", nonblocking?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 9,
+                "endIndex": 12
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "stepOrKey",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "root",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                },
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 5,
+                    "endIndex": 6
+                  }
+                },
+                {
+                  "parameterName": "nonblocking",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 7,
+                    "endIndex": 8
+                  }
+                }
+              ],
+              "name": "back"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#destroy:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "destroy(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "destroy"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#extendCurrent:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "extendCurrent(params: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DeepPartial",
+                  "canonicalReference": "@elux/react-redux-web!DeepPartial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", pagename?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "N"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StateLocation",
+                  "canonicalReference": "@elux/react-redux-web!StateLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P, N>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "params",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                },
+                {
+                  "parameterName": "pagename",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 4,
+                    "endIndex": 5
+                  }
+                }
+              ],
+              "name": "extendCurrent"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#findRecordByKey:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "findRecordByKey(key: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        record: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IHistoryRecord",
+                  "canonicalReference": "@elux/react-redux-web!IHistoryRecord:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        overflow: boolean;\n        index: [number, number];\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "key",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "findRecordByKey"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#findRecordByStep:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "findRecordByStep(delta: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", rootOnly: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        record: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IHistoryRecord",
+                  "canonicalReference": "@elux/react-redux-web!IHistoryRecord:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        overflow: boolean;\n        index: [number, number];\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "delta",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "rootOnly",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "findRecordByStep"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#getCurrentPages:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getCurrentPages(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        pagename: string;\n        store: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-redux-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        page?: any;\n    }[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getCurrentPages"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#getHistoryLength:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getHistoryLength(root?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "root",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "getHistoryLength"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#initialize:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "initialize: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteState",
+                  "canonicalReference": "@elux/react-redux-web!RouteState:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "initialize",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#location:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "location: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ILocationTransform",
+                  "canonicalReference": "@elux/react-redux-web!ILocationTransform:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "location",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#nativeData:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "nativeData: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "NT"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "nativeData",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#push:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "push(dataOrUrl: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EluxLocation",
+                  "canonicalReference": "@elux/react-redux-web!EluxLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StateLocation",
+                  "canonicalReference": "@elux/react-redux-web!StateLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P, N> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NativeLocation",
+                  "canonicalReference": "@elux/react-redux-web!NativeLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", root?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", nonblocking?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 12,
+                "endIndex": 15
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "dataOrUrl",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 7
+                  }
+                },
+                {
+                  "parameterName": "root",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 8,
+                    "endIndex": 9
+                  }
+                },
+                {
+                  "parameterName": "nonblocking",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 10,
+                    "endIndex": 11
+                  }
+                }
+              ],
+              "name": "push"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#relaunch:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "relaunch(dataOrUrl: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EluxLocation",
+                  "canonicalReference": "@elux/react-redux-web!EluxLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StateLocation",
+                  "canonicalReference": "@elux/react-redux-web!StateLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P, N> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NativeLocation",
+                  "canonicalReference": "@elux/react-redux-web!NativeLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", root?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", nonblocking?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 12,
+                "endIndex": 15
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "dataOrUrl",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 7
+                  }
+                },
+                {
+                  "parameterName": "root",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 8,
+                    "endIndex": 9
+                  }
+                },
+                {
+                  "parameterName": "nonblocking",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 10,
+                    "endIndex": 11
+                  }
+                }
+              ],
+              "name": "relaunch"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IEluxRouter#replace:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "replace(dataOrUrl: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "EluxLocation",
+                  "canonicalReference": "@elux/react-redux-web!EluxLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StateLocation",
+                  "canonicalReference": "@elux/react-redux-web!StateLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P, N> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "NativeLocation",
+                  "canonicalReference": "@elux/react-redux-web!NativeLocation:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", root?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", nonblocking?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 12,
+                "endIndex": 15
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "dataOrUrl",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 7
+                  }
+                },
+                {
+                  "parameterName": "root",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 8,
+                    "endIndex": 9
+                  }
+                },
+                {
+                  "parameterName": "nonblocking",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 10,
+                    "endIndex": 11
+                  }
+                }
+              ],
+              "name": "replace"
+            }
+          ],
+          "extendsTokenRanges": [
+            {
+              "startIndex": 12,
+              "endIndex": 16
+            }
+          ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!IFlux:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface IFlux<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "State",
+              "canonicalReference": "@elux/react-redux-web!State:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "IFlux",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IFlux#getState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getState: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "GetState",
+                  "canonicalReference": "@elux/react-redux-web!GetState:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<S>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "getState",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IFlux#subscribe:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "subscribe(listener: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "listener",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "subscribe"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IFlux#update:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "update: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(actionName: string, state: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<S>) => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "update",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!IHistoryRecord:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface IHistoryRecord "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "IHistoryRecord",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IHistoryRecord#key:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "key: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "key",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IHistoryRecord#location:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "location: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ILocationTransform",
+                  "canonicalReference": "@elux/react-redux-web!ILocationTransform:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "location",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!ILocationTransform:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ILocationTransform<P extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootParams",
+              "canonicalReference": "@elux/react-redux-web!RootParams:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "P",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "ILocationTransform",
+          "members": [
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!ILocationTransform#getEluxUrl:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getEluxUrl(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getEluxUrl"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!ILocationTransform#getNativeUrl:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getNativeUrl(withoutProtocol?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "withoutProtocol",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "getNativeUrl"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!ILocationTransform#getPagename:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getPagename(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getPagename"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!ILocationTransform#getParams:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getParams(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P> | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getParams"
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!IModuleHandlers:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface IModuleHandlers<S = "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "name": "IModuleHandlers",
+          "members": [
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IModuleHandlers#destroy:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "destroy(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "destroy"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IModuleHandlers#initState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly initState: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "S"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "initState",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IModuleHandlers#moduleName:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly moduleName: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "moduleName",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IModuleHandlers#store:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly store: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-redux-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "store",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/react-redux-web!InferableComponentEnhancerWithProps:type",
           "docComment": "/**\n * @public\n */\n",
@@ -857,6 +3806,521 @@
           "typeTokenRange": {
             "startIndex": 1,
             "endIndex": 10
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!IStore:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface IStore<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "State",
+              "canonicalReference": "@elux/react-redux-web!State:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "IFlux",
+              "canonicalReference": "@elux/react-redux-web!IFlux:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<S> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "S",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "IStore",
+          "members": [
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#destroy:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "destroy(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "destroy"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#dispatch:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dispatch: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Dispatch",
+                  "canonicalReference": "@elux/react-redux-web!Dispatch:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "dispatch",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#getCurrentActionName:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getCurrentActionName: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "getCurrentActionName",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#getCurrentState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getCurrentState: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "GetState",
+                  "canonicalReference": "@elux/react-redux-web!GetState:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<S>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "getCurrentState",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#injectedModules:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "injectedModules: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        [moduleName: string]: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IModuleHandlers",
+                  "canonicalReference": "@elux/react-redux-web!IModuleHandlers:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "injectedModules",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#isActive:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "isActive(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "isActive"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#loadingGroups:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "loadingGroups: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "TaskCounter",
+                  "canonicalReference": "@elux/react-redux-web!TaskCounter:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "loadingGroups",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#options:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "options: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        initState: (data: S) => S;\n        middlewares?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStoreMiddleware",
+                  "canonicalReference": "@elux/react-redux-web!IStoreMiddleware:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[];\n        logger?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStoreLogger",
+                  "canonicalReference": "@elux/react-redux-web!IStoreLogger:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "options",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#router:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "router: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ICoreRouter",
+                  "canonicalReference": "@elux/react-redux-web!ICoreRouter:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "router",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#setActive:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setActive(status: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "status",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "setActive"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!IStore#sid:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "sid: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "sid",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": [
+            {
+              "startIndex": 6,
+              "endIndex": 8
+            }
+          ]
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!IStoreLogger:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type IStoreLogger = "
+            },
+            {
+              "kind": "Content",
+              "text": "({ id, isActive }: {\n    id: number;\n    isActive: boolean;\n}, actionName: string, payload: any[], priority: string[], handers: string[], state: object, effect: boolean) => void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "IStoreLogger",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!IStoreMiddleware:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type IStoreMiddleware = "
+            },
+            {
+              "kind": "Content",
+              "text": "(api: {\n    getState: "
+            },
+            {
+              "kind": "Reference",
+              "text": "GetState",
+              "canonicalReference": "@elux/react-redux-web!GetState:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    dispatch: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Dispatch",
+              "canonicalReference": "@elux/react-redux-web!Dispatch:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}) => (next: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Dispatch",
+              "canonicalReference": "@elux/react-redux-web!Dispatch:type"
+            },
+            {
+              "kind": "Content",
+              "text": ") => (action: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Action",
+              "canonicalReference": "@elux/react-redux-web!Action:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => void | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<void>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "IStoreMiddleware",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 12
           }
         },
         {
@@ -964,6 +4428,32 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "action",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!LinkProps#disabled:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "disabled?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "disabled",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -1101,6 +4591,1281 @@
           ]
         },
         {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!LoadComponent:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type LoadComponent<A extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleFacade",
+              "canonicalReference": "@elux/react-redux-web!RootModuleFacade:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "{}"
+            },
+            {
+              "kind": "Content",
+              "text": ", O = "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "<M extends keyof A, V extends keyof A[M]['components']>(moduleName: M, componentName: V, options?: O) => A[M]['components'][V]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "LoadComponent",
+          "typeParameters": [
+            {
+              "typeParameterName": "A",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            },
+            {
+              "typeParameterName": "O",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 7
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 8,
+            "endIndex": 9
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!LoadComponentOptions:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface LoadComponentOptions "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "LoadComponentOptions",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!LoadComponentOptions#OnError:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "OnError?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentType",
+                  "canonicalReference": "@types/react!~React.ComponentType:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        message: string;\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "OnError",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!LoadComponentOptions#OnLoading:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "OnLoading?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ComponentType",
+                  "canonicalReference": "@types/react!~React.ComponentType:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{}>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "OnLoading",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Enum",
+          "canonicalReference": "@elux/react-redux-web!LoadingState:enum",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare enum LoadingState "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "LoadingState",
+          "members": [
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "@elux/react-redux-web!LoadingState.Depth:member",
+              "docComment": "/**\n * 开始深度加载，对于加载时间超过setLoadingDepthTime设置值时将转为深度加载状态\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "Depth = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"Depth\""
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Depth",
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "@elux/react-redux-web!LoadingState.Start:member",
+              "docComment": "/**\n * 开始加载.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "Start = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"Start\""
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Start",
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "EnumMember",
+              "canonicalReference": "@elux/react-redux-web!LoadingState.Stop:member",
+              "docComment": "/**\n * 加载完成.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "Stop = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"Stop\""
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Stop",
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!LocationState:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface LocationState<P extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootParams",
+              "canonicalReference": "@elux/react-redux-web!RootParams:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "P",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "LocationState",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!LocationState#pagename:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pagename: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "pagename",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!LocationState#params:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "params: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "params",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!ModuleFacade:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type ModuleFacade<M extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "CommonModule",
+              "canonicalReference": "@elux/react-redux-web!CommonModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    name: string;\n    components: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ReturnComponents",
+              "canonicalReference": "@elux/react-redux-web!ReturnComponents:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<M['components']>;\n    state: M['state'];\n    params: M['params'];\n    actions: M['actions'];\n    actionNames: {\n        [K in keyof M['actions']]: string;\n    };\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "ModuleFacade",
+          "typeParameters": [
+            {
+              "typeParameterName": "M",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 6
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!NativeLocation:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface NativeLocation "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "NativeLocation",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!NativeLocation#pathname:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pathname: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "pathname",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!NativeLocation#query:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "query: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "query",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!ReturnComponents:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type ReturnComponents<CS extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, "
+            },
+            {
+              "kind": "Reference",
+              "text": "EluxComponent",
+              "canonicalReference": "@elux/react-redux-web!EluxComponent:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " | (() => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    default: "
+            },
+            {
+              "kind": "Reference",
+              "text": "EluxComponent",
+              "canonicalReference": "@elux/react-redux-web!EluxComponent:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}>)>"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    [K in keyof CS]: "
+            },
+            {
+              "kind": "Reference",
+              "text": "GetPromiseComponent",
+              "canonicalReference": "@elux/react-redux-web!GetPromiseComponent:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<CS[K]>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "ReturnComponents",
+          "typeParameters": [
+            {
+              "typeParameterName": "CS",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 9
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 10,
+            "endIndex": 13
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!RootModuleActions:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type RootModuleActions<A extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleFacade",
+              "canonicalReference": "@elux/react-redux-web!RootModuleFacade:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    [K in keyof A]: keyof A[K]['actions'];\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "RootModuleActions",
+          "typeParameters": [
+            {
+              "typeParameterName": "A",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!RootModuleAPI:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type RootModuleAPI<A extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleFacade",
+              "canonicalReference": "@elux/react-redux-web!RootModuleFacade:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootModuleFacade",
+              "canonicalReference": "@elux/react-redux-web!RootModuleFacade:type"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    [K in keyof A]: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Pick",
+              "canonicalReference": "!Pick:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<A[K], 'name' | 'actions' | 'actionNames'>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "RootModuleAPI",
+          "typeParameters": [
+            {
+              "typeParameterName": "A",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 6,
+            "endIndex": 9
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!RootParams:type",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type RootParams = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, any>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "RootParams",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!RouteState:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RouteState<P extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootParams",
+              "canonicalReference": "@elux/react-redux-web!RootParams:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "P",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "name": "RouteState",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!RouteState#action:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "action: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "HistoryAction",
+                  "canonicalReference": "@elux/react-redux-web!HistoryAction:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "action",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!RouteState#key:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "key: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "key",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!RouteState#pagename:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pagename: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "pagename",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!RouteState#params:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "params: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "params",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@elux/react-redux-web!setConfig:function(1)",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function setConfig(conf: "
+            },
+            {
+              "kind": "Reference",
+              "text": "UserConfig",
+              "canonicalReference": "@elux/react-redux-web!UserConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " & {\n    LoadComponentOnError?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ComponentType",
+              "canonicalReference": "@types/react!~React.ComponentType:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n        message: string;\n    }>;\n    LoadComponentOnLoading?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ComponentType",
+              "canonicalReference": "@types/react!~React.ComponentType:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<{}>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 8,
+            "endIndex": 9
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "conf",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 7
+              }
+            }
+          ],
+          "name": "setConfig"
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "@elux/react-redux-web!SingleDispatcher:class",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class SingleDispatcher<T> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "SingleDispatcher",
+          "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "@elux/react-redux-web!SingleDispatcher#addListener:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addListener(callback: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(data: T) => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "callback",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "addListener"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@elux/react-redux-web!SingleDispatcher#dispatch:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dispatch(data: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "T"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "data",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "dispatch"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@elux/react-redux-web!SingleDispatcher#listenerId:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "protected listenerId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "listenerId",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@elux/react-redux-web!SingleDispatcher#listenerMap:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "protected readonly listenerMap: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, (data: T) => void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "listenerMap",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "isStatic": false
+            }
+          ],
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-redux-web!State:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type State = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, any>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "State",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 5
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!StateLocation:interface",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface StateLocation<P extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "RootParams",
+              "canonicalReference": "@elux/react-redux-web!RootParams:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
+              "text": ", N extends "
+            },
+            {
+              "kind": "Content",
+              "text": "string "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "P",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            },
+            {
+              "typeParameterName": "N",
+              "constraintTokenRange": {
+                "startIndex": 6,
+                "endIndex": 7
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 8,
+                "endIndex": 9
+              }
+            }
+          ],
+          "name": "StateLocation",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!StateLocation#pagename:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "pagename: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "N"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "pagename",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!StateLocation#payload:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "payload: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DeepPartial",
+                  "canonicalReference": "@elux/react-redux-web!DeepPartial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<P>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "payload",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Variable",
           "canonicalReference": "@elux/react-redux-web!Switch:var",
           "docComment": "",
@@ -1197,6 +5962,509 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "elseView",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "@elux/react-redux-web!TaskCounter:class",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class TaskCounter extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "SingleDispatcher",
+              "canonicalReference": "@elux/react-redux-web!SingleDispatcher:class"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "LoadingState",
+              "canonicalReference": "@elux/react-redux-web!LoadingState:enum"
+            },
+            {
+              "kind": "Content",
+              "text": "> "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "TaskCounter",
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@elux/react-redux-web!TaskCounter:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `TaskCounter` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(deferSecond: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "deferSecond",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@elux/react-redux-web!TaskCounter#addItem:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addItem(promise: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<any>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", note?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<any>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "promise",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                },
+                {
+                  "parameterName": "note",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 4,
+                    "endIndex": 5
+                  }
+                }
+              ],
+              "name": "addItem"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@elux/react-redux-web!TaskCounter#deferSecond:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "deferSecond: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "deferSecond",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@elux/react-redux-web!TaskCounter#list:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly list: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        promise: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<any>;\n        note: string;\n    }[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "list",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isStatic": false
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 5
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-redux-web!UserConfig:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface UserConfig "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "UserConfig",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#AppModuleName:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "AppModuleName?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "AppModuleName",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#DepthTimeOnLoading:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "DepthTimeOnLoading?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "DepthTimeOnLoading",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#disableNativeRouter:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "disableNativeRouter?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "disableNativeRouter",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#indexUrl:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "indexUrl?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "indexUrl",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#maxHistory:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "maxHistory?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxHistory",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#maxLocationCache:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "maxLocationCache?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxLocationCache",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#MSP:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "MSP?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "MSP",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#notfoundPagename:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "notfoundPagename: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "notfoundPagename",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#NSP:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "NSP?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "NSP",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#paramsKey:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "paramsKey: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "paramsKey",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-redux-web!UserConfig#RouteModuleName:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "RouteModuleName?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "RouteModuleName",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2

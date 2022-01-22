@@ -98,7 +98,7 @@ class RouteStack<T extends {destroy?: () => void; store?: IStore}> {
   }
 }
 
-/*** @internal */
+/*** @public */
 export interface IHistoryRecord {
   key: string;
   location: ILocationTransform;

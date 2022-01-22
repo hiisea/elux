@@ -254,23 +254,23 @@ export function getCachedModules(): Record<string, undefined | CommonModule | Pr
   return MetaData.moduleCaches;
 }
 
-/*** @internal */
+/*** @public */
 export type GetPromiseComponent<T> = T extends () => Promise<{default: infer R}> ? R : T;
 
 /**
- * @internal
+ * @public
  */
 export type ReturnComponents<CS extends Record<string, EluxComponent | (() => Promise<{default: EluxComponent}>)>> = {
   [K in keyof CS]: GetPromiseComponent<CS[K]>;
 };
 
 /**
- * @internal
+ * @public
  */
 export type GetPromiseModule<T> = T extends Promise<{default: infer R}> ? R : T;
 
 /**
- * @internal
+ * @public
  */
 export type ModuleFacade<M extends CommonModule> = {
   name: string;
@@ -282,7 +282,7 @@ export type ModuleFacade<M extends CommonModule> = {
 };
 
 /**
- * @internal
+ * @public
  */
 export type RootModuleFacade<
   G extends {
@@ -291,12 +291,12 @@ export type RootModuleFacade<
 > = {[K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>};
 
 /**
- * @internal
+ * @public
  */
 export type RootModuleActions<A extends RootModuleFacade> = {[K in keyof A]: keyof A[K]['actions']};
 
 /**
- * @internal
+ * @public
  */
 export type RootModuleAPI<A extends RootModuleFacade = RootModuleFacade> = {[K in keyof A]: Pick<A[K], 'name' | 'actions' | 'actionNames'>};
 
@@ -379,7 +379,7 @@ export function exportView<T>(component: T): T & EluxComponent {
 }
 
 /**
- * @internal
+ * @public
  */
 export type LoadComponent<A extends RootModuleFacade = {}, O = any> = <M extends keyof A, V extends keyof A[M]['components']>(
   moduleName: M,

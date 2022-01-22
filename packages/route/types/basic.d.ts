@@ -1,32 +1,32 @@
-/*** @internal */
+/*** @public */
 export declare type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
-/*** @internal */
+/*** @public */
 export declare type RootParams = Record<string, any>;
-/*** @internal */
+/*** @public */
 export declare type DeepPartial<T> = {
     [P in keyof T]?: DeepPartial<T[P]>;
 };
-/*** @internal */
+/*** @public */
 export interface EluxLocation<P extends RootParams = any> {
     pathmatch: string;
     args: DeepPartial<P>;
 }
-/*** @internal */
+/*** @public */
 export interface NativeLocation {
     pathname: string;
     query: string;
 }
-/*** @internal */
+/*** @public */
 export interface StateLocation<P extends RootParams = any, N extends string = string> {
     pagename: N;
     payload: DeepPartial<P>;
 }
-/*** @internal */
+/*** @public */
 export interface LocationState<P extends RootParams = any> {
     pagename: string;
     params: Partial<P>;
 }
-/*** @internal */
+/*** @public */
 export interface RouteState<P extends RootParams = any> {
     action: HistoryAction;
     key: string;

@@ -27,7 +27,7 @@ export declare const setAppConfig: (config: Partial<{
     useStore: () => IStore;
 }>) => void;
 /**
- * @internal
+ * @public
  */
 export interface UserConfig {
     maxHistory?: number;
@@ -123,7 +123,7 @@ export declare function createBaseSSR<INS = {}, S extends State = any>(ins: INS,
  */
 export declare function patchActions(typeName: string, json?: string): void;
 /**
- * @internal
+ * @public
  */
 export declare type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', NT = unknown> = {
     State: {

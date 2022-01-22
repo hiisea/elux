@@ -356,7 +356,7 @@ export abstract class BaseEluxRouter<P extends RootParams = {}, N extends string
   }
 }
 
-/*** @internal */
+/*** @public */
 export interface IEluxRouter<P extends RootParams = {}, N extends string = string, NT = unknown> extends ICoreRouter<RouteState<P>> {
   initialize: Promise<RouteState<P>>;
   nativeData: NT;
