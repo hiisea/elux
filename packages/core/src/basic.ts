@@ -1,4 +1,5 @@
-import {TaskCounter, deepMerge} from './sprite';
+import env from './env';
+import {buildConfigSetter, SingleDispatcher, UNListener, deepMerge} from './utils';
 
 export const coreConfig: {
   NSP: string;
@@ -15,17 +16,26 @@ export const coreConfig: {
   RouteModuleName: 'route',
   AppModuleName: 'stage',
 };
-export function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void {
-  return (config) =>
-    Object.keys(data).forEach((key) => {
-      config[key] !== undefined && ((data as any)[key] = config[key]);
-    });
-}
+
 export const setCoreConfig = buildConfigSetter(coreConfig);
 
-/**
- * @public
- */
+/*** @public */
+export enum LoadingState {
+  /**
+   * 开始加载.
+   */
+  Start = 'Start',
+  /**
+   * 加载完成.
+   */
+  Stop = 'Stop',
+  /**
+   * 开始深度加载，对于加载时间超过setLoadingDepthTime设置值时将转为深度加载状态
+   */
+  Depth = 'Depth',
+}
+
+/*** @public */
 export interface Action {
   type: string;
   /**
@@ -48,169 +58,213 @@ export interface ActionHandler {
   __decoratorResults__?: any[];
   (...args: any[]): any;
 }
-export type ActionHandlerList = Record<string, ActionHandler>;
 
-export type ActionHandlerMap = Record<string, ActionHandlerList>;
-
+/*** @public */
 export type ActionCreator = (...args: any[]) => Action;
 
-export type ActionCreatorList = Record<string, ActionCreator>;
+export type ModelAsHandlers = {[actionName: string]: ActionHandler};
 
-export type ActionCreatorMap = Record<string, ActionCreatorList>;
+export type ModelAsCreators = {[actionName: string]: ActionCreator};
 
-/**
- * @public
- */
-export interface IModuleHandlers<S = any> {
-  readonly moduleName: string;
-  readonly initState: S;
-  readonly store: IStore;
+export type ActionHandlersMap = {[actionName: string]: {[moduleName: string]: ActionHandler}};
+
+//export type ActionHandlerMap = Record<string, ActionHandlerList>;
+
+// export type ActionCreator = (...args: any[]) => Action;
+
+// export type ActionCreatorList = Record<string, ActionCreator>;
+
+// export type ActionCreatorMap = Record<string, ActionCreatorList>;
+
+/*** @public */
+export type Dispatch = (action: Action) => void | Promise<void>;
+
+/*** @public */
+export type ModuleState = {[key: string]: any};
+
+/*** @public */
+export type RootState = {[moduleName: string]: ModuleState | undefined};
+
+/*** @public */
+export interface GetState<RS extends RootState = RootState> {
+  (): RS;
+  <N extends string>(moduleName: N): RS[N];
+}
+
+export interface Flux {
+  getState: GetState;
+  update: (actionName: string, state: RootState) => void;
+  subscribe(listener: () => void): UNListener;
+}
+
+/*** @public */
+export interface UStore<RS extends RootState = RootState, PS extends RootState = RootState> {
+  sid: number;
+  dispatch: Dispatch;
+  isActive(): boolean;
+  getState: GetState<RS>;
+  getRouteParams: GetState<PS>;
+  subscribe(listener: () => void): UNListener;
+}
+
+/*** @public */
+export type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
+
+/*** @public */
+export interface RouteState<P extends RootState = RootState, N extends string = string> {
+  action: HistoryAction;
+  key: string;
+  pagename: N;
+  params: P;
+}
+
+export interface CoreRouter {
+  //moduleName: string;
+  routeState: RouteState;
+  startup(store: EStore): void;
+  getCurrentStore(): EStore;
+  getStoreList(): EStore[];
+  latestState: RootState;
+}
+
+/*** @public */
+export interface EluxComponent {
+  __elux_component__: 'view' | 'component';
+}
+
+/*** @public */
+export type AsyncEluxComponent = () => Promise<{
+  default: EluxComponent;
+}>;
+
+export function isEluxComponent(data: any): data is EluxComponent {
+  return data['__elux_component__'];
+}
+
+/*** @public */
+export interface CommonModel {
+  moduleName: string;
+  defaultRouteParams: ModuleState;
+  store: UStore;
+  init(latestState: RootState, preState: RootState): ModuleState;
   destroy(): void;
 }
 
-/**
- * @public
- */
-export type Dispatch = (action: Action) => void | Promise<void>;
-
-/**
- * @public
- */
-export type State = Record<string, Record<string, any>>;
-
-/**
- * @public
- */
-export interface GetState<S extends State = {}> {
-  (): S;
-  (moduleName: string): Record<string, any> | undefined;
+/*** @public */
+export interface CommonModelClass<H = CommonModel> {
+  new (moduleName: string, store: UStore): H;
 }
 
-/**
- * @public
- */
-export type IStoreLogger = (
+/*** @public */
+export interface CommonModule<ModuleName extends string = string, Store extends UStore = UStore> {
+  moduleName: ModuleName;
+  initModel: (store: Store) => void | Promise<void>;
+  state: ModuleState;
+  routeParams: ModuleState;
+  actions: {[actionName: string]: ActionCreator};
+  components: {[componentName: string]: EluxComponent | AsyncEluxComponent};
+  data?: any;
+}
+
+export interface EStore extends UStore, Flux {
+  router: CoreRouter;
+  getCurrentActionName: () => string;
+  getCurrentState: (moduleName?: string) => any;
+  injectedModules: {[moduleName: string]: CommonModel};
+  loadingGroups: {[moduleNameAndGroupName: string]: TaskCounter};
+  setActive(status: boolean): void;
+  destroy(): void;
+  options: {
+    initState: (data: RootState) => RootState;
+    middlewares?: StoreMiddleware[];
+    logger?: StoreLogger;
+  };
+}
+
+/*** @public */
+export type StoreMiddleware = (api: {getStore: () => UStore; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
+
+/*** @public */
+export type StoreLogger = (
   {id, isActive}: {id: number; isActive: boolean},
   actionName: string,
   payload: any[],
   priority: string[],
   handers: string[],
-  state: object,
+  state: {[moduleName: string]: any},
   effect: boolean
 ) => void;
 
-/**
- * @public
- */
-export interface IFlux<S extends State = any> {
-  getState: GetState<S>;
-  update: (actionName: string, state: Partial<S>) => void;
-  subscribe(listener: () => void): () => void;
+export class TaskCounter extends SingleDispatcher<LoadingState> {
+  public readonly list: {promise: Promise<any>; note: string}[] = [];
+
+  private ctimer = 0;
+
+  public constructor(public deferSecond: number) {
+    super();
+  }
+
+  public addItem(promise: Promise<any>, note = ''): Promise<any> {
+    if (!this.list.some((item) => item.promise === promise)) {
+      this.list.push({promise, note});
+      promise.finally(() => this.completeItem(promise));
+
+      if (this.list.length === 1 && !this.ctimer) {
+        this.dispatch(LoadingState.Start);
+        this.ctimer = env.setTimeout(() => {
+          this.ctimer = 0;
+          if (this.list.length > 0) {
+            this.dispatch(LoadingState.Depth);
+          }
+        }, this.deferSecond * 1000);
+      }
+    }
+    return promise;
+  }
+
+  private completeItem(promise: Promise<any>): this {
+    const i = this.list.findIndex((item) => item.promise === promise);
+    if (i > -1) {
+      this.list.splice(i, 1);
+      if (this.list.length === 0) {
+        if (this.ctimer) {
+          env.clearTimeout.call(null, this.ctimer);
+          this.ctimer = 0;
+        }
+        this.dispatch(LoadingState.Stop);
+      }
+    }
+    return this;
+  }
 }
 
-/**
- * @public
- */
-export interface IStore<S extends State = any> extends IFlux<S> {
-  sid: number;
-  dispatch: Dispatch;
-  router: ICoreRouter;
-  getCurrentActionName: () => string;
-  getCurrentState: GetState<S>;
-  injectedModules: {[moduleName: string]: IModuleHandlers};
-  loadingGroups: Record<string, TaskCounter>;
-  isActive(): boolean;
-  setActive(status: boolean): void;
-  destroy(): void;
-  options: {
-    initState: (data: S) => S;
-    middlewares?: IStoreMiddleware[];
-    logger?: IStoreLogger;
-  };
-}
+export type ModuleMap = Record<string, {name: string; actions: ModelAsCreators; actionNames: Record<string, string>}>;
 
-/**
- * @public
- */
-export type IStoreMiddleware = (api: {getState: GetState; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
+/*** @public */
+export type ModuleGetter = {[moduleName: string]: () => CommonModule | Promise<{default: CommonModule}>};
 
-/**
- * @public
- */
-export interface ICoreRouteState {
-  action: string;
-  params: any;
-}
-
-/**
- * @public
- */
-export interface ICoreRouter<ST extends ICoreRouteState = ICoreRouteState> {
-  routeState: ST;
-  startup(store: IStore): void;
-  getCurrentStore(): IStore;
-  getStoreList(): IStore[];
-  readonly name: string;
-  latestState: Record<string, any>;
-}
-
-/**
- * @public
- */
-export interface CommonModule<ModuleName extends string = string> {
-  moduleName: ModuleName;
-  model: (store: IStore) => void | Promise<void>;
-  state: Record<string, any>;
-  params: Record<string, any>;
-  actions: Record<string, (...args: any[]) => Action>;
-  components: Record<string, EluxComponent | (() => Promise<{default: EluxComponent}>)>;
-}
-
-/**
- * @internal
- */
-export type ModuleGetter = Record<string, () => CommonModule | Promise<{default: CommonModule}>>;
-
-export type FacadeMap = Record<string, {name: string; actions: ActionCreatorList; actionNames: Record<string, string>}>;
-
-/**
- * @public
- */
-export interface EluxComponent {
-  __elux_component__: 'view' | 'component';
-}
-export function isEluxComponent(data: any): data is EluxComponent {
-  return data['__elux_component__'];
-}
 export const MetaData: {
-  facadeMap: FacadeMap;
+  moduleMap: ModuleMap;
   moduleGetter: ModuleGetter;
-  moduleExists: Record<string, boolean>;
-  injectedModules: Record<string, boolean>;
-  reducersMap: ActionHandlerMap;
-  effectsMap: ActionHandlerMap;
-  moduleCaches: Record<string, undefined | CommonModule | Promise<CommonModule>>;
-  componentCaches: Record<string, undefined | EluxComponent | Promise<EluxComponent>>;
-  currentRouter: ICoreRouter;
+  moduleExists: {[moduleName: string]: boolean};
+  injectedModules: {[moduleName: string]: boolean};
+  reducersMap: ActionHandlersMap;
+  effectsMap: ActionHandlersMap;
+  moduleCaches: {[moduleName: string]: undefined | CommonModule | Promise<CommonModule>};
+  componentCaches: {[moduleNameAndComponentName: string]: undefined | EluxComponent | Promise<EluxComponent>};
+  currentRouter: CoreRouter;
 } = {
   injectedModules: {},
   reducersMap: {},
   effectsMap: {},
   moduleCaches: {},
   componentCaches: {},
-  facadeMap: null as any,
+  moduleMap: null as any,
   moduleGetter: null as any,
   moduleExists: null as any,
   currentRouter: null as any,
 };
 
-export function moduleExists(): Record<string, boolean> {
-  return MetaData.moduleExists;
-}
-
-/**
- * @internal
- */
 export function deepMergeState(target: any = {}, ...args: any[]): any {
   if (coreConfig.MutableData) {
     return deepMerge(target, ...args);
@@ -223,4 +277,9 @@ export function mergeState(target: any = {}, ...args: any[]): any {
     return Object.assign(target, ...args);
   }
   return Object.assign({}, target, ...args);
+}
+
+/*** @public */
+export function isServer(): boolean {
+  return env.isServer;
 }

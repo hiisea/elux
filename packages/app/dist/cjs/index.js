@@ -3,55 +3,21 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.clientSide = exports.appConfig = exports.action = exports.TaskCounter = exports.SingleDispatcher = exports.RouteActionTypes = exports.LoadingState = exports.EmptyModuleHandlers = exports.BaseModuleHandlers = exports.ActionTypes = void 0;
+exports.appConfig = void 0;
 exports.createBaseApp = createBaseApp;
 exports.createBaseMP = createBaseMP;
 exports.createBaseSSR = createBaseSSR;
-exports.exportView = exports.exportModule = exports.exportComponent = exports.errorProcessed = exports.errorAction = exports.effect = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.createRouteModule = void 0;
-exports.getApp = getApp;
-exports.mutation = exports.modelHotReplacement = exports.logger = exports.location = exports.isServer = exports.isProcessedError = void 0;
+exports.getApi = getApi;
 exports.patchActions = patchActions;
-exports.setProcessedError = exports.setLoading = exports.setAppConfig = exports.serverSide = exports.safeJsonParse = exports.reducer = void 0;
+exports.setAppConfig = void 0;
 exports.setUserConfig = setUserConfig;
 
 var _extends3 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
 var _core = require("@elux/core");
 
-exports.env = _core.env;
-exports.ActionTypes = _core.ActionTypes;
-exports.LoadingState = _core.LoadingState;
-exports.effect = _core.effect;
-exports.errorAction = _core.errorAction;
-exports.reducer = _core.reducer;
-exports.action = _core.action;
-exports.mutation = _core.mutation;
-exports.setLoading = _core.setLoading;
-exports.logger = _core.logger;
-exports.isServer = _core.isServer;
-exports.serverSide = _core.serverSide;
-exports.clientSide = _core.clientSide;
-exports.deepClone = _core.deepClone;
-exports.deepMerge = _core.deepMerge;
-exports.deepMergeState = _core.deepMergeState;
-exports.exportModule = _core.exportModule;
-exports.isProcessedError = _core.isProcessedError;
-exports.setProcessedError = _core.setProcessedError;
-exports.exportView = _core.exportView;
-exports.exportComponent = _core.exportComponent;
-exports.modelHotReplacement = _core.modelHotReplacement;
-exports.EmptyModuleHandlers = _core.EmptyModuleHandlers;
-exports.TaskCounter = _core.TaskCounter;
-exports.SingleDispatcher = _core.SingleDispatcher;
-exports.BaseModuleHandlers = _core.CoreModuleHandlers;
-exports.errorProcessed = _core.errorProcessed;
-
 var _route = require("@elux/route");
 
-exports.RouteActionTypes = _route.RouteActionTypes;
-exports.location = _route.location;
-exports.createRouteModule = _route.createRouteModule;
-exports.safeJsonParse = _route.safeJsonParse;
 var appMeta = {
   router: null,
   SSRTPL: _core.env.isServer ? _core.env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
@@ -84,7 +50,8 @@ function createBaseMP(ins, router, render, storeInitState, storeMiddlewares, sto
     storeMiddlewares = [];
   }
 
-  appMeta.router = router;
+  var urouter = (0, _route.toURouter)(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render: function (_render) {
       function render() {
@@ -104,7 +71,7 @@ function createBaseMP(ins, router, render, storeInitState, storeMiddlewares, sto
 
       var context = render({
         deps: {},
-        router: router,
+        router: urouter,
         documentHead: ''
       }, ins);
       return {
@@ -120,7 +87,8 @@ function createBaseApp(ins, router, render, storeInitState, storeMiddlewares, st
     storeMiddlewares = [];
   }
 
-  appMeta.router = router;
+  var urouter = (0, _route.toURouter)(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render: function (_render2) {
       function render(_x) {
@@ -149,7 +117,7 @@ function createBaseApp(ins, router, render, storeInitState, storeMiddlewares, st
       return router.initialize.then(function (routeState) {
         var _extends2;
 
-        var storeData = (0, _extends3.default)((_extends2 = {}, _extends2[_route.routeConfig.RouteModuleName] = routeState, _extends2), state);
+        var storeData = (0, _extends3.default)((_extends2 = {}, _extends2[_core.coreConfig.RouteModuleName] = routeState, _extends2), state);
 
         var _initApp2 = (0, _core.initApp)(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components),
             store = _initApp2.store,
@@ -159,7 +127,7 @@ function createBaseApp(ins, router, render, storeInitState, storeMiddlewares, st
         return setup.then(function () {
           render(id, AppView, {
             deps: {},
-            router: router,
+            router: urouter,
             documentHead: ''
           }, !!_core.env[ssrKey], ins, store);
         });
@@ -173,7 +141,8 @@ function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares, st
     storeMiddlewares = [];
   }
 
-  appMeta.router = router;
+  var urouter = (0, _route.toURouter)(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render: function (_render3) {
       function render(_x2) {
@@ -197,7 +166,7 @@ function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares, st
       return router.initialize.then(function (routeState) {
         var _storeData;
 
-        var storeData = (_storeData = {}, _storeData[_route.routeConfig.RouteModuleName] = routeState, _storeData);
+        var storeData = (_storeData = {}, _storeData[_core.coreConfig.RouteModuleName] = routeState, _storeData);
 
         var _initApp3 = (0, _core.initApp)(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName),
             store = _initApp3.store,
@@ -208,7 +177,7 @@ function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares, st
           var state = store.getState();
           var eluxContext = {
             deps: {},
-            router: router,
+            router: urouter,
             documentHead: ''
           };
           return render(id, AppView, eluxContext, ins, store).then(function (html) {
@@ -231,12 +200,12 @@ function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares, st
 
 function patchActions(typeName, json) {
   if (json) {
-    (0, _core.getRootModuleAPI)(JSON.parse(json));
+    (0, _core.getModuleMap)(JSON.parse(json));
   }
 }
 
-function getApp(demoteForProductionOnly, injectActions) {
-  var modules = (0, _core.getRootModuleAPI)(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+function getApi(demoteForProductionOnly, injectActions) {
+  var modules = (0, _core.getModuleMap)(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   return {
     GetActions: function GetActions() {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -258,7 +227,6 @@ function getApp(demoteForProductionOnly, injectActions) {
       return appMeta.router;
     },
     LoadComponent: appConfig.loadComponent,
-    Modules: modules,
-    Pagenames: _route.routeMeta.pagenames
+    Modules: modules
   };
 }

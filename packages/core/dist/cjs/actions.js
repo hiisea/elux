@@ -3,28 +3,28 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.action = exports.ActionTypes = void 0;
+exports.ActionTypes = void 0;
 exports.effect = effect;
+exports.effectLogger = effectLogger;
 exports.errorAction = errorAction;
-exports.logger = logger;
 exports.moduleInitAction = moduleInitAction;
 exports.moduleLoadingAction = moduleLoadingAction;
 exports.moduleRouteChangeAction = moduleRouteChangeAction;
-exports.mutation = void 0;
 exports.reducer = reducer;
+exports.routeBeforeChangeAction = routeBeforeChangeAction;
 exports.routeChangeAction = routeChangeAction;
+exports.routeTestChangeAction = routeTestChangeAction;
 exports.setLoading = setLoading;
 
 var _env = _interopRequireDefault(require("./env"));
 
 var _basic = require("./basic");
 
-var _sprite = require("./sprite");
-
 var ActionTypes = {
   MLoading: 'Loading',
   MInit: 'Init',
-  MReInit: 'ReInit',
+  MRouteTestChange: 'RouteTestChange',
+  MRouteBeforeChange: 'RouteBeforeChange',
   MRouteChange: 'RouteChange',
   Error: "Elux" + _basic.coreConfig.NSP + "Error"
 };
@@ -40,6 +40,20 @@ function errorAction(error) {
 function routeChangeAction(routeState) {
   return {
     type: "" + _basic.coreConfig.RouteModuleName + _basic.coreConfig.NSP + ActionTypes.MRouteChange,
+    payload: [routeState]
+  };
+}
+
+function routeBeforeChangeAction(routeState) {
+  return {
+    type: "" + _basic.coreConfig.RouteModuleName + _basic.coreConfig.NSP + ActionTypes.MRouteBeforeChange,
+    payload: [routeState]
+  };
+}
+
+function routeTestChangeAction(routeState) {
+  return {
+    type: "" + _basic.coreConfig.RouteModuleName + _basic.coreConfig.NSP + ActionTypes.MRouteTestChange,
     payload: [routeState]
   };
 }
@@ -63,24 +77,6 @@ function moduleRouteChangeAction(moduleName, params, action) {
     type: "" + moduleName + _basic.coreConfig.NSP + ActionTypes.MRouteChange,
     payload: [params, action]
   };
-}
-
-function setLoading(store, item, moduleName, groupName) {
-  var key = moduleName + _basic.coreConfig.NSP + groupName;
-  var loadings = store.loadingGroups;
-
-  if (!loadings[key]) {
-    loadings[key] = new _sprite.TaskCounter(_basic.coreConfig.DepthTimeOnLoading);
-    loadings[key].addListener(function (loadingState) {
-      var _moduleLoadingAction;
-
-      var action = moduleLoadingAction(moduleName, (_moduleLoadingAction = {}, _moduleLoadingAction[groupName] = loadingState, _moduleLoadingAction));
-      store.dispatch(action);
-    });
-  }
-
-  loadings[key].addItem(item);
-  return item;
 }
 
 function reducer(target, key, descriptor) {
@@ -142,12 +138,7 @@ function effect(loadingKey) {
   };
 }
 
-var mutation = reducer;
-exports.mutation = mutation;
-var action = effect;
-exports.action = action;
-
-function logger(before, after) {
+function effectLogger(before, after) {
   return function (target, key, descriptor) {
     if (!key && !descriptor) {
       key = target.key;
@@ -162,4 +153,22 @@ function logger(before, after) {
 
     fun.__decorators__.push([before, after]);
   };
+}
+
+function setLoading(store, item, moduleName, groupName) {
+  var key = moduleName + _basic.coreConfig.NSP + groupName;
+  var loadings = store.loadingGroups;
+
+  if (!loadings[key]) {
+    loadings[key] = new _basic.TaskCounter(_basic.coreConfig.DepthTimeOnLoading);
+    loadings[key].addListener(function (loadingState) {
+      var _moduleLoadingAction;
+
+      var action = moduleLoadingAction(moduleName, (_moduleLoadingAction = {}, _moduleLoadingAction[groupName] = loadingState, _moduleLoadingAction));
+      store.dispatch(action);
+    });
+  }
+
+  loadings[key].addItem(item);
+  return item;
 }

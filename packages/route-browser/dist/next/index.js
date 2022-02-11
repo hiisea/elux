@@ -93,18 +93,11 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 
 }
-export class EluxRouter extends BaseEluxRouter {
-  constructor(nativeUrl, browserNativeRouter, nativeData) {
-    super(nativeUrl, browserNativeRouter, nativeData);
-  }
-
-}
 export function createRouter(browserHistory, nativeData) {
   const browserNativeRouter = new BrowserNativeRouter(browserHistory);
   const {
     pathname,
     search
   } = browserHistory.location;
-  const router = new EluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
-  return router;
+  return new BaseEluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
 }

@@ -1,7 +1,7 @@
 /* eslint-disable vue/one-component-per-file */
 import {h, provide, inject, defineComponent, DefineComponent, shallowRef, ref, onBeforeUnmount, PropType} from 'vue';
 import type {App} from 'vue';
-import {env, IStore} from '@elux/core';
+import {env, UStore} from '@elux/core';
 import {EluxContext, EluxContextKey, EluxStoreContextKey, EluxStoreContext} from './base';
 
 let StageView: DefineComponent;
@@ -9,7 +9,7 @@ let StageView: DefineComponent;
 export const Page = defineComponent({
   props: {
     store: {
-      type: Object as PropType<IStore>,
+      type: Object as PropType<UStore>,
       required: true,
     },
     view: {
@@ -31,7 +31,7 @@ export const Router = defineComponent({
       classname: string;
       pages: {
         pagename: string;
-        store: IStore<any>;
+        store: UStore;
         page?: any;
       }[];
     }>({
@@ -108,7 +108,7 @@ export function renderToDocument(
   eluxContext: EluxContext,
   fromSSR: boolean,
   app: App,
-  store: IStore
+  store: UStore
 ): void {
   StageView = APPView;
   app.provide<EluxContext>(EluxContextKey, eluxContext);
@@ -117,7 +117,7 @@ export function renderToDocument(
   }
   app.mount(`#${id}`);
 }
-export function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App, store: IStore): Promise<string> {
+export function renderToString(id: string, APPView: DefineComponent<{}>, eluxContext: EluxContext, app: App, store: UStore): Promise<string> {
   StageView = APPView;
   app.provide<EluxContext>(EluxContextKey, eluxContext);
   const htmlPromise: Promise<string> = require('@vue/server-renderer').renderToString(app);

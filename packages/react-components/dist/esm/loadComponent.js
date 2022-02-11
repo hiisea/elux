@@ -5,10 +5,10 @@ import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 var _excluded = ["forwardedRef", "deps", "store"];
 import React, { Component, useContext } from 'react';
-import { env, loadComponet, isPromise } from '@elux/core';
+import { env, loadComponent, isPromise } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
 
-var loadComponent = function loadComponent(moduleName, componentName, options) {
+var reactLoadComponent = function reactLoadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
@@ -67,7 +67,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
         var result;
 
         try {
-          result = loadComponet(moduleName, componentName, store, deps);
+          result = loadComponent(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -140,4 +140,4 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   });
 };
 
-export default loadComponent;
+export default reactLoadComponent;

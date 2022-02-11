@@ -4,6 +4,7 @@
 
 ## EluxComponent interface
 
+\*
 
 <b>Signature:</b>
 

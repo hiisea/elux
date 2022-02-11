@@ -1,71 +1,98 @@
 import env from './env';
-import {isPromise} from './sprite';
+import {isPromise, compose} from './utils';
 import {createRedux} from './redux';
+import {devLogger} from './devtools';
 import {
+  MetaData,
+  coreConfig,
+  StoreMiddleware,
+  RouteState,
+  CoreRouter,
+  StoreLogger,
+  EStore,
   Action,
   ActionHandler,
-  ActionHandlerList,
-  coreConfig,
-  MetaData,
-  IModuleHandlers,
-  IStore,
-  IStoreMiddleware,
-  State,
-  ICoreRouter,
-  IStoreLogger,
+  CommonModel,
+  RootState,
 } from './basic';
-import {ActionTypes, errorAction} from './actions';
+import {ActionTypes, moduleRouteChangeAction, errorAction} from './actions';
 import {loadModel} from './inject';
-import {routeMiddleware} from './router';
-import {devLogger} from './devtools';
 
-/*** @internal */
-export const errorProcessed = '__eluxProcessed__';
+export const routeMiddleware: StoreMiddleware =
+  ({dispatch, getStore}) =>
+  (next) =>
+  (action) => {
+    if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`) {
+      const existsModules = Object.keys(getStore().getState()).reduce((obj, moduleName) => {
+        obj[moduleName] = true;
+        return obj;
+      }, {});
+      const result = next(action);
+      const [routeState] = action.payload as [RouteState];
+      Object.keys(routeState.params).forEach((moduleName) => {
+        const moduleState = routeState.params[moduleName];
+        if (moduleState && Object.keys(moduleState).length > 0) {
+          if (existsModules[moduleName]) {
+            dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
+          }
+        }
+      });
+      return result;
+    } else {
+      return next(action);
+    }
+  };
 
-/*** @internal */
-export function isProcessedError(error: any): boolean {
-  return error && !!error[errorProcessed];
+export function forkStore(originalStore: EStore, newRouteState: RouteState): EStore {
+  const {
+    sid,
+    options: {initState, middlewares, logger},
+    router,
+  } = originalStore;
+
+  return createStore(sid + 1, router, {[coreConfig.RouteModuleName]: newRouteState}, initState, middlewares, logger);
 }
 
-/*** @internal */
-export function setProcessedError(error: any, processed: boolean): {[errorProcessed]: boolean; [key: string]: any} {
-  if (typeof error !== 'object') {
-    error = {message: error};
-  }
-  Object.defineProperty(error, errorProcessed, {value: processed, enumerable: false, writable: true});
-  return error;
-}
-
-export function getActionData(action: Action): any[] {
-  return Array.isArray(action.payload) ? action.payload : [];
-}
-
-function compose(...funcs: Function[]) {
-  if (funcs.length === 0) {
-    return (arg: any) => arg;
-  }
-
-  if (funcs.length === 1) {
-    return funcs[0];
-  }
-
-  return funcs.reduce(
-    (a, b) =>
-      (...args: any[]) =>
-        a(b(...args))
-  );
-}
-
-export function createStore<S extends State = any>(
+const preMiddleware: StoreMiddleware =
+  ({getStore}) =>
+  (next) =>
+  (action) => {
+    if (action.type === ActionTypes.Error) {
+      const actionData = getActionData(action);
+      if (isProcessedError(actionData[0])) {
+        return undefined;
+      }
+      actionData[0] = setProcessedError(actionData[0], true);
+    }
+    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
+    if (env.isServer && actionName === ActionTypes.MLoading) {
+      return undefined;
+    }
+    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
+      const store = getStore() as EStore;
+      if (!store.injectedModules[moduleName]) {
+        const result: void | Promise<void> = loadModel(moduleName, store);
+        if (isPromise(result)) {
+          return result.then(() => next(action));
+        }
+      }
+    }
+    return next(action);
+  };
+export function createStore(
   sid: number,
-  router: ICoreRouter,
-  data: S,
-  initState: (data: S) => S,
-  middlewares?: IStoreMiddleware[],
-  logger?: IStoreLogger
-): IStore<S> {
+  router: CoreRouter,
+  data: RootState,
+  initState: (data: RootState) => RootState,
+  middlewares?: StoreMiddleware[],
+  logger?: StoreLogger
+): EStore {
   const redux = createRedux(initState(data));
   const {getState, subscribe, update: _update} = redux;
+  const getRouteParams = (moduleName?: string) => {
+    const routeState = getState(coreConfig.RouteModuleName) as RouteState;
+    return moduleName ? routeState.params[moduleName] : (routeState.params as any);
+  };
   const options = {
     initState,
     logger,
@@ -94,7 +121,7 @@ export function createStore<S extends State = any>(
       injectedModules[moduleName].destroy();
     });
   };
-  const update = (actionName: string, state: Partial<S>) => {
+  const update = (actionName: string, state: RootState) => {
     _update(actionName, state);
     router.latestState = {...router.latestState, ...state};
   };
@@ -103,7 +130,7 @@ export function createStore<S extends State = any>(
     throw new Error('Dispatching while constructing your middleware is not allowed. ');
   };
 
-  function applyEffect(moduleName: string, handler: ActionHandler, modelInstance: IModuleHandlers, action: Action, actionData: any[]) {
+  function applyEffect(moduleName: string, handler: ActionHandler, modelInstance: CommonModel, action: Action, actionData: any[]) {
     const effectResult: Promise<any> = handler.apply(modelInstance, actionData);
     const decorators = handler.__decorators__;
     if (decorators) {
@@ -144,7 +171,7 @@ export function createStore<S extends State = any>(
       }
     );
   }
-  function respondHandler(action: Action, isReducer: boolean, prevData: {actionName: string; prevState: S}): void | Promise<void> {
+  function respondHandler(action: Action, isReducer: boolean, prevData: {actionName: string; prevState: RootState}): void | Promise<void> {
     let logs: [{id: number; isActive: boolean}, string, any[], string[], string[], object, boolean];
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
@@ -152,7 +179,7 @@ export function createStore<S extends State = any>(
     const commonHandlers = handlersMap[action.type];
     const universalActionType = actionName.replace(new RegExp(`[^${coreConfig.NSP}]+`), '*');
     const universalHandlers = handlersMap[universalActionType];
-    const handlers: ActionHandlerList = {...commonHandlers, ...universalHandlers};
+    const handlers = {...commonHandlers, ...universalHandlers};
     const handlerModuleNames = Object.keys(handlers);
     if (handlerModuleNames.length > 0) {
       const orderList: string[] = [];
@@ -197,7 +224,7 @@ export function createStore<S extends State = any>(
         //logger前置更符合日志逻辑，store.update可能同步引起ui更新、同步引起另一个action
         devLogger(...logs);
         logger && logger(...logs);
-        update(actionName, newState as S);
+        update(actionName, newState);
       } else {
         logs = [{id: sid, isActive: _isActive}, actionName, actionData, action.priority || [], orderList, getState(), true];
         devLogger(...logs);
@@ -225,38 +252,17 @@ export function createStore<S extends State = any>(
   }
 
   const middlewareAPI = {
-    getState,
+    getStore: () => store,
     dispatch: (action: Action) => dispatch(action),
   };
 
-  const preMiddleware: IStoreMiddleware = () => (next) => (action) => {
-    if (action.type === ActionTypes.Error) {
-      const actionData = getActionData(action);
-      if (isProcessedError(actionData[0])) {
-        return undefined;
-      }
-      actionData[0] = setProcessedError(actionData[0], true);
-    }
-    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
-    if (env.isServer && actionName === ActionTypes.MLoading) {
-      return undefined;
-    }
-    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!injectedModules[moduleName]) {
-        const result: void | Promise<void> = loadModel(moduleName, store);
-        if (isPromise(result)) {
-          return result.then(() => next(action));
-        }
-      }
-    }
-    return next(action);
-  };
   const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map((middleware) => middleware(middlewareAPI));
   dispatch = compose(...chain)(_dispatch);
 
-  const store: IStore<S> = {
+  const store: EStore = {
     sid,
     getState,
+    getRouteParams,
     subscribe,
     dispatch,
     router,
@@ -270,5 +276,24 @@ export function createStore<S extends State = any>(
     setActive,
     options,
   };
+
   return store;
+}
+
+export const errorProcessed = '__eluxProcessed__';
+
+export function isProcessedError(error: any): boolean {
+  return error && !!error[errorProcessed];
+}
+
+export function setProcessedError(error: any, processed: boolean): {[errorProcessed]: boolean; [key: string]: any} {
+  if (typeof error !== 'object') {
+    error = {message: error};
+  }
+  Object.defineProperty(error, errorProcessed, {value: processed, enumerable: false, writable: true});
+  return error;
+}
+
+export function getActionData(action: Action): any[] {
+  return Array.isArray(action.payload) ? action.payload : [];
 }

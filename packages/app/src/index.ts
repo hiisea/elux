@@ -1,132 +1,48 @@
 import {
   env,
-  getRootModuleAPI,
+  getModuleMap,
   buildConfigSetter,
   initApp,
   setCoreConfig,
-  IStore,
+  UStore,
   LoadComponent,
   ModuleGetter,
-  IStoreMiddleware,
-  IStoreLogger,
-  RootModuleFacade,
-  RootModuleAPI,
-  RootModuleActions,
-  ICoreRouter,
-  State,
+  StoreMiddleware,
+  StoreLogger,
+  RootState,
+  coreConfig,
+  Facade,
+  FacadeStates,
+  FacadeModules,
+  FacadeActions,
 } from '@elux/core';
 
-import {setRouteConfig, IEluxRouter, routeConfig, routeMeta, RouteState} from '@elux/route';
+import {setRouteConfig, URouter, BaseEluxRouter, toURouter} from '@elux/route';
 
-export {
-  ActionTypes,
-  LoadingState,
-  env,
-  effect,
-  errorAction,
-  reducer,
-  action,
-  mutation,
-  setLoading,
-  logger,
-  isServer,
-  serverSide,
-  clientSide,
-  deepClone,
-  deepMerge,
-  deepMergeState,
-  exportModule,
-  isProcessedError,
-  setProcessedError,
-  exportView,
-  exportComponent,
-  modelHotReplacement,
-  EmptyModuleHandlers,
-  TaskCounter,
-  SingleDispatcher,
-  CoreModuleHandlers as BaseModuleHandlers,
-  errorProcessed,
-} from '@elux/core';
-export {RouteActionTypes, location, createRouteModule, safeJsonParse} from '@elux/route';
-export type {
-  RootModuleFacade as Facade,
-  Dispatch,
-  IStore,
-  EluxComponent,
-  LoadComponent,
-  ICoreRouter,
-  ModuleGetter,
-  IStoreMiddleware,
-  IStoreLogger,
-  IFlux,
-  RootModuleAPI,
-  RootModuleActions,
-  GetState,
-  State,
-  ICoreRouteState,
-  IModuleHandlersClass,
-  PickActions,
-  ModuleFacade,
-  GetPromiseModule,
-  ReturnComponents,
-  CommonModule,
-  IModuleHandlers,
-  GetPromiseComponent,
-  ActionsThis,
-  Action,
-  HandlerThis,
-  PickHandler,
-} from '@elux/core';
-export type {
-  LocationState,
-  PagenameMap,
-  NativeLocationMap,
-  HistoryAction,
-  EluxLocation,
-  NativeLocation,
-  StateLocation,
-  RouteState,
-  DeepPartial,
-  IEluxRouter,
-  RootParams,
-  ILocationTransform,
-  IHistoryRecord,
-} from '@elux/route';
-
-/**
- * @internal
- */
+/*** @public */
 export type ComputedStore<T> = {[K in keyof T]-?: () => T[K]};
 
 const appMeta: {
   SSRTPL: string;
-  router: IEluxRouter;
+  router: URouter;
 } = {
   router: null as any,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
 };
 
-/**
- * @internal
- */
 export const appConfig: {
   loadComponent: LoadComponent;
-  useRouter: () => ICoreRouter;
-  useStore: () => IStore;
+  useRouter: () => URouter;
+  useStore: () => UStore;
 } = {
   loadComponent: null as any,
   useRouter: null as any,
   useStore: null as any,
 };
 
-/**
- * @internal
- */
 export const setAppConfig = buildConfigSetter(appConfig);
 
-/**
- * @public
- */
+/*** @public */
 export interface UserConfig {
   maxHistory?: number;
   maxLocationCache?: number;
@@ -137,13 +53,10 @@ export interface UserConfig {
   notfoundPagename: string;
   paramsKey: string;
   AppModuleName?: string;
-  RouteModuleName?: string;
   disableNativeRouter?: boolean;
 }
 
-/**
- * @internal
- */
+/*** @public */
 export function setUserConfig(conf: UserConfig): void {
   setCoreConfig(conf);
   setRouteConfig(conf);
@@ -152,122 +65,100 @@ export function setUserConfig(conf: UserConfig): void {
   }
 }
 
-/**
- * @internal
- */
+/*** @public */
 export interface RenderOptions {
   viewName?: string;
   id?: string;
   ssrKey?: string;
 }
 
-/**
- * @internal
- */
 export interface ContextWrap {}
 
-/**
- * @internal
- */
 export type AttachMP<App> = (
   app: App,
   moduleGetter: ModuleGetter,
-  storeMiddlewares?: IStoreMiddleware[],
-  storeLogger?: IStoreLogger
+  storeMiddlewares?: StoreMiddleware[],
+  storeLogger?: StoreLogger
 ) => App & {
-  render(): {store: IStore; context: ContextWrap};
+  render(): {store: UStore; context: ContextWrap};
 };
 
-/**
- * @internal
- */
 export type CreateMP = (
   moduleGetter: ModuleGetter,
-  storeMiddlewares?: IStoreMiddleware[],
-  storeLogger?: IStoreLogger
+  storeMiddlewares?: StoreMiddleware[],
+  storeLogger?: StoreLogger
 ) => {
-  render(): {store: IStore; context: ContextWrap};
+  render(): {store: UStore; context: ContextWrap};
 };
 
-/**
- * @internal
- */
+/*** @public */
 export type CreateApp<INS = {}> = (
   moduleGetter: ModuleGetter,
-  storeMiddlewares?: IStoreMiddleware[],
-  storeLogger?: IStoreLogger
+  storeMiddlewares?: StoreMiddleware[],
+  storeLogger?: StoreLogger
 ) => INS & {
   render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
 };
 
-/**
- * @internal
- */
+/*** @public */
 export type CreateSSR<INS = {}> = (
   moduleGetter: ModuleGetter,
   url: string,
   nativeData: any,
-  storeMiddlewares?: IStoreMiddleware[],
-  storeLogger?: IStoreLogger
+  storeMiddlewares?: StoreMiddleware[],
+  storeLogger?: StoreLogger
 ) => INS & {
   render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
 };
 
-/**
- * @internal
- */
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
-  router?: IEluxRouter<any, string>;
+  router?: URouter;
 }
 
-/**
- * @internal
- */
-export function createBaseMP<INS = {}, S extends State = any>(
+export function createBaseMP<INS = {}>(
   ins: INS,
-  router: IEluxRouter,
+  router: BaseEluxRouter,
   render: (eluxContext: EluxContext, ins: INS) => any,
-  storeInitState: (data: S) => S,
-  storeMiddlewares: IStoreMiddleware[] = [],
-  storeLogger?: IStoreLogger
+  storeInitState: (data: RootState) => RootState,
+  storeMiddlewares: StoreMiddleware[] = [],
+  storeLogger?: StoreLogger
 ): INS & {
-  render(): {store: IStore; context: ContextWrap};
+  render(): {store: UStore; context: ContextWrap};
 } {
-  appMeta.router = router;
+  const urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render() {
-      const storeData = {} as S;
-      const {store} = initApp<S>(router, storeData, storeInitState, storeMiddlewares, storeLogger);
-      const context: ContextWrap = render({deps: {}, router, documentHead: ''}, ins);
+      const storeData: RootState = {};
+      const {store} = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger);
+      const context: ContextWrap = render({deps: {}, router: urouter, documentHead: ''}, ins);
       return {store, context};
     },
   });
 }
 
-/**
- * @internal
- */
-export function createBaseApp<INS = {}, S extends State = any>(
+export function createBaseApp<INS = {}>(
   ins: INS,
-  router: IEluxRouter,
-  render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS, store: IStore) => void,
-  storeInitState: (data: S) => S,
-  storeMiddlewares: IStoreMiddleware[] = [],
-  storeLogger?: IStoreLogger
+  router: BaseEluxRouter,
+  render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS, store: UStore) => void,
+  storeInitState: (data: RootState) => RootState,
+  storeMiddlewares: StoreMiddleware[] = [],
+  storeLogger?: StoreLogger
 ): INS & {
   render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
 } {
-  appMeta.router = router;
+  const urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
       const {state, components = []}: {state?: Record<string, any>; components: string[]} = env[ssrKey] || {};
       return router.initialize.then((routeState) => {
-        const storeData = {[routeConfig.RouteModuleName]: routeState, ...state} as S;
-        const {store, AppView, setup} = initApp<S>(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components);
+        const storeData: RootState = {[coreConfig.RouteModuleName]: routeState, ...state};
+        const {store, AppView, setup} = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components);
         return setup.then(() => {
-          render(id, AppView, {deps: {}, router, documentHead: ''}, !!env[ssrKey], ins, store);
+          render(id, AppView, {deps: {}, router: urouter, documentHead: ''}, !!env[ssrKey], ins, store);
           //return store;
         });
       });
@@ -275,28 +166,26 @@ export function createBaseApp<INS = {}, S extends State = any>(
   });
 }
 
-/**
- * @internal
- */
-export function createBaseSSR<INS = {}, S extends State = any>(
+export function createBaseSSR<INS = {}>(
   ins: INS,
-  router: IEluxRouter,
-  render: (id: string, component: any, eluxContext: EluxContext, ins: INS, store: IStore) => Promise<string>,
-  storeInitState: (data: S) => S,
-  storeMiddlewares: IStoreMiddleware[] = [],
-  storeLogger?: IStoreLogger
+  router: BaseEluxRouter,
+  render: (id: string, component: any, eluxContext: EluxContext, ins: INS, store: UStore) => Promise<string>,
+  storeInitState: (data: RootState) => RootState,
+  storeMiddlewares: StoreMiddleware[] = [],
+  storeLogger?: StoreLogger
 ): INS & {
   render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
 } {
-  appMeta.router = router;
+  const urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
       return router.initialize.then((routeState) => {
-        const storeData: S = {[routeConfig.RouteModuleName]: routeState} as any;
-        const {store, AppView, setup} = initApp<S>(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName);
+        const storeData: RootState = {[coreConfig.RouteModuleName]: routeState};
+        const {store, AppView, setup} = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName);
         return setup.then(() => {
           const state = store.getState();
-          const eluxContext: EluxContext = {deps: {}, router, documentHead: ''};
+          const eluxContext: EluxContext = {deps: {}, router: urouter, documentHead: ''};
           return render(id, AppView, eluxContext, ins, store).then((html) => {
             const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
             if (match) {
@@ -316,43 +205,32 @@ export function createBaseSSR<INS = {}, S extends State = any>(
   });
 }
 
-/**
- * @internal
- */
+/*** @public */
 export function patchActions(typeName: string, json?: string): void {
   if (json) {
-    getRootModuleAPI(JSON.parse(json));
+    getModuleMap(JSON.parse(json));
   }
 }
 
-/**
- * @public
- */
-export type GetBaseAPP<A extends RootModuleFacade, LoadComponentOptions, R extends string = 'route', NT = unknown> = {
-  State: {[M in keyof A]: A[M]['state']};
-  RouteParams: {[M in keyof A]?: A[M]['params']};
-  RouteState: RouteState<{[M in keyof A]?: A[M]['params']}>;
-  Router: IEluxRouter<{[M in keyof A]: A[M]['params']}, Extract<keyof A[R]['components'], string>, NT>;
-  GetActions<N extends keyof A>(...args: N[]): {[K in N]: A[K]['actions']};
-  LoadComponent: LoadComponent<A, LoadComponentOptions>;
-  Modules: RootModuleAPI<A>;
-  Actions: RootModuleActions<A>;
-  Pagename: keyof A[R]['components'];
-  Pagenames: {[K in keyof A[R]['components']]: K};
+/*** @public */
+export type GetBaseFacade<F extends Facade, LoadComponentOptions, R extends string> = {
+  State: FacadeStates<F, R>;
+  GetActions<N extends Exclude<keyof F, R>>(...args: N[]): {[K in N]: F[K]['actions']};
+  LoadComponent: LoadComponent<F, LoadComponentOptions>;
+  Modules: FacadeModules<F, R>;
+  Actions: FacadeActions<F, R>;
 };
 
-/**
- * @internal
- */
-export function getApp<T extends {State: any; GetActions: any; LoadComponent: any; Modules: any; Pagenames: any; Router: any}>(
+/*** @public */
+export function getApi<T extends {State: any; GetActions: any; LoadComponent: any; Modules: any}, R extends URouter>(
   demoteForProductionOnly?: boolean,
   injectActions?: Record<string, string[]>
-): Pick<T, 'GetActions' | 'LoadComponent' | 'Modules' | 'Pagenames'> & {
-  GetRouter: () => T['Router'];
-  useRouter: () => T['Router'];
-  useStore: () => IStore<T['State']>;
+): Pick<T, 'GetActions' | 'LoadComponent' | 'Modules'> & {
+  GetRouter: () => R;
+  useRouter: () => R;
+  useStore: () => UStore<T['State'], R['routeState']['params']>;
 } {
-  const modules = getRootModuleAPI(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+  const modules = getModuleMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   return {
     GetActions: (...args: string[]) => {
       return args.reduce((prev, moduleName) => {
@@ -360,16 +238,15 @@ export function getApp<T extends {State: any; GetActions: any; LoadComponent: an
         return prev;
       }, {});
     },
-    useRouter: appConfig.useRouter,
+    useRouter: appConfig.useRouter as any,
     useStore: appConfig.useStore,
     GetRouter: () => {
       if (env.isServer) {
         throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
       }
-      return appMeta.router;
+      return appMeta.router as any;
     },
     LoadComponent: appConfig.loadComponent,
     Modules: modules,
-    Pagenames: routeMeta.pagenames,
   };
 }

@@ -1,10 +1,13 @@
 import {Fragment, h, VNode, Comment} from 'vue';
 
-interface Props {
+/*** @public */
+export interface SwitchProps {
   elseView?: VNode;
 }
+
+/*** @public */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function (props: Props, context: {slots: {default?: () => VNode[]; elseView?: () => VNode[]}}) {
+export default function (props: SwitchProps, context: {slots: {default?: () => VNode[]; elseView?: () => VNode[]}}) {
   const arr: VNode[] = [];
   const children: VNode[] = context.slots.default ? context.slots.default() : [];
   children.forEach((item) => {

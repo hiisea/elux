@@ -354,7 +354,7 @@ var LocationTransform = function () {
       if ((0, _core.isPromise)(modulesOrPromise)) {
         return modulesOrPromise.then(function (modules) {
           modules.forEach(function (module) {
-            def[module.moduleName] = module.params;
+            def[module.moduleName] = module.routeParams;
           });
 
           var _params = assignDefaultData(payload);
@@ -372,7 +372,7 @@ var LocationTransform = function () {
 
       var modules = modulesOrPromise;
       modules.forEach(function (module) {
-        def[module.moduleName] = module.params;
+        def[module.moduleName] = module.routeParams;
       });
 
       var _params = assignDefaultData(payload);
@@ -518,11 +518,14 @@ var defaultNativeLocationMap = {
   }
 };
 
-function createRouteModule(pagenameMap, nativeLocationMap) {
+function createRouteModule(moduleName, pagenameMap, nativeLocationMap) {
   if (nativeLocationMap === void 0) {
     nativeLocationMap = defaultNativeLocationMap;
   }
 
+  (0, _core.setCoreConfig)({
+    RouteModuleName: moduleName
+  });
   var pagenames = Object.keys(pagenameMap);
 
   var _pagenameMap = pagenames.sort(function (a, b) {
@@ -532,18 +535,17 @@ function createRouteModule(pagenameMap, nativeLocationMap) {
     var _pagenameMap$pagename = pagenameMap[pagename],
         argsToParams = _pagenameMap$pagename.argsToParams,
         paramsToArgs = _pagenameMap$pagename.paramsToArgs,
-        page = _pagenameMap$pagename.page;
+        pageData = _pagenameMap$pagename.pageData;
     map[fullPagename] = {
       argsToParams: argsToParams,
       paramsToArgs: paramsToArgs
     };
-    _basic.routeMeta.pagenames[pagename] = pagename;
-    _basic.routeMeta.pages[pagename] = page;
+    _basic.routeMeta.pageDatas[pagename] = pageData;
     return map;
   }, {});
 
   _basic.routeMeta.pagenameMap = _pagenameMap;
   _basic.routeMeta.pagenameList = Object.keys(_pagenameMap);
   _basic.routeMeta.nativeLocationMap = nativeLocationMap;
-  return (0, _core.exportModule)(_basic.routeConfig.RouteModuleName, _core.RouteModuleHandlers, {}, {});
+  return (0, _core.exportModule)(moduleName, _core.RouteModel, {}, '/index');
 }

@@ -9,7 +9,7 @@ var _vue = require("vue");
 
 var _base = require("./base");
 
-var loadComponent = function loadComponent(moduleName, componentName, options) {
+var vueLoadComponent = function vueLoadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
@@ -32,7 +32,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     var errorMessage = '';
 
     try {
-      result = (0, _core.loadComponet)(moduleName, componentName, store, deps || {});
+      result = (0, _core.loadComponent)(moduleName, componentName, store, deps || {});
     } catch (e) {
       _core.env.console.error(e);
 
@@ -63,5 +63,5 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   return component;
 };
 
-var _default = loadComponent;
+var _default = vueLoadComponent;
 exports.default = _default;

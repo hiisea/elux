@@ -1,10 +1,10 @@
 import env from './env';
-import { coreConfig } from './basic';
-import { TaskCounter } from './sprite';
+import { coreConfig, TaskCounter } from './basic';
 export var ActionTypes = {
   MLoading: 'Loading',
   MInit: 'Init',
-  MReInit: 'ReInit',
+  MRouteTestChange: 'RouteTestChange',
+  MRouteBeforeChange: 'RouteBeforeChange',
   MRouteChange: 'RouteChange',
   Error: "Elux" + coreConfig.NSP + "Error"
 };
@@ -17,6 +17,18 @@ export function errorAction(error) {
 export function routeChangeAction(routeState) {
   return {
     type: "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes.MRouteChange,
+    payload: [routeState]
+  };
+}
+export function routeBeforeChangeAction(routeState) {
+  return {
+    type: "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes.MRouteBeforeChange,
+    payload: [routeState]
+  };
+}
+export function routeTestChangeAction(routeState) {
+  return {
+    type: "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes.MRouteTestChange,
     payload: [routeState]
   };
 }
@@ -37,23 +49,6 @@ export function moduleRouteChangeAction(moduleName, params, action) {
     type: "" + moduleName + coreConfig.NSP + ActionTypes.MRouteChange,
     payload: [params, action]
   };
-}
-export function setLoading(store, item, moduleName, groupName) {
-  var key = moduleName + coreConfig.NSP + groupName;
-  var loadings = store.loadingGroups;
-
-  if (!loadings[key]) {
-    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
-    loadings[key].addListener(function (loadingState) {
-      var _moduleLoadingAction;
-
-      var action = moduleLoadingAction(moduleName, (_moduleLoadingAction = {}, _moduleLoadingAction[groupName] = loadingState, _moduleLoadingAction));
-      store.dispatch(action);
-    });
-  }
-
-  loadings[key].addItem(item);
-  return item;
 }
 export function reducer(target, key, descriptor) {
   if (!key && !descriptor) {
@@ -112,9 +107,7 @@ export function effect(loadingKey) {
     return target.descriptor === descriptor ? target : descriptor;
   };
 }
-export var mutation = reducer;
-export var action = effect;
-export function logger(before, after) {
+export function effectLogger(before, after) {
   return function (target, key, descriptor) {
     if (!key && !descriptor) {
       key = target.key;
@@ -129,4 +122,21 @@ export function logger(before, after) {
 
     fun.__decorators__.push([before, after]);
   };
+}
+export function setLoading(store, item, moduleName, groupName) {
+  var key = moduleName + coreConfig.NSP + groupName;
+  var loadings = store.loadingGroups;
+
+  if (!loadings[key]) {
+    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
+    loadings[key].addListener(function (loadingState) {
+      var _moduleLoadingAction;
+
+      var action = moduleLoadingAction(moduleName, (_moduleLoadingAction = {}, _moduleLoadingAction[groupName] = loadingState, _moduleLoadingAction));
+      store.dispatch(action);
+    });
+  }
+
+  loadings[key].addItem(item);
+  return item;
 }

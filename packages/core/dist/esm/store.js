@@ -1,61 +1,104 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import env from './env';
-import { isPromise } from './sprite';
+import { isPromise, compose } from './utils';
 import { createRedux } from './redux';
-import { coreConfig, MetaData } from './basic';
-import { ActionTypes, errorAction } from './actions';
-import { loadModel } from './inject';
-import { routeMiddleware } from './router';
 import { devLogger } from './devtools';
-export var errorProcessed = '__eluxProcessed__';
-export function isProcessedError(error) {
-  return error && !!error[errorProcessed];
-}
-export function setProcessedError(error, processed) {
-  if (typeof error !== 'object') {
-    error = {
-      message: error
+import { MetaData, coreConfig } from './basic';
+import { ActionTypes, moduleRouteChangeAction, errorAction } from './actions';
+import { loadModel } from './inject';
+export var routeMiddleware = function routeMiddleware(_ref) {
+  var dispatch = _ref.dispatch,
+      getStore = _ref.getStore;
+  return function (next) {
+    return function (action) {
+      if (action.type === "" + coreConfig.RouteModuleName + coreConfig.NSP + ActionTypes.MRouteChange) {
+        var existsModules = Object.keys(getStore().getState()).reduce(function (obj, moduleName) {
+          obj[moduleName] = true;
+          return obj;
+        }, {});
+        var result = next(action);
+        var _ref2 = action.payload,
+            routeState = _ref2[0];
+        Object.keys(routeState.params).forEach(function (moduleName) {
+          var moduleState = routeState.params[moduleName];
+
+          if (moduleState && Object.keys(moduleState).length > 0) {
+            if (existsModules[moduleName]) {
+              dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
+            }
+          }
+        });
+        return result;
+      } else {
+        return next(action);
+      }
     };
-  }
+  };
+};
+export function forkStore(originalStore, newRouteState) {
+  var _createStore;
 
-  Object.defineProperty(error, errorProcessed, {
-    value: processed,
-    enumerable: false,
-    writable: true
-  });
-  return error;
+  var sid = originalStore.sid,
+      _originalStore$option = originalStore.options,
+      initState = _originalStore$option.initState,
+      middlewares = _originalStore$option.middlewares,
+      logger = _originalStore$option.logger,
+      router = originalStore.router;
+  return createStore(sid + 1, router, (_createStore = {}, _createStore[coreConfig.RouteModuleName] = newRouteState, _createStore), initState, middlewares, logger);
 }
-export function getActionData(action) {
-  return Array.isArray(action.payload) ? action.payload : [];
-}
 
-function compose() {
-  for (var _len = arguments.length, funcs = new Array(_len), _key = 0; _key < _len; _key++) {
-    funcs[_key] = arguments[_key];
-  }
+var preMiddleware = function preMiddleware(_ref3) {
+  var getStore = _ref3.getStore;
+  return function (next) {
+    return function (action) {
+      if (action.type === ActionTypes.Error) {
+        var actionData = getActionData(action);
 
-  if (funcs.length === 0) {
-    return function (arg) {
-      return arg;
+        if (isProcessedError(actionData[0])) {
+          return undefined;
+        }
+
+        actionData[0] = setProcessedError(actionData[0], true);
+      }
+
+      var _action$type$split = action.type.split(coreConfig.NSP),
+          moduleName = _action$type$split[0],
+          actionName = _action$type$split[1];
+
+      if (env.isServer && actionName === ActionTypes.MLoading) {
+        return undefined;
+      }
+
+      if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
+        var store = getStore();
+
+        if (!store.injectedModules[moduleName]) {
+          var result = loadModel(moduleName, store);
+
+          if (isPromise(result)) {
+            return result.then(function () {
+              return next(action);
+            });
+          }
+        }
+      }
+
+      return next(action);
     };
-  }
-
-  if (funcs.length === 1) {
-    return funcs[0];
-  }
-
-  return funcs.reduce(function (a, b) {
-    return function () {
-      return a(b.apply(void 0, arguments));
-    };
-  });
-}
+  };
+};
 
 export function createStore(sid, router, data, initState, middlewares, logger) {
   var redux = createRedux(initState(data));
   var getState = redux.getState,
       subscribe = redux.subscribe,
       _update = redux.update;
+
+  var getRouteParams = function getRouteParams(moduleName) {
+    var routeState = getState(coreConfig.RouteModuleName);
+    return moduleName ? routeState.params[moduleName] : routeState.params;
+  };
+
   var options = {
     initState: initState,
     logger: logger,
@@ -241,50 +284,13 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
   }
 
   var middlewareAPI = {
-    getState: getState,
+    getStore: function getStore() {
+      return store;
+    },
     dispatch: function dispatch(action) {
       return _dispatch2(action);
     }
   };
-
-  var preMiddleware = function preMiddleware() {
-    return function (next) {
-      return function (action) {
-        if (action.type === ActionTypes.Error) {
-          var actionData = getActionData(action);
-
-          if (isProcessedError(actionData[0])) {
-            return undefined;
-          }
-
-          actionData[0] = setProcessedError(actionData[0], true);
-        }
-
-        var _action$type$split = action.type.split(coreConfig.NSP),
-            moduleName = _action$type$split[0],
-            actionName = _action$type$split[1];
-
-        if (env.isServer && actionName === ActionTypes.MLoading) {
-          return undefined;
-        }
-
-        if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-          if (!injectedModules[moduleName]) {
-            var result = loadModel(moduleName, store);
-
-            if (isPromise(result)) {
-              return result.then(function () {
-                return next(action);
-              });
-            }
-          }
-        }
-
-        return next(action);
-      };
-    };
-  };
-
   var chain = [preMiddleware, routeMiddleware].concat(middlewares || []).map(function (middleware) {
     return middleware(middlewareAPI);
   });
@@ -292,6 +298,7 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
   var store = {
     sid: sid,
     getState: getState,
+    getRouteParams: getRouteParams,
     subscribe: subscribe,
     dispatch: _dispatch2,
     router: router,
@@ -306,4 +313,25 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
     options: options
   };
   return store;
+}
+export var errorProcessed = '__eluxProcessed__';
+export function isProcessedError(error) {
+  return error && !!error[errorProcessed];
+}
+export function setProcessedError(error, processed) {
+  if (typeof error !== 'object') {
+    error = {
+      message: error
+    };
+  }
+
+  Object.defineProperty(error, errorProcessed, {
+    value: processed,
+    enumerable: false,
+    writable: true
+  });
+  return error;
+}
+export function getActionData(action) {
+  return Array.isArray(action.payload) ? action.payload : [];
 }

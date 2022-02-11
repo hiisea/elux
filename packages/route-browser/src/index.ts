@@ -1,16 +1,15 @@
-import {BaseEluxRouter, BaseNativeRouter, RootParams, ILocationTransform, setRouteConfig, routeConfig, urlParser} from '@elux/route';
-import {env} from '@elux/core';
+import {BaseEluxRouter, BaseNativeRouter, ULocationTransform, setRouteConfig, routeConfig, urlParser} from '@elux/route';
+import {env, UNListener} from '@elux/core';
 import {createBrowserHistory as _createBrowserHistory} from 'history';
 
 setRouteConfig({notifyNativeRouter: {root: true, internal: true}});
 
-type UnregisterCallback = () => void;
 export type Action = 'PUSH' | 'POP' | 'REPLACE';
 export type LocationData = {pathname: string; search: string; hash: string; state?: string};
 export interface IHistory {
   push(url: string): void;
   replace(url: string): void;
-  block(callback: (locationData: LocationData, action: Action) => string | false | void): UnregisterCallback;
+  block(callback: (locationData: LocationData, action: Action) => string | false | void): UNListener;
   location: {pathname: string; search: string};
 }
 
@@ -35,7 +34,7 @@ export function createBrowserHistory(): IHistory {
 }
 
 export class BrowserNativeRouter extends BaseNativeRouter {
-  private _unlistenHistory: UnregisterCallback | undefined;
+  private _unlistenHistory: UNListener | undefined;
 
   constructor(public _history: IHistory) {
     super();
@@ -52,28 +51,28 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     }
   }
 
-  protected push(location: ILocationTransform, key: string): void | true | Promise<void> {
+  protected push(location: ULocationTransform, key: string): void | true | Promise<void> {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
     }
     return undefined;
   }
 
-  protected replace(location: ILocationTransform, key: string): void | true | Promise<void> {
+  protected replace(location: ULocationTransform, key: string): void | true | Promise<void> {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
     }
     return undefined;
   }
 
-  protected relaunch(location: ILocationTransform, key: string): void | true | Promise<void> {
+  protected relaunch(location: ULocationTransform, key: string): void | true | Promise<void> {
     if (!env.isServer) {
       this._history.push(location.getNativeUrl(true));
     }
     return undefined;
   }
 
-  protected back(location: ILocationTransform, index: [number, number], key: string): void | true | Promise<void> {
+  protected back(location: ULocationTransform, index: [number, number], key: string): void | true | Promise<void> {
     if (!env.isServer) {
       this._history.replace(location.getNativeUrl(true));
     }
@@ -85,17 +84,8 @@ export class BrowserNativeRouter extends BaseNativeRouter {
   }
 }
 
-export class EluxRouter<P extends RootParams, N extends string, NT = unknown> extends BaseEluxRouter<P, N, NT> {
-  public declare nativeRouter: BrowserNativeRouter;
-
-  constructor(nativeUrl: string, browserNativeRouter: BrowserNativeRouter, nativeData: NT) {
-    super(nativeUrl, browserNativeRouter, nativeData);
-  }
-}
-
-export function createRouter<P extends RootParams, N extends string, NT = unknown>(browserHistory: IHistory, nativeData: NT): EluxRouter<P, N, NT> {
+export function createRouter(browserHistory: IHistory, nativeData: unknown): BaseEluxRouter {
   const browserNativeRouter = new BrowserNativeRouter(browserHistory);
   const {pathname, search} = browserHistory.location;
-  const router = new EluxRouter<P, N, NT>(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
-  return router;
+  return new BaseEluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
 }

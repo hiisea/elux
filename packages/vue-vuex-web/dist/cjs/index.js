@@ -1,26 +1,36 @@
 "use strict";
 
 exports.__esModule = true;
-var _exportNames = {
-  DocumentHead: true,
-  Switch: true,
-  Else: true,
-  Link: true,
-  setConfig: true,
-  createApp: true,
-  createSSR: true,
-  loadComponent: true
-};
-exports.createSSR = exports.createApp = exports.Switch = exports.Link = exports.Else = exports.DocumentHead = void 0;
+exports.safeJsonParse = exports.reducer = exports.patchActions = exports.modelHotReplacement = exports.location = exports.loadModel = exports.isServer = exports.getModule = exports.getComponent = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.createSSR = exports.createRouteModule = exports.createApp = exports.Switch = exports.RouteModel = exports.LoadingState = exports.Link = exports.EmptyModel = exports.Else = exports.DocumentHead = exports.BaseModel = void 0;
 exports.setConfig = setConfig;
+exports.setLoading = void 0;
 
 var _vue = require("vue");
 
 var _core = require("@elux/core");
 
+exports.errorAction = _core.errorAction;
+exports.LoadingState = _core.LoadingState;
+exports.env = _core.env;
+exports.effect = _core.effect;
+exports.reducer = _core.reducer;
+exports.setLoading = _core.setLoading;
+exports.effectLogger = _core.effectLogger;
+exports.isServer = _core.isServer;
+exports.deepMerge = _core.deepMerge;
+exports.exportModule = _core.exportModule;
+exports.exportView = _core.exportView;
+exports.exportComponent = _core.exportComponent;
+exports.modelHotReplacement = _core.modelHotReplacement;
+exports.EmptyModel = _core.EmptyModel;
+exports.BaseModel = _core.BaseModel;
+exports.RouteModel = _core.RouteModel;
+exports.loadModel = _core.loadModel;
+exports.getModule = _core.getModule;
+exports.getComponent = _core.getComponent;
+
 var _vueComponents = require("@elux/vue-components");
 
-exports.loadComponent = _vueComponents.loadComponent;
 exports.DocumentHead = _vueComponents.DocumentHead;
 exports.Switch = _vueComponents.Switch;
 exports.Else = _vueComponents.Else;
@@ -30,15 +40,16 @@ var _stage = require("@elux/vue-components/stage");
 
 var _app = require("@elux/app");
 
-Object.keys(_app).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _app[key]) return;
-  exports[key] = _app[key];
-});
+exports.getApi = _app.getApi;
+exports.patchActions = _app.patchActions;
 
 var _routeBrowser = require("@elux/route-browser");
 
+var _route = require("@elux/route");
+
+exports.location = _route.location;
+exports.createRouteModule = _route.createRouteModule;
+exports.safeJsonParse = _route.safeJsonParse;
 (0, _core.setCoreConfig)({
   MutableData: true
 });

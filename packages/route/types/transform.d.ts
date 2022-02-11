@@ -1,4 +1,5 @@
-import { NativeLocationMap, PagenameMap, RouteState, RootParams, EluxLocation, NativeLocation, StateLocation } from './basic';
+import { RootState, RouteModel } from '@elux/core';
+import { NativeLocationMap, PagenameMap, EluxLocation, NativeLocation, StateLocation } from './basic';
 export declare const urlParser: {
     type: {
         e: string;
@@ -26,21 +27,22 @@ export declare const urlParser: {
     withoutProtocol(url: string): string;
 };
 /*** @public */
-export interface ILocationTransform<P extends RootParams = any> {
+export interface ULocationTransform {
     getPagename(): string;
     getEluxUrl(): string;
     getNativeUrl(withoutProtocol?: boolean): string;
-    getParams(): Partial<P> | Promise<Partial<P>>;
+    getParams(): RootState | Promise<RootState>;
 }
-/*** @internal */
-export declare function location<P extends RootParams = any>(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ILocationTransform<P>;
-/*** @internal */
-export declare function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeLocationMap?: NativeLocationMap): {
-    moduleName: any;
-    model: (store: import("@elux/core").IStore<any>) => void | Promise<void>;
-    state: RouteState<any>;
-    params: {};
-    actions: import("@elux/core").PickActions<import("@elux/core").IModuleHandlers<RouteState<any>>>;
-    components: { [k in keyof G]: any; };
+/*** @public */
+export declare function location(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ULocationTransform;
+/*** @public */
+export declare function createRouteModule<G extends PagenameMap, N extends string>(moduleName: N, pagenameMap: G, nativeLocationMap?: NativeLocationMap): {
+    moduleName: N;
+    initModel: (store: import("@elux/core").UStore<RootState, RootState>) => void | Promise<void>;
+    state: import("@elux/core").RouteState<RootState, string>;
+    routeParams: import("@elux/core").ModuleState;
+    actions: import("@elux/core").PickActions<RouteModel>;
+    components: {};
+    data: keyof G;
 };
 //# sourceMappingURL=transform.d.ts.map

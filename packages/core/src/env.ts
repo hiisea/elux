@@ -20,9 +20,7 @@ if (typeof self !== 'undefined') {
   root = new Function('return this')();
 }
 
-/**
- * @internal
- */
+/*** @public */
 const env: EluxRuntime.ENV = root;
 
 env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;

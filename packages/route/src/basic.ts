@@ -1,16 +1,7 @@
-import {buildConfigSetter, env} from '@elux/core';
+import {buildConfigSetter, env, RootState, DeepPartial} from '@elux/core';
 
 /*** @public */
-export type HistoryAction = 'PUSH' | 'BACK' | 'REPLACE' | 'RELAUNCH';
-
-/*** @public */
-export type RootParams = Record<string, any>;
-
-/*** @public */
-export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
-
-/*** @public */
-export interface EluxLocation<P extends RootParams = any> {
+export interface EluxLocation<P extends RootState = RootState> {
   pathmatch: string;
   args: DeepPartial<P>;
 }
@@ -22,41 +13,27 @@ export interface NativeLocation {
 }
 
 /*** @public */
-export interface StateLocation<P extends RootParams = any, N extends string = string> {
+export interface StateLocation<P extends RootState = RootState, N extends string = string> {
   pagename: N;
   payload: DeepPartial<P>;
 }
 
 /*** @public */
-export interface LocationState<P extends RootParams = any> {
-  pagename: string;
-  params: Partial<P>;
-}
-
-/*** @public */
-export interface RouteState<P extends RootParams = any> {
-  action: HistoryAction;
-  key: string;
-  pagename: string;
-  params: Partial<P>;
-}
-
-/*** @internal */
 export interface NativeLocationMap {
   in(nativeLocation: NativeLocation): EluxLocation;
   out(eluxLocation: EluxLocation): NativeLocation;
 }
 
-/*** @internal */
-export interface PagenameMap {
-  [pageName: string]: {
+/*** @public */
+export type PagenameMap<P extends string = string> = {
+  [K in P]: {
     argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
-    paramsToArgs: Function; // TODO vue下类型推导出错？paramsToArgs(params: Record<string, any>): Array<any>;
-    page?: any;
+    paramsToArgs(params: Record<string, any>): Array<string | undefined>; // TODO vue下类型推导出错？paramsToArgs(params: Record<string, any>): Array<any>;
+    pageData?: any;
   };
-}
+};
 export interface RouteConfig {
-  RouteModuleName: string;
+  //RouteModuleName: string;
   maxHistory: number;
   maxLocationCache: number;
   notifyNativeRouter: {
@@ -68,7 +45,7 @@ export interface RouteConfig {
   paramsKey: string;
 }
 export const routeConfig: RouteConfig = {
-  RouteModuleName: 'route',
+  //RouteModuleName: 'route',
   maxHistory: 10,
   maxLocationCache: env.isServer ? 10000 : 500,
   notifyNativeRouter: {
@@ -83,22 +60,20 @@ export const routeConfig: RouteConfig = {
 export const setRouteConfig = buildConfigSetter(routeConfig);
 
 export const routeMeta: {
-  pagenames: Record<string, string>;
   defaultParams: Record<string, any>;
-  pages: Record<string, any>;
+  pageDatas: Record<string, any>;
   pagenameMap: Record<string, any>;
   pagenameList: string[];
   nativeLocationMap: NativeLocationMap;
 } = {
   defaultParams: {},
-  pagenames: {},
-  pages: {},
+  pageDatas: {},
   pagenameMap: {},
   pagenameList: [],
   nativeLocationMap: {} as any,
 };
 
-/*** @internal */
+/*** @public */
 export function safeJsonParse(json: string): Record<string, any> {
   if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
     return {};

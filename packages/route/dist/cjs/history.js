@@ -212,7 +212,7 @@ var RootStack = function (_RouteStack2) {
       return {
         pagename: pagename,
         store: store,
-        page: _basic.routeMeta.pages[pagename]
+        pageData: _basic.routeMeta.pageDatas[pagename]
       };
     });
   };

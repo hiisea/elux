@@ -1,8 +1,8 @@
-import {env, IStore, forkStore} from '@elux/core';
-import {routeMeta, RouteState} from './basic';
-import {ILocationTransform} from './transform';
+import {env, EStore, forkStore, RootState, RouteState} from '@elux/core';
+import {routeMeta} from './basic';
+import {ULocationTransform} from './transform';
 
-class RouteStack<T extends {destroy?: () => void; store?: IStore}> {
+class RouteStack<T extends {destroy?: () => void; store?: EStore}> {
   public records: T[] = [];
   constructor(protected limit: number) {}
 
@@ -99,19 +99,19 @@ class RouteStack<T extends {destroy?: () => void; store?: IStore}> {
 }
 
 /*** @public */
-export interface IHistoryRecord {
+export interface UHistoryRecord {
   key: string;
-  location: ILocationTransform;
+  location: ULocationTransform;
 }
 
-export class HistoryRecord implements IHistoryRecord {
+export class HistoryRecord implements UHistoryRecord {
   static id = 0;
   public readonly destroy: undefined;
   // public readonly pagename: string;
   // public readonly params: Record<string, any>;
   public readonly key: string;
   public readonly recordKey: string;
-  constructor(public readonly location: ILocationTransform, public readonly historyStack: HistoryStack) {
+  constructor(public readonly location: ULocationTransform, public readonly historyStack: HistoryStack) {
     this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
     // const {pagename, params} = location;
     // this.pagename = pagename;
@@ -124,21 +124,21 @@ export class HistoryRecord implements IHistoryRecord {
 export class HistoryStack extends RouteStack<HistoryRecord> {
   static id = 0;
   public readonly stackkey: string;
-  constructor(public readonly rootStack: RootStack, public readonly store: IStore) {
+  constructor(public readonly rootStack: RootStack, public readonly store: EStore) {
     super(20);
     this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
   }
-  push(location: ILocationTransform): HistoryRecord {
+  push(location: ULocationTransform): HistoryRecord {
     const newRecord = new HistoryRecord(location, this);
     this._push(newRecord);
     return newRecord;
   }
-  replace(location: ILocationTransform): HistoryRecord {
+  replace(location: ULocationTransform): HistoryRecord {
     const newRecord = new HistoryRecord(location, this);
     this._replace(newRecord);
     return newRecord;
   }
-  relaunch(location: ILocationTransform): HistoryRecord {
+  relaunch(location: ULocationTransform): HistoryRecord {
     const newRecord = new HistoryRecord(location, this);
     this._relaunch(newRecord);
     return newRecord;
@@ -157,22 +157,21 @@ export class HistoryStack extends RouteStack<HistoryRecord> {
   }
 }
 
-/*** @internal */
 export class RootStack extends RouteStack<HistoryStack> {
   constructor() {
     super(10);
   }
-  getCurrentPages(): {pagename: string; store: IStore; page?: any}[] {
+  getCurrentPages(): {pagename: string; store: EStore; pageData?: any}[] {
     return this.records.map((item) => {
       const store = item.store;
       const record = item.getCurrentItem();
       const pagename = record.location.getPagename();
-      return {pagename, store, page: routeMeta.pages[pagename]};
+      return {pagename, store, pageData: routeMeta.pageDatas[pagename]};
     });
   }
-  push(location: ILocationTransform): HistoryRecord {
+  push(location: ULocationTransform): HistoryRecord {
     const curHistory = this.getCurrentItem();
-    const routeState: RouteState = {pagename: location.getPagename(), params: location.getParams(), action: 'RELAUNCH', key: ''};
+    const routeState: RouteState = {pagename: location.getPagename(), params: location.getParams() as RootState, action: 'RELAUNCH', key: ''};
     const store = forkStore(curHistory.store, routeState);
     const newHistory = new HistoryStack(this, store);
     const newRecord = new HistoryRecord(location, newHistory);
@@ -180,11 +179,11 @@ export class RootStack extends RouteStack<HistoryStack> {
     this._push(newHistory);
     return newRecord;
   }
-  replace(location: ILocationTransform): HistoryRecord {
+  replace(location: ULocationTransform): HistoryRecord {
     const curHistory = this.getCurrentItem();
     return curHistory.relaunch(location);
   }
-  relaunch(location: ILocationTransform): HistoryRecord {
+  relaunch(location: ULocationTransform): HistoryRecord {
     const curHistory = this.getCurrentItem();
     const newRecord = curHistory.relaunch(location);
     this._relaunch(curHistory);

@@ -1,10 +1,10 @@
 import { Component } from 'vue';
-import { IStore, ICoreRouter } from '@elux/core';
-import { IEluxRouter } from '@elux/route';
+import { UStore } from '@elux/core';
+import { URouter } from '@elux/route';
 export declare const vueComponentsConfig: {
     setPageTitle(title: string): void;
     Provider: Component<{
-        store: IStore;
+        store: UStore;
     }>;
     LoadComponentOnError: Component<{
         message: string;
@@ -14,7 +14,7 @@ export declare const vueComponentsConfig: {
 export declare const setVueComponentsConfig: (config: Partial<{
     setPageTitle(title: string): void;
     Provider: Component<{
-        store: IStore;
+        store: UStore;
     }>;
     LoadComponentOnError: Component<{
         message: string;
@@ -24,13 +24,13 @@ export declare const setVueComponentsConfig: (config: Partial<{
 export interface EluxContext {
     deps?: Record<string, boolean>;
     documentHead: string;
-    router?: IEluxRouter;
+    router?: URouter;
 }
 export interface EluxStoreContext {
-    store: IStore;
+    store: UStore;
 }
 export declare const EluxContextKey = "__EluxContext__";
 export declare const EluxStoreContextKey = "__EluxStoreContext__";
-export declare function useRouter(): ICoreRouter;
-export declare function useStore(): IStore;
+export declare function useRouter(): URouter;
+export declare function useStore(): UStore;
 //# sourceMappingURL=base.d.ts.map

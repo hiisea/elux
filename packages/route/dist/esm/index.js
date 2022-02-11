@@ -3,11 +3,11 @@ import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitial
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import _regeneratorRuntime from "@babel/runtime/regenerator";
-import { isPromise, deepMerge, routeChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp } from '@elux/core';
+import { isPromise, deepMerge, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp } from '@elux/core';
 import { routeConfig } from './basic';
 import { RootStack, HistoryStack, HistoryRecord } from './history';
 import { location as createLocationTransform } from './transform';
-export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
+export { setRouteConfig, routeConfig, safeJsonParse } from './basic';
 export { location, createRouteModule, urlParser } from './transform';
 export var BaseNativeRouter = function () {
   function BaseNativeRouter() {
@@ -75,11 +75,9 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "routeState", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "name", routeConfig.RouteModuleName);
+    _defineProperty(_assertThisInitialized(_this2), "name", coreConfig.RouteModuleName);
 
     _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
-
-    _defineProperty(_assertThisInitialized(_this2), "injectedModules", {});
 
     _defineProperty(_assertThisInitialized(_this2), "rootStack", new RootStack());
 
@@ -229,11 +227,11 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key
               };
               _context.next = 9;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
 
             case 9:
               _context.next = 11;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
             case 11:
               if (root) {
@@ -313,11 +311,11 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key
               };
               _context2.next = 9;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
 
             case 9:
               _context2.next = 11;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
             case 11:
               if (root) {
@@ -413,11 +411,11 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key
               };
               _context3.next = 9;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
 
             case 9:
               _context3.next = 11;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
             case 11:
               if (root) {
@@ -526,11 +524,11 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
                 action: 'BACK'
               };
               _context4.next = 14;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
 
             case 14:
               _context4.next = 16;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
             case 16:
               if (index[0]) {
@@ -613,19 +611,35 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
 
   return BaseEluxRouter;
 }(MultipleDispatcher);
-export var RouteActionTypes = {
-  TestRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "TestRouteChange",
-  BeforeRouteChange: "" + routeConfig.RouteModuleName + coreConfig.NSP + "BeforeRouteChange"
-};
-export function beforeRouteChangeAction(routeState) {
+export function toURouter(router) {
+  var nativeData = router.nativeData,
+      location = router.location,
+      routeState = router.routeState,
+      initialize = router.initialize,
+      addListener = router.addListener,
+      getCurrentPages = router.getCurrentPages,
+      findRecordByKey = router.findRecordByKey,
+      findRecordByStep = router.findRecordByStep,
+      getHistoryLength = router.getHistoryLength,
+      extendCurrent = router.extendCurrent,
+      relaunch = router.relaunch,
+      push = router.push,
+      replace = router.replace,
+      back = router.back;
   return {
-    type: RouteActionTypes.BeforeRouteChange,
-    payload: [routeState]
-  };
-}
-export function testRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
+    nativeData: nativeData,
+    location: location,
+    routeState: routeState,
+    initialize: initialize,
+    addListener: addListener.bind(router),
+    getCurrentPages: getCurrentPages.bind(router),
+    findRecordByKey: findRecordByKey.bind(router),
+    findRecordByStep: findRecordByStep.bind(router),
+    extendCurrent: extendCurrent.bind(router),
+    getHistoryLength: getHistoryLength.bind(router),
+    relaunch: relaunch.bind(router),
+    push: push.bind(router),
+    replace: replace.bind(router),
+    back: back.bind(router)
   };
 }

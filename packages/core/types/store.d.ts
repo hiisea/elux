@@ -1,13 +1,12 @@
-import { Action, IStore, IStoreMiddleware, State, ICoreRouter, IStoreLogger } from './basic';
-/*** @internal */
+import { StoreMiddleware, RouteState, CoreRouter, StoreLogger, EStore, Action, RootState } from './basic';
+export declare const routeMiddleware: StoreMiddleware;
+export declare function forkStore(originalStore: EStore, newRouteState: RouteState): EStore;
+export declare function createStore(sid: number, router: CoreRouter, data: RootState, initState: (data: RootState) => RootState, middlewares?: StoreMiddleware[], logger?: StoreLogger): EStore;
 export declare const errorProcessed = "__eluxProcessed__";
-/*** @internal */
 export declare function isProcessedError(error: any): boolean;
-/*** @internal */
 export declare function setProcessedError(error: any, processed: boolean): {
     [errorProcessed]: boolean;
     [key: string]: any;
 };
 export declare function getActionData(action: Action): any[];
-export declare function createStore<S extends State = any>(sid: number, router: ICoreRouter, data: S, initState: (data: S) => S, middlewares?: IStoreMiddleware[], logger?: IStoreLogger): IStore<S>;
 //# sourceMappingURL=store.d.ts.map

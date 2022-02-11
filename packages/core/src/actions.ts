@@ -1,10 +1,6 @@
 import env from './env';
-import {Action, coreConfig, IStore, ActionHandler, IModuleHandlers} from './basic';
-import {TaskCounter, LoadingState} from './sprite';
+import {coreConfig, LoadingState, Action, ActionHandler, CommonModel, UStore, EStore, TaskCounter, RouteState, ModuleState, RootState} from './basic';
 
-/**
- * @internal
- */
 export const ActionTypes = {
   /**
    * 为模块注入加载状态时使用ActionType：moduleName.MLoading
@@ -14,67 +10,60 @@ export const ActionTypes = {
    * 模块初始化时使用ActionType：moduleName.MInit
    */
   MInit: 'Init',
-  /**
-   * 模块初始化时使用ActionType：moduleName.MReInit
-   */
-  MReInit: 'ReInit',
+  MRouteTestChange: 'RouteTestChange',
+  MRouteBeforeChange: 'RouteBeforeChange',
   MRouteChange: 'RouteChange',
   Error: `Elux${coreConfig.NSP}Error`,
 };
 
-/**
- * @internal
- */
+/*** @public */
 export function errorAction(error: Object): Action {
   return {
     type: ActionTypes.Error,
     payload: [error],
   };
 }
-export function routeChangeAction(routeState: Record<string, any>): Action {
+
+export function routeChangeAction(routeState: RouteState): Action {
   return {
     type: `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`,
     payload: [routeState],
   };
 }
-export function moduleInitAction(moduleName: string, initState: Record<string, any>): Action {
+export function routeBeforeChangeAction(routeState: RouteState): Action {
+  return {
+    type: `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteBeforeChange}`,
+    payload: [routeState],
+  };
+}
+export function routeTestChangeAction(routeState: RouteState): Action {
+  return {
+    type: `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteTestChange}`,
+    payload: [routeState],
+  };
+}
+export function moduleInitAction(moduleName: string, initState: ModuleState): Action {
   return {
     type: `${moduleName}${coreConfig.NSP}${ActionTypes.MInit}`,
     payload: [initState],
   };
 }
+
 export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}): Action {
   return {
     type: `${moduleName}${coreConfig.NSP}${ActionTypes.MLoading}`,
     payload: [loadingState],
   };
 }
-export function moduleRouteChangeAction(moduleName: string, params: Record<string, any>, action: string): Action {
+
+export function moduleRouteChangeAction(moduleName: string, params: RootState, action: string): Action {
   return {
     type: `${moduleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`,
     payload: [params, action],
   };
 }
-/**
- * @internal
- */
-export function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T {
-  const key = moduleName + coreConfig.NSP + groupName;
-  const loadings = store.loadingGroups;
-  if (!loadings[key]) {
-    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
-    loadings[key].addListener((loadingState) => {
-      const action = moduleLoadingAction(moduleName, {[groupName]: loadingState});
-      store.dispatch(action);
-    });
-  }
-  loadings[key].addItem(item);
-  return item;
-}
 
-/**
- * @internal
- */
+/*** @public */
 export function reducer(target: any, key: string, descriptor: PropertyDescriptor): any {
   if (!key && !descriptor) {
     key = target.key;
@@ -87,9 +76,7 @@ export function reducer(target: any, key: string, descriptor: PropertyDescriptor
   return target.descriptor === descriptor ? target : descriptor;
 }
 
-/**
- * @internal
- */
+/*** @public */
 export function effect(loadingKey: string | null = 'app.loading.global'): Function {
   let loadingForModuleName: string | undefined;
   let loadingForGroupName: string | undefined;
@@ -107,7 +94,7 @@ export function effect(loadingKey: string | null = 'app.loading.global'): Functi
     descriptor.enumerable = true;
     if (loadingForModuleName && loadingForGroupName && !env.isServer) {
       // eslint-disable-next-line no-inner-declarations
-      const injectLoading = function (this: IModuleHandlers, curAction: Action, promiseResult: Promise<any>) {
+      const injectLoading = function (this: CommonModel, curAction: Action, promiseResult: Promise<any>) {
         if (loadingForModuleName === 'app') {
           loadingForModuleName = coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
@@ -124,20 +111,8 @@ export function effect(loadingKey: string | null = 'app.loading.global'): Functi
   };
 }
 
-/**
- * @internal
- */
-export const mutation = reducer;
-
-/**
- * @internal
- */
-export const action = effect;
-
-/**
- * @internal
- */
-export function logger(
+/*** @public */
+export function effectLogger(
   before: (action: Action, promiseResult: Promise<any>) => void,
   after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)
 ) {
@@ -152,4 +127,19 @@ export function logger(
     }
     fun.__decorators__.push([before, after]);
   };
+}
+
+/*** @public */
+export function setLoading<T extends Promise<any>>(store: UStore, item: T, moduleName: string, groupName: string): T {
+  const key = moduleName + coreConfig.NSP + groupName;
+  const loadings = (store as EStore).loadingGroups;
+  if (!loadings[key]) {
+    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
+    loadings[key].addListener((loadingState) => {
+      const action = moduleLoadingAction(moduleName, {[groupName]: loadingState});
+      store.dispatch(action);
+    });
+  }
+  loadings[key].addItem(item);
+  return item;
 }

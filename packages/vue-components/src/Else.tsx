@@ -1,10 +1,13 @@
 import {Fragment, h, VNode, Comment} from 'vue';
 
-interface Props {
+/*** @public */
+export interface ElseProps {
   elseView?: VNode;
 }
+
+/*** @public */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function (props: Props, context: {slots: {default?: () => VNode[]; elseView?: () => VNode[]}}) {
+export default function (props: ElseProps, context: {slots: {default?: () => VNode[]; elseView?: () => VNode[]}}) {
   const arr: VNode[] = [];
   const children: VNode[] = context.slots.default ? context.slots.default() : [];
   children.forEach((item) => {

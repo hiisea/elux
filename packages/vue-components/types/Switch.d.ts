@@ -1,8 +1,10 @@
 import { VNode } from 'vue';
-interface Props {
+/*** @public */
+export interface SwitchProps {
     elseView?: VNode;
 }
-export default function (props: Props, context: {
+/*** @public */
+export default function (props: SwitchProps, context: {
     slots: {
         default?: () => VNode[];
         elseView?: () => VNode[];
@@ -10,5 +12,4 @@ export default function (props: Props, context: {
 }): VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
 }>;
-export {};
 //# sourceMappingURL=Switch.d.ts.map

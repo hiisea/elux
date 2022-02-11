@@ -1,7 +1,5 @@
-import { env, getRootModuleAPI, buildConfigSetter, initApp, setCoreConfig } from '@elux/core';
-import { setRouteConfig, routeConfig, routeMeta } from '@elux/route';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepClone, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, TaskCounter, SingleDispatcher, CoreModuleHandlers as BaseModuleHandlers, errorProcessed } from '@elux/core';
-export { RouteActionTypes, location, createRouteModule, safeJsonParse } from '@elux/route';
+import { env, getModuleMap, buildConfigSetter, initApp, setCoreConfig, coreConfig } from '@elux/core';
+import { setRouteConfig, toURouter } from '@elux/route';
 const appMeta = {
   router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
@@ -26,7 +24,8 @@ export function setUserConfig(conf) {
   }
 }
 export function createBaseMP(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
-  appMeta.router = router;
+  const urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render() {
       const storeData = {};
@@ -35,7 +34,7 @@ export function createBaseMP(ins, router, render, storeInitState, storeMiddlewar
       } = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger);
       const context = render({
         deps: {},
-        router,
+        router: urouter,
         documentHead: ''
       }, ins);
       return {
@@ -47,7 +46,8 @@ export function createBaseMP(ins, router, render, storeInitState, storeMiddlewar
   });
 }
 export function createBaseApp(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
-  appMeta.router = router;
+  const urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render({
       id = 'root',
@@ -60,7 +60,7 @@ export function createBaseApp(ins, router, render, storeInitState, storeMiddlewa
       } = env[ssrKey] || {};
       return router.initialize.then(routeState => {
         const storeData = {
-          [routeConfig.RouteModuleName]: routeState,
+          [coreConfig.RouteModuleName]: routeState,
           ...state
         };
         const {
@@ -71,7 +71,7 @@ export function createBaseApp(ins, router, render, storeInitState, storeMiddlewa
         return setup.then(() => {
           render(id, AppView, {
             deps: {},
-            router,
+            router: urouter,
             documentHead: ''
           }, !!env[ssrKey], ins, store);
         });
@@ -81,7 +81,8 @@ export function createBaseApp(ins, router, render, storeInitState, storeMiddlewa
   });
 }
 export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares = [], storeLogger) {
-  appMeta.router = router;
+  const urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render({
       id = 'root',
@@ -90,7 +91,7 @@ export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewa
     } = {}) {
       return router.initialize.then(routeState => {
         const storeData = {
-          [routeConfig.RouteModuleName]: routeState
+          [coreConfig.RouteModuleName]: routeState
         };
         const {
           store,
@@ -101,7 +102,7 @@ export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewa
           const state = store.getState();
           const eluxContext = {
             deps: {},
-            router,
+            router: urouter,
             documentHead: ''
           };
           return render(id, AppView, eluxContext, ins, store).then(html => {
@@ -124,11 +125,11 @@ export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewa
 }
 export function patchActions(typeName, json) {
   if (json) {
-    getRootModuleAPI(JSON.parse(json));
+    getModuleMap(JSON.parse(json));
   }
 }
-export function getApp(demoteForProductionOnly, injectActions) {
-  const modules = getRootModuleAPI(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+export function getApi(demoteForProductionOnly, injectActions) {
+  const modules = getModuleMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   return {
     GetActions: (...args) => {
       return args.reduce((prev, moduleName) => {
@@ -146,7 +147,6 @@ export function getApp(demoteForProductionOnly, injectActions) {
       return appMeta.router;
     },
     LoadComponent: appConfig.loadComponent,
-    Modules: modules,
-    Pagenames: routeMeta.pagenames
+    Modules: modules
   };
 }

@@ -7,7 +7,6 @@ export interface LoadComponentOptions {
     }>;
     OnLoading?: ComponentType<{}>;
 }
-/*** @internal */
-declare const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions>;
-export default loadComponent;
+declare const reactLoadComponent: LoadComponent<Record<string, any>, LoadComponentOptions>;
+export default reactLoadComponent;
 //# sourceMappingURL=loadComponent.d.ts.map

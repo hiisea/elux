@@ -1,9 +1,9 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge, routeChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp } from '@elux/core';
+import { isPromise, deepMerge, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp } from '@elux/core';
 import { routeConfig } from './basic';
 import { RootStack, HistoryStack, HistoryRecord } from './history';
 import { location as createLocationTransform } from './transform';
-export { setRouteConfig, routeConfig, routeMeta, safeJsonParse } from './basic';
+export { setRouteConfig, routeConfig, safeJsonParse } from './basic';
 export { location, createRouteModule, urlParser } from './transform';
 export class BaseNativeRouter {
   constructor() {
@@ -57,11 +57,9 @@ export class BaseEluxRouter extends MultipleDispatcher {
 
     _defineProperty(this, "routeState", void 0);
 
-    _defineProperty(this, "name", routeConfig.RouteModuleName);
+    _defineProperty(this, "name", coreConfig.RouteModuleName);
 
     _defineProperty(this, "initialize", void 0);
-
-    _defineProperty(this, "injectedModules", {});
 
     _defineProperty(this, "rootStack", new RootStack());
 
@@ -189,8 +187,8 @@ export class BaseEluxRouter extends MultipleDispatcher {
       action: 'RELAUNCH',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (root) {
       key = this.rootStack.relaunch(location).key;
@@ -230,8 +228,8 @@ export class BaseEluxRouter extends MultipleDispatcher {
       action: 'PUSH',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (root) {
       key = this.rootStack.push(location).key;
@@ -277,8 +275,8 @@ export class BaseEluxRouter extends MultipleDispatcher {
       action: 'REPLACE',
       key
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (root) {
       key = this.rootStack.replace(location).key;
@@ -338,8 +336,8 @@ export class BaseEluxRouter extends MultipleDispatcher {
       params,
       action: 'BACK'
     };
-    await this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
-    await this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
+    await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (index[0]) {
       root = true;
@@ -396,19 +394,37 @@ export class BaseEluxRouter extends MultipleDispatcher {
   }
 
 }
-export const RouteActionTypes = {
-  TestRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}TestRouteChange`,
-  BeforeRouteChange: `${routeConfig.RouteModuleName}${coreConfig.NSP}BeforeRouteChange`
-};
-export function beforeRouteChangeAction(routeState) {
+export function toURouter(router) {
+  const {
+    nativeData,
+    location,
+    routeState,
+    initialize,
+    addListener,
+    getCurrentPages,
+    findRecordByKey,
+    findRecordByStep,
+    getHistoryLength,
+    extendCurrent,
+    relaunch,
+    push,
+    replace,
+    back
+  } = router;
   return {
-    type: RouteActionTypes.BeforeRouteChange,
-    payload: [routeState]
-  };
-}
-export function testRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
+    nativeData,
+    location,
+    routeState,
+    initialize,
+    addListener: addListener.bind(router),
+    getCurrentPages: getCurrentPages.bind(router),
+    findRecordByKey: findRecordByKey.bind(router),
+    findRecordByStep: findRecordByStep.bind(router),
+    extendCurrent: extendCurrent.bind(router),
+    getHistoryLength: getHistoryLength.bind(router),
+    relaunch: relaunch.bind(router),
+    push: push.bind(router),
+    replace: replace.bind(router),
+    back: back.bind(router)
   };
 }

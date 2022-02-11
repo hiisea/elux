@@ -1,8 +1,9 @@
 import {env, isServer} from '@elux/core';
-import {inject, defineComponent} from 'vue';
+import {inject, defineComponent, DefineComponent} from 'vue';
 import {EluxContext, EluxContextKey} from './base';
 
-export interface Props {
+/*** @public */
+export interface DocumentHeadProps {
   title?: string;
   html?: string;
 }
@@ -22,15 +23,14 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
   }
 }
 
-export default defineComponent({
+/*** @public */
+const Component: DefineComponent<DocumentHeadProps> = defineComponent({
   props: {
     title: {
       type: String,
-      default: '',
     },
     html: {
       type: String,
-      default: '',
     },
   },
   data() {
@@ -41,8 +41,8 @@ export default defineComponent({
   },
   computed: {
     headText(): string {
-      const title = this.title;
-      let html = this.html;
+      const title = this.title || '';
+      let html = this.html || '';
       const eluxContext = this.eluxContext;
       if (!html) {
         html = eluxContext.documentHead || '<title>Elux</title>';
@@ -66,4 +66,6 @@ export default defineComponent({
     }
     return null;
   },
-});
+}) as any;
+
+export default Component;

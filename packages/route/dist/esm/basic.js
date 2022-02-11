@@ -1,6 +1,5 @@
 import { buildConfigSetter, env } from '@elux/core';
 export var routeConfig = {
-  RouteModuleName: 'route',
   maxHistory: 10,
   maxLocationCache: env.isServer ? 10000 : 500,
   notifyNativeRouter: {
@@ -14,8 +13,7 @@ export var routeConfig = {
 export var setRouteConfig = buildConfigSetter(routeConfig);
 export var routeMeta = {
   defaultParams: {},
-  pagenames: {},
-  pages: {},
+  pageDatas: {},
   pagenameMap: {},
   pagenameList: [],
   nativeLocationMap: {}

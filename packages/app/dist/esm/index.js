@@ -1,8 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import { env, getRootModuleAPI, buildConfigSetter, initApp, setCoreConfig } from '@elux/core';
-import { setRouteConfig, routeConfig, routeMeta } from '@elux/route';
-export { ActionTypes, LoadingState, env, effect, errorAction, reducer, action, mutation, setLoading, logger, isServer, serverSide, clientSide, deepClone, deepMerge, deepMergeState, exportModule, isProcessedError, setProcessedError, exportView, exportComponent, modelHotReplacement, EmptyModuleHandlers, TaskCounter, SingleDispatcher, CoreModuleHandlers as BaseModuleHandlers, errorProcessed } from '@elux/core';
-export { RouteActionTypes, location, createRouteModule, safeJsonParse } from '@elux/route';
+import { env, getModuleMap, buildConfigSetter, initApp, setCoreConfig, coreConfig } from '@elux/core';
+import { setRouteConfig, toURouter } from '@elux/route';
 var appMeta = {
   router: null,
   SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : ''
@@ -31,7 +29,8 @@ export function createBaseMP(ins, router, render, storeInitState, storeMiddlewar
     storeMiddlewares = [];
   }
 
-  appMeta.router = router;
+  var urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render: function (_render) {
       function render() {
@@ -51,7 +50,7 @@ export function createBaseMP(ins, router, render, storeInitState, storeMiddlewar
 
       var context = render({
         deps: {},
-        router: router,
+        router: urouter,
         documentHead: ''
       }, ins);
       return {
@@ -66,7 +65,8 @@ export function createBaseApp(ins, router, render, storeInitState, storeMiddlewa
     storeMiddlewares = [];
   }
 
-  appMeta.router = router;
+  var urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render: function (_render2) {
       function render(_x) {
@@ -95,7 +95,7 @@ export function createBaseApp(ins, router, render, storeInitState, storeMiddlewa
       return router.initialize.then(function (routeState) {
         var _extends2;
 
-        var storeData = _extends((_extends2 = {}, _extends2[routeConfig.RouteModuleName] = routeState, _extends2), state);
+        var storeData = _extends((_extends2 = {}, _extends2[coreConfig.RouteModuleName] = routeState, _extends2), state);
 
         var _initApp2 = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components),
             store = _initApp2.store,
@@ -105,7 +105,7 @@ export function createBaseApp(ins, router, render, storeInitState, storeMiddlewa
         return setup.then(function () {
           render(id, AppView, {
             deps: {},
-            router: router,
+            router: urouter,
             documentHead: ''
           }, !!env[ssrKey], ins, store);
         });
@@ -118,7 +118,8 @@ export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewa
     storeMiddlewares = [];
   }
 
-  appMeta.router = router;
+  var urouter = toURouter(router);
+  appMeta.router = urouter;
   return Object.assign(ins, {
     render: function (_render3) {
       function render(_x2) {
@@ -142,7 +143,7 @@ export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewa
       return router.initialize.then(function (routeState) {
         var _storeData;
 
-        var storeData = (_storeData = {}, _storeData[routeConfig.RouteModuleName] = routeState, _storeData);
+        var storeData = (_storeData = {}, _storeData[coreConfig.RouteModuleName] = routeState, _storeData);
 
         var _initApp3 = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName),
             store = _initApp3.store,
@@ -153,7 +154,7 @@ export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewa
           var state = store.getState();
           var eluxContext = {
             deps: {},
-            router: router,
+            router: urouter,
             documentHead: ''
           };
           return render(id, AppView, eluxContext, ins, store).then(function (html) {
@@ -175,11 +176,11 @@ export function createBaseSSR(ins, router, render, storeInitState, storeMiddlewa
 }
 export function patchActions(typeName, json) {
   if (json) {
-    getRootModuleAPI(JSON.parse(json));
+    getModuleMap(JSON.parse(json));
   }
 }
-export function getApp(demoteForProductionOnly, injectActions) {
-  var modules = getRootModuleAPI(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+export function getApi(demoteForProductionOnly, injectActions) {
+  var modules = getModuleMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   return {
     GetActions: function GetActions() {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -201,7 +202,6 @@ export function getApp(demoteForProductionOnly, injectActions) {
       return appMeta.router;
     },
     LoadComponent: appConfig.loadComponent,
-    Modules: modules,
-    Pagenames: routeMeta.pagenames
+    Modules: modules
   };
 }

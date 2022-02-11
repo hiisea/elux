@@ -44,6 +44,7 @@
     "@elux/core": "^1.0.1",
     "@elux/app": "^1.0.1",
     "@elux/react-components": "^1.0.1",
+    "@elux/route": "^1.0.1",
     "@elux/route-browser": "^1.0.1",
     "@elux/react-redux": "^1.0.1"
   },

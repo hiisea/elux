@@ -1,16 +1,5 @@
-import {deepMerge, moduleExists, getModuleList, isPromise, RouteModuleHandlers, IRouteModuleHandlersClass, exportModule} from '@elux/core';
-import {
-  routeMeta,
-  routeConfig,
-  NativeLocationMap,
-  PagenameMap,
-  RouteState,
-  RootParams,
-  EluxLocation,
-  NativeLocation,
-  StateLocation,
-  safeJsonParse,
-} from './basic';
+import {deepMerge, moduleExists, getModuleList, isPromise, RootState, RouteModel, exportModule, setCoreConfig} from '@elux/core';
+import {routeMeta, routeConfig, NativeLocationMap, PagenameMap, EluxLocation, NativeLocation, StateLocation, safeJsonParse} from './basic';
 import {extendDefault, excludeDefault} from './deep-extend';
 
 interface CacheItem {
@@ -165,19 +154,19 @@ interface LocationCache {
 }
 
 /*** @public */
-export interface ILocationTransform<P extends RootParams = any> {
+export interface ULocationTransform {
   getPagename(): string;
   getEluxUrl(): string;
   getNativeUrl(withoutProtocol?: boolean): string;
-  getParams(): Partial<P> | Promise<Partial<P>>;
+  getParams(): RootState | Promise<RootState>;
 }
 /**
  * pagename,payload,params,eurl(pathmatch,args),nurl
  */
-class LocationTransform<P extends RootParams = any> implements ILocationTransform, LocationCache {
+class LocationTransform implements ULocationTransform, LocationCache {
   _pagename?: string;
   _payload?: Record<string, any>;
-  _params?: Partial<P>;
+  _params?: RootState;
   _eurl?: string;
   _nurl?: string;
   private _minData?: {pathmatch: string; args: Record<string, any>};
@@ -278,7 +267,7 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
     }
     return withoutProtocol ? urlParser.withoutProtocol(this._nurl) : this._nurl;
   }
-  public getParams(): Partial<P> | Promise<Partial<P>> {
+  public getParams(): RootState | Promise<RootState> {
     if (!this._params) {
       const payload = this.getPayload();
       const def = routeMeta.defaultParams;
@@ -287,7 +276,7 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
       if (isPromise(modulesOrPromise)) {
         return modulesOrPromise.then((modules) => {
           modules.forEach((module) => {
-            def[module.moduleName] = module.params;
+            def[module.moduleName] = module.routeParams;
           });
           const _params: any = assignDefaultData(payload);
           const modulesMap = moduleExists();
@@ -302,7 +291,7 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
       }
       const modules = modulesOrPromise;
       modules.forEach((module) => {
-        def[module.moduleName] = module.params;
+        def[module.moduleName] = module.routeParams;
       });
       const _params: any = assignDefaultData(payload);
       const modulesMap = moduleExists();
@@ -319,8 +308,8 @@ class LocationTransform<P extends RootParams = any> implements ILocationTransfor
   }
 }
 
-/*** @internal */
-export function location<P extends RootParams = any>(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ILocationTransform<P> {
+/*** @public */
+export function location(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ULocationTransform {
   if (typeof dataOrUrl === 'string') {
     const url = urlParser.checkUrl(dataOrUrl);
     const type: 'e' | 'n' | 's' = url.charAt(0) as any;
@@ -406,18 +395,23 @@ const defaultNativeLocationMap: NativeLocationMap = {
   },
 };
 
-/*** @internal */
+/*** @public */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeLocationMap: NativeLocationMap = defaultNativeLocationMap) {
+export function createRouteModule<G extends PagenameMap, N extends string>(
+  moduleName: N,
+  pagenameMap: G,
+  nativeLocationMap: NativeLocationMap = defaultNativeLocationMap
+) {
+  setCoreConfig({RouteModuleName: moduleName});
   const pagenames = Object.keys(pagenameMap);
   const _pagenameMap = pagenames
     .sort((a, b) => b.length - a.length)
     .reduce((map, pagename) => {
       const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-      const {argsToParams, paramsToArgs, page} = pagenameMap[pagename];
+      const {argsToParams, paramsToArgs, pageData} = pagenameMap[pagename];
       map[fullPagename] = {argsToParams, paramsToArgs};
-      routeMeta.pagenames[pagename] = pagename;
-      routeMeta.pages[pagename] = page;
+      //routeMeta.pagenames[pagename] = pagename;
+      routeMeta.pageDatas[pagename] = pageData;
       return map;
     }, {});
 
@@ -425,10 +419,5 @@ export function createRouteModule<G extends PagenameMap>(pagenameMap: G, nativeL
   routeMeta.pagenameList = Object.keys(_pagenameMap);
   routeMeta.nativeLocationMap = nativeLocationMap;
 
-  return exportModule(
-    routeConfig.RouteModuleName as any,
-    RouteModuleHandlers as IRouteModuleHandlersClass<RouteState>,
-    {},
-    {} as {[k in keyof G]: any}
-  );
+  return exportModule(moduleName, RouteModel, {}, '/index' as keyof G);
 }

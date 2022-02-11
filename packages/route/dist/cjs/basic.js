@@ -8,7 +8,6 @@ exports.setRouteConfig = void 0;
 var _core = require("@elux/core");
 
 var routeConfig = {
-  RouteModuleName: 'route',
   maxHistory: 10,
   maxLocationCache: _core.env.isServer ? 10000 : 500,
   notifyNativeRouter: {
@@ -24,8 +23,7 @@ var setRouteConfig = (0, _core.buildConfigSetter)(routeConfig);
 exports.setRouteConfig = setRouteConfig;
 var routeMeta = {
   defaultParams: {},
-  pagenames: {},
-  pages: {},
+  pageDatas: {},
   pagenameMap: {},
   pagenameList: [],
   nativeLocationMap: {}

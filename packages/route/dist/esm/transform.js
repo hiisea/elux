@@ -1,5 +1,5 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { deepMerge, moduleExists, getModuleList, isPromise, RouteModuleHandlers, exportModule } from '@elux/core';
+import { deepMerge, moduleExists, getModuleList, isPromise, RouteModel, exportModule, setCoreConfig } from '@elux/core';
 import { routeMeta, routeConfig, safeJsonParse } from './basic';
 import { extendDefault, excludeDefault } from './deep-extend';
 
@@ -351,7 +351,7 @@ var LocationTransform = function () {
       if (isPromise(modulesOrPromise)) {
         return modulesOrPromise.then(function (modules) {
           modules.forEach(function (module) {
-            def[module.moduleName] = module.params;
+            def[module.moduleName] = module.routeParams;
           });
 
           var _params = assignDefaultData(payload);
@@ -369,7 +369,7 @@ var LocationTransform = function () {
 
       var modules = modulesOrPromise;
       modules.forEach(function (module) {
-        def[module.moduleName] = module.params;
+        def[module.moduleName] = module.routeParams;
       });
 
       var _params = assignDefaultData(payload);
@@ -514,11 +514,14 @@ var defaultNativeLocationMap = {
     };
   }
 };
-export function createRouteModule(pagenameMap, nativeLocationMap) {
+export function createRouteModule(moduleName, pagenameMap, nativeLocationMap) {
   if (nativeLocationMap === void 0) {
     nativeLocationMap = defaultNativeLocationMap;
   }
 
+  setCoreConfig({
+    RouteModuleName: moduleName
+  });
   var pagenames = Object.keys(pagenameMap);
 
   var _pagenameMap = pagenames.sort(function (a, b) {
@@ -528,18 +531,17 @@ export function createRouteModule(pagenameMap, nativeLocationMap) {
     var _pagenameMap$pagename = pagenameMap[pagename],
         argsToParams = _pagenameMap$pagename.argsToParams,
         paramsToArgs = _pagenameMap$pagename.paramsToArgs,
-        page = _pagenameMap$pagename.page;
+        pageData = _pagenameMap$pagename.pageData;
     map[fullPagename] = {
       argsToParams: argsToParams,
       paramsToArgs: paramsToArgs
     };
-    routeMeta.pagenames[pagename] = pagename;
-    routeMeta.pages[pagename] = page;
+    routeMeta.pageDatas[pagename] = pageData;
     return map;
   }, {});
 
   routeMeta.pagenameMap = _pagenameMap;
   routeMeta.pagenameList = Object.keys(_pagenameMap);
   routeMeta.nativeLocationMap = nativeLocationMap;
-  return exportModule(routeConfig.RouteModuleName, RouteModuleHandlers, {}, {});
+  return exportModule(moduleName, RouteModel, {}, '/index');
 }

@@ -18,15 +18,13 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
-export default defineComponent({
+const Component = defineComponent({
   props: {
     title: {
-      type: String,
-      default: ''
+      type: String
     },
     html: {
-      type: String,
-      default: ''
+      type: String
     }
   },
 
@@ -41,8 +39,8 @@ export default defineComponent({
 
   computed: {
     headText() {
-      const title = this.title;
-      let html = this.html;
+      const title = this.title || '';
+      let html = this.html || '';
       const eluxContext = this.eluxContext;
 
       if (!html) {
@@ -76,3 +74,4 @@ export default defineComponent({
   }
 
 });
+export default Component;

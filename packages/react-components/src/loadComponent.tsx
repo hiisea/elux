@@ -1,5 +1,5 @@
 import React, {ComponentType, Component, useContext} from 'react';
-import {env, loadComponet, isPromise, LoadComponent, EluxComponent, IStore} from '@elux/core';
+import {env, loadComponent, isPromise, LoadComponent, EluxComponent, UStore, EStore} from '@elux/core';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
 /*** @public */
@@ -8,12 +8,11 @@ export interface LoadComponentOptions {
   OnLoading?: ComponentType<{}>;
 }
 
-/*** @internal */
-const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
+const reactLoadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
-  class Loader extends Component<{store: IStore; deps: Record<string, boolean>; forwardedRef: any}> {
+  class Loader extends Component<{store: UStore; deps: Record<string, boolean>; forwardedRef: any}> {
     private active = true;
 
     private loading = false;
@@ -50,7 +49,7 @@ const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = 
         this.loading = true;
         let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
         try {
-          result = loadComponet(moduleName, componentName as string, store, deps);
+          result = loadComponent(moduleName, componentName as string, store as EStore, deps);
         } catch (e: any) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -102,4 +101,4 @@ const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = 
   }) as any;
 };
 
-export default loadComponent;
+export default reactLoadComponent;

@@ -25,7 +25,7 @@ var _base = require("./base");
 
 var _excluded = ["forwardedRef", "deps", "store"];
 
-var loadComponent = function loadComponent(moduleName, componentName, options) {
+var reactLoadComponent = function reactLoadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
@@ -79,7 +79,7 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
         var result;
 
         try {
-          result = (0, _core.loadComponet)(moduleName, componentName, store, deps);
+          result = (0, _core.loadComponent)(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -154,5 +154,5 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   });
 };
 
-var _default = loadComponent;
+var _default = reactLoadComponent;
 exports.default = _default;

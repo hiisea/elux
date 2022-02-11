@@ -18,6 +18,7 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement>
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [action?](./react-redux-web.linkprops.action.md) | 'push' \| 'replace' \| 'relaunch' | <i>(Optional)</i> |
+|  [disabled?](./react-redux-web.linkprops.disabled.md) | boolean | <i>(Optional)</i> |
 |  [href?](./react-redux-web.linkprops.href.md) | string | <i>(Optional)</i> |
 |  [root?](./react-redux-web.linkprops.root.md) | boolean | <i>(Optional)</i> |
 |  [route?](./react-redux-web.linkprops.route.md) | string | <i>(Optional)</i> |

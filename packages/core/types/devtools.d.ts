@@ -1,3 +1,3 @@
-import { IStoreLogger } from './basic';
-export declare const devLogger: IStoreLogger;
+import { StoreLogger } from './basic';
+export declare const devLogger: StoreLogger;
 //# sourceMappingURL=devtools.d.ts.map

@@ -1,5 +1,5 @@
 import env from './env';
-import {IStoreLogger} from './basic';
+import {StoreLogger} from './basic';
 
 type LogItem = {type: string; payload: any[]; priority: string[]; handers: string[]; effects?: LogItem[]};
 
@@ -23,7 +23,7 @@ if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) 
 
 const effects: LogItem[] = [];
 
-export const devLogger: IStoreLogger = (
+export const devLogger: StoreLogger = (
   {id, isActive}: {id: number; isActive: boolean},
   actionName: string,
   payload: any[],

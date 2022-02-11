@@ -1,11 +1,11 @@
 /*!
  * (c) fork from https://redux.js.org/
  */
-import {IFlux, State, mergeState} from './basic';
-type ReduxAction<S> = {type: string; state?: Partial<S>};
+import {Flux, mergeState} from './basic';
+type ReduxAction = {type: string; state?: {[moduleName: string]: any}};
 type Listener = () => void;
 
-export function createRedux<S extends State>(initState: S): IFlux<S> {
+export function createRedux(initState: {[moduleName: string]: any}): Flux {
   let currentState = initState;
   let currentListeners: Listener[] | null = [];
   let nextListeners = currentListeners;
@@ -54,7 +54,7 @@ export function createRedux<S extends State>(initState: S): IFlux<S> {
     };
   }
 
-  function dispatch(action: ReduxAction<S>) {
+  function dispatch(action: ReduxAction) {
     if (isDispatching) {
       throw new Error('Reducers may not dispatch actions.');
     }
@@ -77,7 +77,7 @@ export function createRedux<S extends State>(initState: S): IFlux<S> {
 
   // dispatch({type: ActionTypes.INIT});
 
-  function update(actionName: string, state: Partial<S>): void {
+  function update(actionName: string, state: {[moduleName: string]: any}): void {
     dispatch({type: actionName, state});
   }
 

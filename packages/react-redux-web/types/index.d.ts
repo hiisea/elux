@@ -1,13 +1,20 @@
 import { ComponentType } from 'react';
-import { RootModuleFacade } from '@elux/core';
+import { Facade } from '@elux/core';
 import { LoadComponentOptions } from '@elux/react-components';
-import { CreateApp, CreateSSR, UserConfig, GetBaseAPP } from '@elux/app';
-export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/react-components';
+import { CreateApp, CreateSSR, UserConfig, GetBaseFacade } from '@elux/app';
+export { DocumentHead, Switch, Else, Link } from '@elux/react-components';
 export type { DocumentHeadProps, SwitchProps, ElseProps, LinkProps, LoadComponentOptions } from '@elux/react-components';
-export * from '@elux/app';
+export { errorAction, LoadingState, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, EmptyModel, BaseModel, RouteModel, loadModel, getModule, getComponent, } from '@elux/core';
+export type { Facade, Dispatch, UStore, DeepPartial, StoreMiddleware, StoreLogger, CommonModule, Action, HistoryAction } from '@elux/core';
+export type { GetState, EluxComponent, AsyncEluxComponent, CommonModelClass, ModuleAPI, ReturnComponents, GetPromiseModule, GetPromiseComponent, ModuleState, RootState, CommonModel, RouteState, ActionsThis, PickHandler, ModuleGetter, LoadComponent, HandlerThis, FacadeStates, FacadeModules, FacadeActions, FacadeRoutes, PickActions, UNListener, ActionCreator, } from '@elux/core';
+export { location, createRouteModule, safeJsonParse } from '@elux/route';
+export type { NativeLocationMap, EluxLocation, NativeLocation, StateLocation, URouter, UHistoryRecord, ULocationTransform, PagenameMap, } from '@elux/route';
+export { getApi, patchActions } from '@elux/app';
+export type { ComputedStore } from '@elux/app';
+export type { GetBaseFacade, UserConfig, CreateApp, CreateSSR, RenderOptions } from '@elux/app';
 export * from '@elux/react-redux';
 /*** @public */
-export declare type GetApp<A extends RootModuleFacade, R extends string = 'route', NT = unknown> = GetBaseAPP<A, LoadComponentOptions, R, NT>;
+export declare type GetFacade<F extends Facade, R extends string = 'route'> = GetBaseFacade<F, LoadComponentOptions, R>;
 /*** @public */
 export declare function setConfig(conf: UserConfig & {
     LoadComponentOnError?: ComponentType<{
@@ -15,8 +22,8 @@ export declare function setConfig(conf: UserConfig & {
     }>;
     LoadComponentOnLoading?: ComponentType<{}>;
 }): void;
-/*** @internal */
+/*** @public */
 export declare const createApp: CreateApp<{}>;
-/*** @internal */
+/*** @public */
 export declare const createSSR: CreateSSR<{}>;
 //# sourceMappingURL=index.d.ts.map

@@ -4,8 +4,10 @@ import { renderToString, renderToDocument } from '@elux/react-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
 import { createRouter, createBrowserHistory, createServerHistory } from '@elux/route-browser';
 import { Provider, useStore } from '@elux/react-redux';
-export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/react-components';
-export * from '@elux/app';
+export { DocumentHead, Switch, Else, Link } from '@elux/react-components';
+export { errorAction, LoadingState, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, EmptyModel, BaseModel, RouteModel, loadModel, getModule, getComponent } from '@elux/core';
+export { location, createRouteModule, safeJsonParse } from '@elux/route';
+export { getApi, patchActions } from '@elux/app';
 export * from '@elux/react-redux';
 setAppConfig({
   loadComponent: loadComponent,

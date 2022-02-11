@@ -107,20 +107,10 @@ export var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   return BrowserNativeRouter;
 }(BaseNativeRouter);
-export var EluxRouter = function (_BaseEluxRouter) {
-  _inheritsLoose(EluxRouter, _BaseEluxRouter);
-
-  function EluxRouter(nativeUrl, browserNativeRouter, nativeData) {
-    return _BaseEluxRouter.call(this, nativeUrl, browserNativeRouter, nativeData) || this;
-  }
-
-  return EluxRouter;
-}(BaseEluxRouter);
 export function createRouter(browserHistory, nativeData) {
   var browserNativeRouter = new BrowserNativeRouter(browserHistory);
   var _browserHistory$locat = browserHistory.location,
       pathname = _browserHistory$locat.pathname,
       search = _browserHistory$locat.search;
-  var router = new EluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
-  return router;
+  return new BaseEluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
 }

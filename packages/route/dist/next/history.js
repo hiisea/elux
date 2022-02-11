@@ -191,7 +191,7 @@ export class RootStack extends RouteStack {
       return {
         pagename,
         store,
-        page: routeMeta.pages[pagename]
+        pageData: routeMeta.pageDatas[pagename]
       };
     });
   }

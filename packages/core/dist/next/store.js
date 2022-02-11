@@ -1,44 +1,83 @@
 import env from './env';
-import { isPromise } from './sprite';
+import { isPromise, compose } from './utils';
 import { createRedux } from './redux';
-import { coreConfig, MetaData } from './basic';
-import { ActionTypes, errorAction } from './actions';
-import { loadModel } from './inject';
-import { routeMiddleware } from './router';
 import { devLogger } from './devtools';
-export const errorProcessed = '__eluxProcessed__';
-export function isProcessedError(error) {
-  return error && !!error[errorProcessed];
+import { MetaData, coreConfig } from './basic';
+import { ActionTypes, moduleRouteChangeAction, errorAction } from './actions';
+import { loadModel } from './inject';
+export const routeMiddleware = ({
+  dispatch,
+  getStore
+}) => next => action => {
+  if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`) {
+    const existsModules = Object.keys(getStore().getState()).reduce((obj, moduleName) => {
+      obj[moduleName] = true;
+      return obj;
+    }, {});
+    const result = next(action);
+    const [routeState] = action.payload;
+    Object.keys(routeState.params).forEach(moduleName => {
+      const moduleState = routeState.params[moduleName];
+
+      if (moduleState && Object.keys(moduleState).length > 0) {
+        if (existsModules[moduleName]) {
+          dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
+        }
+      }
+    });
+    return result;
+  } else {
+    return next(action);
+  }
+};
+export function forkStore(originalStore, newRouteState) {
+  const {
+    sid,
+    options: {
+      initState,
+      middlewares,
+      logger
+    },
+    router
+  } = originalStore;
+  return createStore(sid + 1, router, {
+    [coreConfig.RouteModuleName]: newRouteState
+  }, initState, middlewares, logger);
 }
-export function setProcessedError(error, processed) {
-  if (typeof error !== 'object') {
-    error = {
-      message: error
-    };
+
+const preMiddleware = ({
+  getStore
+}) => next => action => {
+  if (action.type === ActionTypes.Error) {
+    const actionData = getActionData(action);
+
+    if (isProcessedError(actionData[0])) {
+      return undefined;
+    }
+
+    actionData[0] = setProcessedError(actionData[0], true);
   }
 
-  Object.defineProperty(error, errorProcessed, {
-    value: processed,
-    enumerable: false,
-    writable: true
-  });
-  return error;
-}
-export function getActionData(action) {
-  return Array.isArray(action.payload) ? action.payload : [];
-}
+  const [moduleName, actionName] = action.type.split(coreConfig.NSP);
 
-function compose(...funcs) {
-  if (funcs.length === 0) {
-    return arg => arg;
+  if (env.isServer && actionName === ActionTypes.MLoading) {
+    return undefined;
   }
 
-  if (funcs.length === 1) {
-    return funcs[0];
+  if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
+    const store = getStore();
+
+    if (!store.injectedModules[moduleName]) {
+      const result = loadModel(moduleName, store);
+
+      if (isPromise(result)) {
+        return result.then(() => next(action));
+      }
+    }
   }
 
-  return funcs.reduce((a, b) => (...args) => a(b(...args)));
-}
+  return next(action);
+};
 
 export function createStore(sid, router, data, initState, middlewares, logger) {
   const redux = createRedux(initState(data));
@@ -47,6 +86,12 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
     subscribe,
     update: _update
   } = redux;
+
+  const getRouteParams = moduleName => {
+    const routeState = getState(coreConfig.RouteModuleName);
+    return moduleName ? routeState.params[moduleName] : routeState.params;
+  };
+
   const options = {
     initState,
     logger,
@@ -227,45 +272,15 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
   }
 
   const middlewareAPI = {
-    getState,
+    getStore: () => store,
     dispatch: action => dispatch(action)
   };
-
-  const preMiddleware = () => next => action => {
-    if (action.type === ActionTypes.Error) {
-      const actionData = getActionData(action);
-
-      if (isProcessedError(actionData[0])) {
-        return undefined;
-      }
-
-      actionData[0] = setProcessedError(actionData[0], true);
-    }
-
-    const [moduleName, actionName] = action.type.split(coreConfig.NSP);
-
-    if (env.isServer && actionName === ActionTypes.MLoading) {
-      return undefined;
-    }
-
-    if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-      if (!injectedModules[moduleName]) {
-        const result = loadModel(moduleName, store);
-
-        if (isPromise(result)) {
-          return result.then(() => next(action));
-        }
-      }
-    }
-
-    return next(action);
-  };
-
   const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map(middleware => middleware(middlewareAPI));
   dispatch = compose(...chain)(_dispatch);
   const store = {
     sid,
     getState,
+    getRouteParams,
     subscribe,
     dispatch,
     router,
@@ -280,4 +295,25 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
     options
   };
   return store;
+}
+export const errorProcessed = '__eluxProcessed__';
+export function isProcessedError(error) {
+  return error && !!error[errorProcessed];
+}
+export function setProcessedError(error, processed) {
+  if (typeof error !== 'object') {
+    error = {
+      message: error
+    };
+  }
+
+  Object.defineProperty(error, errorProcessed, {
+    value: processed,
+    enumerable: false,
+    writable: true
+  });
+  return error;
+}
+export function getActionData(action) {
+  return Array.isArray(action.payload) ? action.payload : [];
 }

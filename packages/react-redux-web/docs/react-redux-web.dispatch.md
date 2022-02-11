@@ -4,6 +4,7 @@
 
 ## Dispatch type
 
+\*
 
 <b>Signature:</b>
 

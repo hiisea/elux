@@ -3,10 +3,8 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.RouteActionTypes = exports.BaseNativeRouter = exports.BaseEluxRouter = void 0;
-exports.beforeRouteChangeAction = beforeRouteChangeAction;
-exports.setRouteConfig = exports.safeJsonParse = exports.routeMeta = exports.location = exports.createRouteModule = void 0;
-exports.testRouteChangeAction = testRouteChangeAction;
+exports.setRouteConfig = exports.safeJsonParse = exports.location = exports.createRouteModule = exports.BaseNativeRouter = exports.BaseEluxRouter = void 0;
+exports.toURouter = toURouter;
 exports.urlParser = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
@@ -25,7 +23,6 @@ var _basic = require("./basic");
 
 exports.routeConfig = _basic.routeConfig;
 exports.setRouteConfig = _basic.setRouteConfig;
-exports.routeMeta = _basic.routeMeta;
 exports.safeJsonParse = _basic.safeJsonParse;
 
 var _history = require("./history");
@@ -101,9 +98,8 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_taskList", []);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "location", void 0);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "routeState", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "name", _basic.routeConfig.RouteModuleName);
+    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "name", _core.coreConfig.RouteModuleName);
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "initialize", void 0);
-    (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "injectedModules", {});
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "rootStack", new _history.RootStack());
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "latestState", {});
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this2), "_taskComplete", function () {
@@ -249,11 +245,11 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key
               };
               _context.next = 9;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeTestChangeAction)(routeState));
 
             case 9:
               _context.next = 11;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeBeforeChangeAction)(routeState));
 
             case 11:
               if (root) {
@@ -333,11 +329,11 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key
               };
               _context2.next = 9;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeTestChangeAction)(routeState));
 
             case 9:
               _context2.next = 11;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeBeforeChangeAction)(routeState));
 
             case 11:
               if (root) {
@@ -433,11 +429,11 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key
               };
               _context3.next = 9;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeTestChangeAction)(routeState));
 
             case 9:
               _context3.next = 11;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeBeforeChangeAction)(routeState));
 
             case 11:
               if (root) {
@@ -548,11 +544,11 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
                 action: 'BACK'
               };
               _context4.next = 14;
-              return this.getCurrentStore().dispatch(testRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeTestChangeAction)(routeState));
 
             case 14:
               _context4.next = 16;
-              return this.getCurrentStore().dispatch(beforeRouteChangeAction(routeState));
+              return this.getCurrentStore().dispatch((0, _core.routeBeforeChangeAction)(routeState));
 
             case 16:
               if (index[0]) {
@@ -637,22 +633,36 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 }(_core.MultipleDispatcher);
 
 exports.BaseEluxRouter = BaseEluxRouter;
-var RouteActionTypes = {
-  TestRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "TestRouteChange",
-  BeforeRouteChange: "" + _basic.routeConfig.RouteModuleName + _core.coreConfig.NSP + "BeforeRouteChange"
-};
-exports.RouteActionTypes = RouteActionTypes;
 
-function beforeRouteChangeAction(routeState) {
+function toURouter(router) {
+  var nativeData = router.nativeData,
+      location = router.location,
+      routeState = router.routeState,
+      initialize = router.initialize,
+      addListener = router.addListener,
+      getCurrentPages = router.getCurrentPages,
+      findRecordByKey = router.findRecordByKey,
+      findRecordByStep = router.findRecordByStep,
+      getHistoryLength = router.getHistoryLength,
+      extendCurrent = router.extendCurrent,
+      relaunch = router.relaunch,
+      push = router.push,
+      replace = router.replace,
+      back = router.back;
   return {
-    type: RouteActionTypes.BeforeRouteChange,
-    payload: [routeState]
-  };
-}
-
-function testRouteChangeAction(routeState) {
-  return {
-    type: RouteActionTypes.TestRouteChange,
-    payload: [routeState]
+    nativeData: nativeData,
+    location: location,
+    routeState: routeState,
+    initialize: initialize,
+    addListener: addListener.bind(router),
+    getCurrentPages: getCurrentPages.bind(router),
+    findRecordByKey: findRecordByKey.bind(router),
+    findRecordByStep: findRecordByStep.bind(router),
+    extendCurrent: extendCurrent.bind(router),
+    getHistoryLength: getHistoryLength.bind(router),
+    relaunch: relaunch.bind(router),
+    push: push.bind(router),
+    replace: replace.bind(router),
+    back: back.bind(router)
   };
 }

@@ -26,15 +26,13 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
-var _default = (0, _vue.defineComponent)({
+var Component = (0, _vue.defineComponent)({
   props: {
     title: {
-      type: String,
-      default: ''
+      type: String
     },
     html: {
-      type: String,
-      default: ''
+      type: String
     }
   },
   data: function data() {
@@ -47,8 +45,8 @@ var _default = (0, _vue.defineComponent)({
   },
   computed: {
     headText: function headText() {
-      var title = this.title;
-      var html = this.html;
+      var title = this.title || '';
+      var html = this.html || '';
       var eluxContext = this.eluxContext;
 
       if (!html) {
@@ -77,5 +75,5 @@ var _default = (0, _vue.defineComponent)({
     return null;
   }
 });
-
+var _default = Component;
 exports.default = _default;

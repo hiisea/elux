@@ -4,8 +4,10 @@ import { setVueComponentsConfig, loadComponent, useRouter, useStore } from '@elu
 import { renderToString, renderToDocument, Router } from '@elux/vue-components/stage';
 import { createBaseApp, createBaseSSR, setAppConfig, setUserConfig } from '@elux/app';
 import { createRouter, createBrowserHistory, createServerHistory } from '@elux/route-browser';
-export { DocumentHead, Switch, Else, Link, loadComponent } from '@elux/vue-components';
-export * from '@elux/app';
+export { DocumentHead, Switch, Else, Link } from '@elux/vue-components';
+export { errorAction, LoadingState, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, EmptyModel, BaseModel, RouteModel, loadModel, getModule, getComponent } from '@elux/core';
+export { location, createRouteModule, safeJsonParse } from '@elux/route';
+export { getApi, patchActions } from '@elux/app';
 setCoreConfig({
   MutableData: true
 });

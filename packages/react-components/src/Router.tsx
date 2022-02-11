@@ -1,5 +1,6 @@
 import React, {useContext, useEffect, useState, useRef, memo} from 'react';
-import {ICoreRouter, env, IStore} from '@elux/core';
+import {env, UStore} from '@elux/core';
+import {URouter} from '@elux/route';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
 export const Router: React.FC<{page: React.ComponentType}> = (props) => {
@@ -9,7 +10,7 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
     classname: string;
     pages: {
       pagename: string;
-      store: IStore<any>;
+      store: UStore;
       page?: any;
     }[];
   }>({classname: 'elux-app', pages: router.getCurrentPages().reverse()});
@@ -70,7 +71,7 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
   );
 };
 
-export const Page: React.FC<{store: IStore; view: React.ComponentType}> = memo(function ({store, view}) {
+export const Page: React.FC<{store: UStore; view: React.ComponentType}> = memo(function ({store, view}) {
   const View = view;
   return (
     <reactComponentsConfig.Provider store={store}>
@@ -79,7 +80,7 @@ export const Page: React.FC<{store: IStore; view: React.ComponentType}> = memo(f
   );
 });
 
-export function useRouter(): ICoreRouter {
+export function useRouter(): URouter {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router!;
   return router;

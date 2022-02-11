@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.EluxRouter = exports.BrowserNativeRouter = void 0;
+exports.BrowserNativeRouter = void 0;
 exports.createBrowserHistory = createBrowserHistory;
 exports.createRouter = createRouter;
 exports.createServerHistory = createServerHistory;
@@ -128,23 +128,10 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
 exports.BrowserNativeRouter = BrowserNativeRouter;
 
-var EluxRouter = function (_BaseEluxRouter) {
-  (0, _inheritsLoose2.default)(EluxRouter, _BaseEluxRouter);
-
-  function EluxRouter(nativeUrl, browserNativeRouter, nativeData) {
-    return _BaseEluxRouter.call(this, nativeUrl, browserNativeRouter, nativeData) || this;
-  }
-
-  return EluxRouter;
-}(_route.BaseEluxRouter);
-
-exports.EluxRouter = EluxRouter;
-
 function createRouter(browserHistory, nativeData) {
   var browserNativeRouter = new BrowserNativeRouter(browserHistory);
   var _browserHistory$locat = browserHistory.location,
       pathname = _browserHistory$locat.pathname,
       search = _browserHistory$locat.search;
-  var router = new EluxRouter(_route.urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
-  return router;
+  return new _route.BaseEluxRouter(_route.urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
 }

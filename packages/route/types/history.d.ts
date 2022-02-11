@@ -1,8 +1,8 @@
-import { IStore } from '@elux/core';
-import { ILocationTransform } from './transform';
+import { EStore } from '@elux/core';
+import { ULocationTransform } from './transform';
 declare class RouteStack<T extends {
     destroy?: () => void;
-    store?: IStore;
+    store?: EStore;
 }> {
     protected limit: number;
     records: T[];
@@ -20,42 +20,41 @@ declare class RouteStack<T extends {
     protected setActive(oItem: T | undefined): void;
 }
 /*** @public */
-export interface IHistoryRecord {
+export interface UHistoryRecord {
     key: string;
-    location: ILocationTransform;
+    location: ULocationTransform;
 }
-export declare class HistoryRecord implements IHistoryRecord {
-    readonly location: ILocationTransform;
+export declare class HistoryRecord implements UHistoryRecord {
+    readonly location: ULocationTransform;
     readonly historyStack: HistoryStack;
     static id: number;
     readonly destroy: undefined;
     readonly key: string;
     readonly recordKey: string;
-    constructor(location: ILocationTransform, historyStack: HistoryStack);
+    constructor(location: ULocationTransform, historyStack: HistoryStack);
 }
 export declare class HistoryStack extends RouteStack<HistoryRecord> {
     readonly rootStack: RootStack;
-    readonly store: IStore;
+    readonly store: EStore;
     static id: number;
     readonly stackkey: string;
-    constructor(rootStack: RootStack, store: IStore);
-    push(location: ILocationTransform): HistoryRecord;
-    replace(location: ILocationTransform): HistoryRecord;
-    relaunch(location: ILocationTransform): HistoryRecord;
+    constructor(rootStack: RootStack, store: EStore);
+    push(location: ULocationTransform): HistoryRecord;
+    replace(location: ULocationTransform): HistoryRecord;
+    relaunch(location: ULocationTransform): HistoryRecord;
     findRecordByKey(recordKey: string): [HistoryRecord, number] | undefined;
     destroy(): void;
 }
-/*** @internal */
 export declare class RootStack extends RouteStack<HistoryStack> {
     constructor();
     getCurrentPages(): {
         pagename: string;
-        store: IStore;
-        page?: any;
+        store: EStore;
+        pageData?: any;
     }[];
-    push(location: ILocationTransform): HistoryRecord;
-    replace(location: ILocationTransform): HistoryRecord;
-    relaunch(location: ILocationTransform): HistoryRecord;
+    push(location: ULocationTransform): HistoryRecord;
+    replace(location: ULocationTransform): HistoryRecord;
+    relaunch(location: ULocationTransform): HistoryRecord;
     private countBack;
     testBack(stepOrKey: number | string, rootOnly: boolean): {
         record: HistoryRecord;

@@ -1,7 +1,7 @@
-import { MetaData, coreConfig } from './basic';
-import { getModule, getComponet, getModuleList, getComponentList } from './inject';
-import { createStore } from './store';
 import env from './env';
+import { MetaData, coreConfig } from './basic';
+import { createStore } from './store';
+import { getModule, getComponent, getModuleList, getComponentList } from './inject';
 export function initApp(router, data, initState, middlewares, storeLogger, appViewName, preloadComponents = []) {
   MetaData.currentRouter = router;
   const store = createStore(0, router, data, initState, middlewares, storeLogger);
@@ -15,7 +15,7 @@ export function initApp(router, data, initState, middlewares, storeLogger, appVi
   } = MetaData;
   const appModule = getModule(AppModuleName);
   const routeModule = getModule(RouteModuleName);
-  const AppView = appViewName ? getComponet(AppModuleName, appViewName) : {
+  const AppView = appViewName ? getComponent(AppModuleName, appViewName) : {
     __elux_component__: 'view'
   };
   const preloadModules = Object.keys(router.routeState.params).concat(Object.keys(store.getState())).reduce((data, moduleName) => {
@@ -25,12 +25,12 @@ export function initApp(router, data, initState, middlewares, storeLogger, appVi
 
     return data;
   }, {});
-  const results = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.model(store), appModule.model(store)]);
+  const results = Promise.all([getModuleList(Object.keys(preloadModules)), getComponentList(preloadComponents), routeModule.initModel(store), appModule.initModel(store)]);
   let setup;
 
   if (env.isServer) {
     setup = results.then(([modules]) => {
-      return Promise.all(modules.map(mod => mod.model(store)));
+      return Promise.all(modules.map(mod => mod.initModel(store)));
     });
   } else {
     setup = results;
@@ -53,19 +53,5 @@ export function reinitApp(store) {
   } = coreConfig;
   const appModule = getModule(AppModuleName);
   const routeModule = getModule(RouteModuleName);
-  return Promise.all([getModuleList(preloadModules), routeModule.model(store), appModule.model(store)]);
-}
-export function forkStore(originalStore, routeState) {
-  const {
-    sid,
-    options: {
-      initState,
-      middlewares,
-      logger
-    },
-    router
-  } = originalStore;
-  return createStore(sid + 1, router, {
-    [coreConfig.RouteModuleName]: routeState
-  }, initState, middlewares, logger);
+  return Promise.all([getModuleList(preloadModules), routeModule.initModel(store), appModule.initModel(store)]);
 }

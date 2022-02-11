@@ -1,8 +1,4 @@
-import { Action, IStore } from './basic';
-import { LoadingState } from './sprite';
-/**
- * @internal
- */
+import { LoadingState, Action, UStore, RouteState, ModuleState, RootState } from './basic';
 export declare const ActionTypes: {
     /**
      * 为模块注入加载状态时使用ActionType：moduleName.MLoading
@@ -12,45 +8,27 @@ export declare const ActionTypes: {
      * 模块初始化时使用ActionType：moduleName.MInit
      */
     MInit: string;
-    /**
-     * 模块初始化时使用ActionType：moduleName.MReInit
-     */
-    MReInit: string;
+    MRouteTestChange: string;
+    MRouteBeforeChange: string;
     MRouteChange: string;
     Error: string;
 };
-/**
- * @internal
- */
+/*** @public */
 export declare function errorAction(error: Object): Action;
-export declare function routeChangeAction(routeState: Record<string, any>): Action;
-export declare function moduleInitAction(moduleName: string, initState: Record<string, any>): Action;
+export declare function routeChangeAction(routeState: RouteState): Action;
+export declare function routeBeforeChangeAction(routeState: RouteState): Action;
+export declare function routeTestChangeAction(routeState: RouteState): Action;
+export declare function moduleInitAction(moduleName: string, initState: ModuleState): Action;
 export declare function moduleLoadingAction(moduleName: string, loadingState: {
     [group: string]: LoadingState;
 }): Action;
-export declare function moduleRouteChangeAction(moduleName: string, params: Record<string, any>, action: string): Action;
-/**
- * @internal
- */
-export declare function setLoading<T extends Promise<any>>(store: IStore, item: T, moduleName: string, groupName: string): T;
-/**
- * @internal
- */
+export declare function moduleRouteChangeAction(moduleName: string, params: RootState, action: string): Action;
+/*** @public */
 export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
-/**
- * @internal
- */
+/*** @public */
 export declare function effect(loadingKey?: string | null): Function;
-/**
- * @internal
- */
-export declare const mutation: typeof reducer;
-/**
- * @internal
- */
-export declare const action: typeof effect;
-/**
- * @internal
- */
-export declare function logger(before: (action: Action, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
+/*** @public */
+export declare function effectLogger(before: (action: Action, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
+/*** @public */
+export declare function setLoading<T extends Promise<any>>(store: UStore, item: T, moduleName: string, groupName: string): T;
 //# sourceMappingURL=actions.d.ts.map

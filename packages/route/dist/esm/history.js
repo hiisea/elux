@@ -205,7 +205,7 @@ export var RootStack = function (_RouteStack2) {
       return {
         pagename: pagename,
         store: store,
-        page: routeMeta.pages[pagename]
+        pageData: routeMeta.pageDatas[pagename]
       };
     });
   };

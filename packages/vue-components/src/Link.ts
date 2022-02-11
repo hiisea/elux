@@ -1,24 +1,24 @@
-import {h, HTMLAttributes, inject, VNode} from 'vue';
+import {h, HTMLAttributes, inject, VNode, Events} from 'vue';
 import {EluxContext, EluxContextKey} from './base';
 
-type MouseEvent = any;
-
-export interface Props extends HTMLAttributes {
+/*** @public */
+export interface LinkProps extends HTMLAttributes {
   disabled?: boolean;
   route?: string;
-  onClick?(event: MouseEvent): void;
+  onClick?(event: Events['onClick']): void;
   href?: string;
   action?: 'push' | 'replace' | 'relaunch';
   root?: boolean;
 }
 
+/*** @public */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function (
-  {onClick: _onClick, disabled, href, route, action = 'push', root, ...props}: Props,
+  {onClick: _onClick, disabled, href, route, action = 'push', root, ...props}: LinkProps,
   context: {slots: {default?: () => VNode[]}}
 ) {
   const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
-  const onClick = (event: MouseEvent) => {
+  const onClick = (event: Events['onClick']) => {
     event.preventDefault();
     _onClick && _onClick(event);
     route && router![action](route, root);

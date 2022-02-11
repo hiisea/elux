@@ -1,10 +1,10 @@
 import {Component, inject} from 'vue';
-import {env, IStore, ICoreRouter, buildConfigSetter} from '@elux/core';
-import {IEluxRouter} from '@elux/route';
+import {env, UStore, buildConfigSetter} from '@elux/core';
+import {URouter} from '@elux/route';
 
 export const vueComponentsConfig: {
   setPageTitle(title: string): void;
-  Provider: Component<{store: IStore}>;
+  Provider: Component<{store: UStore}>;
   LoadComponentOnError: Component<{message: string}>;
   LoadComponentOnLoading: Component<{}>;
 } = {
@@ -20,19 +20,19 @@ export const setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 export interface EluxContext {
   deps?: Record<string, boolean>;
   documentHead: string;
-  router?: IEluxRouter;
+  router?: URouter;
 }
 export interface EluxStoreContext {
-  store: IStore;
+  store: UStore;
 }
 export const EluxContextKey = '__EluxContext__';
 export const EluxStoreContextKey = '__EluxStoreContext__';
 
-export function useRouter(): ICoreRouter {
+export function useRouter(): URouter {
   const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
   return router!;
 }
-export function useStore(): IStore {
+export function useStore(): UStore {
   const {store} = inject<EluxStoreContext>(EluxStoreContextKey, {} as any);
   return store;
 }

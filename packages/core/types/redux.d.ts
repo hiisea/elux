@@ -1,6 +1,8 @@
 /*!
  * (c) fork from https://redux.js.org/
  */
-import { IFlux, State } from './basic';
-export declare function createRedux<S extends State>(initState: S): IFlux<S>;
+import { Flux } from './basic';
+export declare function createRedux(initState: {
+    [moduleName: string]: any;
+}): Flux;
 //# sourceMappingURL=redux.d.ts.map
