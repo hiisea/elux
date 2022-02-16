@@ -8,5 +8,5 @@
 
 |  Package | Description |
 |  --- | --- |
-|  [@elux/react-redux-web](./react-redux-web.md) |  |
+|  [@elux/react-web](./react-web.md) |  |
 

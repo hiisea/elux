@@ -1,5 +1,5 @@
 import {env, EStore, forkStore, RootState, RouteState} from '@elux/core';
-import {routeMeta} from './basic';
+import {routeMeta, routeConfig} from './basic';
 import {ULocationTransform} from './transform';
 
 class RouteStack<T extends {destroy?: () => void; store?: EStore}> {
@@ -159,7 +159,7 @@ export class HistoryStack extends RouteStack<HistoryRecord> {
 
 export class RootStack extends RouteStack<HistoryStack> {
   constructor() {
-    super(10);
+    super(routeConfig.maxHistory);
   }
   getCurrentPages(): {pagename: string; store: EStore; pageData?: any}[] {
     return this.records.map((item) => {
