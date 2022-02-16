@@ -10,9 +10,9 @@
     "packages/route-mp",
     "packages/react-components",
     "packages/react-redux",
-    "packages/react-redux-web",
+    "packages/react-web",
     "packages/vue-components",
-    "packages/vue-vuex-web"
+    "packages/vue-web"
   ],
   "command": {
     "publish": {
