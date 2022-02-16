@@ -4,14 +4,22 @@
 
 ## BaseModel class
 
-\*
+Model基类
 
 <b>Signature:</b>
 
 ```typescript
-export declare abstract class BaseModel<MS extends ModuleState = {}, MP extends ModuleState = {}, RS extends RootState = {}> implements CommonModel 
+export declare abstract class BaseModel<TModuleState extends ModuleState = {}, TRouteParams extends ModuleState = {}, TRootState extends RootState = {}> implements CommonModel 
 ```
 <b>Implements:</b> [CommonModel](./react-web.commonmodel.md)
+
+## Remarks
+
+- `TModuleState`<!-- -->: 本模块的状态结构
+
+- `TRouteParams`<!-- -->: 本模块的路由参数结构
+
+- `TRootState`<!-- -->: 全局状态结构
 
 ## Constructors
 
@@ -23,10 +31,10 @@ export declare abstract class BaseModel<MS extends ModuleState = {}, MP extends 
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [actions](./react-web.basemodel.actions.md) |  | [ActionsThis](./react-web.actionsthis.md)<!-- -->&lt;this&gt; |  |
-|  [defaultRouteParams](./react-web.basemodel.defaultrouteparams.md) |  | MP |  |
+|  [actions](./react-web.basemodel.actions.md) |  | [ActionsThis](./react-web.actionsthis.md)<!-- -->&lt;this&gt; | 获取本模块的公开actions构造器 |
+|  [defaultRouteParams](./react-web.basemodel.defaultrouteparams.md) |  | TRouteParams | 本模块的路由参数默认值 |
 |  [moduleName](./react-web.basemodel.modulename.md) |  | string |  |
-|  [router](./react-web.basemodel.router.md) |  | { routeState: [RouteState](./react-web.routestate.md)<!-- -->; } |  |
+|  [router](./react-web.basemodel.router.md) |  | unknown | 获取当前Router |
 |  [store](./react-web.basemodel.store.md) |  | [UStore](./react-web.ustore.md) |  |
 
 ## Methods
@@ -35,14 +43,14 @@ export declare abstract class BaseModel<MS extends ModuleState = {}, MP extends 
 |  --- | --- | --- |
 |  [destroy()](./react-web.basemodel.destroy.md) |  |  |
 |  [dispatch(action)](./react-web.basemodel.dispatch.md) |  |  |
-|  [getCurrentActionName()](./react-web.basemodel.getcurrentactionname.md) |  |  |
-|  [getCurrentRootState()](./react-web.basemodel.getcurrentrootstate.md) |  |  |
-|  [getCurrentState()](./react-web.basemodel.getcurrentstate.md) |  |  |
-|  [getLatestState()](./react-web.basemodel.getlateststate.md) |  |  |
-|  [getPrivateActions(actionsMap)](./react-web.basemodel.getprivateactions.md) |  |  |
-|  [getRootState()](./react-web.basemodel.getrootstate.md) |  |  |
-|  [getRouteParams()](./react-web.basemodel.getrouteparams.md) |  |  |
-|  [getState()](./react-web.basemodel.getstate.md) |  |  |
-|  [init(latestState, preState)](./react-web.basemodel.init.md) |  |  |
+|  [getCurrentActionName()](./react-web.basemodel.getcurrentactionname.md) |  | 获取当前执行的action.type |
+|  [getCurrentRootState()](./react-web.basemodel.getcurrentrootstate.md) |  | 获取全局的当前状态 |
+|  [getCurrentState()](./react-web.basemodel.getcurrentstate.md) |  | 获取本模块的实时状态 |
+|  [getLatestState()](./react-web.basemodel.getlateststate.md) |  | 获取全局的当前状态 |
+|  [getPrivateActions(actionsMap)](./react-web.basemodel.getprivateactions.md) |  | 获取本模块的私有actions构造器 |
+|  [getRootState()](./react-web.basemodel.getrootstate.md) |  | 获取全局的当前状态 |
+|  [getRouteParams()](./react-web.basemodel.getrouteparams.md) |  | 获取本模块当前路由参数 |
+|  [getState()](./react-web.basemodel.getstate.md) |  | 获取本模块的当前状态 |
+|  [init(latestState, preState)](./react-web.basemodel.init.md) |  | 获取本模块的状态初始值 |
 |  [loadModel(moduleName)](./react-web.basemodel.loadmodel.md) |  |  |
 

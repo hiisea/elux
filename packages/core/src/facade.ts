@@ -111,49 +111,122 @@ export type HandlerThis<T> = T extends (...args: infer P) => any
 /*** @public */
 export type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
 
-/*** @public */
-export abstract class BaseModel<MS extends ModuleState = {}, MP extends ModuleState = {}, RS extends RootState = {}> implements CommonModel {
-  abstract defaultRouteParams: MP;
-  abstract init(latestState: RootState, preState: RootState): MS;
+/**
+ * Model基类
+ *
+ * @remarks
+ * - `TModuleState`: 本模块的状态结构
+ *
+ * - `TRouteParams`: 本模块的路由参数结构
+ *
+ * - `TRootState`: 全局状态结构
+ *
+ * @typeParam TModuleState - 本模块的状态结构
+ * @typeParam TRouteParams - 本模块的路由参数结构
+ * @typeParam TRootState - 全局状态结构
+ *
+ * @public
+ */
+export abstract class BaseModel<TModuleState extends ModuleState = {}, TRouteParams extends ModuleState = {}, TRootState extends RootState = {}>
+  implements CommonModel
+{
+  /**
+   * 本模块的路由参数默认值
+   *
+   * @remarks
+   * 实际路由参数由`URL传值`+`默认值`deepMerge所得
+   *
+   */
+  abstract defaultRouteParams: TRouteParams;
+  /**
+   * 获取本模块的状态初始值
+   *
+   * @remarks
+   * 模块初始化时将调用此方法获取状态初始值
+   *
+   * @param latestState - 当前最新的全局状态（多个PageStore合并后的状态）
+   * @param preState - 提前预置的全局状态（通常用于SSR时传递脱水状态）
+   *
+   * @returns 返回本模块的状态初始值
+   *
+   */
+  abstract init(latestState: RootState, preState: RootState): TModuleState;
 
   constructor(public readonly moduleName: string, public store: UStore) {}
 
+  /**
+   * 获取本模块的公开actions构造器
+   */
   protected get actions(): ActionsThis<this> {
     return MetaData.moduleMap[this.moduleName].actions as any;
   }
 
-  protected get router(): {routeState: RouteState} {
-    return (this.store as EStore).router as any;
+  /**
+   * 获取当前Router
+   */
+  protected get router(): unknown {
+    return (this.store as EStore).router;
   }
 
-  protected getRouteParams(): MP {
-    return this.store.getRouteParams(this.moduleName) as MP;
+  /**
+   * 获取本模块当前路由参数
+   */
+  protected getRouteParams(): TRouteParams {
+    return this.store.getRouteParams(this.moduleName) as TRouteParams;
   }
 
-  protected getLatestState(): RS {
-    return (this.store as EStore).router.latestState as RS;
+  /**
+   * 获取全局的当前状态
+   *
+   * @remarks
+   * 使用虚拟多页模式时，应用可能同时存在多个Page（但有且只有一个最顶层的Page处于激活状态，其它Page处于历史堆栈中），每个Page将对应一个独立的Store，每个Store都由自己的RootState。
+   * 注意以下三者的区别：
+   *
+   * - {@link BaseModel.getRootState | getRootState(): TRootState}
+   *
+   * - {@link BaseModel.getCurrentRootState | getCurrentRootState(): TRootState}
+   *
+   * - {@link BaseModel.getLatestState | getLatestState(): TRootState}
+   */
+  protected getLatestState(): TRootState {
+    return (this.store as EStore).router.latestState as TRootState;
   }
+
+  /**
+   * 获取本模块的私有actions构造器
+   */
   protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {[K in keyof T]: PickHandler<T[K]>} {
     return MetaData.moduleMap[this.moduleName].actions as any;
   }
 
-  protected getState(): MS {
-    return this.store.getState(this.moduleName) as MS;
+  /**
+   * 获取本模块的当前状态
+   */
+  protected getState(): TModuleState {
+    return this.store.getState(this.moduleName) as TModuleState;
   }
 
-  protected getRootState(): RS {
-    return this.store.getState() as RS;
+  /** {@inheritDoc BaseModel.getLatestState} */
+  protected getRootState(): TRootState {
+    return this.store.getState() as TRootState;
   }
 
+  /**
+   * 获取当前执行的action.type
+   */
   protected getCurrentActionName(): string {
     return (this.store as EStore).getCurrentActionName();
   }
 
-  protected getCurrentState(): MS {
-    return (this.store as EStore).getCurrentState(this.moduleName) as MS;
+  /**
+   * 获取本模块的实时状态
+   */
+  protected getCurrentState(): TModuleState {
+    return (this.store as EStore).getCurrentState(this.moduleName) as TModuleState;
   }
 
-  protected getCurrentRootState(): RS {
+  /** {@inheritDoc BaseModel.getLatestState} */
+  protected getCurrentRootState(): TRootState {
     return (this.store as EStore).getCurrentState();
   }
 
@@ -176,12 +249,12 @@ export abstract class BaseModel<MS extends ModuleState = {}, MP extends ModuleSt
   // }
 
   @reducer
-  public [ActionTypes.MInit](initState: MS): MS {
+  public [ActionTypes.MInit](initState: TModuleState): TModuleState {
     return initState;
   }
 
   @reducer
-  public [ActionTypes.MLoading](payload: {[groupKey: string]: string}): MS {
+  public [ActionTypes.MLoading](payload: {[groupKey: string]: string}): TModuleState {
     const state = this.getState();
     const loading = mergeState(state.loading, payload);
     return mergeState(state, {loading});

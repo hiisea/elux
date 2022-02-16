@@ -81,27 +81,92 @@ export declare type HandlerThis<T> = T extends (...args: infer P) => any ? (...a
 export declare type ActionsThis<T> = {
     [K in keyof T]: HandlerThis<T[K]>;
 };
-/*** @public */
-export declare abstract class BaseModel<MS extends ModuleState = {}, MP extends ModuleState = {}, RS extends RootState = {}> implements CommonModel {
+/**
+ * Model基类
+ *
+ * @remarks
+ * - `TModuleState`: 本模块的状态结构
+ *
+ * - `TRouteParams`: 本模块的路由参数结构
+ *
+ * - `TRootState`: 全局状态结构
+ *
+ * @typeParam TModuleState - 本模块的状态结构
+ * @typeParam TRouteParams - 本模块的路由参数结构
+ * @typeParam TRootState - 全局状态结构
+ *
+ * @public
+ */
+export declare abstract class BaseModel<TModuleState extends ModuleState = {}, TRouteParams extends ModuleState = {}, TRootState extends RootState = {}> implements CommonModel {
     readonly moduleName: string;
     store: UStore;
-    abstract defaultRouteParams: MP;
-    abstract init(latestState: RootState, preState: RootState): MS;
+    /**
+     * 本模块的路由参数默认值
+     *
+     * @remarks
+     * 实际路由参数由`URL传值`+`默认值`deepMerge所得
+     *
+     */
+    abstract defaultRouteParams: TRouteParams;
+    /**
+     * 获取本模块的状态初始值
+     *
+     * @remarks
+     * 模块初始化时将调用此方法获取状态初始值
+     *
+     * @param latestState - 当前最新的全局状态（多个PageStore合并后的状态）
+     * @param preState - 提前预置的全局状态（通常用于SSR时传递脱水状态）
+     *
+     * @returns 返回本模块的状态初始值
+     *
+     */
+    abstract init(latestState: RootState, preState: RootState): TModuleState;
     constructor(moduleName: string, store: UStore);
+    /**
+     * 获取本模块的公开actions构造器
+     */
     protected get actions(): ActionsThis<this>;
-    protected get router(): {
-        routeState: RouteState;
-    };
-    protected getRouteParams(): MP;
-    protected getLatestState(): RS;
+    /**
+     * 获取当前Router
+     */
+    protected get router(): unknown;
+    /**
+     * 获取本模块当前路由参数
+     */
+    protected getRouteParams(): TRouteParams;
+    /**
+     * 获取全局的当前状态
+     *
+     * @remarks
+     * 注意一下三者的区别
+     *
+     * - getRootState(): TRootState
+     * - getCurrentRootState(): TRootState
+     * - getLatestState(): TRootState
+     */
+    protected getLatestState(): TRootState;
+    /**
+     * 获取本模块的私有actions构造器
+     */
     protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {
         [K in keyof T]: PickHandler<T[K]>;
     };
-    protected getState(): MS;
-    protected getRootState(): RS;
+    /**
+     * 获取本模块的当前状态
+     */
+    protected getState(): TModuleState;
+    /** {@inheritDoc BaseModel.getLatestState} */
+    protected getRootState(): TRootState;
+    /**
+     * 获取当前执行的action.type
+     */
     protected getCurrentActionName(): string;
-    protected getCurrentState(): MS;
-    protected getCurrentRootState(): RS;
+    /**
+     * 获取本模块的实时状态
+     */
+    protected getCurrentState(): TModuleState;
+    /** {@inheritDoc BaseModel.getLatestState} */
+    protected getCurrentRootState(): TRootState;
     protected dispatch(action: Action): void | Promise<void>;
     protected loadModel(moduleName: string): void | Promise<void>;
     destroy(): void;

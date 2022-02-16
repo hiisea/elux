@@ -4,10 +4,10 @@
 
 ## BaseModel.router property
 
+获取当前Router
+
 <b>Signature:</b>
 
 ```typescript
-protected get router(): {
-        routeState: RouteState;
-    };
+protected get router(): unknown;
 ```

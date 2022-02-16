@@ -4,8 +4,17 @@
 
 ## UserConfig.paramsKey property
 
+序列化路由参数key名
+
 <b>Signature:</b>
 
 ```typescript
 paramsKey: string;
 ```
+
+## Remarks
+
+默认: `_`
+
+框架将路由参数序列化为string后，作为该key的value存入url，如：/index?`_`<!-- -->=`{...}`
+

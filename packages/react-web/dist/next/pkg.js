@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useCallback, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
 import { hydrate, render, unstable_batchedUpdates } from 'react-dom';
-export { unstable_batchedUpdates as batch } from 'react-dom';
 
 let root;
 
@@ -205,7 +204,7 @@ const coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  RouteModuleName: 'route',
+  RouteModuleName: '',
   AppModuleName: 'stage'
 };
 const setCoreConfig = buildConfigSetter(coreConfig);
@@ -7605,11 +7604,11 @@ var useSelector = /*#__PURE__*/createSelectorHook();
 
 setBatch(unstable_batchedUpdates);
 
-const connectRedux = function (...args) {
+function connectRedux(mapStateToProps, options) {
   return function (component) {
-    return exportView(connect(...args)(component));
+    return exportView(connect(mapStateToProps, options)(component));
   };
-};
+}
 
 setAppConfig({
   loadComponent: reactLoadComponent,
@@ -7624,17 +7623,17 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
-const createApp = (moduleGetter, storeMiddlewares, storeLogger) => {
+function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   const history = createBrowserHistory();
   const router = createRouter(history, {});
   return createBaseApp({}, router, renderToDocument, data => data, storeMiddlewares, storeLogger);
-};
-const createSSR = (moduleGetter, url, nativeData, storeMiddlewares, storeLogger) => {
+}
+function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   const history = createServerHistory(url);
   const router = createRouter(history, nativeData);
   return createBaseSSR({}, router, renderToString, data => data, storeMiddlewares, storeLogger);
-};
+}
 
-export { BaseModel, DocumentHead, Else, EmptyModel, Link, LoadingState, Provider, RouteModel, Switch, connect, connectAdvanced, connectRedux, createApp, createRouteModule, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, loadModel, location, modelHotReplacement, patchActions, reducer, safeJsonParse, setConfig, setLoading, shallowEqual, useSelector, useStore };
+export { BaseModel, DocumentHead, Else, EmptyModel, Link, LoadingState, RouteModel, Switch, connectRedux, createApp, createRouteModule, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, loadModel, location, modelHotReplacement, patchActions, reducer, safeJsonParse, setConfig, setLoading, shallowEqual, useSelector };

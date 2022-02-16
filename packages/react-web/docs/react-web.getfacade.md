@@ -4,12 +4,18 @@
 
 ## GetFacade type
 
-\*
+获取应用顶级API类型
 
 <b>Signature:</b>
 
 ```typescript
-export declare type GetFacade<F extends Facade, R extends string = 'route'> = GetBaseFacade<F, LoadComponentOptions, R>;
+export declare type GetFacade<TFacade extends Facade, TRouteModuleName extends string = 'route'> = GetBaseFacade<TFacade, LoadComponentOptions, TRouteModuleName>;
 ```
 <b>References:</b> [Facade](./react-web.facade.md)<!-- -->, [GetBaseFacade](./react-web.getbasefacade.md)<!-- -->, [LoadComponentOptions](./react-web.loadcomponentoptions.md)
+
+## Remarks
+
+- `TFacade`<!-- -->: 各模块接口，可通过`Facade<ModuleGetter>`<!-- -->获取
+
+- `TRouteModuleName`<!-- -->: 路由模块名称，默认为`route`
 

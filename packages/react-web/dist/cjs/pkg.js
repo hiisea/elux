@@ -259,7 +259,7 @@ var coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  RouteModuleName: 'route',
+  RouteModuleName: '',
   AppModuleName: 'stage'
 };
 var setCoreConfig = buildConfigSetter(coreConfig);
@@ -8784,15 +8784,11 @@ var useSelector = /*#__PURE__*/createSelectorHook();
 
 setBatch(reactDom.unstable_batchedUpdates);
 
-var connectRedux = function connectRedux() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-
+function connectRedux(mapStateToProps, options) {
   return function (component) {
-    return exportView(connect.apply(void 0, args)(component));
+    return exportView(connect(mapStateToProps, options)(component));
   };
-};
+}
 
 setAppConfig({
   loadComponent: reactLoadComponent,
@@ -8807,39 +8803,30 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
-var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
+function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createBrowserHistory();
   var router = createRouter(history, {});
   return createBaseApp({}, router, renderToDocument, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
-var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
+}
+function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createServerHistory(url);
   var router = createRouter(history, nativeData);
   return createBaseSSR({}, router, renderToString, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
+}
 
-Object.defineProperty(exports, 'batch', {
-  enumerable: true,
-  get: function () {
-    return reactDom.unstable_batchedUpdates;
-  }
-});
 exports.BaseModel = BaseModel;
 exports.DocumentHead = DocumentHead;
 exports.Else = Else;
 exports.EmptyModel = EmptyModel;
 exports.Link = Link;
-exports.Provider = Provider;
 exports.RouteModel = RouteModel;
 exports.Switch = Switch;
-exports.connect = connect;
-exports.connectAdvanced = connectAdvanced;
 exports.connectRedux = connectRedux;
 exports.createApp = createApp;
 exports.createRouteModule = createRouteModule;
@@ -8867,4 +8854,3 @@ exports.setConfig = setConfig;
 exports.setLoading = setLoading;
 exports.shallowEqual = shallowEqual;
 exports.useSelector = useSelector;
-exports.useStore = useStore;

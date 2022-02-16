@@ -8,9 +8,8 @@
 
 |  Class | Description |
 |  --- | --- |
-|  [BaseModel](./react-web.basemodel.md) | \* |
+|  [BaseModel](./react-web.basemodel.md) | Model基类 |
 |  [EmptyModel](./react-web.emptymodel.md) | \* |
-|  [RouteModel](./react-web.routemodel.md) | \* |
 
 ## Enumerations
 
@@ -22,7 +21,10 @@
 
 |  Function | Description |
 |  --- | --- |
+|  [connectRedux(mapStateToProps, options)](./react-web.connectredux.md) | 连接store与react组件 |
+|  [createApp(moduleGetter, storeMiddlewares, storeLogger)](./react-web.createapp.md) | 创建应用(CSR) |
 |  [createRouteModule(moduleName, pagenameMap, nativeLocationMap)](./react-web.createroutemodule.md) | \* |
+|  [createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger)](./react-web.createssr.md) | 创建应用(SSR) |
 |  [deepMerge(target, args)](./react-web.deepmerge.md) | \* |
 |  [effect(loadingKey)](./react-web.effect.md) | \* |
 |  [effectLogger(before, after)](./react-web.effectlogger.md) | \* |
@@ -56,7 +58,6 @@
 |  [EluxComponent](./react-web.eluxcomponent.md) | \* |
 |  [EluxLocation](./react-web.eluxlocation.md) | \* |
 |  [GetState](./react-web.getstate.md) | \* |
-|  [IConnectRedux](./react-web.iconnectredux.md) |  |
 |  [LinkProps](./react-web.linkprops.md) | \* |
 |  [LoadComponentOptions](./react-web.loadcomponentoptions.md) | \* |
 |  [NativeLocation](./react-web.nativelocation.md) | \* |
@@ -75,9 +76,6 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [connectRedux](./react-web.connectredux.md) |  |
-|  [createApp](./react-web.createapp.md) | \* |
-|  [createSSR](./react-web.createssr.md) | \* |
 |  [DocumentHead](./react-web.documenthead.md) |  |
 |  [Else](./react-web.else.md) |  |
 |  [env](./react-web.env.md) | \* |
@@ -92,8 +90,6 @@
 |  [ActionsThis](./react-web.actionsthis.md) | \* |
 |  [AsyncEluxComponent](./react-web.asynceluxcomponent.md) | \* |
 |  [ComputedStore](./react-web.computedstore.md) | \* |
-|  [CreateApp](./react-web.createapp.md) | \* |
-|  [CreateSSR](./react-web.createssr.md) | \* |
 |  [DeepPartial](./react-web.deeppartial.md) | \* |
 |  [Dispatch](./react-web.dispatch.md) | \* |
 |  [Facade](./react-web.facade.md) | \* |
@@ -102,13 +98,13 @@
 |  [FacadeRoutes](./react-web.facaderoutes.md) | \* |
 |  [FacadeStates](./react-web.facadestates.md) | \* |
 |  [GetBaseFacade](./react-web.getbasefacade.md) | \* |
-|  [GetFacade](./react-web.getfacade.md) | \* |
+|  [GetFacade](./react-web.getfacade.md) | 获取应用顶级API类型 |
 |  [GetPromiseComponent](./react-web.getpromisecomponent.md) | \* |
 |  [GetPromiseModule](./react-web.getpromisemodule.md) | \* |
-|  [GetProps](./react-web.getprops.md) |  |
+|  [GetProps](./react-web.getprops.md) | 用于[connectRedux()](./react-web.connectredux.md) |
 |  [HandlerThis](./react-web.handlerthis.md) | \* |
 |  [HistoryAction](./react-web.historyaction.md) | \* |
-|  [InferableComponentEnhancerWithProps](./react-web.inferablecomponentenhancerwithprops.md) |  |
+|  [InferableComponentEnhancerWithProps](./react-web.inferablecomponentenhancerwithprops.md) | 用于[connectRedux()](./react-web.connectredux.md) |
 |  [LoadComponent](./react-web.loadcomponent.md) | \* |
 |  [ModuleAPI](./react-web.moduleapi.md) | \* |
 |  [ModuleGetter](./react-web.modulegetter.md) | \* |

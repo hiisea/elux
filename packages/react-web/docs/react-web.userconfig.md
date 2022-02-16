@@ -12,16 +12,20 @@
 export interface UserConfig 
 ```
 
+## Remarks
+
+通常使用默认设置即可
+
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [AppModuleName?](./react-web.userconfig.appmodulename.md) | string | <i>(Optional)</i> |
+|  [AppModuleName?](./react-web.userconfig.appmodulename.md) | string | <i>(Optional)</i> APP根模块名称 |
 |  [DepthTimeOnLoading?](./react-web.userconfig.depthtimeonloading.md) | number | <i>(Optional)</i> 超过多少秒Loading视为深度加载 |
-|  [disableNativeRouter?](./react-web.userconfig.disablenativerouter.md) | boolean | <i>(Optional)</i> |
+|  [disableNativeRouter?](./react-web.userconfig.disablenativerouter.md) | boolean | <i>(Optional)</i> 不通知原生路由 |
 |  [indexUrl?](./react-web.userconfig.indexurl.md) | string | <i>(Optional)</i> 设置应用的首页路由 |
 |  [maxHistory?](./react-web.userconfig.maxhistory.md) | number | <i>(Optional)</i> 最大历史记录栈数 |
 |  [maxLocationCache?](./react-web.userconfig.maxlocationcache.md) | number | <i>(Optional)</i> 最大路由转换缓存数 |
-|  [notfoundPagename](./react-web.userconfig.notfoundpagename.md) | string |  |
-|  [paramsKey](./react-web.userconfig.paramskey.md) | string |  |
+|  [notfoundPagename](./react-web.userconfig.notfoundpagename.md) | string | 应用默认的404 Pagename |
+|  [paramsKey](./react-web.userconfig.paramskey.md) | string | 序列化路由参数key名 |
 

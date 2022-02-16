@@ -4,8 +4,17 @@
 
 ## UserConfig.disableNativeRouter property
 
+不通知原生路由
+
 <b>Signature:</b>
 
 ```typescript
 disableNativeRouter?: boolean;
 ```
+
+## Remarks
+
+默认: `false`
+
+框架有自己的路由体系，运行平台的原生路由体系作为外挂模式存在。默认情况下二者之间会建立关联，此设置为true可以彻底忽略原生路由体系。
+

@@ -45,6 +45,9 @@ export const setAppConfig = buildConfigSetter(appConfig);
 /**
  * 全局参数设置
  *
+ * @remarks
+ * 通常使用默认设置即可
+ *
  * @public
  */
 export interface UserConfig {
@@ -52,7 +55,7 @@ export interface UserConfig {
    * 最大历史记录栈数
    *
    * @remarks
-   * 默认: 10
+   * 默认: `10`
    *
    * 此数值也表示可能同时存在的历史Page数量，设置过大可能导致页面Dom过多
    *
@@ -63,7 +66,7 @@ export interface UserConfig {
    * 最大路由转换缓存数
    *
    * @remarks
-   * 服务器环境(SSR)下默认: 10000，浏览器环境下默认: 500
+   * 默认: `服务器环境(SSR)：10000; 浏览器环境(CSR): 500`
    *
    * 由于elux中存在3种路由协议：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]，为了提高路由协议之间相互转换的性能（尤其是在SSR时，存在大量重复路由协议转换），框架做了缓存，此项目设置最大缓存数量
    *
@@ -74,7 +77,7 @@ export interface UserConfig {
    * 超过多少秒Loading视为深度加载
    *
    * @remarks
-   * 默认: 2
+   * 默认: `2`
    *
    * 框架将Loading状态分为3种：{@link LoadingState | LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时仅显示icon图标，深度loading时显示icon图标+灰色蒙层
    *
@@ -94,9 +97,49 @@ export interface UserConfig {
    * @defaultValue `/index`
    */
   indexUrl?: string;
+  /**
+   * 应用默认的404 Pagename
+   *
+   * @remarks
+   * 默认: `/404`
+   *
+   * 未找到页面时默认使用该Pagename替代。
+   *
+   * @defaultValue `/404`
+   */
   notfoundPagename: string;
+  /**
+   * 序列化路由参数key名
+   *
+   * @remarks
+   * 默认: `_`
+   *
+   * 框架将路由参数序列化为string后，作为该key的value存入url，如：/index?`_`=`{...}`
+   *
+   * @defaultValue `_`
+   */
   paramsKey: string;
+  /**
+   * APP根模块名称
+   *
+   * @remarks
+   * 默认: `stage`
+   *
+   * APP根模块名称，通常约定为stage
+   *
+   * @defaultValue `stage`
+   */
   AppModuleName?: string;
+  /**
+   * 不通知原生路由
+   *
+   * @remarks
+   * 默认: `false`
+   *
+   * 框架有自己的路由体系，运行平台的原生路由体系作为外挂模式存在。默认情况下二者之间会建立关联，此设置为true可以彻底忽略原生路由体系。
+   *
+   * @defaultValue `false`
+   */
   disableNativeRouter?: boolean;
 }
 
@@ -135,8 +178,7 @@ export type CreateMP = (
   render(): {store: UStore; context: ContextWrap};
 };
 
-/*** @public */
-export type CreateApp<INS = {}> = (
+export type ICreateApp<INS = {}> = (
   moduleGetter: ModuleGetter,
   storeMiddlewares?: StoreMiddleware[],
   storeLogger?: StoreLogger
@@ -144,8 +186,7 @@ export type CreateApp<INS = {}> = (
   render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
 };
 
-/*** @public */
-export type CreateSSR<INS = {}> = (
+export type ICreateSSR<INS = {}> = (
   moduleGetter: ModuleGetter,
   url: string,
   nativeData: any,

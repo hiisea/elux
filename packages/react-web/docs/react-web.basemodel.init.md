@@ -4,20 +4,28 @@
 
 ## BaseModel.init() method
 
+获取本模块的状态初始值
+
 <b>Signature:</b>
 
 ```typescript
-abstract init(latestState: RootState, preState: RootState): MS;
+abstract init(latestState: RootState, preState: RootState): TModuleState;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  latestState | [RootState](./react-web.rootstate.md) |  |
-|  preState | [RootState](./react-web.rootstate.md) |  |
+|  latestState | [RootState](./react-web.rootstate.md) | 当前最新的全局状态（多个PageStore合并后的状态） |
+|  preState | [RootState](./react-web.rootstate.md) | 提前预置的全局状态（通常用于SSR时传递脱水状态） |
 
 <b>Returns:</b>
 
-MS
+TModuleState
+
+返回本模块的状态初始值
+
+## Remarks
+
+模块初始化时将调用此方法获取状态初始值
 

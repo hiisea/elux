@@ -11,8 +11,8 @@
 ```typescript
 export declare type PagenameMap<P extends string = string> = {
     [K in P]: {
-        argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
-        paramsToArgs(params: Record<string, any>): Array<string | undefined>;
+        pathToParams(pathArgs: Array<string | undefined>): Record<string, any>;
+        paramsToPath(params: Record<string, any>): Array<string | undefined>;
         pageData?: any;
     };
 };

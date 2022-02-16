@@ -2,12 +2,35 @@
 
 [Home](./index.md) &gt; [@elux/react-web](./react-web.md) &gt; [createSSR](./react-web.createssr.md)
 
-## createSSR variable
+## createSSR() function
 
-\*
+创建应用(SSR)
 
 <b>Signature:</b>
 
 ```typescript
-createSSR: CreateSSR<{}>
+export declare function createSSR(moduleGetter: ModuleGetter, url: string, nativeData: any, storeMiddlewares?: StoreMiddleware[], storeLogger?: StoreLogger): {
+    render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
+};
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  moduleGetter | [ModuleGetter](./react-web.modulegetter.md) | 模块工厂 |
+|  url | string | 服务器收到的原始url |
+|  nativeData | any | 可存放任何原始请求数据 |
+|  storeMiddlewares | [StoreMiddleware](./react-web.storemiddleware.md)<!-- -->\[\] | store中间件 |
+|  storeLogger | [StoreLogger](./react-web.storelogger.md) | store日志记录器 |
+
+<b>Returns:</b>
+
+{ render({ id, ssrKey, viewName }?: [RenderOptions](./react-web.renderoptions.md)<!-- -->): Promise&lt;string&gt;; }
+
+返回包含`render(...)`<!-- -->方法的下一步实例
+
+## Remarks
+
+应用唯一的创建入口，用于服务端渲染(SSR)，客户端渲染(CSR)请使用[createApp(...)](./react-web.createapp.md)
+

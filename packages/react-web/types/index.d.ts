@@ -1,19 +1,32 @@
 import { ComponentType } from 'react';
-import { Facade } from '@elux/core';
+import { Facade, ModuleGetter, StoreMiddleware, StoreLogger } from '@elux/core';
 import { LoadComponentOptions } from '@elux/react-components';
-import { CreateApp, CreateSSR, UserConfig, GetBaseFacade } from '@elux/app';
+import { UserConfig, GetBaseFacade, RenderOptions } from '@elux/app';
 export { DocumentHead, Switch, Else, Link } from '@elux/react-components';
 export type { DocumentHeadProps, SwitchProps, ElseProps, LinkProps, LoadComponentOptions } from '@elux/react-components';
-export { errorAction, LoadingState, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, EmptyModel, BaseModel, RouteModel, loadModel, getModule, getComponent, } from '@elux/core';
+export { errorAction, LoadingState, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, EmptyModel, BaseModel, loadModel, getModule, getComponent, } from '@elux/core';
 export type { Facade, Dispatch, UStore, DeepPartial, StoreMiddleware, StoreLogger, CommonModule, Action, HistoryAction } from '@elux/core';
 export type { GetState, EluxComponent, AsyncEluxComponent, CommonModelClass, ModuleAPI, ReturnComponents, GetPromiseModule, GetPromiseComponent, ModuleState, RootState, CommonModel, RouteState, ActionsThis, PickHandler, ModuleGetter, LoadComponent, HandlerThis, FacadeStates, FacadeModules, FacadeActions, FacadeRoutes, PickActions, UNListener, ActionCreator, } from '@elux/core';
 export { location, createRouteModule, safeJsonParse } from '@elux/route';
 export type { NativeLocationMap, EluxLocation, NativeLocation, StateLocation, URouter, UHistoryRecord, ULocationTransform, PagenameMap, } from '@elux/route';
 export { getApi, patchActions } from '@elux/app';
-export type { ComputedStore, GetBaseFacade, UserConfig, CreateApp, CreateSSR, RenderOptions } from '@elux/app';
-export * from '@elux/react-redux';
-/*** @public */
-export declare type GetFacade<F extends Facade, R extends string = 'route'> = GetBaseFacade<F, LoadComponentOptions, R>;
+export type { ComputedStore, GetBaseFacade, UserConfig, RenderOptions } from '@elux/app';
+export { connectRedux, shallowEqual, useSelector, createSelectorHook } from '@elux/react-redux';
+export type { InferableComponentEnhancerWithProps, GetProps } from '@elux/react-redux';
+/**
+ * 获取应用顶级API类型
+ *
+ * @remarks
+ * - `TFacade`: 各模块接口，可通过`Facade<ModuleGetter>`获取
+ *
+ * - `TRouteModuleName`: 路由模块名称，默认为`route`
+ *
+ * @typeParam TFacade - 各模块接口，可通过`Facade<ModuleGetter>`获取
+ * @typeParam TRouteModuleName - 路由模块名称，默认为`route`
+ *
+ * @public
+ */
+export declare type GetFacade<TFacade extends Facade, TRouteModuleName extends string = 'route'> = GetBaseFacade<TFacade, LoadComponentOptions, TRouteModuleName>;
 /**
  * 全局参数设置
  *
@@ -26,7 +39,7 @@ export declare type GetFacade<F extends Facade, R extends string = 'route'> = Ge
  *
  * - LoadComponentOnLoading：用于LoadComponent(...)，组件加载中的Loading组件，此设置为全局默认，LoadComponent方法中可以单独设置
  *
- * @param conf - 参数
+ * @param conf - 全局参数
  *
  * @public
  */
@@ -36,8 +49,40 @@ export declare function setConfig(conf: UserConfig & {
     }>;
     LoadComponentOnLoading?: ComponentType<{}>;
 }): void;
-/*** @public */
-export declare const createApp: CreateApp<{}>;
-/*** @public */
-export declare const createSSR: CreateSSR<{}>;
+/**
+ * 创建应用(CSR)
+ *
+ * @remarks
+ * 应用唯一的创建入口，用于客户端渲染(CSR)，服务端渲染(SSR)请使用{@link createSSR | createSSR(...)}
+ *
+ * @param moduleGetter - 模块工厂
+ * @param storeMiddlewares - store中间件
+ * @param storeLogger - store日志记录器
+ *
+ * @returns 返回包含`render(...)`方法的下一步实例
+ *
+ * @public
+ */
+export declare function createApp(moduleGetter: ModuleGetter, storeMiddlewares?: StoreMiddleware[], storeLogger?: StoreLogger): {
+    render({ id, ssrKey, viewName }?: RenderOptions): Promise<void>;
+};
+/**
+ * 创建应用(SSR)
+ *
+ * @remarks
+ * 应用唯一的创建入口，用于服务端渲染(SSR)，客户端渲染(CSR)请使用{@link createApp | createApp(...)}
+ *
+ * @param moduleGetter - 模块工厂
+ * @param url - 服务器收到的原始url
+ * @param nativeData - 可存放任何原始请求数据
+ * @param storeMiddlewares - store中间件
+ * @param storeLogger - store日志记录器
+ *
+ * @returns 返回包含`render(...)`方法的下一步实例
+ *
+ * @public
+ */
+export declare function createSSR(moduleGetter: ModuleGetter, url: string, nativeData: any, storeMiddlewares?: StoreMiddleware[], storeLogger?: StoreLogger): {
+    render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
+};
 //# sourceMappingURL=index.d.ts.map

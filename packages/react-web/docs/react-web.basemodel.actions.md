@@ -4,6 +4,8 @@
 
 ## BaseModel.actions property
 
+获取本模块的公开actions构造器
+
 <b>Signature:</b>
 
 ```typescript

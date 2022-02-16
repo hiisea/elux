@@ -4,8 +4,17 @@
 
 ## UserConfig.notfoundPagename property
 
+应用默认的404 Pagename
+
 <b>Signature:</b>
 
 ```typescript
 notfoundPagename: string;
 ```
+
+## Remarks
+
+默认: `/404`
+
+未找到页面时默认使用该Pagename替代。
+

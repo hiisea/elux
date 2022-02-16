@@ -2,11 +2,30 @@
 
 [Home](./index.md) &gt; [@elux/react-web](./react-web.md) &gt; [connectRedux](./react-web.connectredux.md)
 
-## connectRedux variable
+## connectRedux() function
 
+连接store与react组件
 
 <b>Signature:</b>
 
 ```typescript
-connectRedux: IConnectRedux
+export declare function connectRedux<S = {}, D = {}, W = {}>(mapStateToProps?: (state: any, owner: W) => S, options?: Options<any, S, W>): InferableComponentEnhancerWithProps<S & D & {
+    dispatch: Dispatch;
+}>;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  mapStateToProps | (state: any, owner: W) =&gt; S | state与props之间的映射与转换 |
+|  options | Options&lt;any, S, W&gt; | 连接参数设置 |
+
+<b>Returns:</b>
+
+[InferableComponentEnhancerWithProps](./react-web.inferablecomponentenhancerwithprops.md)<!-- -->&lt;S &amp; D &amp; { dispatch: [Dispatch](./react-web.dispatch.md)<!-- -->; }&gt;
+
+## Remarks
+
+参见[react-redux/connect](https://react-redux.js.org/api/connect)
+

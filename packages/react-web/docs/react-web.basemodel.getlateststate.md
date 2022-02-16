@@ -4,12 +4,20 @@
 
 ## BaseModel.getLatestState() method
 
+获取全局的当前状态
+
 <b>Signature:</b>
 
 ```typescript
-protected getLatestState(): RS;
+protected getLatestState(): TRootState;
 ```
 <b>Returns:</b>
 
-RS
+TRootState
+
+## Remarks
+
+注意一下三者的区别
+
+- getRootState(): TRootState - getCurrentRootState(): TRootState - getLatestState(): TRootState
 

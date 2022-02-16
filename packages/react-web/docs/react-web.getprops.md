@@ -4,9 +4,15 @@
 
 ## GetProps type
 
+用于[connectRedux()](./react-web.connectredux.md)
 
 <b>Signature:</b>
 
 ```typescript
 export declare type GetProps<C> = C extends FunctionComponent<infer P> ? P : C extends ComponentClass<infer P> ? P : never;
 ```
+
+## Remarks
+
+参见 [connectRedux()](./react-web.connectredux.md)
+

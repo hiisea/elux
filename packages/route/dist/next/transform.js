@@ -233,7 +233,7 @@ class LocationTransform {
         arrArgs = _pathmatch.replace(_pagename, '').split('/').map(item => item ? decodeURIComponent(item) : undefined);
       }
 
-      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].pathToParams(arrArgs) : {};
       this._payload = deepMerge({}, pathArgs, args);
     }
 
@@ -307,10 +307,10 @@ class LocationTransform {
       let pathArgs;
 
       if (pagenameMap[_pagename]) {
-        const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
+        const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToPath(minPayload));
         pathmatch = _pagename + pathArgsArr.map(item => item ? encodeURIComponent(item) : '').join('/');
         pathmatch = pathmatch.replace(/\/*$/, '');
-        pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
+        pathArgs = pagenameMap[_pagename].pathToParams(pathArgsArr);
       } else {
         pathmatch = '/index';
         pathArgs = {};
@@ -535,13 +535,13 @@ export function createRouteModule(moduleName, pagenameMap, nativeLocationMap = d
   const _pagenameMap = pagenames.sort((a, b) => b.length - a.length).reduce((map, pagename) => {
     const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
     const {
-      argsToParams,
-      paramsToArgs,
+      pathToParams,
+      paramsToPath,
       pageData
     } = pagenameMap[pagename];
     map[fullPagename] = {
-      argsToParams,
-      paramsToArgs
+      pathToParams,
+      paramsToPath
     };
     routeMeta.pageDatas[pagename] = pageData;
     return map;

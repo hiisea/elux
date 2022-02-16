@@ -1,4 +1,4 @@
-import { RootState, RouteModel } from '@elux/core';
+import { RootState } from '@elux/core';
 import { NativeLocationMap, PagenameMap, EluxLocation, NativeLocation, StateLocation } from './basic';
 export declare const urlParser: {
     type: {
@@ -39,9 +39,9 @@ export declare function location(dataOrUrl: string | EluxLocation | StateLocatio
 export declare function createRouteModule<G extends PagenameMap, N extends string>(moduleName: N, pagenameMap: G, nativeLocationMap?: NativeLocationMap): {
     moduleName: N;
     initModel: (store: import("@elux/core").UStore<RootState, RootState>) => void | Promise<void>;
-    state: import("@elux/core").RouteState<RootState, string>;
+    state: import("@elux/core").ModuleState;
     routeParams: import("@elux/core").ModuleState;
-    actions: import("@elux/core").PickActions<RouteModel>;
+    actions: import("@elux/core").PickActions<import("@elux/core").CommonModel>;
     components: {};
     data: keyof G;
 };

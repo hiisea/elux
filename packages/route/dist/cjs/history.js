@@ -199,7 +199,7 @@ var RootStack = function (_RouteStack2) {
   (0, _inheritsLoose2.default)(RootStack, _RouteStack2);
 
   function RootStack() {
-    return _RouteStack2.call(this, 10) || this;
+    return _RouteStack2.call(this, _basic.routeConfig.maxHistory) || this;
   }
 
   var _proto3 = RootStack.prototype;

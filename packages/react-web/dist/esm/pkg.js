@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useCallback, memo, useState, useRef, Component as Component$3, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
 import { hydrate, render, unstable_batchedUpdates } from 'react-dom';
-export { unstable_batchedUpdates as batch } from 'react-dom';
 
 var root;
 
@@ -252,7 +251,7 @@ var coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  RouteModuleName: 'route',
+  RouteModuleName: '',
   AppModuleName: 'stage'
 };
 var setCoreConfig = buildConfigSetter(coreConfig);
@@ -8777,15 +8776,11 @@ var useSelector = /*#__PURE__*/createSelectorHook();
 
 setBatch(unstable_batchedUpdates);
 
-var connectRedux = function connectRedux() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-
+function connectRedux(mapStateToProps, options) {
   return function (component) {
-    return exportView(connect.apply(void 0, args)(component));
+    return exportView(connect(mapStateToProps, options)(component));
   };
-};
+}
 
 setAppConfig({
   loadComponent: reactLoadComponent,
@@ -8800,21 +8795,21 @@ function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
-var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
+function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createBrowserHistory();
   var router = createRouter(history, {});
   return createBaseApp({}, router, renderToDocument, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
-var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
+}
+function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createServerHistory(url);
   var router = createRouter(history, nativeData);
   return createBaseSSR({}, router, renderToString, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
+}
 
-export { BaseModel, DocumentHead, Else, EmptyModel, Link, LoadingState, Provider, RouteModel, Switch, connect, connectAdvanced, connectRedux, createApp, createRouteModule, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, loadModel, location, modelHotReplacement, patchActions, reducer, safeJsonParse, setConfig, setLoading, shallowEqual, useSelector, useStore };
+export { BaseModel, DocumentHead, Else, EmptyModel, Link, LoadingState, RouteModel, Switch, connectRedux, createApp, createRouteModule, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, loadModel, location, modelHotReplacement, patchActions, reducer, safeJsonParse, setConfig, setLoading, shallowEqual, useSelector };

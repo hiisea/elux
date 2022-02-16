@@ -1,42 +1,13 @@
 "use strict";
 
 exports.__esModule = true;
-var _exportNames = {
-  DocumentHead: true,
-  Switch: true,
-  Else: true,
-  Link: true,
-  errorAction: true,
-  LoadingState: true,
-  env: true,
-  effect: true,
-  reducer: true,
-  setLoading: true,
-  effectLogger: true,
-  isServer: true,
-  deepMerge: true,
-  exportModule: true,
-  exportView: true,
-  exportComponent: true,
-  modelHotReplacement: true,
-  EmptyModel: true,
-  BaseModel: true,
-  RouteModel: true,
-  loadModel: true,
-  getModule: true,
-  getComponent: true,
-  location: true,
-  createRouteModule: true,
-  safeJsonParse: true,
-  getApi: true,
-  patchActions: true,
-  setConfig: true,
-  createApp: true,
-  createSSR: true
-};
-exports.safeJsonParse = exports.reducer = exports.patchActions = exports.modelHotReplacement = exports.location = exports.loadModel = exports.isServer = exports.getModule = exports.getComponent = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.createSSR = exports.createRouteModule = exports.createApp = exports.Switch = exports.RouteModel = exports.LoadingState = exports.Link = exports.EmptyModel = exports.Else = exports.DocumentHead = exports.BaseModel = void 0;
+exports.connectRedux = exports.Switch = exports.RouteModel = exports.LoadingState = exports.Link = exports.EmptyModel = exports.Else = exports.DocumentHead = exports.BaseModel = void 0;
+exports.createApp = createApp;
+exports.createRouteModule = void 0;
+exports.createSSR = createSSR;
+exports.safeJsonParse = exports.reducer = exports.patchActions = exports.modelHotReplacement = exports.location = exports.loadModel = exports.isServer = exports.getModule = exports.getComponent = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.createSelectorHook = void 0;
 exports.setConfig = setConfig;
-exports.setLoading = void 0;
+exports.useSelector = exports.shallowEqual = exports.setLoading = void 0;
 
 var _core = require("@elux/core");
 
@@ -78,12 +49,10 @@ var _routeBrowser = require("@elux/route-browser");
 
 var _reactRedux = require("@elux/react-redux");
 
-Object.keys(_reactRedux).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _reactRedux[key]) return;
-  exports[key] = _reactRedux[key];
-});
+exports.connectRedux = _reactRedux.connectRedux;
+exports.shallowEqual = _reactRedux.shallowEqual;
+exports.useSelector = _reactRedux.useSelector;
+exports.createSelectorHook = _reactRedux.createSelectorHook;
 
 var _route = require("@elux/route");
 
@@ -105,24 +74,20 @@ function setConfig(conf) {
   (0, _app.setUserConfig)(conf);
 }
 
-var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
+function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   (0, _core.defineModuleGetter)(moduleGetter);
   var history = (0, _routeBrowser.createBrowserHistory)();
   var router = (0, _routeBrowser.createRouter)(history, {});
   return (0, _app.createBaseApp)({}, router, _stage.renderToDocument, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
+}
 
-exports.createApp = createApp;
-
-var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
+function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   (0, _core.defineModuleGetter)(moduleGetter);
   var history = (0, _routeBrowser.createServerHistory)(url);
   var router = (0, _routeBrowser.createRouter)(history, nativeData);
   return (0, _app.createBaseSSR)({}, router, _stage.renderToString, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
-
-exports.createSSR = createSSR;
+}

@@ -228,7 +228,7 @@ var LocationTransform = function () {
         });
       }
 
-      var pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+      var pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].pathToParams(arrArgs) : {};
       this._payload = (0, _core.deepMerge)({}, pathArgs, args);
     }
 
@@ -303,12 +303,12 @@ var LocationTransform = function () {
       var pathArgs;
 
       if (pagenameMap[_pagename]) {
-        var pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
+        var pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToPath(minPayload));
         pathmatch = _pagename + pathArgsArr.map(function (item) {
           return item ? encodeURIComponent(item) : '';
         }).join('/');
         pathmatch = pathmatch.replace(/\/*$/, '');
-        pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
+        pathArgs = pagenameMap[_pagename].pathToParams(pathArgsArr);
       } else {
         pathmatch = '/index';
         pathArgs = {};
@@ -533,12 +533,12 @@ function createRouteModule(moduleName, pagenameMap, nativeLocationMap) {
   }).reduce(function (map, pagename) {
     var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
     var _pagenameMap$pagename = pagenameMap[pagename],
-        argsToParams = _pagenameMap$pagename.argsToParams,
-        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
+        pathToParams = _pagenameMap$pagename.pathToParams,
+        paramsToPath = _pagenameMap$pagename.paramsToPath,
         pageData = _pagenameMap$pagename.pageData;
     map[fullPagename] = {
-      argsToParams: argsToParams,
-      paramsToArgs: paramsToArgs
+      pathToParams: pathToParams,
+      paramsToPath: paramsToPath
     };
     _basic.routeMeta.pageDatas[pagename] = pageData;
     return map;

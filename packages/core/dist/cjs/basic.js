@@ -25,7 +25,7 @@ var coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  RouteModuleName: 'route',
+  RouteModuleName: '',
   AppModuleName: 'stage'
 };
 exports.coreConfig = coreConfig;

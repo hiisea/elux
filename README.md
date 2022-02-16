@@ -2,7 +2,7 @@
   <img src="logo.png" width="150" alt="elux">
   <h3>基于“微模块”和“模型驱动”的跨平台、跨框架的Web解决方案</h3>
   <em>我们不造轮子，不造车子，造的是底盘...</em>
-  <p></p>
+  <p><small>Learn Once, Write Anywhere</small></p>
   <a href="https://www.npmjs.com/package/@elux/cli">
     <img src="https://img.shields.io/node/v/@elux/cli.svg?style=flat-square">
   </a>
@@ -40,7 +40,7 @@
     <tr>
         <td valign="top">
         <strong>跨平台、跨框架</strong>
-        <p>支持单页应用、多页应用、服务器同构渲染(SSR)、小程序等运行平台；支持React、VUE、Taro、Redux、Vuex等泛Web框架...</p>
+        <p>支持单页应用、多页应用、服务器同构渲染(SSR)、小程序等运行平台；支持React、VUE、Taro、Less、SaaS等泛Web框架...</p>
         </td>
         <td valign="top">
         <strong>简单易用</strong>

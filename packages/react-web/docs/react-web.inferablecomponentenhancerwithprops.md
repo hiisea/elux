@@ -4,6 +4,7 @@
 
 ## InferableComponentEnhancerWithProps type
 
+用于[connectRedux()](./react-web.connectredux.md)
 
 <b>Signature:</b>
 
@@ -11,4 +12,8 @@
 export declare type InferableComponentEnhancerWithProps<TInjectedProps> = <C>(component: C) => EluxComponent & ComponentType<Omit<GetProps<C>, keyof TInjectedProps>>;
 ```
 <b>References:</b> [EluxComponent](./react-web.eluxcomponent.md)<!-- -->, [GetProps](./react-web.getprops.md)
+
+## Remarks
+
+参见 [connectRedux()](./react-web.connectredux.md)
 

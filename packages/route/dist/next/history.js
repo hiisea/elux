@@ -1,6 +1,6 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { env, forkStore } from '@elux/core';
-import { routeMeta } from './basic';
+import { routeMeta, routeConfig } from './basic';
 
 class RouteStack {
   constructor(limit) {
@@ -180,7 +180,7 @@ _defineProperty(HistoryStack, "id", 0);
 
 export class RootStack extends RouteStack {
   constructor() {
-    super(10);
+    super(routeConfig.maxHistory);
   }
 
   getCurrentPages() {

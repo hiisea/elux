@@ -4,8 +4,17 @@
 
 ## UserConfig.AppModuleName property
 
+APP根模块名称
+
 <b>Signature:</b>
 
 ```typescript
 AppModuleName?: string;
 ```
+
+## Remarks
+
+默认: `stage`
+
+APP根模块名称，通常约定为stage
+

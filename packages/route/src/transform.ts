@@ -1,4 +1,4 @@
-import {deepMerge, moduleExists, getModuleList, isPromise, RootState, RouteModel, exportModule, setCoreConfig} from '@elux/core';
+import {deepMerge, moduleExists, getModuleList, isPromise, RootState, RouteModel, exportModule, setCoreConfig, CommonModelClass} from '@elux/core';
 import {routeMeta, routeConfig, NativeLocationMap, PagenameMap, EluxLocation, NativeLocation, StateLocation, safeJsonParse} from './basic';
 import {extendDefault, excludeDefault} from './deep-extend';
 
@@ -192,7 +192,7 @@ class LocationTransform implements ULocationTransform, LocationCache {
           .split('/')
           .map((item) => (item ? decodeURIComponent(item) : undefined));
       }
-      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+      const pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].pathToParams(arrArgs) : {};
       this._payload = deepMerge({}, pathArgs, args) as Record<string, any>;
     }
     return this._payload;
@@ -244,10 +244,10 @@ class LocationTransform implements ULocationTransform, LocationCache {
       let pathmatch: string;
       let pathArgs: Record<string, any>;
       if (pagenameMap[_pagename]) {
-        const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
+        const pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToPath(minPayload));
         pathmatch = _pagename + pathArgsArr.map((item) => (item ? encodeURIComponent(item) : '')).join('/');
         pathmatch = pathmatch.replace(/\/*$/, '');
-        pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
+        pathArgs = pagenameMap[_pagename].pathToParams(pathArgsArr);
       } else {
         pathmatch = '/index';
         pathArgs = {};
@@ -408,8 +408,8 @@ export function createRouteModule<G extends PagenameMap, N extends string>(
     .sort((a, b) => b.length - a.length)
     .reduce((map, pagename) => {
       const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-      const {argsToParams, paramsToArgs, pageData} = pagenameMap[pagename];
-      map[fullPagename] = {argsToParams, paramsToArgs};
+      const {pathToParams, paramsToPath, pageData} = pagenameMap[pagename];
+      map[fullPagename] = {pathToParams, paramsToPath};
       //routeMeta.pagenames[pagename] = pagename;
       routeMeta.pageDatas[pagename] = pageData;
       return map;
@@ -419,5 +419,5 @@ export function createRouteModule<G extends PagenameMap, N extends string>(
   routeMeta.pagenameList = Object.keys(_pagenameMap);
   routeMeta.nativeLocationMap = nativeLocationMap;
 
-  return exportModule(moduleName, RouteModel, {}, '/index' as keyof G);
+  return exportModule(moduleName, RouteModel as CommonModelClass, {}, '/index' as keyof G);
 }

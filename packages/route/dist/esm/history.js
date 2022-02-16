@@ -2,7 +2,7 @@ import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitial
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { env, forkStore } from '@elux/core';
-import { routeMeta } from './basic';
+import { routeMeta, routeConfig } from './basic';
 
 var RouteStack = function () {
   function RouteStack(limit) {
@@ -192,7 +192,7 @@ export var RootStack = function (_RouteStack2) {
   _inheritsLoose(RootStack, _RouteStack2);
 
   function RootStack() {
-    return _RouteStack2.call(this, 10) || this;
+    return _RouteStack2.call(this, routeConfig.maxHistory) || this;
   }
 
   var _proto3 = RootStack.prototype;

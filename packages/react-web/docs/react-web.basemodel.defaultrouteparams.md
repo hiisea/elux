@@ -4,8 +4,15 @@
 
 ## BaseModel.defaultRouteParams property
 
+本模块的路由参数默认值
+
 <b>Signature:</b>
 
 ```typescript
-abstract defaultRouteParams: MP;
+abstract defaultRouteParams: TRouteParams;
 ```
+
+## Remarks
+
+实际路由参数由`URL传值`<!-- -->+`默认值`<!-- -->deepMerge所得
+

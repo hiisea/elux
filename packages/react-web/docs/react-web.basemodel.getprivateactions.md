@@ -4,6 +4,8 @@
 
 ## BaseModel.getPrivateActions() method
 
+获取本模块的私有actions构造器
+
 <b>Signature:</b>
 
 ```typescript

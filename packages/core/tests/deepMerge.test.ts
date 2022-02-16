@@ -1,4 +1,4 @@
-import {deepMerge} from 'src/sprite';
+import {deepMerge} from 'src/utils';
 
 describe('deepExtend', () => {
   test('deepExtend', () => {

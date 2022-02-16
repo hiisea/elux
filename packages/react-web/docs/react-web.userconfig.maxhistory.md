@@ -14,7 +14,7 @@ maxHistory?: number;
 
 ## Remarks
 
-默认: 10
+默认: `10`
 
 此数值也表示可能同时存在的历史Page数量，设置过大可能导致页面Dom过多
 

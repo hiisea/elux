@@ -4,6 +4,8 @@
 
 ## BaseModel.getCurrentActionName() method
 
+获取当前执行的action.type
+
 <b>Signature:</b>
 
 ```typescript

@@ -8,7 +8,7 @@ export { DocumentHead, Switch, Else, Link } from '@elux/react-components';
 export { errorAction, LoadingState, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, EmptyModel, BaseModel, RouteModel, loadModel, getModule, getComponent } from '@elux/core';
 export { location, createRouteModule, safeJsonParse } from '@elux/route';
 export { getApi, patchActions } from '@elux/app';
-export * from '@elux/react-redux';
+export { connectRedux, shallowEqual, useSelector, createSelectorHook } from '@elux/react-redux';
 setAppConfig({
   loadComponent: loadComponent,
   useRouter: useRouter,
@@ -22,19 +22,19 @@ export function setConfig(conf) {
   setReactComponentsConfig(conf);
   setUserConfig(conf);
 }
-export var createApp = function createApp(moduleGetter, storeMiddlewares, storeLogger) {
+export function createApp(moduleGetter, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createBrowserHistory();
   var router = createRouter(history, {});
   return createBaseApp({}, router, renderToDocument, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
-export var createSSR = function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
+}
+export function createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger) {
   defineModuleGetter(moduleGetter);
   var history = createServerHistory(url);
   var router = createRouter(history, nativeData);
   return createBaseSSR({}, router, renderToString, function (data) {
     return data;
   }, storeMiddlewares, storeLogger);
-};
+}

@@ -12,9 +12,9 @@
 export declare function createRouteModule<G extends PagenameMap, N extends string>(moduleName: N, pagenameMap: G, nativeLocationMap?: NativeLocationMap): {
     moduleName: N;
     initModel: (store: import("@elux/core").UStore<RootState, RootState>) => void | Promise<void>;
-    state: import("@elux/core").RouteState<RootState, string>;
+    state: import("@elux/core").ModuleState;
     routeParams: import("@elux/core").ModuleState;
-    actions: import("@elux/core").PickActions<RouteModel>;
+    actions: import("@elux/core").PickActions<import("@elux/core").CommonModel>;
     components: {};
     data: keyof G;
 };
@@ -30,5 +30,5 @@ export declare function createRouteModule<G extends PagenameMap, N extends strin
 
 <b>Returns:</b>
 
-{ moduleName: N; initModel: (store: import("@elux/core").[UStore](./react-web.ustore.md)<!-- -->&lt;[RootState](./react-web.rootstate.md)<!-- -->, [RootState](./react-web.rootstate.md)<!-- -->&gt;) =&gt; void \| Promise&lt;void&gt;; state: import("@elux/core").[RouteState](./react-web.routestate.md)<!-- -->&lt;[RootState](./react-web.rootstate.md)<!-- -->, string&gt;; routeParams: import("@elux/core").[ModuleState](./react-web.modulestate.md)<!-- -->; actions: import("@elux/core").[PickActions](./react-web.pickactions.md)<!-- -->&lt;[RouteModel](./react-web.routemodel.md)<!-- -->&gt;; components: {}; data: keyof G; }
+{ moduleName: N; initModel: (store: import("@elux/core").[UStore](./react-web.ustore.md)<!-- -->&lt;[RootState](./react-web.rootstate.md)<!-- -->, [RootState](./react-web.rootstate.md)<!-- -->&gt;) =&gt; void \| Promise&lt;void&gt;; state: import("@elux/core").[ModuleState](./react-web.modulestate.md)<!-- -->; routeParams: import("@elux/core").[ModuleState](./react-web.modulestate.md)<!-- -->; actions: import("@elux/core").[PickActions](./react-web.pickactions.md)<!-- -->&lt;import("@elux/core").[CommonModel](./react-web.commonmodel.md)<!-- -->&gt;; components: {}; data: keyof G; }
 

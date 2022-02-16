@@ -4,7 +4,6 @@
     "rootDir": "../",
     "declarationDir": null,
     "noEmit": true,
-    "declaration": false,
     "emitDeclarationOnly": false,
     "types": ["jest", "node"],
     "paths": {

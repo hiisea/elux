@@ -6,7 +6,7 @@ export const coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  RouteModuleName: 'route',
+  RouteModuleName: '',
   AppModuleName: 'stage'
 };
 export const setCoreConfig = buildConfigSetter(coreConfig);

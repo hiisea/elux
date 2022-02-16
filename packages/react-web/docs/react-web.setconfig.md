@@ -21,7 +21,7 @@ export declare function setConfig(conf: UserConfig & {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  conf | [UserConfig](./react-web.userconfig.md) &amp; { LoadComponentOnError?: ComponentType&lt;{ message: string; }&gt;; LoadComponentOnLoading?: ComponentType&lt;{}&gt;; } | 参数 |
+|  conf | [UserConfig](./react-web.userconfig.md) &amp; { LoadComponentOnError?: ComponentType&lt;{ message: string; }&gt;; LoadComponentOnLoading?: ComponentType&lt;{}&gt;; } | 全局参数 |
 
 <b>Returns:</b>
 

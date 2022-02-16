@@ -4,12 +4,14 @@
 
 ## BaseModel.getRouteParams() method
 
+获取本模块当前路由参数
+
 <b>Signature:</b>
 
 ```typescript
-protected getRouteParams(): MP;
+protected getRouteParams(): TRouteParams;
 ```
 <b>Returns:</b>
 
-MP
+TRouteParams
 

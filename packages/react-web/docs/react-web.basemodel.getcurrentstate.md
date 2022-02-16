@@ -4,12 +4,14 @@
 
 ## BaseModel.getCurrentState() method
 
+获取本模块的实时状态
+
 <b>Signature:</b>
 
 ```typescript
-protected getCurrentState(): MS;
+protected getCurrentState(): TModuleState;
 ```
 <b>Returns:</b>
 
-MS
+TModuleState
 

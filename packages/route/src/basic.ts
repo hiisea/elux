@@ -27,8 +27,8 @@ export interface NativeLocationMap {
 /*** @public */
 export type PagenameMap<P extends string = string> = {
   [K in P]: {
-    argsToParams(pathArgs: Array<string | undefined>): Record<string, any>;
-    paramsToArgs(params: Record<string, any>): Array<string | undefined>; // TODO vue下类型推导出错？paramsToArgs(params: Record<string, any>): Array<any>;
+    pathToParams(pathArgs: Array<string | undefined>): Record<string, any>;
+    paramsToPath(params: Record<string, any>): Array<string | undefined>; // TODO vue下类型推导出错？paramsToArgs(params: Record<string, any>): Array<any>;
     pageData?: any;
   };
 };
