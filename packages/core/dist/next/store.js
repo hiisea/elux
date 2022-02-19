@@ -99,26 +99,26 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
   };
   const loadingGroups = {};
   const injectedModules = {};
-  const currentData = {
-    actionName: '',
-    prevState: {}
+  const refData = {
+    currentActionName: '',
+    uncommittedState: {},
+    isActive: false
   };
-  let _isActive = false;
 
   const isActive = () => {
-    return _isActive;
+    return refData.isActive;
   };
 
   const setActive = status => {
-    if (_isActive !== status) {
-      _isActive = status;
+    if (refData.isActive !== status) {
+      refData.isActive = status;
     }
   };
 
-  const getCurrentActionName = () => currentData.actionName;
+  const getCurrentActionName = () => refData.currentActionName;
 
-  const getCurrentState = moduleName => {
-    const state = currentData.prevState;
+  const getUncommittedState = moduleName => {
+    const state = refData.uncommittedState;
     return moduleName ? state[moduleName] : state;
   };
 
@@ -183,10 +183,12 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
     });
   }
 
-  function respondHandler(action, isReducer, prevData) {
+  function respondHandler(action, isReducer) {
     let logs;
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
+    const actionPriority = action.priority || [];
+    const actionData = getActionData(action);
     const [actionModuleName] = actionName.split(coreConfig.NSP);
     const commonHandlers = handlersMap[action.type];
     const universalActionType = actionName.replace(new RegExp(`[^${coreConfig.NSP}]+`), '*');
@@ -207,17 +209,15 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
           orderList.push(moduleName);
         }
       });
-
-      if (action.priority) {
-        orderList.unshift(...action.priority);
-      }
-
+      orderList.unshift(...actionPriority);
       const implemented = {};
-      const actionData = getActionData(action);
 
       if (isReducer) {
-        Object.assign(currentData, prevData);
+        const prevState = getState();
         const newState = {};
+        const uncommittedState = { ...prevState
+        };
+        refData.uncommittedState = uncommittedState;
         orderList.forEach(moduleName => {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
@@ -227,21 +227,22 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
 
             if (result) {
               newState[moduleName] = result;
+              uncommittedState[moduleName] = result;
             }
           }
         });
         logs = [{
           id: sid,
-          isActive: _isActive
-        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), false];
+          isActive: refData.isActive
+        }, actionName, actionData, actionPriority, orderList, uncommittedState, false];
         devLogger(...logs);
         logger && logger(...logs);
         update(actionName, newState);
       } else {
         logs = [{
           id: sid,
-          isActive: _isActive
-        }, actionName, actionData, action.priority || [], orderList, getState(), true];
+          isActive: refData.isActive
+        }, actionName, actionData, actionPriority, orderList, getState(), true];
         devLogger(...logs);
         logger && logger(...logs);
         const result = [];
@@ -250,7 +251,7 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
             const modelInstance = injectedModules[moduleName];
-            Object.assign(currentData, prevData);
+            refData.currentActionName = actionName;
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
@@ -263,12 +264,8 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
   }
 
   function _dispatch(action) {
-    const prevData = {
-      actionName: action.type,
-      prevState: getState()
-    };
-    respondHandler(action, true, prevData);
-    return respondHandler(action, false, prevData);
+    respondHandler(action, true);
+    return respondHandler(action, false);
   }
 
   const middlewareAPI = {
@@ -288,7 +285,7 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
     injectedModules,
     destroy,
     getCurrentActionName,
-    getCurrentState,
+    getUncommittedState,
     update,
     isActive,
     setActive,

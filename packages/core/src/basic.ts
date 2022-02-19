@@ -169,7 +169,7 @@ export interface CommonModule<ModuleName extends string = string, Store extends 
 export interface EStore extends UStore, Flux {
   router: CoreRouter;
   getCurrentActionName: () => string;
-  getCurrentState: (moduleName?: string) => any;
+  getUncommittedState: (moduleName?: string) => any;
   injectedModules: {[moduleName: string]: CommonModel};
   loadingGroups: {[moduleNameAndGroupName: string]: TaskCounter};
   setActive(status: boolean): void;

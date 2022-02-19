@@ -4,6 +4,8 @@
 
 ## BaseModel.destroy() method
 
+model被销毁时的hook钩子
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,8 @@ destroy(): void;
 <b>Returns:</b>
 
 void
+
+## Remarks
+
+在虚拟多页模式下，`虚拟Page`<!-- -->被出栈时，Page对应的Store将被destroy()，Store对应的Model实例也将被destroy()
 

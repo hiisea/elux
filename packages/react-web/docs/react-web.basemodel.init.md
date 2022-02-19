@@ -27,5 +27,5 @@ TModuleState
 
 ## Remarks
 
-模块初始化时将调用此方法获取状态初始值
+模块初始化时将调用此方法获取状态初始值，同一个Store中，每个模块只会执行一次初始化。 此方法除了返回状态初始值之外，还可以执行一些其它初始化动作，如果有某些副作用，请记得在[BaseModel.destroy()](./react-web.basemodel.destroy.md)<!-- -->中清除
 

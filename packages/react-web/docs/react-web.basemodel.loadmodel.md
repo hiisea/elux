@@ -4,6 +4,8 @@
 
 ## BaseModel.loadModel() method
 
+手动加载Module并初始化其Model
+
 <b>Signature:</b>
 
 ```typescript
@@ -19,4 +21,8 @@ protected loadModel(moduleName: string): void | Promise<void>;
 <b>Returns:</b>
 
 void \| Promise&lt;void&gt;
+
+## Remarks
+
+大部分情况下，框架将自动按需加载Module并初始化其Model，无需手动加载
 

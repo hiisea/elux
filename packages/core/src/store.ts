@@ -100,19 +100,25 @@ export function createStore(
   };
   const loadingGroups = {};
   const injectedModules = {};
-  const currentData: {actionName: string; prevState: any} = {actionName: '', prevState: {}};
-  let _isActive = false;
+  const refData: {currentActionName: string; uncommittedState: RootState; isActive: boolean} = {
+    currentActionName: '',
+    uncommittedState: {},
+    isActive: false,
+  };
+
   const isActive = (): boolean => {
-    return _isActive;
+    return refData.isActive;
   };
   const setActive = (status: boolean): void => {
-    if (_isActive !== status) {
-      _isActive = status;
+    if (refData.isActive !== status) {
+      refData.isActive = status;
     }
   };
-  const getCurrentActionName = () => currentData.actionName;
-  const getCurrentState = (moduleName?: string) => {
-    const state = currentData.prevState;
+  const getCurrentActionName = () => refData.currentActionName;
+
+  // 只有ImmutableData状态才具有事务提交的原子性，MutableData对数据的修改是流式实时的
+  const getUncommittedState = (moduleName?: string) => {
+    const state = refData.uncommittedState;
     return moduleName ? state[moduleName] : state;
   };
 
@@ -171,10 +177,12 @@ export function createStore(
       }
     );
   }
-  function respondHandler(action: Action, isReducer: boolean, prevData: {actionName: string; prevState: RootState}): void | Promise<void> {
+  function respondHandler(action: Action, isReducer: boolean): void | Promise<void> {
     let logs: [{id: number; isActive: boolean}, string, any[], string[], string[], object, boolean];
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
+    const actionPriority = action.priority || [];
+    const actionData = getActionData(action);
     const [actionModuleName] = actionName.split(coreConfig.NSP);
     const commonHandlers = handlersMap[action.type];
     const universalActionType = actionName.replace(new RegExp(`[^${coreConfig.NSP}]+`), '*');
@@ -192,15 +200,13 @@ export function createStore(
           orderList.push(moduleName);
         }
       });
-      if (action.priority) {
-        orderList.unshift(...action.priority);
-      }
+      orderList.unshift(...actionPriority);
       const implemented: {[key: string]: boolean} = {};
-      const actionData = getActionData(action);
-
       if (isReducer) {
-        Object.assign(currentData, prevData);
-        const newState = {};
+        const prevState = getState();
+        const newState: RootState = {};
+        const uncommittedState: RootState = {...prevState};
+        refData.uncommittedState = uncommittedState;
         orderList.forEach((moduleName) => {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
@@ -209,24 +215,17 @@ export function createStore(
             const result = handler.apply(modelInstance, actionData);
             if (result) {
               newState[moduleName] = result;
+              uncommittedState[moduleName] = result;
             }
           }
         });
-        logs = [
-          {id: sid, isActive: _isActive},
-          actionName,
-          actionData,
-          action.priority || [],
-          orderList,
-          Object.assign({}, prevData.prevState, newState),
-          false,
-        ];
+        logs = [{id: sid, isActive: refData.isActive}, actionName, actionData, actionPriority, orderList, uncommittedState, false];
         //logger前置更符合日志逻辑，store.update可能同步引起ui更新、同步引起另一个action
         devLogger(...logs);
         logger && logger(...logs);
         update(actionName, newState);
       } else {
-        logs = [{id: sid, isActive: _isActive}, actionName, actionData, action.priority || [], orderList, getState(), true];
+        logs = [{id: sid, isActive: refData.isActive}, actionName, actionData, actionPriority, orderList, getState(), true];
         devLogger(...logs);
         logger && logger(...logs);
         const result: Promise<any>[] = [];
@@ -235,7 +234,7 @@ export function createStore(
             implemented[moduleName] = true;
             const handler = handlers[moduleName];
             const modelInstance = injectedModules[moduleName];
-            Object.assign(currentData, prevData);
+            refData.currentActionName = actionName;
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
@@ -246,9 +245,8 @@ export function createStore(
     return undefined;
   }
   function _dispatch(action: Action): void | Promise<void> {
-    const prevData = {actionName: action.type, prevState: getState()};
-    respondHandler(action, true, prevData);
-    return respondHandler(action, false, prevData);
+    respondHandler(action, true);
+    return respondHandler(action, false);
   }
 
   const middlewareAPI = {
@@ -270,7 +268,7 @@ export function createStore(
     injectedModules,
     destroy,
     getCurrentActionName,
-    getCurrentState,
+    getUncommittedState,
     update,
     isActive,
     setActive,

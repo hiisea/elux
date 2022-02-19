@@ -4,7 +4,7 @@
 
 ## BaseModel.getState() method
 
-获取本模块的当前状态
+获取本模块的状态
 
 <b>Signature:</b>
 
@@ -14,4 +14,8 @@ protected getState(): TModuleState;
 <b>Returns:</b>
 
 TModuleState
+
+## Remarks
+
+此方法类是 [getRootState(this.moduleName)](./react-web.basemodel.getrootstate.md) 的快捷调用
 

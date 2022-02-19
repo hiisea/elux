@@ -35,9 +35,39 @@ var BaseModel = (0, _decorate2.default)(null, function (_initialize) {
       key: "defaultRouteParams",
       value: void 0
     }, {
+      kind: "method",
+      key: "getLatestState",
+      value: function getLatestState() {
+        return this.store.router.latestState;
+      }
+    }, {
+      kind: "method",
+      key: "getRootState",
+      value: function getRootState() {
+        return this.store.getState();
+      }
+    }, {
+      kind: "method",
+      key: "getUncommittedState",
+      value: function getUncommittedState() {
+        return this.store.getUncommittedState();
+      }
+    }, {
+      kind: "method",
+      key: "getState",
+      value: function getState() {
+        return this.store.getState(this.moduleName);
+      }
+    }, {
       kind: "get",
       key: "actions",
       value: function actions() {
+        return _basic.MetaData.moduleMap[this.moduleName].actions;
+      }
+    }, {
+      kind: "method",
+      key: "getPrivateActions",
+      value: function getPrivateActions(actionsMap) {
         return _basic.MetaData.moduleMap[this.moduleName].actions;
       }
     }, {
@@ -54,45 +84,9 @@ var BaseModel = (0, _decorate2.default)(null, function (_initialize) {
       }
     }, {
       kind: "method",
-      key: "getLatestState",
-      value: function getLatestState() {
-        return this.store.router.latestState;
-      }
-    }, {
-      kind: "method",
-      key: "getPrivateActions",
-      value: function getPrivateActions(actionsMap) {
-        return _basic.MetaData.moduleMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "method",
-      key: "getState",
-      value: function getState() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "getRootState",
-      value: function getRootState() {
-        return this.store.getState();
-      }
-    }, {
-      kind: "method",
       key: "getCurrentActionName",
       value: function getCurrentActionName() {
         return this.store.getCurrentActionName();
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentState",
-      value: function getCurrentState() {
-        return this.store.getCurrentState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentRootState",
-      value: function getCurrentRootState() {
-        return this.store.getCurrentState();
       }
     }, {
       kind: "method",

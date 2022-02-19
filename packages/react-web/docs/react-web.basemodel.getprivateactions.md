@@ -24,3 +24,15 @@ protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): 
 
 { \[K in keyof T\]: [PickHandler](./react-web.pickhandler.md)<!-- -->&lt;T\[K\]&gt;; }
 
+## Remarks
+
+有些action并只在本Model内部调用，应当将其定义为`protected`<!-- -->或`private`<!-- -->权限，此时将无法通过`this.actions`<!-- -->获得其构造器
+
+## Example
+
+
+```ts
+const privateAction = this.getPrivateActions({renameUser: this.renameUser});
+this.dispatch(privateAction.renameUser('jimmy'))
+```
+

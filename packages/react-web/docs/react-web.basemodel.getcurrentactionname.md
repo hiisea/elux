@@ -4,7 +4,7 @@
 
 ## BaseModel.getCurrentActionName() method
 
-获取当前执行的action.type
+获取当前触发的action.type
 
 <b>Signature:</b>
 

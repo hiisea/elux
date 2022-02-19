@@ -15,6 +15,8 @@ export declare abstract class BaseModel<TModuleState extends ModuleState = {}, T
 
 ## Remarks
 
+Model基类中提供了一些常用的方法
+
 - `TModuleState`<!-- -->: 本模块的状态结构
 
 - `TRouteParams`<!-- -->: 本模块的路由参数结构
@@ -41,16 +43,15 @@ export declare abstract class BaseModel<TModuleState extends ModuleState = {}, T
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [destroy()](./react-web.basemodel.destroy.md) |  |  |
-|  [dispatch(action)](./react-web.basemodel.dispatch.md) |  |  |
-|  [getCurrentActionName()](./react-web.basemodel.getcurrentactionname.md) |  | 获取当前执行的action.type |
-|  [getCurrentRootState()](./react-web.basemodel.getcurrentrootstate.md) |  | 获取全局的当前状态 |
-|  [getCurrentState()](./react-web.basemodel.getcurrentstate.md) |  | 获取本模块的实时状态 |
-|  [getLatestState()](./react-web.basemodel.getlateststate.md) |  | 获取全局的当前状态 |
+|  [destroy()](./react-web.basemodel.destroy.md) |  | model被销毁时的hook钩子 |
+|  [dispatch(action)](./react-web.basemodel.dispatch.md) |  | 等同于this.store.dispatch(action) |
+|  [getCurrentActionName()](./react-web.basemodel.getcurrentactionname.md) |  | 获取当前触发的action.type |
+|  [getLatestState()](./react-web.basemodel.getlateststate.md) |  | 获取全局的状态 |
 |  [getPrivateActions(actionsMap)](./react-web.basemodel.getprivateactions.md) |  | 获取本模块的私有actions构造器 |
-|  [getRootState()](./react-web.basemodel.getrootstate.md) |  | 获取全局的当前状态 |
+|  [getRootState()](./react-web.basemodel.getrootstate.md) |  | 获取全局的状态 |
 |  [getRouteParams()](./react-web.basemodel.getrouteparams.md) |  | 获取本模块当前路由参数 |
-|  [getState()](./react-web.basemodel.getstate.md) |  | 获取本模块的当前状态 |
+|  [getState()](./react-web.basemodel.getstate.md) |  | 获取本模块的状态 |
+|  [getUncommittedState()](./react-web.basemodel.getuncommittedstate.md) |  | 获取全局的状态 |
 |  [init(latestState, preState)](./react-web.basemodel.init.md) |  | 获取本模块的状态初始值 |
-|  [loadModel(moduleName)](./react-web.basemodel.loadmodel.md) |  |  |
+|  [loadModel(moduleName)](./react-web.basemodel.loadmodel.md) |  | 手动加载Module并初始化其Model |
 

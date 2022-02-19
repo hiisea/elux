@@ -4,7 +4,7 @@
 
 ## BaseModel.getLatestState() method
 
-获取全局的当前状态
+获取全局的状态
 
 <b>Signature:</b>
 
@@ -17,7 +17,17 @@ TRootState
 
 ## Remarks
 
-注意一下三者的区别
+以下三者都是获取全局的状态，请注意它们之间的区别：
 
-- getRootState(): TRootState - getCurrentRootState(): TRootState - getLatestState(): TRootState
+- [getRootState(): TRootState](./react-web.basemodel.getrootstate.md)
+
+- [getUncommittedState(): TRootState](./react-web.basemodel.getuncommittedstate.md)
+
+- [getLatestState(): TRootState](./react-web.basemodel.getlateststate.md)
+
+- `getRootState()` VS `getUncommittedState()`<!-- -->：RootState由多个MoudleState组成，每个Module独立维护自己的MoudleState。 当一个Action触发多个不同Module的reducer时，这些reducer将顺序执行并返回新的ModuleState。 当所有reducer执行完毕时，最后才一次性commit至store，所以在执行commit之前，通过getRootState()得到的依然是原数据，而通过getUncommittedState()得到的是实时数据。 比如：ModuleA、ModuleB 都监听了Action `stage.putUser`<!-- -->，ModuleA先执行了reducer并分别返回了`NewModuleAState`<!-- -->， 然后ModuleB执行reducer时，它想通过getRootState()获取`NewModuleAState`<!-- -->是无效的，因为此时`NewModuleAState`<!-- -->还未commit至store中，此时必须使用getUncommittedState()。 因此通过getUncommittedState()获取的RootState比getRootState()要更实时。
+
+- `getUncommittedState()`<!-- -->在MutableData模式下（如VUE）无使用的意义，因为可变数据不存在commit的事务性，它是实时修改的。
+
+- `getRootState()` VS `getLatestState()`<!-- -->：使用虚拟多页时，应用可能同时存在多个`虚拟Page`<!-- -->（但有且只有一个最顶层的`虚拟Page`<!-- -->处于激活状态）， 每个`虚拟Page`<!-- -->将对应一个独立的Store，每个Store都由自己独立的RootState，它们里面存储的ModuleState并不完全一样。 getRootState()只能得到自己Store的RootState，而getLatestState()得到的是多个Store合并后的RootState。 因此通过getLatestState()获取的RootState比getRootState()要更新，getLatestState()一般用于涉及跨`虚拟Page`<!-- -->之间的状态同步。
 

@@ -4,6 +4,8 @@
 
 ## BaseModel.dispatch() method
 
+等同于this.store.dispatch(action)
+
 <b>Signature:</b>
 
 ```typescript
