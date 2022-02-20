@@ -6,7 +6,7 @@ import {EluxContext, EluxContextKey, EluxStoreContextKey, EluxStoreContext} from
 
 let StageView: DefineComponent;
 
-export const Page = defineComponent({
+export const EWindow = defineComponent({
   props: {
     store: {
       type: Object as PropType<UStore>,
@@ -32,7 +32,7 @@ export const Router = defineComponent({
       pages: {
         pagename: string;
         store: UStore;
-        page?: any;
+        pageComponent?: DefineComponent;
       }[];
     }>({
       classname: 'elux-app',
@@ -85,8 +85,8 @@ export const Router = defineComponent({
           {pages.map((item) => {
             const {store, pagename} = item;
             return (
-              <div key={store.sid} data-sid={store.sid} class="elux-page" data-pagename={pagename}>
-                <Page store={store} view={item.page || StageView} />
+              <div key={store.sid} data-sid={store.sid} class="elux-window" data-pagename={pagename}>
+                <EWindow store={store} view={item.pageComponent || StageView} />
               </div>
             );
           })}

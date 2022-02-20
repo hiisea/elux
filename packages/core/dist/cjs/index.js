@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.setProcessedError = exports.setLoading = exports.setCoreConfig = exports.routeTestChangeAction = exports.routeChangeAction = exports.routeBeforeChangeAction = exports.reinitApp = exports.reducer = exports.moduleExists = exports.modelHotReplacement = exports.mergeState = exports.loadModel = exports.loadComponent = exports.isServer = exports.isPromise = exports.isProcessedError = exports.initApp = exports.getModuleMap = exports.getModuleList = exports.getModule = exports.getComponent = exports.getCachedModules = exports.getActionData = exports.forkStore = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorProcessed = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.defineModuleGetter = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.createStore = exports.coreConfig = exports.buildConfigSetter = exports.SingleDispatcher = exports.RouteModel = exports.MultipleDispatcher = exports.LoadingState = exports.EmptyModel = exports.BaseModel = exports.ActionTypes = void 0;
+exports.setProcessedError = exports.setLoading = exports.setCoreConfig = exports.routeTestChangeAction = exports.routeChangeAction = exports.routeBeforeChangeAction = exports.reinitApp = exports.reducer = exports.moduleExists = exports.modelHotReplacement = exports.mergeState = exports.loadModel = exports.loadComponent = exports.isServer = exports.isPromise = exports.isProcessedError = exports.initApp = exports.getModuleMap = exports.getModuleList = exports.getModule = exports.getComponent = exports.getCachedModules = exports.getActionData = exports.forkStore = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorProcessed = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.defineModuleGetter = exports.deepMergeState = exports.deepMerge = exports.deepClone = exports.createStore = exports.coreConfig = exports.buildConfigSetter = exports.SingleDispatcher = exports.RouteModel = exports.RouteHistoryAction = exports.MultipleDispatcher = exports.LoadingState = exports.EmptyModel = exports.BaseModel = exports.ActionTypes = void 0;
 
 var _env = _interopRequireDefault(require("./env"));
 
@@ -25,6 +25,7 @@ exports.mergeState = _basic.mergeState;
 exports.deepMergeState = _basic.deepMergeState;
 exports.setCoreConfig = _basic.setCoreConfig;
 exports.LoadingState = _basic.LoadingState;
+exports.RouteHistoryAction = _basic.RouteHistoryAction;
 exports.isServer = _basic.isServer;
 
 var _actions = require("./actions");

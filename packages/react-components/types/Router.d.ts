@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { ComponentType } from 'react';
 import { UStore } from '@elux/core';
 import { URouter } from '@elux/route';
 export declare const Router: React.FC<{
-    page: React.ComponentType;
+    page: ComponentType;
 }>;
-export declare const Page: React.FC<{
+export declare const EWindow: React.FC<{
     store: UStore;
-    view: React.ComponentType;
+    view: ComponentType;
 }>;
 export declare function useRouter(): URouter;
 //# sourceMappingURL=Router.d.ts.map

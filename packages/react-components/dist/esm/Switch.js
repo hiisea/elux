@@ -15,4 +15,4 @@ var Component = function Component(_ref) {
   return React.createElement(React.Fragment, null, elseView);
 };
 
-export default React.memo(Component);
+export var Switch = React.memo(Component);

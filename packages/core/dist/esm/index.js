@@ -1,6 +1,6 @@
 export { default as env } from './env';
 export { buildConfigSetter, deepClone, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise } from './utils';
-export { coreConfig, mergeState, deepMergeState, setCoreConfig, LoadingState, isServer } from './basic';
+export { coreConfig, mergeState, deepMergeState, setCoreConfig, LoadingState, RouteHistoryAction, isServer } from './basic';
 export { ActionTypes, reducer, effect, setLoading, effectLogger, errorAction, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction } from './actions';
 export { getActionData, setProcessedError, isProcessedError, errorProcessed, forkStore, createStore } from './store';
 export { getModuleMap, exportView, exportComponent, modelHotReplacement, RouteModel, EmptyModel } from './modules';

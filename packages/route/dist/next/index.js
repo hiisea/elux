@@ -1,9 +1,9 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { isPromise, deepMerge, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp } from '@elux/core';
+import { isPromise, deepMerge, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp, RouteHistoryAction } from '@elux/core';
 import { routeConfig } from './basic';
-import { RootStack, HistoryStack, HistoryRecord } from './history';
+import { WindowStack, PageStack, RouteRecord } from './history';
 import { location as createLocationTransform } from './transform';
-export { setRouteConfig, routeConfig, safeJsonParse } from './basic';
+export { setRouteConfig, routeConfig, routeJsonParse } from './basic';
 export { location, createRouteModule, urlParser } from './transform';
 export class BaseNativeRouter {
   constructor() {
@@ -61,7 +61,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
 
     _defineProperty(this, "initialize", void 0);
 
-    _defineProperty(this, "rootStack", new RootStack());
+    _defineProperty(this, "windowStack", new WindowStack());
 
     _defineProperty(this, "latestState", {});
 
@@ -87,7 +87,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
       const routeState = {
         pagename,
         params,
-        action: 'RELAUNCH',
+        action: RouteHistoryAction.RELAUNCH,
         key: ''
       };
       this.routeState = routeState;
@@ -102,29 +102,29 @@ export class BaseEluxRouter extends MultipleDispatcher {
   }
 
   startup(store) {
-    const historyStack = new HistoryStack(this.rootStack, store);
-    const historyRecord = new HistoryRecord(this.location, historyStack);
-    historyStack.startup(historyRecord);
-    this.rootStack.startup(historyStack);
-    this.routeState.key = historyRecord.key;
+    const pageStack = new PageStack(this.windowStack, store);
+    const routeRecord = new RouteRecord(this.location, pageStack);
+    pageStack.startup(routeRecord);
+    this.windowStack.startup(pageStack);
+    this.routeState.key = routeRecord.key;
   }
 
   getCurrentPages() {
-    return this.rootStack.getCurrentPages();
+    return this.windowStack.getCurrentPages();
   }
 
   getCurrentStore() {
-    return this.rootStack.getCurrentItem().store;
+    return this.windowStack.getCurrentItem().store;
   }
 
   getStoreList() {
-    return this.rootStack.getItems().map(({
+    return this.windowStack.getItems().map(({
       store
     }) => store);
   }
 
   getHistoryLength(root) {
-    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
+    return root ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
   }
 
   findRecordByKey(recordKey) {
@@ -135,7 +135,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
       },
       overflow,
       index
-    } = this.rootStack.findRecordByKey(recordKey);
+    } = this.windowStack.findRecordByKey(recordKey);
     return {
       overflow,
       index,
@@ -154,7 +154,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
       },
       overflow,
       index
-    } = this.rootStack.testBack(delta, rootOnly);
+    } = this.windowStack.testBack(delta, rootOnly);
     return {
       overflow,
       index,
@@ -184,16 +184,16 @@ export class BaseEluxRouter extends MultipleDispatcher {
     const routeState = {
       pagename,
       params,
-      action: 'RELAUNCH',
+      action: RouteHistoryAction.RELAUNCH,
       key
     };
     await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
     await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.relaunch(location).key;
+      key = this.windowStack.relaunch(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().relaunch(location).key;
+      key = this.windowStack.getCurrentItem().relaunch(location).key;
     }
 
     routeState.key = key;
@@ -225,16 +225,16 @@ export class BaseEluxRouter extends MultipleDispatcher {
     const routeState = {
       pagename,
       params,
-      action: 'PUSH',
+      action: RouteHistoryAction.PUSH,
       key
     };
     await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
     await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.push(location).key;
+      key = this.windowStack.push(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().push(location).key;
+      key = this.windowStack.getCurrentItem().push(location).key;
     }
 
     routeState.key = key;
@@ -272,16 +272,16 @@ export class BaseEluxRouter extends MultipleDispatcher {
     const routeState = {
       pagename,
       params,
-      action: 'REPLACE',
+      action: RouteHistoryAction.REPLACE,
       key
     };
     await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
     await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (root) {
-      key = this.rootStack.replace(location).key;
+      key = this.windowStack.replace(location).key;
     } else {
-      key = this.rootStack.getCurrentItem().replace(location).key;
+      key = this.windowStack.getCurrentItem().replace(location).key;
     }
 
     routeState.key = key;
@@ -314,7 +314,7 @@ export class BaseEluxRouter extends MultipleDispatcher {
       record,
       overflow,
       index
-    } = this.rootStack.testBack(stepOrKey, root);
+    } = this.windowStack.testBack(stepOrKey, root);
 
     if (overflow) {
       const url = options.overflowRedirect || routeConfig.indexUrl;
@@ -334,18 +334,18 @@ export class BaseEluxRouter extends MultipleDispatcher {
       key,
       pagename,
       params,
-      action: 'BACK'
+      action: RouteHistoryAction.BACK
     };
     await this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
     await this.getCurrentStore().dispatch(routeBeforeChangeAction(routeState));
 
     if (index[0]) {
       root = true;
-      this.rootStack.back(index[0]);
+      this.windowStack.back(index[0]);
     }
 
     if (index[1]) {
-      this.rootStack.getCurrentItem().back(index[1]);
+      this.windowStack.getCurrentItem().back(index[1]);
     }
 
     const notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -373,20 +373,6 @@ export class BaseEluxRouter extends MultipleDispatcher {
     if (env.isServer) {
       return;
     }
-
-    if (this._curTask && !nonblocking) {
-      return;
-    }
-
-    return new Promise((resolve, reject) => {
-      const task = () => execute().then(resolve, reject);
-
-      if (this._curTask) {
-        this._taskList.push(task);
-      } else {
-        this.executeTask(task);
-      }
-    });
   }
 
   destroy() {

@@ -2,7 +2,22 @@ import {env, isServer} from '@elux/core';
 import {inject, defineComponent, DefineComponent} from 'vue';
 import {EluxContext, EluxContextKey} from './base';
 
-/*** @public */
+/**
+ * 内置VUE组件
+ *
+ * @remarks
+ * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
+ *
+ * @example
+ * ```html
+ * <DocumentHead
+ *   title='文章'
+ *   html='<meta name="keywords" content="域名,域名推广,域名注册">'
+ * />
+ * ```
+ *
+ * @public
+ */
 export interface DocumentHeadProps {
   title?: string;
   html?: string;
@@ -23,8 +38,15 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
   }
 }
 
-/*** @public */
-const Component: DefineComponent<DocumentHeadProps> = defineComponent({
+/**
+ * 内置VUE组件
+ *
+ * @remarks
+ * 参见：{@link DocumentHeadProps}
+ *
+ * @public
+ */
+export const DocumentHead: DefineComponent<DocumentHeadProps> = defineComponent({
   props: {
     title: {
       type: String,
@@ -67,5 +89,3 @@ const Component: DefineComponent<DocumentHeadProps> = defineComponent({
     return null;
   },
 }) as any;
-
-export default Component;

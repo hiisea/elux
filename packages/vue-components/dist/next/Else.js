@@ -1,5 +1,5 @@
 import { Fragment, h, Comment } from 'vue';
-export default function (props, context) {
+export const Else = function (props, context) {
   const arr = [];
   const children = context.slots.default ? context.slots.default() : [];
   children.forEach(item => {
@@ -13,4 +13,4 @@ export default function (props, context) {
   }
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
-}
+};

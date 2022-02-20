@@ -3,11 +3,11 @@ import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitial
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import _regeneratorRuntime from "@babel/runtime/regenerator";
-import { isPromise, deepMerge, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp } from '@elux/core';
+import { isPromise, deepMerge, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction, coreConfig, deepClone, MultipleDispatcher, env, reinitApp, RouteHistoryAction } from '@elux/core';
 import { routeConfig } from './basic';
-import { RootStack, HistoryStack, HistoryRecord } from './history';
+import { WindowStack, PageStack, RouteRecord } from './history';
 import { location as createLocationTransform } from './transform';
-export { setRouteConfig, routeConfig, safeJsonParse } from './basic';
+export { setRouteConfig, routeConfig, routeJsonParse } from './basic';
 export { location, createRouteModule, urlParser } from './transform';
 export var BaseNativeRouter = function () {
   function BaseNativeRouter() {
@@ -79,7 +79,7 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "rootStack", new RootStack());
+    _defineProperty(_assertThisInitialized(_this2), "windowStack", new WindowStack());
 
     _defineProperty(_assertThisInitialized(_this2), "latestState", {});
 
@@ -105,7 +105,7 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
       var routeState = {
         pagename: pagename,
         params: params,
-        action: 'RELAUNCH',
+        action: RouteHistoryAction.RELAUNCH,
         key: ''
       };
       _this2.routeState = routeState;
@@ -124,39 +124,39 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
   var _proto2 = BaseEluxRouter.prototype;
 
   _proto2.startup = function startup(store) {
-    var historyStack = new HistoryStack(this.rootStack, store);
-    var historyRecord = new HistoryRecord(this.location, historyStack);
-    historyStack.startup(historyRecord);
-    this.rootStack.startup(historyStack);
-    this.routeState.key = historyRecord.key;
+    var pageStack = new PageStack(this.windowStack, store);
+    var routeRecord = new RouteRecord(this.location, pageStack);
+    pageStack.startup(routeRecord);
+    this.windowStack.startup(pageStack);
+    this.routeState.key = routeRecord.key;
   };
 
   _proto2.getCurrentPages = function getCurrentPages() {
-    return this.rootStack.getCurrentPages();
+    return this.windowStack.getCurrentPages();
   };
 
   _proto2.getCurrentStore = function getCurrentStore() {
-    return this.rootStack.getCurrentItem().store;
+    return this.windowStack.getCurrentItem().store;
   };
 
   _proto2.getStoreList = function getStoreList() {
-    return this.rootStack.getItems().map(function (_ref) {
+    return this.windowStack.getItems().map(function (_ref) {
       var store = _ref.store;
       return store;
     });
   };
 
   _proto2.getHistoryLength = function getHistoryLength(root) {
-    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
+    return root ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
   };
 
   _proto2.findRecordByKey = function findRecordByKey(recordKey) {
-    var _this$rootStack$findR = this.rootStack.findRecordByKey(recordKey),
-        _this$rootStack$findR2 = _this$rootStack$findR.record,
-        key = _this$rootStack$findR2.key,
-        location = _this$rootStack$findR2.location,
-        overflow = _this$rootStack$findR.overflow,
-        index = _this$rootStack$findR.index;
+    var _this$windowStack$fin = this.windowStack.findRecordByKey(recordKey),
+        _this$windowStack$fin2 = _this$windowStack$fin.record,
+        key = _this$windowStack$fin2.key,
+        location = _this$windowStack$fin2.location,
+        overflow = _this$windowStack$fin.overflow,
+        index = _this$windowStack$fin.index;
 
     return {
       overflow: overflow,
@@ -169,12 +169,12 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
   };
 
   _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
-    var _this$rootStack$testB = this.rootStack.testBack(delta, rootOnly),
-        _this$rootStack$testB2 = _this$rootStack$testB.record,
-        key = _this$rootStack$testB2.key,
-        location = _this$rootStack$testB2.location,
-        overflow = _this$rootStack$testB.overflow,
-        index = _this$rootStack$testB.index;
+    var _this$windowStack$tes = this.windowStack.testBack(delta, rootOnly),
+        _this$windowStack$tes2 = _this$windowStack$tes.record,
+        key = _this$windowStack$tes2.key,
+        location = _this$windowStack$tes2.location,
+        overflow = _this$windowStack$tes.overflow,
+        index = _this$windowStack$tes.index;
 
     return {
       overflow: overflow,
@@ -223,7 +223,7 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
               routeState = {
                 pagename: pagename,
                 params: params,
-                action: 'RELAUNCH',
+                action: RouteHistoryAction.RELAUNCH,
                 key: key
               };
               _context.next = 9;
@@ -235,9 +235,9 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 11:
               if (root) {
-                key = this.rootStack.relaunch(location).key;
+                key = this.windowStack.relaunch(location).key;
               } else {
-                key = this.rootStack.getCurrentItem().relaunch(location).key;
+                key = this.windowStack.getCurrentItem().relaunch(location).key;
               }
 
               routeState.key = key;
@@ -307,7 +307,7 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
               routeState = {
                 pagename: pagename,
                 params: params,
-                action: 'PUSH',
+                action: RouteHistoryAction.PUSH,
                 key: key
               };
               _context2.next = 9;
@@ -319,9 +319,9 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 11:
               if (root) {
-                key = this.rootStack.push(location).key;
+                key = this.windowStack.push(location).key;
               } else {
-                key = this.rootStack.getCurrentItem().push(location).key;
+                key = this.windowStack.getCurrentItem().push(location).key;
               }
 
               routeState.key = key;
@@ -407,7 +407,7 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
               routeState = {
                 pagename: pagename,
                 params: params,
-                action: 'REPLACE',
+                action: RouteHistoryAction.REPLACE,
                 key: key
               };
               _context3.next = 9;
@@ -419,9 +419,9 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 11:
               if (root) {
-                key = this.rootStack.replace(location).key;
+                key = this.windowStack.replace(location).key;
               } else {
-                key = this.rootStack.getCurrentItem().replace(location).key;
+                key = this.windowStack.getCurrentItem().replace(location).key;
               }
 
               routeState.key = key;
@@ -485,13 +485,13 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
     var _back2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee4(stepOrKey, root, options, nativeCaller) {
       var _this3 = this;
 
-      var _this$rootStack$testB3, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
+      var _this$windowStack$tes3, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
 
       return _regeneratorRuntime.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              _this$rootStack$testB3 = this.rootStack.testBack(stepOrKey, root), record = _this$rootStack$testB3.record, overflow = _this$rootStack$testB3.overflow, index = _this$rootStack$testB3.index;
+              _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, root), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
 
               if (!overflow) {
                 _context4.next = 5;
@@ -521,7 +521,7 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key,
                 pagename: pagename,
                 params: params,
-                action: 'BACK'
+                action: RouteHistoryAction.BACK
               };
               _context4.next = 14;
               return this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
@@ -533,11 +533,11 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
             case 16:
               if (index[0]) {
                 root = true;
-                this.rootStack.back(index[0]);
+                this.windowStack.back(index[0]);
               }
 
               if (index[1]) {
-                this.rootStack.getCurrentItem().back(index[1]);
+                this.windowStack.getCurrentItem().back(index[1]);
               }
 
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -582,27 +582,9 @@ export var BaseEluxRouter = function (_MultipleDispatcher) {
   };
 
   _proto2.addTask = function addTask(execute, nonblocking) {
-    var _this4 = this;
-
     if (env.isServer) {
       return;
     }
-
-    if (this._curTask && !nonblocking) {
-      return;
-    }
-
-    return new Promise(function (resolve, reject) {
-      var task = function task() {
-        return execute().then(resolve, reject);
-      };
-
-      if (_this4._curTask) {
-        _this4._taskList.push(task);
-      } else {
-        _this4.executeTask(task);
-      }
-    });
   };
 
   _proto2.destroy = function destroy() {

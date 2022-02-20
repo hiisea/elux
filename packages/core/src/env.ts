@@ -20,7 +20,16 @@ if (typeof self !== 'undefined') {
   root = new Function('return this')();
 }
 
-/*** @public */
+/**
+ * 运行环境的引用
+ *
+ * @remarks
+ * - 浏览器环境下，该变量指向 window
+ *
+ * - 服务器环境下，该变量指向 global
+ *
+ * @public
+ */
 const env: EluxRuntime.ENV = root;
 
 env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;

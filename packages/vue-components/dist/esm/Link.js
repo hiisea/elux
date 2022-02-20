@@ -2,7 +2,7 @@ import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWith
 var _excluded = ["onClick", "disabled", "href", "route", "action", "root"];
 import { h, inject } from 'vue';
 import { EluxContextKey } from './base';
-export default function (_ref, context) {
+export var Link = function Link(_ref, context) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       href = _ref.href,
@@ -35,4 +35,4 @@ export default function (_ref, context) {
   } else {
     return h('div', props, context.slots.default());
   }
-}
+};

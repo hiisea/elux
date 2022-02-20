@@ -5,7 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
 
 exports.__esModule = true;
-exports.default = void 0;
+exports.loadComponent = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -25,7 +25,7 @@ var _base = require("./base");
 
 var _excluded = ["forwardedRef", "deps", "store"];
 
-var reactLoadComponent = function reactLoadComponent(moduleName, componentName, options) {
+var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
@@ -154,5 +154,4 @@ var reactLoadComponent = function reactLoadComponent(moduleName, componentName, 
   });
 };
 
-var _default = reactLoadComponent;
-exports.default = _default;
+exports.loadComponent = loadComponent;

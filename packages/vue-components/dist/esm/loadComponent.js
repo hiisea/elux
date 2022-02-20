@@ -1,8 +1,7 @@
-import { loadComponent, isPromise, env } from '@elux/core';
+import { loadComponent as baseLoadComponent, isPromise, env } from '@elux/core';
 import { defineAsyncComponent, h, inject } from 'vue';
 import { EluxContextKey, EluxStoreContextKey, vueComponentsConfig } from './base';
-
-var vueLoadComponent = function vueLoadComponent(moduleName, componentName, options) {
+export var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
@@ -25,7 +24,7 @@ var vueLoadComponent = function vueLoadComponent(moduleName, componentName, opti
     var errorMessage = '';
 
     try {
-      result = loadComponent(moduleName, componentName, store, deps || {});
+      result = baseLoadComponent(moduleName, componentName, store, deps || {});
     } catch (e) {
       env.console.error(e);
       errorMessage = e.message || "" + e;
@@ -54,5 +53,3 @@ var vueLoadComponent = function vueLoadComponent(moduleName, componentName, opti
 
   return component;
 };
-
-export default vueLoadComponent;

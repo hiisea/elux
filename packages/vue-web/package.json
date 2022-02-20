@@ -27,9 +27,8 @@
     "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts\"",
     "package:next": "cross-env NODE_TAG=next rollup -c",
     "package:esm": "cross-env NODE_TAG=esm rollup -c",
-    "build": "yarn build:types && rimraf ./dist && yarn build:next & yarn build:esm & yarn build:cjs & yarn package:next && yarn package:esm",
-    "api:json": "api-extractor run",
-    "api:md": "api-documenter markdown -i ./temp -o docs"
+    "api:json": "yarn build:types && api-extractor run",
+    "build": "yarn api:json && rimraf ./dist && yarn build:next & yarn build:esm & yarn build:cjs & yarn package:next && yarn package:esm"
   },
   "externals": {
     "vue": true

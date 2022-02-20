@@ -2,7 +2,7 @@ import { DefineComponent, PropType } from 'vue';
 import type { App } from 'vue';
 import { UStore } from '@elux/core';
 import { EluxContext } from './base';
-export declare const Page: DefineComponent<{
+export declare const EWindow: DefineComponent<{
     store: {
         type: PropType<UStore<import("@elux/core").RootState, import("@elux/core").RootState>>;
         required: true;

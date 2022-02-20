@@ -1,9 +1,9 @@
-import React, {useContext, useEffect, useState, useRef, memo} from 'react';
+import React, {useContext, useEffect, useState, useRef, memo, ComponentType} from 'react';
 import {env, UStore} from '@elux/core';
 import {URouter} from '@elux/route';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
-export const Router: React.FC<{page: React.ComponentType}> = (props) => {
+export const Router: React.FC<{page: ComponentType}> = (props) => {
   const eluxContext = useContext(EluxContextComponent);
   const router = eluxContext.router!;
   const [data, setData] = useState<{
@@ -11,7 +11,7 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
     pages: {
       pagename: string;
       store: UStore;
-      page?: any;
+      pageComponent?: ComponentType;
     }[];
   }>({classname: 'elux-app', pages: router.getCurrentPages().reverse()});
   const {classname, pages} = data;
@@ -62,8 +62,8 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
       {pages.map((item) => {
         const {store, pagename} = item;
         return (
-          <div key={store.sid} data-sid={store.sid} className="elux-page" data-pagename={pagename}>
-            <Page store={store} view={item.page || props.page}></Page>
+          <div key={store.sid} data-sid={store.sid} className="elux-window" data-pagename={pagename}>
+            <EWindow store={store} view={item.pageComponent || props.page}></EWindow>
           </div>
         );
       })}
@@ -71,7 +71,7 @@ export const Router: React.FC<{page: React.ComponentType}> = (props) => {
   );
 };
 
-export const Page: React.FC<{store: UStore; view: React.ComponentType}> = memo(function ({store, view}) {
+export const EWindow: React.FC<{store: UStore; view: ComponentType}> = memo(function ({store, view}) {
   const View = view;
   return (
     <reactComponentsConfig.Provider store={store}>

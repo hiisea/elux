@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.RootStack = exports.HistoryStack = exports.HistoryRecord = void 0;
+exports.WindowStack = exports.RouteRecord = exports.PageStack = void 0;
 
 var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/assertThisInitialized"));
 
@@ -15,13 +15,13 @@ var _core = require("@elux/core");
 
 var _basic = require("./basic");
 
-var RouteStack = function () {
-  function RouteStack(limit) {
+var HistoryStack = function () {
+  function HistoryStack(limit) {
     (0, _defineProperty2.default)(this, "records", []);
     this.limit = limit;
   }
 
-  var _proto = RouteStack.prototype;
+  var _proto = HistoryStack.prototype;
 
   _proto.startup = function startup(record) {
     var oItem = this.records[0];
@@ -117,40 +117,40 @@ var RouteStack = function () {
     }
   };
 
-  return RouteStack;
+  return HistoryStack;
 }();
 
-var HistoryRecord = function HistoryRecord(location, historyStack) {
+var RouteRecord = function RouteRecord(location, pageStack) {
   (0, _defineProperty2.default)(this, "destroy", void 0);
   (0, _defineProperty2.default)(this, "key", void 0);
   (0, _defineProperty2.default)(this, "recordKey", void 0);
   this.location = location;
-  this.historyStack = historyStack;
-  this.recordKey = _core.env.isServer ? '0' : ++HistoryRecord.id + '';
-  this.key = [historyStack.stackkey, this.recordKey].join('-');
+  this.pageStack = pageStack;
+  this.recordKey = _core.env.isServer ? '0' : ++RouteRecord.id + '';
+  this.key = [pageStack.stackkey, this.recordKey].join('-');
 };
 
-exports.HistoryRecord = HistoryRecord;
-(0, _defineProperty2.default)(HistoryRecord, "id", 0);
+exports.RouteRecord = RouteRecord;
+(0, _defineProperty2.default)(RouteRecord, "id", 0);
 
-var HistoryStack = function (_RouteStack) {
-  (0, _inheritsLoose2.default)(HistoryStack, _RouteStack);
+var PageStack = function (_HistoryStack) {
+  (0, _inheritsLoose2.default)(PageStack, _HistoryStack);
 
-  function HistoryStack(rootStack, store) {
+  function PageStack(windowStack, store) {
     var _this;
 
-    _this = _RouteStack.call(this, 20) || this;
+    _this = _HistoryStack.call(this, 20) || this;
     (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "stackkey", void 0);
-    _this.rootStack = rootStack;
+    _this.windowStack = windowStack;
     _this.store = store;
-    _this.stackkey = _core.env.isServer ? '0' : ++HistoryStack.id + '';
+    _this.stackkey = _core.env.isServer ? '0' : ++PageStack.id + '';
     return _this;
   }
 
-  var _proto2 = HistoryStack.prototype;
+  var _proto2 = PageStack.prototype;
 
   _proto2.push = function push(location) {
-    var newRecord = new HistoryRecord(location, this);
+    var newRecord = new RouteRecord(location, this);
 
     this._push(newRecord);
 
@@ -158,7 +158,7 @@ var HistoryStack = function (_RouteStack) {
   };
 
   _proto2.replace = function replace(location) {
-    var newRecord = new HistoryRecord(location, this);
+    var newRecord = new RouteRecord(location, this);
 
     this._replace(newRecord);
 
@@ -166,7 +166,7 @@ var HistoryStack = function (_RouteStack) {
   };
 
   _proto2.relaunch = function relaunch(location) {
-    var newRecord = new HistoryRecord(location, this);
+    var newRecord = new RouteRecord(location, this);
 
     this._relaunch(newRecord);
 
@@ -189,20 +189,20 @@ var HistoryStack = function (_RouteStack) {
     this.store.destroy();
   };
 
-  return HistoryStack;
-}(RouteStack);
+  return PageStack;
+}(HistoryStack);
 
-exports.HistoryStack = HistoryStack;
-(0, _defineProperty2.default)(HistoryStack, "id", 0);
+exports.PageStack = PageStack;
+(0, _defineProperty2.default)(PageStack, "id", 0);
 
-var RootStack = function (_RouteStack2) {
-  (0, _inheritsLoose2.default)(RootStack, _RouteStack2);
+var WindowStack = function (_HistoryStack2) {
+  (0, _inheritsLoose2.default)(WindowStack, _HistoryStack2);
 
-  function RootStack() {
-    return _RouteStack2.call(this, _basic.routeConfig.maxHistory) || this;
+  function WindowStack() {
+    return _HistoryStack2.call(this, _basic.routeConfig.maxHistory) || this;
   }
 
-  var _proto3 = RootStack.prototype;
+  var _proto3 = WindowStack.prototype;
 
   _proto3.getCurrentPages = function getCurrentPages() {
     return this.records.map(function (item) {
@@ -212,7 +212,7 @@ var RootStack = function (_RouteStack2) {
       return {
         pagename: pagename,
         store: store,
-        pageData: _basic.routeMeta.pageDatas[pagename]
+        pageComponent: _basic.routeMeta.pageComponents[pagename]
       };
     });
   };
@@ -222,12 +222,12 @@ var RootStack = function (_RouteStack2) {
     var routeState = {
       pagename: location.getPagename(),
       params: location.getParams(),
-      action: 'RELAUNCH',
+      action: _core.RouteHistoryAction.RELAUNCH,
       key: ''
     };
     var store = (0, _core.forkStore)(curHistory.store, routeState);
-    var newHistory = new HistoryStack(this, store);
-    var newRecord = new HistoryRecord(location, newHistory);
+    var newHistory = new PageStack(this, store);
+    var newRecord = new RouteRecord(location, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -254,9 +254,9 @@ var RootStack = function (_RouteStack2) {
     var backSteps = [0, 0];
 
     for (var i = 0, k = historyStacks.length; i < k; i++) {
-      var _historyStack = historyStacks[i];
+      var _pageStack = historyStacks[i];
 
-      var recordNum = _historyStack.getLength();
+      var recordNum = _pageStack.getLength();
 
       delta = delta - recordNum;
 
@@ -311,14 +311,14 @@ var RootStack = function (_RouteStack2) {
     }
 
     if (delta < 0) {
-      var _historyStack2 = this.getEarliestItem();
+      var _pageStack2 = this.getEarliestItem();
 
-      var _record3 = _historyStack2.getEarliestItem();
+      var _record3 = _pageStack2.getEarliestItem();
 
       return {
         record: _record3,
         overflow: false,
-        index: [this.records.length - 1, _historyStack2.records.length - 1]
+        index: [this.records.length - 1, _pageStack2.records.length - 1]
       };
     }
 
@@ -335,14 +335,14 @@ var RootStack = function (_RouteStack2) {
         index: [rootDelta, recordDelta]
       };
     } else {
-      var _historyStack3 = this.getEarliestItem();
+      var _pageStack3 = this.getEarliestItem();
 
-      var _record5 = _historyStack3.getEarliestItem();
+      var _record5 = _pageStack3.getEarliestItem();
 
       return {
         record: _record5,
         overflow: true,
-        index: [this.records.length - 1, _historyStack3.records.length - 1]
+        index: [this.records.length - 1, _pageStack3.records.length - 1]
       };
     }
   };
@@ -351,10 +351,10 @@ var RootStack = function (_RouteStack2) {
     var arr = key.split('-');
 
     for (var i = 0, k = this.records.length; i < k; i++) {
-      var _historyStack4 = this.records[i];
+      var _pageStack4 = this.records[i];
 
-      if (_historyStack4.stackkey === arr[0]) {
-        var item = _historyStack4.findRecordByKey(arr[1]);
+      if (_pageStack4.stackkey === arr[0]) {
+        var item = _pageStack4.findRecordByKey(arr[1]);
 
         if (item) {
           return {
@@ -373,7 +373,7 @@ var RootStack = function (_RouteStack2) {
     };
   };
 
-  return RootStack;
-}(RouteStack);
+  return WindowStack;
+}(HistoryStack);
 
-exports.RootStack = RootStack;
+exports.WindowStack = WindowStack;

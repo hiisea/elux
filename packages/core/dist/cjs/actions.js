@@ -93,7 +93,7 @@ function reducer(target, key, descriptor) {
 
 function effect(loadingKey) {
   if (loadingKey === void 0) {
-    loadingKey = 'app.loading.global';
+    loadingKey = 'stage.loading.global';
   }
 
   var loadingForModuleName;
@@ -118,13 +118,13 @@ function effect(loadingKey) {
 
     if (loadingForModuleName && loadingForGroupName && !_env.default.isServer) {
       var injectLoading = function injectLoading(curAction, promiseResult) {
-        if (loadingForModuleName === 'app') {
+        if (loadingForModuleName === 'stage') {
           loadingForModuleName = _basic.coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
 
-        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
+        setLoading(promiseResult, this.store, loadingForModuleName, loadingForGroupName);
       };
 
       if (!fun.__decorators__) {
@@ -155,7 +155,7 @@ function effectLogger(before, after) {
   };
 }
 
-function setLoading(store, item, moduleName, groupName) {
+function setLoading(item, store, moduleName, groupName) {
   var key = moduleName + _basic.coreConfig.NSP + groupName;
   var loadings = store.loadingGroups;
 

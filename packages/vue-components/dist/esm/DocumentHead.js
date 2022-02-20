@@ -18,7 +18,7 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
-var Component = defineComponent({
+export var DocumentHead = defineComponent({
   props: {
     title: {
       type: String
@@ -67,4 +67,3 @@ var Component = defineComponent({
     return null;
   }
 });
-export default Component;

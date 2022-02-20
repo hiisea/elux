@@ -1,11 +1,11 @@
 "use strict";
 
 exports.__esModule = true;
-exports.connectRedux = exports.Switch = exports.RouteModel = exports.LoadingState = exports.Link = exports.EmptyModel = exports.Else = exports.DocumentHead = exports.BaseModel = void 0;
+exports.connectRedux = exports.Switch = exports.LoadingState = exports.Link = exports.EmptyModel = exports.Else = exports.DocumentHead = exports.BaseModel = void 0;
 exports.createApp = createApp;
 exports.createRouteModule = void 0;
 exports.createSSR = createSSR;
-exports.safeJsonParse = exports.reducer = exports.patchActions = exports.modelHotReplacement = exports.location = exports.loadModel = exports.isServer = exports.getModule = exports.getComponent = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.createSelectorHook = void 0;
+exports.routeJsonParse = exports.reducer = exports.modelHotReplacement = exports.location = exports.loadModel = exports.isServer = exports.getModule = exports.getComponent = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.createSelectorHook = void 0;
 exports.setConfig = setConfig;
 exports.useSelector = exports.shallowEqual = exports.setLoading = void 0;
 
@@ -26,7 +26,6 @@ exports.exportComponent = _core.exportComponent;
 exports.modelHotReplacement = _core.modelHotReplacement;
 exports.EmptyModel = _core.EmptyModel;
 exports.BaseModel = _core.BaseModel;
-exports.RouteModel = _core.RouteModel;
 exports.loadModel = _core.loadModel;
 exports.getModule = _core.getModule;
 exports.getComponent = _core.getComponent;
@@ -43,7 +42,6 @@ var _stage = require("@elux/react-components/stage");
 var _app = require("@elux/app");
 
 exports.getApi = _app.getApi;
-exports.patchActions = _app.patchActions;
 
 var _routeBrowser = require("@elux/route-browser");
 
@@ -58,7 +56,7 @@ var _route = require("@elux/route");
 
 exports.location = _route.location;
 exports.createRouteModule = _route.createRouteModule;
-exports.safeJsonParse = _route.safeJsonParse;
+exports.routeJsonParse = _route.routeJsonParse;
 (0, _app.setAppConfig)({
   loadComponent: _reactComponents.loadComponent,
   useRouter: _reactComponents.useRouter,

@@ -1,11 +1,11 @@
 "use strict";
 
 exports.__esModule = true;
-exports.default = _default;
+exports.Switch = void 0;
 
 var _vue = require("vue");
 
-function _default(props, context) {
+var Switch = function Switch(props, context) {
   var arr = [];
   var children = context.slots.default ? context.slots.default() : [];
   children.forEach(function (item) {
@@ -19,4 +19,6 @@ function _default(props, context) {
   }
 
   return (0, _vue.h)(_vue.Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
-}
+};
+
+exports.Switch = Switch;

@@ -18,7 +18,7 @@ export declare const setAppConfig: (config: Partial<{
  * 全局参数设置
  *
  * @remarks
- * 通常使用默认设置即可
+ * 可通过 {@link setConfig | setConfig(...)} 个性化设置（通常使用默认设置即可）
  *
  * @public
  */
@@ -40,7 +40,7 @@ export interface UserConfig {
      * @remarks
      * 默认: `服务器环境(SSR)：10000; 浏览器环境(CSR): 500`
      *
-     * 由于elux中存在3种路由协议：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]，为了提高路由协议之间相互转换的性能（尤其是在SSR时，存在大量重复路由协议转换），框架做了缓存，此项目设置最大缓存数量
+     * 由于elux中存在{@link EluxLocation | 3种路由协议}：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]，为了提高路由协议之间相互转换的性能（尤其是在SSR时，存在大量重复路由协议转换），框架做了缓存，此项目设置最大缓存数量
      *
      * @defaultValue `SSR：10000; CSR: 500`
      */
@@ -114,12 +114,29 @@ export interface UserConfig {
      */
     disableNativeRouter?: boolean;
 }
-/*** @public */
 export declare function setUserConfig(conf: UserConfig): void;
-/*** @public */
+/**
+ * APP Render参数
+ *
+ * @example
+ * ```js
+ * createApp(moduleGetter).render({id: 'root', viewName: 'main', ssrKey: 'eluxInitStore'})
+ * ```
+ *
+ * @public
+ */
 export interface RenderOptions {
+    /**
+     * 根视图名称，默认为 `main`
+     */
     viewName?: string;
+    /**
+     * 挂载 Dom 的 id，默认为 `root`
+     */
     id?: string;
+    /**
+     * SSR脱水数据的变量名称，默认为 `eluxInitStore`
+     */
     ssrKey?: string;
 }
 export interface ContextWrap {
@@ -159,7 +176,6 @@ export declare function createBaseApp<INS = {}>(ins: INS, router: BaseEluxRouter
 export declare function createBaseSSR<INS = {}>(ins: INS, router: BaseEluxRouter, render: (id: string, component: any, eluxContext: EluxContext, ins: INS, store: UStore) => Promise<string>, storeInitState: (data: RootState) => RootState, storeMiddlewares?: StoreMiddleware[], storeLogger?: StoreLogger): INS & {
     render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
 };
-/*** @public */
 export declare function patchActions(typeName: string, json?: string): void;
 /*** @public */
 export declare type GetBaseFacade<F extends Facade, LoadComponentOptions, R extends string> = {
@@ -171,15 +187,71 @@ export declare type GetBaseFacade<F extends Facade, LoadComponentOptions, R exte
     Modules: FacadeModules<F, R>;
     Actions: FacadeActions<F, R>;
 };
-/*** @public */
-export declare function getApi<T extends {
+/**
+ * 获取应用全局方法
+ *
+ * @remarks
+ * 参数 `components` 支持异步获取组件，当组件代码量大时，可以使用 `import(...)` 返回Promise
+ *
+ * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
+ * @param injectActions -  用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
+ *
+ * @returns
+ * 返回包含多个全局方法的结构体：
+ *
+ * - `LoadComponent`：用于加载其它模块导出的{@link exportView | EluxUI组件}，参见 {@link LoadComponent}。
+ * 相比直接 `import`，使用此方法加载组件不仅可以`按需加载`，而且还可以自动初始化其所属 Model，例如：
+ * ```js
+ *   const Article = LoadComponent('article', 'main')
+ * ```
+ *
+ * - `Modules`：用于获取所有模块的对外接口，参见 {@link FacadeModules}，例如：
+ * ```js
+ *   dispatch(Modules.article.actions.refresh())
+ * ```
+ *
+ * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：
+ * ```js
+ *   dispatch(Modules.a.actions.a1())
+ *   dispatch(Modules.b.actions.b1())
+ * ```
+ *   这种写法可以简化为：
+ * ```js
+ *   const {a, b} = GetActions('a', 'b')
+ *   dispatch(a.a1())
+ *   dispatch(b.b1())
+ * ```
+ *
+ * - `GetRouter`：用于获取全局Roter，注意此方法不能运行在SSR（`服务端渲染`）中，因为服务端每个 `request` 都将生成一个 Router，不存在全局 Roter，请使用 `useRouter()`
+ *
+ * - `useRouter`：React Hook，用于获取当前 Router，在CSR（`客户端渲染`）中，因为只存在一个Router，所以其值等于`GetRouter()`，例如：
+ * ```js
+ *   const blobalRouter = GetRouter()
+ *   const currentRouter = useRouter()
+ *   console.log(blobalRouter===currentRouter)
+ * ```
+ *
+ * - `useStore`：React Hook，用于获取当前 Store，例如：
+ * ```js
+ *   const store = useStore()
+ *   store.dispatch(Modules.article.actions.refresh())
+ * ```
+ *
+ * @example
+ * ```js
+ * const {Modules, LoadComponent, GetActions, GetRouter, useStore, useRouter} = getApi<API, Router>();
+ * ```
+ *
+ * @public
+ */
+export declare function getApi<TAPI extends {
     State: any;
     GetActions: any;
     LoadComponent: any;
     Modules: any;
-}, R extends URouter>(demoteForProductionOnly?: boolean, injectActions?: Record<string, string[]>): Pick<T, 'GetActions' | 'LoadComponent' | 'Modules'> & {
+}, R extends URouter>(demoteForProductionOnly?: boolean, injectActions?: Record<string, string[]>): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'Modules'> & {
     GetRouter: () => R;
     useRouter: () => R;
-    useStore: () => UStore<T['State'], R['routeState']['params']>;
+    useStore: () => UStore<TAPI['State'], R['routeState']['params']>;
 };
 //# sourceMappingURL=index.d.ts.map

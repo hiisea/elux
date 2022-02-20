@@ -5,11 +5,11 @@ import { UserConfig, GetBaseFacade, RenderOptions } from '@elux/app';
 export { DocumentHead, Switch, Else, Link } from '@elux/react-components';
 export type { DocumentHeadProps, SwitchProps, ElseProps, LinkProps, LoadComponentOptions } from '@elux/react-components';
 export { errorAction, LoadingState, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, EmptyModel, BaseModel, loadModel, getModule, getComponent, } from '@elux/core';
-export type { Facade, Dispatch, UStore, DeepPartial, StoreMiddleware, StoreLogger, CommonModule, Action, HistoryAction } from '@elux/core';
+export type { Facade, Dispatch, UStore, DeepPartial, StoreMiddleware, StoreLogger, CommonModule, Action, RouteHistoryAction } from '@elux/core';
 export type { GetState, EluxComponent, AsyncEluxComponent, CommonModelClass, ModuleAPI, ReturnComponents, GetPromiseModule, GetPromiseComponent, ModuleState, RootState, CommonModel, RouteState, ActionsThis, PickHandler, ModuleGetter, LoadComponent, HandlerThis, FacadeStates, FacadeModules, FacadeActions, FacadeRoutes, PickActions, UNListener, ActionCreator, } from '@elux/core';
-export { location, createRouteModule, safeJsonParse } from '@elux/route';
-export type { NativeLocationMap, EluxLocation, NativeLocation, StateLocation, URouter, UHistoryRecord, ULocationTransform, PagenameMap, } from '@elux/route';
-export { getApi, patchActions } from '@elux/app';
+export { location, createRouteModule, routeJsonParse } from '@elux/route';
+export type { NativeLocationMap, EluxLocation, NativeLocation, StateLocation, URouter, URouteRecord, ULocationTransform, PagenameMap, } from '@elux/route';
+export { getApi } from '@elux/app';
 export type { ComputedStore, GetBaseFacade, UserConfig, RenderOptions } from '@elux/app';
 export { connectRedux, shallowEqual, useSelector, createSelectorHook } from '@elux/react-redux';
 export type { InferableComponentEnhancerWithProps, GetProps } from '@elux/react-redux';
@@ -53,13 +53,26 @@ export declare function setConfig(conf: UserConfig & {
  * 创建应用(CSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于客户端渲染(CSR)，服务端渲染(SSR)请使用{@link createSSR | createSSR(...)}
+ * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR | createSSR(...)}
  *
  * @param moduleGetter - 模块工厂
  * @param storeMiddlewares - store中间件
  * @param storeLogger - store日志记录器
  *
- * @returns 返回包含`render(...)`方法的下一步实例
+ * @returns
+ * 返回包含`render(options: RenderOptions): Promise<void>`方法的下一步实例，参见{@link RenderOptions}
+ *
+ * @example
+ * ```js
+ * createApp(moduleGetter)
+ * .render()
+ * .then(() => {
+ *   const initLoading = document.getElementById('root-loading');
+ *   if (initLoading) {
+ *     initLoading.parentNode!.removeChild(initLoading);
+ *   }
+ * });
+ * ```
  *
  * @public
  */
@@ -70,7 +83,7 @@ export declare function createApp(moduleGetter: ModuleGetter, storeMiddlewares?:
  * 创建应用(SSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于服务端渲染(SSR)，客户端渲染(CSR)请使用{@link createApp | createApp(...)}
+ * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp | createApp(...)}
  *
  * @param moduleGetter - 模块工厂
  * @param url - 服务器收到的原始url
@@ -78,8 +91,15 @@ export declare function createApp(moduleGetter: ModuleGetter, storeMiddlewares?:
  * @param storeMiddlewares - store中间件
  * @param storeLogger - store日志记录器
  *
- * @returns 返回包含`render(...)`方法的下一步实例
+ * @returns
+ * 返回包含`render(options: RenderOptions): Promise<string>`方法的下一步实例，参见{@link RenderOptions}
  *
+ * @example
+ * ```js
+ * export default function server(request: {url: string}, response: any): Promise<string> {
+ *   return createSSR(moduleGetter, request.url, {request, response}).render();
+ * }
+ * ```
  * @public
  */
 export declare function createSSR(moduleGetter: ModuleGetter, url: string, nativeData: any, storeMiddlewares?: StoreMiddleware[], storeLogger?: StoreLogger): {

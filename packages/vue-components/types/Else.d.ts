@@ -1,15 +1,31 @@
-import { VNode } from 'vue';
-/*** @public */
+import { VNode, DefineComponent } from 'vue';
+/**
+ * 内置VUE组件
+ *
+ * @remarks
+ * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`，
+ * 与 {@link Switch | `<Switch>`} 的区别在于：`<Switch>` 仅渲染非空子元素中的第1个
+ *
+ * @example
+ * ```html
+ *<Else elseView={<NotFound />}>
+ *  {subView === 'detail' && <Detail />}
+ *  {subView === 'list' && <List />}
+ *</Else>
+ * ```
+ *
+ * @public
+ */
 export interface ElseProps {
     elseView?: VNode;
 }
-/*** @public */
-export default function (props: ElseProps, context: {
-    slots: {
-        default?: () => VNode[];
-        elseView?: () => VNode[];
-    };
-}): VNode<import("vue").RendererNode, import("vue").RendererElement, {
-    [key: string]: any;
-}>;
+/**
+ * 内置VUE组件
+ *
+ * @remarks
+ * 参见：{@link ElseProps}
+ *
+ * @public
+ */
+export declare const Else: DefineComponent<ElseProps>;
 //# sourceMappingURL=Else.d.ts.map

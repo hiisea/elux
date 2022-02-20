@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.coreConfig = exports.TaskCounter = exports.MetaData = exports.LoadingState = void 0;
+exports.coreConfig = exports.TaskCounter = exports.RouteHistoryAction = exports.MetaData = exports.LoadingState = void 0;
 exports.deepMergeState = deepMergeState;
 exports.isEluxComponent = isEluxComponent;
 exports.isServer = isServer;
@@ -39,6 +39,16 @@ exports.LoadingState = LoadingState;
   LoadingState["Stop"] = "Stop";
   LoadingState["Depth"] = "Depth";
 })(LoadingState || (exports.LoadingState = LoadingState = {}));
+
+var RouteHistoryAction;
+exports.RouteHistoryAction = RouteHistoryAction;
+
+(function (RouteHistoryAction) {
+  RouteHistoryAction["PUSH"] = "PUSH";
+  RouteHistoryAction["BACK"] = "BACK";
+  RouteHistoryAction["REPLACE"] = "REPLACE";
+  RouteHistoryAction["RELAUNCH"] = "RELAUNCH";
+})(RouteHistoryAction || (exports.RouteHistoryAction = RouteHistoryAction = {}));
 
 function isEluxComponent(data) {
   return data['__elux_component__'];

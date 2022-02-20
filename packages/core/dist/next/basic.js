@@ -18,6 +18,15 @@ export let LoadingState;
   LoadingState["Depth"] = "Depth";
 })(LoadingState || (LoadingState = {}));
 
+export let RouteHistoryAction;
+
+(function (RouteHistoryAction) {
+  RouteHistoryAction["PUSH"] = "PUSH";
+  RouteHistoryAction["BACK"] = "BACK";
+  RouteHistoryAction["REPLACE"] = "REPLACE";
+  RouteHistoryAction["RELAUNCH"] = "RELAUNCH";
+})(RouteHistoryAction || (RouteHistoryAction = {}));
+
 export function isEluxComponent(data) {
   return data['__elux_component__'];
 }

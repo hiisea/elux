@@ -1,7 +1,7 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import React, { useContext, useCallback } from 'react';
 import { EluxContextComponent } from './base';
-export default React.forwardRef(({
+export const Link = React.forwardRef(({
   onClick: _onClick,
   disabled,
   href,

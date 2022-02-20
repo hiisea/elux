@@ -3,7 +3,7 @@ import { h, provide, inject, defineComponent, shallowRef, ref, onBeforeUnmount }
 import { env } from '@elux/core';
 import { EluxContextKey, EluxStoreContextKey } from './base';
 var StageView;
-export var Page = defineComponent({
+export var EWindow = defineComponent({
   props: {
     store: {
       type: Object,
@@ -108,11 +108,11 @@ export var Router = defineComponent({
         return _createVNode("div", {
           "key": store.sid,
           "data-sid": store.sid,
-          "class": "elux-page",
+          "class": "elux-window",
           "data-pagename": pagename
-        }, [_createVNode(Page, {
+        }, [_createVNode(EWindow, {
           "store": store,
-          "view": item.page || StageView
+          "view": item.pageComponent || StageView
         }, null)]);
       })]);
     };

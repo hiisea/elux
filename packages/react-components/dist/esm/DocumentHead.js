@@ -55,4 +55,4 @@ var Component = function Component(_ref) {
   return null;
 };
 
-export default React.memo(Component);
+export var DocumentHead = React.memo(Component);

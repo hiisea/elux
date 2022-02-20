@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.default = void 0;
+exports.DocumentHead = void 0;
 
 var _core = require("@elux/core");
 
@@ -26,7 +26,7 @@ function setClientHead(eluxContext, documentHead) {
   }
 }
 
-var Component = (0, _vue.defineComponent)({
+var DocumentHead = (0, _vue.defineComponent)({
   props: {
     title: {
       type: String
@@ -75,5 +75,4 @@ var Component = (0, _vue.defineComponent)({
     return null;
   }
 });
-var _default = Component;
-exports.default = _default;
+exports.DocumentHead = DocumentHead;

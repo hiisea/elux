@@ -54,4 +54,4 @@ const Component = ({
   return null;
 };
 
-export default React.memo(Component);
+export const DocumentHead = React.memo(Component);

@@ -1,10 +1,10 @@
 import _decorate from "@babel/runtime/helpers/esm/decorate";
 import { MetaData, mergeState } from './basic';
 import { reducer, ActionTypes } from './actions';
-import { exportModule as _exportModule } from './modules';
+import { baseExportModule } from './modules';
 import { loadModel as _loadModel } from './inject';
 export function exportModule(moduleName, ModelClass, components, data) {
-  return _exportModule(moduleName, ModelClass, components, data);
+  return baseExportModule(moduleName, ModelClass, components, data);
 }
 export var BaseModel = _decorate(null, function (_initialize) {
   var BaseModel = function BaseModel(moduleName, store) {

@@ -1,6 +1,6 @@
 export {default as env} from './env';
 export {buildConfigSetter, deepClone, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise} from './utils';
-export {coreConfig, mergeState, deepMergeState, setCoreConfig, LoadingState, isServer} from './basic';
+export {coreConfig, mergeState, deepMergeState, setCoreConfig, LoadingState, RouteHistoryAction, isServer} from './basic';
 export {
   ActionTypes,
   reducer,
@@ -27,7 +27,6 @@ export type {
   RootState,
   RouteState,
   ModuleState,
-  HistoryAction,
   UStore,
   EStore,
   Dispatch,

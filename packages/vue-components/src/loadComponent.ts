@@ -1,15 +1,31 @@
-import {loadComponent, isPromise, env} from '@elux/core';
+import {loadComponent as baseLoadComponent, isPromise, env} from '@elux/core';
 import type {LoadComponent, EluxComponent, EStore} from '@elux/core';
 import {defineAsyncComponent, Component, h, inject} from 'vue';
 import {EluxContext, EluxContextKey, EluxStoreContext, EluxStoreContextKey, vueComponentsConfig} from './base';
 
-/*** @public */
+/**
+ * EluxUI组件加载参数
+ *
+ * @remarks
+ * EluxUI组件加载参见 {@link LoadComponent}，加载参数可通过 {@link setConfig | setConfig(...)} 设置全局默认，
+ * 也可以直接在 `LoadComponent(...)` 中特别指明
+ *
+ * @example
+ * ```js
+ *   const OnError = ({message}) => <div>{message}</div>
+ *   const OnLoading = () => <div>loading...</div>
+ *
+ *   const Article = LoadComponent('article', 'main', {OnLoading, OnError})
+ * ```
+ *
+ * @public
+ */
 export interface LoadComponentOptions {
   OnError?: Component<{message: string}>;
   OnLoading?: Component<{}>;
 }
 
-const vueLoadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
+export const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
   const loadingComponent = options.OnLoading || vueComponentsConfig.LoadComponentOnLoading;
   const errorComponent = options.OnError || vueComponentsConfig.LoadComponentOnError;
 
@@ -19,7 +35,7 @@ const vueLoadComponent: LoadComponent<Record<string, any>, LoadComponentOptions>
     let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
     let errorMessage = '';
     try {
-      result = loadComponent(moduleName, componentName as string, store as EStore, deps || {});
+      result = baseLoadComponent(moduleName, componentName as string, store as EStore, deps || {});
     } catch (e: any) {
       env.console.error(e);
       errorMessage = e.message || `${e}`;
@@ -45,4 +61,3 @@ const vueLoadComponent: LoadComponent<Record<string, any>, LoadComponentOptions>
   };
   return component;
 };
-export default vueLoadComponent;

@@ -1,14 +1,30 @@
 import React, {ComponentType, Component, useContext} from 'react';
-import {env, loadComponent, isPromise, LoadComponent, EluxComponent, UStore, EStore} from '@elux/core';
+import {env, loadComponent as baseLoadComponent, isPromise, LoadComponent, EluxComponent, UStore, EStore} from '@elux/core';
 import {EluxContextComponent, reactComponentsConfig} from './base';
 
-/*** @public */
+/**
+ * EluxUI组件加载参数
+ *
+ * @remarks
+ * EluxUI组件加载参见 {@link LoadComponent}，加载参数可通过 {@link setConfig | setConfig(...)} 设置全局默认，
+ * 也可以直接在 `LoadComponent(...)` 中特别指明
+ *
+ * @example
+ * ```js
+ *   const OnError = ({message}) => <div>{message}</div>
+ *   const OnLoading = () => <div>loading...</div>
+ *
+ *   const Article = LoadComponent('article', 'main', {OnLoading, OnError})
+ * ```
+ *
+ * @public
+ */
 export interface LoadComponentOptions {
   OnError?: ComponentType<{message: string}>;
   OnLoading?: ComponentType<{}>;
 }
 
-const reactLoadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
+export const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
@@ -49,7 +65,7 @@ const reactLoadComponent: LoadComponent<Record<string, any>, LoadComponentOption
         this.loading = true;
         let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
         try {
-          result = loadComponent(moduleName, componentName as string, store as EStore, deps);
+          result = baseLoadComponent(moduleName, componentName as string, store as EStore, deps);
         } catch (e: any) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -100,5 +116,3 @@ const reactLoadComponent: LoadComponent<Record<string, any>, LoadComponentOption
     return <Loader {...props} store={store} deps={deps} forwardedRef={ref} />;
   }) as any;
 };
-
-export default reactLoadComponent;

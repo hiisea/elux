@@ -3,7 +3,7 @@
 var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
 
 exports.__esModule = true;
-exports.default = void 0;
+exports.DocumentHead = void 0;
 
 var _react = _interopRequireWildcard(require("react"));
 
@@ -65,6 +65,6 @@ var Component = function Component(_ref) {
   return null;
 };
 
-var _default = _react.default.memo(Component);
+var DocumentHead = _react.default.memo(Component);
 
-exports.default = _default;
+exports.DocumentHead = DocumentHead;

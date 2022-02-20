@@ -3,7 +3,7 @@ import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWith
 var _excluded = ["onClick", "disabled", "href", "route", "root", "action"];
 import React, { useContext, useCallback } from 'react';
 import { EluxContextComponent } from './base';
-export default React.forwardRef(function (_ref, ref) {
+export var Link = React.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       href = _ref.href,

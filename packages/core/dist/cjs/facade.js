@@ -17,7 +17,7 @@ var _modules = require("./modules");
 var _inject = require("./inject");
 
 function exportModule(moduleName, ModelClass, components, data) {
-  return (0, _modules.exportModule)(moduleName, ModelClass, components, data);
+  return (0, _modules.baseExportModule)(moduleName, ModelClass, components, data);
 }
 
 var BaseModel = (0, _decorate2.default)(null, function (_initialize) {

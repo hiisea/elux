@@ -1,7 +1,7 @@
-export { default as DocumentHead } from './DocumentHead';
-export { default as Else } from './Else';
-export { default as Switch } from './Switch';
-export { default as Link } from './Link';
-export { Page, Router, useRouter } from './Router';
-export { default as loadComponent } from './loadComponent';
+export { DocumentHead } from './DocumentHead';
+export { Else } from './Else';
+export { Switch } from './Switch';
+export { Link } from './Link';
+export { Router, useRouter } from './Router';
+export { loadComponent } from './loadComponent';
 export { setReactComponentsConfig, reactComponentsConfig } from './base';

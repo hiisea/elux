@@ -1,5 +1,5 @@
 import {deepMerge, moduleExists, getModuleList, isPromise, RootState, RouteModel, exportModule, setCoreConfig, CommonModelClass} from '@elux/core';
-import {routeMeta, routeConfig, NativeLocationMap, PagenameMap, EluxLocation, NativeLocation, StateLocation, safeJsonParse} from './basic';
+import {routeMeta, routeConfig, NativeLocationMap, PagenameMap, EluxLocation, NativeLocation, StateLocation, routeJsonParse} from './basic';
 import {extendDefault, excludeDefault} from './deep-extend';
 
 interface CacheItem {
@@ -102,7 +102,7 @@ export const urlParser = {
     return Object.keys(data).length ? JSON.stringify(data) : '';
   },
   parseSearch(search: string): Record<string, any> {
-    return safeJsonParse(search);
+    return routeJsonParse(search);
   },
   checkUrl(url: string): string {
     const type: 'e' | 'n' | 's' = this.type[url.charAt(0)] || 'e';
@@ -153,12 +153,36 @@ interface LocationCache {
   _params?: Record<string, any>;
 }
 
-/*** @public */
+/**
+ * 用于3种路由描述之间的转换
+ *
+ * @remarks
+ * 该转换器由 {@link location | location(...)} 创建
+ *
+ * @public
+ */
 export interface ULocationTransform {
+  /**
+   * 返回当前路由所属的`Pagename`
+   */
   getPagename(): string;
-  getEluxUrl(): string;
-  getNativeUrl(withoutProtocol?: boolean): string;
+  /**
+   * 返回当前路由所对应的`Params`，注意 Params 等于传参（`payload`）+ 模块默认路由参数（`defaultRouteParams`）合并后的结果。
+   * 因为模块有可能是异步加载的，所以defaultRouteParams也可能是异步获取，所以此方法最终结果可能为Promise
+   */
   getParams(): RootState | Promise<RootState>;
+  /**
+   * 转换为 {@link StateLocation}，并返回其URL
+   */
+  getStateUrl(): string;
+  /**
+   * 转换为 {@link EluxLocation}，并返回其URL
+   */
+  getEluxUrl(): string;
+  /**
+   * 转换为 {@link NativeLocation}，并返回其URL
+   */
+  getNativeUrl(withoutProtocol?: boolean): string;
 }
 /**
  * pagename,payload,params,eurl(pathmatch,args),nurl
@@ -169,6 +193,7 @@ class LocationTransform implements ULocationTransform, LocationCache {
   _params?: RootState;
   _eurl?: string;
   _nurl?: string;
+  _surl?: string;
   private _minData?: {pathmatch: string; args: Record<string, any>};
   constructor(private readonly url: string, data?: LocationCache) {
     data && this.update(data);
@@ -233,6 +258,12 @@ class LocationTransform implements ULocationTransform, LocationCache {
       this._pagename = __pagename ? __pagename.substr(0, __pagename.length - 1) : notfoundPagename;
     }
     return this._pagename;
+  }
+  public getStateUrl(): string {
+    if (!this._surl) {
+      this._surl = urlParser.getStateUrl(this.getPagename(), this.getPayload());
+    }
+    return this._surl;
   }
   public getEluxUrl(): string {
     if (!this._eurl) {
@@ -308,7 +339,23 @@ class LocationTransform implements ULocationTransform, LocationCache {
   }
 }
 
-/*** @public */
+/**
+ * 创建路由Location转换器
+ *
+ * @remarks
+ * 框架中内置3种路由描述分别是：NativeLocation，EluxLocation，StateLocation，其中 StateLocation 为`标准形态`，其余2种为临时形态
+ *
+ * 对应的3种Url路由协议分别是：`n://xxx?_={...}`，`e://xxx?{...}`，`s://xxx?{...}`
+ *
+ * 其转换关系通常为：NativeLocation -\> EluxLocation -\> StateLocation
+ *
+ * @param dataOrUrl - 3种路由描述或3种路由协议的url
+ *
+ * @returns
+ * 路由Location转换器
+ *
+ * @public
+ */
 export function location(dataOrUrl: string | EluxLocation | StateLocation | NativeLocation): ULocationTransform {
   if (typeof dataOrUrl === 'string') {
     const url = urlParser.checkUrl(dataOrUrl);
@@ -395,11 +442,22 @@ const defaultNativeLocationMap: NativeLocationMap = {
   },
 };
 
-/*** @public */
+/**
+ * 创建Route模块
+ *
+ * @remarks
+ * Route模块相对于其它`业务模块`来说是一个框架内置的特殊模块，通过本方法创建。
+ *
+ * @param moduleName - 通常约定为`route`
+ * @param pagenameMap - 定义Page及路由参数，参见 {@link PagenameMap}
+ * @param nativeLocationMap - 运行环境`原始路由`与`Elux路由`之间的映射与转换
+ *
+ * @public
+ */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createRouteModule<G extends PagenameMap, N extends string>(
-  moduleName: N,
-  pagenameMap: G,
+export function createRouteModule<TPagenameMap extends PagenameMap, TRouteModuleName extends string>(
+  moduleName: TRouteModuleName,
+  pagenameMap: TPagenameMap,
   nativeLocationMap: NativeLocationMap = defaultNativeLocationMap
 ) {
   setCoreConfig({RouteModuleName: moduleName});
@@ -408,10 +466,10 @@ export function createRouteModule<G extends PagenameMap, N extends string>(
     .sort((a, b) => b.length - a.length)
     .reduce((map, pagename) => {
       const fullPagename = `/${pagename}/`.replace(/^\/+|\/+$/g, '/');
-      const {pathToParams, paramsToPath, pageData} = pagenameMap[pagename];
+      const {pathToParams, paramsToPath, pageComponent} = pagenameMap[pagename];
       map[fullPagename] = {pathToParams, paramsToPath};
       //routeMeta.pagenames[pagename] = pagename;
-      routeMeta.pageDatas[pagename] = pageData;
+      routeMeta.pageComponents[pagename] = pageComponent;
       return map;
     }, {});
 
@@ -419,5 +477,5 @@ export function createRouteModule<G extends PagenameMap, N extends string>(
   routeMeta.pagenameList = Object.keys(_pagenameMap);
   routeMeta.nativeLocationMap = nativeLocationMap;
 
-  return exportModule(moduleName, RouteModel as CommonModelClass, {}, '/index' as keyof G);
+  return exportModule(moduleName, RouteModel as CommonModelClass, {}, '/index' as keyof TPagenameMap);
 }

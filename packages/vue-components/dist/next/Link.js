@@ -1,6 +1,6 @@
 import { h, inject } from 'vue';
 import { EluxContextKey } from './base';
-export default function ({
+export const Link = function ({
   onClick: _onClick,
   disabled,
   href,
@@ -33,4 +33,4 @@ export default function ({
   } else {
     return h('div', props, context.slots.default());
   }
-}
+};

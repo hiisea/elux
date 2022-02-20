@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.default = _default;
+exports.Link = void 0;
 
 var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/objectWithoutPropertiesLoose"));
 
@@ -13,7 +13,7 @@ var _base = require("./base");
 
 var _excluded = ["onClick", "disabled", "href", "route", "action", "root"];
 
-function _default(_ref, context) {
+var Link = function Link(_ref, context) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       href = _ref.href,
@@ -46,4 +46,6 @@ function _default(_ref, context) {
   } else {
     return (0, _vue.h)('div', props, context.slots.default());
   }
-}
+};
+
+exports.Link = Link;

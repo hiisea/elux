@@ -271,6 +271,15 @@ exports.LoadingState = void 0;
   LoadingState["Depth"] = "Depth";
 })(exports.LoadingState || (exports.LoadingState = {}));
 
+var RouteHistoryAction;
+
+(function (RouteHistoryAction) {
+  RouteHistoryAction["PUSH"] = "PUSH";
+  RouteHistoryAction["BACK"] = "BACK";
+  RouteHistoryAction["REPLACE"] = "REPLACE";
+  RouteHistoryAction["RELAUNCH"] = "RELAUNCH";
+})(RouteHistoryAction || (RouteHistoryAction = {}));
+
 function isEluxComponent(data) {
   return data['__elux_component__'];
 }
@@ -441,7 +450,7 @@ function reducer(target, key, descriptor) {
 }
 function effect(loadingKey) {
   if (loadingKey === void 0) {
-    loadingKey = 'app.loading.global';
+    loadingKey = 'stage.loading.global';
   }
 
   var loadingForModuleName;
@@ -466,13 +475,13 @@ function effect(loadingKey) {
 
     if (loadingForModuleName && loadingForGroupName && !env.isServer) {
       var injectLoading = function injectLoading(curAction, promiseResult) {
-        if (loadingForModuleName === 'app') {
+        if (loadingForModuleName === 'stage') {
           loadingForModuleName = coreConfig.AppModuleName;
         } else if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
 
-        setLoading(this.store, promiseResult, loadingForModuleName, loadingForGroupName);
+        setLoading(promiseResult, this.store, loadingForModuleName, loadingForGroupName);
       };
 
       if (!fun.__decorators__) {
@@ -501,7 +510,7 @@ function effectLogger(before, after) {
     fun.__decorators__.push([before, after]);
   };
 }
-function setLoading(store, item, moduleName, groupName) {
+function setLoading(item, store, moduleName, groupName) {
   var key = moduleName + coreConfig.NSP + groupName;
   var loadings = store.loadingGroups;
 
@@ -772,7 +781,7 @@ function loadModel(moduleName, store) {
 
   return moduleOrPromise.initModel(store);
 }
-function loadComponent(moduleName, componentName, store, deps) {
+function loadComponent$1(moduleName, componentName, store, deps) {
   var promiseOrComponent = getComponent(moduleName, componentName);
 
   var callback = function callback(component) {
@@ -910,28 +919,28 @@ function createStore(sid, router, data, initState, middlewares, logger) {
   };
   var loadingGroups = {};
   var injectedModules = {};
-  var currentData = {
-    actionName: '',
-    prevState: {}
+  var refData = {
+    currentActionName: '',
+    uncommittedState: {},
+    isActive: false
   };
-  var _isActive = false;
 
   var isActive = function isActive() {
-    return _isActive;
+    return refData.isActive;
   };
 
   var setActive = function setActive(status) {
-    if (_isActive !== status) {
-      _isActive = status;
+    if (refData.isActive !== status) {
+      refData.isActive = status;
     }
   };
 
   var getCurrentActionName = function getCurrentActionName() {
-    return currentData.actionName;
+    return refData.currentActionName;
   };
 
-  var getCurrentState = function getCurrentState(moduleName) {
-    var state = currentData.prevState;
+  var getUncommittedState = function getUncommittedState(moduleName) {
+    var state = refData.uncommittedState;
     return moduleName ? state[moduleName] : state;
   };
 
@@ -996,10 +1005,12 @@ function createStore(sid, router, data, initState, middlewares, logger) {
     });
   }
 
-  function respondHandler(action, isReducer, prevData) {
+  function respondHandler(action, isReducer) {
     var logs;
     var handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     var actionName = action.type;
+    var actionPriority = action.priority || [];
+    var actionData = getActionData(action);
 
     var _actionName$split = actionName.split(coreConfig.NSP),
         actionModuleName = _actionName$split[0];
@@ -1023,17 +1034,16 @@ function createStore(sid, router, data, initState, middlewares, logger) {
           orderList.push(moduleName);
         }
       });
-
-      if (action.priority) {
-        orderList.unshift.apply(orderList, action.priority);
-      }
-
+      orderList.unshift.apply(orderList, actionPriority);
       var implemented = {};
-      var actionData = getActionData(action);
 
       if (isReducer) {
-        Object.assign(currentData, prevData);
+        var prevState = getState();
         var newState = {};
+
+        var uncommittedState = _extends({}, prevState);
+
+        refData.uncommittedState = uncommittedState;
         orderList.forEach(function (moduleName) {
           if (!implemented[moduleName]) {
             implemented[moduleName] = true;
@@ -1043,21 +1053,22 @@ function createStore(sid, router, data, initState, middlewares, logger) {
 
             if (result) {
               newState[moduleName] = result;
+              uncommittedState[moduleName] = result;
             }
           }
         });
         logs = [{
           id: sid,
-          isActive: _isActive
-        }, actionName, actionData, action.priority || [], orderList, Object.assign({}, prevData.prevState, newState), false];
+          isActive: refData.isActive
+        }, actionName, actionData, actionPriority, orderList, uncommittedState, false];
         devLogger.apply(void 0, logs);
         logger && logger.apply(void 0, logs);
         update(actionName, newState);
       } else {
         logs = [{
           id: sid,
-          isActive: _isActive
-        }, actionName, actionData, action.priority || [], orderList, getState(), true];
+          isActive: refData.isActive
+        }, actionName, actionData, actionPriority, orderList, getState(), true];
         devLogger.apply(void 0, logs);
         logger && logger.apply(void 0, logs);
         var result = [];
@@ -1066,7 +1077,7 @@ function createStore(sid, router, data, initState, middlewares, logger) {
             implemented[moduleName] = true;
             var handler = handlers[moduleName];
             var modelInstance = injectedModules[moduleName];
-            Object.assign(currentData, prevData);
+            refData.currentActionName = actionName;
             result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
           }
         });
@@ -1079,12 +1090,8 @@ function createStore(sid, router, data, initState, middlewares, logger) {
   }
 
   function _dispatch(action) {
-    var prevData = {
-      actionName: action.type,
-      prevState: getState()
-    };
-    respondHandler(action, true, prevData);
-    return respondHandler(action, false, prevData);
+    respondHandler(action, true);
+    return respondHandler(action, false);
   }
 
   var middlewareAPI = {
@@ -1110,7 +1117,7 @@ function createStore(sid, router, data, initState, middlewares, logger) {
     injectedModules: injectedModules,
     destroy: destroy,
     getCurrentActionName: getCurrentActionName,
-    getCurrentState: getCurrentState,
+    getUncommittedState: getUncommittedState,
     update: update,
     isActive: isActive,
     setActive: setActive,
@@ -1619,7 +1626,7 @@ function initModel(moduleName, ModelClass, _store) {
   return undefined;
 }
 
-function exportModule$1(moduleName, ModelClass, components, data) {
+function baseExportModule(moduleName, ModelClass, components, data) {
   Object.keys(components).forEach(function (key) {
     var component = components[key];
 
@@ -1860,7 +1867,7 @@ var RouteModel = _decorate(null, function (_initialize) {
 });
 
 function exportModule(moduleName, ModelClass, components, data) {
-  return exportModule$1(moduleName, ModelClass, components, data);
+  return baseExportModule(moduleName, ModelClass, components, data);
 }
 var BaseModel = _decorate(null, function (_initialize) {
   var BaseModel = function BaseModel(moduleName, store) {
@@ -1877,9 +1884,39 @@ var BaseModel = _decorate(null, function (_initialize) {
       key: "defaultRouteParams",
       value: void 0
     }, {
+      kind: "method",
+      key: "getLatestState",
+      value: function getLatestState() {
+        return this.store.router.latestState;
+      }
+    }, {
+      kind: "method",
+      key: "getRootState",
+      value: function getRootState() {
+        return this.store.getState();
+      }
+    }, {
+      kind: "method",
+      key: "getUncommittedState",
+      value: function getUncommittedState() {
+        return this.store.getUncommittedState();
+      }
+    }, {
+      kind: "method",
+      key: "getState",
+      value: function getState() {
+        return this.store.getState(this.moduleName);
+      }
+    }, {
       kind: "get",
       key: "actions",
       value: function actions() {
+        return MetaData.moduleMap[this.moduleName].actions;
+      }
+    }, {
+      kind: "method",
+      key: "getPrivateActions",
+      value: function getPrivateActions(actionsMap) {
         return MetaData.moduleMap[this.moduleName].actions;
       }
     }, {
@@ -1896,45 +1933,9 @@ var BaseModel = _decorate(null, function (_initialize) {
       }
     }, {
       kind: "method",
-      key: "getLatestState",
-      value: function getLatestState() {
-        return this.store.router.latestState;
-      }
-    }, {
-      kind: "method",
-      key: "getPrivateActions",
-      value: function getPrivateActions(actionsMap) {
-        return MetaData.moduleMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "method",
-      key: "getState",
-      value: function getState() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "getRootState",
-      value: function getRootState() {
-        return this.store.getState();
-      }
-    }, {
-      kind: "method",
       key: "getCurrentActionName",
       value: function getCurrentActionName() {
         return this.store.getCurrentActionName();
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentState",
-      value: function getCurrentState() {
-        return this.store.getCurrentState(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentRootState",
-      value: function getCurrentRootState() {
-        return this.store.getCurrentState();
       }
     }, {
       kind: "method",
@@ -2277,15 +2278,15 @@ var Router = function Router(props) {
     return React__default['default'].createElement("div", {
       key: store.sid,
       "data-sid": store.sid,
-      className: "elux-page",
+      className: "elux-window",
       "data-pagename": pagename
-    }, React__default['default'].createElement(Page, {
+    }, React__default['default'].createElement(EWindow, {
       store: store,
-      view: item.page || props.page
+      view: item.pageComponent || props.page
     }));
   }));
 };
-var Page = React.memo(function (_ref2) {
+var EWindow = React.memo(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
@@ -2300,8 +2301,7 @@ function useRouter() {
 }
 
 var _excluded$3 = ["forwardedRef", "deps", "store"];
-
-var reactLoadComponent = function reactLoadComponent(moduleName, componentName, options) {
+var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
@@ -2360,7 +2360,7 @@ var reactLoadComponent = function reactLoadComponent(moduleName, componentName, 
         var result;
 
         try {
-          result = loadComponent(moduleName, componentName, store, deps);
+          result = loadComponent$1(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -3235,12 +3235,12 @@ var routeConfig = {
 var setRouteConfig = buildConfigSetter(routeConfig);
 var routeMeta = {
   defaultParams: {},
-  pageDatas: {},
+  pageComponents: {},
   pagenameMap: {},
   pagenameList: [],
   nativeLocationMap: {}
 };
-function safeJsonParse(json) {
+function routeJsonParse(json) {
   if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
     return {};
   }
@@ -3256,14 +3256,14 @@ function safeJsonParse(json) {
   return args;
 }
 
-var RouteStack = function () {
-  function RouteStack(limit) {
+var HistoryStack = function () {
+  function HistoryStack(limit) {
     _defineProperty(this, "records", []);
 
     this.limit = limit;
   }
 
-  var _proto = RouteStack.prototype;
+  var _proto = HistoryStack.prototype;
 
   _proto.startup = function startup(record) {
     var oItem = this.records[0];
@@ -3359,10 +3359,10 @@ var RouteStack = function () {
     }
   };
 
-  return RouteStack;
+  return HistoryStack;
 }();
 
-var HistoryRecord = function HistoryRecord(location, historyStack) {
+var RouteRecord = function RouteRecord(location, pageStack) {
   _defineProperty(this, "destroy", void 0);
 
   _defineProperty(this, "key", void 0);
@@ -3370,33 +3370,33 @@ var HistoryRecord = function HistoryRecord(location, historyStack) {
   _defineProperty(this, "recordKey", void 0);
 
   this.location = location;
-  this.historyStack = historyStack;
-  this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
-  this.key = [historyStack.stackkey, this.recordKey].join('-');
+  this.pageStack = pageStack;
+  this.recordKey = env.isServer ? '0' : ++RouteRecord.id + '';
+  this.key = [pageStack.stackkey, this.recordKey].join('-');
 };
 
-_defineProperty(HistoryRecord, "id", 0);
+_defineProperty(RouteRecord, "id", 0);
 
-var HistoryStack = function (_RouteStack) {
-  _inheritsLoose(HistoryStack, _RouteStack);
+var PageStack = function (_HistoryStack) {
+  _inheritsLoose(PageStack, _HistoryStack);
 
-  function HistoryStack(rootStack, store) {
+  function PageStack(windowStack, store) {
     var _this;
 
-    _this = _RouteStack.call(this, 20) || this;
+    _this = _HistoryStack.call(this, 20) || this;
 
     _defineProperty(_assertThisInitialized(_this), "stackkey", void 0);
 
-    _this.rootStack = rootStack;
+    _this.windowStack = windowStack;
     _this.store = store;
-    _this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+    _this.stackkey = env.isServer ? '0' : ++PageStack.id + '';
     return _this;
   }
 
-  var _proto2 = HistoryStack.prototype;
+  var _proto2 = PageStack.prototype;
 
   _proto2.push = function push(location) {
-    var newRecord = new HistoryRecord(location, this);
+    var newRecord = new RouteRecord(location, this);
 
     this._push(newRecord);
 
@@ -3404,7 +3404,7 @@ var HistoryStack = function (_RouteStack) {
   };
 
   _proto2.replace = function replace(location) {
-    var newRecord = new HistoryRecord(location, this);
+    var newRecord = new RouteRecord(location, this);
 
     this._replace(newRecord);
 
@@ -3412,7 +3412,7 @@ var HistoryStack = function (_RouteStack) {
   };
 
   _proto2.relaunch = function relaunch(location) {
-    var newRecord = new HistoryRecord(location, this);
+    var newRecord = new RouteRecord(location, this);
 
     this._relaunch(newRecord);
 
@@ -3435,19 +3435,19 @@ var HistoryStack = function (_RouteStack) {
     this.store.destroy();
   };
 
-  return HistoryStack;
-}(RouteStack);
+  return PageStack;
+}(HistoryStack);
 
-_defineProperty(HistoryStack, "id", 0);
+_defineProperty(PageStack, "id", 0);
 
-var RootStack = function (_RouteStack2) {
-  _inheritsLoose(RootStack, _RouteStack2);
+var WindowStack = function (_HistoryStack2) {
+  _inheritsLoose(WindowStack, _HistoryStack2);
 
-  function RootStack() {
-    return _RouteStack2.call(this, 10) || this;
+  function WindowStack() {
+    return _HistoryStack2.call(this, routeConfig.maxHistory) || this;
   }
 
-  var _proto3 = RootStack.prototype;
+  var _proto3 = WindowStack.prototype;
 
   _proto3.getCurrentPages = function getCurrentPages() {
     return this.records.map(function (item) {
@@ -3457,7 +3457,7 @@ var RootStack = function (_RouteStack2) {
       return {
         pagename: pagename,
         store: store,
-        pageData: routeMeta.pageDatas[pagename]
+        pageComponent: routeMeta.pageComponents[pagename]
       };
     });
   };
@@ -3467,12 +3467,12 @@ var RootStack = function (_RouteStack2) {
     var routeState = {
       pagename: location.getPagename(),
       params: location.getParams(),
-      action: 'RELAUNCH',
+      action: RouteHistoryAction.RELAUNCH,
       key: ''
     };
     var store = forkStore(curHistory.store, routeState);
-    var newHistory = new HistoryStack(this, store);
-    var newRecord = new HistoryRecord(location, newHistory);
+    var newHistory = new PageStack(this, store);
+    var newRecord = new RouteRecord(location, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -3499,9 +3499,9 @@ var RootStack = function (_RouteStack2) {
     var backSteps = [0, 0];
 
     for (var i = 0, k = historyStacks.length; i < k; i++) {
-      var _historyStack = historyStacks[i];
+      var _pageStack = historyStacks[i];
 
-      var recordNum = _historyStack.getLength();
+      var recordNum = _pageStack.getLength();
 
       delta = delta - recordNum;
 
@@ -3556,14 +3556,14 @@ var RootStack = function (_RouteStack2) {
     }
 
     if (delta < 0) {
-      var _historyStack2 = this.getEarliestItem();
+      var _pageStack2 = this.getEarliestItem();
 
-      var _record3 = _historyStack2.getEarliestItem();
+      var _record3 = _pageStack2.getEarliestItem();
 
       return {
         record: _record3,
         overflow: false,
-        index: [this.records.length - 1, _historyStack2.records.length - 1]
+        index: [this.records.length - 1, _pageStack2.records.length - 1]
       };
     }
 
@@ -3580,14 +3580,14 @@ var RootStack = function (_RouteStack2) {
         index: [rootDelta, recordDelta]
       };
     } else {
-      var _historyStack3 = this.getEarliestItem();
+      var _pageStack3 = this.getEarliestItem();
 
-      var _record5 = _historyStack3.getEarliestItem();
+      var _record5 = _pageStack3.getEarliestItem();
 
       return {
         record: _record5,
         overflow: true,
-        index: [this.records.length - 1, _historyStack3.records.length - 1]
+        index: [this.records.length - 1, _pageStack3.records.length - 1]
       };
     }
   };
@@ -3596,10 +3596,10 @@ var RootStack = function (_RouteStack2) {
     var arr = key.split('-');
 
     for (var i = 0, k = this.records.length; i < k; i++) {
-      var _historyStack4 = this.records[i];
+      var _pageStack4 = this.records[i];
 
-      if (_historyStack4.stackkey === arr[0]) {
-        var item = _historyStack4.findRecordByKey(arr[1]);
+      if (_pageStack4.stackkey === arr[0]) {
+        var item = _pageStack4.findRecordByKey(arr[1]);
 
         if (item) {
           return {
@@ -3618,8 +3618,8 @@ var RootStack = function (_RouteStack2) {
     };
   };
 
-  return RootStack;
-}(RouteStack);
+  return WindowStack;
+}(HistoryStack);
 
 function isPlainObject$1(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
@@ -3831,7 +3831,7 @@ var urlParser = {
     return Object.keys(data).length ? JSON.stringify(data) : '';
   },
   parseSearch: function parseSearch(search) {
-    return safeJsonParse(search);
+    return routeJsonParse(search);
   },
   checkUrl: function checkUrl(url) {
     var type = this.type[url.charAt(0)] || 'e';
@@ -3895,6 +3895,8 @@ var LocationTransform = function () {
 
     _defineProperty(this, "_nurl", void 0);
 
+    _defineProperty(this, "_surl", void 0);
+
     _defineProperty(this, "_minData", void 0);
 
     this.url = url;
@@ -3926,7 +3928,7 @@ var LocationTransform = function () {
         });
       }
 
-      var pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].argsToParams(arrArgs) : {};
+      var pathArgs = pagenameMap[_pagename] ? pagenameMap[_pagename].pathToParams(arrArgs) : {};
       this._payload = deepMerge({}, pathArgs, args);
     }
 
@@ -3988,6 +3990,14 @@ var LocationTransform = function () {
     return this._pagename;
   };
 
+  _proto2.getStateUrl = function getStateUrl() {
+    if (!this._surl) {
+      this._surl = urlParser.getStateUrl(this.getPagename(), this.getPayload());
+    }
+
+    return this._surl;
+  };
+
   _proto2.getEluxUrl = function getEluxUrl() {
     if (!this._eurl) {
       var payload = this.getPayload();
@@ -4001,12 +4011,12 @@ var LocationTransform = function () {
       var pathArgs;
 
       if (pagenameMap[_pagename]) {
-        var pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToArgs(minPayload));
+        var pathArgsArr = this.toStringArgs(pagenameMap[_pagename].paramsToPath(minPayload));
         pathmatch = _pagename + pathArgsArr.map(function (item) {
           return item ? encodeURIComponent(item) : '';
         }).join('/');
         pathmatch = pathmatch.replace(/\/*$/, '');
-        pathArgs = pagenameMap[_pagename].argsToParams(pathArgsArr);
+        pathArgs = pagenameMap[_pagename].pathToParams(pathArgsArr);
       } else {
         pathmatch = '/index';
         pathArgs = {};
@@ -4230,14 +4240,14 @@ function createRouteModule(moduleName, pagenameMap, nativeLocationMap) {
   }).reduce(function (map, pagename) {
     var fullPagename = ("/" + pagename + "/").replace(/^\/+|\/+$/g, '/');
     var _pagenameMap$pagename = pagenameMap[pagename],
-        argsToParams = _pagenameMap$pagename.argsToParams,
-        paramsToArgs = _pagenameMap$pagename.paramsToArgs,
-        pageData = _pagenameMap$pagename.pageData;
+        pathToParams = _pagenameMap$pagename.pathToParams,
+        paramsToPath = _pagenameMap$pagename.paramsToPath,
+        pageComponent = _pagenameMap$pagename.pageComponent;
     map[fullPagename] = {
-      argsToParams: argsToParams,
-      paramsToArgs: paramsToArgs
+      pathToParams: pathToParams,
+      paramsToPath: paramsToPath
     };
-    routeMeta.pageDatas[pagename] = pageData;
+    routeMeta.pageComponents[pagename] = pageComponent;
     return map;
   }, {});
 
@@ -4317,7 +4327,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
     _defineProperty(_assertThisInitialized(_this2), "initialize", void 0);
 
-    _defineProperty(_assertThisInitialized(_this2), "rootStack", new RootStack());
+    _defineProperty(_assertThisInitialized(_this2), "windowStack", new WindowStack());
 
     _defineProperty(_assertThisInitialized(_this2), "latestState", {});
 
@@ -4343,7 +4353,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
       var routeState = {
         pagename: pagename,
         params: params,
-        action: 'RELAUNCH',
+        action: RouteHistoryAction.RELAUNCH,
         key: ''
       };
       _this2.routeState = routeState;
@@ -4362,39 +4372,39 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
   var _proto2 = BaseEluxRouter.prototype;
 
   _proto2.startup = function startup(store) {
-    var historyStack = new HistoryStack(this.rootStack, store);
-    var historyRecord = new HistoryRecord(this.location, historyStack);
-    historyStack.startup(historyRecord);
-    this.rootStack.startup(historyStack);
-    this.routeState.key = historyRecord.key;
+    var pageStack = new PageStack(this.windowStack, store);
+    var routeRecord = new RouteRecord(this.location, pageStack);
+    pageStack.startup(routeRecord);
+    this.windowStack.startup(pageStack);
+    this.routeState.key = routeRecord.key;
   };
 
   _proto2.getCurrentPages = function getCurrentPages() {
-    return this.rootStack.getCurrentPages();
+    return this.windowStack.getCurrentPages();
   };
 
   _proto2.getCurrentStore = function getCurrentStore() {
-    return this.rootStack.getCurrentItem().store;
+    return this.windowStack.getCurrentItem().store;
   };
 
   _proto2.getStoreList = function getStoreList() {
-    return this.rootStack.getItems().map(function (_ref) {
+    return this.windowStack.getItems().map(function (_ref) {
       var store = _ref.store;
       return store;
     });
   };
 
   _proto2.getHistoryLength = function getHistoryLength(root) {
-    return root ? this.rootStack.getLength() : this.rootStack.getCurrentItem().getLength();
+    return root ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
   };
 
   _proto2.findRecordByKey = function findRecordByKey(recordKey) {
-    var _this$rootStack$findR = this.rootStack.findRecordByKey(recordKey),
-        _this$rootStack$findR2 = _this$rootStack$findR.record,
-        key = _this$rootStack$findR2.key,
-        location = _this$rootStack$findR2.location,
-        overflow = _this$rootStack$findR.overflow,
-        index = _this$rootStack$findR.index;
+    var _this$windowStack$fin = this.windowStack.findRecordByKey(recordKey),
+        _this$windowStack$fin2 = _this$windowStack$fin.record,
+        key = _this$windowStack$fin2.key,
+        location = _this$windowStack$fin2.location,
+        overflow = _this$windowStack$fin.overflow,
+        index = _this$windowStack$fin.index;
 
     return {
       overflow: overflow,
@@ -4407,12 +4417,12 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
   };
 
   _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
-    var _this$rootStack$testB = this.rootStack.testBack(delta, rootOnly),
-        _this$rootStack$testB2 = _this$rootStack$testB.record,
-        key = _this$rootStack$testB2.key,
-        location = _this$rootStack$testB2.location,
-        overflow = _this$rootStack$testB.overflow,
-        index = _this$rootStack$testB.index;
+    var _this$windowStack$tes = this.windowStack.testBack(delta, rootOnly),
+        _this$windowStack$tes2 = _this$windowStack$tes.record,
+        key = _this$windowStack$tes2.key,
+        location = _this$windowStack$tes2.location,
+        overflow = _this$windowStack$tes.overflow,
+        index = _this$windowStack$tes.index;
 
     return {
       overflow: overflow,
@@ -4461,7 +4471,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               routeState = {
                 pagename: pagename,
                 params: params,
-                action: 'RELAUNCH',
+                action: RouteHistoryAction.RELAUNCH,
                 key: key
               };
               _context.next = 9;
@@ -4473,9 +4483,9 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 11:
               if (root) {
-                key = this.rootStack.relaunch(location$1).key;
+                key = this.windowStack.relaunch(location$1).key;
               } else {
-                key = this.rootStack.getCurrentItem().relaunch(location$1).key;
+                key = this.windowStack.getCurrentItem().relaunch(location$1).key;
               }
 
               routeState.key = key;
@@ -4545,7 +4555,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               routeState = {
                 pagename: pagename,
                 params: params,
-                action: 'PUSH',
+                action: RouteHistoryAction.PUSH,
                 key: key
               };
               _context2.next = 9;
@@ -4557,9 +4567,9 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 11:
               if (root) {
-                key = this.rootStack.push(location$1).key;
+                key = this.windowStack.push(location$1).key;
               } else {
-                key = this.rootStack.getCurrentItem().push(location$1).key;
+                key = this.windowStack.getCurrentItem().push(location$1).key;
               }
 
               routeState.key = key;
@@ -4645,7 +4655,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
               routeState = {
                 pagename: pagename,
                 params: params,
-                action: 'REPLACE',
+                action: RouteHistoryAction.REPLACE,
                 key: key
               };
               _context3.next = 9;
@@ -4657,9 +4667,9 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
 
             case 11:
               if (root) {
-                key = this.rootStack.replace(location$1).key;
+                key = this.windowStack.replace(location$1).key;
               } else {
-                key = this.rootStack.getCurrentItem().replace(location$1).key;
+                key = this.windowStack.getCurrentItem().replace(location$1).key;
               }
 
               routeState.key = key;
@@ -4723,13 +4733,13 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
     var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(stepOrKey, root, options, nativeCaller) {
       var _this3 = this;
 
-      var _this$rootStack$testB3, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
+      var _this$windowStack$tes3, record, overflow, index, url, key, location, pagename, params, routeState, notifyNativeRouter, cloneState;
 
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              _this$rootStack$testB3 = this.rootStack.testBack(stepOrKey, root), record = _this$rootStack$testB3.record, overflow = _this$rootStack$testB3.overflow, index = _this$rootStack$testB3.index;
+              _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, root), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
 
               if (!overflow) {
                 _context4.next = 5;
@@ -4759,7 +4769,7 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
                 key: key,
                 pagename: pagename,
                 params: params,
-                action: 'BACK'
+                action: RouteHistoryAction.BACK
               };
               _context4.next = 14;
               return this.getCurrentStore().dispatch(routeTestChangeAction(routeState));
@@ -4771,11 +4781,11 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
             case 16:
               if (index[0]) {
                 root = true;
-                this.rootStack.back(index[0]);
+                this.windowStack.back(index[0]);
               }
 
               if (index[1]) {
-                this.rootStack.getCurrentItem().back(index[1]);
+                this.windowStack.getCurrentItem().back(index[1]);
               }
 
               notifyNativeRouter = routeConfig.notifyNativeRouter[root ? 'root' : 'internal'];
@@ -4820,27 +4830,9 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
   };
 
   _proto2.addTask = function addTask(execute, nonblocking) {
-    var _this4 = this;
-
     if (env.isServer) {
       return;
     }
-
-    if (this._curTask && !nonblocking) {
-      return;
-    }
-
-    return new Promise(function (resolve, reject) {
-      var task = function task() {
-        return execute().then(resolve, reject);
-      };
-
-      if (_this4._curTask) {
-        _this4._taskList.push(task);
-      } else {
-        _this4.executeTask(task);
-      }
-    });
   };
 
   _proto2.destroy = function destroy() {
@@ -5018,11 +5010,6 @@ function createBaseSSR(ins, router, render, storeInitState, storeMiddlewares, st
       });
     })
   });
-}
-function patchActions(typeName, json) {
-  if (json) {
-    getModuleMap(JSON.parse(json));
-  }
 }
 function getApi(demoteForProductionOnly, injectActions) {
   var modules = getModuleMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
@@ -8791,7 +8778,7 @@ function connectRedux(mapStateToProps, options) {
 }
 
 setAppConfig({
-  loadComponent: reactLoadComponent,
+  loadComponent: loadComponent,
   useRouter: useRouter,
   useStore: useStore
 });
@@ -8825,7 +8812,6 @@ exports.DocumentHead = DocumentHead;
 exports.Else = Else;
 exports.EmptyModel = EmptyModel;
 exports.Link = Link;
-exports.RouteModel = RouteModel;
 exports.Switch = Switch;
 exports.connectRedux = connectRedux;
 exports.createApp = createApp;
@@ -8847,9 +8833,8 @@ exports.isServer = isServer;
 exports.loadModel = loadModel;
 exports.location = location;
 exports.modelHotReplacement = modelHotReplacement;
-exports.patchActions = patchActions;
 exports.reducer = reducer;
-exports.safeJsonParse = safeJsonParse;
+exports.routeJsonParse = routeJsonParse;
 exports.setConfig = setConfig;
 exports.setLoading = setLoading;
 exports.shallowEqual = shallowEqual;

@@ -4,8 +4,8 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 exports.__esModule = true;
 exports.RouteModel = exports.EmptyModel = void 0;
+exports.baseExportModule = baseExportModule;
 exports.exportComponent = exportComponent;
-exports.exportModule = exportModule;
 exports.exportView = exportView;
 exports.getModuleMap = getModuleMap;
 exports.injectActions = injectActions;
@@ -38,7 +38,7 @@ function initModel(moduleName, ModelClass, _store) {
   return undefined;
 }
 
-function exportModule(moduleName, ModelClass, components, data) {
+function baseExportModule(moduleName, ModelClass, components, data) {
   Object.keys(components).forEach(function (key) {
     var component = components[key];
 

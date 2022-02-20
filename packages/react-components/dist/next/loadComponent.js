@@ -1,10 +1,9 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import React, { Component, useContext } from 'react';
-import { env, loadComponent, isPromise } from '@elux/core';
+import { env, loadComponent as baseLoadComponent, isPromise } from '@elux/core';
 import { EluxContextComponent, reactComponentsConfig } from './base';
-
-const reactLoadComponent = (moduleName, componentName, options = {}) => {
+export const loadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
   const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
 
@@ -50,7 +49,7 @@ const reactLoadComponent = (moduleName, componentName, options = {}) => {
         let result;
 
         try {
-          result = loadComponent(moduleName, componentName, store, deps);
+          result = baseLoadComponent(moduleName, componentName, store, deps);
         } catch (e) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -121,5 +120,3 @@ const reactLoadComponent = (moduleName, componentName, options = {}) => {
     }));
   });
 };
-
-export default reactLoadComponent;

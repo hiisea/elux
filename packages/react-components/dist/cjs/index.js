@@ -1,35 +1,32 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
-
 exports.__esModule = true;
-exports.useRouter = exports.setReactComponentsConfig = exports.reactComponentsConfig = exports.loadComponent = exports.Switch = exports.Router = exports.Page = exports.Link = exports.Else = exports.DocumentHead = void 0;
+exports.useRouter = exports.setReactComponentsConfig = exports.reactComponentsConfig = exports.loadComponent = exports.Switch = exports.Router = exports.Link = exports.Else = exports.DocumentHead = void 0;
 
-var _DocumentHead = _interopRequireDefault(require("./DocumentHead"));
+var _DocumentHead = require("./DocumentHead");
 
-exports.DocumentHead = _DocumentHead.default;
+exports.DocumentHead = _DocumentHead.DocumentHead;
 
-var _Else = _interopRequireDefault(require("./Else"));
+var _Else = require("./Else");
 
-exports.Else = _Else.default;
+exports.Else = _Else.Else;
 
-var _Switch = _interopRequireDefault(require("./Switch"));
+var _Switch = require("./Switch");
 
-exports.Switch = _Switch.default;
+exports.Switch = _Switch.Switch;
 
-var _Link = _interopRequireDefault(require("./Link"));
+var _Link = require("./Link");
 
-exports.Link = _Link.default;
+exports.Link = _Link.Link;
 
 var _Router = require("./Router");
 
-exports.Page = _Router.Page;
 exports.Router = _Router.Router;
 exports.useRouter = _Router.useRouter;
 
-var _loadComponent = _interopRequireDefault(require("./loadComponent"));
+var _loadComponent = require("./loadComponent");
 
-exports.loadComponent = _loadComponent.default;
+exports.loadComponent = _loadComponent.loadComponent;
 
 var _base = require("./base");
 

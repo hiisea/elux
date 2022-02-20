@@ -27,6 +27,7 @@
     "stylelint": "cross-env NODE_ENV=production stylelint --cache **/*.{css,less,vue}",
     "jsonlint": "prettier --write **/*.json",
     "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
+    "api:md": "api-documenter markdown -i ./api/json -o ./api/docs",
     "recommit": "git commit --amend --no-edit",
     "build:types": "lerna run build:types",
     "publish-lerna": "lerna publish",

@@ -22,7 +22,7 @@ function initModel(moduleName, ModelClass, _store) {
   return undefined;
 }
 
-export function exportModule(moduleName, ModelClass, components, data) {
+export function baseExportModule(moduleName, ModelClass, components, data) {
   Object.keys(components).forEach(key => {
     const component = components[key];
 

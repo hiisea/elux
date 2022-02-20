@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.default = void 0;
+exports.loadComponent = void 0;
 
 var _core = require("@elux/core");
 
@@ -9,7 +9,7 @@ var _vue = require("vue");
 
 var _base = require("./base");
 
-var vueLoadComponent = function vueLoadComponent(moduleName, componentName, options) {
+var loadComponent = function loadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
@@ -63,5 +63,4 @@ var vueLoadComponent = function vueLoadComponent(moduleName, componentName, opti
   return component;
 };
 
-var _default = vueLoadComponent;
-exports.default = _default;
+exports.loadComponent = loadComponent;

@@ -1,8 +1,8 @@
-import {env, EStore, forkStore, RootState, RouteState} from '@elux/core';
+import {env, EStore, forkStore, RootState, RouteState, RouteHistoryAction} from '@elux/core';
 import {routeMeta, routeConfig} from './basic';
 import {ULocationTransform} from './transform';
 
-class RouteStack<T extends {destroy?: () => void; store?: EStore}> {
+class HistoryStack<T extends {destroy?: () => void; store?: EStore}> {
   public records: T[] = [];
   constructor(protected limit: number) {}
 
@@ -98,52 +98,65 @@ class RouteStack<T extends {destroy?: () => void; store?: EStore}> {
   }
 }
 
-/*** @public */
-export interface UHistoryRecord {
+/**
+ * 路由历史记录
+ *
+ * @remarks
+ * 可以通过 {@link URouter.findRecordByKey}、{@link URouter.findRecordByStep} 获得
+ *
+ * @public
+ */
+export interface URouteRecord {
+  /**
+   * 每条路由记录都有一个唯一的key
+   */
   key: string;
+  /**
+   * 路由转换器，参见 {@link ULocationTransform}
+   */
   location: ULocationTransform;
 }
 
-export class HistoryRecord implements UHistoryRecord {
+export class RouteRecord implements URouteRecord {
   static id = 0;
   public readonly destroy: undefined;
   // public readonly pagename: string;
   // public readonly params: Record<string, any>;
   public readonly key: string;
   public readonly recordKey: string;
-  constructor(public readonly location: ULocationTransform, public readonly historyStack: HistoryStack) {
-    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
+  constructor(public readonly location: ULocationTransform, public readonly pageStack: PageStack) {
+    this.recordKey = env.isServer ? '0' : ++RouteRecord.id + '';
     // const {pagename, params} = location;
     // this.pagename = pagename;
     // this.params = params;
-    this.key = [historyStack.stackkey, this.recordKey].join('-');
+    this.key = [pageStack.stackkey, this.recordKey].join('-');
     //this.query = JSON.stringify(params);
   }
 }
 
-export class HistoryStack extends RouteStack<HistoryRecord> {
+export class PageStack extends HistoryStack<RouteRecord> {
   static id = 0;
   public readonly stackkey: string;
-  constructor(public readonly rootStack: RootStack, public readonly store: EStore) {
+  constructor(public readonly windowStack: WindowStack, public readonly store: EStore) {
     super(20);
-    this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+    this.stackkey = env.isServer ? '0' : ++PageStack.id + '';
   }
-  push(location: ULocationTransform): HistoryRecord {
-    const newRecord = new HistoryRecord(location, this);
+  push(location: ULocationTransform): RouteRecord {
+    const newRecord = new RouteRecord(location, this);
     this._push(newRecord);
     return newRecord;
   }
-  replace(location: ULocationTransform): HistoryRecord {
-    const newRecord = new HistoryRecord(location, this);
+  replace(location: ULocationTransform): RouteRecord {
+    const newRecord = new RouteRecord(location, this);
     this._replace(newRecord);
     return newRecord;
   }
-  relaunch(location: ULocationTransform): HistoryRecord {
-    const newRecord = new HistoryRecord(location, this);
+  relaunch(location: ULocationTransform): RouteRecord {
+    const newRecord = new RouteRecord(location, this);
     this._relaunch(newRecord);
     return newRecord;
   }
-  findRecordByKey(recordKey: string): [HistoryRecord, number] | undefined {
+  findRecordByKey(recordKey: string): [RouteRecord, number] | undefined {
     for (let i = 0, k = this.records.length; i < k; i++) {
       const item = this.records[i];
       if (item.recordKey === recordKey) {
@@ -157,33 +170,38 @@ export class HistoryStack extends RouteStack<HistoryRecord> {
   }
 }
 
-export class RootStack extends RouteStack<HistoryStack> {
+export class WindowStack extends HistoryStack<PageStack> {
   constructor() {
     super(routeConfig.maxHistory);
   }
-  getCurrentPages(): {pagename: string; store: EStore; pageData?: any}[] {
+  getCurrentPages(): {pagename: string; store: EStore; pageComponent?: any}[] {
     return this.records.map((item) => {
       const store = item.store;
       const record = item.getCurrentItem();
       const pagename = record.location.getPagename();
-      return {pagename, store, pageData: routeMeta.pageDatas[pagename]};
+      return {pagename, store, pageComponent: routeMeta.pageComponents[pagename]};
     });
   }
-  push(location: ULocationTransform): HistoryRecord {
+  push(location: ULocationTransform): RouteRecord {
     const curHistory = this.getCurrentItem();
-    const routeState: RouteState = {pagename: location.getPagename(), params: location.getParams() as RootState, action: 'RELAUNCH', key: ''};
+    const routeState: RouteState = {
+      pagename: location.getPagename(),
+      params: location.getParams() as RootState,
+      action: RouteHistoryAction.RELAUNCH,
+      key: '',
+    };
     const store = forkStore(curHistory.store, routeState);
-    const newHistory = new HistoryStack(this, store);
-    const newRecord = new HistoryRecord(location, newHistory);
+    const newHistory = new PageStack(this, store);
+    const newRecord = new RouteRecord(location, newHistory);
     newHistory.startup(newRecord);
     this._push(newHistory);
     return newRecord;
   }
-  replace(location: ULocationTransform): HistoryRecord {
+  replace(location: ULocationTransform): RouteRecord {
     const curHistory = this.getCurrentItem();
     return curHistory.relaunch(location);
   }
-  relaunch(location: ULocationTransform): HistoryRecord {
+  relaunch(location: ULocationTransform): RouteRecord {
     const curHistory = this.getCurrentItem();
     const newRecord = curHistory.relaunch(location);
     this._relaunch(curHistory);
@@ -193,8 +211,8 @@ export class RootStack extends RouteStack<HistoryStack> {
     const historyStacks = this.records;
     const backSteps: [number, number] = [0, 0];
     for (let i = 0, k = historyStacks.length; i < k; i++) {
-      const historyStack = historyStacks[i];
-      const recordNum = historyStack.getLength();
+      const pageStack = historyStacks[i];
+      const recordNum = pageStack.getLength();
       delta = delta - recordNum;
       if (delta > 0) {
         backSteps[0]++;
@@ -208,7 +226,7 @@ export class RootStack extends RouteStack<HistoryStack> {
     }
     return backSteps;
   }
-  testBack(stepOrKey: number | string, rootOnly: boolean): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
+  testBack(stepOrKey: number | string, rootOnly: boolean): {record: RouteRecord; overflow: boolean; index: [number, number]} {
     if (typeof stepOrKey === 'string') {
       return this.findRecordByKey(stepOrKey);
     }
@@ -227,26 +245,26 @@ export class RootStack extends RouteStack<HistoryStack> {
       }
     }
     if (delta < 0) {
-      const historyStack = this.getEarliestItem();
-      const record = historyStack.getEarliestItem();
-      return {record, overflow: false, index: [this.records.length - 1, historyStack.records.length - 1]};
+      const pageStack = this.getEarliestItem();
+      const record = pageStack.getEarliestItem();
+      return {record, overflow: false, index: [this.records.length - 1, pageStack.records.length - 1]};
     }
     const [rootDelta, recordDelta] = this.countBack(delta);
     if (rootDelta < this.records.length) {
       const record = this.getItemAt(rootDelta)!.getItemAt(recordDelta)!;
       return {record, overflow: false, index: [rootDelta, recordDelta]};
     } else {
-      const historyStack = this.getEarliestItem();
-      const record = historyStack.getEarliestItem();
-      return {record, overflow: true, index: [this.records.length - 1, historyStack.records.length - 1]};
+      const pageStack = this.getEarliestItem();
+      const record = pageStack.getEarliestItem();
+      return {record, overflow: true, index: [this.records.length - 1, pageStack.records.length - 1]};
     }
   }
-  findRecordByKey(key: string): {record: HistoryRecord; overflow: boolean; index: [number, number]} {
+  findRecordByKey(key: string): {record: RouteRecord; overflow: boolean; index: [number, number]} {
     const arr = key.split('-');
     for (let i = 0, k = this.records.length; i < k; i++) {
-      const historyStack = this.records[i];
-      if (historyStack.stackkey === arr[0]) {
-        const item = historyStack.findRecordByKey(arr[1]);
+      const pageStack = this.records[i];
+      if (pageStack.stackkey === arr[0]) {
+        const item = pageStack.findRecordByKey(arr[1]);
         if (item) {
           return {record: item[0], index: [i, item[1]], overflow: false};
         }

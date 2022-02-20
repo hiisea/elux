@@ -3,7 +3,7 @@
 var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
 
 exports.__esModule = true;
-exports.Router = exports.Page = void 0;
+exports.Router = exports.EWindow = void 0;
 exports.useRouter = useRouter;
 
 var _react = _interopRequireWildcard(require("react"));
@@ -100,17 +100,17 @@ var Router = function Router(props) {
     return _react.default.createElement("div", {
       key: store.sid,
       "data-sid": store.sid,
-      className: "elux-page",
+      className: "elux-window",
       "data-pagename": pagename
-    }, _react.default.createElement(Page, {
+    }, _react.default.createElement(EWindow, {
       store: store,
-      view: item.page || props.page
+      view: item.pageComponent || props.page
     }));
   }));
 };
 
 exports.Router = Router;
-var Page = (0, _react.memo)(function (_ref2) {
+var EWindow = (0, _react.memo)(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
@@ -118,7 +118,7 @@ var Page = (0, _react.memo)(function (_ref2) {
     store: store
   }, _react.default.createElement(View, null));
 });
-exports.Page = Page;
+exports.EWindow = EWindow;
 
 function useRouter() {
   var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);

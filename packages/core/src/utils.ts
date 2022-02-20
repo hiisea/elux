@@ -5,7 +5,11 @@ export function buildConfigSetter<T extends Record<string, any>>(data: T): (conf
     });
 }
 
-/*** @public */
+/**
+ * 常用于取消监听
+ *
+ * @public
+ */
 export type UNListener = () => void;
 
 export class SingleDispatcher<T> {
@@ -92,7 +96,18 @@ function __deepMerge(optimize: boolean | null, target: {[key: string]: any}, inj
   return target;
 }
 
-/*** @public */
+/**
+ * 多个PlainObject的深度Merge
+ *
+ * @remarks
+ * 类似于 `Object.assin` 的深复制版本。
+ *
+ * - 除第一个参数 target 会被修改外，保证其它入参不会被修改。
+ *
+ * - 仅适应于 Merge PlainObject，且对于 array 是直接替换而不 merge
+ *
+ * @public
+ */
 export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
   args = args.filter((item) => isObject(item) && Object.keys(item).length);
   if (args.length === 0) {

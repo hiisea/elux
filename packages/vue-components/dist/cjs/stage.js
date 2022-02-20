@@ -1,7 +1,7 @@
 "use strict";
 
 exports.__esModule = true;
-exports.Router = exports.Page = void 0;
+exports.Router = exports.EWindow = void 0;
 exports.renderToDocument = renderToDocument;
 exports.renderToMP = renderToMP;
 exports.renderToString = renderToString;
@@ -13,7 +13,7 @@ var _core = require("@elux/core");
 var _base = require("./base");
 
 var StageView;
-var Page = (0, _vue.defineComponent)({
+var EWindow = (0, _vue.defineComponent)({
   props: {
     store: {
       type: Object,
@@ -34,7 +34,7 @@ var Page = (0, _vue.defineComponent)({
     };
   }
 });
-exports.Page = Page;
+exports.EWindow = EWindow;
 var Router = (0, _vue.defineComponent)({
   setup: function setup() {
     var _inject = (0, _vue.inject)(_base.EluxContextKey, {
@@ -125,11 +125,11 @@ var Router = (0, _vue.defineComponent)({
         return (0, _vue.createVNode)("div", {
           "key": store.sid,
           "data-sid": store.sid,
-          "class": "elux-page",
+          "class": "elux-window",
           "data-pagename": pagename
-        }, [(0, _vue.createVNode)(Page, {
+        }, [(0, _vue.createVNode)(EWindow, {
           "store": store,
-          "view": item.page || StageView
+          "view": item.pageComponent || StageView
         }, null)]);
       })]);
     };

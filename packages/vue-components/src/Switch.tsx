@@ -1,13 +1,39 @@
-import {Fragment, h, VNode, Comment} from 'vue';
+import {Fragment, h, VNode, Comment, DefineComponent} from 'vue';
 
-/*** @public */
+/**
+ * 内置VUE组件
+ *
+ * @remarks
+ * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染第一个非空子元素，否则将渲染`props.elseView`，
+ * 与 {@link Else | `<Else>`} 的区别在于：`<Else>` 渲染所有非空子元素
+ *
+ * @example
+ * ```html
+ *<Switch elseView={<NotFound />}>
+ *  {subView === 'detail' && <Detail />}
+ *  {subView === 'list' && <List />}
+ *</Switch>
+ * ```
+ *
+ * @public
+ */
 export interface SwitchProps {
   elseView?: VNode;
 }
 
-/*** @public */
+/**
+ * 内置VUE组件
+ *
+ * @remarks
+ * 参见：{@link SwitchProps}
+ *
+ * @public
+ */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function (props: SwitchProps, context: {slots: {default?: () => VNode[]; elseView?: () => VNode[]}}) {
+export const Switch: DefineComponent<SwitchProps> = function (
+  props: SwitchProps,
+  context: {slots: {default?: () => VNode[]; elseView?: () => VNode[]}}
+) {
   const arr: VNode[] = [];
   const children: VNode[] = context.slots.default ? context.slots.default() : [];
   children.forEach((item) => {
@@ -20,7 +46,7 @@ export default function (props: SwitchProps, context: {slots: {default?: () => V
   }
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
-}
+} as any;
 
 // export default defineComponent({
 //   props: {

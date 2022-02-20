@@ -13,12 +13,12 @@ export var routeConfig = {
 export var setRouteConfig = buildConfigSetter(routeConfig);
 export var routeMeta = {
   defaultParams: {},
-  pageDatas: {},
+  pageComponents: {},
   pagenameMap: {},
   pagenameList: [],
   nativeLocationMap: {}
 };
-export function safeJsonParse(json) {
+export function routeJsonParse(json) {
   if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
     return {};
   }

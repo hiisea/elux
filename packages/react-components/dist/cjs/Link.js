@@ -5,7 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
 
 exports.__esModule = true;
-exports.default = void 0;
+exports.Link = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
@@ -17,7 +17,7 @@ var _base = require("./base");
 
 var _excluded = ["onClick", "disabled", "href", "route", "root", "action"];
 
-var _default = _react.default.forwardRef(function (_ref, ref) {
+var Link = _react.default.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       href = _ref.href,
@@ -51,4 +51,4 @@ var _default = _react.default.forwardRef(function (_ref, ref) {
   }
 });
 
-exports.default = _default;
+exports.Link = Link;

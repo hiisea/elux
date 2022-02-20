@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.default = void 0;
+exports.Else = void 0;
 
 var _react = _interopRequireDefault(require("react"));
 
@@ -23,6 +23,6 @@ var Component = function Component(_ref) {
   return _react.default.createElement(_react.default.Fragment, null, elseView);
 };
 
-var _default = _react.default.memo(Component);
+var Else = _react.default.memo(Component);
 
-exports.default = _default;
+exports.Else = Else;

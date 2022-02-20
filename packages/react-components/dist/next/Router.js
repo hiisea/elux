@@ -81,15 +81,15 @@ export const Router = props => {
     return React.createElement("div", {
       key: store.sid,
       "data-sid": store.sid,
-      className: "elux-page",
+      className: "elux-window",
       "data-pagename": pagename
-    }, React.createElement(Page, {
+    }, React.createElement(EWindow, {
       store: store,
-      view: item.page || props.page
+      view: item.pageComponent || props.page
     }));
   }));
 };
-export const Page = memo(function ({
+export const EWindow = memo(function ({
   store,
   view
 }) {

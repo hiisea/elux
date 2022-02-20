@@ -1,8 +1,8 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { env, forkStore } from '@elux/core';
+import { env, forkStore, RouteHistoryAction } from '@elux/core';
 import { routeMeta, routeConfig } from './basic';
 
-class RouteStack {
+class HistoryStack {
   constructor(limit) {
     _defineProperty(this, "records", []);
 
@@ -105,8 +105,8 @@ class RouteStack {
 
 }
 
-export class HistoryRecord {
-  constructor(location, historyStack) {
+export class RouteRecord {
+  constructor(location, pageStack) {
     _defineProperty(this, "destroy", void 0);
 
     _defineProperty(this, "key", void 0);
@@ -114,28 +114,28 @@ export class HistoryRecord {
     _defineProperty(this, "recordKey", void 0);
 
     this.location = location;
-    this.historyStack = historyStack;
-    this.recordKey = env.isServer ? '0' : ++HistoryRecord.id + '';
-    this.key = [historyStack.stackkey, this.recordKey].join('-');
+    this.pageStack = pageStack;
+    this.recordKey = env.isServer ? '0' : ++RouteRecord.id + '';
+    this.key = [pageStack.stackkey, this.recordKey].join('-');
   }
 
 }
 
-_defineProperty(HistoryRecord, "id", 0);
+_defineProperty(RouteRecord, "id", 0);
 
-export class HistoryStack extends RouteStack {
-  constructor(rootStack, store) {
+export class PageStack extends HistoryStack {
+  constructor(windowStack, store) {
     super(20);
 
     _defineProperty(this, "stackkey", void 0);
 
-    this.rootStack = rootStack;
+    this.windowStack = windowStack;
     this.store = store;
-    this.stackkey = env.isServer ? '0' : ++HistoryStack.id + '';
+    this.stackkey = env.isServer ? '0' : ++PageStack.id + '';
   }
 
   push(location) {
-    const newRecord = new HistoryRecord(location, this);
+    const newRecord = new RouteRecord(location, this);
 
     this._push(newRecord);
 
@@ -143,7 +143,7 @@ export class HistoryStack extends RouteStack {
   }
 
   replace(location) {
-    const newRecord = new HistoryRecord(location, this);
+    const newRecord = new RouteRecord(location, this);
 
     this._replace(newRecord);
 
@@ -151,7 +151,7 @@ export class HistoryStack extends RouteStack {
   }
 
   relaunch(location) {
-    const newRecord = new HistoryRecord(location, this);
+    const newRecord = new RouteRecord(location, this);
 
     this._relaunch(newRecord);
 
@@ -176,9 +176,9 @@ export class HistoryStack extends RouteStack {
 
 }
 
-_defineProperty(HistoryStack, "id", 0);
+_defineProperty(PageStack, "id", 0);
 
-export class RootStack extends RouteStack {
+export class WindowStack extends HistoryStack {
   constructor() {
     super(routeConfig.maxHistory);
   }
@@ -191,7 +191,7 @@ export class RootStack extends RouteStack {
       return {
         pagename,
         store,
-        pageData: routeMeta.pageDatas[pagename]
+        pageComponent: routeMeta.pageComponents[pagename]
       };
     });
   }
@@ -201,12 +201,12 @@ export class RootStack extends RouteStack {
     const routeState = {
       pagename: location.getPagename(),
       params: location.getParams(),
-      action: 'RELAUNCH',
+      action: RouteHistoryAction.RELAUNCH,
       key: ''
     };
     const store = forkStore(curHistory.store, routeState);
-    const newHistory = new HistoryStack(this, store);
-    const newRecord = new HistoryRecord(location, newHistory);
+    const newHistory = new PageStack(this, store);
+    const newRecord = new RouteRecord(location, newHistory);
     newHistory.startup(newRecord);
 
     this._push(newHistory);
@@ -233,8 +233,8 @@ export class RootStack extends RouteStack {
     const backSteps = [0, 0];
 
     for (let i = 0, k = historyStacks.length; i < k; i++) {
-      const historyStack = historyStacks[i];
-      const recordNum = historyStack.getLength();
+      const pageStack = historyStacks[i];
+      const recordNum = pageStack.getLength();
       delta = delta - recordNum;
 
       if (delta > 0) {
@@ -286,12 +286,12 @@ export class RootStack extends RouteStack {
     }
 
     if (delta < 0) {
-      const historyStack = this.getEarliestItem();
-      const record = historyStack.getEarliestItem();
+      const pageStack = this.getEarliestItem();
+      const record = pageStack.getEarliestItem();
       return {
         record,
         overflow: false,
-        index: [this.records.length - 1, historyStack.records.length - 1]
+        index: [this.records.length - 1, pageStack.records.length - 1]
       };
     }
 
@@ -305,12 +305,12 @@ export class RootStack extends RouteStack {
         index: [rootDelta, recordDelta]
       };
     } else {
-      const historyStack = this.getEarliestItem();
-      const record = historyStack.getEarliestItem();
+      const pageStack = this.getEarliestItem();
+      const record = pageStack.getEarliestItem();
       return {
         record,
         overflow: true,
-        index: [this.records.length - 1, historyStack.records.length - 1]
+        index: [this.records.length - 1, pageStack.records.length - 1]
       };
     }
   }
@@ -319,10 +319,10 @@ export class RootStack extends RouteStack {
     const arr = key.split('-');
 
     for (let i = 0, k = this.records.length; i < k; i++) {
-      const historyStack = this.records[i];
+      const pageStack = this.records[i];
 
-      if (historyStack.stackkey === arr[0]) {
-        const item = historyStack.findRecordByKey(arr[1]);
+      if (pageStack.stackkey === arr[0]) {
+        const item = pageStack.findRecordByKey(arr[1]);
 
         if (item) {
           return {

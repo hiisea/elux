@@ -1,6 +1,6 @@
 import { EStore } from '@elux/core';
 import { ULocationTransform } from './transform';
-declare class RouteStack<T extends {
+declare class HistoryStack<T extends {
     destroy?: () => void;
     store?: EStore;
 }> {
@@ -19,50 +19,63 @@ declare class RouteStack<T extends {
     back(delta: number): void;
     protected setActive(oItem: T | undefined): void;
 }
-/*** @public */
-export interface UHistoryRecord {
+/**
+ * 路由历史记录
+ *
+ * @remarks
+ * 可以通过 {@link URouter.findRecordByKey}、{@link URouter.findRecordByStep} 获得
+ *
+ * @public
+ */
+export interface URouteRecord {
+    /**
+     * 每条路由记录都有一个唯一的key
+     */
     key: string;
+    /**
+     * 路由转换器，参见 {@link ULocationTransform}
+     */
     location: ULocationTransform;
 }
-export declare class HistoryRecord implements UHistoryRecord {
+export declare class RouteRecord implements URouteRecord {
     readonly location: ULocationTransform;
-    readonly historyStack: HistoryStack;
+    readonly pageStack: PageStack;
     static id: number;
     readonly destroy: undefined;
     readonly key: string;
     readonly recordKey: string;
-    constructor(location: ULocationTransform, historyStack: HistoryStack);
+    constructor(location: ULocationTransform, pageStack: PageStack);
 }
-export declare class HistoryStack extends RouteStack<HistoryRecord> {
-    readonly rootStack: RootStack;
+export declare class PageStack extends HistoryStack<RouteRecord> {
+    readonly windowStack: WindowStack;
     readonly store: EStore;
     static id: number;
     readonly stackkey: string;
-    constructor(rootStack: RootStack, store: EStore);
-    push(location: ULocationTransform): HistoryRecord;
-    replace(location: ULocationTransform): HistoryRecord;
-    relaunch(location: ULocationTransform): HistoryRecord;
-    findRecordByKey(recordKey: string): [HistoryRecord, number] | undefined;
+    constructor(windowStack: WindowStack, store: EStore);
+    push(location: ULocationTransform): RouteRecord;
+    replace(location: ULocationTransform): RouteRecord;
+    relaunch(location: ULocationTransform): RouteRecord;
+    findRecordByKey(recordKey: string): [RouteRecord, number] | undefined;
     destroy(): void;
 }
-export declare class RootStack extends RouteStack<HistoryStack> {
+export declare class WindowStack extends HistoryStack<PageStack> {
     constructor();
     getCurrentPages(): {
         pagename: string;
         store: EStore;
-        pageData?: any;
+        pageComponent?: any;
     }[];
-    push(location: ULocationTransform): HistoryRecord;
-    replace(location: ULocationTransform): HistoryRecord;
-    relaunch(location: ULocationTransform): HistoryRecord;
+    push(location: ULocationTransform): RouteRecord;
+    replace(location: ULocationTransform): RouteRecord;
+    relaunch(location: ULocationTransform): RouteRecord;
     private countBack;
     testBack(stepOrKey: number | string, rootOnly: boolean): {
-        record: HistoryRecord;
+        record: RouteRecord;
         overflow: boolean;
         index: [number, number];
     };
     findRecordByKey(key: string): {
-        record: HistoryRecord;
+        record: RouteRecord;
         overflow: boolean;
         index: [number, number];
     };

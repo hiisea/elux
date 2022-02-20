@@ -28,7 +28,7 @@ export {
   getModule,
   getComponent,
 } from '@elux/core';
-export type {Facade, Dispatch, UStore, DeepPartial, StoreMiddleware, StoreLogger, CommonModule, Action, HistoryAction} from '@elux/core';
+export type {Facade, Dispatch, UStore, DeepPartial, StoreMiddleware, StoreLogger, CommonModule, Action, RouteHistoryAction} from '@elux/core';
 export type {
   GetState,
   EluxComponent,
@@ -55,18 +55,18 @@ export type {
   UNListener,
   ActionCreator,
 } from '@elux/core';
-export {location, createRouteModule, safeJsonParse} from '@elux/route';
+export {location, createRouteModule, routeJsonParse} from '@elux/route';
 export type {
   NativeLocationMap,
   EluxLocation,
   NativeLocation,
   StateLocation,
   URouter,
-  UHistoryRecord,
+  URouteRecord,
   ULocationTransform,
   PagenameMap,
 } from '@elux/route';
-export {getApi, patchActions} from '@elux/app';
+export {getApi} from '@elux/app';
 export type {ComputedStore, GetBaseFacade, UserConfig, RenderOptions} from '@elux/app';
 export {connectRedux, shallowEqual, useSelector, createSelectorHook} from '@elux/react-redux';
 export type {InferableComponentEnhancerWithProps, GetProps} from '@elux/react-redux';
@@ -120,13 +120,26 @@ export function setConfig(
  * 创建应用(CSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于客户端渲染(CSR)，服务端渲染(SSR)请使用{@link createSSR | createSSR(...)}
+ * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR | createSSR(...)}
  *
  * @param moduleGetter - 模块工厂
  * @param storeMiddlewares - store中间件
  * @param storeLogger - store日志记录器
  *
- * @returns 返回包含`render(...)`方法的下一步实例
+ * @returns
+ * 返回包含`render(options: RenderOptions): Promise<void>`方法的下一步实例，参见{@link RenderOptions}
+ *
+ * @example
+ * ```js
+ * createApp(moduleGetter)
+ * .render()
+ * .then(() => {
+ *   const initLoading = document.getElementById('root-loading');
+ *   if (initLoading) {
+ *     initLoading.parentNode!.removeChild(initLoading);
+ *   }
+ * });
+ * ```
  *
  * @public
  */
@@ -147,7 +160,7 @@ export function createApp(
  * 创建应用(SSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于服务端渲染(SSR)，客户端渲染(CSR)请使用{@link createApp | createApp(...)}
+ * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp | createApp(...)}
  *
  * @param moduleGetter - 模块工厂
  * @param url - 服务器收到的原始url
@@ -155,8 +168,15 @@ export function createApp(
  * @param storeMiddlewares - store中间件
  * @param storeLogger - store日志记录器
  *
- * @returns 返回包含`render(...)`方法的下一步实例
+ * @returns
+ * 返回包含`render(options: RenderOptions): Promise<string>`方法的下一步实例，参见{@link RenderOptions}
  *
+ * @example
+ * ```js
+ * export default function server(request: {url: string}, response: any): Promise<string> {
+ *   return createSSR(moduleGetter, request.url, {request, response}).render();
+ * }
+ * ```
  * @public
  */
 export function createSSR(

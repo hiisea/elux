@@ -35,7 +35,7 @@ function initModel(moduleName: string, ModelClass: CommonModelClass, _store: USt
   return undefined;
 }
 
-export function exportModule(
+export function baseExportModule(
   moduleName: string,
   ModelClass: CommonModelClass,
   components: {[componentName: string]: EluxComponent | AsyncEluxComponent},
@@ -109,7 +109,17 @@ export function injectActions(moduleName: string, model: CommonModel, hmr?: bool
   // return MetaData.facadeMap[moduleName].actions;
 }
 
-/*** @public */
+/**
+ * model热更新
+ *
+ * @remarks
+ * 修改了Model时热更新runtime，通常由脚手架自动调用
+ *
+ * @param moduleName - Model所属模块名称
+ * @param ModelClass - 新的Model
+ *
+ * @public
+ */
 export function modelHotReplacement(moduleName: string, ModelClass: CommonModelClass): void {
   const moduleCache = MetaData.moduleCaches[moduleName];
   if (moduleCache && moduleCache['initModel']) {
@@ -189,21 +199,47 @@ export function getModuleMap(data?: Record<string, string[]>): ModuleMap {
   return MetaData.moduleMap;
 }
 
-/*** @public */
+/**
+ * 向外导出一个EluxUI组件
+ *
+ * @remarks
+ * 不同于普通UI组件，EluxUI组件可通过 {@link LoadComponent} 来加载，参见 {@link exportModule}
+ *
+ * {@link exportComponent} VS {@link exportView} 参见：`Elux中组件与视图的区别`
+ *
+ * @param component - 普通UI组件（如React组件、Vue组件）
+ *
+ * @returns
+ * 返回实现 EluxComponent 接口的UI组件
+ *
+ * @public
+ */
 export function exportComponent<T>(component: T): T & EluxComponent {
   const eluxComponent: EluxComponent & T = component as any;
   eluxComponent.__elux_component__ = 'component';
   return eluxComponent;
 }
 
-/*** @public */
+/**
+ *
+ * {@inheritDoc exportComponent}
+ *
+ * @public
+ */
 export function exportView<T>(component: T): T & EluxComponent {
   const eluxComponent: EluxComponent & T = component as any;
   eluxComponent.__elux_component__ = 'view';
   return eluxComponent;
 }
 
-/*** @public */
+/**
+ * 一个空的Model
+ *
+ * @remarks
+ * 常用于Mock一个空Module
+ *
+ * @public
+ */
 export class EmptyModel implements CommonModel {
   initState: any = {};
   defaultRouteParams: any = {};
@@ -215,8 +251,6 @@ export class EmptyModel implements CommonModel {
     return;
   }
 }
-
-/*** @public */
 export class RouteModel implements CommonModel {
   defaultRouteParams: ModuleState = {};
   constructor(public readonly moduleName: string, public readonly store: UStore) {}

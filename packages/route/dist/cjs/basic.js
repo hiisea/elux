@@ -1,9 +1,9 @@
 "use strict";
 
 exports.__esModule = true;
-exports.routeMeta = exports.routeConfig = void 0;
-exports.safeJsonParse = safeJsonParse;
-exports.setRouteConfig = void 0;
+exports.routeConfig = void 0;
+exports.routeJsonParse = routeJsonParse;
+exports.setRouteConfig = exports.routeMeta = void 0;
 
 var _core = require("@elux/core");
 
@@ -23,14 +23,14 @@ var setRouteConfig = (0, _core.buildConfigSetter)(routeConfig);
 exports.setRouteConfig = setRouteConfig;
 var routeMeta = {
   defaultParams: {},
-  pageDatas: {},
+  pageComponents: {},
   pagenameMap: {},
   pagenameList: [],
   nativeLocationMap: {}
 };
 exports.routeMeta = routeMeta;
 
-function safeJsonParse(json) {
+function routeJsonParse(json) {
   if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
     return {};
   }

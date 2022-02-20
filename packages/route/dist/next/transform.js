@@ -1,6 +1,6 @@
 import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
 import { deepMerge, moduleExists, getModuleList, isPromise, RouteModel, exportModule, setCoreConfig } from '@elux/core';
-import { routeMeta, routeConfig, safeJsonParse } from './basic';
+import { routeMeta, routeConfig, routeJsonParse } from './basic';
 import { extendDefault, excludeDefault } from './deep-extend';
 
 class LocationCaches {
@@ -137,7 +137,7 @@ export const urlParser = {
   },
 
   parseSearch(search) {
-    return safeJsonParse(search);
+    return routeJsonParse(search);
   },
 
   checkUrl(url) {
@@ -204,6 +204,8 @@ class LocationTransform {
     _defineProperty(this, "_eurl", void 0);
 
     _defineProperty(this, "_nurl", void 0);
+
+    _defineProperty(this, "_surl", void 0);
 
     _defineProperty(this, "_minData", void 0);
 
@@ -292,6 +294,14 @@ class LocationTransform {
     }
 
     return this._pagename;
+  }
+
+  getStateUrl() {
+    if (!this._surl) {
+      this._surl = urlParser.getStateUrl(this.getPagename(), this.getPayload());
+    }
+
+    return this._surl;
   }
 
   getEluxUrl() {
@@ -537,13 +547,13 @@ export function createRouteModule(moduleName, pagenameMap, nativeLocationMap = d
     const {
       pathToParams,
       paramsToPath,
-      pageData
+      pageComponent
     } = pagenameMap[pagename];
     map[fullPagename] = {
       pathToParams,
       paramsToPath
     };
-    routeMeta.pageDatas[pagename] = pageData;
+    routeMeta.pageComponents[pagename] = pageComponent;
     return map;
   }, {});
 
