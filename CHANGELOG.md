@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1](https://github.com/hiisea/elux/compare/v1.2.0...v1.2.1) (2022-02-24)
+
+
+### Bug Fixes
+
+* 路由跳转错误 ([9d00945](https://github.com/hiisea/elux/commit/9d00945535dfbea5705011ac5ea1c4234e7c5d3d))
+
+
+
+
+
 # [1.2.0](https://github.com/hiisea/elux/compare/v1.1.0...v1.2.0) (2022-02-24)
 
 
