@@ -4774,9 +4774,27 @@ var BaseEluxRouter = function (_MultipleDispatcher) {
   };
 
   _proto2.addTask = function addTask(execute, nonblocking) {
+    var _this4 = this;
+
     if (env.isServer) {
       return;
     }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise(function (resolve, reject) {
+      var task = function task() {
+        return execute().then(resolve, reject);
+      };
+
+      if (_this4._curTask) {
+        _this4._taskList.push(task);
+      } else {
+        _this4.executeTask(task);
+      }
+    });
   };
 
   _proto2.destroy = function destroy() {

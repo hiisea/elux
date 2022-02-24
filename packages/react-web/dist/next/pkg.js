@@ -3687,6 +3687,20 @@ class BaseEluxRouter extends MultipleDispatcher {
     if (env.isServer) {
       return;
     }
+
+    if (this._curTask && !nonblocking) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const task = () => execute().then(resolve, reject);
+
+      if (this._curTask) {
+        this._taskList.push(task);
+      } else {
+        this.executeTask(task);
+      }
+    });
   }
 
   destroy() {
