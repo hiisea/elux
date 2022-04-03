@@ -33,5 +33,5 @@ export declare type InferableComponentEnhancerWithProps<TInjectedProps> = <C>(co
 export declare function connectRedux<S = {}, D = {}, W = {}>(mapStateToProps?: (state: any, owner: W) => S, options?: Options<any, S, W>): InferableComponentEnhancerWithProps<S & D & {
     dispatch: Dispatch;
 }>;
-export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect, useStore } from 'react-redux';
+export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, connect } from 'react-redux';
 //# sourceMappingURL=index.d.ts.map

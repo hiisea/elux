@@ -9,37 +9,41 @@ var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runt
 
 var _vue = require("vue");
 
-var _base = require("./base");
+var _core = require("@elux/core");
 
-var _excluded = ["onClick", "disabled", "href", "route", "action", "root"];
+var _excluded = ["onClick", "disabled", "to", "target", "action"];
 
 var Link = function Link(_ref, context) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
-      href = _ref.href,
-      route = _ref.route,
+      _ref$to = _ref.to,
+      to = _ref$to === void 0 ? '' : _ref$to,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
-      root = _ref.root,
       props = (0, _objectWithoutPropertiesLoose2.default)(_ref, _excluded);
 
-  var _inject = (0, _vue.inject)(_base.EluxContextKey, {
-    documentHead: ''
-  }),
-      router = _inject.router;
+  var router = _core.coreConfig.UseRouter();
 
   var onClick = function onClick(event) {
     event.preventDefault();
-    _onClick && _onClick(event);
-    route && router[action](route, root);
+
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {
+        url: to
+      }, target);
+    }
   };
 
-  !disabled && (props['onClick'] = onClick);
+  var href = action !== 'back' ? to : '';
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
   disabled && (props['disabled'] = true);
-  !disabled && href && (props['href'] = href);
-  route && (props['route'] = route);
-  action && (props['action'] = action);
-  root && (props['target'] = 'root');
+  href && (props['href'] = href);
 
   if (href) {
     return (0, _vue.h)('a', props, context.slots.default());

@@ -1,38 +1,45 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
-var _excluded = ["onClick", "disabled", "href", "route", "root", "action"];
-import React, { useContext, useCallback } from 'react';
-import { EluxContextComponent } from './base';
+var _excluded = ["onClick", "disabled", "to", "target", "action"];
+import React, { useCallback } from 'react';
+import { coreConfig } from '@elux/core';
+import { jsx as _jsx } from "react/jsx-runtime";
 export var Link = React.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
-      href = _ref.href,
-      route = _ref.route,
-      root = _ref.root,
+      _ref$to = _ref.to,
+      to = _ref$to === void 0 ? '' : _ref$to,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
-  var eluxContext = useContext(EluxContextComponent);
-  var router = eluxContext.router;
+  var router = coreConfig.UseRouter();
   var onClick = useCallback(function (event) {
     event.preventDefault();
-    _onClick && _onClick(event);
-    route && router[action](route, root);
-  }, [_onClick, action, root, route, router]);
-  !disabled && (props['onClick'] = onClick);
+
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {
+        url: to
+      }, target);
+    }
+  }, [_onClick, disabled, to, router, action, target]);
+  var href = action !== 'back' ? to : '';
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
   disabled && (props['disabled'] = true);
-  !disabled && href && (props['href'] = href);
-  route && (props['route'] = route);
-  action && (props['action'] = action);
-  root && (props['target'] = 'root');
+  href && (props['href'] = href);
 
   if (href) {
-    return React.createElement("a", _extends({}, props, {
+    return _jsx("a", _extends({}, props, {
       ref: ref
     }));
   } else {
-    return React.createElement("div", _extends({}, props, {
+    return _jsx("div", _extends({}, props, {
       ref: ref
     }));
   }

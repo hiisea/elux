@@ -1,6 +1,6 @@
 import {ComponentType, FunctionComponent, ComponentClass} from 'react';
-import {connect, Options} from 'react-redux';
-import {exportView, Dispatch, EluxComponent} from '@elux/core';
+import {connect, useStore, Provider, Options} from 'react-redux';
+import {exportView, Dispatch, EluxComponent, setCoreConfig} from '@elux/core';
 
 /**
  * 用于{@link connectRedux }
@@ -44,4 +44,6 @@ export function connectRedux<S = {}, D = {}, W = {}>(
   };
 }
 
-export {shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect, useStore} from 'react-redux';
+setCoreConfig({UseStore: useStore as any, StoreProvider: Provider as any});
+
+export {shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, connect} from 'react-redux';

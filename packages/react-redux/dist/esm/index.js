@@ -1,8 +1,12 @@
-import { connect } from 'react-redux';
-import { exportView } from '@elux/core';
+import { connect, useStore, Provider } from 'react-redux';
+import { exportView, setCoreConfig } from '@elux/core';
 export function connectRedux(mapStateToProps, options) {
   return function (component) {
     return exportView(connect(mapStateToProps, options)(component));
   };
 }
-export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect, useStore } from 'react-redux';
+setCoreConfig({
+  UseStore: useStore,
+  StoreProvider: Provider
+});
+export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, connect } from 'react-redux';

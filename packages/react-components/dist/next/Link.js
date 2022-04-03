@@ -1,36 +1,40 @@
-import _extends from "@babel/runtime/helpers/esm/extends";
-import React, { useContext, useCallback } from 'react';
-import { EluxContextComponent } from './base';
+import React, { useCallback } from 'react';
+import { coreConfig } from '@elux/core';
+import { jsx as _jsx } from "react/jsx-runtime";
 export const Link = React.forwardRef(({
   onClick: _onClick,
   disabled,
-  href,
-  route,
-  root,
+  to = '',
+  target = 'page',
   action = 'push',
   ...props
 }, ref) => {
-  const eluxContext = useContext(EluxContextComponent);
-  const router = eluxContext.router;
+  const router = coreConfig.UseRouter();
   const onClick = useCallback(event => {
     event.preventDefault();
-    _onClick && _onClick(event);
-    route && router[action](route, root);
-  }, [_onClick, action, root, route, router]);
-  !disabled && (props['onClick'] = onClick);
+
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {
+        url: to
+      }, target);
+    }
+  }, [_onClick, disabled, to, router, action, target]);
+  const href = action !== 'back' ? to : '';
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
   disabled && (props['disabled'] = true);
-  !disabled && href && (props['href'] = href);
-  route && (props['route'] = route);
-  action && (props['action'] = action);
-  root && (props['target'] = 'root');
+  href && (props['href'] = href);
 
   if (href) {
-    return React.createElement("a", _extends({}, props, {
+    return _jsx("a", { ...props,
       ref: ref
-    }));
+    });
   } else {
-    return React.createElement("div", _extends({}, props, {
+    return _jsx("div", { ...props,
       ref: ref
-    }));
+    });
   }
 });

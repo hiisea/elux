@@ -13,39 +13,49 @@ var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runt
 
 var _react = _interopRequireWildcard(require("react"));
 
-var _base = require("./base");
+var _core = require("@elux/core");
 
-var _excluded = ["onClick", "disabled", "href", "route", "root", "action"];
+var _jsxRuntime = require("react/jsx-runtime");
+
+var _excluded = ["onClick", "disabled", "to", "target", "action"];
 
 var Link = _react.default.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
-      href = _ref.href,
-      route = _ref.route,
-      root = _ref.root,
+      _ref$to = _ref.to,
+      to = _ref$to === void 0 ? '' : _ref$to,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
       props = (0, _objectWithoutPropertiesLoose2.default)(_ref, _excluded);
-  var eluxContext = (0, _react.useContext)(_base.EluxContextComponent);
-  var router = eluxContext.router;
+
+  var router = _core.coreConfig.UseRouter();
+
   var onClick = (0, _react.useCallback)(function (event) {
     event.preventDefault();
-    _onClick && _onClick(event);
-    route && router[action](route, root);
-  }, [_onClick, action, root, route, router]);
-  !disabled && (props['onClick'] = onClick);
+
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {
+        url: to
+      }, target);
+    }
+  }, [_onClick, disabled, to, router, action, target]);
+  var href = action !== 'back' ? to : '';
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
   disabled && (props['disabled'] = true);
-  !disabled && href && (props['href'] = href);
-  route && (props['route'] = route);
-  action && (props['action'] = action);
-  root && (props['target'] = 'root');
+  href && (props['href'] = href);
 
   if (href) {
-    return _react.default.createElement("a", (0, _extends2.default)({}, props, {
+    return (0, _jsxRuntime.jsx)("a", (0, _extends2.default)({}, props, {
       ref: ref
     }));
   } else {
-    return _react.default.createElement("div", (0, _extends2.default)({}, props, {
+    return (0, _jsxRuntime.jsx)("div", (0, _extends2.default)({}, props, {
       ref: ref
     }));
   }

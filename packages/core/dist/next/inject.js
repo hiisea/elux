@@ -1,17 +1,18 @@
 import env from './env';
-import { isPromise } from './utils';
+import { isPromise, promiseCaseCallback } from './utils';
 import { MetaData, coreConfig, isEluxComponent } from './basic';
 export function getModule(moduleName) {
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName];
   }
 
-  const moduleOrPromise = MetaData.moduleGetter[moduleName]();
+  const moduleOrPromise = coreConfig.ModuleGetter[moduleName]();
 
   if (isPromise(moduleOrPromise)) {
     const promiseModule = moduleOrPromise.then(({
       default: module
     }) => {
+      injectActions(new module.ModelClass(moduleName, null));
       MetaData.moduleCaches[moduleName] = module;
       return module;
     }, reason => {
@@ -22,27 +23,9 @@ export function getModule(moduleName) {
     return promiseModule;
   }
 
+  injectActions(new moduleOrPromise.ModelClass(moduleName, null));
   MetaData.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
-}
-export function getModuleList(moduleNames) {
-  if (moduleNames.length < 1) {
-    return [];
-  }
-
-  const list = moduleNames.map(moduleName => {
-    if (MetaData.moduleCaches[moduleName]) {
-      return MetaData.moduleCaches[moduleName];
-    }
-
-    return getModule(moduleName);
-  });
-
-  if (list.some(item => isPromise(item))) {
-    return Promise.all(list);
-  } else {
-    return list;
-  }
 }
 export function getComponent(moduleName, componentName) {
   const key = [moduleName, componentName].join(coreConfig.NSP);
@@ -55,9 +38,8 @@ export function getComponent(moduleName, componentName) {
     const componentOrFun = module.components[componentName];
 
     if (isEluxComponent(componentOrFun)) {
-      const component = componentOrFun;
-      MetaData.componentCaches[key] = component;
-      return component;
+      MetaData.componentCaches[key] = componentOrFun;
+      return componentOrFun;
     }
 
     const promiseComponent = componentOrFun().then(({
@@ -81,66 +63,117 @@ export function getComponent(moduleName, componentName) {
 
   return moduleCallback(moduleOrPromise);
 }
-export function getComponentList(keys) {
-  if (keys.length < 1) {
-    return Promise.resolve([]);
+export function getEntryComponent() {
+  return getComponent(coreConfig.StageModuleName, coreConfig.StageViewName);
+}
+export function getModuleApiMap(data) {
+  if (!MetaData.moduleApiMap) {
+    if (data) {
+      MetaData.moduleApiMap = Object.keys(data).reduce((prev, moduleName) => {
+        const arr = data[moduleName];
+        const actions = {};
+        const actionNames = {};
+        arr.forEach(actionName => {
+          actions[actionName] = (...payload) => ({
+            type: moduleName + coreConfig.NSP + actionName,
+            payload
+          });
+
+          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
+        });
+        const moduleFacade = {
+          name: moduleName,
+          actions,
+          actionNames
+        };
+        prev[moduleName] = moduleFacade;
+        return prev;
+      }, {});
+    } else {
+      const cacheData = {};
+      MetaData.moduleApiMap = new Proxy({}, {
+        set(target, moduleName, val, receiver) {
+          return Reflect.set(target, moduleName, val, receiver);
+        },
+
+        get(target, moduleName, receiver) {
+          const val = Reflect.get(target, moduleName, receiver);
+
+          if (val !== undefined) {
+            return val;
+          }
+
+          if (!cacheData[moduleName]) {
+            cacheData[moduleName] = {
+              name: moduleName,
+              actionNames: new Proxy({}, {
+                get(__, actionName) {
+                  return moduleName + coreConfig.NSP + actionName;
+                }
+
+              }),
+              actions: new Proxy({}, {
+                get(__, actionName) {
+                  return (...payload) => ({
+                    type: moduleName + coreConfig.NSP + actionName,
+                    payload
+                  });
+                }
+
+              })
+            };
+          }
+
+          return cacheData[moduleName];
+        }
+
+      });
+    }
   }
 
-  return Promise.all(keys.map(key => {
-    if (MetaData.componentCaches[key]) {
-      return MetaData.componentCaches[key];
+  return MetaData.moduleApiMap;
+}
+export function injectComponent(moduleName, componentName, store) {
+  return promiseCaseCallback(getComponent(moduleName, componentName), component => {
+    if (component.__elux_component__ === 'view' && !env.isServer) {
+      return promiseCaseCallback(store.mount(moduleName, false), () => component);
     }
 
-    const [moduleName, componentName] = key.split(coreConfig.NSP);
-    return getComponent(moduleName, componentName);
-  }));
-}
-export function loadModel(moduleName, store) {
-  const moduleOrPromise = getModule(moduleName);
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(module => module.initModel(store));
-  }
-
-  return moduleOrPromise.initModel(store);
-}
-export function loadComponent(moduleName, componentName, store, deps) {
-  const promiseOrComponent = getComponent(moduleName, componentName);
-
-  const callback = component => {
-    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
-      if (env.isServer) {
-        return null;
-      }
-
-      const module = getModule(moduleName);
-      module.initModel(store);
-    }
-
-    deps[moduleName + coreConfig.NSP + componentName] = true;
     return component;
-  };
+  });
+}
+export function injectActions(model, hmr) {
+  const moduleName = model.moduleName;
+  const handlers = model;
 
-  if (isPromise(promiseOrComponent)) {
-    if (env.isServer) {
-      return null;
+  for (const actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      const handler = handlers[actionNames];
+
+      if (handler.__isReducer__ || handler.__isEffect__) {
+        actionNames.split(coreConfig.MSP).forEach(actionName => {
+          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+          const arr = actionName.split(coreConfig.NSP);
+
+          if (arr[1]) {
+            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          } else {
+            transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          }
+        });
+      }
     }
+  }
+}
 
-    return promiseOrComponent.then(callback);
+function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
   }
 
-  return callback(promiseOrComponent);
-}
-export function moduleExists() {
-  return MetaData.moduleExists;
-}
-export function getCachedModules() {
-  return MetaData.moduleCaches;
-}
-export function defineModuleGetter(moduleGetter) {
-  MetaData.moduleGetter = moduleGetter;
-  MetaData.moduleExists = Object.keys(moduleGetter).reduce((data, moduleName) => {
-    data[moduleName] = true;
-    return data;
-  }, {});
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    env.console.warn(`Action duplicate : ${actionName}.`);
+  }
+
+  actionHandlerMap[actionName][listenerModule] = handler;
 }

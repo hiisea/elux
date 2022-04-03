@@ -24,7 +24,7 @@ function setClientHead(eluxContext, documentHead) {
       var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
-        _base.reactComponentsConfig.setPageTitle(arr[1]);
+        _core.coreConfig.SetPageTitle(arr[1]);
       }
     }, 0);
   }

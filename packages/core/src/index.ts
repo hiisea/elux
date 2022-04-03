@@ -1,40 +1,34 @@
 export {default as env} from './env';
-export {buildConfigSetter, deepClone, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise} from './utils';
-export {coreConfig, mergeState, deepMergeState, setCoreConfig, LoadingState, RouteHistoryAction, isServer} from './basic';
-export {
-  ActionTypes,
-  reducer,
-  effect,
-  setLoading,
-  effectLogger,
-  errorAction,
-  routeChangeAction,
-  routeBeforeChangeAction,
-  routeTestChangeAction,
-} from './actions';
-export {getActionData, setProcessedError, isProcessedError, errorProcessed, forkStore, createStore} from './store';
-export {getModuleMap, exportView, exportComponent, modelHotReplacement, RouteModel, EmptyModel} from './modules';
-export {exportModule, BaseModel} from './facade';
-export {moduleExists, loadModel, loadComponent, getModule, getModuleList, getCachedModules, getComponent, defineModuleGetter} from './inject';
-export {initApp, reinitApp} from './app';
-
+export type {UNListener, LoadingState} from './utils';
+export {isPromise, isServer, buildConfigSetter, deepClone, toPromise, deepMerge} from './utils';
 export type {
   Action,
-  CommonModule,
-  CommonModel,
-  ModuleGetter,
-  CoreRouter,
-  RootState,
-  RouteState,
-  ModuleState,
-  UStore,
-  EStore,
+  ActionError,
   Dispatch,
   StoreMiddleware,
+  StoreState,
   StoreLogger,
-  ActionCreator,
+  ModuleGetter,
+  Location,
+  RouteAction,
+  RouteTarget,
+  RouteRuntime,
+  IStore,
+  IRouter,
+  IRouteRecord,
+  EluxComponent,
+  IAppRender,
+  EluxContext,
+  EluxStoreContext,
+  CommonModule,
+  CommonModel,
 } from './basic';
-export type {GetState, EluxComponent, AsyncEluxComponent, CommonModelClass} from './basic';
-export type {UNListener, DeepPartial} from './utils';
-export type {Facade, FacadeStates, FacadeModules, FacadeRoutes, FacadeActions, LoadComponent} from './facade';
-export type {ModuleAPI, ActionsThis, HandlerThis, PickHandler, PickActions, GetPromiseComponent, GetPromiseModule, ReturnComponents} from './facade';
+export {coreConfig, setCoreConfig, getClientRouter, ErrorCodes} from './basic';
+export {errorAction} from './actions';
+export {getComponent, getEntryComponent, getModuleApiMap, injectComponent} from './inject';
+export {setLoading, exportView, exportComponent, effect, reducer, effectLogger, EmptyModel} from './module';
+export {CoreRouter, Store, modelHotReplacement} from './store';
+export type {Facade, API, ILoadComponent} from './facade';
+export {exportModule, getApi, BaseModel} from './facade';
+export type {RenderOptions} from './app';
+export {buildApp, buildSSR} from './app';

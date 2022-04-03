@@ -1,22 +1,26 @@
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { env, forkStore, RouteHistoryAction } from '@elux/core';
-import { routeMeta, routeConfig } from './basic';
-
-class HistoryStack {
+export class HistoryStack {
   constructor(limit) {
-    _defineProperty(this, "records", []);
-
+    this.currentRecord = undefined;
+    this.records = [];
     this.limit = limit;
   }
 
-  startup(record) {
-    const oItem = this.records[0];
+  init(record) {
     this.records = [record];
-    this.setActive(oItem);
+    this.currentRecord = record;
+    record.setActive();
+  }
+
+  onChanged() {
+    if (this.currentRecord !== this.records[0]) {
+      this.currentRecord.setInactive();
+      this.currentRecord = this.records[0];
+      this.currentRecord.setActive();
+    }
   }
 
   getCurrentItem() {
-    return this.records[0];
+    return this.currentRecord;
   }
 
   getEarliestItem() {
@@ -27,53 +31,41 @@ class HistoryStack {
     return this.records[n];
   }
 
-  getItems() {
-    return [...this.records];
-  }
-
   getLength() {
     return this.records.length;
   }
 
-  _push(item) {
+  push(item) {
     const records = this.records;
-    const oItem = records[0];
     records.unshift(item);
-    const delItem = records.splice(this.limit)[0];
 
-    if (delItem && delItem !== item && delItem.destroy) {
-      delItem.destroy();
+    if (records.length > this.limit) {
+      const delItem = records.pop();
+      delItem !== item && delItem.destroy();
     }
 
-    this.setActive(oItem);
+    this.onChanged();
   }
 
-  _replace(item) {
+  replace(item) {
     const records = this.records;
     const delItem = records[0];
     records[0] = item;
-
-    if (delItem && delItem !== item && delItem.destroy) {
-      delItem.destroy();
-    }
-
-    this.setActive(delItem);
+    delItem !== item && delItem.destroy();
+    this.onChanged();
   }
 
-  _relaunch(item) {
+  relaunch(item) {
     const delList = this.records;
-    const oItem = delList[0];
     this.records = [item];
+    this.currentRecord = item;
     delList.forEach(delItem => {
-      if (delItem !== item && delItem.destroy) {
-        delItem.destroy();
-      }
+      delItem !== item && delItem.destroy();
     });
-    this.setActive(oItem);
+    this.onChanged();
   }
 
   back(delta) {
-    const oItem = this.records[0];
     const delList = this.records.splice(0, delta);
 
     if (this.records.length === 0) {
@@ -86,83 +78,61 @@ class HistoryStack {
         delItem.destroy();
       }
     });
-    this.setActive(oItem);
+    this.onChanged();
   }
 
-  setActive(oItem) {
-    var _this$records$;
+}
+export class RouteRecord {
+  constructor(location, pageStack) {
+    this.key = void 0;
+    this.location = location;
+    this.pageStack = pageStack;
+    this.key = [pageStack.key, pageStack.id++].join('-');
+  }
 
-    const oStore = oItem == null ? void 0 : oItem.store;
-    const store = (_this$records$ = this.records[0]) == null ? void 0 : _this$records$.store;
+  setActive() {
+    return;
+  }
 
-    if (store === oStore) {
-      store == null ? void 0 : store.setActive(true);
-    } else {
-      oStore == null ? void 0 : oStore.setActive(false);
-      store == null ? void 0 : store.setActive(true);
+  setInactive() {
+    return;
+  }
+
+  destroy() {
+    return;
+  }
+
+}
+export class PageStack extends HistoryStack {
+  constructor(windowStack, location, store) {
+    super(20);
+    this.id = 0;
+    this.key = void 0;
+    this._store = void 0;
+    this.windowStack = windowStack;
+    this._store = store;
+    this.key = '' + windowStack.id++;
+    this.init(new RouteRecord(location, this));
+  }
+
+  get store() {
+    return this._store;
+  }
+
+  replaceStore(store) {
+    if (this._store !== store) {
+      this._store.destroy();
+
+      this._store = store;
+      store.setActive();
     }
   }
 
-}
-
-export class RouteRecord {
-  constructor(location, pageStack) {
-    _defineProperty(this, "destroy", void 0);
-
-    _defineProperty(this, "key", void 0);
-
-    _defineProperty(this, "recordKey", void 0);
-
-    this.location = location;
-    this.pageStack = pageStack;
-    this.recordKey = env.isServer ? '0' : ++RouteRecord.id + '';
-    this.key = [pageStack.stackkey, this.recordKey].join('-');
-  }
-
-}
-
-_defineProperty(RouteRecord, "id", 0);
-
-export class PageStack extends HistoryStack {
-  constructor(windowStack, store) {
-    super(20);
-
-    _defineProperty(this, "stackkey", void 0);
-
-    this.windowStack = windowStack;
-    this.store = store;
-    this.stackkey = env.isServer ? '0' : ++PageStack.id + '';
-  }
-
-  push(location) {
-    const newRecord = new RouteRecord(location, this);
-
-    this._push(newRecord);
-
-    return newRecord;
-  }
-
-  replace(location) {
-    const newRecord = new RouteRecord(location, this);
-
-    this._replace(newRecord);
-
-    return newRecord;
-  }
-
-  relaunch(location) {
-    const newRecord = new RouteRecord(location, this);
-
-    this._relaunch(newRecord);
-
-    return newRecord;
-  }
-
-  findRecordByKey(recordKey) {
+  findRecordByKey(key) {
     for (let i = 0, k = this.records.length; i < k; i++) {
       const item = this.records[i];
 
-      if (item.recordKey === recordKey) {
+      if (item.key === key) {
         return [item, i];
       }
     }
@@ -170,62 +140,47 @@ export class PageStack extends HistoryStack {
     return undefined;
   }
 
+  setActive() {
+    this.store.setActive();
+  }
+
+  setInactive() {
+    this.store.setInactive();
+  }
+
   destroy() {
     this.store.destroy();
   }
 
 }
-
-_defineProperty(PageStack, "id", 0);
-
 export class WindowStack extends HistoryStack {
-  constructor() {
-    super(routeConfig.maxHistory);
+  constructor(location, store) {
+    super(10);
+    this.id = 0;
+    this.init(new PageStack(this, location, store));
   }
 
-  getCurrentPages() {
+  getCurrentWindowPage() {
+    const item = this.getCurrentItem();
+    const store = item.store;
+    const record = item.getCurrentItem();
+    const url = record.location.url;
+    return {
+      url,
+      store
+    };
+  }
+
+  getWindowPages() {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const pagename = record.location.getPagename();
+      const url = record.location.url;
       return {
-        pagename,
-        store,
-        pageComponent: routeMeta.pageComponents[pagename]
+        url,
+        store
       };
     });
-  }
-
-  push(location) {
-    const curHistory = this.getCurrentItem();
-    const routeState = {
-      pagename: location.getPagename(),
-      params: location.getParams(),
-      action: RouteHistoryAction.RELAUNCH,
-      key: ''
-    };
-    const store = forkStore(curHistory.store, routeState);
-    const newHistory = new PageStack(this, store);
-    const newRecord = new RouteRecord(location, newHistory);
-    newHistory.startup(newRecord);
-
-    this._push(newHistory);
-
-    return newRecord;
-  }
-
-  replace(location) {
-    const curHistory = this.getCurrentItem();
-    return curHistory.relaunch(location);
-  }
-
-  relaunch(location) {
-    const curHistory = this.getCurrentItem();
-    const newRecord = curHistory.relaunch(location);
-
-    this._relaunch(curHistory);
-
-    return newRecord;
   }
 
   countBack(delta) {
@@ -291,7 +246,7 @@ export class WindowStack extends HistoryStack {
       return {
         record,
         overflow: false,
-        index: [this.records.length - 1, pageStack.records.length - 1]
+        index: [this.records.length - 1, pageStack.getLength() - 1]
       };
     }
 
@@ -310,7 +265,7 @@ export class WindowStack extends HistoryStack {
       return {
         record,
         overflow: true,
-        index: [this.records.length - 1, pageStack.records.length - 1]
+        index: [this.records.length - 1, pageStack.getLength() - 1]
       };
     }
   }
@@ -321,8 +276,8 @@ export class WindowStack extends HistoryStack {
     for (let i = 0, k = this.records.length; i < k; i++) {
       const pageStack = this.records[i];
 
-      if (pageStack.stackkey === arr[0]) {
-        const item = pageStack.findRecordByKey(arr[1]);
+      if (pageStack.key === arr[0]) {
+        const item = pageStack.findRecordByKey(key);
 
         if (item) {
           return {

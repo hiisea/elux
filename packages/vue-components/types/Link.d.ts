@@ -1,4 +1,5 @@
 import { HTMLAttributes, Events, DefineComponent } from 'vue';
+import { RouteTarget, RouteAction } from '@elux/core';
 /**
  * 内置VUE组件
  *
@@ -20,20 +21,16 @@ export interface LinkProps extends HTMLAttributes {
     /**
      * 指定跳转的url，支持{@link EluxLocation | 3种路由协议}：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]
      */
-    route?: string;
-    /**
-     * href属性仅用于SSR时提供给搜索引擎爬取，指定跳转的url请使用 {@link LinkProps.route} 替代
-     */
-    href?: string;
+    to?: string;
     onClick?(event: Events['onClick']): void;
     /**
      * 路由的切换方式，参见 {@link RouteHistoryAction}
      */
-    action?: 'push' | 'replace' | 'relaunch';
+    action?: RouteAction;
     /**
      * 是否操作顶级路由栈（EWindow栈），虚拟多页下使用
      */
-    root?: boolean;
+    target?: RouteTarget;
 }
 /**
  * 内置VUE组件

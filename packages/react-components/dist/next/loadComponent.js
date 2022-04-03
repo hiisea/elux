@@ -1,28 +1,30 @@
-import _extends from "@babel/runtime/helpers/esm/extends";
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import React, { Component, useContext } from 'react';
-import { env, loadComponent as baseLoadComponent, isPromise } from '@elux/core';
-import { EluxContextComponent, reactComponentsConfig } from './base';
-export const loadComponent = (moduleName, componentName, options = {}) => {
-  const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
-  const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
+import React, { Component } from 'react';
+import { env, injectComponent, isPromise, coreConfig } from '@elux/core';
+import { jsx as _jsx } from "react/jsx-runtime";
+export const LoadComponentOnError = ({
+  message
+}) => _jsx("div", {
+  className: "g-component-error",
+  children: message
+});
+export const LoadComponentOnLoading = () => _jsx("div", {
+  className: "g-component-loading",
+  children: "loading..."
+});
+export const LoadComponent = (moduleName, componentName, options = {}) => {
+  const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
+  const OnError = options.onError || coreConfig.LoadComponentOnError;
 
   class Loader extends Component {
     constructor(props) {
       super(props);
-
-      _defineProperty(this, "active", true);
-
-      _defineProperty(this, "loading", false);
-
-      _defineProperty(this, "error", '');
-
-      _defineProperty(this, "view", void 0);
-
-      _defineProperty(this, "state", {
+      this.active = true;
+      this.loading = false;
+      this.error = '';
+      this.view = void 0;
+      this.state = {
         ver: 0
-      });
-
+      };
       this.execute();
     }
 
@@ -42,14 +44,18 @@ export const loadComponent = (moduleName, componentName, options = {}) => {
     execute() {
       if (!this.view && !this.loading && !this.error) {
         const {
-          deps,
           store
         } = this.props;
         this.loading = true;
         let result;
 
         try {
-          result = baseLoadComponent(moduleName, componentName, store, deps);
+          result = injectComponent(moduleName, componentName, store);
+
+          if (env.isServer && isPromise(result)) {
+            result = undefined;
+            throw 'can not use async component in SSR';
+          }
         } catch (e) {
           this.loading = false;
           this.error = e.message || `${e}`;
@@ -84,24 +90,24 @@ export const loadComponent = (moduleName, componentName, options = {}) => {
     render() {
       const {
         forwardedRef,
-        deps,
         store,
         ...rest
       } = this.props;
 
       if (this.view) {
         const View = this.view;
-        return React.createElement(View, _extends({
-          ref: forwardedRef
-        }, rest));
+        return _jsx(View, {
+          ref: forwardedRef,
+          ...rest
+        });
       }
 
       if (this.loading) {
         const Loading = OnLoading;
-        return React.createElement(Loading, null);
+        return _jsx(Loading, {});
       }
 
-      return React.createElement(OnError, {
+      return _jsx(OnError, {
         message: this.error
       });
     }
@@ -109,14 +115,10 @@ export const loadComponent = (moduleName, componentName, options = {}) => {
   }
 
   return React.forwardRef((props, ref) => {
-    const {
-      deps = {}
-    } = useContext(EluxContextComponent);
-    const store = reactComponentsConfig.useStore();
-    return React.createElement(Loader, _extends({}, props, {
+    const store = coreConfig.UseStore();
+    return _jsx(Loader, { ...props,
       store: store,
-      deps: deps,
       forwardedRef: ref
-    }));
+    });
   });
 };

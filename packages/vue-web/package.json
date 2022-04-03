@@ -28,10 +28,11 @@
     "package:next": "cross-env NODE_TAG=next rollup -c",
     "package:esm": "cross-env NODE_TAG=esm rollup -c",
     "api:json": "yarn build:types && api-extractor run",
-    "build": "yarn api:json && rimraf ./dist && yarn build:next & yarn build:esm & yarn build:cjs & yarn package:next && yarn package:esm"
+    "build": "yarn build:types && rimraf ./dist && yarn build:next && yarn build:esm && yarn build:cjs && yarn package:next && yarn package:esm"
   },
   "externals": {
-    "vue": true
+    "vue": true,
+    "@elux/vue-components/server": true
   },
   "peerDependencies": {
     "vue": "^3.0.0"

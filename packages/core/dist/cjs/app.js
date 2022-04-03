@@ -3,69 +3,48 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.initApp = initApp;
-exports.reinitApp = reinitApp;
+exports.buildApp = buildApp;
+exports.buildSSR = buildSSR;
 
 var _env = _interopRequireDefault(require("./env"));
 
 var _basic = require("./basic");
 
-var _store = require("./store");
+function buildApp(ins, router) {
+  var store = router.getCurrentPage().store;
+  var ssrData = _env.default[_basic.coreConfig.SSRDataKey];
+  var AppRender = _basic.coreConfig.AppRender;
+  return Object.assign(ins, {
+    render: function render(_temp) {
+      var _ref = _temp === void 0 ? {} : _temp,
+          _ref$id = _ref.id,
+          id = _ref$id === void 0 ? 'root' : _ref$id;
 
-var _inject = require("./inject");
-
-function initApp(router, data, initState, middlewares, storeLogger, appViewName, preloadComponents) {
-  if (preloadComponents === void 0) {
-    preloadComponents = [];
-  }
-
-  _basic.MetaData.currentRouter = router;
-  var store = (0, _store.createStore)(0, router, data, initState, middlewares, storeLogger);
-  router.startup(store);
-  var AppModuleName = _basic.coreConfig.AppModuleName,
-      RouteModuleName = _basic.coreConfig.RouteModuleName;
-  var moduleGetter = _basic.MetaData.moduleGetter;
-  var appModule = (0, _inject.getModule)(AppModuleName);
-  var routeModule = (0, _inject.getModule)(RouteModuleName);
-  var AppView = appViewName ? (0, _inject.getComponent)(AppModuleName, appViewName) : {
-    __elux_component__: 'view'
-  };
-  var preloadModules = Object.keys(router.routeState.params).concat(Object.keys(store.getState())).reduce(function (data, moduleName) {
-    if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
-      data[moduleName] = true;
+      return router.init(ssrData || {}).then(function () {
+        AppRender.toDocument(id, {
+          router: router,
+          documentHead: ''
+        }, !!ssrData, ins, store);
+      });
     }
-
-    return data;
-  }, {});
-  var results = Promise.all([(0, _inject.getModuleList)(Object.keys(preloadModules)), (0, _inject.getComponentList)(preloadComponents), routeModule.initModel(store), appModule.initModel(store)]);
-  var setup;
-
-  if (_env.default.isServer) {
-    setup = results.then(function (_ref) {
-      var modules = _ref[0];
-      return Promise.all(modules.map(function (mod) {
-        return mod.initModel(store);
-      }));
-    });
-  } else {
-    setup = results;
-  }
-
-  return {
-    store: store,
-    AppView: AppView,
-    setup: setup
-  };
+  });
 }
 
-function reinitApp(store) {
-  var moduleGetter = _basic.MetaData.moduleGetter;
-  var preloadModules = Object.keys(store.router.routeState.params).filter(function (moduleName) {
-    return moduleGetter[moduleName] && moduleName !== AppModuleName;
+function buildSSR(ins, router) {
+  var store = router.getCurrentPage().store;
+  var AppRender = _basic.coreConfig.AppRender;
+  return Object.assign(ins, {
+    render: function render(_temp2) {
+      var _ref2 = _temp2 === void 0 ? {} : _temp2,
+          _ref2$id = _ref2.id,
+          id = _ref2$id === void 0 ? 'root' : _ref2$id;
+
+      return router.init({}).then(function () {
+        AppRender.toString(id, {
+          router: router,
+          documentHead: ''
+        }, ins, store);
+      });
+    }
   });
-  var AppModuleName = _basic.coreConfig.AppModuleName,
-      RouteModuleName = _basic.coreConfig.RouteModuleName;
-  var appModule = (0, _inject.getModule)(AppModuleName);
-  var routeModule = (0, _inject.getModule)(RouteModuleName);
-  return Promise.all([(0, _inject.getModuleList)(preloadModules), routeModule.initModel(store), appModule.initModel(store)]);
 }

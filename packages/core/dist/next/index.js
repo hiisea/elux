@@ -1,9 +1,9 @@
 export { default as env } from './env';
-export { buildConfigSetter, deepClone, deepMerge, SingleDispatcher, MultipleDispatcher, isPromise } from './utils';
-export { coreConfig, mergeState, deepMergeState, setCoreConfig, LoadingState, RouteHistoryAction, isServer } from './basic';
-export { ActionTypes, reducer, effect, setLoading, effectLogger, errorAction, routeChangeAction, routeBeforeChangeAction, routeTestChangeAction } from './actions';
-export { getActionData, setProcessedError, isProcessedError, errorProcessed, forkStore, createStore } from './store';
-export { getModuleMap, exportView, exportComponent, modelHotReplacement, RouteModel, EmptyModel } from './modules';
-export { exportModule, BaseModel } from './facade';
-export { moduleExists, loadModel, loadComponent, getModule, getModuleList, getCachedModules, getComponent, defineModuleGetter } from './inject';
-export { initApp, reinitApp } from './app';
+export { isPromise, isServer, buildConfigSetter, deepClone, toPromise, deepMerge } from './utils';
+export { coreConfig, setCoreConfig, getClientRouter, ErrorCodes } from './basic';
+export { errorAction } from './actions';
+export { getComponent, getEntryComponent, getModuleApiMap, injectComponent } from './inject';
+export { setLoading, exportView, exportComponent, effect, reducer, effectLogger, EmptyModel } from './module';
+export { CoreRouter, Store, modelHotReplacement } from './store';
+export { exportModule, getApi, BaseModel } from './facade';
+export { buildApp, buildSSR } from './app';

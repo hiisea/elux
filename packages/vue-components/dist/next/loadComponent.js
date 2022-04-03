@@ -1,48 +1,48 @@
-import { loadComponent as baseLoadComponent, isPromise, env } from '@elux/core';
-import { defineAsyncComponent, h, inject } from 'vue';
-import { EluxContextKey, EluxStoreContextKey, vueComponentsConfig } from './base';
-export const loadComponent = (moduleName, componentName, options = {}) => {
-  const loadingComponent = options.OnLoading || vueComponentsConfig.LoadComponentOnLoading;
-  const errorComponent = options.OnError || vueComponentsConfig.LoadComponentOnError;
+import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
+import { defineAsyncComponent, h } from 'vue';
+import { env, injectComponent, isPromise, coreConfig } from '@elux/core';
+export const LoadComponentOnError = ({
+  message
+}) => _createVNode("div", {
+  "class": "g-component-error"
+}, [message]);
+export const LoadComponentOnLoading = () => _createVNode("div", {
+  "class": "g-component-loading"
+}, [_createTextVNode("loading...")]);
+export const LoadComponent = (moduleName, componentName, options = {}) => {
+  const loadingComponent = options.onLoading || coreConfig.LoadComponentOnLoading;
+  const errorComponent = options.onError || coreConfig.LoadComponentOnError;
 
   const component = (props, context) => {
-    const {
-      deps
-    } = inject(EluxContextKey, {
-      documentHead: ''
-    });
-    const {
-      store
-    } = inject(EluxStoreContextKey, {
-      store: null
-    });
+    const store = coreConfig.UseStore();
     let result;
     let errorMessage = '';
 
     try {
-      result = baseLoadComponent(moduleName, componentName, store, deps || {});
+      result = injectComponent(moduleName, componentName, store);
+
+      if (env.isServer && isPromise(result)) {
+        result = undefined;
+        throw 'can not use async component in SSR';
+      }
     } catch (e) {
       env.console.error(e);
       errorMessage = e.message || `${e}`;
     }
 
-    if (result !== undefined) {
-      if (result === null) {
-        return h(loadingComponent);
-      }
-
+    if (result) {
       if (isPromise(result)) {
         return h(defineAsyncComponent({
           loader: () => result,
           errorComponent,
           loadingComponent
         }), props, context.slots);
+      } else {
+        return h(result, props, context.slots);
       }
-
-      return h(result, props, context.slots);
+    } else {
+      return h(errorComponent, null, errorMessage);
     }
-
-    return h(errorComponent, null, errorMessage);
   };
 
   return component;

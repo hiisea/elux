@@ -17,12 +17,18 @@ if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) 
 }
 
 var effects = [];
-export var devLogger = function devLogger(_ref2, actionName, payload, priority, handers, state, effect) {
+export var devLogger = function devLogger(_ref2) {
   var id = _ref2.id,
-      isActive = _ref2.isActive;
+      isActive = _ref2.isActive,
+      actionName = _ref2.actionName,
+      payload = _ref2.payload,
+      priority = _ref2.priority,
+      handers = _ref2.handers,
+      state = _ref2.state,
+      effect = _ref2.effect;
 
   if (reduxDevTools) {
-    var type = [actionName, " (" + (isActive ? '' : '*') + id + ")"].join('');
+    var type = ["" + id + (isActive ? '' : '*') + "|", actionName, "(" + handers.length + ")"].join('');
     var _logItem = {
       type: type,
       payload: payload,

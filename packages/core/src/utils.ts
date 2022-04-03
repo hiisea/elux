@@ -1,10 +1,4 @@
-export function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void {
-  return (config) =>
-    Object.keys(data).forEach((key) => {
-      config[key] !== undefined && ((data as any)[key] = config[key]);
-    });
-}
-
+import env from './env';
 /**
  * 常用于取消监听
  *
@@ -12,67 +6,35 @@ export function buildConfigSetter<T extends Record<string, any>>(data: T): (conf
  */
 export type UNListener = () => void;
 
-export class SingleDispatcher<T> {
-  protected listenerId = 0;
+export type Listener = () => void;
 
-  protected readonly listenerMap: Record<string, (data: T) => void> = {};
-
-  addListener(callback: (data: T) => void): UNListener {
-    this.listenerId++;
-    const id = `${this.listenerId}`;
-    const listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return () => {
-      delete listenerMap[id];
-    };
-  }
-
-  dispatch(data: T): void {
-    const listenerMap = this.listenerMap;
-    Object.keys(listenerMap).forEach((id) => {
-      listenerMap[id](data);
-    });
-  }
+export function isPromise(data: any): data is Promise<any> {
+  return typeof data === 'object' && typeof data.then === 'function';
 }
 
-export class MultipleDispatcher<T extends Record<string, any> = {}> {
-  protected listenerId = 0;
-
-  protected listenerMap: {
-    [N in keyof T]?: {[id: string]: (data: T[N]) => void | Promise<void>};
-  } = {};
-
-  addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void | Promise<void>): UNListener {
-    this.listenerId++;
-    const id = `${this.listenerId}`;
-    if (!this.listenerMap[name]) {
-      this.listenerMap[name] = {};
-    }
-    const listenerMap = this.listenerMap[name] as {
-      [id: string]: (data: T[N]) => void;
-    };
-    listenerMap[id] = callback;
-    return () => {
-      delete listenerMap[id];
-    };
+export function toPromise<T>(resultOrPromise: Promise<T> | T): Promise<T> {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise;
   }
+  return Promise.resolve(resultOrPromise);
+}
 
-  dispatch<N extends keyof T>(name: N, data: T[N]): void | Promise<void[]> {
-    const listenerMap = this.listenerMap[name] as {
-      [id: string]: (data: T[N]) => void | Promise<void>;
-    };
-    if (listenerMap) {
-      let hasPromise = false;
-      const arr = Object.keys(listenerMap).map((id) => {
-        const result = listenerMap[id](data);
-        if (!hasPromise && isPromise(result)) {
-          hasPromise = true;
-        }
-        return result;
-      });
-      return hasPromise ? Promise.all(arr) : undefined;
-    }
+export function promiseCaseCallback<T, R>(resultOrPromise: Promise<T> | T, callback: (result: T) => Promise<R> | R): Promise<R> | R {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise.then((result) => callback(result));
   }
+  return callback(resultOrPromise);
+}
+
+export function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void {
+  return (config) =>
+    Object.keys(data).forEach((key) => {
+      config[key] !== undefined && ((data as any)[key] = config[key]);
+    });
+}
+
+export function deepClone<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
 }
 
 function isObject(obj: any): Boolean {
@@ -141,14 +103,78 @@ export function deepMerge(target: {[key: string]: any}, ...args: any[]): any {
   return target;
 }
 
-export function deepClone<T>(data: T): T {
-  return JSON.parse(JSON.stringify(data));
+export class SingleDispatcher<T> {
+  protected listenerId = 0;
+
+  protected readonly listenerMap: Record<string, (data: T) => void> = {};
+
+  addListener(callback: (data: T) => void): UNListener {
+    this.listenerId++;
+    const id = `${this.listenerId}`;
+    const listenerMap = this.listenerMap;
+    listenerMap[id] = callback;
+    return () => {
+      delete listenerMap[id];
+    };
+  }
+
+  dispatch(data: T): void {
+    const listenerMap = this.listenerMap;
+    Object.keys(listenerMap).forEach((id) => {
+      listenerMap[id](data);
+    });
+  }
 }
 
-export function isPromise(data: any): data is Promise<any> {
-  return typeof data === 'object' && typeof data.then === 'function';
-}
+/**
+ * 描述异步状态
+ *
+ * @public
+ */
+export type LoadingState = 'Start' | 'Stop' | 'Depth';
 
+export class TaskCounter extends SingleDispatcher<LoadingState> {
+  public readonly list: {promise: Promise<any>; note: string}[] = [];
+
+  private ctimer = 0;
+
+  public constructor(public deferSecond: number) {
+    super();
+  }
+
+  public addItem(promise: Promise<any>, note = ''): Promise<any> {
+    if (!this.list.some((item) => item.promise === promise)) {
+      this.list.push({promise, note});
+      promise.finally(() => this.completeItem(promise));
+
+      if (this.list.length === 1 && !this.ctimer) {
+        this.dispatch('Start');
+        this.ctimer = env.setTimeout(() => {
+          this.ctimer = 0;
+          if (this.list.length > 0) {
+            this.dispatch('Depth');
+          }
+        }, this.deferSecond * 1000);
+      }
+    }
+    return promise;
+  }
+
+  private completeItem(promise: Promise<any>): this {
+    const i = this.list.findIndex((item) => item.promise === promise);
+    if (i > -1) {
+      this.list.splice(i, 1);
+      if (this.list.length === 0) {
+        if (this.ctimer) {
+          env.clearTimeout.call(null, this.ctimer);
+          this.ctimer = 0;
+        }
+        this.dispatch('Stop');
+      }
+    }
+    return this;
+  }
+}
 export function compose(...funcs: Function[]): Function {
   if (funcs.length === 0) {
     return (arg: any) => arg;
@@ -165,5 +191,6 @@ export function compose(...funcs: Function[]): Function {
   );
 }
 
-/*** @public */
-export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
+export function isServer(): boolean {
+  return env.isServer;
+}

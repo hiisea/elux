@@ -1,120 +1,14 @@
-import {ComponentType} from 'react';
-import {Facade, defineModuleGetter, ModuleGetter, StoreMiddleware, StoreLogger} from '@elux/core';
-import {setReactComponentsConfig, loadComponent, LoadComponentOptions, useRouter} from '@elux/react-components';
-import {renderToString, renderToDocument} from '@elux/react-components/stage';
-import {createBaseApp, createBaseSSR, setAppConfig, setUserConfig, UserConfig, GetBaseFacade, RenderOptions} from '@elux/app';
-import {createRouter, createBrowserHistory, createServerHistory} from '@elux/route-browser';
-import {Provider, useStore} from '@elux/react-redux';
+import {buildApp, buildSSR} from '@elux/core';
+import {createClientRouter, createServerRouter} from '@elux/route-browser';
+import {AppConfig} from '@elux/app';
 
 export {DocumentHead, Switch, Else, Link} from '@elux/react-components';
-export type {DocumentHeadProps, SwitchProps, ElseProps, LinkProps, LoadComponentOptions} from '@elux/react-components';
-export {
-  errorAction,
-  LoadingState,
-  env,
-  effect,
-  reducer,
-  setLoading,
-  effectLogger,
-  isServer,
-  deepMerge,
-  exportModule,
-  exportView,
-  exportComponent,
-  modelHotReplacement,
-  EmptyModel,
-  BaseModel,
-  loadModel,
-  getModule,
-  getComponent,
-} from '@elux/core';
-export type {Facade, Dispatch, UStore, DeepPartial, StoreMiddleware, StoreLogger, CommonModule, Action, RouteHistoryAction} from '@elux/core';
-export type {
-  GetState,
-  EluxComponent,
-  AsyncEluxComponent,
-  CommonModelClass,
-  ModuleAPI,
-  ReturnComponents,
-  GetPromiseModule,
-  GetPromiseComponent,
-  ModuleState,
-  RootState,
-  CommonModel,
-  RouteState,
-  ActionsThis,
-  PickHandler,
-  ModuleGetter,
-  LoadComponent,
-  HandlerThis,
-  FacadeStates,
-  FacadeModules,
-  FacadeActions,
-  FacadeRoutes,
-  PickActions,
-  UNListener,
-  ActionCreator,
-} from '@elux/core';
-export {location, createRouteModule, routeJsonParse} from '@elux/route';
-export type {
-  NativeLocationMap,
-  EluxLocation,
-  NativeLocation,
-  StateLocation,
-  URouter,
-  URouteRecord,
-  ULocationTransform,
-  PagenameMap,
-} from '@elux/route';
-export {getApi} from '@elux/app';
-export type {ComputedStore, GetBaseFacade, UserConfig, RenderOptions} from '@elux/app';
+export type {DocumentHeadProps, SwitchProps, ElseProps, LinkProps} from '@elux/react-components';
+
 export {connectRedux, shallowEqual, useSelector, createSelectorHook} from '@elux/react-redux';
 export type {InferableComponentEnhancerWithProps, GetProps} from '@elux/react-redux';
 
-setAppConfig({loadComponent, useRouter, useStore: useStore as any});
-setReactComponentsConfig({Provider: Provider as any, useStore: useStore as any});
-
-/**
- * 获取应用顶级API类型
- *
- * @remarks
- * - `TFacade`: 各模块接口，可通过`Facade<ModuleGetter>`获取
- *
- * - `TRouteModuleName`: 路由模块名称，默认为`route`
- *
- * @typeParam TFacade - 各模块接口，可通过`Facade<ModuleGetter>`获取
- * @typeParam TRouteModuleName - 路由模块名称，默认为`route`
- *
- * @public
- */
-export type GetFacade<TFacade extends Facade, TRouteModuleName extends string = 'route'> = GetBaseFacade<
-  TFacade,
-  LoadComponentOptions,
-  TRouteModuleName
->;
-
-/**
- * 全局参数设置
- *
- * @remarks
- * 必须放在初始化最前面，通常没必要也不支持二次修改
- *
- * - UserConfig：{@link UserConfig | UserConfig}
- *
- * - LoadComponentOnError：用于LoadComponent(...)，组件加载失败时的显示组件，此设置为全局默认，LoadComponent方法中可以单独设置
- *
- * - LoadComponentOnLoading：用于LoadComponent(...)，组件加载中的Loading组件，此设置为全局默认，LoadComponent方法中可以单独设置
- *
- * @param conf - 全局参数
- *
- * @public
- */
-export function setConfig(
-  conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
-): void {
-  setReactComponentsConfig(conf);
-  setUserConfig(conf);
-}
+export * from '@elux/app';
 
 /**
  * 创建应用(CSR)
@@ -143,17 +37,10 @@ export function setConfig(
  *
  * @public
  */
-export function createApp(
-  moduleGetter: ModuleGetter,
-  storeMiddlewares?: StoreMiddleware[],
-  storeLogger?: StoreLogger
-): {
-  render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
-} {
-  defineModuleGetter(moduleGetter);
-  const history = createBrowserHistory();
-  const router = createRouter(history, {});
-  return createBaseApp({}, router, renderToDocument, (data) => data, storeMiddlewares, storeLogger);
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function createApp(appConfig: AppConfig) {
+  const router = createClientRouter();
+  return buildApp({}, router);
 }
 
 /**
@@ -179,17 +66,8 @@ export function createApp(
  * ```
  * @public
  */
-export function createSSR(
-  moduleGetter: ModuleGetter,
-  url: string,
-  nativeData: any,
-  storeMiddlewares?: StoreMiddleware[],
-  storeLogger?: StoreLogger
-): {
-  render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
-} {
-  defineModuleGetter(moduleGetter);
-  const history = createServerHistory(url);
-  const router = createRouter(history, nativeData);
-  return createBaseSSR({}, router, renderToString, (data) => data, storeMiddlewares, storeLogger);
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function createSSR(appConfig: AppConfig, url: string, nativeData: any) {
+  const router = createServerRouter(url, nativeData);
+  return buildSSR({}, router);
 }

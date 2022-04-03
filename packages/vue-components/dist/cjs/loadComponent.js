@@ -1,49 +1,57 @@
 "use strict";
 
 exports.__esModule = true;
-exports.loadComponent = void 0;
-
-var _core = require("@elux/core");
+exports.LoadComponentOnLoading = exports.LoadComponentOnError = exports.LoadComponent = void 0;
 
 var _vue = require("vue");
 
-var _base = require("./base");
+var _core = require("@elux/core");
 
-var loadComponent = function loadComponent(moduleName, componentName, options) {
+var LoadComponentOnError = function LoadComponentOnError(_ref) {
+  var message = _ref.message;
+  return (0, _vue.createVNode)("div", {
+    "class": "g-component-error"
+  }, [message]);
+};
+
+exports.LoadComponentOnError = LoadComponentOnError;
+
+var LoadComponentOnLoading = function LoadComponentOnLoading() {
+  return (0, _vue.createVNode)("div", {
+    "class": "g-component-loading"
+  }, [(0, _vue.createTextVNode)("loading...")]);
+};
+
+exports.LoadComponentOnLoading = LoadComponentOnLoading;
+
+var LoadComponent = function LoadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
 
-  var loadingComponent = options.OnLoading || _base.vueComponentsConfig.LoadComponentOnLoading;
-  var errorComponent = options.OnError || _base.vueComponentsConfig.LoadComponentOnError;
+  var loadingComponent = options.onLoading || _core.coreConfig.LoadComponentOnLoading;
+  var errorComponent = options.onError || _core.coreConfig.LoadComponentOnError;
 
   var component = function component(props, context) {
-    var _inject = (0, _vue.inject)(_base.EluxContextKey, {
-      documentHead: ''
-    }),
-        deps = _inject.deps;
-
-    var _inject2 = (0, _vue.inject)(_base.EluxStoreContextKey, {
-      store: null
-    }),
-        store = _inject2.store;
+    var store = _core.coreConfig.UseStore();
 
     var result;
     var errorMessage = '';
 
     try {
-      result = (0, _core.loadComponent)(moduleName, componentName, store, deps || {});
+      result = (0, _core.injectComponent)(moduleName, componentName, store);
+
+      if (_core.env.isServer && (0, _core.isPromise)(result)) {
+        result = undefined;
+        throw 'can not use async component in SSR';
+      }
     } catch (e) {
       _core.env.console.error(e);
 
       errorMessage = e.message || "" + e;
     }
 
-    if (result !== undefined) {
-      if (result === null) {
-        return (0, _vue.h)(loadingComponent);
-      }
-
+    if (result) {
       if ((0, _core.isPromise)(result)) {
         return (0, _vue.h)((0, _vue.defineAsyncComponent)({
           loader: function loader() {
@@ -52,15 +60,15 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
           errorComponent: errorComponent,
           loadingComponent: loadingComponent
         }), props, context.slots);
+      } else {
+        return (0, _vue.h)(result, props, context.slots);
       }
-
-      return (0, _vue.h)(result, props, context.slots);
+    } else {
+      return (0, _vue.h)(errorComponent, null, errorMessage);
     }
-
-    return (0, _vue.h)(errorComponent, null, errorMessage);
   };
 
   return component;
 };
 
-exports.loadComponent = loadComponent;
+exports.LoadComponent = LoadComponent;

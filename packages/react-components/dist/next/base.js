@@ -1,22 +1,9 @@
-import React from 'react';
-import { env, buildConfigSetter } from '@elux/core';
-export const reactComponentsConfig = {
-  setPageTitle(title) {
-    return env.document.title = title;
-  },
-
-  Provider: null,
-  useStore: null,
-  LoadComponentOnError: ({
-    message
-  }) => React.createElement("div", {
-    className: "g-component-error"
-  }, message),
-  LoadComponentOnLoading: () => React.createElement("div", {
-    className: "g-component-loading"
-  }, "loading...")
-};
-export const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
+import React, { useContext } from 'react';
 export const EluxContextComponent = React.createContext({
-  documentHead: ''
+  documentHead: '',
+  router: null
 });
+export function UseRouter() {
+  const eluxContext = useContext(EluxContextComponent);
+  return eluxContext.router;
+}

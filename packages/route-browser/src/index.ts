@@ -1,20 +1,18 @@
-import {BaseEluxRouter, BaseNativeRouter, ULocationTransform, setRouteConfig, routeConfig, urlParser} from '@elux/route';
-import {env, UNListener} from '@elux/core';
-import {createBrowserHistory as _createBrowserHistory} from 'history';
+import {Router, BaseNativeRouter, setRouteConfig, routeConfig} from '@elux/route';
+import {env, Location, UNListener} from '@elux/core';
+import {createBrowserHistory} from 'history';
 
-setRouteConfig({notifyNativeRouter: {root: true, internal: true}});
+setRouteConfig({NotifyNativeRouter: {window: true, page: true}});
 
-export type Action = 'PUSH' | 'POP' | 'REPLACE';
-export type LocationData = {pathname: string; search: string; hash: string; state?: string};
-export interface IHistory {
-  push(url: string): void;
-  replace(url: string): void;
-  block(callback: (locationData: LocationData, action: Action) => string | false | void): UNListener;
-  location: {pathname: string; search: string};
+interface IHistory {
+  push(location: Location): void;
+  replace(location: Location): void;
+  block(callback: (locationData: unknown, action: 'PUSH' | 'POP' | 'REPLACE') => string | false | void): UNListener;
+  location: {pathname: string; search: string; hash: string};
 }
 
-export function createServerHistory(url: string): IHistory {
-  const [pathname, search] = url.split('?');
+function createServerHistory(url: string): IHistory {
+  const [pathname, search = ''] = url.split('?');
   return {
     push() {
       return undefined;
@@ -25,25 +23,23 @@ export function createServerHistory(url: string): IHistory {
     block() {
       return () => undefined;
     },
-    location: {pathname, search},
+    location: {pathname, search, hash: ''},
   };
 }
 
-export function createBrowserHistory(): IHistory {
-  return _createBrowserHistory();
-}
+class BrowserNativeRouter extends BaseNativeRouter {
+  private unlistenHistory: UNListener | undefined;
+  public router: Router;
 
-export class BrowserNativeRouter extends BaseNativeRouter {
-  private _unlistenHistory: UNListener | undefined;
-
-  constructor(public _history: IHistory) {
-    super();
-    const {root, internal} = routeConfig.notifyNativeRouter;
-    if (root || internal) {
-      this._unlistenHistory = this._history.block((locationData, action) => {
+  constructor(private history: IHistory, nativeData: any) {
+    super(history.location, nativeData);
+    this.router = new Router(this);
+    const {window, page} = routeConfig.NotifyNativeRouter;
+    if (window || page) {
+      this.unlistenHistory = this.history.block((locationData, action) => {
         // browser与elux简化为松散关系，操作elux一定不会触发POP，触发POP一定是操作browser
         if (action === 'POP') {
-          env.setTimeout(() => this.eluxRouter.back(1), 100);
+          env.setTimeout(() => this.router.back(1), 100);
           return false;
         }
         return undefined;
@@ -51,41 +47,46 @@ export class BrowserNativeRouter extends BaseNativeRouter {
     }
   }
 
-  protected push(location: ULocationTransform, key: string): void | true | Promise<void> {
+  protected push(location: Location, key: string): boolean {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true));
+      this.history.push(location);
     }
-    return undefined;
+    return false;
   }
 
-  protected replace(location: ULocationTransform, key: string): void | true | Promise<void> {
+  protected replace(location: Location, key: string): boolean {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true));
+      this.history.push(location);
     }
-    return undefined;
+    return false;
   }
 
-  protected relaunch(location: ULocationTransform, key: string): void | true | Promise<void> {
+  protected relaunch(location: Location, key: string): boolean {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true));
+      this.history.push(location);
     }
-    return undefined;
+    return false;
   }
 
-  protected back(location: ULocationTransform, index: [number, number], key: string): void | true | Promise<void> {
+  protected back(location: Location, key: string, index: [number, number]): boolean {
     if (!env.isServer) {
-      this._history.replace(location.getNativeUrl(true));
+      this.history.replace(location);
     }
-    return undefined;
+    return false;
   }
 
   public destroy(): void {
-    this._unlistenHistory && this._unlistenHistory();
+    this.unlistenHistory && this.unlistenHistory();
   }
 }
 
-export function createRouter(browserHistory: IHistory, nativeData: unknown): BaseEluxRouter {
-  const browserNativeRouter = new BrowserNativeRouter(browserHistory);
-  const {pathname, search} = browserHistory.location;
-  return new BaseEluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
+export function createClientRouter(): Router {
+  const history: IHistory = createBrowserHistory();
+  const browserNativeRouter = new BrowserNativeRouter(history, {});
+  return browserNativeRouter.router;
+}
+export function createServerRouter(url: string, nativeData: any): Router {
+  const history: IHistory = createServerHistory(url);
+  const browserNativeRouter = new BrowserNativeRouter(history, nativeData);
+  return browserNativeRouter.router;
 }

@@ -1,15 +1,15 @@
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
-import { BaseEluxRouter, BaseNativeRouter, setRouteConfig, routeConfig, urlParser } from '@elux/route';
+import { Router, BaseNativeRouter, setRouteConfig, routeConfig } from '@elux/route';
 import { env } from '@elux/core';
-import { createBrowserHistory as _createBrowserHistory } from 'history';
+import { createBrowserHistory } from 'history';
 setRouteConfig({
-  notifyNativeRouter: {
-    root: true,
-    internal: true
+  NotifyNativeRouter: {
+    window: true,
+    page: true
   }
 });
-export function createServerHistory(url) {
-  const [pathname, search] = url.split('?');
+
+function createServerHistory(url) {
+  const [pathname, search = ''] = url.split('?');
   return {
     push() {
       return undefined;
@@ -25,29 +25,28 @@ export function createServerHistory(url) {
 
     location: {
       pathname,
-      search
+      search,
+      hash: ''
     }
   };
 }
-export function createBrowserHistory() {
-  return _createBrowserHistory();
-}
-export class BrowserNativeRouter extends BaseNativeRouter {
-  constructor(_history) {
-    super();
 
-    _defineProperty(this, "_unlistenHistory", void 0);
-
-    this._history = _history;
+class BrowserNativeRouter extends BaseNativeRouter {
+  constructor(history, nativeData) {
+    super(history.location, nativeData);
+    this.unlistenHistory = void 0;
+    this.router = void 0;
+    this.history = history;
+    this.router = new Router(this);
     const {
-      root,
-      internal
-    } = routeConfig.notifyNativeRouter;
+      window,
+      page
+    } = routeConfig.NotifyNativeRouter;
 
-    if (root || internal) {
-      this._unlistenHistory = this._history.block((locationData, action) => {
+    if (window || page) {
+      this.unlistenHistory = this.history.block((locationData, action) => {
         if (action === 'POP') {
-          env.setTimeout(() => this.eluxRouter.back(1), 100);
+          env.setTimeout(() => this.router.back(1), 100);
           return false;
         }
 
@@ -58,46 +57,49 @@ export class BrowserNativeRouter extends BaseNativeRouter {
 
   push(location, key) {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true));
+      this.history.push(location);
     }
 
-    return undefined;
+    return false;
   }
 
   replace(location, key) {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true));
+      this.history.push(location);
     }
 
-    return undefined;
+    return false;
   }
 
   relaunch(location, key) {
     if (!env.isServer) {
-      this._history.push(location.getNativeUrl(true));
+      this.history.push(location);
     }
 
-    return undefined;
+    return false;
   }
 
-  back(location, index, key) {
+  back(location, key, index) {
     if (!env.isServer) {
-      this._history.replace(location.getNativeUrl(true));
+      this.history.replace(location);
     }
 
-    return undefined;
+    return false;
   }
 
   destroy() {
-    this._unlistenHistory && this._unlistenHistory();
+    this.unlistenHistory && this.unlistenHistory();
   }
 
 }
-export function createRouter(browserHistory, nativeData) {
-  const browserNativeRouter = new BrowserNativeRouter(browserHistory);
-  const {
-    pathname,
-    search
-  } = browserHistory.location;
-  return new BaseEluxRouter(urlParser.getUrl('n', pathname, search), browserNativeRouter, nativeData);
+
+export function createClientRouter() {
+  const history = createBrowserHistory();
+  const browserNativeRouter = new BrowserNativeRouter(history, {});
+  return browserNativeRouter.router;
+}
+export function createServerRouter(url, nativeData) {
+  const history = createServerHistory(url);
+  const browserNativeRouter = new BrowserNativeRouter(history, nativeData);
+  return browserNativeRouter.router;
 }

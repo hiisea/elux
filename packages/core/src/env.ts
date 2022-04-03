@@ -30,7 +30,7 @@ if (typeof self !== 'undefined') {
  *
  * @public
  */
-const env: EluxRuntime.ENV = root;
+const env: Elux.ENV = root;
 
 env.isServer = typeof window === 'undefined' && typeof global === 'object' && global.global === global;
 

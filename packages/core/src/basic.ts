@@ -1,67 +1,5 @@
 import env from './env';
-import {buildConfigSetter, SingleDispatcher, UNListener, deepMerge} from './utils';
-
-export const coreConfig: {
-  NSP: string;
-  MSP: string;
-  MutableData: boolean;
-  DepthTimeOnLoading: number;
-  AppModuleName: string;
-  RouteModuleName: string;
-} = {
-  NSP: '.',
-  MSP: ',',
-  MutableData: false,
-  DepthTimeOnLoading: 2,
-  RouteModuleName: '',
-  AppModuleName: 'stage',
-};
-
-export const setCoreConfig = buildConfigSetter(coreConfig);
-
-/**
- * 描述异步状态
- *
- * @public
- */
-export enum LoadingState {
-  /**
-   * 开始加载.
-   */
-  Start = 'Start',
-  /**
-   * 加载完成.
-   */
-  Stop = 'Stop',
-  /**
-   * 进入深度加载，加载时间超过 {@link UserConfig.DepthTimeOnLoading} 时将视为深度加载
-   */
-  Depth = 'Depth',
-}
-
-/**
- * 路由切换方式
- *
- * @public
- */
-export enum RouteHistoryAction {
-  /**
-   * 新增
-   */
-  PUSH = 'PUSH',
-  /**
-   * 回退
-   */
-  BACK = 'BACK',
-  /**
-   * 替换
-   */
-  REPLACE = 'REPLACE',
-  /**
-   * 重启
-   */
-  RELAUNCH = 'RELAUNCH',
-}
+import {buildConfigSetter, deepMerge, LoadingState} from './utils';
 
 /**
  * 定义Action
@@ -85,37 +23,6 @@ export interface Action {
    */
   payload?: any[];
 }
-
-export interface ActionHandler {
-  // __moduleName__: string;
-  // __actionName__: string;
-  __isReducer__?: boolean;
-  __isEffect__?: boolean;
-  // __isHandler__?: boolean;
-  __decorators__?: [
-    (action: Action, effectResult: Promise<any>) => any,
-    null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)
-  ][];
-  __decoratorResults__?: any[];
-  (...args: any[]): any;
-}
-
-/*** @public */
-export type ActionCreator = (...args: any[]) => Action;
-
-export type ModelAsHandlers = {[actionName: string]: ActionHandler};
-
-export type ModelAsCreators = {[actionName: string]: ActionCreator};
-
-export type ActionHandlersMap = {[actionName: string]: {[moduleName: string]: ActionHandler}};
-
-//export type ActionHandlerMap = Record<string, ActionHandlerList>;
-
-// export type ActionCreator = (...args: any[]) => Action;
-
-// export type ActionCreatorList = Record<string, ActionCreator>;
-
-// export type ActionCreatorMap = Record<string, ActionCreatorList>;
 
 /**
  * 派发Action
@@ -145,7 +52,29 @@ export type ModuleState = {[key: string]: any};
  *
  * @public
  */
-export type RootState = {[moduleName: string]: ModuleState | undefined};
+export type StoreState = {[moduleName: string]: ModuleState | undefined};
+
+export interface ActionHandler {
+  // __moduleName__: string;
+  // __actionName__: string;
+  __isReducer__?: boolean;
+  __isEffect__?: boolean;
+  // __isHandler__?: boolean;
+  __decorators__?: [
+    (store: IStore, action: Action, effectPromise: Promise<unknown>) => any,
+    null | ((status: 'Rejected' | 'Resolved', beforeResult: unknown, effectResult: unknown) => void)
+  ][];
+  (...args: any[]): unknown;
+}
+
+/*** @public */
+export type ActionCreator = (...args: any[]) => Action;
+
+export type ModelAsHandlers = {[actionName: string]: ActionHandler};
+
+export type ActionHandlersMap = {[actionName: string]: {[moduleName: string]: ActionHandler}};
+
+export type ModelAsCreators = {[actionName: string]: ActionCreator};
 
 /**
  * 获取Store状态
@@ -154,65 +83,139 @@ export type RootState = {[moduleName: string]: ModuleState | undefined};
  *
  * @public
  */
-export interface GetState<TRootState extends RootState = RootState> {
-  (): TRootState;
-  <N extends string>(moduleName: N): TRootState[N];
+export interface GetState<TStoreState extends StoreState = StoreState> {
+  (): TStoreState;
+  <N extends string>(moduleName: N): TStoreState[N];
 }
 
-export interface Flux {
-  getState: GetState;
-  update: (actionName: string, state: RootState) => void;
-  subscribe(listener: () => void): UNListener;
+// /**
+//  * Store实例
+//  *
+//  * @remarks
+//  * 类似于 `Redux` 或 `VUEX` 的 Store，多页模式下，每个`EWindow窗口`都会生成一个独立的 Store 实例
+//  *
+//  * @public
+//  */
+// export interface UStore<TStoreState extends StoreState = StoreState> {
+//   sid: number;
+//   dispatch: Dispatch;
+//   //isActive(): boolean;
+//   getState: GetState<TStoreState>;
+//   subscribe(listener: Listener): UNListener;
+//   mount(moduleName: string, prevState: StoreState): void | Promise<void>;
+// }
+
+export interface IStore<TStoreState extends StoreState = StoreState> {
+  sid: number;
+  router: IRouter<TStoreState>;
+  dispatch: Dispatch;
+  getState: GetState<TStoreState>;
+  getUncommittedState: () => TStoreState;
+  mount(moduleName: keyof TStoreState, routeChanged: boolean): void | Promise<void>;
 }
 
 /**
- * Store实例
+ * @public
+ */
+export type RouteAction = 'relaunch' | 'push' | 'replace' | 'back';
+
+/**
+ * @public
+ */
+export type RouteTarget = 'window' | 'page';
+
+/**
+ * @public
+ */
+export interface Location {
+  url: string;
+  pathname: string;
+  search: string;
+  hash: string;
+  searchQuery: {[key: string]: any};
+  hashQuery: {[key: string]: any};
+}
+
+export interface ActionError {
+  code: string;
+  message: string;
+  detail?: any;
+}
+
+export const ErrorCodes = {
+  INIT_ERROR: 'ELUX.INIT_ERROR',
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW',
+};
+export interface AppModuleState {
+  routeAction: RouteAction;
+  routeLocation: Location;
+  globalLoading: LoadingState;
+  initError: string;
+}
+
+/**
+ * 路由历史记录
  *
  * @remarks
- * 类似于 `Redux` 或 `VUEX` 的 Store，多页模式下，每个`EWindow窗口`都会生成一个独立的 Store 实例
+ * 可以通过 {@link URouter.findRecordByKey}、{@link URouter.findRecordByStep} 获得
  *
  * @public
  */
-export interface UStore<TRootState extends RootState = RootState, TRouteParams extends RootState = RootState> {
-  sid: number;
-  dispatch: Dispatch;
-  isActive(): boolean;
-  getState: GetState<TRootState>;
-  getRouteParams: GetState<TRouteParams>;
-  subscribe(listener: () => void): UNListener;
-}
-
-/**
- * 路由状态描述
- *
- * @public
- */
-export interface RouteState<TRootState extends RootState = RootState, TPagename extends string = string> {
+export interface IRouteRecord {
   /**
-   * 切换动作
-   */
-  action: RouteHistoryAction;
-  /**
-   * 唯一ID，通过该ID可以找到此记录
+   * 每条路由记录都有一个唯一的key
    */
   key: string;
   /**
-   * {@link PagenameMap} 中定义的key名，参见 {@link createRouteModule | createRouteModule(...)}
+   * 路由转换器，参见 {@link ULocationTransform}
    */
-  pagename: TPagename;
-  /**
-   * 路由参数，Elux中的路由参数也是一种Store，参见：`路由状态化`
-   */
-  params: TRootState;
+  location: Location;
 }
 
-export interface CoreRouter {
-  //moduleName: string;
-  routeState: RouteState;
-  startup(store: EStore): void;
-  getCurrentStore(): EStore;
-  getStoreList(): EStore[];
-  latestState: RootState;
+export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
+  timestamp: number;
+  payload: unknown;
+  prevState: TStoreState;
+  completed: boolean;
+}
+
+export interface IRouter<TStoreState extends StoreState = StoreState> {
+  nativeData: unknown;
+  action: RouteAction;
+  location: Location;
+  runtime: RouteRuntime<TStoreState>;
+  getCurrentPage(): {url: string; store: IStore};
+  getHistoryLength(target?: RouteTarget): number;
+  findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
+  findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]};
+  relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
+  push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
+  replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
+  back(stepOrKey?: number | string, target?: RouteTarget, payload?: any, overflowRedirect?: string): void | Promise<void>;
+}
+
+/**
+ * Model的一般形态
+ *
+ * 通常通过继承 {@link BaseModel} 类生成
+ *
+ * @public
+ */
+export interface CommonModel {
+  readonly moduleName: string;
+  onInit(routeChanged: boolean): ModuleState | Promise<ModuleState>;
+  onStartup(routeChanged: boolean): void | Promise<void>;
+  onActive(): void;
+  onInactive(): void;
+}
+
+/**
+ * Model的构造类
+ *
+ * @public
+ */
+export interface CommonModelClass<H = CommonModel> {
+  new (moduleName: string, store: IStore): H;
 }
 
 /**
@@ -223,7 +226,7 @@ export interface CoreRouter {
  *
  * @public
  */
-export interface EluxComponent {
+export interface EluxComponent extends Elux.Component<any> {
   __elux_component__: 'view' | 'component';
 }
 
@@ -244,26 +247,6 @@ export function isEluxComponent(data: any): data is EluxComponent {
 }
 
 /**
- * Model的一般形态
- *
- * 通常通过继承 {@link BaseModel} 类生成
- *
- * @public
- */
-export interface CommonModel {
-  moduleName: string;
-  defaultRouteParams: ModuleState;
-  store: UStore;
-  init(latestState: RootState, preState: RootState): ModuleState;
-  destroy(): void;
-}
-
-/*** @public */
-export interface CommonModelClass<H = CommonModel> {
-  new (moduleName: string, store: UStore): H;
-}
-
-/**
  * Module的一般形态
  *
  * @remarks
@@ -271,103 +254,14 @@ export interface CommonModelClass<H = CommonModel> {
  *
  * @public
  */
-export interface CommonModule<ModuleName extends string = string, Store extends UStore = UStore> {
-  moduleName: ModuleName;
-  initModel: (store: Store) => void | Promise<void>;
+export interface CommonModule<TModuleName extends string = string> {
+  moduleName: TModuleName;
+  ModelClass: CommonModelClass;
+  components: {[componentName: string]: EluxComponent};
   state: ModuleState;
-  routeParams: ModuleState;
-  actions: {[actionName: string]: ActionCreator};
-  components: {[componentName: string]: EluxComponent | AsyncEluxComponent};
+  actions: ModelAsCreators;
   data?: any;
 }
-
-export interface EStore extends UStore, Flux {
-  router: CoreRouter;
-  getCurrentActionName: () => string;
-  getUncommittedState: (moduleName?: string) => any;
-  injectedModules: {[moduleName: string]: CommonModel};
-  loadingGroups: {[moduleNameAndGroupName: string]: TaskCounter};
-  setActive(status: boolean): void;
-  destroy(): void;
-  options: {
-    initState: (data: RootState) => RootState;
-    middlewares?: StoreMiddleware[];
-    logger?: StoreLogger;
-  };
-}
-
-/**
- * Store的中间件
- *
- * @remarks
- * 类似于 Redux 的 Middleware
- *
- * @public
- */
-export type StoreMiddleware = (api: {getStore: () => UStore; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
-
-/**
- * Store的日志记录器
- *
- * @remarks
- * Store的所有变化都将调用该记录器
- *
- * @public
- */
-export type StoreLogger = (
-  {id, isActive}: {id: number; isActive: boolean},
-  actionName: string,
-  payload: any[],
-  priority: string[],
-  handers: string[],
-  state: {[moduleName: string]: any},
-  effect: boolean
-) => void;
-
-export class TaskCounter extends SingleDispatcher<LoadingState> {
-  public readonly list: {promise: Promise<any>; note: string}[] = [];
-
-  private ctimer = 0;
-
-  public constructor(public deferSecond: number) {
-    super();
-  }
-
-  public addItem(promise: Promise<any>, note = ''): Promise<any> {
-    if (!this.list.some((item) => item.promise === promise)) {
-      this.list.push({promise, note});
-      promise.finally(() => this.completeItem(promise));
-
-      if (this.list.length === 1 && !this.ctimer) {
-        this.dispatch(LoadingState.Start);
-        this.ctimer = env.setTimeout(() => {
-          this.ctimer = 0;
-          if (this.list.length > 0) {
-            this.dispatch(LoadingState.Depth);
-          }
-        }, this.deferSecond * 1000);
-      }
-    }
-    return promise;
-  }
-
-  private completeItem(promise: Promise<any>): this {
-    const i = this.list.findIndex((item) => item.promise === promise);
-    if (i > -1) {
-      this.list.splice(i, 1);
-      if (this.list.length === 0) {
-        if (this.ctimer) {
-          env.clearTimeout.call(null, this.ctimer);
-          this.ctimer = 0;
-        }
-        this.dispatch(LoadingState.Stop);
-      }
-    }
-    return this;
-  }
-}
-
-export type ModuleMap = Record<string, {name: string; actions: ModelAsCreators; actionNames: Record<string, string>}>;
 
 /**
  * 配置模块的获取方式
@@ -393,27 +287,140 @@ export type ModuleMap = Record<string, {name: string; actions: ModelAsCreators; 
  */
 export type ModuleGetter = {[moduleName: string]: () => CommonModule | Promise<{default: CommonModule}>};
 
+export type ModuleApiMap = Record<string, {name: string; actions: ModelAsCreators; actionNames: Record<string, string>}>;
+
 export const MetaData: {
-  moduleMap: ModuleMap;
-  moduleGetter: ModuleGetter;
-  moduleExists: {[moduleName: string]: boolean};
-  injectedModules: {[moduleName: string]: boolean};
-  reducersMap: ActionHandlersMap;
-  effectsMap: ActionHandlersMap;
+  moduleApiMap: ModuleApiMap;
   moduleCaches: {[moduleName: string]: undefined | CommonModule | Promise<CommonModule>};
   componentCaches: {[moduleNameAndComponentName: string]: undefined | EluxComponent | Promise<EluxComponent>};
-  currentRouter: CoreRouter;
+  reducersMap: ActionHandlersMap;
+  effectsMap: ActionHandlersMap;
+  clientRouter?: IRouter;
+  //   moduleMap: ModuleMap;
+  //   moduleExists: {[moduleName: string]: boolean};
+  //installedModules: {[moduleName: string]: boolean};
+  //
+  //
+
+  //
+  //   currentRouter: CoreRouter;
 } = {
-  injectedModules: {},
-  reducersMap: {},
-  effectsMap: {},
+  moduleApiMap: null as any,
   moduleCaches: {},
   componentCaches: {},
-  moduleMap: null as any,
-  moduleGetter: null as any,
-  moduleExists: null as any,
-  currentRouter: null as any,
+  reducersMap: {},
+  effectsMap: {},
+  clientRouter: undefined,
+  //   injectedModules: {},
+  //
+  //
+
+  //
+  //   moduleMap: null as any,
+  //   moduleGetter: null as any,
+  //   moduleExists: null as any,
+  //   currentRouter: null as any,
 };
+
+/**
+ * Store的中间件
+ *
+ * @remarks
+ * 类似于 Redux 的 Middleware
+ *
+ * @public
+ */
+export type StoreMiddleware = (api: {getStore: () => IStore; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
+
+export type storeLoggerInfo = {
+  id: number;
+  isActive: boolean;
+  actionName: string;
+  payload: any[];
+  priority: string[];
+  handers: string[];
+  state: any;
+  effect: boolean;
+};
+/**
+ * Store的日志记录器
+ *
+ * @remarks
+ * Store的所有变化都将调用该记录器
+ *
+ * @public
+ */
+export type StoreLogger = (info: storeLoggerInfo) => void;
+
+export interface EluxContext {
+  documentHead: string;
+  router: IRouter;
+}
+
+export interface EluxStoreContext {
+  store: IStore;
+}
+
+export interface IAppRender {
+  toDocument(id: string, eluxContext: EluxContext, fromSSR: boolean, app: any, store: IStore): void;
+  toString(id: string, eluxContext: EluxContext, app: {}, store: IStore): Promise<string>;
+}
+
+export const coreConfig: {
+  NSP: string;
+  MSP: string;
+  MutableData: boolean;
+  DepthTimeOnLoading: number;
+  AppModuleName: string;
+  StageModuleName: string;
+  StageViewName: string;
+  SSRDataKey: string;
+  SSRTPL: string;
+  ModuleGetter: ModuleGetter;
+  StoreInitState: () => {};
+  StoreMiddlewares: StoreMiddleware[];
+  StoreLogger: StoreLogger;
+  SetPageTitle: (title: string) => void;
+  StoreProvider?: Elux.Component<{store: IStore; children: JSX.Element}>;
+  LoadComponent?: (
+    moduleName: string,
+    componentName: string,
+    options: {onError: Elux.Component<{message: string}>; onLoading: Elux.Component<{}>}
+  ) => EluxComponent | Promise<EluxComponent>;
+  LoadComponentOnError?: Elux.Component<{message: string}>;
+  LoadComponentOnLoading?: Elux.Component<{}>;
+  UseRouter?: () => IRouter;
+  UseStore?: () => IStore;
+  AppRender?: IAppRender;
+} = {
+  NSP: '.',
+  MSP: ',',
+  MutableData: false,
+  DepthTimeOnLoading: 2,
+  AppModuleName: 'app',
+  StageModuleName: 'stage',
+  StageViewName: 'main',
+  SSRDataKey: 'eluxSSRData',
+  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
+  ModuleGetter: {},
+  StoreInitState: () => ({}),
+  StoreMiddlewares: [],
+  StoreLogger: () => undefined,
+  SetPageTitle: (title: string) => {
+    if (env.document) {
+      env.document.title = title;
+    }
+  },
+  StoreProvider: undefined,
+  LoadComponent: undefined,
+  LoadComponentOnError: undefined,
+  LoadComponentOnLoading: undefined,
+  UseRouter: undefined,
+  UseStore: undefined,
+  AppRender: undefined,
+};
+
+export const setCoreConfig = buildConfigSetter(coreConfig);
 
 export function deepMergeState(target: any = {}, ...args: any[]): any {
   if (coreConfig.MutableData) {
@@ -429,11 +436,6 @@ export function mergeState(target: any = {}, ...args: any[]): any {
   return Object.assign({}, target, ...args);
 }
 
-/**
- * 当前环境是否是服务器环境
- *
- * @public
- */
-export function isServer(): boolean {
-  return env.isServer;
+export function getClientRouter(): IRouter {
+  return MetaData.clientRouter!;
 }

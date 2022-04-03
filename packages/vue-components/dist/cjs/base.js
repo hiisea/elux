@@ -1,50 +1,25 @@
 "use strict";
 
 exports.__esModule = true;
-exports.setVueComponentsConfig = exports.EluxStoreContextKey = exports.EluxContextKey = void 0;
-exports.useRouter = useRouter;
-exports.useStore = useStore;
-exports.vueComponentsConfig = void 0;
+exports.EluxStoreContextKey = exports.EluxContextKey = void 0;
+exports.UseRouter = UseRouter;
+exports.UseStore = UseStore;
 
 var _vue = require("vue");
 
-var _core = require("@elux/core");
-
-var vueComponentsConfig = {
-  setPageTitle: function setPageTitle(title) {
-    return _core.env.document.title = title;
-  },
-  Provider: null,
-  LoadComponentOnError: function LoadComponentOnError(_ref) {
-    var message = _ref.message;
-    return (0, _vue.createVNode)("div", {
-      "class": "g-component-error"
-    }, [message]);
-  },
-  LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return (0, _vue.createVNode)("div", {
-      "class": "g-component-loading"
-    }, [(0, _vue.createTextVNode)("loading...")]);
-  }
-};
-exports.vueComponentsConfig = vueComponentsConfig;
-var setVueComponentsConfig = (0, _core.buildConfigSetter)(vueComponentsConfig);
-exports.setVueComponentsConfig = setVueComponentsConfig;
 var EluxContextKey = '__EluxContext__';
 exports.EluxContextKey = EluxContextKey;
 var EluxStoreContextKey = '__EluxStoreContext__';
 exports.EluxStoreContextKey = EluxStoreContextKey;
 
-function useRouter() {
-  var _inject = (0, _vue.inject)(EluxContextKey, {
-    documentHead: ''
-  }),
+function UseRouter() {
+  var _inject = (0, _vue.inject)(EluxContextKey, {}),
       router = _inject.router;
 
   return router;
 }
 
-function useStore() {
+function UseStore() {
   var _inject2 = (0, _vue.inject)(EluxStoreContextKey, {}),
       store = _inject2.store;
 

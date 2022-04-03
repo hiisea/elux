@@ -1,28 +1,35 @@
-import {env, EStore, forkStore, RootState, RouteState, RouteHistoryAction} from '@elux/core';
-import {routeMeta, routeConfig} from './basic';
-import {ULocationTransform} from './transform';
+import {Store, Location, IRouteRecord} from '@elux/core';
 
-class HistoryStack<T extends {destroy?: () => void; store?: EStore}> {
-  public records: T[] = [];
+export class HistoryStack<T extends {destroy: () => void; setActive: () => void; setInactive: () => void}> {
+  private currentRecord: T = undefined as any;
+  protected records: T[] = [];
+
   constructor(protected limit: number) {}
 
-  startup(record: T): void {
-    const oItem = this.records[0];
+  protected init(record: T): void {
     this.records = [record];
-    this.setActive(oItem);
+    this.currentRecord = record;
+    record.setActive();
+  }
+  protected onChanged(): void {
+    if (this.currentRecord !== this.records[0]) {
+      this.currentRecord.setInactive();
+      this.currentRecord = this.records[0];
+      this.currentRecord.setActive();
+    }
   }
   getCurrentItem(): T {
-    return this.records[0];
+    return this.currentRecord;
   }
   getEarliestItem(): T {
-    return this.records[this.records.length - 1];
+    return this.records[this.records.length - 1]!;
   }
   getItemAt(n: number): T | undefined {
     return this.records[n];
   }
-  getItems(): T[] {
-    return [...this.records];
-  }
+  // getItems(): T[] {
+  //   return [...(this.records as T[])];
+  // }
   getLength(): number {
     return this.records.length;
   }
@@ -33,35 +40,30 @@ class HistoryStack<T extends {destroy?: () => void; store?: EStore}> {
   //     return this.records[n];
   //   }
   // }
-  protected _push(item: T): void {
+  push(item: T): void {
     const records = this.records;
-    const oItem = records[0];
     records.unshift(item);
-    const delItem = records.splice(this.limit)[0];
-    if (delItem && delItem !== item && delItem.destroy) {
-      delItem.destroy();
+    if (records.length > this.limit) {
+      const delItem = records.pop()!;
+      delItem !== item && delItem.destroy();
     }
-    this.setActive(oItem);
+    this.onChanged();
   }
-  protected _replace(item: T): void {
+  replace(item: T): void {
     const records = this.records;
     const delItem = records[0];
     records[0] = item;
-    if (delItem && delItem !== item && delItem.destroy) {
-      delItem.destroy();
-    }
-    this.setActive(delItem);
+    delItem !== item && delItem.destroy();
+    this.onChanged();
   }
-  protected _relaunch(item: T): void {
+  relaunch(item: T): void {
     const delList = this.records;
-    const oItem = delList[0];
     this.records = [item];
+    this.currentRecord = item;
     delList.forEach((delItem) => {
-      if (delItem !== item && delItem.destroy) {
-        delItem.destroy();
-      }
+      delItem !== item && delItem.destroy();
     });
-    this.setActive(oItem);
+    this.onChanged();
   }
   // protected _preBack(delta: number): {item: T; overflow: number} {
   //   let overflow = 0;
@@ -73,7 +75,6 @@ class HistoryStack<T extends {destroy?: () => void; store?: EStore}> {
   //   return {item: records[0], overflow};
   // }
   back(delta: number): void {
-    const oItem = this.records[0];
     const delList = this.records.splice(0, delta);
     if (this.records.length === 0) {
       const last = delList.pop()!;
@@ -84,86 +85,60 @@ class HistoryStack<T extends {destroy?: () => void; store?: EStore}> {
         delItem.destroy();
       }
     });
-    this.setActive(oItem);
-  }
-  protected setActive(oItem: T | undefined) {
-    const oStore = oItem?.store;
-    const store = this.records[0]?.store;
-    if (store === oStore) {
-      store?.setActive(true);
-    } else {
-      oStore?.setActive(false);
-      store?.setActive(true);
-    }
+    this.onChanged();
   }
 }
 
-/**
- * 路由历史记录
- *
- * @remarks
- * 可以通过 {@link URouter.findRecordByKey}、{@link URouter.findRecordByStep} 获得
- *
- * @public
- */
-export interface URouteRecord {
-  /**
-   * 每条路由记录都有一个唯一的key
-   */
-  key: string;
-  /**
-   * 路由转换器，参见 {@link ULocationTransform}
-   */
-  location: ULocationTransform;
-}
-
-export class RouteRecord implements URouteRecord {
-  static id = 0;
-  public readonly destroy: undefined;
-  // public readonly pagename: string;
-  // public readonly params: Record<string, any>;
+export class RouteRecord implements IRouteRecord {
   public readonly key: string;
-  public readonly recordKey: string;
-  constructor(public readonly location: ULocationTransform, public readonly pageStack: PageStack) {
-    this.recordKey = env.isServer ? '0' : ++RouteRecord.id + '';
-    // const {pagename, params} = location;
-    // this.pagename = pagename;
-    // this.params = params;
-    this.key = [pageStack.stackkey, this.recordKey].join('-');
-    //this.query = JSON.stringify(params);
+  constructor(public readonly location: Location, public readonly pageStack: PageStack) {
+    this.key = [pageStack.key, pageStack.id++].join('-');
+  }
+  setActive(): void {
+    return;
+  }
+  setInactive(): void {
+    return;
+  }
+  destroy(): void {
+    return;
   }
 }
 
 export class PageStack extends HistoryStack<RouteRecord> {
-  static id = 0;
-  public readonly stackkey: string;
-  constructor(public readonly windowStack: WindowStack, public readonly store: EStore) {
+  public id = 0;
+  public readonly key: string;
+  private _store: Store;
+  constructor(public readonly windowStack: WindowStack, location: Location, store: Store) {
     super(20);
-    this.stackkey = env.isServer ? '0' : ++PageStack.id + '';
+    this._store = store;
+    this.key = '' + windowStack.id++;
+    this.init(new RouteRecord(location, this));
   }
-  push(location: ULocationTransform): RouteRecord {
-    const newRecord = new RouteRecord(location, this);
-    this._push(newRecord);
-    return newRecord;
+  get store(): Store {
+    return this._store;
   }
-  replace(location: ULocationTransform): RouteRecord {
-    const newRecord = new RouteRecord(location, this);
-    this._replace(newRecord);
-    return newRecord;
+  replaceStore(store: Store): void {
+    if (this._store !== store) {
+      this._store.destroy();
+      this._store = store;
+      store.setActive();
+    }
   }
-  relaunch(location: ULocationTransform): RouteRecord {
-    const newRecord = new RouteRecord(location, this);
-    this._relaunch(newRecord);
-    return newRecord;
-  }
-  findRecordByKey(recordKey: string): [RouteRecord, number] | undefined {
+  findRecordByKey(key: string): [RouteRecord, number] | undefined {
     for (let i = 0, k = this.records.length; i < k; i++) {
       const item = this.records[i];
-      if (item.recordKey === recordKey) {
+      if (item.key === key) {
         return [item, i];
       }
     }
     return undefined;
+  }
+  setActive(): void {
+    this.store.setActive();
+  }
+  setInactive(): void {
+    this.store.setInactive();
   }
   destroy(): void {
     this.store.destroy();
@@ -171,42 +146,41 @@ export class PageStack extends HistoryStack<RouteRecord> {
 }
 
 export class WindowStack extends HistoryStack<PageStack> {
-  constructor() {
-    super(routeConfig.maxHistory);
+  public id = 0;
+  constructor(location: Location, store: Store) {
+    super(10);
+    this.init(new PageStack(this, location, store));
   }
-  getCurrentPages(): {pagename: string; store: EStore; pageComponent?: any}[] {
+  getCurrentWindowPage(): {url: string; store: Store} {
+    const item = this.getCurrentItem();
+    const store = item.store;
+    const record = item.getCurrentItem();
+    const url = record.location.url;
+    return {url, store};
+  }
+  getWindowPages(): {url: string; store: Store}[] {
     return this.records.map((item) => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const pagename = record.location.getPagename();
-      return {pagename, store, pageComponent: routeMeta.pageComponents[pagename]};
+      const url = record.location.url;
+      return {url, store};
     });
   }
-  push(location: ULocationTransform): RouteRecord {
-    const curHistory = this.getCurrentItem();
-    const routeState: RouteState = {
-      pagename: location.getPagename(),
-      params: location.getParams() as RootState,
-      action: RouteHistoryAction.RELAUNCH,
-      key: '',
-    };
-    const store = forkStore(curHistory.store, routeState);
-    const newHistory = new PageStack(this, store);
-    const newRecord = new RouteRecord(location, newHistory);
-    newHistory.startup(newRecord);
-    this._push(newHistory);
-    return newRecord;
-  }
-  replace(location: ULocationTransform): RouteRecord {
-    const curHistory = this.getCurrentItem();
-    return curHistory.relaunch(location);
-  }
-  relaunch(location: ULocationTransform): RouteRecord {
-    const curHistory = this.getCurrentItem();
-    const newRecord = curHistory.relaunch(location);
-    this._relaunch(curHistory);
-    return newRecord;
-  }
+  // push(location: Location): RouteRecord {
+  //   const curHistory = this.getCurrentItem();
+  //   const routeState: RouteState = {
+  //     pagename: location.getPagename(),
+  //     params: location.getParams() as RootState,
+  //     action: RouteHistoryAction.RELAUNCH,
+  //     key: '',
+  //   };
+  //   const store = forkStore(curHistory.store, routeState);
+  //   const newHistory = new PageStack(this, store);
+  //   const newRecord = new RouteRecord(location, newHistory);
+  //   newHistory.startup(newRecord);
+  //   this._push(newHistory);
+  //   return newRecord;
+  // }
   private countBack(delta: number): [number, number] {
     const historyStacks = this.records;
     const backSteps: [number, number] = [0, 0];
@@ -247,7 +221,7 @@ export class WindowStack extends HistoryStack<PageStack> {
     if (delta < 0) {
       const pageStack = this.getEarliestItem();
       const record = pageStack.getEarliestItem();
-      return {record, overflow: false, index: [this.records.length - 1, pageStack.records.length - 1]};
+      return {record, overflow: false, index: [this.records.length - 1, pageStack.getLength() - 1]};
     }
     const [rootDelta, recordDelta] = this.countBack(delta);
     if (rootDelta < this.records.length) {
@@ -256,15 +230,15 @@ export class WindowStack extends HistoryStack<PageStack> {
     } else {
       const pageStack = this.getEarliestItem();
       const record = pageStack.getEarliestItem();
-      return {record, overflow: true, index: [this.records.length - 1, pageStack.records.length - 1]};
+      return {record, overflow: true, index: [this.records.length - 1, pageStack.getLength() - 1]};
     }
   }
   findRecordByKey(key: string): {record: RouteRecord; overflow: boolean; index: [number, number]} {
     const arr = key.split('-');
     for (let i = 0, k = this.records.length; i < k; i++) {
       const pageStack = this.records[i];
-      if (pageStack.stackkey === arr[0]) {
-        const item = pageStack.findRecordByKey(arr[1]);
+      if (pageStack.key === arr[0]) {
+        const item = pageStack.findRecordByKey(key);
         if (item) {
           return {record: item[0], index: [i, item[1]], overflow: false};
         }

@@ -3,15 +3,12 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.defineModuleGetter = defineModuleGetter;
-exports.getCachedModules = getCachedModules;
 exports.getComponent = getComponent;
-exports.getComponentList = getComponentList;
+exports.getEntryComponent = getEntryComponent;
 exports.getModule = getModule;
-exports.getModuleList = getModuleList;
-exports.loadComponent = loadComponent;
-exports.loadModel = loadModel;
-exports.moduleExists = moduleExists;
+exports.getModuleApiMap = getModuleApiMap;
+exports.injectActions = injectActions;
+exports.injectComponent = injectComponent;
 
 var _env = _interopRequireDefault(require("./env"));
 
@@ -24,11 +21,12 @@ function getModule(moduleName) {
     return _basic.MetaData.moduleCaches[moduleName];
   }
 
-  var moduleOrPromise = _basic.MetaData.moduleGetter[moduleName]();
+  var moduleOrPromise = _basic.coreConfig.ModuleGetter[moduleName]();
 
   if ((0, _utils.isPromise)(moduleOrPromise)) {
     var promiseModule = moduleOrPromise.then(function (_ref) {
       var module = _ref.default;
+      injectActions(new module.ModelClass(moduleName, null));
       _basic.MetaData.moduleCaches[moduleName] = module;
       return module;
     }, function (reason) {
@@ -39,30 +37,9 @@ function getModule(moduleName) {
     return promiseModule;
   }
 
+  injectActions(new moduleOrPromise.ModelClass(moduleName, null));
   _basic.MetaData.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
-}
-
-function getModuleList(moduleNames) {
-  if (moduleNames.length < 1) {
-    return [];
-  }
-
-  var list = moduleNames.map(function (moduleName) {
-    if (_basic.MetaData.moduleCaches[moduleName]) {
-      return _basic.MetaData.moduleCaches[moduleName];
-    }
-
-    return getModule(moduleName);
-  });
-
-  if (list.some(function (item) {
-    return (0, _utils.isPromise)(item);
-  })) {
-    return Promise.all(list);
-  } else {
-    return list;
-  }
 }
 
 function getComponent(moduleName, componentName) {
@@ -76,9 +53,8 @@ function getComponent(moduleName, componentName) {
     var componentOrFun = module.components[componentName];
 
     if ((0, _basic.isEluxComponent)(componentOrFun)) {
-      var component = componentOrFun;
-      _basic.MetaData.componentCaches[key] = component;
-      return component;
+      _basic.MetaData.componentCaches[key] = componentOrFun;
+      return componentOrFun;
     }
 
     var promiseComponent = componentOrFun().then(function (_ref2) {
@@ -102,76 +78,132 @@ function getComponent(moduleName, componentName) {
   return moduleCallback(moduleOrPromise);
 }
 
-function getComponentList(keys) {
-  if (keys.length < 1) {
-    return Promise.resolve([]);
-  }
-
-  return Promise.all(keys.map(function (key) {
-    if (_basic.MetaData.componentCaches[key]) {
-      return _basic.MetaData.componentCaches[key];
-    }
-
-    var _key$split = key.split(_basic.coreConfig.NSP),
-        moduleName = _key$split[0],
-        componentName = _key$split[1];
-
-    return getComponent(moduleName, componentName);
-  }));
+function getEntryComponent() {
+  return getComponent(_basic.coreConfig.StageModuleName, _basic.coreConfig.StageViewName);
 }
 
-function loadModel(moduleName, store) {
-  var moduleOrPromise = getModule(moduleName);
+function getModuleApiMap(data) {
+  if (!_basic.MetaData.moduleApiMap) {
+    if (data) {
+      _basic.MetaData.moduleApiMap = Object.keys(data).reduce(function (prev, moduleName) {
+        var arr = data[moduleName];
+        var actions = {};
+        var actionNames = {};
+        arr.forEach(function (actionName) {
+          actions[actionName] = function () {
+            for (var _len = arguments.length, payload = new Array(_len), _key = 0; _key < _len; _key++) {
+              payload[_key] = arguments[_key];
+            }
 
-  if ((0, _utils.isPromise)(moduleOrPromise)) {
-    return moduleOrPromise.then(function (module) {
-      return module.initModel(store);
-    });
+            return {
+              type: moduleName + _basic.coreConfig.NSP + actionName,
+              payload: payload
+            };
+          };
+
+          actionNames[actionName] = moduleName + _basic.coreConfig.NSP + actionName;
+        });
+        var moduleFacade = {
+          name: moduleName,
+          actions: actions,
+          actionNames: actionNames
+        };
+        prev[moduleName] = moduleFacade;
+        return prev;
+      }, {});
+    } else {
+      var cacheData = {};
+      _basic.MetaData.moduleApiMap = new Proxy({}, {
+        set: function set(target, moduleName, val, receiver) {
+          return Reflect.set(target, moduleName, val, receiver);
+        },
+        get: function get(target, moduleName, receiver) {
+          var val = Reflect.get(target, moduleName, receiver);
+
+          if (val !== undefined) {
+            return val;
+          }
+
+          if (!cacheData[moduleName]) {
+            cacheData[moduleName] = {
+              name: moduleName,
+              actionNames: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return moduleName + _basic.coreConfig.NSP + actionName;
+                }
+              }),
+              actions: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return function () {
+                    for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                      payload[_key2] = arguments[_key2];
+                    }
+
+                    return {
+                      type: moduleName + _basic.coreConfig.NSP + actionName,
+                      payload: payload
+                    };
+                  };
+                }
+              })
+            };
+          }
+
+          return cacheData[moduleName];
+        }
+      });
+    }
   }
 
-  return moduleOrPromise.initModel(store);
+  return _basic.MetaData.moduleApiMap;
 }
 
-function loadComponent(moduleName, componentName, store, deps) {
-  var promiseOrComponent = getComponent(moduleName, componentName);
-
-  var callback = function callback(component) {
-    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
-      if (_env.default.isServer) {
-        return null;
-      }
-
-      var module = getModule(moduleName);
-      module.initModel(store);
+function injectComponent(moduleName, componentName, store) {
+  return (0, _utils.promiseCaseCallback)(getComponent(moduleName, componentName), function (component) {
+    if (component.__elux_component__ === 'view' && !_env.default.isServer) {
+      return (0, _utils.promiseCaseCallback)(store.mount(moduleName, false), function () {
+        return component;
+      });
     }
 
-    deps[moduleName + _basic.coreConfig.NSP + componentName] = true;
     return component;
-  };
+  });
+}
 
-  if ((0, _utils.isPromise)(promiseOrComponent)) {
-    if (_env.default.isServer) {
-      return null;
+function injectActions(model, hmr) {
+  var moduleName = model.moduleName;
+  var handlers = model;
+
+  for (var actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      (function () {
+        var handler = handlers[actionNames];
+
+        if (handler.__isReducer__ || handler.__isEffect__) {
+          actionNames.split(_basic.coreConfig.MSP).forEach(function (actionName) {
+            actionName = actionName.trim().replace(new RegExp("^this[" + _basic.coreConfig.NSP + "]"), "" + moduleName + _basic.coreConfig.NSP);
+            var arr = actionName.split(_basic.coreConfig.NSP);
+
+            if (arr[1]) {
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? _basic.MetaData.effectsMap : _basic.MetaData.reducersMap, hmr);
+            } else {
+              transformAction(moduleName + _basic.coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? _basic.MetaData.effectsMap : _basic.MetaData.reducersMap, hmr);
+            }
+          });
+        }
+      })();
     }
+  }
+}
 
-    return promiseOrComponent.then(callback);
+function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
   }
 
-  return callback(promiseOrComponent);
-}
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    _env.default.console.warn("Action duplicate : " + actionName + ".");
+  }
 
-function moduleExists() {
-  return _basic.MetaData.moduleExists;
-}
-
-function getCachedModules() {
-  return _basic.MetaData.moduleCaches;
-}
-
-function defineModuleGetter(moduleGetter) {
-  _basic.MetaData.moduleGetter = moduleGetter;
-  _basic.MetaData.moduleExists = Object.keys(moduleGetter).reduce(function (data, moduleName) {
-    data[moduleName] = true;
-    return data;
-  }, {});
+  actionHandlerMap[actionName][listenerModule] = handler;
 }

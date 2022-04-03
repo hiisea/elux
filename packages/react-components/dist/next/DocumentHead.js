@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react';
-import { env } from '@elux/core';
-import { EluxContextComponent, reactComponentsConfig } from './base';
+import { env, coreConfig } from '@elux/core';
+import { EluxContextComponent } from './base';
 let clientTimer = 0;
 let recoverLock = false;
 
@@ -14,7 +14,7 @@ function setClientHead(eluxContext, documentHead) {
       const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
-        reactComponentsConfig.setPageTitle(arr[1]);
+        coreConfig.SetPageTitle(arr[1]);
       }
     }, 0);
   }

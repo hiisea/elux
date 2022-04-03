@@ -1,74 +1,28 @@
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import env from './env';
+export function isPromise(data) {
+  return typeof data === 'object' && typeof data.then === 'function';
+}
+export function toPromise(resultOrPromise) {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise;
+  }
+
+  return Promise.resolve(resultOrPromise);
+}
+export function promiseCaseCallback(resultOrPromise, callback) {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise.then(result => callback(result));
+  }
+
+  return callback(resultOrPromise);
+}
 export function buildConfigSetter(data) {
   return config => Object.keys(data).forEach(key => {
     config[key] !== undefined && (data[key] = config[key]);
   });
 }
-export class SingleDispatcher {
-  constructor() {
-    _defineProperty(this, "listenerId", 0);
-
-    _defineProperty(this, "listenerMap", {});
-  }
-
-  addListener(callback) {
-    this.listenerId++;
-    const id = `${this.listenerId}`;
-    const listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return () => {
-      delete listenerMap[id];
-    };
-  }
-
-  dispatch(data) {
-    const listenerMap = this.listenerMap;
-    Object.keys(listenerMap).forEach(id => {
-      listenerMap[id](data);
-    });
-  }
-
-}
-export class MultipleDispatcher {
-  constructor() {
-    _defineProperty(this, "listenerId", 0);
-
-    _defineProperty(this, "listenerMap", {});
-  }
-
-  addListener(name, callback) {
-    this.listenerId++;
-    const id = `${this.listenerId}`;
-
-    if (!this.listenerMap[name]) {
-      this.listenerMap[name] = {};
-    }
-
-    const listenerMap = this.listenerMap[name];
-    listenerMap[id] = callback;
-    return () => {
-      delete listenerMap[id];
-    };
-  }
-
-  dispatch(name, data) {
-    const listenerMap = this.listenerMap[name];
-
-    if (listenerMap) {
-      let hasPromise = false;
-      const arr = Object.keys(listenerMap).map(id => {
-        const result = listenerMap[id](data);
-
-        if (!hasPromise && isPromise(result)) {
-          hasPromise = true;
-        }
-
-        return result;
-      });
-      return hasPromise ? Promise.all(arr) : undefined;
-    }
-  }
-
+export function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
 }
 
 function isObject(obj) {
@@ -131,11 +85,80 @@ export function deepMerge(target, ...args) {
   });
   return target;
 }
-export function deepClone(data) {
-  return JSON.parse(JSON.stringify(data));
+export class SingleDispatcher {
+  constructor() {
+    this.listenerId = 0;
+    this.listenerMap = {};
+  }
+
+  addListener(callback) {
+    this.listenerId++;
+    const id = `${this.listenerId}`;
+    const listenerMap = this.listenerMap;
+    listenerMap[id] = callback;
+    return () => {
+      delete listenerMap[id];
+    };
+  }
+
+  dispatch(data) {
+    const listenerMap = this.listenerMap;
+    Object.keys(listenerMap).forEach(id => {
+      listenerMap[id](data);
+    });
+  }
+
 }
-export function isPromise(data) {
-  return typeof data === 'object' && typeof data.then === 'function';
+export class TaskCounter extends SingleDispatcher {
+  constructor(deferSecond) {
+    super();
+    this.list = [];
+    this.ctimer = 0;
+    this.deferSecond = deferSecond;
+  }
+
+  addItem(promise, note = '') {
+    if (!this.list.some(item => item.promise === promise)) {
+      this.list.push({
+        promise,
+        note
+      });
+      promise.finally(() => this.completeItem(promise));
+
+      if (this.list.length === 1 && !this.ctimer) {
+        this.dispatch('Start');
+        this.ctimer = env.setTimeout(() => {
+          this.ctimer = 0;
+
+          if (this.list.length > 0) {
+            this.dispatch('Depth');
+          }
+        }, this.deferSecond * 1000);
+      }
+    }
+
+    return promise;
+  }
+
+  completeItem(promise) {
+    const i = this.list.findIndex(item => item.promise === promise);
+
+    if (i > -1) {
+      this.list.splice(i, 1);
+
+      if (this.list.length === 0) {
+        if (this.ctimer) {
+          env.clearTimeout.call(null, this.ctimer);
+          this.ctimer = 0;
+        }
+
+        this.dispatch('Stop');
+      }
+    }
+
+    return this;
+  }
+
 }
 export function compose(...funcs) {
   if (funcs.length === 0) {
@@ -147,4 +170,7 @@ export function compose(...funcs) {
   }
 
   return funcs.reduce((a, b) => (...args) => a(b(...args)));
+}
+export function isServer() {
+  return env.isServer;
 }

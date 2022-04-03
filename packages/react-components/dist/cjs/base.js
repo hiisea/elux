@@ -1,38 +1,21 @@
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
+var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
 
 exports.__esModule = true;
-exports.setReactComponentsConfig = exports.reactComponentsConfig = exports.EluxContextComponent = void 0;
+exports.EluxContextComponent = void 0;
+exports.UseRouter = UseRouter;
 
-var _react = _interopRequireDefault(require("react"));
-
-var _core = require("@elux/core");
-
-var reactComponentsConfig = {
-  setPageTitle: function setPageTitle(title) {
-    return _core.env.document.title = title;
-  },
-  Provider: null,
-  useStore: null,
-  LoadComponentOnError: function LoadComponentOnError(_ref) {
-    var message = _ref.message;
-    return _react.default.createElement("div", {
-      className: "g-component-error"
-    }, message);
-  },
-  LoadComponentOnLoading: function LoadComponentOnLoading() {
-    return _react.default.createElement("div", {
-      className: "g-component-loading"
-    }, "loading...");
-  }
-};
-exports.reactComponentsConfig = reactComponentsConfig;
-var setReactComponentsConfig = (0, _core.buildConfigSetter)(reactComponentsConfig);
-exports.setReactComponentsConfig = setReactComponentsConfig;
+var _react = _interopRequireWildcard(require("react"));
 
 var EluxContextComponent = _react.default.createContext({
-  documentHead: ''
+  documentHead: '',
+  router: null
 });
 
 exports.EluxContextComponent = EluxContextComponent;
+
+function UseRouter() {
+  var eluxContext = (0, _react.useContext)(EluxContextComponent);
+  return eluxContext.router;
+}

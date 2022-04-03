@@ -23,17 +23,9 @@ if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) 
 
 const effects: LogItem[] = [];
 
-export const devLogger: StoreLogger = (
-  {id, isActive}: {id: number; isActive: boolean},
-  actionName: string,
-  payload: any[],
-  priority: string[],
-  handers: string[],
-  state: object,
-  effect: boolean
-): void => {
+export const devLogger: StoreLogger = ({id, isActive, actionName, payload, priority, handers, state, effect}): void => {
   if (reduxDevTools) {
-    const type = [actionName, ` (${isActive ? '' : '*'}${id})`].join('');
+    const type = [`${id}${isActive ? '' : '*'}|`, actionName, `(${handers.length})`].join('');
     const logItem: LogItem = {type, payload, priority, handers};
     if (effect) {
       effects.push(logItem);

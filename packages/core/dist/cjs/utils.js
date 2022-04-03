@@ -3,14 +3,41 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.SingleDispatcher = exports.MultipleDispatcher = void 0;
+exports.TaskCounter = exports.SingleDispatcher = void 0;
 exports.buildConfigSetter = buildConfigSetter;
 exports.compose = compose;
 exports.deepClone = deepClone;
 exports.deepMerge = deepMerge;
 exports.isPromise = isPromise;
+exports.isServer = isServer;
+exports.promiseCaseCallback = promiseCaseCallback;
+exports.toPromise = toPromise;
 
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
+var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/inheritsLoose"));
+
+var _env = _interopRequireDefault(require("./env"));
+
+function isPromise(data) {
+  return typeof data === 'object' && typeof data.then === 'function';
+}
+
+function toPromise(resultOrPromise) {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise;
+  }
+
+  return Promise.resolve(resultOrPromise);
+}
+
+function promiseCaseCallback(resultOrPromise, callback) {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise.then(function (result) {
+      return callback(result);
+    });
+  }
+
+  return callback(resultOrPromise);
+}
 
 function buildConfigSetter(data) {
   return function (config) {
@@ -20,81 +47,9 @@ function buildConfigSetter(data) {
   };
 }
 
-var SingleDispatcher = function () {
-  function SingleDispatcher() {
-    (0, _defineProperty2.default)(this, "listenerId", 0);
-    (0, _defineProperty2.default)(this, "listenerMap", {});
-  }
-
-  var _proto = SingleDispatcher.prototype;
-
-  _proto.addListener = function addListener(callback) {
-    this.listenerId++;
-    var id = "" + this.listenerId;
-    var listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
-  };
-
-  _proto.dispatch = function dispatch(data) {
-    var listenerMap = this.listenerMap;
-    Object.keys(listenerMap).forEach(function (id) {
-      listenerMap[id](data);
-    });
-  };
-
-  return SingleDispatcher;
-}();
-
-exports.SingleDispatcher = SingleDispatcher;
-
-var MultipleDispatcher = function () {
-  function MultipleDispatcher() {
-    (0, _defineProperty2.default)(this, "listenerId", 0);
-    (0, _defineProperty2.default)(this, "listenerMap", {});
-  }
-
-  var _proto2 = MultipleDispatcher.prototype;
-
-  _proto2.addListener = function addListener(name, callback) {
-    this.listenerId++;
-    var id = "" + this.listenerId;
-
-    if (!this.listenerMap[name]) {
-      this.listenerMap[name] = {};
-    }
-
-    var listenerMap = this.listenerMap[name];
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
-  };
-
-  _proto2.dispatch = function dispatch(name, data) {
-    var listenerMap = this.listenerMap[name];
-
-    if (listenerMap) {
-      var hasPromise = false;
-      var arr = Object.keys(listenerMap).map(function (id) {
-        var result = listenerMap[id](data);
-
-        if (!hasPromise && isPromise(result)) {
-          hasPromise = true;
-        }
-
-        return result;
-      });
-      return hasPromise ? Promise.all(arr) : undefined;
-    }
-  };
-
-  return MultipleDispatcher;
-}();
-
-exports.MultipleDispatcher = MultipleDispatcher;
+function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
+}
 
 function isObject(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
@@ -163,13 +118,110 @@ function deepMerge(target) {
   return target;
 }
 
-function deepClone(data) {
-  return JSON.parse(JSON.stringify(data));
-}
+var SingleDispatcher = function () {
+  function SingleDispatcher() {
+    this.listenerId = 0;
+    this.listenerMap = {};
+  }
 
-function isPromise(data) {
-  return typeof data === 'object' && typeof data.then === 'function';
-}
+  var _proto = SingleDispatcher.prototype;
+
+  _proto.addListener = function addListener(callback) {
+    this.listenerId++;
+    var id = "" + this.listenerId;
+    var listenerMap = this.listenerMap;
+    listenerMap[id] = callback;
+    return function () {
+      delete listenerMap[id];
+    };
+  };
+
+  _proto.dispatch = function dispatch(data) {
+    var listenerMap = this.listenerMap;
+    Object.keys(listenerMap).forEach(function (id) {
+      listenerMap[id](data);
+    });
+  };
+
+  return SingleDispatcher;
+}();
+
+exports.SingleDispatcher = SingleDispatcher;
+
+var TaskCounter = function (_SingleDispatcher) {
+  (0, _inheritsLoose2.default)(TaskCounter, _SingleDispatcher);
+
+  function TaskCounter(deferSecond) {
+    var _this;
+
+    _this = _SingleDispatcher.call(this) || this;
+    _this.list = [];
+    _this.ctimer = 0;
+    _this.deferSecond = deferSecond;
+    return _this;
+  }
+
+  var _proto2 = TaskCounter.prototype;
+
+  _proto2.addItem = function addItem(promise, note) {
+    var _this2 = this;
+
+    if (note === void 0) {
+      note = '';
+    }
+
+    if (!this.list.some(function (item) {
+      return item.promise === promise;
+    })) {
+      this.list.push({
+        promise: promise,
+        note: note
+      });
+      promise.finally(function () {
+        return _this2.completeItem(promise);
+      });
+
+      if (this.list.length === 1 && !this.ctimer) {
+        this.dispatch('Start');
+        this.ctimer = _env.default.setTimeout(function () {
+          _this2.ctimer = 0;
+
+          if (_this2.list.length > 0) {
+            _this2.dispatch('Depth');
+          }
+        }, this.deferSecond * 1000);
+      }
+    }
+
+    return promise;
+  };
+
+  _proto2.completeItem = function completeItem(promise) {
+    var i = this.list.findIndex(function (item) {
+      return item.promise === promise;
+    });
+
+    if (i > -1) {
+      this.list.splice(i, 1);
+
+      if (this.list.length === 0) {
+        if (this.ctimer) {
+          _env.default.clearTimeout.call(null, this.ctimer);
+
+          this.ctimer = 0;
+        }
+
+        this.dispatch('Stop');
+      }
+    }
+
+    return this;
+  };
+
+  return TaskCounter;
+}(SingleDispatcher);
+
+exports.TaskCounter = TaskCounter;
 
 function compose() {
   for (var _len2 = arguments.length, funcs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
@@ -191,4 +243,8 @@ function compose() {
       return a(b.apply(void 0, arguments));
     };
   });
+}
+
+function isServer() {
+  return _env.default.isServer;
 }

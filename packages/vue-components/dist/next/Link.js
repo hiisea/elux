@@ -1,32 +1,33 @@
-import { h, inject } from 'vue';
-import { EluxContextKey } from './base';
+import { h } from 'vue';
+import { coreConfig } from '@elux/core';
 export const Link = function ({
   onClick: _onClick,
   disabled,
-  href,
-  route,
+  to = '',
+  target = 'page',
   action = 'push',
-  root,
   ...props
 }, context) {
-  const {
-    router
-  } = inject(EluxContextKey, {
-    documentHead: ''
-  });
+  const router = coreConfig.UseRouter();
 
   const onClick = event => {
     event.preventDefault();
-    _onClick && _onClick(event);
-    route && router[action](route, root);
+
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {
+        url: to
+      }, target);
+    }
   };
 
-  !disabled && (props['onClick'] = onClick);
+  const href = action !== 'back' ? to : '';
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
   disabled && (props['disabled'] = true);
-  !disabled && href && (props['href'] = href);
-  route && (props['route'] = route);
-  action && (props['action'] = action);
-  root && (props['target'] = 'root');
+  href && (props['href'] = href);
 
   if (href) {
     return h('a', props, context.slots.default());

@@ -1,115 +1,122 @@
-import _decorate from "@babel/runtime/helpers/esm/decorate";
-import { MetaData, mergeState } from './basic';
-import { reducer, ActionTypes } from './actions';
-import { baseExportModule } from './modules';
-import { loadModel as _loadModel } from './inject';
-export function exportModule(moduleName, ModelClass, components, data) {
-  return baseExportModule(moduleName, ModelClass, components, data);
-}
-export var BaseModel = _decorate(null, function (_initialize) {
-  var BaseModel = function BaseModel(moduleName, store) {
-    _initialize(this);
+import _createClass from "@babel/runtime/helpers/esm/createClass";
+import _applyDecoratedDescriptor from "@babel/runtime/helpers/esm/applyDecoratedDescriptor";
 
+var _class;
+
+import env from './env';
+import { MetaData, coreConfig, mergeState } from './basic';
+import { getModuleApiMap } from './inject';
+import { exportModuleFacade, reducer } from './module';
+export function exportModule(moduleName, ModelClass, components, data) {
+  return exportModuleFacade(moduleName, ModelClass, components, data);
+}
+export function getApi(demoteForProductionOnly, injectActions) {
+  var modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+  return {
+    GetActions: function GetActions() {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      return args.reduce(function (prev, moduleName) {
+        prev[moduleName] = modules[moduleName].actions;
+        return prev;
+      }, {});
+    },
+    GetClientRouter: function GetClientRouter() {
+      if (env.isServer) {
+        throw 'Cannot use GetRouter() in the server side, please use useRouter() instead';
+      }
+
+      return MetaData.clientRouter;
+    },
+    LoadComponent: coreConfig.LoadComponent,
+    Modules: modules,
+    useRouter: coreConfig.UseRouter,
+    useStore: coreConfig.UseStore
+  };
+}
+export var BaseModel = (_class = function () {
+  function BaseModel(moduleName, store) {
+    this.store = void 0;
     this.moduleName = moduleName;
     this.store = store;
+  }
+
+  var _proto = BaseModel.prototype;
+
+  _proto.onStartup = function onStartup(routeChanged) {
+    return;
   };
 
-  return {
-    F: BaseModel,
-    d: [{
-      kind: "field",
-      key: "defaultRouteParams",
-      value: void 0
-    }, {
-      kind: "method",
-      key: "getLatestState",
-      value: function getLatestState() {
-        return this.store.router.latestState;
-      }
-    }, {
-      kind: "method",
-      key: "getRootState",
-      value: function getRootState() {
-        return this.store.getState();
-      }
-    }, {
-      kind: "method",
-      key: "getUncommittedState",
-      value: function getUncommittedState() {
-        return this.store.getUncommittedState();
-      }
-    }, {
-      kind: "method",
-      key: "getState",
-      value: function getState() {
-        return this.store.getState(this.moduleName);
-      }
-    }, {
-      kind: "get",
-      key: "actions",
-      value: function actions() {
-        return MetaData.moduleMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "method",
-      key: "getPrivateActions",
-      value: function getPrivateActions(actionsMap) {
-        return MetaData.moduleMap[this.moduleName].actions;
-      }
-    }, {
-      kind: "get",
-      key: "router",
-      value: function router() {
-        return this.store.router;
-      }
-    }, {
-      kind: "method",
-      key: "getRouteParams",
-      value: function getRouteParams() {
-        return this.store.getRouteParams(this.moduleName);
-      }
-    }, {
-      kind: "method",
-      key: "getCurrentActionName",
-      value: function getCurrentActionName() {
-        return this.store.getCurrentActionName();
-      }
-    }, {
-      kind: "method",
-      key: "dispatch",
-      value: function dispatch(action) {
-        return this.store.dispatch(action);
-      }
-    }, {
-      kind: "method",
-      key: "loadModel",
-      value: function loadModel(moduleName) {
-        return _loadModel(moduleName, this.store);
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: ActionTypes.MInit,
-      value: function value(initState) {
-        return initState;
-      }
-    }, {
-      kind: "method",
-      decorators: [reducer],
-      key: ActionTypes.MLoading,
-      value: function value(payload) {
-        var state = this.getState();
-        var loading = mergeState(state.loading, payload);
-        return mergeState(state, {
-          loading: loading
-        });
-      }
-    }, {
-      kind: "method",
-      key: "destroy",
-      value: function destroy() {
-        return;
-      }
-    }]
+  _proto.onActive = function onActive() {
+    return;
   };
-});
+
+  _proto.onInactive = function onInactive() {
+    return;
+  };
+
+  _proto.getRouter = function getRouter() {
+    return this.store.router;
+  };
+
+  _proto.getState = function getState(type) {
+    var runtime = this.store.router.runtime;
+
+    if (type === 'previous') {
+      return runtime.prevState[this.moduleName];
+    } else {
+      return this.store.getState(this.moduleName);
+    }
+  };
+
+  _proto.getStoreState = function getStoreState(type) {
+    var runtime = this.store.router.runtime;
+    var state;
+
+    if (type === 'previous') {
+      state = runtime.prevState;
+    } else if (type === 'uncommitted') {
+      state = this.store.getUncommittedState();
+    } else {
+      state = this.store.getState();
+    }
+
+    return state;
+  };
+
+  _proto.getPrivateActions = function getPrivateActions(actionsMap) {
+    return MetaData.moduleApiMap[this.moduleName].actions;
+  };
+
+  _proto.getCurrentAction = function getCurrentAction() {
+    var store = this.store;
+    return store.getCurrentAction();
+  };
+
+  _proto.dispatch = function dispatch(action) {
+    return this.store.dispatch(action);
+  };
+
+  _proto.initState = function initState(state) {
+    return state;
+  };
+
+  _proto.updateState = function updateState(subject, state) {
+    return mergeState(this.getState(), state);
+  };
+
+  _proto.loadingState = function loadingState(_loadingState) {
+    return mergeState(this.getState(), _loadingState);
+  };
+
+  _createClass(BaseModel, [{
+    key: "actions",
+    get: function get() {
+      return MetaData.moduleApiMap[this.moduleName].actions;
+    }
+  }]);
+
+  return BaseModel;
+}(), (_applyDecoratedDescriptor(_class.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "loadingState"), _class.prototype)), _class);

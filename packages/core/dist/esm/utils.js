@@ -1,4 +1,24 @@
-import _defineProperty from "@babel/runtime/helpers/esm/defineProperty";
+import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
+import env from './env';
+export function isPromise(data) {
+  return typeof data === 'object' && typeof data.then === 'function';
+}
+export function toPromise(resultOrPromise) {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise;
+  }
+
+  return Promise.resolve(resultOrPromise);
+}
+export function promiseCaseCallback(resultOrPromise, callback) {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise.then(function (result) {
+      return callback(result);
+    });
+  }
+
+  return callback(resultOrPromise);
+}
 export function buildConfigSetter(data) {
   return function (config) {
     return Object.keys(data).forEach(function (key) {
@@ -6,78 +26,9 @@ export function buildConfigSetter(data) {
     });
   };
 }
-export var SingleDispatcher = function () {
-  function SingleDispatcher() {
-    _defineProperty(this, "listenerId", 0);
-
-    _defineProperty(this, "listenerMap", {});
-  }
-
-  var _proto = SingleDispatcher.prototype;
-
-  _proto.addListener = function addListener(callback) {
-    this.listenerId++;
-    var id = "" + this.listenerId;
-    var listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
-  };
-
-  _proto.dispatch = function dispatch(data) {
-    var listenerMap = this.listenerMap;
-    Object.keys(listenerMap).forEach(function (id) {
-      listenerMap[id](data);
-    });
-  };
-
-  return SingleDispatcher;
-}();
-export var MultipleDispatcher = function () {
-  function MultipleDispatcher() {
-    _defineProperty(this, "listenerId", 0);
-
-    _defineProperty(this, "listenerMap", {});
-  }
-
-  var _proto2 = MultipleDispatcher.prototype;
-
-  _proto2.addListener = function addListener(name, callback) {
-    this.listenerId++;
-    var id = "" + this.listenerId;
-
-    if (!this.listenerMap[name]) {
-      this.listenerMap[name] = {};
-    }
-
-    var listenerMap = this.listenerMap[name];
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
-  };
-
-  _proto2.dispatch = function dispatch(name, data) {
-    var listenerMap = this.listenerMap[name];
-
-    if (listenerMap) {
-      var hasPromise = false;
-      var arr = Object.keys(listenerMap).map(function (id) {
-        var result = listenerMap[id](data);
-
-        if (!hasPromise && isPromise(result)) {
-          hasPromise = true;
-        }
-
-        return result;
-      });
-      return hasPromise ? Promise.all(arr) : undefined;
-    }
-  };
-
-  return MultipleDispatcher;
-}();
+export function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
+}
 
 function isObject(obj) {
   return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
@@ -145,12 +96,104 @@ export function deepMerge(target) {
   });
   return target;
 }
-export function deepClone(data) {
-  return JSON.parse(JSON.stringify(data));
-}
-export function isPromise(data) {
-  return typeof data === 'object' && typeof data.then === 'function';
-}
+export var SingleDispatcher = function () {
+  function SingleDispatcher() {
+    this.listenerId = 0;
+    this.listenerMap = {};
+  }
+
+  var _proto = SingleDispatcher.prototype;
+
+  _proto.addListener = function addListener(callback) {
+    this.listenerId++;
+    var id = "" + this.listenerId;
+    var listenerMap = this.listenerMap;
+    listenerMap[id] = callback;
+    return function () {
+      delete listenerMap[id];
+    };
+  };
+
+  _proto.dispatch = function dispatch(data) {
+    var listenerMap = this.listenerMap;
+    Object.keys(listenerMap).forEach(function (id) {
+      listenerMap[id](data);
+    });
+  };
+
+  return SingleDispatcher;
+}();
+export var TaskCounter = function (_SingleDispatcher) {
+  _inheritsLoose(TaskCounter, _SingleDispatcher);
+
+  function TaskCounter(deferSecond) {
+    var _this;
+
+    _this = _SingleDispatcher.call(this) || this;
+    _this.list = [];
+    _this.ctimer = 0;
+    _this.deferSecond = deferSecond;
+    return _this;
+  }
+
+  var _proto2 = TaskCounter.prototype;
+
+  _proto2.addItem = function addItem(promise, note) {
+    var _this2 = this;
+
+    if (note === void 0) {
+      note = '';
+    }
+
+    if (!this.list.some(function (item) {
+      return item.promise === promise;
+    })) {
+      this.list.push({
+        promise: promise,
+        note: note
+      });
+      promise.finally(function () {
+        return _this2.completeItem(promise);
+      });
+
+      if (this.list.length === 1 && !this.ctimer) {
+        this.dispatch('Start');
+        this.ctimer = env.setTimeout(function () {
+          _this2.ctimer = 0;
+
+          if (_this2.list.length > 0) {
+            _this2.dispatch('Depth');
+          }
+        }, this.deferSecond * 1000);
+      }
+    }
+
+    return promise;
+  };
+
+  _proto2.completeItem = function completeItem(promise) {
+    var i = this.list.findIndex(function (item) {
+      return item.promise === promise;
+    });
+
+    if (i > -1) {
+      this.list.splice(i, 1);
+
+      if (this.list.length === 0) {
+        if (this.ctimer) {
+          env.clearTimeout.call(null, this.ctimer);
+          this.ctimer = 0;
+        }
+
+        this.dispatch('Stop');
+      }
+    }
+
+    return this;
+  };
+
+  return TaskCounter;
+}(SingleDispatcher);
 export function compose() {
   for (var _len2 = arguments.length, funcs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
     funcs[_key2] = arguments[_key2];
@@ -171,4 +214,7 @@ export function compose() {
       return a(b.apply(void 0, arguments));
     };
   });
+}
+export function isServer() {
+  return env.isServer;
 }

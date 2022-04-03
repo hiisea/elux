@@ -1,6 +1,6 @@
-import {env, isServer} from '@elux/core';
 import {inject, defineComponent, DefineComponent} from 'vue';
-import {EluxContext, EluxContextKey} from './base';
+import {env, coreConfig, EluxContext} from '@elux/core';
+import {EluxContextKey} from './base';
 
 /**
  * 内置VUE组件
@@ -32,7 +32,7 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
       clientTimer = 0;
       const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
       if (arr[1]) {
-        env.document.title = arr[1];
+        coreConfig.SetPageTitle(arr[1]);
       }
     }, 0);
   }
@@ -57,7 +57,7 @@ export const DocumentHead: DefineComponent<DocumentHeadProps> = defineComponent(
   },
   data() {
     return {
-      eluxContext: inject<EluxContext>(EluxContextKey, {documentHead: ''}),
+      eluxContext: inject<EluxContext>(EluxContextKey, {} as any),
       raw: '',
     };
   },
@@ -83,7 +83,7 @@ export const DocumentHead: DefineComponent<DocumentHeadProps> = defineComponent(
     setClientHead(this.eluxContext, this.raw);
   },
   render() {
-    if (isServer()) {
+    if (env.isServer) {
       this.eluxContext.documentHead = this.headText;
     }
     return null;

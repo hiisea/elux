@@ -3,9 +3,9 @@
 exports.__esModule = true;
 exports.DocumentHead = void 0;
 
-var _core = require("@elux/core");
-
 var _vue = require("vue");
+
+var _core = require("@elux/core");
 
 var _base = require("./base");
 
@@ -20,7 +20,7 @@ function setClientHead(eluxContext, documentHead) {
       var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
 
       if (arr[1]) {
-        _core.env.document.title = arr[1];
+        _core.coreConfig.SetPageTitle(arr[1]);
       }
     }, 0);
   }
@@ -37,9 +37,7 @@ var DocumentHead = (0, _vue.defineComponent)({
   },
   data: function data() {
     return {
-      eluxContext: (0, _vue.inject)(_base.EluxContextKey, {
-        documentHead: ''
-      }),
+      eluxContext: (0, _vue.inject)(_base.EluxContextKey, {}),
       raw: ''
     };
   },
@@ -68,7 +66,7 @@ var DocumentHead = (0, _vue.defineComponent)({
     setClientHead(this.eluxContext, this.raw);
   },
   render: function render() {
-    if ((0, _core.isServer)()) {
+    if (_core.env.isServer) {
       this.eluxContext.documentHead = this.headText;
     }
 

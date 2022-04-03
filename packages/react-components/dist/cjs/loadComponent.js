@@ -5,33 +5,48 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard").default;
 
 exports.__esModule = true;
-exports.loadComponent = void 0;
+exports.LoadComponentOnLoading = exports.LoadComponentOnError = exports.LoadComponent = void 0;
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
 
 var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/objectWithoutPropertiesLoose"));
 
-var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/assertThisInitialized"));
-
 var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/inheritsLoose"));
-
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
 var _react = _interopRequireWildcard(require("react"));
 
 var _core = require("@elux/core");
 
-var _base = require("./base");
+var _jsxRuntime = require("react/jsx-runtime");
 
-var _excluded = ["forwardedRef", "deps", "store"];
+var _excluded = ["forwardedRef", "store"];
 
-var loadComponent = function loadComponent(moduleName, componentName, options) {
+var LoadComponentOnError = function LoadComponentOnError(_ref) {
+  var message = _ref.message;
+  return (0, _jsxRuntime.jsx)("div", {
+    className: "g-component-error",
+    children: message
+  });
+};
+
+exports.LoadComponentOnError = LoadComponentOnError;
+
+var LoadComponentOnLoading = function LoadComponentOnLoading() {
+  return (0, _jsxRuntime.jsx)("div", {
+    className: "g-component-loading",
+    children: "loading..."
+  });
+};
+
+exports.LoadComponentOnLoading = LoadComponentOnLoading;
+
+var LoadComponent = function LoadComponent(moduleName, componentName, options) {
   if (options === void 0) {
     options = {};
   }
 
-  var OnLoading = options.OnLoading || _base.reactComponentsConfig.LoadComponentOnLoading;
-  var OnError = options.OnError || _base.reactComponentsConfig.LoadComponentOnError;
+  var OnLoading = options.onLoading || _core.coreConfig.LoadComponentOnLoading;
+  var OnError = options.onError || _core.coreConfig.LoadComponentOnError;
 
   var Loader = function (_Component) {
     (0, _inheritsLoose2.default)(Loader, _Component);
@@ -40,13 +55,13 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       var _this;
 
       _this = _Component.call(this, props) || this;
-      (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "active", true);
-      (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "loading", false);
-      (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "error", '');
-      (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "view", void 0);
-      (0, _defineProperty2.default)((0, _assertThisInitialized2.default)(_this), "state", {
+      _this.active = true;
+      _this.loading = false;
+      _this.error = '';
+      _this.view = void 0;
+      _this.state = {
         ver: 0
-      });
+      };
 
       _this.execute();
 
@@ -72,14 +87,17 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
       var _this2 = this;
 
       if (!this.view && !this.loading && !this.error) {
-        var _this$props = this.props,
-            deps = _this$props.deps,
-            store = _this$props.store;
+        var store = this.props.store;
         this.loading = true;
         var result;
 
         try {
-          result = (0, _core.loadComponent)(moduleName, componentName, store, deps);
+          result = (0, _core.injectComponent)(moduleName, componentName, store);
+
+          if (_core.env.isServer && (0, _core.isPromise)(result)) {
+            result = undefined;
+            throw 'can not use async component in SSR';
+          }
         } catch (e) {
           this.loading = false;
           this.error = e.message || "" + e;
@@ -113,25 +131,24 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
     };
 
     _proto.render = function render() {
-      var _this$props2 = this.props,
-          forwardedRef = _this$props2.forwardedRef,
-          deps = _this$props2.deps,
-          store = _this$props2.store,
-          rest = (0, _objectWithoutPropertiesLoose2.default)(_this$props2, _excluded);
+      var _this$props = this.props,
+          forwardedRef = _this$props.forwardedRef,
+          store = _this$props.store,
+          rest = (0, _objectWithoutPropertiesLoose2.default)(_this$props, _excluded);
 
       if (this.view) {
         var View = this.view;
-        return _react.default.createElement(View, (0, _extends2.default)({
+        return (0, _jsxRuntime.jsx)(View, (0, _extends2.default)({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
         var Loading = OnLoading;
-        return _react.default.createElement(Loading, null);
+        return (0, _jsxRuntime.jsx)(Loading, {});
       }
 
-      return _react.default.createElement(OnError, {
+      return (0, _jsxRuntime.jsx)(OnError, {
         message: this.error
       });
     };
@@ -140,18 +157,13 @@ var loadComponent = function loadComponent(moduleName, componentName, options) {
   }(_react.Component);
 
   return _react.default.forwardRef(function (props, ref) {
-    var _useContext = (0, _react.useContext)(_base.EluxContextComponent),
-        _useContext$deps = _useContext.deps,
-        deps = _useContext$deps === void 0 ? {} : _useContext$deps;
+    var store = _core.coreConfig.UseStore();
 
-    var store = _base.reactComponentsConfig.useStore();
-
-    return _react.default.createElement(Loader, (0, _extends2.default)({}, props, {
+    return (0, _jsxRuntime.jsx)(Loader, (0, _extends2.default)({}, props, {
       store: store,
-      deps: deps,
       forwardedRef: ref
     }));
   });
 };
 
-exports.loadComponent = loadComponent;
+exports.LoadComponent = LoadComponent;

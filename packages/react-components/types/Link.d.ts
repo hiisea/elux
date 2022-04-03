@@ -1,13 +1,14 @@
 import React from 'react';
+import { RouteTarget, RouteAction } from '@elux/core';
 /**
  * 内置React组件
  *
  * @remarks
- * 类似于Html标签 `<a>`
+ * 类似于Html标签 `<a>`，用组件的方式执行路由切换，参见 {@link URouter}
  *
  * @example
  * ```html
- *<Link disabled={pagename==='/home'} route='/home' href='/home' action='push' root>home</Link>
+ *<Link disabled={pagename==='/home'} route='/home' action='push' target='window'>home</Link>
  * ```
  *
  * @public
@@ -18,22 +19,18 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
      */
     disabled?: boolean;
     /**
-     * 指定跳转的url，支持{@link EluxLocation | 3种路由协议}：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]
+     * 指定跳转的url或后退步数
      */
-    route?: string;
-    /**
-     * href属性仅用于SSR时提供给搜索引擎爬取，指定跳转的url请使用 {@link LinkProps.route} 替代
-     */
-    href?: string;
+    to?: string;
     onClick?(event: React.MouseEvent): void;
     /**
      * 路由的切换方式，参见 {@link RouteHistoryAction}
      */
-    action?: 'push' | 'replace' | 'relaunch';
+    action?: RouteAction;
     /**
      * 是否操作顶级路由栈（EWindow栈），虚拟多页下使用
      */
-    root?: boolean;
+    target?: RouteTarget;
 }
 /**
  * 内置React组件

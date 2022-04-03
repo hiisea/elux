@@ -1,54 +1,17 @@
 import env from './env';
-import { isPromise, compose } from './utils';
-import { createRedux } from './redux';
+import { promiseCaseCallback, toPromise, compose, isPromise } from './utils';
+import { MetaData, coreConfig, mergeState } from './basic';
 import { devLogger } from './devtools';
-import { MetaData, coreConfig } from './basic';
-import { ActionTypes, moduleRouteChangeAction, errorAction } from './actions';
-import { loadModel } from './inject';
-export const routeMiddleware = ({
-  dispatch,
-  getStore
-}) => next => action => {
-  if (action.type === `${coreConfig.RouteModuleName}${coreConfig.NSP}${ActionTypes.MRouteChange}`) {
-    const existsModules = Object.keys(getStore().getState()).reduce((obj, moduleName) => {
-      obj[moduleName] = true;
-      return obj;
-    }, {});
-    const result = next(action);
-    const [routeState] = action.payload;
-    Object.keys(routeState.params).forEach(moduleName => {
-      const moduleState = routeState.params[moduleName];
-
-      if (moduleState && Object.keys(moduleState).length > 0) {
-        if (existsModules[moduleName]) {
-          dispatch(moduleRouteChangeAction(moduleName, moduleState, routeState.action));
-        }
-      }
-    });
-    return result;
-  } else {
-    return next(action);
-  }
-};
-export function forkStore(originalStore, newRouteState) {
-  const {
-    sid,
-    options: {
-      initState,
-      middlewares,
-      logger
-    },
-    router
-  } = originalStore;
-  return createStore(sid + 1, router, {
-    [coreConfig.RouteModuleName]: newRouteState
-  }, initState, middlewares, logger);
+import { getModule, injectActions } from './inject';
+import { ActionTypes, errorAction, moduleInitAction, isProcessedError, setProcessedError } from './actions';
+import { AppModel } from './module';
+export function getActionData(action) {
+  return Array.isArray(action.payload) ? action.payload : [];
 }
-
-const preMiddleware = ({
+export const preMiddleware = ({
   getStore
 }) => next => action => {
-  if (action.type === ActionTypes.Error) {
+  if (action.type === `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`) {
     const actionData = getActionData(action);
 
     if (isProcessedError(actionData[0])) {
@@ -60,131 +23,308 @@ const preMiddleware = ({
 
   const [moduleName, actionName] = action.type.split(coreConfig.NSP);
 
-  if (env.isServer && actionName === ActionTypes.MLoading) {
+  if (!moduleName || !actionName || moduleName !== coreConfig.AppModuleName && !coreConfig.ModuleGetter[moduleName]) {
     return undefined;
   }
 
-  if (moduleName && actionName && MetaData.moduleGetter[moduleName]) {
-    const store = getStore();
+  if (env.isServer && actionName === ActionTypes.Loading) {
+    return undefined;
+  }
 
-    if (!store.injectedModules[moduleName]) {
-      const result = loadModel(moduleName, store);
+  const store = getStore();
+  const state = store.getState();
 
-      if (isPromise(result)) {
-        return result.then(() => next(action));
-      }
-    }
+  if (!state[moduleName] && actionName !== ActionTypes.Init) {
+    return promiseCaseCallback(store.mount(moduleName, false), () => next(action));
   }
 
   return next(action);
 };
+export class CoreRouter {
+  constructor(location, action, nativeData) {
+    this.listenerId = 0;
+    this.listenerMap = {};
+    this.location = location;
+    this.action = action;
+    this.nativeData = nativeData;
 
-export function createStore(sid, router, data, initState, middlewares, logger) {
-  const redux = createRedux(initState(data));
-  const {
-    getState,
-    subscribe,
-    update: _update
-  } = redux;
-
-  const getRouteParams = moduleName => {
-    const routeState = getState(coreConfig.RouteModuleName);
-    return moduleName ? routeState.params[moduleName] : routeState.params;
-  };
-
-  const options = {
-    initState,
-    logger,
-    middlewares
-  };
-  const loadingGroups = {};
-  const injectedModules = {};
-  const refData = {
-    currentActionName: '',
-    uncommittedState: {},
-    isActive: false
-  };
-
-  const isActive = () => {
-    return refData.isActive;
-  };
-
-  const setActive = status => {
-    if (refData.isActive !== status) {
-      refData.isActive = status;
+    if (!MetaData.clientRouter) {
+      MetaData.clientRouter = this;
     }
-  };
-
-  const getCurrentActionName = () => refData.currentActionName;
-
-  const getUncommittedState = moduleName => {
-    const state = refData.uncommittedState;
-    return moduleName ? state[moduleName] : state;
-  };
-
-  const destroy = () => {
-    Object.keys(injectedModules).forEach(moduleName => {
-      injectedModules[moduleName].destroy();
-    });
-  };
-
-  const update = (actionName, state) => {
-    _update(actionName, state);
-
-    router.latestState = { ...router.latestState,
-      ...state
-    };
-  };
-
-  let dispatch = action => {
-    throw new Error('Dispatching while constructing your middleware is not allowed. ');
-  };
-
-  function applyEffect(moduleName, handler, modelInstance, action, actionData) {
-    const effectResult = handler.apply(modelInstance, actionData);
-    const decorators = handler.__decorators__;
-
-    if (decorators) {
-      const results = [];
-      decorators.forEach((decorator, index) => {
-        results[index] = decorator[0].call(modelInstance, action, effectResult);
-      });
-      handler.__decoratorResults__ = results;
-    }
-
-    return effectResult.then(reslove => {
-      if (decorators) {
-        const results = handler.__decoratorResults__ || [];
-        decorators.forEach((decorator, index) => {
-          if (decorator[1]) {
-            decorator[1].call(modelInstance, 'Resolved', results[index], reslove);
-          }
-        });
-        handler.__decoratorResults__ = undefined;
-      }
-
-      return reslove;
-    }, error => {
-      if (decorators) {
-        const results = handler.__decoratorResults__ || [];
-        decorators.forEach((decorator, index) => {
-          if (decorator[1]) {
-            decorator[1].call(modelInstance, 'Rejected', results[index], error);
-          }
-        });
-        handler.__decoratorResults__ = undefined;
-      }
-
-      if (isProcessedError(error)) {
-        throw error;
-      } else {
-        return dispatch(errorAction(setProcessedError(error, false)));
-      }
-    });
   }
 
-  function respondHandler(action, isReducer) {
-    let logs;
+  addListener(callback) {
+    this.listenerId++;
+    const id = `${this.listenerId}`;
+    const listenerMap = this.listenerMap;
+    listenerMap[id] = callback;
+    return () => {
+      delete listenerMap[id];
+    };
+  }
+
+  dispatch(data) {
+    const listenerMap = this.listenerMap;
+    const promiseResults = [];
+    Object.keys(listenerMap).forEach(id => {
+      const result = listenerMap[id](data);
+
+      if (isPromise(result)) {
+        promiseResults.push(result);
+      }
+    });
+
+    if (promiseResults.length === 0) {
+      return undefined;
+    } else if (promiseResults.length === 1) {
+      return promiseResults[0];
+    } else {
+      return Promise.all(promiseResults).then(() => undefined);
+    }
+  }
+
+}
+
+function applyEffect(effectResult, store, model, action, dispatch, decorators = []) {
+  const decoratorBeforeResults = [];
+  decorators.forEach((decorator, index) => {
+    decoratorBeforeResults[index] = decorator[0].call(model, store, action, effectResult);
+  });
+  return effectResult.then(reslove => {
+    decorators.forEach((decorator, index) => {
+      if (decorator[1]) {
+        decorator[1].call(model, 'Resolved', decoratorBeforeResults[index], reslove);
+      }
+    });
+    return reslove;
+  }, error => {
+    decorators.forEach((decorator, index) => {
+      if (decorator[1]) {
+        decorator[1].call(model, 'Rejected', decoratorBeforeResults[index], error);
+      }
+    });
+
+    if (isProcessedError(error)) {
+      throw error;
+    } else {
+      return dispatch(errorAction(setProcessedError(error, false)));
+    }
+  });
+}
+
+injectActions(new AppModel(null));
+export class Store {
+  constructor(sid, router) {
+    this.state = void 0;
+    this.mountedModels = void 0;
+    this.currentListeners = [];
+    this.nextListeners = [];
+    this.active = false;
+    this.currentAction = void 0;
+    this.uncommittedState = {};
+
+    this.dispatch = action => {
+      throw 'Dispatching action while constructing your middleware is not allowed.';
+    };
+
+    this.loadingGroups = {};
+    this.sid = sid;
+    this.router = router;
+    const {
+      location: routeLocation,
+      action: routeAction
+    } = router;
+    const appState = {
+      routeAction,
+      routeLocation,
+      globalLoading: 'Stop',
+      initError: ''
+    };
+    this.state = mergeState(coreConfig.StoreInitState(), {
+      [coreConfig.AppModuleName]: appState
+    });
+    const appModel = new AppModel(this);
+    this.mountedModels = {
+      [coreConfig.AppModuleName]: appModel
+    };
+    const middlewareAPI = {
+      getStore: () => this,
+      dispatch: action => this.dispatch(action)
+    };
+
+    const _dispatch = action => {
+      this.respondHandler(action, true);
+      return this.respondHandler(action, false);
+    };
+
+    const chain = [preMiddleware, ...coreConfig.StoreMiddlewares].map(middleware => middleware(middlewareAPI));
+    this.dispatch = compose(...chain)(_dispatch);
+  }
+
+  clone() {
+    return new Store(this.sid + 1, this.router);
+  }
+
+  hotReplaceModel(moduleName, ModelClass) {
+    const orignModel = this.mountedModels[moduleName];
+
+    if (orignModel && !isPromise(orignModel)) {
+      const model = new ModelClass(moduleName, this);
+      this.mountedModels[moduleName] = model;
+
+      if (this.active) {
+        orignModel.onInactive();
+        model.onActive();
+      }
+    }
+  }
+
+  getCurrentAction() {
+    return this.currentAction;
+  }
+
+  mountModule(moduleName, routeChanged) {
+    const errorCallback = err => {
+      delete mountedModels[moduleName];
+      throw err;
+    };
+
+    const initStateCallback = initState => {
+      mountedModels[moduleName] = model;
+      this.dispatch(moduleInitAction(moduleName, initState));
+
+      if (this.active) {
+        model.onActive();
+      }
+
+      return model.onStartup(routeChanged);
+    };
+
+    const getModuleCallback = module => {
+      model = new module.ModelClass(moduleName, this);
+      const initStateOrPromise = model.onInit(routeChanged);
+
+      if (isPromise(initStateOrPromise)) {
+        return initStateOrPromise.then(initStateCallback, errorCallback);
+      } else {
+        return initStateCallback(initStateOrPromise);
+      }
+    };
+
+    const mountedModels = this.mountedModels;
+    const moduleOrPromise = getModule(moduleName);
+    let model = null;
+
+    if (isPromise(moduleOrPromise)) {
+      return moduleOrPromise.then(getModuleCallback, errorCallback);
+    } else {
+      const result = getModuleCallback(moduleOrPromise);
+
+      if (isPromise(result)) {
+        return result;
+      } else {
+        return model;
+      }
+    }
+  }
+
+  mount(moduleName, routeChanged) {
+    if (!coreConfig.ModuleGetter[moduleName]) {
+      return;
+    }
+
+    const mountedModels = this.mountedModels;
+
+    if (!mountedModels[moduleName]) {
+      mountedModels[moduleName] = this.mountModule(moduleName, routeChanged);
+    }
+
+    const result = mountedModels[moduleName];
+    return isPromise(result) ? result : undefined;
+  }
+
+  setActive() {
+    if (!this.active) {
+      this.active = true;
+      const mountedModels = this.mountedModels;
+      Object.keys(mountedModels).forEach(moduleName => {
+        const modelOrPromise = mountedModels[moduleName];
+
+        if (modelOrPromise && !isPromise(modelOrPromise)) {
+          modelOrPromise.onActive();
+        }
+      });
+    }
+  }
+
+  setInactive() {
+    if (this.active) {
+      this.active = false;
+      const mountedModels = this.mountedModels;
+      Object.keys(mountedModels).forEach(moduleName => {
+        const modelOrPromise = mountedModels[moduleName];
+
+        if (modelOrPromise && !isPromise(modelOrPromise)) {
+          modelOrPromise.onInactive();
+        }
+      });
+    }
+  }
+
+  ensureCanMutateNextListeners() {
+    if (this.nextListeners === this.currentListeners) {
+      this.nextListeners = this.currentListeners.slice();
+    }
+  }
+
+  destroy() {
+    this.setInactive();
+
+    this.dispatch = function () {};
+
+    this.mount = function () {};
+  }
+
+  update(newState) {
+    this.state = mergeState(this.state, newState);
+    const listeners = this.currentListeners = this.nextListeners;
+
+    for (let i = 0; i < listeners.length; i++) {
+      const listener = listeners[i];
+      listener();
+    }
+  }
+
+  getState(moduleName) {
+    return moduleName ? this.state[moduleName] : this.state;
+  }
+
+  getUncommittedState() {
+    return this.uncommittedState;
+  }
+
+  subscribe(listener) {
+    if (typeof listener !== 'function') {
+      throw new Error('Expected the listener to be a function.');
+    }
+
+    let isSubscribed = true;
+    this.ensureCanMutateNextListeners();
+    this.nextListeners.push(listener);
+    return () => {
+      if (!isSubscribed) {
+        return;
+      }
+
+      isSubscribed = false;
+      this.ensureCanMutateNextListeners();
+      const index = this.nextListeners.indexOf(listener);
+      this.nextListeners.splice(index, 1);
+      this.currentListeners = [];
+    };
+  }
+
+  respondHandler(action, isReducer) {
     const handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     const actionName = action.type;
     const actionPriority = action.priority || [];
@@ -197,120 +337,100 @@ export function createStore(sid, router, data, initState, middlewares, logger) {
       ...universalHandlers
     };
     const handlerModuleNames = Object.keys(handlers);
+    const prevState = this.getState();
+    const logs = {
+      id: this.sid,
+      isActive: this.active,
+      actionName,
+      payload: actionData,
+      priority: actionPriority,
+      handers: [],
+      state: 'No Change',
+      effect: !isReducer
+    };
+    const storeLogger = coreConfig.StoreLogger;
 
     if (handlerModuleNames.length > 0) {
-      const orderList = [];
+      let orderList = [];
       handlerModuleNames.forEach(moduleName => {
-        if (moduleName === coreConfig.AppModuleName) {
-          orderList.unshift(moduleName);
-        } else if (moduleName === actionModuleName) {
+        if (moduleName === actionModuleName) {
           orderList.unshift(moduleName);
         } else {
           orderList.push(moduleName);
         }
       });
       orderList.unshift(...actionPriority);
+      const mountedModels = this.mountedModels;
       const implemented = {};
+      orderList = orderList.filter(moduleName => {
+        if (implemented[moduleName] || !handlers[moduleName]) {
+          return false;
+        }
+
+        implemented[moduleName] = true;
+        return mountedModels[moduleName] && !isPromise(mountedModels[moduleName]);
+      });
+      logs.handers = orderList;
 
       if (isReducer) {
-        const prevState = getState();
         const newState = {};
-        const uncommittedState = { ...prevState
+        const uncommittedState = this.uncommittedState = { ...prevState
         };
-        refData.uncommittedState = uncommittedState;
         orderList.forEach(moduleName => {
-          if (!implemented[moduleName]) {
-            implemented[moduleName] = true;
-            const handler = handlers[moduleName];
-            const modelInstance = injectedModules[moduleName];
-            const result = handler.apply(modelInstance, actionData);
+          const model = mountedModels[moduleName];
+          const handler = handlers[moduleName];
+          const result = handler.apply(model, actionData);
 
-            if (result) {
-              newState[moduleName] = result;
-              uncommittedState[moduleName] = result;
-            }
+          if (result) {
+            newState[moduleName] = result;
+            uncommittedState[moduleName] = result;
           }
         });
-        logs = [{
-          id: sid,
-          isActive: refData.isActive
-        }, actionName, actionData, actionPriority, orderList, uncommittedState, false];
-        devLogger(...logs);
-        logger && logger(...logs);
-        update(actionName, newState);
+        logs.state = uncommittedState;
+        devLogger(logs);
+        storeLogger(logs);
+        this.update(newState);
       } else {
-        logs = [{
-          id: sid,
-          isActive: refData.isActive
-        }, actionName, actionData, actionPriority, orderList, getState(), true];
-        devLogger(...logs);
-        logger && logger(...logs);
-        const result = [];
+        devLogger(logs);
+        storeLogger(logs);
+        const effectHandlers = [];
         orderList.forEach(moduleName => {
-          if (!implemented[moduleName]) {
-            implemented[moduleName] = true;
-            const handler = handlers[moduleName];
-            const modelInstance = injectedModules[moduleName];
-            refData.currentActionName = actionName;
-            result.push(applyEffect(moduleName, handler, modelInstance, action, actionData));
-          }
+          const model = mountedModels[moduleName];
+          const handler = handlers[moduleName];
+          this.currentAction = action;
+          const result = handler.apply(model, actionData);
+          effectHandlers.push(applyEffect(toPromise(result), this, model, action, this.dispatch, handler.__decorators__));
         });
-        const task = result.length === 1 ? result[0] : Promise.all(result);
+        const task = effectHandlers.length === 1 ? effectHandlers[0] : Promise.all(effectHandlers);
         return task;
+      }
+    } else {
+      if (isReducer) {
+        devLogger(logs);
+        storeLogger(logs);
+      } else {
+        if (actionName === `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`) {
+          return Promise.reject(actionData);
+        }
       }
     }
 
     return undefined;
   }
 
-  function _dispatch(action) {
-    respondHandler(action, true);
-    return respondHandler(action, false);
+}
+export function modelHotReplacement(moduleName, ModelClass) {
+  const moduleCache = MetaData.moduleCaches[moduleName];
+
+  if (moduleCache) {
+    promiseCaseCallback(moduleCache, module => {
+      module.ModelClass = ModelClass;
+      const newModel = new ModelClass(moduleName, null);
+      injectActions(newModel, true);
+      const page = MetaData.clientRouter.getCurrentPage();
+      page.store.hotReplaceModel(moduleName, ModelClass);
+    });
   }
 
-  const middlewareAPI = {
-    getStore: () => store,
-    dispatch: action => dispatch(action)
-  };
-  const chain = [preMiddleware, routeMiddleware, ...(middlewares || [])].map(middleware => middleware(middlewareAPI));
-  dispatch = compose(...chain)(_dispatch);
-  const store = {
-    sid,
-    getState,
-    getRouteParams,
-    subscribe,
-    dispatch,
-    router,
-    loadingGroups,
-    injectedModules,
-    destroy,
-    getCurrentActionName,
-    getUncommittedState,
-    update,
-    isActive,
-    setActive,
-    options
-  };
-  return store;
-}
-export const errorProcessed = '__eluxProcessed__';
-export function isProcessedError(error) {
-  return error && !!error[errorProcessed];
-}
-export function setProcessedError(error, processed) {
-  if (typeof error !== 'object') {
-    error = {
-      message: error
-    };
-  }
-
-  Object.defineProperty(error, errorProcessed, {
-    value: processed,
-    enumerable: false,
-    writable: true
-  });
-  return error;
-}
-export function getActionData(action) {
-  return Array.isArray(action.payload) ? action.payload : [];
+  env.console.log(`[HMR] @Elux Updated model: ${moduleName}`);
 }

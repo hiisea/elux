@@ -1,26 +1,15 @@
-export declare function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void;
 /**
  * 常用于取消监听
  *
  * @public
  */
 export declare type UNListener = () => void;
-export declare class SingleDispatcher<T> {
-    protected listenerId: number;
-    protected readonly listenerMap: Record<string, (data: T) => void>;
-    addListener(callback: (data: T) => void): UNListener;
-    dispatch(data: T): void;
-}
-export declare class MultipleDispatcher<T extends Record<string, any> = {}> {
-    protected listenerId: number;
-    protected listenerMap: {
-        [N in keyof T]?: {
-            [id: string]: (data: T[N]) => void | Promise<void>;
-        };
-    };
-    addListener<N extends keyof T>(name: N, callback: (data: T[N]) => void | Promise<void>): UNListener;
-    dispatch<N extends keyof T>(name: N, data: T[N]): void | Promise<void[]>;
-}
+export declare type Listener = () => void;
+export declare function isPromise(data: any): data is Promise<any>;
+export declare function toPromise<T>(resultOrPromise: Promise<T> | T): Promise<T>;
+export declare function promiseCaseCallback<T, R>(resultOrPromise: Promise<T> | T, callback: (result: T) => Promise<R> | R): Promise<R> | R;
+export declare function buildConfigSetter<T extends Record<string, any>>(data: T): (config: Partial<T>) => void;
+export declare function deepClone<T>(data: T): T;
 /**
  * 多个PlainObject的深度Merge
  *
@@ -36,11 +25,29 @@ export declare class MultipleDispatcher<T extends Record<string, any> = {}> {
 export declare function deepMerge(target: {
     [key: string]: any;
 }, ...args: any[]): any;
-export declare function deepClone<T>(data: T): T;
-export declare function isPromise(data: any): data is Promise<any>;
+export declare class SingleDispatcher<T> {
+    protected listenerId: number;
+    protected readonly listenerMap: Record<string, (data: T) => void>;
+    addListener(callback: (data: T) => void): UNListener;
+    dispatch(data: T): void;
+}
+/**
+ * 描述异步状态
+ *
+ * @public
+ */
+export declare type LoadingState = 'Start' | 'Stop' | 'Depth';
+export declare class TaskCounter extends SingleDispatcher<LoadingState> {
+    deferSecond: number;
+    readonly list: {
+        promise: Promise<any>;
+        note: string;
+    }[];
+    private ctimer;
+    constructor(deferSecond: number);
+    addItem(promise: Promise<any>, note?: string): Promise<any>;
+    private completeItem;
+}
 export declare function compose(...funcs: Function[]): Function;
-/*** @public */
-export declare type DeepPartial<T> = {
-    [P in keyof T]?: DeepPartial<T[P]>;
-};
+export declare function isServer(): boolean;
 //# sourceMappingURL=utils.d.ts.map
