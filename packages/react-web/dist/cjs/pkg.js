@@ -278,10 +278,6 @@ function isServer() {
   return env.isServer;
 }
 
-var ErrorCodes = {
-  INIT_ERROR: 'ELUX.INIT_ERROR',
-  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
-};
 function isEluxComponent(data) {
   return data['__elux_component__'];
 }
@@ -298,7 +294,6 @@ var coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  AppModuleName: 'app',
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
@@ -359,21 +354,10 @@ function setProcessedError(error, processed) {
   });
   return error;
 }
-var ActionTypes = {
-  Init: 'initState',
-  Loading: 'loadingState',
-  Error: "error"
-};
 function moduleLoadingAction(moduleName, loadingState) {
   return {
-    type: "" + moduleName + coreConfig.NSP + ActionTypes.Loading,
+    type: "" + moduleName + coreConfig.NSP + "_loadingState",
     payload: [loadingState]
-  };
-}
-function moduleInitAction(moduleName, initState) {
-  return {
-    type: "" + moduleName + coreConfig.NSP + ActionTypes.Init,
-    payload: [initState]
   };
 }
 function errorAction(error) {
@@ -401,9 +385,15 @@ function errorAction(error) {
     writable: true
   });
   return {
-    type: "" + coreConfig.AppModuleName + coreConfig.NSP + ActionTypes.Error,
+    type: getErrorActionType(),
     payload: [actionError]
   };
+}
+function getErrorActionType() {
+  return coreConfig.StageModuleName + coreConfig.NSP + '_error';
+}
+function getInitActionType(moduleName) {
+  return moduleName + coreConfig.NSP + '_initState';
 }
 
 function getModule(moduleName) {
@@ -547,7 +537,7 @@ function getModuleApiMap(data) {
 function injectComponent(moduleName, componentName, store) {
   return promiseCaseCallback(getComponent(moduleName, componentName), function (component) {
     if (component.__elux_component__ === 'view' && !env.isServer) {
-      return promiseCaseCallback(store.mount(moduleName, false), function () {
+      return promiseCaseCallback(store.mount(moduleName, 'update'), function () {
         return component;
       });
     }
@@ -593,6 +583,22 @@ function transformAction(actionName, handler, listenerModule, actionHandlerMap, 
   actionHandlerMap[actionName][listenerModule] = handler;
 }
 
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
+}
+
 function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
   var desc = {};
   Object.keys(descriptor).forEach(function (key) {
@@ -622,7 +628,7 @@ function _applyDecoratedDescriptor(target, property, decorators, descriptor, con
   return desc;
 }
 
-var _class$1, _class2;
+var _class$1;
 function exportComponent(component) {
   var eluxComponent = component;
   eluxComponent.__elux_component__ = 'component';
@@ -641,6 +647,11 @@ var EmptyModel = (_class$1 = function () {
 
   var _proto = EmptyModel.prototype;
 
+  _proto.onMount = function onMount() {
+    var actions = MetaData.moduleApiMap[this.moduleName].actions;
+    this.store.dispatch(actions._initState({}));
+  };
+
   _proto.onActive = function onActive() {
     return;
   };
@@ -649,60 +660,19 @@ var EmptyModel = (_class$1 = function () {
     return;
   };
 
-  _proto.onInit = function onInit() {
-    return {};
-  };
-
-  _proto.onStartup = function onStartup() {
-    return;
-  };
-
-  _proto.initState = function initState(state) {
+  _proto._initState = function _initState(state) {
     return state;
   };
 
-  return EmptyModel;
-}(), _applyDecoratedDescriptor(_class$1.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class$1.prototype, "initState"), _class$1.prototype), _class$1);
-var AppModel = (_class2 = function () {
-  function AppModel(store) {
-    this.moduleName = coreConfig.AppModuleName;
-    this.store = store;
-  }
-
-  var _proto2 = AppModel.prototype;
-
-  _proto2.onInit = function onInit() {
-    return {};
-  };
-
-  _proto2.onStartup = function onStartup() {
-    return;
-  };
-
-  _proto2.onActive = function onActive() {
-    return;
-  };
-
-  _proto2.onInactive = function onInactive() {
-    return;
-  };
-
-  _proto2.loadingState = function loadingState(_loadingState) {
-    return mergeState(this.store.getState(this.moduleName), _loadingState);
-  };
-
-  _proto2.error = function error(_error) {
-    if (_error.code === ErrorCodes.INIT_ERROR) {
-      return mergeState(this.store.getState(this.moduleName), {
-        initError: _error.message
-      });
+  _createClass(EmptyModel, [{
+    key: "state",
+    get: function get() {
+      return this.store.getState(this.moduleName);
     }
+  }]);
 
-    return this.store.getState(this.moduleName);
-  };
-
-  return AppModel;
-}(), (_applyDecoratedDescriptor(_class2.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "loadingState"), _class2.prototype), _applyDecoratedDescriptor(_class2.prototype, "error", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "error"), _class2.prototype)), _class2);
+  return EmptyModel;
+}(), _applyDecoratedDescriptor(_class$1.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class$1.prototype, "_initState"), _class$1.prototype), _class$1);
 function exportModuleFacade(moduleName, ModelClass, components, data) {
   Object.keys(components).forEach(function (key) {
     var component = components[key];
@@ -721,7 +691,7 @@ function exportModuleFacade(moduleName, ModelClass, components, data) {
   };
 }
 function setLoading(item, store, _moduleName, _groupName) {
-  var moduleName = _moduleName || coreConfig.AppModuleName;
+  var moduleName = _moduleName || coreConfig.StageModuleName;
   var groupName = _groupName || 'globalLoading';
   var key = moduleName + coreConfig.NSP + groupName;
   var loadings = store.loadingGroups;
@@ -767,20 +737,6 @@ function reducer(target, key, descriptor) {
   return target.descriptor === descriptor ? target : descriptor;
 }
 function effect(loadingKey) {
-  if (loadingKey === void 0) {
-    loadingKey = 'app.globalLoading';
-  }
-
-  var loadingForModuleName;
-  var loadingForGroupName;
-
-  if (loadingKey !== null) {
-    var _loadingKey$split = loadingKey.split('.');
-
-    loadingForModuleName = _loadingKey$split[0];
-    loadingForGroupName = _loadingKey$split[1];
-  }
-
   return function (target, key, descriptor) {
     if (!key && !descriptor) {
       key = target.key;
@@ -791,8 +747,21 @@ function effect(loadingKey) {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+    if (loadingKey !== null && !env.isServer) {
       var injectLoading = function injectLoading(store, curAction, effectPromise) {
+        var loadingForModuleName;
+        var loadingForGroupName;
+
+        if (loadingKey === undefined) {
+          loadingForModuleName = coreConfig.StageModuleName;
+          loadingForGroupName = 'globalLoading';
+        } else {
+          var _loadingKey$split = loadingKey.split('.');
+
+          loadingForModuleName = _loadingKey$split[0];
+          loadingForGroupName = _loadingKey$split[1];
+        }
+
         if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }
@@ -881,7 +850,7 @@ var preMiddleware = function preMiddleware(_ref) {
   var getStore = _ref.getStore;
   return function (next) {
     return function (action) {
-      if (action.type === "" + coreConfig.AppModuleName + coreConfig.NSP + ActionTypes.Error) {
+      if (action.type === getErrorActionType()) {
         var actionData = getActionData(action);
 
         if (isProcessedError(actionData[0])) {
@@ -895,19 +864,15 @@ var preMiddleware = function preMiddleware(_ref) {
           moduleName = _action$type$split[0],
           actionName = _action$type$split[1];
 
-      if (!moduleName || !actionName || moduleName !== coreConfig.AppModuleName && !coreConfig.ModuleGetter[moduleName]) {
-        return undefined;
-      }
-
-      if (env.isServer && actionName === ActionTypes.Loading) {
+      if (!moduleName || !actionName || !coreConfig.ModuleGetter[moduleName]) {
         return undefined;
       }
 
       var store = getStore();
       var state = store.getState();
 
-      if (!state[moduleName] && actionName !== ActionTypes.Init) {
-        return promiseCaseCallback(store.mount(moduleName, false), function () {
+      if (!state[moduleName] && action.type !== getInitActionType(moduleName)) {
+        return promiseCaseCallback(store.mount(moduleName, 'update'), function () {
           return next(action);
         });
       }
@@ -917,12 +882,12 @@ var preMiddleware = function preMiddleware(_ref) {
   };
 };
 var CoreRouter = function () {
-  function CoreRouter(location, action, nativeData) {
+  function CoreRouter(location, action, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
     this.location = location;
     this.action = action;
-    this.nativeData = nativeData;
+    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
@@ -997,15 +962,13 @@ function applyEffect(effectResult, store, model, action, dispatch, decorators) {
   });
 }
 
-injectActions(new AppModel(null));
 var Store = function () {
   function Store(sid, router) {
-    var _mergeState,
-        _this$mountedModels,
-        _this = this;
+    var _this = this;
 
-    this.state = void 0;
-    this.mountedModels = void 0;
+    this.state = coreConfig.StoreInitState();
+    this.injectedModels = {};
+    this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
     this.active = false;
@@ -1019,17 +982,6 @@ var Store = function () {
     this.loadingGroups = {};
     this.sid = sid;
     this.router = router;
-    var routeLocation = router.location,
-        routeAction = router.action;
-    var appState = {
-      routeAction: routeAction,
-      routeLocation: routeLocation,
-      globalLoading: 'Stop',
-      initError: ''
-    };
-    this.state = mergeState(coreConfig.StoreInitState(), (_mergeState = {}, _mergeState[coreConfig.AppModuleName] = appState, _mergeState));
-    var appModel = new AppModel(this);
-    this.mountedModels = (_this$mountedModels = {}, _this$mountedModels[coreConfig.AppModuleName] = appModel, _this$mountedModels);
     var middlewareAPI = {
       getStore: function getStore() {
         return _this;
@@ -1058,11 +1010,11 @@ var Store = function () {
   };
 
   _proto2.hotReplaceModel = function hotReplaceModel(moduleName, ModelClass) {
-    var orignModel = this.mountedModels[moduleName];
+    var orignModel = this.injectedModels[moduleName];
 
-    if (orignModel && !isPromise(orignModel)) {
+    if (orignModel) {
       var model = new ModelClass(moduleName, this);
-      this.mountedModels[moduleName] = model;
+      this.injectedModels[moduleName] = model;
 
       if (this.active) {
         orignModel.onInactive();
@@ -1075,93 +1027,74 @@ var Store = function () {
     return this.currentAction;
   };
 
-  _proto2.mountModule = function mountModule(moduleName, routeChanged) {
+  _proto2.mount = function mount(moduleName, env) {
     var _this2 = this;
 
-    var errorCallback = function errorCallback(err) {
-      delete mountedModels[moduleName];
-      throw err;
-    };
-
-    var initStateCallback = function initStateCallback(initState) {
-      mountedModels[moduleName] = model;
-
-      _this2.dispatch(moduleInitAction(moduleName, initState));
-
-      if (_this2.active) {
-        model.onActive();
-      }
-
-      return model.onStartup(routeChanged);
-    };
-
-    var getModuleCallback = function getModuleCallback(module) {
-      model = new module.ModelClass(moduleName, _this2);
-      var initStateOrPromise = model.onInit(routeChanged);
-
-      if (isPromise(initStateOrPromise)) {
-        return initStateOrPromise.then(initStateCallback, errorCallback);
-      } else {
-        return initStateCallback(initStateOrPromise);
-      }
-    };
-
-    var mountedModels = this.mountedModels;
-    var moduleOrPromise = getModule(moduleName);
-    var model = null;
-
-    if (isPromise(moduleOrPromise)) {
-      return moduleOrPromise.then(getModuleCallback, errorCallback);
-    } else {
-      var result = getModuleCallback(moduleOrPromise);
-
-      if (isPromise(result)) {
-        return result;
-      } else {
-        return model;
-      }
-    }
-  };
-
-  _proto2.mount = function mount(moduleName, routeChanged) {
     if (!coreConfig.ModuleGetter[moduleName]) {
       return;
     }
 
-    var mountedModels = this.mountedModels;
+    var mountedModules = this.mountedModules;
+    var injectedModels = this.injectedModels;
 
-    if (!mountedModels[moduleName]) {
-      mountedModels[moduleName] = this.mountModule(moduleName, routeChanged);
+    var errorCallback = function errorCallback(err) {
+      if (!_this2.state[moduleName]) {
+        delete mountedModules[moduleName];
+        delete injectedModels[moduleName];
+      }
+
+      throw err;
+    };
+
+    var getModuleCallback = function getModuleCallback(module) {
+      var model = new module.ModelClass(moduleName, _this2);
+      _this2.injectedModels[moduleName] = model;
+      return model.onMount(env);
+    };
+
+    if (!mountedModules[moduleName]) {
+      var _result;
+
+      try {
+        var moduleOrPromise = getModule(moduleName);
+        _result = promiseCaseCallback(moduleOrPromise, getModuleCallback);
+      } catch (err) {
+        errorCallback(err);
+      }
+
+      if (isPromise(_result)) {
+        mountedModules[moduleName] = _result.then(function () {
+          mountedModules[moduleName] = true;
+        }, errorCallback);
+      } else {
+        mountedModules[moduleName] = true;
+      }
     }
 
-    var result = mountedModels[moduleName];
-    return isPromise(result) ? result : undefined;
+    var result = mountedModules[moduleName];
+    return result === true ? undefined : result;
   };
 
   _proto2.setActive = function setActive() {
+    var _this3 = this;
+
     if (!this.active) {
       this.active = true;
-      var mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach(function (moduleName) {
-        var modelOrPromise = mountedModels[moduleName];
-
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onActive();
-        }
+      Object.keys(this.injectedModels).forEach(function (moduleName) {
+        var model = _this3.injectedModels[moduleName];
+        model.onActive();
       });
     }
   };
 
   _proto2.setInactive = function setInactive() {
+    var _this4 = this;
+
     if (this.active) {
       this.active = false;
-      var mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach(function (moduleName) {
-        var modelOrPromise = mountedModels[moduleName];
-
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onInactive();
-        }
+      Object.keys(this.injectedModels).forEach(function (moduleName) {
+        var model = _this4.injectedModels[moduleName];
+        model.onInactive();
       });
     }
   };
@@ -1199,7 +1132,7 @@ var Store = function () {
   };
 
   _proto2.subscribe = function subscribe(listener) {
-    var _this3 = this;
+    var _this5 = this;
 
     if (typeof listener !== 'function') {
       throw new Error('Expected the listener to be a function.');
@@ -1215,18 +1148,18 @@ var Store = function () {
 
       isSubscribed = false;
 
-      _this3.ensureCanMutateNextListeners();
+      _this5.ensureCanMutateNextListeners();
 
-      var index = _this3.nextListeners.indexOf(listener);
+      var index = _this5.nextListeners.indexOf(listener);
 
-      _this3.nextListeners.splice(index, 1);
+      _this5.nextListeners.splice(index, 1);
 
-      _this3.currentListeners = [];
+      _this5.currentListeners = [];
     };
   };
 
   _proto2.respondHandler = function respondHandler(action, isReducer) {
-    var _this4 = this;
+    var _this6 = this;
 
     var handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     var actionName = action.type;
@@ -1270,7 +1203,7 @@ var Store = function () {
 
       (_orderList = orderList).unshift.apply(_orderList, actionPriority);
 
-      var mountedModels = this.mountedModels;
+      var injectedModels = this.injectedModels;
       var implemented = {};
       orderList = orderList.filter(function (moduleName) {
         if (implemented[moduleName] || !handlers[moduleName]) {
@@ -1278,7 +1211,7 @@ var Store = function () {
         }
 
         implemented[moduleName] = true;
-        return mountedModels[moduleName] && !isPromise(mountedModels[moduleName]);
+        return injectedModels[moduleName];
       });
       logs.handers = orderList;
 
@@ -1288,7 +1221,7 @@ var Store = function () {
         var uncommittedState = this.uncommittedState = _extends$2({}, prevState);
 
         orderList.forEach(function (moduleName) {
-          var model = mountedModels[moduleName];
+          var model = injectedModels[moduleName];
           var handler = handlers[moduleName];
           var result = handler.apply(model, actionData);
 
@@ -1306,11 +1239,11 @@ var Store = function () {
         storeLogger(logs);
         var effectHandlers = [];
         orderList.forEach(function (moduleName) {
-          var model = mountedModels[moduleName];
+          var model = injectedModels[moduleName];
           var handler = handlers[moduleName];
-          _this4.currentAction = action;
+          _this6.currentAction = action;
           var result = handler.apply(model, actionData);
-          effectHandlers.push(applyEffect(toPromise(result), _this4, model, action, _this4.dispatch, handler.__decorators__));
+          effectHandlers.push(applyEffect(toPromise(result), _this6, model, action, _this6.dispatch, handler.__decorators__));
         });
         var task = effectHandlers.length === 1 ? effectHandlers[0] : Promise.all(effectHandlers);
         return task;
@@ -1320,7 +1253,7 @@ var Store = function () {
         devLogger(logs);
         storeLogger(logs);
       } else {
-        if (actionName === "" + coreConfig.AppModuleName + coreConfig.NSP + ActionTypes.Error) {
+        if (actionName === getErrorActionType()) {
           return Promise.reject(actionData);
         }
       }
@@ -1345,22 +1278,6 @@ function modelHotReplacement(moduleName, ModelClass) {
   }
 
   env.console.log("[HMR] @Elux Updated model: " + moduleName);
-}
-
-function _defineProperties(target, props) {
-  for (var i = 0; i < props.length; i++) {
-    var descriptor = props[i];
-    descriptor.enumerable = descriptor.enumerable || false;
-    descriptor.configurable = true;
-    if ("value" in descriptor) descriptor.writable = true;
-    Object.defineProperty(target, descriptor.key, descriptor);
-  }
-}
-
-function _createClass(Constructor, protoProps, staticProps) {
-  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-  if (staticProps) _defineProperties(Constructor, staticProps);
-  return Constructor;
 }
 
 var _class;
@@ -1402,10 +1319,6 @@ var BaseModel = (_class = function () {
 
   var _proto = BaseModel.prototype;
 
-  _proto.onStartup = function onStartup(routeChanged) {
-    return;
-  };
-
   _proto.onActive = function onActive() {
     return;
   };
@@ -1418,17 +1331,12 @@ var BaseModel = (_class = function () {
     return this.store.router;
   };
 
-  _proto.getState = function getState(type) {
+  _proto.getPrevState = function getPrevState() {
     var runtime = this.store.router.runtime;
-
-    if (type === 'previous') {
-      return runtime.prevState[this.moduleName];
-    } else {
-      return this.store.getState(this.moduleName);
-    }
+    return runtime.prevState[this.moduleName];
   };
 
-  _proto.getStoreState = function getStoreState(type) {
+  _proto.getRootState = function getRootState(type) {
     var runtime = this.store.router.runtime;
     var state;
 
@@ -1456,19 +1364,24 @@ var BaseModel = (_class = function () {
     return this.store.dispatch(action);
   };
 
-  _proto.initState = function initState(state) {
+  _proto._initState = function _initState(state) {
     return state;
   };
 
-  _proto.updateState = function updateState(subject, state) {
-    return mergeState(this.getState(), state);
+  _proto._updateState = function _updateState(subject, state) {
+    return mergeState(this.state, state);
   };
 
-  _proto.loadingState = function loadingState(_loadingState) {
-    return mergeState(this.getState(), _loadingState);
+  _proto._loadingState = function _loadingState(loadingState) {
+    return mergeState(this.state, loadingState);
   };
 
   _createClass(BaseModel, [{
+    key: "state",
+    get: function get() {
+      return this.store.getState(this.moduleName);
+    }
+  }, {
     key: "actions",
     get: function get() {
       return MetaData.moduleApiMap[this.moduleName].actions;
@@ -1476,7 +1389,7 @@ var BaseModel = (_class = function () {
   }]);
 
   return BaseModel;
-}(), (_applyDecoratedDescriptor(_class.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "loadingState"), _class.prototype)), _class);
+}(), (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
 
 function buildApp(ins, router) {
   var store = router.getCurrentPage().store;
@@ -1507,10 +1420,23 @@ function buildSSR(ins, router) {
           id = _ref2$id === void 0 ? 'root' : _ref2$id;
 
       return router.init({}).then(function () {
-        AppRender.toString(id, {
+        store.destroy();
+        var eluxContext = {
           router: router,
           documentHead: ''
-        }, ins, store);
+        };
+        return AppRender.toString(id, eluxContext, ins, store).then(function (html) {
+          var SSRTPL = coreConfig.SSRTPL,
+              SSRDataKey = coreConfig.SSRDataKey;
+          var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
+
+          if (match) {
+            var state = store.getState();
+            return SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + SSRDataKey + " = " + JSON.stringify(state) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
+          }
+
+          return html;
+        });
       });
     }
   });
@@ -2293,6 +2219,34 @@ try {
 
 var regenerator = runtime_1;
 
+var ErrorCodes = {
+  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
+};
+function nativeUrlToUrl(nativeUrl) {
+  var _nativeUrl$split = nativeUrl.split(/[?#]/),
+      _nativeUrl$split$ = _nativeUrl$split[0],
+      path = _nativeUrl$split$ === void 0 ? '' : _nativeUrl$split$,
+      _nativeUrl$split$2 = _nativeUrl$split[1],
+      search = _nativeUrl$split$2 === void 0 ? '' : _nativeUrl$split$2,
+      _nativeUrl$split$3 = _nativeUrl$split[2],
+      hash = _nativeUrl$split$3 === void 0 ? '' : _nativeUrl$split$3;
+
+  var pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
+  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+}
+function urlToNativeUrl(eluxUrl) {
+  var _eluxUrl$split = eluxUrl.split(/[?#]/),
+      _eluxUrl$split$ = _eluxUrl$split[0],
+      path = _eluxUrl$split$ === void 0 ? '' : _eluxUrl$split$,
+      _eluxUrl$split$2 = _eluxUrl$split[1],
+      search = _eluxUrl$split$2 === void 0 ? '' : _eluxUrl$split$2,
+      _eluxUrl$split$3 = _eluxUrl$split[2],
+      hash = _eluxUrl$split$3 === void 0 ? '' : _eluxUrl$split$3;
+
+  var pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
+  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+}
 function urlToLocation(url) {
   var _url$split = url.split(/[?#]/),
       _url$split$ = _url$split[0],
@@ -2337,7 +2291,7 @@ function locationToUrl(_ref) {
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
   return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
 }
-function toNativeLocation(location) {
+function locationToNativeLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.out(location.pathname);
   var url = location.url.replace(location.pathname, pathname);
   return _extends$2({}, location, {
@@ -2345,7 +2299,7 @@ function toNativeLocation(location) {
     url: url
   });
 }
-function toEluxLocation(location) {
+function nativeLocationToLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.in(location.pathname);
   var url = location.url.replace(location.pathname, pathname);
   return _extends$2({}, location, {
@@ -2355,19 +2309,19 @@ function toEluxLocation(location) {
 }
 function testChangeAction(location, routeAction) {
   return {
-    type: "" + coreConfig.AppModuleName + coreConfig.NSP + "testRouteChange",
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_testRouteChange",
     payload: [location, routeAction]
   };
 }
 function beforeChangeAction(location, routeAction) {
   return {
-    type: "" + coreConfig.AppModuleName + coreConfig.NSP + "beforeRouteChange",
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_beforeRouteChange",
     payload: [location, routeAction]
   };
 }
 function afterChangeAction(location, routeAction) {
   return {
-    type: "" + coreConfig.AppModuleName + coreConfig.NSP + "afterRouteChange",
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_afterRouteChange",
     payload: [location, routeAction]
   };
 }
@@ -2737,10 +2691,9 @@ var WindowStack = function (_HistoryStack2) {
 }(HistoryStack);
 
 var BaseNativeRouter = function () {
-  function BaseNativeRouter(nativeLocation, nativeData) {
+  function BaseNativeRouter(nativeRequest) {
     this.curTask = void 0;
-    this.nativeLocation = nativeLocation;
-    this.nativeData = nativeData;
+    this.nativeRequest = nativeRequest;
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -2760,7 +2713,7 @@ var BaseNativeRouter = function () {
   _proto.execute = function execute(method, location, key, backIndex) {
     var _this = this;
 
-    var result = this[method](toNativeLocation(location), key, backIndex);
+    var result = this[method](locationToNativeLocation(location), key, backIndex);
 
     if (result) {
       return new Promise(function (resolve, reject) {
@@ -2780,7 +2733,7 @@ var Router = function (_CoreRouter) {
   function Router(nativeRouter) {
     var _this2;
 
-    _this2 = _CoreRouter.call(this, toEluxLocation(urlToLocation(nativeRouter.nativeLocation.url || locationToUrl(nativeRouter.nativeLocation))), 'relaunch', nativeRouter.nativeData) || this;
+    _this2 = _CoreRouter.call(this, urlToLocation(nativeUrlToUrl(nativeRouter.nativeRequest.request.url)), 'relaunch', nativeRouter.nativeRequest) || this;
     _this2.curTask = void 0;
     _this2.taskList = [];
     _this2.windowStack = void 0;
@@ -2792,7 +2745,7 @@ var Router = function (_CoreRouter) {
         _this2.curTask = task;
         var onTaskComplete = _this2.onTaskComplete;
         env.setTimeout(function () {
-          return task().finally(onTaskComplete);
+          return task[0]().finally(onTaskComplete).then(task[1], task[2]);
         }, 0);
       } else {
         _this2.curTask = undefined;
@@ -2809,20 +2762,16 @@ var Router = function (_CoreRouter) {
   _proto2.addTask = function addTask(execute) {
     var _this3 = this;
 
-    if (env.isServer) {
-      return;
-    }
-
     return new Promise(function (resolve, reject) {
-      var task = function task() {
-        return setLoading(execute(), _this3.getCurrentPage().store).then(resolve, reject);
-      };
+      var task = [function () {
+        return setLoading(execute(), _this3.getCurrentPage().store);
+      }, resolve, reject];
 
       if (_this3.curTask) {
         _this3.taskList.push(task);
       } else {
         _this3.curTask = task;
-        task().finally(_this3.onTaskComplete);
+        task[0]().finally(_this3.onTaskComplete).then(task[1], task[2]);
       }
     });
   };
@@ -2879,60 +2828,12 @@ var Router = function (_CoreRouter) {
     return this.windowStack.getWindowPages();
   };
 
-  _proto2.init = function () {
-    var _init = _asyncToGenerator(regenerator.mark(function _callee(prevState) {
-      var store;
+  _proto2.mountStore = function () {
+    var _mountStore = _asyncToGenerator(regenerator.mark(function _callee(payload, prevStore, newStore, historyStore) {
+      var prevState;
       return regenerator.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
-            case 0:
-              this.runtime = {
-                timestamp: Date.now(),
-                payload: null,
-                prevState: prevState,
-                completed: false
-              };
-              store = this.getCurrentPage().store;
-              _context.prev = 2;
-              _context.next = 5;
-              return store.mount(coreConfig.StageModuleName, true);
-
-            case 5:
-              _context.next = 10;
-              break;
-
-            case 7:
-              _context.prev = 7;
-              _context.t0 = _context["catch"](2);
-              store.dispatch(errorAction({
-                code: ErrorCodes.INIT_ERROR,
-                message: _context.t0.message || _context.t0.toString()
-              }));
-
-            case 10:
-              this.runtime.completed = true;
-
-            case 11:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, this, [[2, 7]]);
-    }));
-
-    function init(_x) {
-      return _init.apply(this, arguments);
-    }
-
-    return init;
-  }();
-
-  _proto2.mountStore = function () {
-    var _mountStore = _asyncToGenerator(regenerator.mark(function _callee2(payload, prevStore, newStore, historyStore) {
-      var prevState;
-      return regenerator.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
             case 0:
               prevState = prevStore.getState();
               this.runtime = {
@@ -2943,47 +2844,126 @@ var Router = function (_CoreRouter) {
               };
 
               if (!(newStore === historyStore)) {
-                _context2.next = 5;
+                _context.next = 5;
                 break;
               }
 
-              this.runtime.completed = false;
-              return _context2.abrupt("return");
+              this.runtime.completed = true;
+              return _context.abrupt("return");
 
             case 5:
-              _context2.prev = 5;
-              _context2.next = 8;
-              return newStore.mount(coreConfig.StageModuleName, true);
+              _context.prev = 5;
+              _context.next = 8;
+              return newStore.mount(coreConfig.StageModuleName, 'route');
 
             case 8:
-              _context2.next = 13;
+              _context.next = 13;
               break;
 
             case 10:
-              _context2.prev = 10;
-              _context2.t0 = _context2["catch"](5);
-              newStore.dispatch(errorAction({
-                code: ErrorCodes.INIT_ERROR,
-                message: _context2.t0.message || _context2.t0.toString()
-              }));
+              _context.prev = 10;
+              _context.t0 = _context["catch"](5);
+              env.console.error(_context.t0);
 
             case 13:
-              this.runtime.completed = false;
+              this.runtime.completed = true;
 
             case 14:
             case "end":
-              return _context2.stop();
+              return _context.stop();
           }
         }
-      }, _callee2, this, [[5, 10]]);
+      }, _callee, this, [[5, 10]]);
     }));
 
-    function mountStore(_x2, _x3, _x4, _x5) {
+    function mountStore(_x, _x2, _x3, _x4) {
       return _mountStore.apply(this, arguments);
     }
 
     return mountStore;
   }();
+
+  _proto2.init = function init(prevState) {
+    var task = [this._init.bind(this, prevState), function () {
+      return undefined;
+    }, function () {
+      return undefined;
+    }];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  };
+
+  _proto2._init = function () {
+    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2(prevState) {
+      var store;
+      return regenerator.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              this.runtime = {
+                timestamp: Date.now(),
+                payload: null,
+                prevState: prevState,
+                completed: false
+              };
+              store = this.getCurrentPage().store;
+              _context2.prev = 2;
+              _context2.next = 5;
+              return store.mount(coreConfig.StageModuleName, 'init');
+
+            case 5:
+              _context2.next = 7;
+              return store.dispatch(testChangeAction(this.location, this.action));
+
+            case 7:
+              _context2.next = 15;
+              break;
+
+            case 9:
+              _context2.prev = 9;
+              _context2.t0 = _context2["catch"](2);
+
+              if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
+                _context2.next = 14;
+                break;
+              }
+
+              this.taskList = [];
+              throw _context2.t0;
+
+            case 14:
+              env.console.error(_context2.t0);
+
+            case 15:
+              this.runtime.completed = true;
+
+            case 16:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this, [[2, 9]]);
+    }));
+
+    function _init(_x5) {
+      return _init2.apply(this, arguments);
+    }
+
+    return _init;
+  }();
+
+  _proto2.redirectOnServer = function redirectOnServer(urlOrLocation) {
+    if (env.isServer) {
+      var url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      var nativeUrl = urlToNativeUrl(url);
+      var err = {
+        code: ErrorCodes.ROUTE_REDIRECT,
+        message: 'Route change in server is not allowed.',
+        detail: nativeUrl
+      };
+      throw err;
+    }
+  };
 
   _proto2.relaunch = function relaunch(urlOrLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
@@ -2998,6 +2978,7 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
   };
 
@@ -3088,6 +3069,7 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
   };
 
@@ -3177,6 +3159,7 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
   };
 
@@ -3289,12 +3272,15 @@ var Router = function (_CoreRouter) {
       return;
     }
 
+    this.redirectOnServer({
+      url: overflowRedirect || routeConfig.HomeUrl
+    });
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   };
 
   _proto2._back = function () {
     var _back2 = _asyncToGenerator(regenerator.mark(function _callee6(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
-      var action, _this$windowStack$tes3, record, overflow, index, url, location, prevStore, NotifyNativeRouter, pageStack, historyStore, newStore;
+      var action, _this$windowStack$tes3, record, overflow, index, url, err, location, prevStore, NotifyNativeRouter, pageStack, historyStore, newStore;
 
       return regenerator.wrap(function _callee6$(_context6) {
         while (1) {
@@ -3304,7 +3290,7 @@ var Router = function (_CoreRouter) {
               _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, target === 'window'), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
 
               if (!overflow) {
-                _context6.next = 6;
+                _context6.next = 7;
                 break;
               }
 
@@ -3312,30 +3298,32 @@ var Router = function (_CoreRouter) {
               this.relaunch({
                 url: url
               }, 'window');
-              throw {
+              err = {
                 code: ErrorCodes.ROUTE_BACK_OVERFLOW,
-                message: 'Overflowed on route backward.'
+                message: 'Overflowed on route backward.',
+                detail: stepOrKey
               };
+              throw setProcessedError(err, true);
 
-            case 6:
+            case 7:
               if (!(!index[0] && !index[1])) {
-                _context6.next = 8;
+                _context6.next = 9;
                 break;
               }
 
               throw 'Route backward invalid.';
 
-            case 8:
+            case 9:
               location = record.location;
               prevStore = this.getCurrentPage().store;
-              _context6.next = 12;
+              _context6.next = 13;
               return prevStore.dispatch(testChangeAction(location, action));
 
-            case 12:
-              _context6.next = 14;
+            case 13:
+              _context6.next = 15;
               return prevStore.dispatch(beforeChangeAction(location, action));
 
-            case 14:
+            case 15:
               this.location = location;
               this.action = action;
               NotifyNativeRouter = [];
@@ -3359,20 +3347,20 @@ var Router = function (_CoreRouter) {
                 pageStack.replaceStore(newStore);
               }
 
-              _context6.next = 25;
+              _context6.next = 26;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 25:
+            case 26:
               if (!(!_nativeCaller && NotifyNativeRouter.length)) {
-                _context6.next = 28;
+                _context6.next = 29;
                 break;
               }
 
-              _context6.next = 28;
+              _context6.next = 29;
               return this.nativeRouter.execute(action, location, record.key, index);
 
-            case 28:
-              _context6.next = 30;
+            case 29:
+              _context6.next = 31;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -3381,10 +3369,10 @@ var Router = function (_CoreRouter) {
                 windowChanged: !!index[0]
               });
 
-            case 30:
+            case 31:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 31:
+            case 32:
             case "end":
               return _context6.stop();
           }
@@ -4006,18 +3994,20 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(url) {
-  var _url$split = url.split('?'),
-      pathname = _url$split[0],
-      _url$split$ = _url$split[1],
-      search = _url$split$ === void 0 ? '' : _url$split$;
+function createServerHistory(nativeRequest) {
+  var _nativeRequest$reques = nativeRequest.request.url.split(/[?#]/),
+      pathname = _nativeRequest$reques[0],
+      _nativeRequest$reques2 = _nativeRequest$reques[1],
+      search = _nativeRequest$reques2 === void 0 ? '' : _nativeRequest$reques2,
+      _nativeRequest$reques3 = _nativeRequest$reques[2],
+      hash = _nativeRequest$reques3 === void 0 ? '' : _nativeRequest$reques3;
 
   return {
     push: function push() {
-      return undefined;
+      return;
     },
     replace: function replace() {
-      return undefined;
+      return;
     },
     block: function block() {
       return function () {
@@ -4027,7 +4017,7 @@ function createServerHistory(url) {
     location: {
       pathname: pathname,
       search: search,
-      hash: ''
+      hash: hash
     }
   };
 }
@@ -4035,10 +4025,10 @@ function createServerHistory(url) {
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter(history, nativeData) {
+  function BrowserNativeRouter(history, nativeRequest) {
     var _this;
 
-    _this = _BaseNativeRouter.call(this, history.location, nativeData) || this;
+    _this = _BaseNativeRouter.call(this, nativeRequest) || this;
     _this.unlistenHistory = void 0;
     _this.router = void 0;
     _this.history = history;
@@ -4066,34 +4056,22 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   var _proto = BrowserNativeRouter.prototype;
 
   _proto.push = function push(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   };
 
   _proto.replace = function replace(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   };
 
   _proto.back = function back(location, key, index) {
-    if (!env.isServer) {
-      this.history.replace(location);
-    }
-
+    this.history.replace(location);
     return false;
   };
 
@@ -4106,12 +4084,18 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
 function createClientRouter() {
   var history = createBrowserHistory();
-  var browserNativeRouter = new BrowserNativeRouter(history, {});
+  var nativeRequest = {
+    request: {
+      url: locationToUrl(history.location)
+    },
+    response: {}
+  };
+  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }
-function createServerRouter(url, nativeData) {
-  var history = createServerHistory(url);
-  var browserNativeRouter = new BrowserNativeRouter(history, nativeData);
+function createServerRouter(nativeRequest) {
+  var history = createServerHistory(nativeRequest);
+  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }
 
@@ -4517,23 +4501,23 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
       }, target);
     }
   }, [_onClick, disabled, to, router, action, target]);
-  var href = action !== 'back' ? to : '';
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
   props['to'] = to;
   disabled && (props['disabled'] = true);
-  href && (props['href'] = href);
+  var href = action !== 'back' ? to : '';
 
   if (href) {
-    return jsxRuntime.jsx("a", _extends$2({}, props, {
-      ref: ref
-    }));
+    href = urlToNativeUrl(href);
   } else {
-    return jsxRuntime.jsx("div", _extends$2({}, props, {
-      ref: ref
-    }));
+    href = '#';
   }
+
+  props['href'] = href;
+  return jsxRuntime.jsx("a", _extends$2({}, props, {
+    ref: ref
+  }));
 });
 
 setCoreConfig({
@@ -7683,8 +7667,8 @@ function createApp(appConfig) {
   var router = createClientRouter();
   return buildApp({}, router);
 }
-function createSSR(appConfig, url, nativeData) {
-  var router = createServerRouter(url, nativeData);
+function createSSR(appConfig, nativeRequest) {
+  var router = createServerRouter(nativeRequest);
   return buildSSR({}, router);
 }
 
@@ -7709,14 +7693,16 @@ exports.exportModule = exportModule;
 exports.exportView = exportView;
 exports.getApi = getApi;
 exports.isServer = isServer;
+exports.locationToNativeLocation = locationToNativeLocation;
 exports.locationToUrl = locationToUrl;
 exports.modelHotReplacement = modelHotReplacement;
+exports.nativeLocationToLocation = nativeLocationToLocation;
+exports.nativeUrlToUrl = nativeUrlToUrl;
 exports.patchActions = patchActions;
 exports.reducer = reducer;
 exports.setConfig = setConfig;
 exports.setLoading = setLoading;
 exports.shallowEqual = shallowEqual;
-exports.toEluxLocation = toEluxLocation;
-exports.toNativeLocation = toNativeLocation;
 exports.urlToLocation = urlToLocation;
+exports.urlToNativeUrl = urlToNativeUrl;
 exports.useSelector = useSelector;

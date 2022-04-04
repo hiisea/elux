@@ -15,6 +15,8 @@ var _react = _interopRequireWildcard(require("react"));
 
 var _core = require("@elux/core");
 
+var _route = require("@elux/route");
+
 var _jsxRuntime = require("react/jsx-runtime");
 
 var _excluded = ["onClick", "disabled", "to", "target", "action"];
@@ -42,23 +44,23 @@ var Link = _react.default.forwardRef(function (_ref, ref) {
       }, target);
     }
   }, [_onClick, disabled, to, router, action, target]);
-  var href = action !== 'back' ? to : '';
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
   props['to'] = to;
   disabled && (props['disabled'] = true);
-  href && (props['href'] = href);
+  var href = action !== 'back' ? to : '';
 
   if (href) {
-    return (0, _jsxRuntime.jsx)("a", (0, _extends2.default)({}, props, {
-      ref: ref
-    }));
+    href = (0, _route.urlToNativeUrl)(href);
   } else {
-    return (0, _jsxRuntime.jsx)("div", (0, _extends2.default)({}, props, {
-      ref: ref
-    }));
+    href = '#';
   }
+
+  props['href'] = href;
+  return (0, _jsxRuntime.jsx)("a", (0, _extends2.default)({}, props, {
+    ref: ref
+  }));
 });
 
 exports.Link = Link;

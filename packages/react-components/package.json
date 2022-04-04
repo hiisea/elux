@@ -37,7 +37,8 @@
     "react-dom": "^16.8.0 || ^17"
   },
   "dependencies": {
-    "@elux/core": "^1.2.0"
+    "@elux/core": "^1.2.0",
+    "@elux/route": "^1.2.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

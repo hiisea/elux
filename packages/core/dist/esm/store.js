@@ -4,8 +4,7 @@ import { promiseCaseCallback, toPromise, compose, isPromise } from './utils';
 import { MetaData, coreConfig, mergeState } from './basic';
 import { devLogger } from './devtools';
 import { getModule, injectActions } from './inject';
-import { ActionTypes, errorAction, moduleInitAction, isProcessedError, setProcessedError } from './actions';
-import { AppModel } from './module';
+import { errorAction, isProcessedError, setProcessedError, getErrorActionType, getInitActionType } from './actions';
 export function getActionData(action) {
   return Array.isArray(action.payload) ? action.payload : [];
 }
@@ -13,7 +12,7 @@ export var preMiddleware = function preMiddleware(_ref) {
   var getStore = _ref.getStore;
   return function (next) {
     return function (action) {
-      if (action.type === "" + coreConfig.AppModuleName + coreConfig.NSP + ActionTypes.Error) {
+      if (action.type === getErrorActionType()) {
         var actionData = getActionData(action);
 
         if (isProcessedError(actionData[0])) {
@@ -27,19 +26,15 @@ export var preMiddleware = function preMiddleware(_ref) {
           moduleName = _action$type$split[0],
           actionName = _action$type$split[1];
 
-      if (!moduleName || !actionName || moduleName !== coreConfig.AppModuleName && !coreConfig.ModuleGetter[moduleName]) {
-        return undefined;
-      }
-
-      if (env.isServer && actionName === ActionTypes.Loading) {
+      if (!moduleName || !actionName || !coreConfig.ModuleGetter[moduleName]) {
         return undefined;
       }
 
       var store = getStore();
       var state = store.getState();
 
-      if (!state[moduleName] && actionName !== ActionTypes.Init) {
-        return promiseCaseCallback(store.mount(moduleName, false), function () {
+      if (!state[moduleName] && action.type !== getInitActionType(moduleName)) {
+        return promiseCaseCallback(store.mount(moduleName, 'update'), function () {
           return next(action);
         });
       }
@@ -49,12 +44,12 @@ export var preMiddleware = function preMiddleware(_ref) {
   };
 };
 export var CoreRouter = function () {
-  function CoreRouter(location, action, nativeData) {
+  function CoreRouter(location, action, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
     this.location = location;
     this.action = action;
-    this.nativeData = nativeData;
+    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
@@ -129,15 +124,13 @@ function applyEffect(effectResult, store, model, action, dispatch, decorators) {
   });
 }
 
-injectActions(new AppModel(null));
 export var Store = function () {
   function Store(sid, router) {
-    var _mergeState,
-        _this$mountedModels,
-        _this = this;
+    var _this = this;
 
-    this.state = void 0;
-    this.mountedModels = void 0;
+    this.state = coreConfig.StoreInitState();
+    this.injectedModels = {};
+    this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
     this.active = false;
@@ -151,17 +144,6 @@ export var Store = function () {
     this.loadingGroups = {};
     this.sid = sid;
     this.router = router;
-    var routeLocation = router.location,
-        routeAction = router.action;
-    var appState = {
-      routeAction: routeAction,
-      routeLocation: routeLocation,
-      globalLoading: 'Stop',
-      initError: ''
-    };
-    this.state = mergeState(coreConfig.StoreInitState(), (_mergeState = {}, _mergeState[coreConfig.AppModuleName] = appState, _mergeState));
-    var appModel = new AppModel(this);
-    this.mountedModels = (_this$mountedModels = {}, _this$mountedModels[coreConfig.AppModuleName] = appModel, _this$mountedModels);
     var middlewareAPI = {
       getStore: function getStore() {
         return _this;
@@ -190,11 +172,11 @@ export var Store = function () {
   };
 
   _proto2.hotReplaceModel = function hotReplaceModel(moduleName, ModelClass) {
-    var orignModel = this.mountedModels[moduleName];
+    var orignModel = this.injectedModels[moduleName];
 
-    if (orignModel && !isPromise(orignModel)) {
+    if (orignModel) {
       var model = new ModelClass(moduleName, this);
-      this.mountedModels[moduleName] = model;
+      this.injectedModels[moduleName] = model;
 
       if (this.active) {
         orignModel.onInactive();
@@ -207,93 +189,74 @@ export var Store = function () {
     return this.currentAction;
   };
 
-  _proto2.mountModule = function mountModule(moduleName, routeChanged) {
+  _proto2.mount = function mount(moduleName, env) {
     var _this2 = this;
 
-    var errorCallback = function errorCallback(err) {
-      delete mountedModels[moduleName];
-      throw err;
-    };
-
-    var initStateCallback = function initStateCallback(initState) {
-      mountedModels[moduleName] = model;
-
-      _this2.dispatch(moduleInitAction(moduleName, initState));
-
-      if (_this2.active) {
-        model.onActive();
-      }
-
-      return model.onStartup(routeChanged);
-    };
-
-    var getModuleCallback = function getModuleCallback(module) {
-      model = new module.ModelClass(moduleName, _this2);
-      var initStateOrPromise = model.onInit(routeChanged);
-
-      if (isPromise(initStateOrPromise)) {
-        return initStateOrPromise.then(initStateCallback, errorCallback);
-      } else {
-        return initStateCallback(initStateOrPromise);
-      }
-    };
-
-    var mountedModels = this.mountedModels;
-    var moduleOrPromise = getModule(moduleName);
-    var model = null;
-
-    if (isPromise(moduleOrPromise)) {
-      return moduleOrPromise.then(getModuleCallback, errorCallback);
-    } else {
-      var result = getModuleCallback(moduleOrPromise);
-
-      if (isPromise(result)) {
-        return result;
-      } else {
-        return model;
-      }
-    }
-  };
-
-  _proto2.mount = function mount(moduleName, routeChanged) {
     if (!coreConfig.ModuleGetter[moduleName]) {
       return;
     }
 
-    var mountedModels = this.mountedModels;
+    var mountedModules = this.mountedModules;
+    var injectedModels = this.injectedModels;
 
-    if (!mountedModels[moduleName]) {
-      mountedModels[moduleName] = this.mountModule(moduleName, routeChanged);
+    var errorCallback = function errorCallback(err) {
+      if (!_this2.state[moduleName]) {
+        delete mountedModules[moduleName];
+        delete injectedModels[moduleName];
+      }
+
+      throw err;
+    };
+
+    var getModuleCallback = function getModuleCallback(module) {
+      var model = new module.ModelClass(moduleName, _this2);
+      _this2.injectedModels[moduleName] = model;
+      return model.onMount(env);
+    };
+
+    if (!mountedModules[moduleName]) {
+      var _result;
+
+      try {
+        var moduleOrPromise = getModule(moduleName);
+        _result = promiseCaseCallback(moduleOrPromise, getModuleCallback);
+      } catch (err) {
+        errorCallback(err);
+      }
+
+      if (isPromise(_result)) {
+        mountedModules[moduleName] = _result.then(function () {
+          mountedModules[moduleName] = true;
+        }, errorCallback);
+      } else {
+        mountedModules[moduleName] = true;
+      }
     }
 
-    var result = mountedModels[moduleName];
-    return isPromise(result) ? result : undefined;
+    var result = mountedModules[moduleName];
+    return result === true ? undefined : result;
   };
 
   _proto2.setActive = function setActive() {
+    var _this3 = this;
+
     if (!this.active) {
       this.active = true;
-      var mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach(function (moduleName) {
-        var modelOrPromise = mountedModels[moduleName];
-
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onActive();
-        }
+      Object.keys(this.injectedModels).forEach(function (moduleName) {
+        var model = _this3.injectedModels[moduleName];
+        model.onActive();
       });
     }
   };
 
   _proto2.setInactive = function setInactive() {
+    var _this4 = this;
+
     if (this.active) {
       this.active = false;
-      var mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach(function (moduleName) {
-        var modelOrPromise = mountedModels[moduleName];
-
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onInactive();
-        }
+      Object.keys(this.injectedModels).forEach(function (moduleName) {
+        var model = _this4.injectedModels[moduleName];
+        model.onInactive();
       });
     }
   };
@@ -331,7 +294,7 @@ export var Store = function () {
   };
 
   _proto2.subscribe = function subscribe(listener) {
-    var _this3 = this;
+    var _this5 = this;
 
     if (typeof listener !== 'function') {
       throw new Error('Expected the listener to be a function.');
@@ -347,18 +310,18 @@ export var Store = function () {
 
       isSubscribed = false;
 
-      _this3.ensureCanMutateNextListeners();
+      _this5.ensureCanMutateNextListeners();
 
-      var index = _this3.nextListeners.indexOf(listener);
+      var index = _this5.nextListeners.indexOf(listener);
 
-      _this3.nextListeners.splice(index, 1);
+      _this5.nextListeners.splice(index, 1);
 
-      _this3.currentListeners = [];
+      _this5.currentListeners = [];
     };
   };
 
   _proto2.respondHandler = function respondHandler(action, isReducer) {
-    var _this4 = this;
+    var _this6 = this;
 
     var handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
     var actionName = action.type;
@@ -402,7 +365,7 @@ export var Store = function () {
 
       (_orderList = orderList).unshift.apply(_orderList, actionPriority);
 
-      var mountedModels = this.mountedModels;
+      var injectedModels = this.injectedModels;
       var implemented = {};
       orderList = orderList.filter(function (moduleName) {
         if (implemented[moduleName] || !handlers[moduleName]) {
@@ -410,7 +373,7 @@ export var Store = function () {
         }
 
         implemented[moduleName] = true;
-        return mountedModels[moduleName] && !isPromise(mountedModels[moduleName]);
+        return injectedModels[moduleName];
       });
       logs.handers = orderList;
 
@@ -420,7 +383,7 @@ export var Store = function () {
         var uncommittedState = this.uncommittedState = _extends({}, prevState);
 
         orderList.forEach(function (moduleName) {
-          var model = mountedModels[moduleName];
+          var model = injectedModels[moduleName];
           var handler = handlers[moduleName];
           var result = handler.apply(model, actionData);
 
@@ -438,11 +401,11 @@ export var Store = function () {
         storeLogger(logs);
         var effectHandlers = [];
         orderList.forEach(function (moduleName) {
-          var model = mountedModels[moduleName];
+          var model = injectedModels[moduleName];
           var handler = handlers[moduleName];
-          _this4.currentAction = action;
+          _this6.currentAction = action;
           var result = handler.apply(model, actionData);
-          effectHandlers.push(applyEffect(toPromise(result), _this4, model, action, _this4.dispatch, handler.__decorators__));
+          effectHandlers.push(applyEffect(toPromise(result), _this6, model, action, _this6.dispatch, handler.__decorators__));
         });
         var task = effectHandlers.length === 1 ? effectHandlers[0] : Promise.all(effectHandlers);
         return task;
@@ -452,7 +415,7 @@ export var Store = function () {
         devLogger(logs);
         storeLogger(logs);
       } else {
-        if (actionName === "" + coreConfig.AppModuleName + coreConfig.NSP + ActionTypes.Error) {
+        if (actionName === getErrorActionType()) {
           return Promise.reject(actionData);
         }
       }

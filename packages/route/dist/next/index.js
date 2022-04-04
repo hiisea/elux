@@ -1,12 +1,11 @@
-import { CoreRouter, Store, ErrorCodes, deepClone, coreConfig, setLoading, errorAction, env } from '@elux/core';
-import { urlToLocation, testChangeAction, beforeChangeAction, afterChangeAction, routeConfig, locationToUrl, toNativeLocation, toEluxLocation } from './basic';
+import { CoreRouter, Store, deepClone, coreConfig, setLoading, setProcessedError, env } from '@elux/core';
+import { ErrorCodes, urlToLocation, testChangeAction, beforeChangeAction, afterChangeAction, routeConfig, urlToNativeUrl, locationToUrl, nativeUrlToUrl, locationToNativeLocation } from './basic';
 import { WindowStack, PageStack, RouteRecord } from './history';
-export { setRouteConfig, routeConfig, locationToUrl, urlToLocation, toNativeLocation, toEluxLocation } from './basic';
+export { ErrorCodes, setRouteConfig, routeConfig, locationToUrl, urlToLocation, locationToNativeLocation, nativeLocationToLocation, urlToNativeUrl, nativeUrlToUrl } from './basic';
 export class BaseNativeRouter {
-  constructor(nativeLocation, nativeData) {
+  constructor(nativeRequest) {
     this.curTask = void 0;
-    this.nativeLocation = nativeLocation;
-    this.nativeData = nativeData;
+    this.nativeRequest = nativeRequest;
   }
 
   onSuccess(key) {
@@ -22,7 +21,7 @@ export class BaseNativeRouter {
   }
 
   execute(method, location, key, backIndex) {
-    const result = this[method](toNativeLocation(location), key, backIndex);
+    const result = this[method](locationToNativeLocation(location), key, backIndex);
 
     if (result) {
       return new Promise((resolve, reject) => {
@@ -37,7 +36,7 @@ export class BaseNativeRouter {
 }
 export class Router extends CoreRouter {
   constructor(nativeRouter) {
-    super(toEluxLocation(urlToLocation(nativeRouter.nativeLocation.url || locationToUrl(nativeRouter.nativeLocation))), 'relaunch', nativeRouter.nativeData);
+    super(urlToLocation(nativeUrlToUrl(nativeRouter.nativeRequest.request.url)), 'relaunch', nativeRouter.nativeRequest);
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -48,7 +47,7 @@ export class Router extends CoreRouter {
       if (task) {
         this.curTask = task;
         const onTaskComplete = this.onTaskComplete;
-        env.setTimeout(() => task().finally(onTaskComplete), 0);
+        env.setTimeout(() => task[0]().finally(onTaskComplete).then(task[1], task[2]), 0);
       } else {
         this.curTask = undefined;
       }
@@ -59,18 +58,14 @@ export class Router extends CoreRouter {
   }
 
   addTask(execute) {
-    if (env.isServer) {
-      return;
-    }
-
     return new Promise((resolve, reject) => {
-      const task = () => setLoading(execute(), this.getCurrentPage().store).then(resolve, reject);
+      const task = [() => setLoading(execute(), this.getCurrentPage().store), resolve, reject];
 
       if (this.curTask) {
         this.taskList.push(task);
       } else {
         this.curTask = task;
-        task().finally(this.onTaskComplete);
+        task[0]().finally(this.onTaskComplete).then(task[1], task[2]);
       }
     });
   }
@@ -125,27 +120,6 @@ export class Router extends CoreRouter {
     return this.windowStack.getWindowPages();
   }
 
-  async init(prevState) {
-    this.runtime = {
-      timestamp: Date.now(),
-      payload: null,
-      prevState,
-      completed: false
-    };
-    const store = this.getCurrentPage().store;
-
-    try {
-      await store.mount(coreConfig.StageModuleName, true);
-    } catch (error) {
-      store.dispatch(errorAction({
-        code: ErrorCodes.INIT_ERROR,
-        message: error.message || error.toString()
-      }));
-    }
-
-    this.runtime.completed = true;
-  }
-
   async mountStore(payload, prevStore, newStore, historyStore) {
     const prevState = prevStore.getState();
     this.runtime = {
@@ -156,23 +130,64 @@ export class Router extends CoreRouter {
     };
 
     if (newStore === historyStore) {
-      this.runtime.completed = false;
+      this.runtime.completed = true;
       return;
     }
 
     try {
-      await newStore.mount(coreConfig.StageModuleName, true);
-    } catch (error) {
-      newStore.dispatch(errorAction({
-        code: ErrorCodes.INIT_ERROR,
-        message: error.message || error.toString()
-      }));
+      await newStore.mount(coreConfig.StageModuleName, 'route');
+    } catch (err) {
+      env.console.error(err);
     }
 
-    this.runtime.completed = false;
+    this.runtime.completed = true;
+  }
+
+  init(prevState) {
+    const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  }
+
+  async _init(prevState) {
+    this.runtime = {
+      timestamp: Date.now(),
+      payload: null,
+      prevState,
+      completed: false
+    };
+    const store = this.getCurrentPage().store;
+
+    try {
+      await store.mount(coreConfig.StageModuleName, 'init');
+      await store.dispatch(testChangeAction(this.location, this.action));
+    } catch (err) {
+      if (err.code === ErrorCodes.ROUTE_REDIRECT) {
+        this.taskList = [];
+        throw err;
+      }
+
+      env.console.error(err);
+    }
+
+    this.runtime.completed = true;
+  }
+
+  redirectOnServer(urlOrLocation) {
+    if (env.isServer) {
+      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const nativeUrl = urlToNativeUrl(url);
+      const err = {
+        code: ErrorCodes.ROUTE_REDIRECT,
+        message: 'Route change in server is not allowed.',
+        detail: nativeUrl
+      };
+      throw err;
+    }
   }
 
   relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
   }
 
@@ -214,6 +229,7 @@ export class Router extends CoreRouter {
   }
 
   replace(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
   }
 
@@ -254,6 +270,7 @@ export class Router extends CoreRouter {
   }
 
   push(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
   }
 
@@ -302,6 +319,9 @@ export class Router extends CoreRouter {
       return;
     }
 
+    this.redirectOnServer({
+      url: overflowRedirect || routeConfig.HomeUrl
+    });
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   }
 
@@ -318,10 +338,12 @@ export class Router extends CoreRouter {
       this.relaunch({
         url
       }, 'window');
-      throw {
+      const err = {
         code: ErrorCodes.ROUTE_BACK_OVERFLOW,
-        message: 'Overflowed on route backward.'
+        message: 'Overflowed on route backward.',
+        detail: stepOrKey
       };
+      throw setProcessedError(err, true);
     }
 
     if (!index[0] && !index[1]) {

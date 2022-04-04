@@ -1,35 +1,48 @@
 import {
+  ActionError,
   Location,
   RouteTarget,
   IRouteRecord,
   CoreRouter,
   Store,
   StoreState,
-  ErrorCodes,
+  NativeRequest,
   deepClone,
   coreConfig,
   setLoading,
-  errorAction,
+  setProcessedError,
   env,
 } from '@elux/core';
 import {
+  ErrorCodes,
   urlToLocation,
   testChangeAction,
   beforeChangeAction,
   afterChangeAction,
   routeConfig,
+  urlToNativeUrl,
   locationToUrl,
-  toNativeLocation,
-  toEluxLocation,
+  nativeUrlToUrl,
+  locationToNativeLocation,
 } from './basic';
 import {WindowStack, PageStack, RouteRecord} from './history';
 
-export {setRouteConfig, routeConfig, locationToUrl, urlToLocation, toNativeLocation, toEluxLocation} from './basic';
+export {
+  ErrorCodes,
+  setRouteConfig,
+  routeConfig,
+  locationToUrl,
+  urlToLocation,
+  locationToNativeLocation,
+  nativeLocationToLocation,
+  urlToNativeUrl,
+  nativeUrlToUrl,
+} from './basic';
 
 export abstract class BaseNativeRouter {
   protected curTask?: {resolve: () => void; reject: () => void};
 
-  constructor(public readonly nativeLocation: Partial<Location>, public readonly nativeData: unknown) {}
+  constructor(public readonly nativeRequest: NativeRequest) {}
 
   // 只有当native不处理时返回false，返回true将依赖onSuccess和onError来关闭task
   protected abstract push(nativeLocation: Location, key: string): boolean;
@@ -49,7 +62,7 @@ export abstract class BaseNativeRouter {
     //return key !== this.eluxRouter.routeState.key;
   }
   public execute(method: 'relaunch' | 'push' | 'replace' | 'back', location: Location, key: string, backIndex?: number[]): void | Promise<void> {
-    const result: boolean = this[method as string](toNativeLocation(location), key, backIndex);
+    const result: boolean = this[method as string](locationToNativeLocation(location), key, backIndex);
     if (result) {
       return new Promise((resolve, reject) => {
         this.curTask = {resolve, reject};
@@ -58,9 +71,11 @@ export abstract class BaseNativeRouter {
   }
 }
 
+type RouteTask = [() => Promise<void>, (value: void) => void, (reason?: any) => void];
+
 export class Router extends CoreRouter {
-  private curTask?: () => Promise<void>;
-  private taskList: Array<() => Promise<void>> = [];
+  private curTask?: RouteTask;
+  private taskList: RouteTask[] = [];
   private readonly windowStack: WindowStack;
 
   private onTaskComplete = () => {
@@ -68,32 +83,37 @@ export class Router extends CoreRouter {
     if (task) {
       this.curTask = task;
       const onTaskComplete = this.onTaskComplete;
-      env.setTimeout(() => task().finally(onTaskComplete), 0);
+      env.setTimeout(() => task[0]().finally(onTaskComplete).then(task[1], task[2]), 0);
     } else {
       this.curTask = undefined;
     }
   };
 
   constructor(private nativeRouter: BaseNativeRouter) {
-    super(
-      toEluxLocation(urlToLocation(nativeRouter.nativeLocation.url || locationToUrl(nativeRouter.nativeLocation))),
-      'relaunch',
-      nativeRouter.nativeData
-    );
+    super(urlToLocation(nativeUrlToUrl(nativeRouter.nativeRequest.request.url)), 'relaunch', nativeRouter.nativeRequest);
     this.windowStack = new WindowStack(this.location, new Store(0, this));
   }
 
+  // private addTask(execute: () => Promise<void>): void | Promise<void> {
+  //   return new Promise((resolve, reject) => {
+  //     const task = () => setLoading(execute(), this.getCurrentPage().store).then(resolve, reject);
+  //     if (this.curTask) {
+  //       this.taskList.push(task);
+  //     } else {
+  //       this.curTask = task;
+  //       task().finally(this.onTaskComplete);
+  //     }
+  //   });
+  // }
+
   private addTask(execute: () => Promise<void>): void | Promise<void> {
-    if (env.isServer) {
-      return;
-    }
     return new Promise((resolve, reject) => {
-      const task = () => setLoading(execute(), this.getCurrentPage().store).then(resolve, reject);
+      const task: RouteTask = [() => setLoading(execute(), this.getCurrentPage().store), resolve, reject];
       if (this.curTask) {
         this.taskList.push(task);
       } else {
         this.curTask = task;
-        task().finally(this.onTaskComplete);
+        task[0]().finally(this.onTaskComplete).then(task[1], task[2]);
       }
     });
   }
@@ -128,17 +148,6 @@ export class Router extends CoreRouter {
     return this.windowStack.getWindowPages();
   }
 
-  public async init(prevState: StoreState): Promise<void> {
-    this.runtime = {timestamp: Date.now(), payload: null, prevState, completed: false};
-    const store = this.getCurrentPage().store;
-    try {
-      await store.mount(coreConfig.StageModuleName, true);
-    } catch (error) {
-      store.dispatch(errorAction({code: ErrorCodes.INIT_ERROR, message: error.message || error.toString()}));
-    }
-    this.runtime.completed = true;
-  }
-
   private async mountStore(payload: unknown, prevStore: Store, newStore: Store, historyStore?: Store): Promise<void> {
     const prevState = prevStore.getState();
     this.runtime = {
@@ -148,18 +157,49 @@ export class Router extends CoreRouter {
       completed: false,
     };
     if (newStore === historyStore) {
-      this.runtime.completed = false;
+      this.runtime.completed = true;
       return;
     }
     try {
-      await newStore.mount(coreConfig.StageModuleName, true);
-    } catch (error) {
-      newStore.dispatch(errorAction({code: ErrorCodes.INIT_ERROR, message: error.message || error.toString()}));
+      await newStore.mount(coreConfig.StageModuleName, 'route');
+    } catch (err) {
+      env.console.error(err);
     }
-    this.runtime.completed = false;
+    this.runtime.completed = true;
   }
 
+  public init(prevState: StoreState): Promise<void> {
+    const task: RouteTask = [this._init.bind(this, prevState), () => undefined, () => undefined];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  }
+
+  private async _init(prevState: StoreState) {
+    this.runtime = {timestamp: Date.now(), payload: null, prevState, completed: false};
+    const store = this.getCurrentPage().store;
+    try {
+      await store.mount(coreConfig.StageModuleName, 'init');
+      await store.dispatch(testChangeAction(this.location, this.action));
+    } catch (err) {
+      if (err.code === ErrorCodes.ROUTE_REDIRECT) {
+        this.taskList = [];
+        throw err;
+      }
+      env.console.error(err);
+    }
+    this.runtime.completed = true;
+  }
+
+  private redirectOnServer(urlOrLocation: Partial<Location>) {
+    if (env.isServer) {
+      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const nativeUrl = urlToNativeUrl(url);
+      const err: ActionError = {code: ErrorCodes.ROUTE_REDIRECT, message: 'Route change in server is not allowed.', detail: nativeUrl};
+      throw err;
+    }
+  }
   relaunch(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): void | Promise<void> {
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
   }
 
@@ -191,6 +231,7 @@ export class Router extends CoreRouter {
   }
 
   replace(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): void | Promise<void> {
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
   }
 
@@ -221,6 +262,7 @@ export class Router extends CoreRouter {
   }
 
   push(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): void | Promise<void> {
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
   }
 
@@ -264,6 +306,7 @@ export class Router extends CoreRouter {
     if (!stepOrKey) {
       return;
     }
+    this.redirectOnServer({url: overflowRedirect || routeConfig.HomeUrl});
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   }
 
@@ -273,7 +316,8 @@ export class Router extends CoreRouter {
     if (overflow) {
       const url = overflowRedirect || routeConfig.HomeUrl;
       this.relaunch({url}, 'window');
-      throw {code: ErrorCodes.ROUTE_BACK_OVERFLOW, message: 'Overflowed on route backward.'};
+      const err: ActionError = {code: ErrorCodes.ROUTE_BACK_OVERFLOW, message: 'Overflowed on route backward.', detail: stepOrKey};
+      throw setProcessedError(err, true);
     }
     if (!index[0] && !index[1]) {
       throw 'Route backward invalid.';

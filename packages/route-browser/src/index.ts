@@ -1,5 +1,5 @@
-import {Router, BaseNativeRouter, setRouteConfig, routeConfig} from '@elux/route';
-import {env, Location, UNListener} from '@elux/core';
+import {Router, BaseNativeRouter, setRouteConfig, routeConfig, locationToUrl} from '@elux/route';
+import {env, Location, UNListener, NativeRequest} from '@elux/core';
 import {createBrowserHistory} from 'history';
 
 setRouteConfig({NotifyNativeRouter: {window: true, page: true}});
@@ -11,19 +11,19 @@ interface IHistory {
   location: {pathname: string; search: string; hash: string};
 }
 
-function createServerHistory(url: string): IHistory {
-  const [pathname, search = ''] = url.split('?');
+function createServerHistory(nativeRequest: NativeRequest): IHistory {
+  const [pathname, search = '', hash = ''] = nativeRequest.request.url.split(/[?#]/);
   return {
     push() {
-      return undefined;
+      return;
     },
     replace() {
-      return undefined;
+      return;
     },
     block() {
       return () => undefined;
     },
-    location: {pathname, search, hash: ''},
+    location: {pathname, search, hash},
   };
 }
 
@@ -31,8 +31,8 @@ class BrowserNativeRouter extends BaseNativeRouter {
   private unlistenHistory: UNListener | undefined;
   public router: Router;
 
-  constructor(private history: IHistory, nativeData: any) {
-    super(history.location, nativeData);
+  constructor(private history: IHistory, nativeRequest: NativeRequest) {
+    super(nativeRequest);
     this.router = new Router(this);
     const {window, page} = routeConfig.NotifyNativeRouter;
     if (window || page) {
@@ -48,30 +48,22 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   protected push(location: Location, key: string): boolean {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
+    this.history.push(location);
     return false;
   }
 
   protected replace(location: Location, key: string): boolean {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
+    this.history.push(location);
     return false;
   }
 
   protected relaunch(location: Location, key: string): boolean {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
+    this.history.push(location);
     return false;
   }
 
   protected back(location: Location, key: string, index: [number, number]): boolean {
-    if (!env.isServer) {
-      this.history.replace(location);
-    }
+    this.history.replace(location);
     return false;
   }
 
@@ -82,11 +74,15 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
 export function createClientRouter(): Router {
   const history: IHistory = createBrowserHistory();
-  const browserNativeRouter = new BrowserNativeRouter(history, {});
+  const nativeRequest: NativeRequest = {
+    request: {url: locationToUrl(history.location)},
+    response: {},
+  };
+  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }
-export function createServerRouter(url: string, nativeData: any): Router {
-  const history: IHistory = createServerHistory(url);
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeData);
+export function createServerRouter(nativeRequest: NativeRequest): Router {
+  const history: IHistory = createServerHistory(nativeRequest);
+  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }

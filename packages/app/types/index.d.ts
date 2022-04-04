@@ -1,7 +1,7 @@
 import { ModuleGetter, StoreMiddleware, StoreLogger } from '@elux/core';
-export { errorAction, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, getApi, EmptyModel, BaseModel, ErrorCodes, } from '@elux/core';
-export type { LoadingState, Facade, API, Dispatch, IStore, IRouter, StoreState, Location, StoreMiddleware, StoreLogger, CommonModule, CommonModel, Action, ActionError, RouteAction, RouteTarget, RouteRuntime, } from '@elux/core';
-export { locationToUrl, urlToLocation, toNativeLocation, toEluxLocation } from '@elux/route';
+export { errorAction, env, effect, reducer, setLoading, effectLogger, isServer, deepMerge, exportModule, exportView, exportComponent, modelHotReplacement, getApi, EmptyModel, BaseModel, } from '@elux/core';
+export type { LoadingState, Facade, API, Dispatch, IStore, IRouter, StoreState, Location, NativeRequest, StoreMiddleware, StoreLogger, CommonModule, CommonModel, Action, ActionError, RouteAction, RouteTarget, RouteRuntime, } from '@elux/core';
+export { ErrorCodes, locationToUrl, urlToLocation, locationToNativeLocation, nativeLocationToLocation, urlToNativeUrl, nativeUrlToUrl, } from '@elux/route';
 /*** @public */
 export declare type ComputedStore<T> = {
     [K in keyof T]-?: () => T[K];

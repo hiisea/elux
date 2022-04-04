@@ -3,15 +3,14 @@ import { promiseCaseCallback, toPromise, compose, isPromise } from './utils';
 import { MetaData, coreConfig, mergeState } from './basic';
 import { devLogger } from './devtools';
 import { getModule, injectActions } from './inject';
-import { ActionTypes, errorAction, moduleInitAction, isProcessedError, setProcessedError } from './actions';
-import { AppModel } from './module';
+import { errorAction, isProcessedError, setProcessedError, getErrorActionType, getInitActionType } from './actions';
 export function getActionData(action) {
   return Array.isArray(action.payload) ? action.payload : [];
 }
 export const preMiddleware = ({
   getStore
 }) => next => action => {
-  if (action.type === `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`) {
+  if (action.type === getErrorActionType()) {
     const actionData = getActionData(action);
 
     if (isProcessedError(actionData[0])) {
@@ -23,30 +22,26 @@ export const preMiddleware = ({
 
   const [moduleName, actionName] = action.type.split(coreConfig.NSP);
 
-  if (!moduleName || !actionName || moduleName !== coreConfig.AppModuleName && !coreConfig.ModuleGetter[moduleName]) {
-    return undefined;
-  }
-
-  if (env.isServer && actionName === ActionTypes.Loading) {
+  if (!moduleName || !actionName || !coreConfig.ModuleGetter[moduleName]) {
     return undefined;
   }
 
   const store = getStore();
   const state = store.getState();
 
-  if (!state[moduleName] && actionName !== ActionTypes.Init) {
-    return promiseCaseCallback(store.mount(moduleName, false), () => next(action));
+  if (!state[moduleName] && action.type !== getInitActionType(moduleName)) {
+    return promiseCaseCallback(store.mount(moduleName, 'update'), () => next(action));
   }
 
   return next(action);
 };
 export class CoreRouter {
-  constructor(location, action, nativeData) {
+  constructor(location, action, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
     this.location = location;
     this.action = action;
-    this.nativeData = nativeData;
+    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
@@ -112,11 +107,11 @@ function applyEffect(effectResult, store, model, action, dispatch, decorators = 
   });
 }
 
-injectActions(new AppModel(null));
 export class Store {
   constructor(sid, router) {
-    this.state = void 0;
-    this.mountedModels = void 0;
+    this.state = coreConfig.StoreInitState();
+    this.injectedModels = {};
+    this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
     this.active = false;
@@ -130,23 +125,6 @@ export class Store {
     this.loadingGroups = {};
     this.sid = sid;
     this.router = router;
-    const {
-      location: routeLocation,
-      action: routeAction
-    } = router;
-    const appState = {
-      routeAction,
-      routeLocation,
-      globalLoading: 'Stop',
-      initError: ''
-    };
-    this.state = mergeState(coreConfig.StoreInitState(), {
-      [coreConfig.AppModuleName]: appState
-    });
-    const appModel = new AppModel(this);
-    this.mountedModels = {
-      [coreConfig.AppModuleName]: appModel
-    };
     const middlewareAPI = {
       getStore: () => this,
       dispatch: action => this.dispatch(action)
@@ -166,11 +144,11 @@ export class Store {
   }
 
   hotReplaceModel(moduleName, ModelClass) {
-    const orignModel = this.mountedModels[moduleName];
+    const orignModel = this.injectedModels[moduleName];
 
-    if (orignModel && !isPromise(orignModel)) {
+    if (orignModel) {
       const model = new ModelClass(moduleName, this);
-      this.mountedModels[moduleName] = model;
+      this.injectedModels[moduleName] = model;
 
       if (this.active) {
         orignModel.onInactive();
@@ -183,76 +161,58 @@ export class Store {
     return this.currentAction;
   }
 
-  mountModule(moduleName, routeChanged) {
-    const errorCallback = err => {
-      delete mountedModels[moduleName];
-      throw err;
-    };
-
-    const initStateCallback = initState => {
-      mountedModels[moduleName] = model;
-      this.dispatch(moduleInitAction(moduleName, initState));
-
-      if (this.active) {
-        model.onActive();
-      }
-
-      return model.onStartup(routeChanged);
-    };
-
-    const getModuleCallback = module => {
-      model = new module.ModelClass(moduleName, this);
-      const initStateOrPromise = model.onInit(routeChanged);
-
-      if (isPromise(initStateOrPromise)) {
-        return initStateOrPromise.then(initStateCallback, errorCallback);
-      } else {
-        return initStateCallback(initStateOrPromise);
-      }
-    };
-
-    const mountedModels = this.mountedModels;
-    const moduleOrPromise = getModule(moduleName);
-    let model = null;
-
-    if (isPromise(moduleOrPromise)) {
-      return moduleOrPromise.then(getModuleCallback, errorCallback);
-    } else {
-      const result = getModuleCallback(moduleOrPromise);
-
-      if (isPromise(result)) {
-        return result;
-      } else {
-        return model;
-      }
-    }
-  }
-
-  mount(moduleName, routeChanged) {
+  mount(moduleName, env) {
     if (!coreConfig.ModuleGetter[moduleName]) {
       return;
     }
 
-    const mountedModels = this.mountedModels;
+    const mountedModules = this.mountedModules;
+    const injectedModels = this.injectedModels;
 
-    if (!mountedModels[moduleName]) {
-      mountedModels[moduleName] = this.mountModule(moduleName, routeChanged);
+    const errorCallback = err => {
+      if (!this.state[moduleName]) {
+        delete mountedModules[moduleName];
+        delete injectedModels[moduleName];
+      }
+
+      throw err;
+    };
+
+    const getModuleCallback = module => {
+      const model = new module.ModelClass(moduleName, this);
+      this.injectedModels[moduleName] = model;
+      return model.onMount(env);
+    };
+
+    if (!mountedModules[moduleName]) {
+      let result;
+
+      try {
+        const moduleOrPromise = getModule(moduleName);
+        result = promiseCaseCallback(moduleOrPromise, getModuleCallback);
+      } catch (err) {
+        errorCallback(err);
+      }
+
+      if (isPromise(result)) {
+        mountedModules[moduleName] = result.then(() => {
+          mountedModules[moduleName] = true;
+        }, errorCallback);
+      } else {
+        mountedModules[moduleName] = true;
+      }
     }
 
-    const result = mountedModels[moduleName];
-    return isPromise(result) ? result : undefined;
+    const result = mountedModules[moduleName];
+    return result === true ? undefined : result;
   }
 
   setActive() {
     if (!this.active) {
       this.active = true;
-      const mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach(moduleName => {
-        const modelOrPromise = mountedModels[moduleName];
-
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onActive();
-        }
+      Object.keys(this.injectedModels).forEach(moduleName => {
+        const model = this.injectedModels[moduleName];
+        model.onActive();
       });
     }
   }
@@ -260,13 +220,9 @@ export class Store {
   setInactive() {
     if (this.active) {
       this.active = false;
-      const mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach(moduleName => {
-        const modelOrPromise = mountedModels[moduleName];
-
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onInactive();
-        }
+      Object.keys(this.injectedModels).forEach(moduleName => {
+        const model = this.injectedModels[moduleName];
+        model.onInactive();
       });
     }
   }
@@ -360,7 +316,7 @@ export class Store {
         }
       });
       orderList.unshift(...actionPriority);
-      const mountedModels = this.mountedModels;
+      const injectedModels = this.injectedModels;
       const implemented = {};
       orderList = orderList.filter(moduleName => {
         if (implemented[moduleName] || !handlers[moduleName]) {
@@ -368,7 +324,7 @@ export class Store {
         }
 
         implemented[moduleName] = true;
-        return mountedModels[moduleName] && !isPromise(mountedModels[moduleName]);
+        return injectedModels[moduleName];
       });
       logs.handers = orderList;
 
@@ -377,7 +333,7 @@ export class Store {
         const uncommittedState = this.uncommittedState = { ...prevState
         };
         orderList.forEach(moduleName => {
-          const model = mountedModels[moduleName];
+          const model = injectedModels[moduleName];
           const handler = handlers[moduleName];
           const result = handler.apply(model, actionData);
 
@@ -395,7 +351,7 @@ export class Store {
         storeLogger(logs);
         const effectHandlers = [];
         orderList.forEach(moduleName => {
-          const model = mountedModels[moduleName];
+          const model = injectedModels[moduleName];
           const handler = handlers[moduleName];
           this.currentAction = action;
           const result = handler.apply(model, actionData);
@@ -409,7 +365,7 @@ export class Store {
         devLogger(logs);
         storeLogger(logs);
       } else {
-        if (actionName === `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`) {
+        if (actionName === getErrorActionType()) {
           return Promise.reject(actionData);
         }
       }

@@ -17,7 +17,6 @@ export {
   getApi,
   EmptyModel,
   BaseModel,
-  ErrorCodes,
 } from '@elux/core';
 export type {
   LoadingState,
@@ -28,6 +27,7 @@ export type {
   IRouter,
   StoreState,
   Location,
+  NativeRequest,
   StoreMiddleware,
   StoreLogger,
   CommonModule,
@@ -39,7 +39,15 @@ export type {
   RouteRuntime,
 } from '@elux/core';
 
-export {locationToUrl, urlToLocation, toNativeLocation, toEluxLocation} from '@elux/route';
+export {
+  ErrorCodes,
+  locationToUrl,
+  urlToLocation,
+  locationToNativeLocation,
+  nativeLocationToLocation,
+  urlToNativeUrl,
+  nativeUrlToUrl,
+} from '@elux/route';
 
 /*** @public */
 export type ComputedStore<T> = {[K in keyof T]-?: () => T[K]};

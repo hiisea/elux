@@ -3,7 +3,6 @@ import {promiseCaseCallback, toPromise, Listener, UNListener, TaskCounter, compo
 import {
   Action,
   ActionHandler,
-  AppModuleState,
   CommonModule,
   CommonModel,
   CommonModelClass,
@@ -12,6 +11,7 @@ import {
   StoreState,
   storeLoggerInfo,
   ModuleState,
+  NativeRequest,
   IRouter,
   IStore,
   RouteRuntime,
@@ -25,8 +25,7 @@ import {
 } from './basic';
 import {devLogger} from './devtools';
 import {getModule, injectActions} from './inject';
-import {ActionTypes, errorAction, moduleInitAction, isProcessedError, setProcessedError} from './actions';
-import {AppModel} from './module';
+import {errorAction, isProcessedError, setProcessedError, getErrorActionType, getInitActionType} from './actions';
 
 export function getActionData(action: Action): any[] {
   return Array.isArray(action.payload) ? action.payload : [];
@@ -36,7 +35,7 @@ export const preMiddleware: StoreMiddleware =
   ({getStore}) =>
   (next) =>
   (action) => {
-    if (action.type === `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`) {
+    if (action.type === getErrorActionType()) {
       const actionData = getActionData(action);
       if (isProcessedError(actionData[0])) {
         return undefined;
@@ -44,16 +43,14 @@ export const preMiddleware: StoreMiddleware =
       actionData[0] = setProcessedError(actionData[0], true);
     }
     const [moduleName, actionName] = action.type.split(coreConfig.NSP);
-    if (!moduleName || !actionName || (moduleName !== coreConfig.AppModuleName && !coreConfig.ModuleGetter[moduleName])) {
-      return undefined;
-    }
-    if (env.isServer && actionName === ActionTypes.Loading) {
+    if (!moduleName || !actionName || !coreConfig.ModuleGetter[moduleName]) {
       return undefined;
     }
     const store = getStore();
     const state = store.getState();
-    if (!state[moduleName] && actionName !== ActionTypes.Init) {
-      return promiseCaseCallback(store.mount(moduleName, false), () => next(action));
+    //TODO  && action.type !== getErrorActionType()
+    if (!state[moduleName] && action.type !== getInitActionType(moduleName)) {
+      return promiseCaseCallback(store.mount(moduleName, 'update'), () => next(action));
     }
     return next(action);
   };
@@ -70,7 +67,7 @@ export abstract class CoreRouter implements IRouter {
   protected listenerId = 0;
   protected readonly listenerMap: {[id: string]: (data: RouterEvent) => void | Promise<void>} = {};
 
-  constructor(public location: Location, public action: RouteAction, public readonly nativeData: unknown) {
+  constructor(public location: Location, public action: RouteAction, public readonly nativeRequest: NativeRequest) {
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
     }
@@ -154,11 +151,10 @@ function applyEffect(
   );
 }
 
-injectActions(new AppModel(null as any));
-
 export class Store implements IStore {
-  private state: StoreState;
-  private mountedModels: {[moduleName: string]: Promise<void> | CommonModel | undefined};
+  private state: StoreState = coreConfig.StoreInitState();
+  private injectedModels: {[moduleName: string]: CommonModel} = {};
+  private mountedModules: {[moduleName: string]: Promise<void> | true | undefined} = {};
   private currentListeners: Listener[] = [];
   private nextListeners: Listener[] = [];
   private active: boolean = false;
@@ -170,11 +166,6 @@ export class Store implements IStore {
   public loadingGroups: {[moduleNameAndGroupName: string]: TaskCounter} = {};
 
   constructor(public readonly sid: number, public readonly router: CoreRouter) {
-    const {location: routeLocation, action: routeAction} = router;
-    const appState: AppModuleState = {routeAction, routeLocation, globalLoading: 'Stop', initError: ''};
-    this.state = mergeState(coreConfig.StoreInitState(), {[coreConfig.AppModuleName]: appState});
-    const appModel = new AppModel(this);
-    this.mountedModels = {[coreConfig.AppModuleName]: appModel};
     const middlewareAPI = {
       getStore: () => this,
       dispatch: (action: Action) => this.dispatch(action),
@@ -191,10 +182,10 @@ export class Store implements IStore {
     return new Store(this.sid + 1, this.router);
   }
   hotReplaceModel(moduleName: string, ModelClass: CommonModelClass): void {
-    const orignModel = this.mountedModels[moduleName];
-    if (orignModel && !isPromise(orignModel)) {
+    const orignModel = this.injectedModels[moduleName];
+    if (orignModel) {
       const model = new ModelClass(moduleName, this);
-      this.mountedModels[moduleName] = model;
+      this.injectedModels[moduleName] = model;
       if (this.active) {
         orignModel.onInactive();
         model.onActive();
@@ -229,74 +220,59 @@ export class Store implements IStore {
   //   }
   //   return mountedModels[moduleName]!;
   // }
-  private mountModule(moduleName: string, routeChanged: boolean): CommonModel | Promise<void> {
-    const errorCallback = (err: any) => {
-      delete mountedModels[moduleName];
-      throw err;
-    };
-    const initStateCallback = (initState: ModuleState) => {
-      mountedModels[moduleName] = model;
-      this.dispatch(moduleInitAction(moduleName, initState));
-      if (this.active) {
-        model.onActive();
-      }
-      return model.onStartup(routeChanged);
-    };
-    const getModuleCallback = (module: CommonModule) => {
-      model = new module.ModelClass(moduleName, this);
-      const initStateOrPromise = model.onInit(routeChanged);
-      if (isPromise(initStateOrPromise)) {
-        return initStateOrPromise.then(initStateCallback, errorCallback);
-      } else {
-        return initStateCallback(initStateOrPromise);
-      }
-    };
-    const mountedModels = this.mountedModels;
-    const moduleOrPromise = getModule(moduleName);
-    let model: CommonModel = null as any;
-    if (isPromise(moduleOrPromise)) {
-      return moduleOrPromise.then(getModuleCallback, errorCallback);
-    } else {
-      const result = getModuleCallback(moduleOrPromise);
-      if (isPromise(result)) {
-        return result;
-      } else {
-        return model;
-      }
-    }
-  }
-  mount(moduleName: string, routeChanged: boolean): void | Promise<void> {
+
+  mount(moduleName: string, env: 'init' | 'route' | 'update'): void | Promise<void> {
     if (!coreConfig.ModuleGetter[moduleName]) {
       return;
     }
-    const mountedModels = this.mountedModels;
-    if (!mountedModels[moduleName]) {
-      mountedModels[moduleName] = this.mountModule(moduleName, routeChanged);
+    const mountedModules = this.mountedModules;
+    const injectedModels = this.injectedModels;
+    const errorCallback = (err: any) => {
+      if (!this.state[moduleName]) {
+        delete mountedModules[moduleName];
+        delete injectedModels[moduleName];
+      }
+      throw err;
+    };
+    const getModuleCallback = (module: CommonModule) => {
+      const model = new module.ModelClass(moduleName, this);
+      this.injectedModels[moduleName] = model;
+      return model.onMount(env);
+    };
+    if (!mountedModules[moduleName]) {
+      let result: void | Promise<void>;
+      try {
+        const moduleOrPromise = getModule(moduleName);
+        result = promiseCaseCallback(moduleOrPromise, getModuleCallback);
+      } catch (err) {
+        errorCallback(err);
+      }
+      if (isPromise(result)) {
+        mountedModules[moduleName] = result.then(() => {
+          mountedModules[moduleName] = true;
+        }, errorCallback);
+      } else {
+        mountedModules[moduleName] = true;
+      }
     }
-    const result = mountedModels[moduleName]!;
-    return isPromise(result) ? result : undefined;
+    const result = mountedModules[moduleName];
+    return result === true ? undefined : result;
   }
   setActive(): void {
     if (!this.active) {
       this.active = true;
-      const mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach((moduleName) => {
-        const modelOrPromise = mountedModels[moduleName];
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onActive();
-        }
+      Object.keys(this.injectedModels).forEach((moduleName) => {
+        const model = this.injectedModels[moduleName];
+        model.onActive();
       });
     }
   }
   setInactive(): void {
     if (this.active) {
       this.active = false;
-      const mountedModels = this.mountedModels;
-      Object.keys(mountedModels).forEach((moduleName) => {
-        const modelOrPromise = mountedModels[moduleName];
-        if (modelOrPromise && !isPromise(modelOrPromise)) {
-          modelOrPromise.onInactive();
-        }
+      Object.keys(this.injectedModels).forEach((moduleName) => {
+        const model = this.injectedModels[moduleName];
+        model.onInactive();
       });
     }
   }
@@ -387,21 +363,21 @@ export class Store implements IStore {
         }
       });
       orderList.unshift(...actionPriority);
-      const mountedModels = this.mountedModels;
+      const injectedModels = this.injectedModels;
       const implemented: {[key: string]: boolean} = {};
       orderList = orderList.filter((moduleName) => {
         if (implemented[moduleName] || !handlers[moduleName]) {
           return false;
         }
         implemented[moduleName] = true;
-        return mountedModels[moduleName] && !isPromise(mountedModels[moduleName]);
+        return injectedModels[moduleName];
       });
       logs.handers = orderList;
       if (isReducer) {
         const newState: StoreState = {};
         const uncommittedState = (this.uncommittedState = {...prevState});
         orderList.forEach((moduleName) => {
-          const model = mountedModels[moduleName] as CommonModel;
+          const model = injectedModels[moduleName] as CommonModel;
           const handler = handlers[moduleName];
           const result = handler.apply(model, actionData) as ModuleState;
           if (result) {
@@ -419,7 +395,7 @@ export class Store implements IStore {
         storeLogger(logs);
         const effectHandlers: Promise<any>[] = [];
         orderList.forEach((moduleName) => {
-          const model = mountedModels[moduleName] as CommonModel;
+          const model = injectedModels[moduleName] as CommonModel;
           const handler = handlers[moduleName];
           this.currentAction = action;
           const result = handler.apply(model, actionData);
@@ -433,7 +409,8 @@ export class Store implements IStore {
         devLogger(logs);
         storeLogger(logs);
       } else {
-        if (actionName === `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`) {
+        //如果没有任何错误处理则抛出
+        if (actionName === getErrorActionType()) {
           return Promise.reject(actionData);
         }
       }

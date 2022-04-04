@@ -3,6 +3,7 @@ import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWith
 var _excluded = ["onClick", "disabled", "to", "target", "action"];
 import React, { useCallback } from 'react';
 import { coreConfig } from '@elux/core';
+import { urlToNativeUrl } from '@elux/route';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var Link = React.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
@@ -26,21 +27,21 @@ export var Link = React.forwardRef(function (_ref, ref) {
       }, target);
     }
   }, [_onClick, disabled, to, router, action, target]);
-  var href = action !== 'back' ? to : '';
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
   props['to'] = to;
   disabled && (props['disabled'] = true);
-  href && (props['href'] = href);
+  var href = action !== 'back' ? to : '';
 
   if (href) {
-    return _jsx("a", _extends({}, props, {
-      ref: ref
-    }));
+    href = urlToNativeUrl(href);
   } else {
-    return _jsx("div", _extends({}, props, {
-      ref: ref
-    }));
+    href = '#';
   }
+
+  props['href'] = href;
+  return _jsx("a", _extends({}, props, {
+    ref: ref
+  }));
 });

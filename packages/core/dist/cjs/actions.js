@@ -1,11 +1,11 @@
 "use strict";
 
 exports.__esModule = true;
-exports.ActionTypes = void 0;
 exports.errorAction = errorAction;
 exports.errorProcessed = void 0;
+exports.getErrorActionType = getErrorActionType;
+exports.getInitActionType = getInitActionType;
 exports.isProcessedError = isProcessedError;
-exports.moduleInitAction = moduleInitAction;
 exports.moduleLoadingAction = moduleLoadingAction;
 exports.setProcessedError = setProcessedError;
 
@@ -33,24 +33,10 @@ function setProcessedError(error, processed) {
   return error;
 }
 
-var ActionTypes = {
-  Init: 'initState',
-  Loading: 'loadingState',
-  Error: "error"
-};
-exports.ActionTypes = ActionTypes;
-
 function moduleLoadingAction(moduleName, loadingState) {
   return {
-    type: "" + moduleName + _basic.coreConfig.NSP + ActionTypes.Loading,
+    type: "" + moduleName + _basic.coreConfig.NSP + "_loadingState",
     payload: [loadingState]
-  };
-}
-
-function moduleInitAction(moduleName, initState) {
-  return {
-    type: "" + moduleName + _basic.coreConfig.NSP + ActionTypes.Init,
-    payload: [initState]
   };
 }
 
@@ -79,7 +65,15 @@ function errorAction(error) {
     writable: true
   });
   return {
-    type: "" + _basic.coreConfig.AppModuleName + _basic.coreConfig.NSP + ActionTypes.Error,
+    type: getErrorActionType(),
     payload: [actionError]
   };
+}
+
+function getErrorActionType() {
+  return _basic.coreConfig.StageModuleName + _basic.coreConfig.NSP + '_error';
+}
+
+function getInitActionType(moduleName) {
+  return moduleName + _basic.coreConfig.NSP + '_initState';
 }

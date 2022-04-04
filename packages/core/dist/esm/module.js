@@ -1,10 +1,11 @@
+import _createClass from "@babel/runtime/helpers/esm/createClass";
 import _applyDecoratedDescriptor from "@babel/runtime/helpers/esm/applyDecoratedDescriptor";
 
-var _class, _class2;
+var _class;
 
 import env from './env';
 import { TaskCounter } from './utils';
-import { isEluxComponent, ErrorCodes, coreConfig, mergeState } from './basic';
+import { MetaData, isEluxComponent, coreConfig } from './basic';
 import { moduleLoadingAction } from './actions';
 export function exportComponent(component) {
   var eluxComponent = component;
@@ -24,6 +25,11 @@ export var EmptyModel = (_class = function () {
 
   var _proto = EmptyModel.prototype;
 
+  _proto.onMount = function onMount() {
+    var actions = MetaData.moduleApiMap[this.moduleName].actions;
+    this.store.dispatch(actions._initState({}));
+  };
+
   _proto.onActive = function onActive() {
     return;
   };
@@ -32,60 +38,19 @@ export var EmptyModel = (_class = function () {
     return;
   };
 
-  _proto.onInit = function onInit() {
-    return {};
-  };
-
-  _proto.onStartup = function onStartup() {
-    return;
-  };
-
-  _proto.initState = function initState(state) {
+  _proto._initState = function _initState(state) {
     return state;
   };
 
-  return EmptyModel;
-}(), (_applyDecoratedDescriptor(_class.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "initState"), _class.prototype)), _class);
-export var AppModel = (_class2 = function () {
-  function AppModel(store) {
-    this.moduleName = coreConfig.AppModuleName;
-    this.store = store;
-  }
-
-  var _proto2 = AppModel.prototype;
-
-  _proto2.onInit = function onInit() {
-    return {};
-  };
-
-  _proto2.onStartup = function onStartup() {
-    return;
-  };
-
-  _proto2.onActive = function onActive() {
-    return;
-  };
-
-  _proto2.onInactive = function onInactive() {
-    return;
-  };
-
-  _proto2.loadingState = function loadingState(_loadingState) {
-    return mergeState(this.store.getState(this.moduleName), _loadingState);
-  };
-
-  _proto2.error = function error(_error) {
-    if (_error.code === ErrorCodes.INIT_ERROR) {
-      return mergeState(this.store.getState(this.moduleName), {
-        initError: _error.message
-      });
+  _createClass(EmptyModel, [{
+    key: "state",
+    get: function get() {
+      return this.store.getState(this.moduleName);
     }
+  }]);
 
-    return this.store.getState(this.moduleName);
-  };
-
-  return AppModel;
-}(), (_applyDecoratedDescriptor(_class2.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "loadingState"), _class2.prototype), _applyDecoratedDescriptor(_class2.prototype, "error", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "error"), _class2.prototype)), _class2);
+  return EmptyModel;
+}(), (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype)), _class);
 export function exportModuleFacade(moduleName, ModelClass, components, data) {
   Object.keys(components).forEach(function (key) {
     var component = components[key];
@@ -104,7 +69,7 @@ export function exportModuleFacade(moduleName, ModelClass, components, data) {
   };
 }
 export function setLoading(item, store, _moduleName, _groupName) {
-  var moduleName = _moduleName || coreConfig.AppModuleName;
+  var moduleName = _moduleName || coreConfig.StageModuleName;
   var groupName = _groupName || 'globalLoading';
   var key = moduleName + coreConfig.NSP + groupName;
   var loadings = store.loadingGroups;
@@ -150,20 +115,6 @@ export function reducer(target, key, descriptor) {
   return target.descriptor === descriptor ? target : descriptor;
 }
 export function effect(loadingKey) {
-  if (loadingKey === void 0) {
-    loadingKey = 'app.globalLoading';
-  }
-
-  var loadingForModuleName;
-  var loadingForGroupName;
-
-  if (loadingKey !== null) {
-    var _loadingKey$split = loadingKey.split('.');
-
-    loadingForModuleName = _loadingKey$split[0];
-    loadingForGroupName = _loadingKey$split[1];
-  }
-
   return function (target, key, descriptor) {
     if (!key && !descriptor) {
       key = target.key;
@@ -174,8 +125,21 @@ export function effect(loadingKey) {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+    if (loadingKey !== null && !env.isServer) {
       var injectLoading = function injectLoading(store, curAction, effectPromise) {
+        var loadingForModuleName;
+        var loadingForGroupName;
+
+        if (loadingKey === undefined) {
+          loadingForModuleName = coreConfig.StageModuleName;
+          loadingForGroupName = 'globalLoading';
+        } else {
+          var _loadingKey$split = loadingKey.split('.');
+
+          loadingForModuleName = _loadingKey$split[0];
+          loadingForGroupName = _loadingKey$split[1];
+        }
+
         if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }

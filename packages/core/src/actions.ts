@@ -1,5 +1,5 @@
 import {LoadingState} from './utils';
-import {Action, coreConfig, ModuleState, ActionError} from './basic';
+import {Action, coreConfig, ActionError} from './basic';
 
 export const errorProcessed = '__eluxProcessed__';
 
@@ -15,23 +15,16 @@ export function setProcessedError(error: any, processed: boolean): {[errorProces
   return error;
 }
 
-export const ActionTypes = {
-  Init: 'initState',
-  Loading: 'loadingState',
-  Error: `error`,
-};
+// const ActionTypes = {
+//   Init: 'initState',
+//   Loading: 'loadingState',
+//   Error: `error`,
+// };
 
 export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}): Action {
   return {
-    type: `${moduleName}${coreConfig.NSP}${ActionTypes.Loading}`,
+    type: `${moduleName}${coreConfig.NSP}_loadingState`,
     payload: [loadingState],
-  };
-}
-
-export function moduleInitAction(moduleName: string, initState: ModuleState): Action {
-  return {
-    type: `${moduleName}${coreConfig.NSP}${ActionTypes.Init}`,
-    payload: [initState],
   };
 }
 
@@ -45,7 +38,15 @@ export function errorAction(error: any): Action {
   Object.defineProperty(actionError, errorProcessed, {value: processed, enumerable: false, writable: true});
   //env.console.error(error);
   return {
-    type: `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`,
+    type: getErrorActionType(),
     payload: [actionError],
   };
+}
+
+export function getErrorActionType(): string {
+  return coreConfig.StageModuleName + coreConfig.NSP + '_error';
+}
+
+export function getInitActionType(moduleName: string): string {
+  return moduleName + coreConfig.NSP + '_initState';
 }

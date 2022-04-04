@@ -1,5 +1,6 @@
 import React, {useCallback} from 'react';
 import {RouteTarget, RouteAction, coreConfig} from '@elux/core';
+import {urlToNativeUrl} from '@elux/route';
 
 /**
  * 内置React组件
@@ -55,19 +56,18 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       },
       [_onClick, disabled, to, router, action, target]
     );
-    //TODO showHref 使用toNativeUrl转换
-    const href = action !== 'back' ? to : '';
     props['onClick'] = onClick;
     props['action'] = action;
     props['target'] = target;
     props['to'] = to;
     disabled && (props['disabled'] = true);
-    href && (props['href'] = href);
-
+    let href = action !== 'back' ? to : '';
     if (href) {
-      return <a {...props} ref={ref} />;
+      href = urlToNativeUrl(href);
     } else {
-      return <div {...props} ref={ref} />;
+      href = '#';
     }
+    props['href'] = href;
+    return <a {...props} ref={ref} />;
   }
 );

@@ -1,6 +1,6 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
-import { Router, BaseNativeRouter, setRouteConfig, routeConfig } from '@elux/route';
+import { Router, BaseNativeRouter, setRouteConfig, routeConfig, locationToUrl } from '@elux/route';
 import { env } from '@elux/core';
 import { createBrowserHistory } from 'history';
 setRouteConfig({
@@ -10,18 +10,20 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(url) {
-  var _url$split = url.split('?'),
-      pathname = _url$split[0],
-      _url$split$ = _url$split[1],
-      search = _url$split$ === void 0 ? '' : _url$split$;
+function createServerHistory(nativeRequest) {
+  var _nativeRequest$reques = nativeRequest.request.url.split(/[?#]/),
+      pathname = _nativeRequest$reques[0],
+      _nativeRequest$reques2 = _nativeRequest$reques[1],
+      search = _nativeRequest$reques2 === void 0 ? '' : _nativeRequest$reques2,
+      _nativeRequest$reques3 = _nativeRequest$reques[2],
+      hash = _nativeRequest$reques3 === void 0 ? '' : _nativeRequest$reques3;
 
   return {
     push: function push() {
-      return undefined;
+      return;
     },
     replace: function replace() {
-      return undefined;
+      return;
     },
     block: function block() {
       return function () {
@@ -31,7 +33,7 @@ function createServerHistory(url) {
     location: {
       pathname: pathname,
       search: search,
-      hash: ''
+      hash: hash
     }
   };
 }
@@ -39,10 +41,10 @@ function createServerHistory(url) {
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter(history, nativeData) {
+  function BrowserNativeRouter(history, nativeRequest) {
     var _this;
 
-    _this = _BaseNativeRouter.call(this, history.location, nativeData) || this;
+    _this = _BaseNativeRouter.call(this, nativeRequest) || this;
     _this.unlistenHistory = void 0;
     _this.router = void 0;
     _this.history = history;
@@ -70,34 +72,22 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   var _proto = BrowserNativeRouter.prototype;
 
   _proto.push = function push(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   };
 
   _proto.replace = function replace(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   };
 
   _proto.back = function back(location, key, index) {
-    if (!env.isServer) {
-      this.history.replace(location);
-    }
-
+    this.history.replace(location);
     return false;
   };
 
@@ -110,11 +100,17 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
 export function createClientRouter() {
   var history = createBrowserHistory();
-  var browserNativeRouter = new BrowserNativeRouter(history, {});
+  var nativeRequest = {
+    request: {
+      url: locationToUrl(history.location)
+    },
+    response: {}
+  };
+  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }
-export function createServerRouter(url, nativeData) {
-  var history = createServerHistory(url);
-  var browserNativeRouter = new BrowserNativeRouter(history, nativeData);
+export function createServerRouter(nativeRequest) {
+  var history = createServerHistory(nativeRequest);
+  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }

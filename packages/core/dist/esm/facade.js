@@ -45,10 +45,6 @@ export var BaseModel = (_class = function () {
 
   var _proto = BaseModel.prototype;
 
-  _proto.onStartup = function onStartup(routeChanged) {
-    return;
-  };
-
   _proto.onActive = function onActive() {
     return;
   };
@@ -61,17 +57,12 @@ export var BaseModel = (_class = function () {
     return this.store.router;
   };
 
-  _proto.getState = function getState(type) {
+  _proto.getPrevState = function getPrevState() {
     var runtime = this.store.router.runtime;
-
-    if (type === 'previous') {
-      return runtime.prevState[this.moduleName];
-    } else {
-      return this.store.getState(this.moduleName);
-    }
+    return runtime.prevState[this.moduleName];
   };
 
-  _proto.getStoreState = function getStoreState(type) {
+  _proto.getRootState = function getRootState(type) {
     var runtime = this.store.router.runtime;
     var state;
 
@@ -99,19 +90,24 @@ export var BaseModel = (_class = function () {
     return this.store.dispatch(action);
   };
 
-  _proto.initState = function initState(state) {
+  _proto._initState = function _initState(state) {
     return state;
   };
 
-  _proto.updateState = function updateState(subject, state) {
-    return mergeState(this.getState(), state);
+  _proto._updateState = function _updateState(subject, state) {
+    return mergeState(this.state, state);
   };
 
-  _proto.loadingState = function loadingState(_loadingState) {
-    return mergeState(this.getState(), _loadingState);
+  _proto._loadingState = function _loadingState(loadingState) {
+    return mergeState(this.state, loadingState);
   };
 
   _createClass(BaseModel, [{
+    key: "state",
+    get: function get() {
+      return this.store.getState(this.moduleName);
+    }
+  }, {
     key: "actions",
     get: function get() {
       return MetaData.moduleApiMap[this.moduleName].actions;
@@ -119,4 +115,4 @@ export var BaseModel = (_class = function () {
   }]);
 
   return BaseModel;
-}(), (_applyDecoratedDescriptor(_class.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "loadingState"), _class.prototype)), _class);
+}(), (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);

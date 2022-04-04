@@ -1,4 +1,4 @@
-import {buildApp, buildSSR} from '@elux/core';
+import {buildApp, buildSSR, NativeRequest} from '@elux/core';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
 import {AppConfig} from '@elux/app';
 
@@ -67,7 +67,7 @@ export function createApp(appConfig: AppConfig) {
  * @public
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createSSR(appConfig: AppConfig, url: string, nativeData: any) {
-  const router = createServerRouter(url, nativeData);
+export function createSSR(appConfig: AppConfig, nativeRequest: NativeRequest) {
+  const router = createServerRouter(nativeRequest);
   return buildSSR({}, router);
 }

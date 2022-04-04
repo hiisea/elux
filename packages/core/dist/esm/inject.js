@@ -142,7 +142,7 @@ export function getModuleApiMap(data) {
 export function injectComponent(moduleName, componentName, store) {
   return promiseCaseCallback(getComponent(moduleName, componentName), function (component) {
     if (component.__elux_component__ === 'view' && !env.isServer) {
-      return promiseCaseCallback(store.mount(moduleName, false), function () {
+      return promiseCaseCallback(store.mount(moduleName, 'update'), function () {
         return component;
       });
     }

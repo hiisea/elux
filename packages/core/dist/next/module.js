@@ -1,10 +1,10 @@
 import _applyDecoratedDescriptor from "@babel/runtime/helpers/esm/applyDecoratedDescriptor";
 
-var _class, _class2;
+var _class;
 
 import env from './env';
 import { TaskCounter } from './utils';
-import { isEluxComponent, ErrorCodes, coreConfig, mergeState } from './basic';
+import { MetaData, isEluxComponent, coreConfig } from './basic';
 import { moduleLoadingAction } from './actions';
 export function exportComponent(component) {
   const eluxComponent = component;
@@ -17,11 +17,20 @@ export function exportView(component) {
   return eluxComponent;
 }
 export let EmptyModel = (_class = class EmptyModel {
+  get state() {
+    return this.store.getState(this.moduleName);
+  }
+
   constructor(moduleName, store) {
     this.moduleName = moduleName;
     this.store = store;
   }
 
+  onMount() {
+    const actions = MetaData.moduleApiMap[this.moduleName].actions;
+    this.store.dispatch(actions._initState({}));
+  }
+
   onActive() {
     return;
   }
@@ -30,56 +39,11 @@ export let EmptyModel = (_class = class EmptyModel {
     return;
   }
 
-  onInit() {
-    return {};
-  }
-
-  onStartup() {
-    return;
-  }
-
-  initState(state) {
+  _initState(state) {
     return state;
   }
 
-}, (_applyDecoratedDescriptor(_class.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "initState"), _class.prototype)), _class);
-export let AppModel = (_class2 = class AppModel {
-  constructor(store) {
-    this.moduleName = coreConfig.AppModuleName;
-    this.store = store;
-  }
-
-  onInit() {
-    return {};
-  }
-
-  onStartup() {
-    return;
-  }
-
-  onActive() {
-    return;
-  }
-
-  onInactive() {
-    return;
-  }
-
-  loadingState(loadingState) {
-    return mergeState(this.store.getState(this.moduleName), loadingState);
-  }
-
-  error(error) {
-    if (error.code === ErrorCodes.INIT_ERROR) {
-      return mergeState(this.store.getState(this.moduleName), {
-        initError: error.message
-      });
-    }
-
-    return this.store.getState(this.moduleName);
-  }
-
-}, (_applyDecoratedDescriptor(_class2.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "loadingState"), _class2.prototype), _applyDecoratedDescriptor(_class2.prototype, "error", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "error"), _class2.prototype)), _class2);
+}, (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype)), _class);
 export function exportModuleFacade(moduleName, ModelClass, components, data) {
   Object.keys(components).forEach(key => {
     const component = components[key];
@@ -98,7 +62,7 @@ export function exportModuleFacade(moduleName, ModelClass, components, data) {
   };
 }
 export function setLoading(item, store, _moduleName, _groupName) {
-  const moduleName = _moduleName || coreConfig.AppModuleName;
+  const moduleName = _moduleName || coreConfig.StageModuleName;
   const groupName = _groupName || 'globalLoading';
   const key = moduleName + coreConfig.NSP + groupName;
   const loadings = store.loadingGroups;
@@ -143,14 +107,7 @@ export function reducer(target, key, descriptor) {
   descriptor.enumerable = true;
   return target.descriptor === descriptor ? target : descriptor;
 }
-export function effect(loadingKey = 'app.globalLoading') {
-  let loadingForModuleName;
-  let loadingForGroupName;
-
-  if (loadingKey !== null) {
-    [loadingForModuleName, loadingForGroupName] = loadingKey.split('.');
-  }
-
+export function effect(loadingKey) {
   return (target, key, descriptor) => {
     if (!key && !descriptor) {
       key = target.key;
@@ -161,8 +118,18 @@ export function effect(loadingKey = 'app.globalLoading') {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+    if (loadingKey !== null && !env.isServer) {
       const injectLoading = function (store, curAction, effectPromise) {
+        let loadingForModuleName;
+        let loadingForGroupName;
+
+        if (loadingKey === undefined) {
+          loadingForModuleName = coreConfig.StageModuleName;
+          loadingForGroupName = 'globalLoading';
+        } else {
+          [loadingForModuleName, loadingForGroupName] = loadingKey.split('.');
+        }
+
         if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }

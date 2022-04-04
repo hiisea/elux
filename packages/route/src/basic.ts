@@ -1,5 +1,22 @@
 import {Action, RouteAction, Location, coreConfig, buildConfigSetter} from '@elux/core';
 
+export const ErrorCodes = {
+  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW',
+};
+
+export function nativeUrlToUrl(nativeUrl: string): string {
+  const [path = '', search = '', hash = ''] = nativeUrl.split(/[?#]/);
+  const pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
+  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+}
+
+export function urlToNativeUrl(eluxUrl: string): string {
+  const [path = '', search = '', hash = ''] = eluxUrl.split(/[?#]/);
+  const pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
+  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+}
+
 export function urlToLocation(url: string): Location {
   const [path = '', search = '', hash = ''] = url.split(/[?#]/);
   //const pathname = ('/' + path.split('//').pop()).replace(/\/(\/|$)/, '');
@@ -22,13 +39,13 @@ export function locationToUrl({url, pathname, search, hash, searchQuery, hashQue
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 
-export function toNativeLocation(location: Location): Location {
+export function locationToNativeLocation(location: Location): Location {
   const pathname = routeConfig.NativePathnameMapping.out(location.pathname);
   const url = location.url.replace(location.pathname, pathname);
   return {...location, pathname, url};
 }
 
-export function toEluxLocation(location: Location): Location {
+export function nativeLocationToLocation(location: Location): Location {
   const pathname = routeConfig.NativePathnameMapping.in(location.pathname);
   const url = location.url.replace(location.pathname, pathname);
   return {...location, pathname, url};
@@ -36,19 +53,19 @@ export function toEluxLocation(location: Location): Location {
 
 export function testChangeAction(location: Location, routeAction: RouteAction): Action {
   return {
-    type: `${coreConfig.AppModuleName}${coreConfig.NSP}testRouteChange`,
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_testRouteChange`,
     payload: [location, routeAction],
   };
 }
 export function beforeChangeAction(location: Location, routeAction: RouteAction): Action {
   return {
-    type: `${coreConfig.AppModuleName}${coreConfig.NSP}beforeRouteChange`,
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_beforeRouteChange`,
     payload: [location, routeAction],
   };
 }
 export function afterChangeAction(location: Location, routeAction: RouteAction): Action {
   return {
-    type: `${coreConfig.AppModuleName}${coreConfig.NSP}afterRouteChange`,
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_afterRouteChange`,
     payload: [location, routeAction],
   };
 }

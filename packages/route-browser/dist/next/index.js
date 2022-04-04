@@ -1,4 +1,4 @@
-import { Router, BaseNativeRouter, setRouteConfig, routeConfig } from '@elux/route';
+import { Router, BaseNativeRouter, setRouteConfig, routeConfig, locationToUrl } from '@elux/route';
 import { env } from '@elux/core';
 import { createBrowserHistory } from 'history';
 setRouteConfig({
@@ -8,15 +8,15 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(url) {
-  const [pathname, search = ''] = url.split('?');
+function createServerHistory(nativeRequest) {
+  const [pathname, search = '', hash = ''] = nativeRequest.request.url.split(/[?#]/);
   return {
     push() {
-      return undefined;
+      return;
     },
 
     replace() {
-      return undefined;
+      return;
     },
 
     block() {
@@ -26,14 +26,14 @@ function createServerHistory(url) {
     location: {
       pathname,
       search,
-      hash: ''
+      hash
     }
   };
 }
 
 class BrowserNativeRouter extends BaseNativeRouter {
-  constructor(history, nativeData) {
-    super(history.location, nativeData);
+  constructor(history, nativeRequest) {
+    super(nativeRequest);
     this.unlistenHistory = void 0;
     this.router = void 0;
     this.history = history;
@@ -56,34 +56,22 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   push(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   }
 
   replace(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   }
 
   relaunch(location, key) {
-    if (!env.isServer) {
-      this.history.push(location);
-    }
-
+    this.history.push(location);
     return false;
   }
 
   back(location, key, index) {
-    if (!env.isServer) {
-      this.history.replace(location);
-    }
-
+    this.history.replace(location);
     return false;
   }
 
@@ -95,11 +83,17 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
 export function createClientRouter() {
   const history = createBrowserHistory();
-  const browserNativeRouter = new BrowserNativeRouter(history, {});
+  const nativeRequest = {
+    request: {
+      url: locationToUrl(history.location)
+    },
+    response: {}
+  };
+  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }
-export function createServerRouter(url, nativeData) {
-  const history = createServerHistory(url);
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeData);
+export function createServerRouter(nativeRequest) {
+  const history = createServerHistory(nativeRequest);
+  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }

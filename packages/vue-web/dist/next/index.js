@@ -9,8 +9,8 @@ export function createApp(appConfig) {
   const app = createCSRApp(RouterComponent);
   return buildApp(app, router);
 }
-export function createSSR(appConfig, url, nativeData) {
-  const router = createServerRouter(url, nativeData);
+export function createSSR(appConfig, nativeRequest) {
+  const router = createServerRouter(nativeRequest);
   const app = createSSRApp(RouterComponent);
   return buildSSR(app, router);
 }

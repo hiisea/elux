@@ -11,6 +11,8 @@ var _vue = require("vue");
 
 var _core = require("@elux/core");
 
+var _route = require("@elux/route");
+
 var _excluded = ["onClick", "disabled", "to", "target", "action"];
 
 var Link = function Link(_ref, context) {
@@ -37,19 +39,21 @@ var Link = function Link(_ref, context) {
     }
   };
 
-  var href = action !== 'back' ? to : '';
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
   props['to'] = to;
   disabled && (props['disabled'] = true);
-  href && (props['href'] = href);
+  var href = action !== 'back' ? to : '';
 
   if (href) {
-    return (0, _vue.h)('a', props, context.slots.default());
+    href = (0, _route.urlToNativeUrl)(href);
   } else {
-    return (0, _vue.h)('div', props, context.slots.default());
+    href = '#';
   }
+
+  props['href'] = href;
+  return (0, _vue.h)('a', props, context.slots.default());
 };
 
 exports.Link = Link;

@@ -1,5 +1,4 @@
-import { LoadingState } from './utils';
-import { Action, CommonModel, CommonModelClass, CommonModule, EluxComponent, ActionError, AsyncEluxComponent, ModuleState, IStore } from './basic';
+import { Action, CommonModel, CommonModelClass, CommonModule, EluxComponent, AsyncEluxComponent, ModuleState, IStore } from './basic';
 /**
  * 向外导出一个EluxUI组件
  *
@@ -33,27 +32,13 @@ export declare function exportView<T>(component: T): T & EluxComponent;
  */
 export declare class EmptyModel implements CommonModel {
     readonly moduleName: string;
-    readonly store: IStore;
-    readonly routeParams: {};
+    protected readonly store: IStore;
+    get state(): ModuleState;
     constructor(moduleName: string, store: IStore);
+    onMount(): void;
     onActive(): void;
     onInactive(): void;
-    onInit(): ModuleState;
-    onStartup(): void;
-    protected initState(state: ModuleState): ModuleState;
-}
-export declare class AppModel implements CommonModel {
-    readonly store: IStore;
-    readonly moduleName: string;
-    constructor(store: IStore);
-    onInit(): ModuleState;
-    onStartup(): void;
-    onActive(): void;
-    onInactive(): void;
-    protected loadingState(loadingState: {
-        [group: string]: LoadingState;
-    }): ModuleState;
-    protected error(error: ActionError): ModuleState;
+    protected _initState(state: ModuleState): ModuleState;
 }
 export declare function exportModuleFacade(moduleName: string, ModelClass: CommonModelClass, components: {
     [componentName: string]: EluxComponent | AsyncEluxComponent;

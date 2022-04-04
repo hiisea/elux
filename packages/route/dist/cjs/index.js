@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.setRouteConfig = exports.Router = exports.BaseNativeRouter = void 0;
+exports.setRouteConfig = exports.nativeLocationToLocation = exports.Router = exports.BaseNativeRouter = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -17,20 +17,22 @@ var _core = require("@elux/core");
 
 var _basic = require("./basic");
 
+exports.ErrorCodes = _basic.ErrorCodes;
 exports.urlToLocation = _basic.urlToLocation;
 exports.routeConfig = _basic.routeConfig;
+exports.urlToNativeUrl = _basic.urlToNativeUrl;
 exports.locationToUrl = _basic.locationToUrl;
-exports.toNativeLocation = _basic.toNativeLocation;
-exports.toEluxLocation = _basic.toEluxLocation;
+exports.nativeUrlToUrl = _basic.nativeUrlToUrl;
+exports.locationToNativeLocation = _basic.locationToNativeLocation;
 exports.setRouteConfig = _basic.setRouteConfig;
+exports.nativeLocationToLocation = _basic.nativeLocationToLocation;
 
 var _history = require("./history");
 
 var BaseNativeRouter = function () {
-  function BaseNativeRouter(nativeLocation, nativeData) {
+  function BaseNativeRouter(nativeRequest) {
     this.curTask = void 0;
-    this.nativeLocation = nativeLocation;
-    this.nativeData = nativeData;
+    this.nativeRequest = nativeRequest;
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -50,7 +52,7 @@ var BaseNativeRouter = function () {
   _proto.execute = function execute(method, location, key, backIndex) {
     var _this = this;
 
-    var result = this[method]((0, _basic.toNativeLocation)(location), key, backIndex);
+    var result = this[method]((0, _basic.locationToNativeLocation)(location), key, backIndex);
 
     if (result) {
       return new Promise(function (resolve, reject) {
@@ -73,7 +75,7 @@ var Router = function (_CoreRouter) {
   function Router(nativeRouter) {
     var _this2;
 
-    _this2 = _CoreRouter.call(this, (0, _basic.toEluxLocation)((0, _basic.urlToLocation)(nativeRouter.nativeLocation.url || (0, _basic.locationToUrl)(nativeRouter.nativeLocation))), 'relaunch', nativeRouter.nativeData) || this;
+    _this2 = _CoreRouter.call(this, (0, _basic.urlToLocation)((0, _basic.nativeUrlToUrl)(nativeRouter.nativeRequest.request.url)), 'relaunch', nativeRouter.nativeRequest) || this;
     _this2.curTask = void 0;
     _this2.taskList = [];
     _this2.windowStack = void 0;
@@ -86,7 +88,7 @@ var Router = function (_CoreRouter) {
         var onTaskComplete = _this2.onTaskComplete;
 
         _core.env.setTimeout(function () {
-          return task().finally(onTaskComplete);
+          return task[0]().finally(onTaskComplete).then(task[1], task[2]);
         }, 0);
       } else {
         _this2.curTask = undefined;
@@ -103,20 +105,16 @@ var Router = function (_CoreRouter) {
   _proto2.addTask = function addTask(execute) {
     var _this3 = this;
 
-    if (_core.env.isServer) {
-      return;
-    }
-
     return new Promise(function (resolve, reject) {
-      var task = function task() {
-        return (0, _core.setLoading)(execute(), _this3.getCurrentPage().store).then(resolve, reject);
-      };
+      var task = [function () {
+        return (0, _core.setLoading)(execute(), _this3.getCurrentPage().store);
+      }, resolve, reject];
 
       if (_this3.curTask) {
         _this3.taskList.push(task);
       } else {
         _this3.curTask = task;
-        task().finally(_this3.onTaskComplete);
+        task[0]().finally(_this3.onTaskComplete).then(task[1], task[2]);
       }
     });
   };
@@ -173,60 +171,12 @@ var Router = function (_CoreRouter) {
     return this.windowStack.getWindowPages();
   };
 
-  _proto2.init = function () {
-    var _init = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee(prevState) {
-      var store;
+  _proto2.mountStore = function () {
+    var _mountStore = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee(payload, prevStore, newStore, historyStore) {
+      var prevState;
       return _regenerator.default.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
-            case 0:
-              this.runtime = {
-                timestamp: Date.now(),
-                payload: null,
-                prevState: prevState,
-                completed: false
-              };
-              store = this.getCurrentPage().store;
-              _context.prev = 2;
-              _context.next = 5;
-              return store.mount(_core.coreConfig.StageModuleName, true);
-
-            case 5:
-              _context.next = 10;
-              break;
-
-            case 7:
-              _context.prev = 7;
-              _context.t0 = _context["catch"](2);
-              store.dispatch((0, _core.errorAction)({
-                code: _core.ErrorCodes.INIT_ERROR,
-                message: _context.t0.message || _context.t0.toString()
-              }));
-
-            case 10:
-              this.runtime.completed = true;
-
-            case 11:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, this, [[2, 7]]);
-    }));
-
-    function init(_x) {
-      return _init.apply(this, arguments);
-    }
-
-    return init;
-  }();
-
-  _proto2.mountStore = function () {
-    var _mountStore = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee2(payload, prevStore, newStore, historyStore) {
-      var prevState;
-      return _regenerator.default.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
             case 0:
               prevState = prevStore.getState();
               this.runtime = {
@@ -237,47 +187,127 @@ var Router = function (_CoreRouter) {
               };
 
               if (!(newStore === historyStore)) {
-                _context2.next = 5;
+                _context.next = 5;
                 break;
               }
 
-              this.runtime.completed = false;
-              return _context2.abrupt("return");
+              this.runtime.completed = true;
+              return _context.abrupt("return");
 
             case 5:
-              _context2.prev = 5;
-              _context2.next = 8;
-              return newStore.mount(_core.coreConfig.StageModuleName, true);
+              _context.prev = 5;
+              _context.next = 8;
+              return newStore.mount(_core.coreConfig.StageModuleName, 'route');
 
             case 8:
-              _context2.next = 13;
+              _context.next = 13;
               break;
 
             case 10:
-              _context2.prev = 10;
-              _context2.t0 = _context2["catch"](5);
-              newStore.dispatch((0, _core.errorAction)({
-                code: _core.ErrorCodes.INIT_ERROR,
-                message: _context2.t0.message || _context2.t0.toString()
-              }));
+              _context.prev = 10;
+              _context.t0 = _context["catch"](5);
+
+              _core.env.console.error(_context.t0);
 
             case 13:
-              this.runtime.completed = false;
+              this.runtime.completed = true;
 
             case 14:
             case "end":
-              return _context2.stop();
+              return _context.stop();
           }
         }
-      }, _callee2, this, [[5, 10]]);
+      }, _callee, this, [[5, 10]]);
     }));
 
-    function mountStore(_x2, _x3, _x4, _x5) {
+    function mountStore(_x, _x2, _x3, _x4) {
       return _mountStore.apply(this, arguments);
     }
 
     return mountStore;
   }();
+
+  _proto2.init = function init(prevState) {
+    var task = [this._init.bind(this, prevState), function () {
+      return undefined;
+    }, function () {
+      return undefined;
+    }];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  };
+
+  _proto2._init = function () {
+    var _init2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee2(prevState) {
+      var store;
+      return _regenerator.default.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              this.runtime = {
+                timestamp: Date.now(),
+                payload: null,
+                prevState: prevState,
+                completed: false
+              };
+              store = this.getCurrentPage().store;
+              _context2.prev = 2;
+              _context2.next = 5;
+              return store.mount(_core.coreConfig.StageModuleName, 'init');
+
+            case 5:
+              _context2.next = 7;
+              return store.dispatch((0, _basic.testChangeAction)(this.location, this.action));
+
+            case 7:
+              _context2.next = 15;
+              break;
+
+            case 9:
+              _context2.prev = 9;
+              _context2.t0 = _context2["catch"](2);
+
+              if (!(_context2.t0.code === _basic.ErrorCodes.ROUTE_REDIRECT)) {
+                _context2.next = 14;
+                break;
+              }
+
+              this.taskList = [];
+              throw _context2.t0;
+
+            case 14:
+              _core.env.console.error(_context2.t0);
+
+            case 15:
+              this.runtime.completed = true;
+
+            case 16:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this, [[2, 9]]);
+    }));
+
+    function _init(_x5) {
+      return _init2.apply(this, arguments);
+    }
+
+    return _init;
+  }();
+
+  _proto2.redirectOnServer = function redirectOnServer(urlOrLocation) {
+    if (_core.env.isServer) {
+      var url = urlOrLocation.url || (0, _basic.locationToUrl)(urlOrLocation);
+      var nativeUrl = (0, _basic.urlToNativeUrl)(url);
+      var err = {
+        code: _basic.ErrorCodes.ROUTE_REDIRECT,
+        message: 'Route change in server is not allowed.',
+        detail: nativeUrl
+      };
+      throw err;
+    }
+  };
 
   _proto2.relaunch = function relaunch(urlOrLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
@@ -292,6 +322,7 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
   };
 
@@ -382,6 +413,7 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
   };
 
@@ -471,6 +503,7 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    this.redirectOnServer(urlOrLocation);
     return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
   };
 
@@ -583,12 +616,15 @@ var Router = function (_CoreRouter) {
       return;
     }
 
+    this.redirectOnServer({
+      url: overflowRedirect || _basic.routeConfig.HomeUrl
+    });
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   };
 
   _proto2._back = function () {
     var _back2 = (0, _asyncToGenerator2.default)(_regenerator.default.mark(function _callee6(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
-      var action, _this$windowStack$tes3, record, overflow, index, url, location, prevStore, NotifyNativeRouter, pageStack, historyStore, newStore;
+      var action, _this$windowStack$tes3, record, overflow, index, url, err, location, prevStore, NotifyNativeRouter, pageStack, historyStore, newStore;
 
       return _regenerator.default.wrap(function _callee6$(_context6) {
         while (1) {
@@ -598,7 +634,7 @@ var Router = function (_CoreRouter) {
               _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, target === 'window'), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
 
               if (!overflow) {
-                _context6.next = 6;
+                _context6.next = 7;
                 break;
               }
 
@@ -606,30 +642,32 @@ var Router = function (_CoreRouter) {
               this.relaunch({
                 url: url
               }, 'window');
-              throw {
-                code: _core.ErrorCodes.ROUTE_BACK_OVERFLOW,
-                message: 'Overflowed on route backward.'
+              err = {
+                code: _basic.ErrorCodes.ROUTE_BACK_OVERFLOW,
+                message: 'Overflowed on route backward.',
+                detail: stepOrKey
               };
+              throw (0, _core.setProcessedError)(err, true);
 
-            case 6:
+            case 7:
               if (!(!index[0] && !index[1])) {
-                _context6.next = 8;
+                _context6.next = 9;
                 break;
               }
 
               throw 'Route backward invalid.';
 
-            case 8:
+            case 9:
               location = record.location;
               prevStore = this.getCurrentPage().store;
-              _context6.next = 12;
+              _context6.next = 13;
               return prevStore.dispatch((0, _basic.testChangeAction)(location, action));
 
-            case 12:
-              _context6.next = 14;
+            case 13:
+              _context6.next = 15;
               return prevStore.dispatch((0, _basic.beforeChangeAction)(location, action));
 
-            case 14:
+            case 15:
               this.location = location;
               this.action = action;
               NotifyNativeRouter = [];
@@ -653,20 +691,20 @@ var Router = function (_CoreRouter) {
                 pageStack.replaceStore(newStore);
               }
 
-              _context6.next = 25;
+              _context6.next = 26;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 25:
+            case 26:
               if (!(!_nativeCaller && NotifyNativeRouter.length)) {
-                _context6.next = 28;
+                _context6.next = 29;
                 break;
               }
 
-              _context6.next = 28;
+              _context6.next = 29;
               return this.nativeRouter.execute(action, location, record.key, index);
 
-            case 28:
-              _context6.next = 30;
+            case 29:
+              _context6.next = 31;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -675,10 +713,10 @@ var Router = function (_CoreRouter) {
                 windowChanged: !!index[0]
               });
 
-            case 30:
+            case 31:
               newStore.dispatch((0, _basic.afterChangeAction)(location, action));
 
-            case 31:
+            case 32:
             case "end":
               return _context6.stop();
           }

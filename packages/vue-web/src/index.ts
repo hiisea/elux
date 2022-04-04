@@ -1,5 +1,5 @@
 import {createSSRApp, createApp as createCSRApp} from 'vue';
-import {buildApp, buildSSR} from '@elux/core';
+import {buildApp, buildSSR, NativeRequest} from '@elux/core';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
 import {AppConfig} from '@elux/app';
 import {RouterComponent} from '@elux/vue-components';
@@ -17,8 +17,8 @@ export function createApp(appConfig: AppConfig) {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createSSR(appConfig: AppConfig, url: string, nativeData: any) {
-  const router = createServerRouter(url, nativeData);
+export function createSSR(appConfig: AppConfig, nativeRequest: NativeRequest) {
+  const router = createServerRouter(nativeRequest);
   const app = createSSRApp(RouterComponent);
   return buildSSR(app, router);
 }

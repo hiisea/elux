@@ -7,7 +7,7 @@ export function createApp(appConfig) {
   var router = createClientRouter();
   return buildApp({}, router);
 }
-export function createSSR(appConfig, url, nativeData) {
-  var router = createServerRouter(url, nativeData);
+export function createSSR(appConfig, nativeRequest) {
+  var router = createServerRouter(nativeRequest);
   return buildSSR({}, router);
 }

@@ -29,10 +29,23 @@ export function buildSSR(ins, router) {
           id = _ref2$id === void 0 ? 'root' : _ref2$id;
 
       return router.init({}).then(function () {
-        AppRender.toString(id, {
+        store.destroy();
+        var eluxContext = {
           router: router,
           documentHead: ''
-        }, ins, store);
+        };
+        return AppRender.toString(id, eluxContext, ins, store).then(function (html) {
+          var SSRTPL = coreConfig.SSRTPL,
+              SSRDataKey = coreConfig.SSRDataKey;
+          var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
+
+          if (match) {
+            var state = store.getState();
+            return SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + SSRDataKey + " = " + JSON.stringify(state) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
+          }
+
+          return html;
+        });
       });
     }
   });

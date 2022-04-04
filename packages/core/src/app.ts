@@ -1,5 +1,5 @@
 import env from './env';
-import {coreConfig} from './basic';
+import {EluxContext, coreConfig} from './basic';
 import {CoreRouter} from './store';
 
 export interface RenderOptions {
@@ -31,14 +31,27 @@ export function buildSSR<INS = {}>(
   ins: INS,
   router: CoreRouter
 ): INS & {
-  render(options?: RenderOptions): Promise<void>;
+  render(options?: RenderOptions): Promise<string>;
 } {
   const store = router.getCurrentPage().store;
   const AppRender = coreConfig.AppRender!;
   return Object.assign(ins, {
     render({id = 'root'}: RenderOptions = {}) {
       return router.init({}).then(() => {
-        AppRender.toString(id, {router, documentHead: ''}, ins, store);
+        store.destroy();
+        const eluxContext: EluxContext = {router, documentHead: ''};
+        return AppRender.toString(id, eluxContext, ins, store).then((html) => {
+          const {SSRTPL, SSRDataKey} = coreConfig;
+          const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+          if (match) {
+            const state = store.getState();
+            return SSRTPL.replace(
+              '</head>',
+              `\r\n${eluxContext.documentHead}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`
+            ).replace(match[0], match[0] + html);
+          }
+          return html;
+        });
       });
     },
   });

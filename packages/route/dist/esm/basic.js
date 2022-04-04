@@ -1,5 +1,33 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import { coreConfig, buildConfigSetter } from '@elux/core';
+export var ErrorCodes = {
+  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
+};
+export function nativeUrlToUrl(nativeUrl) {
+  var _nativeUrl$split = nativeUrl.split(/[?#]/),
+      _nativeUrl$split$ = _nativeUrl$split[0],
+      path = _nativeUrl$split$ === void 0 ? '' : _nativeUrl$split$,
+      _nativeUrl$split$2 = _nativeUrl$split[1],
+      search = _nativeUrl$split$2 === void 0 ? '' : _nativeUrl$split$2,
+      _nativeUrl$split$3 = _nativeUrl$split[2],
+      hash = _nativeUrl$split$3 === void 0 ? '' : _nativeUrl$split$3;
+
+  var pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
+  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+}
+export function urlToNativeUrl(eluxUrl) {
+  var _eluxUrl$split = eluxUrl.split(/[?#]/),
+      _eluxUrl$split$ = _eluxUrl$split[0],
+      path = _eluxUrl$split$ === void 0 ? '' : _eluxUrl$split$,
+      _eluxUrl$split$2 = _eluxUrl$split[1],
+      search = _eluxUrl$split$2 === void 0 ? '' : _eluxUrl$split$2,
+      _eluxUrl$split$3 = _eluxUrl$split[2],
+      hash = _eluxUrl$split$3 === void 0 ? '' : _eluxUrl$split$3;
+
+  var pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
+  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+}
 export function urlToLocation(url) {
   var _url$split = url.split(/[?#]/),
       _url$split$ = _url$split[0],
@@ -44,7 +72,7 @@ export function locationToUrl(_ref) {
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
   return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
 }
-export function toNativeLocation(location) {
+export function locationToNativeLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.out(location.pathname);
   var url = location.url.replace(location.pathname, pathname);
   return _extends({}, location, {
@@ -52,7 +80,7 @@ export function toNativeLocation(location) {
     url: url
   });
 }
-export function toEluxLocation(location) {
+export function nativeLocationToLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.in(location.pathname);
   var url = location.url.replace(location.pathname, pathname);
   return _extends({}, location, {
@@ -62,19 +90,19 @@ export function toEluxLocation(location) {
 }
 export function testChangeAction(location, routeAction) {
   return {
-    type: "" + coreConfig.AppModuleName + coreConfig.NSP + "testRouteChange",
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_testRouteChange",
     payload: [location, routeAction]
   };
 }
 export function beforeChangeAction(location, routeAction) {
   return {
-    type: "" + coreConfig.AppModuleName + coreConfig.NSP + "beforeRouteChange",
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_beforeRouteChange",
     payload: [location, routeAction]
   };
 }
 export function afterChangeAction(location, routeAction) {
   return {
-    type: "" + coreConfig.AppModuleName + coreConfig.NSP + "afterRouteChange",
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_afterRouteChange",
     payload: [location, routeAction]
   };
 }

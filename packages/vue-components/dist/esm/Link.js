@@ -2,6 +2,7 @@ import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWith
 var _excluded = ["onClick", "disabled", "to", "target", "action"];
 import { h } from 'vue';
 import { coreConfig } from '@elux/core';
+import { urlToNativeUrl } from '@elux/route';
 export var Link = function Link(_ref, context) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
@@ -26,17 +27,19 @@ export var Link = function Link(_ref, context) {
     }
   };
 
-  var href = action !== 'back' ? to : '';
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
   props['to'] = to;
   disabled && (props['disabled'] = true);
-  href && (props['href'] = href);
+  var href = action !== 'back' ? to : '';
 
   if (href) {
-    return h('a', props, context.slots.default());
+    href = urlToNativeUrl(href);
   } else {
-    return h('div', props, context.slots.default());
+    href = '#';
   }
+
+  props['href'] = href;
+  return h('a', props, context.slots.default());
 };

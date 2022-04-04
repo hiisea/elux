@@ -32,14 +32,14 @@ export function getApi(demoteForProductionOnly, injectActions) {
   };
 }
 export let BaseModel = (_class = class BaseModel {
+  get state() {
+    return this.store.getState(this.moduleName);
+  }
+
   constructor(moduleName, store) {
     this.store = void 0;
     this.moduleName = moduleName;
     this.store = store;
-  }
-
-  onStartup(routeChanged) {
-    return;
   }
 
   onActive() {
@@ -54,17 +54,12 @@ export let BaseModel = (_class = class BaseModel {
     return this.store.router;
   }
 
-  getState(type) {
+  getPrevState() {
     const runtime = this.store.router.runtime;
-
-    if (type === 'previous') {
-      return runtime.prevState[this.moduleName];
-    } else {
-      return this.store.getState(this.moduleName);
-    }
+    return runtime.prevState[this.moduleName];
   }
 
-  getStoreState(type) {
+  getRootState(type) {
     const runtime = this.store.router.runtime;
     let state;
 
@@ -96,16 +91,16 @@ export let BaseModel = (_class = class BaseModel {
     return this.store.dispatch(action);
   }
 
-  initState(state) {
+  _initState(state) {
     return state;
   }
 
-  updateState(subject, state) {
-    return mergeState(this.getState(), state);
+  _updateState(subject, state) {
+    return mergeState(this.state, state);
   }
 
-  loadingState(loadingState) {
-    return mergeState(this.getState(), loadingState);
+  _loadingState(loadingState) {
+    return mergeState(this.state, loadingState);
   }
 
-}, (_applyDecoratedDescriptor(_class.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "loadingState"), _class.prototype)), _class);
+}, (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);

@@ -1,7 +1,6 @@
 import env from './env';
 import {
   Action,
-  AppModuleState,
   EluxComponent,
   AsyncEluxComponent,
   CommonModule,
@@ -40,20 +39,28 @@ export type Facade<
   } = any
 > = {[K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>};
 
+// type PickHandler<F> = F extends (...args: infer P) => any
+//   ? (...args: P) => {
+//       type: string;
+//     }
+//   : never;
+
+// type PickActions<T> = Pick<
+//   {[K in keyof T]: PickHandler<T[K]>},
+//   {
+//     [K in keyof T]: T[K] extends Function ? Exclude<K, 'onActive' | 'onInactive' | 'onMount'> : never;
+//   }[keyof T]
+// >;
+
 /*** @public */
-export type PickHandler<F> = F extends (...args: infer P) => any
+export type HandlerToAction<T> = T extends (...args: infer P) => any
   ? (...args: P) => {
       type: string;
     }
-  : never;
+  : undefined;
 
 /*** @public */
-export type PickActions<T> = Pick<
-  {[K in keyof T]: PickHandler<T[K]>},
-  {
-    [K in keyof T]: T[K] extends Function ? Exclude<K, 'onActive' | 'onInactive' | 'onStartup' | 'onInit'> : never;
-  }[keyof T]
->;
+export type PickModelActions<T> = {[K in Exclude<keyof T, 'moduleName' | 'state' | 'onActive' | 'onInactive' | 'onMount'>]: HandlerToAction<T[K]>};
 
 /*** @public */
 export type GetPromiseComponent<T> = T extends () => Promise<{default: infer R}> ? R : T;
@@ -99,9 +106,9 @@ export function exportModule<
   return exportModuleFacade(moduleName, ModelClass, components, data) as {
     moduleName: TModuleName;
     ModelClass: CommonModelClass;
-    //state: ReturnType<TModel['onInit']>;
-    state: GetPromiseReturn<ReturnType<TModel['onInit']>>;
-    actions: PickActions<TModel>;
+    state: TModel['state'];
+    //state: GetPromiseReturn<ReturnType<TModel['onInit']>>;
+    actions: PickModelActions<TModel>;
     components: ReturnComponents<TComponents>;
     data: D;
   };
@@ -115,7 +122,7 @@ export type ILoadComponent<TFacade extends Facade = {}> = <M extends keyof TFaca
 
 /*** @public */
 export type API<TFacade extends Facade> = {
-  State: {app: AppModuleState} & {[N in keyof TFacade]?: TFacade[N]['state']};
+  State: {[N in keyof TFacade]?: TFacade[N]['state']};
   GetActions<N extends keyof TFacade>(...args: N[]): {[K in N]: TFacade[K]['actions']};
   LoadComponent: ILoadComponent<TFacade>;
   Modules: {[N in keyof TFacade]: Pick<TFacade[N], 'name' | 'actions' | 'actionNames' | 'data'>};
@@ -208,16 +215,6 @@ export function getApi<TAPI extends {State: any; GetActions: any; LoadComponent:
   };
 }
 
-/*** @public */
-export type HandlerThis<T> = T extends (...args: infer P) => any
-  ? (...args: P) => {
-      type: string;
-    }
-  : undefined;
-
-/*** @public */
-export type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
-
 /**
  * Model基类
  *
@@ -237,21 +234,21 @@ export type ActionsThis<T> = {[K in keyof T]: HandlerThis<T[K]>};
 export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreState extends StoreState = {}> implements CommonModel {
   protected readonly store: IStore<TStoreState>;
 
+  public get state(): TModuleState {
+    return this.store.getState(this.moduleName) as any;
+  }
+
   constructor(public readonly moduleName: string, store: IStore) {
     this.store = store as any;
   }
 
-  abstract onInit(routeChanged: boolean): TModuleState | Promise<TModuleState>;
+  public abstract onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
 
-  onStartup(routeChanged: boolean): void | Promise<void> {
+  public onActive(): void {
     return;
   }
 
-  onActive(): void {
-    return;
-  }
-
-  onInactive(): void {
+  public onInactive(): void {
     return;
   }
 
@@ -259,18 +256,12 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
     return this.store.router;
   }
 
-  protected getState(): TModuleState;
-  protected getState(type: 'previous'): TModuleState | undefined;
-  protected getState(type?: 'previous'): any {
+  protected getPrevState(): TModuleState | undefined {
     const runtime = this.store.router.runtime;
-    if (type === 'previous') {
-      return runtime.prevState[this.moduleName];
-    } else {
-      return this.store.getState(this.moduleName);
-    }
+    return runtime.prevState[this.moduleName] as TModuleState;
   }
 
-  protected getStoreState(type?: 'previous' | 'uncommitted'): TStoreState {
+  protected getRootState(type?: 'previous' | 'uncommitted'): TStoreState {
     const runtime = this.store.router.runtime;
     let state: StoreState;
     if (type === 'previous') {
@@ -286,7 +277,7 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   /**
    * 获取本模块的`公开actions`构造器
    */
-  protected get actions(): ActionsThis<this> {
+  protected get actions(): PickModelActions<this> {
     return MetaData.moduleApiMap[this.moduleName].actions as any;
   }
 
@@ -303,9 +294,11 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
    * ```
    */
   protected getPrivateActions<T extends Record<string, Function>>(
-    actionsMap?: T
-  ): {[K in keyof T]: PickHandler<T[K]>} & {
-    updateState: (subject: string, state: Partial<TModuleState>) => Action;
+    actionsMap: T
+  ): {[K in keyof T]: HandlerToAction<T[K]>} & {
+    _initState(state: TModuleState): Action;
+    _updateState(subject: string, state: Partial<TModuleState>): Action;
+    _loadingState(loadingState: {[group: string]: LoadingState}): Action;
   } {
     return MetaData.moduleApiMap[this.moduleName].actions as any;
   }
@@ -323,17 +316,17 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   }
 
   @reducer
-  protected initState(state: TModuleState): ModuleState {
+  protected _initState(state: TModuleState): TModuleState {
     return state;
   }
 
   @reducer
-  protected updateState(subject: string, state: Partial<TModuleState>): ModuleState {
-    return mergeState(this.getState(), state);
+  protected _updateState(subject: string, state: Partial<TModuleState>): TModuleState {
+    return mergeState(this.state, state);
   }
 
   @reducer
-  protected loadingState(loadingState: {[group: string]: LoadingState}): ModuleState {
-    return mergeState(this.getState(), loadingState);
+  protected _loadingState(loadingState: {[group: string]: LoadingState}): TModuleState {
+    return mergeState(this.state, loadingState);
   }
 }

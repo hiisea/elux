@@ -17,21 +17,10 @@ export function setProcessedError(error, processed) {
   });
   return error;
 }
-export const ActionTypes = {
-  Init: 'initState',
-  Loading: 'loadingState',
-  Error: `error`
-};
 export function moduleLoadingAction(moduleName, loadingState) {
   return {
-    type: `${moduleName}${coreConfig.NSP}${ActionTypes.Loading}`,
+    type: `${moduleName}${coreConfig.NSP}_loadingState`,
     payload: [loadingState]
-  };
-}
-export function moduleInitAction(moduleName, initState) {
-  return {
-    type: `${moduleName}${coreConfig.NSP}${ActionTypes.Init}`,
-    payload: [initState]
   };
 }
 export function errorAction(error) {
@@ -58,7 +47,13 @@ export function errorAction(error) {
     writable: true
   });
   return {
-    type: `${coreConfig.AppModuleName}${coreConfig.NSP}${ActionTypes.Error}`,
+    type: getErrorActionType(),
     payload: [actionError]
   };
+}
+export function getErrorActionType() {
+  return coreConfig.StageModuleName + coreConfig.NSP + '_error';
+}
+export function getInitActionType(moduleName) {
+  return moduleName + coreConfig.NSP + '_initState';
 }

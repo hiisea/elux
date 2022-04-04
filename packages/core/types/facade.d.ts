@@ -1,4 +1,4 @@
-import { Action, AppModuleState, EluxComponent, AsyncEluxComponent, CommonModule, CommonModel, CommonModelClass, ModuleState, StoreState, IRouter, IStore } from './basic';
+import { Action, EluxComponent, AsyncEluxComponent, CommonModule, CommonModel, CommonModelClass, ModuleState, StoreState, IRouter, IStore } from './basic';
 import { LoadingState } from './utils';
 /*** @public */
 export declare type GetPromiseModule<T> = T extends Promise<{
@@ -24,15 +24,13 @@ export declare type Facade<G extends {
     [K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>;
 };
 /*** @public */
-export declare type PickHandler<F> = F extends (...args: infer P) => any ? (...args: P) => {
+export declare type HandlerToAction<T> = T extends (...args: infer P) => any ? (...args: P) => {
     type: string;
-} : never;
+} : undefined;
 /*** @public */
-export declare type PickActions<T> = Pick<{
-    [K in keyof T]: PickHandler<T[K]>;
-}, {
-    [K in keyof T]: T[K] extends Function ? Exclude<K, 'onActive' | 'onInactive' | 'onStartup' | 'onInit'> : never;
-}[keyof T]>;
+export declare type PickModelActions<T> = {
+    [K in Exclude<keyof T, 'moduleName' | 'state' | 'onActive' | 'onInactive' | 'onMount'>]: HandlerToAction<T[K]>;
+};
 /*** @public */
 export declare type GetPromiseComponent<T> = T extends () => Promise<{
     default: infer R;
@@ -71,8 +69,8 @@ export declare function exportModule<TModuleName extends string, TModel extends 
 }, D>(moduleName: TModuleName, ModelClass: CommonModelClass<TModel>, components: TComponents, data?: D): {
     moduleName: TModuleName;
     ModelClass: CommonModelClass;
-    state: GetPromiseReturn<ReturnType<TModel['onInit']>>;
-    actions: PickActions<TModel>;
+    state: TModel['state'];
+    actions: PickModelActions<TModel>;
     components: ReturnComponents<TComponents>;
     data: D;
 };
@@ -85,8 +83,6 @@ export declare type ILoadComponent<TFacade extends Facade = {}> = <M extends key
 /*** @public */
 export declare type API<TFacade extends Facade> = {
     State: {
-        app: AppModuleState;
-    } & {
         [N in keyof TFacade]?: TFacade[N]['state'];
     };
     GetActions<N extends keyof TFacade>(...args: N[]): {
@@ -167,14 +163,6 @@ export declare function getApi<TAPI extends {
     useRouter: () => IRouter;
     useStore: () => IStore<TAPI['State']>;
 };
-/*** @public */
-export declare type HandlerThis<T> = T extends (...args: infer P) => any ? (...args: P) => {
-    type: string;
-} : undefined;
-/*** @public */
-export declare type ActionsThis<T> = {
-    [K in keyof T]: HandlerThis<T[K]>;
-};
 /**
  * Model基类
  *
@@ -194,19 +182,18 @@ export declare type ActionsThis<T> = {
 export declare abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreState extends StoreState = {}> implements CommonModel {
     readonly moduleName: string;
     protected readonly store: IStore<TStoreState>;
+    get state(): TModuleState;
     constructor(moduleName: string, store: IStore);
-    abstract onInit(routeChanged: boolean): TModuleState | Promise<TModuleState>;
-    onStartup(routeChanged: boolean): void | Promise<void>;
+    abstract onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
     onActive(): void;
     onInactive(): void;
     protected getRouter(): IRouter<TStoreState>;
-    protected getState(): TModuleState;
-    protected getState(type: 'previous'): TModuleState | undefined;
-    protected getStoreState(type?: 'previous' | 'uncommitted'): TStoreState;
+    protected getPrevState(): TModuleState | undefined;
+    protected getRootState(type?: 'previous' | 'uncommitted'): TStoreState;
     /**
      * 获取本模块的`公开actions`构造器
      */
-    protected get actions(): ActionsThis<this>;
+    protected get actions(): PickModelActions<this>;
     /**
      * 获取本模块的`私有actions`构造器
      *
@@ -219,20 +206,24 @@ export declare abstract class BaseModel<TModuleState extends ModuleState = {}, T
      * this.dispatch(privateAction.renameUser('jimmy'))
      * ```
      */
-    protected getPrivateActions<T extends Record<string, Function>>(actionsMap?: T): {
-        [K in keyof T]: PickHandler<T[K]>;
+    protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {
+        [K in keyof T]: HandlerToAction<T[K]>;
     } & {
-        updateState: (subject: string, state: Partial<TModuleState>) => Action;
+        _initState(state: TModuleState): Action;
+        _updateState(subject: string, state: Partial<TModuleState>): Action;
+        _loadingState(loadingState: {
+            [group: string]: LoadingState;
+        }): Action;
     };
     /**
      * 获取当前触发的action.type
      */
     protected getCurrentAction(): Action;
     protected dispatch(action: Action): void | Promise<void>;
-    protected initState(state: TModuleState): ModuleState;
-    protected updateState(subject: string, state: Partial<TModuleState>): ModuleState;
-    protected loadingState(loadingState: {
+    protected _initState(state: TModuleState): TModuleState;
+    protected _updateState(subject: string, state: Partial<TModuleState>): TModuleState;
+    protected _loadingState(loadingState: {
         [group: string]: LoadingState;
-    }): ModuleState;
+    }): TModuleState;
 }
 //# sourceMappingURL=facade.d.ts.map

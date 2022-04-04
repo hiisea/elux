@@ -9,7 +9,7 @@ const AppRender: IAppRender = {
   toDocument(id, eluxContext, fromSSR, app, store): void {
     const renderFun = fromSSR ? hydrate : render;
     const panel = env.document!.getElementById(id);
-    const appView = getEntryComponent();
+    const appView: Elux.Component = getEntryComponent() as any;
     renderFun(
       <EluxContextComponent.Provider value={eluxContext}>
         <RouterComponent page={appView} />
@@ -18,7 +18,7 @@ const AppRender: IAppRender = {
     );
   },
   toString(id, eluxContext, app, store): Promise<string> {
-    const appView = getEntryComponent();
+    const appView: Elux.Component = getEntryComponent() as any;
     const html = renderToString(
       <EluxContextComponent.Provider value={eluxContext}>
         <RouterComponent page={appView} />

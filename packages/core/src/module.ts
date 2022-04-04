@@ -1,5 +1,5 @@
 import env from './env';
-import {TaskCounter, LoadingState} from './utils';
+import {TaskCounter} from './utils';
 import {
   Action,
   ActionHandler,
@@ -7,14 +7,12 @@ import {
   CommonModelClass,
   CommonModule,
   EluxComponent,
-  ActionError,
+  MetaData,
   AsyncEluxComponent,
   isEluxComponent,
   ModuleState,
   IStore,
-  ErrorCodes,
   coreConfig,
-  mergeState,
 } from './basic';
 import {moduleLoadingAction} from './actions';
 
@@ -60,9 +58,16 @@ export function exportView<T>(component: T): T & EluxComponent {
  * @public
  */
 export class EmptyModel implements CommonModel {
-  declare readonly routeParams: {};
+  public get state(): ModuleState {
+    return this.store.getState(this.moduleName) as ModuleState;
+  }
 
-  constructor(public readonly moduleName: string, public readonly store: IStore) {}
+  constructor(public readonly moduleName: string, protected readonly store: IStore) {}
+
+  onMount(): void {
+    const actions = MetaData.moduleApiMap[this.moduleName].actions as {_initState: (state: ModuleState) => Action};
+    this.store.dispatch(actions._initState({}));
+  }
 
   onActive(): void {
     return;
@@ -71,46 +76,9 @@ export class EmptyModel implements CommonModel {
     return;
   }
 
-  onInit(): ModuleState {
-    return {};
-  }
-
-  onStartup(): void {
-    return;
-  }
   @reducer
-  protected initState(state: ModuleState): ModuleState {
+  protected _initState(state: ModuleState): ModuleState {
     return state;
-  }
-}
-
-export class AppModel implements CommonModel {
-  public readonly moduleName: string = coreConfig.AppModuleName;
-
-  constructor(public readonly store: IStore) {}
-
-  onInit(): ModuleState {
-    return {};
-  }
-  onStartup(): void {
-    return;
-  }
-  onActive(): void {
-    return;
-  }
-  onInactive(): void {
-    return;
-  }
-  @reducer
-  protected loadingState(loadingState: {[group: string]: LoadingState}): ModuleState {
-    return mergeState(this.store.getState(this.moduleName), loadingState);
-  }
-  @reducer
-  protected error(error: ActionError): ModuleState {
-    if (error.code === ErrorCodes.INIT_ERROR) {
-      return mergeState(this.store.getState(this.moduleName), {initError: error.message});
-    }
-    return this.store.getState(this.moduleName)!;
   }
 }
 
@@ -153,7 +121,7 @@ export function exportModuleFacade(
  * @public
  */
 export function setLoading<T extends Promise<any>>(item: T, store: IStore, _moduleName?: string, _groupName?: string): T {
-  const moduleName = _moduleName || coreConfig.AppModuleName;
+  const moduleName = _moduleName || coreConfig.StageModuleName;
   const groupName = _groupName || 'globalLoading';
   const key = moduleName + coreConfig.NSP + groupName;
   const loadings: {[moduleNameAndGroupName: string]: TaskCounter} = (store as any).loadingGroups;
@@ -241,12 +209,7 @@ export function reducer(target: any, key: string, descriptor: PropertyDescriptor
  *
  * @public
  */
-export function effect(loadingKey: string | null = 'app.globalLoading'): Function {
-  let loadingForModuleName: string | undefined;
-  let loadingForGroupName: string | undefined;
-  if (loadingKey !== null) {
-    [loadingForModuleName, loadingForGroupName] = loadingKey.split('.');
-  }
+export function effect(loadingKey?: string | null): Function {
   return (target: any, key: string, descriptor: PropertyDescriptor) => {
     if (!key && !descriptor) {
       key = target.key;
@@ -256,9 +219,17 @@ export function effect(loadingKey: string | null = 'app.globalLoading'): Functio
     // fun.__actionName__ = key;
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
-    if (loadingForModuleName && loadingForGroupName && !env.isServer) {
+    if (loadingKey !== null && !env.isServer) {
       // eslint-disable-next-line no-inner-declarations
       const injectLoading = function (this: CommonModel, store: IStore, curAction: Action, effectPromise: Promise<unknown>) {
+        let loadingForModuleName: string | undefined;
+        let loadingForGroupName: string | undefined;
+        if (loadingKey === undefined) {
+          loadingForModuleName = coreConfig.StageModuleName;
+          loadingForGroupName = 'globalLoading';
+        } else {
+          [loadingForModuleName, loadingForGroupName] = loadingKey.split('.');
+        }
         if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }

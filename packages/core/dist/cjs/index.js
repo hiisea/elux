@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.toPromise = exports.setLoading = exports.setCoreConfig = exports.reducer = exports.modelHotReplacement = exports.isServer = exports.isPromise = exports.injectComponent = exports.getModuleApiMap = exports.getEntryComponent = exports.getComponent = exports.getClientRouter = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.deepClone = exports.coreConfig = exports.buildSSR = exports.buildConfigSetter = exports.buildApp = exports.Store = exports.ErrorCodes = exports.EmptyModel = exports.CoreRouter = exports.BaseModel = void 0;
+exports.toPromise = exports.setProcessedError = exports.setLoading = exports.setCoreConfig = exports.reducer = exports.modelHotReplacement = exports.isServer = exports.isPromise = exports.injectComponent = exports.getModuleApiMap = exports.getEntryComponent = exports.getComponent = exports.getClientRouter = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.deepClone = exports.coreConfig = exports.buildSSR = exports.buildConfigSetter = exports.buildApp = exports.Store = exports.EmptyModel = exports.CoreRouter = exports.BaseModel = void 0;
 
 var _env = _interopRequireDefault(require("./env"));
 
@@ -23,11 +23,11 @@ var _basic = require("./basic");
 exports.coreConfig = _basic.coreConfig;
 exports.setCoreConfig = _basic.setCoreConfig;
 exports.getClientRouter = _basic.getClientRouter;
-exports.ErrorCodes = _basic.ErrorCodes;
 
 var _actions = require("./actions");
 
 exports.errorAction = _actions.errorAction;
+exports.setProcessedError = _actions.setProcessedError;
 
 var _inject = require("./inject");
 

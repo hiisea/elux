@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.coreConfig = exports.MetaData = exports.ErrorCodes = void 0;
+exports.coreConfig = exports.MetaData = void 0;
 exports.deepMergeState = deepMergeState;
 exports.getClientRouter = getClientRouter;
 exports.isEluxComponent = isEluxComponent;
@@ -13,12 +13,6 @@ exports.setCoreConfig = void 0;
 var _env = _interopRequireDefault(require("./env"));
 
 var _utils = require("./utils");
-
-var ErrorCodes = {
-  INIT_ERROR: 'ELUX.INIT_ERROR',
-  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
-};
-exports.ErrorCodes = ErrorCodes;
 
 function isEluxComponent(data) {
   return data['__elux_component__'];
@@ -38,7 +32,6 @@ var coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  AppModuleName: 'app',
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',

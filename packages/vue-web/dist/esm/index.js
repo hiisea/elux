@@ -9,8 +9,8 @@ export function createApp(appConfig) {
   var app = createCSRApp(RouterComponent);
   return buildApp(app, router);
 }
-export function createSSR(appConfig, url, nativeData) {
-  var router = createServerRouter(url, nativeData);
+export function createSSR(appConfig, nativeRequest) {
+  var router = createServerRouter(nativeRequest);
   var app = createSSRApp(RouterComponent);
   return buildSSR(app, router);
 }

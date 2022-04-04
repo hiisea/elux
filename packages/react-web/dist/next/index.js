@@ -7,7 +7,7 @@ export function createApp(appConfig) {
   const router = createClientRouter();
   return buildApp({}, router);
 }
-export function createSSR(appConfig, url, nativeData) {
-  const router = createServerRouter(url, nativeData);
+export function createSSR(appConfig, nativeRequest) {
+  const router = createServerRouter(nativeRequest);
   return buildSSR({}, router);
 }

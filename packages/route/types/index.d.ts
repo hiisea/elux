@@ -1,13 +1,12 @@
-import { Location, RouteTarget, IRouteRecord, CoreRouter, Store, StoreState } from '@elux/core';
-export { setRouteConfig, routeConfig, locationToUrl, urlToLocation, toNativeLocation, toEluxLocation } from './basic';
+import { Location, RouteTarget, IRouteRecord, CoreRouter, Store, StoreState, NativeRequest } from '@elux/core';
+export { ErrorCodes, setRouteConfig, routeConfig, locationToUrl, urlToLocation, locationToNativeLocation, nativeLocationToLocation, urlToNativeUrl, nativeUrlToUrl, } from './basic';
 export declare abstract class BaseNativeRouter {
-    readonly nativeLocation: Partial<Location>;
-    readonly nativeData: unknown;
+    readonly nativeRequest: NativeRequest;
     protected curTask?: {
         resolve: () => void;
         reject: () => void;
     };
-    constructor(nativeLocation: Partial<Location>, nativeData: unknown);
+    constructor(nativeRequest: NativeRequest);
     protected abstract push(nativeLocation: Location, key: string): boolean;
     protected abstract replace(nativeLocation: Location, key: string): boolean;
     protected abstract relaunch(nativeLocation: Location, key: string): boolean;
@@ -43,8 +42,10 @@ export declare class Router extends CoreRouter {
         url: string;
         store: Store;
     }[];
-    init(prevState: StoreState): Promise<void>;
     private mountStore;
+    init(prevState: StoreState): Promise<void>;
+    private _init;
+    private redirectOnServer;
     relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): void | Promise<void>;
     private _relaunch;
     replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): void | Promise<void>;

@@ -1,5 +1,6 @@
 import {h, HTMLAttributes, VNode, Events, DefineComponent} from 'vue';
 import {RouteTarget, RouteAction, coreConfig} from '@elux/core';
+import {urlToNativeUrl} from '@elux/route';
 
 /**
  * 内置VUE组件
@@ -55,17 +56,17 @@ export const Link: DefineComponent<LinkProps> = function (
       to && router[action](action === 'back' ? parseInt(to) : {url: to}, target);
     }
   };
-  const href = action !== 'back' ? to : '';
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
   props['to'] = to;
   disabled && (props['disabled'] = true);
-  href && (props['href'] = href);
-
+  let href = action !== 'back' ? to : '';
   if (href) {
-    return h('a', props, context.slots.default!());
+    href = urlToNativeUrl(href);
   } else {
-    return h('div', props, context.slots.default!());
+    href = '#';
   }
+  props['href'] = href;
+  return h('a', props, context.slots.default!());
 } as any;

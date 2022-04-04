@@ -1,5 +1,5 @@
 import { Listener, UNListener, TaskCounter } from './utils';
-import { Action, CommonModelClass, StoreMiddleware, StoreState, ModuleState, IRouter, IStore, RouteRuntime, Dispatch, IRouteRecord, Location, RouteAction, RouteTarget } from './basic';
+import { Action, CommonModelClass, StoreMiddleware, StoreState, ModuleState, NativeRequest, IRouter, IStore, RouteRuntime, Dispatch, IRouteRecord, Location, RouteAction, RouteTarget } from './basic';
 export declare function getActionData(action: Action): any[];
 export declare const preMiddleware: StoreMiddleware;
 interface RouterEvent {
@@ -12,13 +12,13 @@ interface RouterEvent {
 export declare abstract class CoreRouter implements IRouter {
     location: Location;
     action: RouteAction;
-    readonly nativeData: unknown;
+    readonly nativeRequest: NativeRequest;
     runtime: RouteRuntime;
     protected listenerId: number;
     protected readonly listenerMap: {
         [id: string]: (data: RouterEvent) => void | Promise<void>;
     };
-    constructor(location: Location, action: RouteAction, nativeData: unknown);
+    constructor(location: Location, action: RouteAction, nativeRequest: NativeRequest);
     addListener(callback: (data: RouterEvent) => void | Promise<void>): UNListener;
     dispatch(data: RouterEvent): void | Promise<void>;
     abstract init(prevState: StoreState): Promise<void>;
@@ -50,7 +50,8 @@ export declare class Store implements IStore {
     readonly sid: number;
     readonly router: CoreRouter;
     private state;
-    private mountedModels;
+    private injectedModels;
+    private mountedModules;
     private currentListeners;
     private nextListeners;
     private active;
@@ -64,8 +65,7 @@ export declare class Store implements IStore {
     clone(): Store;
     hotReplaceModel(moduleName: string, ModelClass: CommonModelClass): void;
     getCurrentAction(): Action;
-    private mountModule;
-    mount(moduleName: string, routeChanged: boolean): void | Promise<void>;
+    mount(moduleName: string, env: 'init' | 'route' | 'update'): void | Promise<void>;
     setActive(): void;
     setInactive(): void;
     private ensureCanMutateNextListeners;

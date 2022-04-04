@@ -1,8 +1,14 @@
 import { Action, RouteAction, Location } from '@elux/core';
+export declare const ErrorCodes: {
+    ROUTE_REDIRECT: string;
+    ROUTE_BACK_OVERFLOW: string;
+};
+export declare function nativeUrlToUrl(nativeUrl: string): string;
+export declare function urlToNativeUrl(eluxUrl: string): string;
 export declare function urlToLocation(url: string): Location;
 export declare function locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery }: Partial<Location>): string;
-export declare function toNativeLocation(location: Location): Location;
-export declare function toEluxLocation(location: Location): Location;
+export declare function locationToNativeLocation(location: Location): Location;
+export declare function nativeLocationToLocation(location: Location): Location;
 export declare function testChangeAction(location: Location, routeAction: RouteAction): Action;
 export declare function beforeChangeAction(location: Location, routeAction: RouteAction): Action;
 export declare function afterChangeAction(location: Location, routeAction: RouteAction): Action;

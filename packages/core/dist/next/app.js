@@ -26,10 +26,25 @@ export function buildSSR(ins, router) {
       id = 'root'
     } = {}) {
       return router.init({}).then(() => {
-        AppRender.toString(id, {
+        store.destroy();
+        const eluxContext = {
           router,
           documentHead: ''
-        }, ins, store);
+        };
+        return AppRender.toString(id, eluxContext, ins, store).then(html => {
+          const {
+            SSRTPL,
+            SSRDataKey
+          } = coreConfig;
+          const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+
+          if (match) {
+            const state = store.getState();
+            return SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`).replace(match[0], match[0] + html);
+          }
+
+          return html;
+        });
       });
     }
 

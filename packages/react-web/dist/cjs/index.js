@@ -50,7 +50,7 @@ function createApp(appConfig) {
   return (0, _core.buildApp)({}, router);
 }
 
-function createSSR(appConfig, url, nativeData) {
-  var router = (0, _routeBrowser.createServerRouter)(url, nativeData);
+function createSSR(appConfig, nativeRequest) {
+  var router = (0, _routeBrowser.createServerRouter)(nativeRequest);
   return (0, _core.buildSSR)({}, router);
 }

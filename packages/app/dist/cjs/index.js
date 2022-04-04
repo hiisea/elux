@@ -1,11 +1,11 @@
 "use strict";
 
 exports.__esModule = true;
-exports.modelHotReplacement = exports.locationToUrl = exports.isServer = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.ErrorCodes = exports.EmptyModel = exports.BaseModel = void 0;
+exports.nativeUrlToUrl = exports.nativeLocationToLocation = exports.modelHotReplacement = exports.locationToUrl = exports.locationToNativeLocation = exports.isServer = exports.getApi = exports.exportView = exports.exportModule = exports.exportComponent = exports.errorAction = exports.env = exports.effectLogger = exports.effect = exports.deepMerge = exports.ErrorCodes = exports.EmptyModel = exports.BaseModel = void 0;
 exports.patchActions = patchActions;
 exports.reducer = void 0;
 exports.setConfig = setConfig;
-exports.urlToLocation = exports.toNativeLocation = exports.toEluxLocation = exports.setLoading = void 0;
+exports.urlToNativeUrl = exports.urlToLocation = exports.setLoading = void 0;
 
 var _core = require("@elux/core");
 
@@ -24,14 +24,16 @@ exports.modelHotReplacement = _core.modelHotReplacement;
 exports.getApi = _core.getApi;
 exports.EmptyModel = _core.EmptyModel;
 exports.BaseModel = _core.BaseModel;
-exports.ErrorCodes = _core.ErrorCodes;
 
 var _route = require("@elux/route");
 
+exports.ErrorCodes = _route.ErrorCodes;
 exports.locationToUrl = _route.locationToUrl;
 exports.urlToLocation = _route.urlToLocation;
-exports.toNativeLocation = _route.toNativeLocation;
-exports.toEluxLocation = _route.toEluxLocation;
+exports.locationToNativeLocation = _route.locationToNativeLocation;
+exports.nativeLocationToLocation = _route.nativeLocationToLocation;
+exports.urlToNativeUrl = _route.urlToNativeUrl;
+exports.nativeUrlToUrl = _route.nativeUrlToUrl;
 var appConfig = Symbol();
 
 function setConfig(conf) {

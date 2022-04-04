@@ -161,7 +161,7 @@ function getModuleApiMap(data) {
 function injectComponent(moduleName, componentName, store) {
   return (0, _utils.promiseCaseCallback)(getComponent(moduleName, componentName), function (component) {
     if (component.__elux_component__ === 'view' && !_env.default.isServer) {
-      return (0, _utils.promiseCaseCallback)(store.mount(moduleName, false), function () {
+      return (0, _utils.promiseCaseCallback)(store.mount(moduleName, 'update'), function () {
         return component;
       });
     }

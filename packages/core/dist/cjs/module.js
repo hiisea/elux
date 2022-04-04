@@ -3,7 +3,7 @@
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault").default;
 
 exports.__esModule = true;
-exports.EmptyModel = exports.AppModel = void 0;
+exports.EmptyModel = void 0;
 exports.effect = effect;
 exports.effectLogger = effectLogger;
 exports.exportComponent = exportComponent;
@@ -11,6 +11,8 @@ exports.exportModuleFacade = exportModuleFacade;
 exports.exportView = exportView;
 exports.reducer = reducer;
 exports.setLoading = setLoading;
+
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 
 var _applyDecoratedDescriptor2 = _interopRequireDefault(require("@babel/runtime/helpers/applyDecoratedDescriptor"));
 
@@ -22,7 +24,7 @@ var _basic = require("./basic");
 
 var _actions = require("./actions");
 
-var _class, _class2;
+var _class;
 
 function exportComponent(component) {
   var eluxComponent = component;
@@ -44,6 +46,11 @@ var EmptyModel = (_class = function () {
 
   var _proto = EmptyModel.prototype;
 
+  _proto.onMount = function onMount() {
+    var actions = _basic.MetaData.moduleApiMap[this.moduleName].actions;
+    this.store.dispatch(actions._initState({}));
+  };
+
   _proto.onActive = function onActive() {
     return;
   };
@@ -52,62 +59,19 @@ var EmptyModel = (_class = function () {
     return;
   };
 
-  _proto.onInit = function onInit() {
-    return {};
-  };
-
-  _proto.onStartup = function onStartup() {
-    return;
-  };
-
-  _proto.initState = function initState(state) {
+  _proto._initState = function _initState(state) {
     return state;
   };
 
-  return EmptyModel;
-}(), ((0, _applyDecoratedDescriptor2.default)(_class.prototype, "initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "initState"), _class.prototype)), _class);
-exports.EmptyModel = EmptyModel;
-var AppModel = (_class2 = function () {
-  function AppModel(store) {
-    this.moduleName = _basic.coreConfig.AppModuleName;
-    this.store = store;
-  }
-
-  var _proto2 = AppModel.prototype;
-
-  _proto2.onInit = function onInit() {
-    return {};
-  };
-
-  _proto2.onStartup = function onStartup() {
-    return;
-  };
-
-  _proto2.onActive = function onActive() {
-    return;
-  };
-
-  _proto2.onInactive = function onInactive() {
-    return;
-  };
-
-  _proto2.loadingState = function loadingState(_loadingState) {
-    return (0, _basic.mergeState)(this.store.getState(this.moduleName), _loadingState);
-  };
-
-  _proto2.error = function error(_error) {
-    if (_error.code === _basic.ErrorCodes.INIT_ERROR) {
-      return (0, _basic.mergeState)(this.store.getState(this.moduleName), {
-        initError: _error.message
-      });
+  (0, _createClass2.default)(EmptyModel, [{
+    key: "state",
+    get: function get() {
+      return this.store.getState(this.moduleName);
     }
-
-    return this.store.getState(this.moduleName);
-  };
-
-  return AppModel;
-}(), ((0, _applyDecoratedDescriptor2.default)(_class2.prototype, "loadingState", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "loadingState"), _class2.prototype), (0, _applyDecoratedDescriptor2.default)(_class2.prototype, "error", [reducer], Object.getOwnPropertyDescriptor(_class2.prototype, "error"), _class2.prototype)), _class2);
-exports.AppModel = AppModel;
+  }]);
+  return EmptyModel;
+}(), ((0, _applyDecoratedDescriptor2.default)(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype)), _class);
+exports.EmptyModel = EmptyModel;
 
 function exportModuleFacade(moduleName, ModelClass, components, data) {
   Object.keys(components).forEach(function (key) {
@@ -128,7 +92,7 @@ function exportModuleFacade(moduleName, ModelClass, components, data) {
 }
 
 function setLoading(item, store, _moduleName, _groupName) {
-  var moduleName = _moduleName || _basic.coreConfig.AppModuleName;
+  var moduleName = _moduleName || _basic.coreConfig.StageModuleName;
   var groupName = _groupName || 'globalLoading';
   var key = moduleName + _basic.coreConfig.NSP + groupName;
   var loadings = store.loadingGroups;
@@ -177,20 +141,6 @@ function reducer(target, key, descriptor) {
 }
 
 function effect(loadingKey) {
-  if (loadingKey === void 0) {
-    loadingKey = 'app.globalLoading';
-  }
-
-  var loadingForModuleName;
-  var loadingForGroupName;
-
-  if (loadingKey !== null) {
-    var _loadingKey$split = loadingKey.split('.');
-
-    loadingForModuleName = _loadingKey$split[0];
-    loadingForGroupName = _loadingKey$split[1];
-  }
-
   return function (target, key, descriptor) {
     if (!key && !descriptor) {
       key = target.key;
@@ -201,8 +151,21 @@ function effect(loadingKey) {
     fun.__isEffect__ = true;
     descriptor.enumerable = true;
 
-    if (loadingForModuleName && loadingForGroupName && !_env.default.isServer) {
+    if (loadingKey !== null && !_env.default.isServer) {
       var injectLoading = function injectLoading(store, curAction, effectPromise) {
+        var loadingForModuleName;
+        var loadingForGroupName;
+
+        if (loadingKey === undefined) {
+          loadingForModuleName = _basic.coreConfig.StageModuleName;
+          loadingForGroupName = 'globalLoading';
+        } else {
+          var _loadingKey$split = loadingKey.split('.');
+
+          loadingForModuleName = _loadingKey$split[0];
+          loadingForGroupName = _loadingKey$split[1];
+        }
+
         if (loadingForModuleName === 'this') {
           loadingForModuleName = this.moduleName;
         }

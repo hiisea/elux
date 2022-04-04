@@ -1,4 +1,3 @@
-import { LoadingState } from './utils';
 /**
  * 定义Action
  *
@@ -91,7 +90,8 @@ export interface IStore<TStoreState extends StoreState = StoreState> {
     dispatch: Dispatch;
     getState: GetState<TStoreState>;
     getUncommittedState: () => TStoreState;
-    mount(moduleName: keyof TStoreState, routeChanged: boolean): void | Promise<void>;
+    mount(moduleName: keyof TStoreState, env: 'init' | 'route' | 'update'): void | Promise<void>;
+    destroy(): void;
 }
 /**
  * @public
@@ -121,16 +121,6 @@ export interface ActionError {
     message: string;
     detail?: any;
 }
-export declare const ErrorCodes: {
-    INIT_ERROR: string;
-    ROUTE_BACK_OVERFLOW: string;
-};
-export interface AppModuleState {
-    routeAction: RouteAction;
-    routeLocation: Location;
-    globalLoading: LoadingState;
-    initError: string;
-}
 /**
  * 路由历史记录
  *
@@ -155,8 +145,14 @@ export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
     prevState: TStoreState;
     completed: boolean;
 }
+export interface NativeRequest {
+    request: {
+        url: string;
+    };
+    response: any;
+}
 export interface IRouter<TStoreState extends StoreState = StoreState> {
-    nativeData: unknown;
+    nativeRequest: NativeRequest;
     action: RouteAction;
     location: Location;
     runtime: RouteRuntime<TStoreState>;
@@ -189,8 +185,8 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
  */
 export interface CommonModel {
     readonly moduleName: string;
-    onInit(routeChanged: boolean): ModuleState | Promise<ModuleState>;
-    onStartup(routeChanged: boolean): void | Promise<void>;
+    readonly state: ModuleState;
+    onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
     onActive(): void;
     onInactive(): void;
 }
@@ -210,7 +206,7 @@ export interface CommonModelClass<H = CommonModel> {
  *
  * @public
  */
-export interface EluxComponent extends Elux.Component<any> {
+export interface EluxComponent {
     __elux_component__: 'view' | 'component';
 }
 /**
@@ -334,7 +330,6 @@ export declare const coreConfig: {
     MSP: string;
     MutableData: boolean;
     DepthTimeOnLoading: number;
-    AppModuleName: string;
     StageModuleName: string;
     StageViewName: string;
     SSRDataKey: string;
@@ -367,7 +362,6 @@ export declare const setCoreConfig: (config: Partial<{
     MSP: string;
     MutableData: boolean;
     DepthTimeOnLoading: number;
-    AppModuleName: string;
     StageModuleName: string;
     StageViewName: string;
     SSRDataKey: string;

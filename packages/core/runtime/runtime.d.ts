@@ -10,6 +10,9 @@ declare namespace Elux {
       title: string;
       getElementById(id: string): any;
     };
+    location?: {
+      href: string;
+    };
     __REDUX_DEVTOOLS_EXTENSION__?: {
       connect: (options?: any) => {
         init(state: any): void;

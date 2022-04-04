@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { coreConfig } from '@elux/core';
+import { urlToNativeUrl } from '@elux/route';
 import { jsx as _jsx } from "react/jsx-runtime";
 export const Link = React.forwardRef(({
   onClick: _onClick,
@@ -20,21 +21,21 @@ export const Link = React.forwardRef(({
       }, target);
     }
   }, [_onClick, disabled, to, router, action, target]);
-  const href = action !== 'back' ? to : '';
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
   props['to'] = to;
   disabled && (props['disabled'] = true);
-  href && (props['href'] = href);
+  let href = action !== 'back' ? to : '';
 
   if (href) {
-    return _jsx("a", { ...props,
-      ref: ref
-    });
+    href = urlToNativeUrl(href);
   } else {
-    return _jsx("div", { ...props,
-      ref: ref
-    });
+    href = '#';
   }
+
+  props['href'] = href;
+  return _jsx("a", { ...props,
+    ref: ref
+  });
 });

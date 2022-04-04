@@ -1,9 +1,5 @@
 import env from './env';
 import { buildConfigSetter, deepMerge } from './utils';
-export var ErrorCodes = {
-  INIT_ERROR: 'ELUX.INIT_ERROR',
-  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
-};
 export function isEluxComponent(data) {
   return data['__elux_component__'];
 }
@@ -20,7 +16,6 @@ export var coreConfig = {
   MSP: ',',
   MutableData: false,
   DepthTimeOnLoading: 2,
-  AppModuleName: 'app',
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
