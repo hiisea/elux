@@ -13,13 +13,13 @@ const tag = process.env.NODE_TAG || process.env.NODE_ENV;
 function createConfig(fileName = 'pkg', inputFile, externals, aliasEntries) {
   const outputFile = inputFile.replace('src/', '');
   const cfg = {
-    next: {output: [{file: `dist/next/${outputFile}${fileName}.js`, format: 'esm'}], mainFields: ['jsnext:main', 'module', 'main']},
-    esm: {
+    es6: {output: [{file: `dist/es6/${outputFile}${fileName}.js`, format: 'esm'}], mainFields: ['module', 'main']},
+    es5: {
       output: [
-        {file: `dist/esm/${outputFile}${fileName}.js`, format: 'esm'},
-        {file: `dist/cjs/${outputFile}${fileName}.js`, format: 'cjs'},
-      ].filter(Boolean),
-      mainFields: ['module', 'main'],
+        {file: `dist/es5/${outputFile}${fileName}.js`, format: 'esm'},
+        //{file: `dist/cjs/${outputFile}${fileName}.js`, format: 'cjs'},
+      ],
+      mainFields: ['main', 'module'],
     },
   };
   const env = cfg[tag];

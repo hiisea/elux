@@ -1,15 +1,7 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var React = require('react');
-var jsxRuntime = require('react/jsx-runtime');
-var reactDom = require('react-dom');
-var server = require('@elux/react-components/server');
-
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-var React__default = /*#__PURE__*/_interopDefaultLegacy(React);
+import _react, { useContext, Component as Component$3, memo, useState, useRef, useEffect, useCallback } from 'react';
+import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
+import _reactDom, { hydrate, render } from 'react-dom';
+import { renderToString } from '@elux/react-components/server';
 
 var root;
 
@@ -778,8 +770,8 @@ function effect(loadingKey) {
   };
 }
 
-function _extends$2() {
-  _extends$2 = Object.assign || function (target) {
+function _extends$1() {
+  _extends$1 = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
 
@@ -793,7 +785,7 @@ function _extends$2() {
     return target;
   };
 
-  return _extends$2.apply(this, arguments);
+  return _extends$1.apply(this, arguments);
 }
 
 var reduxDevTools;
@@ -1173,7 +1165,7 @@ var Store = function () {
     var universalActionType = actionName.replace(new RegExp("[^" + coreConfig.NSP + "]+"), '*');
     var universalHandlers = handlersMap[universalActionType];
 
-    var handlers = _extends$2({}, commonHandlers, universalHandlers);
+    var handlers = _extends$1({}, commonHandlers, universalHandlers);
 
     var handlerModuleNames = Object.keys(handlers);
     var prevState = this.getState();
@@ -1218,7 +1210,7 @@ var Store = function () {
       if (isReducer) {
         var newState = {};
 
-        var uncommittedState = this.uncommittedState = _extends$2({}, prevState);
+        var uncommittedState = this.uncommittedState = _extends$1({}, prevState);
 
         orderList.forEach(function (moduleName) {
           var model = injectedModels[moduleName];
@@ -2294,7 +2286,7 @@ function locationToUrl(_ref) {
 function locationToNativeLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.out(location.pathname);
   var url = location.url.replace(location.pathname, pathname);
-  return _extends$2({}, location, {
+  return _extends$1({}, location, {
     pathname: pathname,
     url: url
   });
@@ -2302,7 +2294,7 @@ function locationToNativeLocation(location) {
 function nativeLocationToLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.in(location.pathname);
   var url = location.url.replace(location.pathname, pathname);
-  return _extends$2({}, location, {
+  return _extends$1({}, location, {
     pathname: pathname,
     url: url
   });
@@ -3390,23 +3382,43 @@ var Router = function (_CoreRouter) {
   return Router;
 }(CoreRouter);
 
-function _extends$1() {
-  _extends$1 = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends$1.apply(this, arguments);
+function isAbsolute$1(e) {
+  return "/" === e.charAt(0);
 }
+
+function spliceOne$1(e, t) {
+  for (var s = t, n = s + 1, i = e.length; n < i; s += 1, n += 1) e[s] = e[n];
+
+  e.pop();
+}
+
+function resolvePathname$3(e, t) {
+  void 0 === t && (t = "");
+  var s,
+      n = e && e.split("/") || [],
+      i = t && t.split("/") || [],
+      l = e && isAbsolute$1(e),
+      r = t && isAbsolute$1(t),
+      o = l || r;
+  if (e && isAbsolute$1(e) ? i = n : n.length && (i.pop(), i = i.concat(n)), !i.length) return "/";
+
+  if (i.length) {
+    var u = i[i.length - 1];
+    s = "." === u || ".." === u || "" === u;
+  } else s = !1;
+
+  for (var a = 0, c = i.length; 0 <= c; c--) {
+    var f = i[c];
+    "." === f ? spliceOne$1(i, c) : ".." === f ? (spliceOne$1(i, c), a++) : a && (spliceOne$1(i, c), a--);
+  }
+
+  if (!o) for (; a--; a) i.unshift("..");
+  !o || "" === i[0] || i[0] && isAbsolute$1(i[0]) || i.unshift("");
+  var h = i.join("/");
+  return s && "/" !== h.substr(-1) && (h += "/"), h;
+}
+
+var resolvePathname_min = resolvePathname$3;
 
 function isAbsolute(pathname) {
   return pathname.charAt(0) === '/';
@@ -3422,7 +3434,7 @@ function spliceOne(list, index) {
 } // This implementation is based heavily on node's url.parse
 
 
-function resolvePathname(to, from) {
+function resolvePathname$2(to, from) {
   if (from === undefined) from = '';
   var toParts = to && to.split('/') || [];
   var fromParts = from && from.split('/') || [];
@@ -3472,6 +3484,76 @@ function resolvePathname(to, from) {
   return result;
 }
 
+var resolvePathname_1 = resolvePathname$2;
+
+var resolvePathname$1 = createCommonjsModule(function (module) {
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = resolvePathname_min;
+} else {
+  module.exports = resolvePathname_1;
+}
+});
+
+function valueOf$1(e) {
+  return e.valueOf ? e.valueOf() : Object.prototype.valueOf.call(e);
+}
+
+function valueEqual$3(u, r) {
+  if (u === r) return !0;
+  if (null == u || null == r) return !1;
+  if (Array.isArray(u)) return Array.isArray(r) && u.length === r.length && u.every(function (e, u) {
+    return valueEqual$3(e, r[u]);
+  });
+  if ("object" != typeof u && "object" != typeof r) return !1;
+  var e = valueOf$1(u),
+      t = valueOf$1(r);
+  return e !== u || t !== r ? valueEqual$3(e, t) : Object.keys(Object.assign({}, u, r)).every(function (e) {
+    return valueEqual$3(u[e], r[e]);
+  });
+}
+
+var valueEqual_min = valueEqual$3;
+
+function valueOf(obj) {
+  return obj.valueOf ? obj.valueOf() : Object.prototype.valueOf.call(obj);
+}
+
+function valueEqual$2(a, b) {
+  // Test for strict equality first.
+  if (a === b) return true; // Otherwise, if either of them == null they are not equal.
+
+  if (a == null || b == null) return false;
+
+  if (Array.isArray(a)) {
+    return Array.isArray(b) && a.length === b.length && a.every(function (item, index) {
+      return valueEqual$2(item, b[index]);
+    });
+  }
+
+  if (typeof a === 'object' || typeof b === 'object') {
+    var aValue = valueOf(a);
+    var bValue = valueOf(b);
+    if (aValue !== a || bValue !== b) return valueEqual$2(aValue, bValue);
+    return Object.keys(Object.assign({}, a, b)).every(function (key) {
+      return valueEqual$2(a[key], b[key]);
+    });
+  }
+
+  return false;
+}
+
+var valueEqual_1 = valueEqual$2;
+
+var valueEqual$1 = createCommonjsModule(function (module) {
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = valueEqual_min;
+} else {
+  module.exports = valueEqual_1;
+}
+});
+
 var isProduction$1 = process.env.NODE_ENV === 'production';
 
 function warning$1(condition, message) {
@@ -3492,10 +3574,12 @@ function warning$1(condition, message) {
   }
 }
 
+var tinyWarning_cjs = warning$1;
+
 var isProduction = process.env.NODE_ENV === 'production';
 var prefix = 'Invariant failed';
 
-function invariant(condition, message) {
+function invariant$1(condition, message) {
   if (condition) {
     return;
   }
@@ -3509,8 +3593,639 @@ function invariant(condition, message) {
   throw new Error(value);
 }
 
+var tinyInvariant_cjs = invariant$1;
+
+var history_min = createCommonjsModule(function (module, exports) {
+
+function _interopDefault(t) {
+  return t && "object" == typeof t && "default" in t ? t.default : t;
+}
+
+Object.defineProperty(exports, "__esModule", {
+  value: !0
+});
+
+var resolvePathname = _interopDefault(resolvePathname$1),
+    valueEqual = _interopDefault(valueEqual$1);
+
+
+
+var invariant = _interopDefault(tinyInvariant_cjs);
+
+function _extends() {
+  return (_extends = Object.assign || function (t) {
+    for (var n = 1; n < arguments.length; n++) {
+      var e = arguments[n];
+
+      for (var a in e) Object.prototype.hasOwnProperty.call(e, a) && (t[a] = e[a]);
+    }
+
+    return t;
+  }).apply(this, arguments);
+}
+
+function addLeadingSlash(t) {
+  return "/" === t.charAt(0) ? t : "/" + t;
+}
+
+function stripLeadingSlash(t) {
+  return "/" === t.charAt(0) ? t.substr(1) : t;
+}
+
+function hasBasename(t, n) {
+  return 0 === t.toLowerCase().indexOf(n.toLowerCase()) && -1 !== "/?#".indexOf(t.charAt(n.length));
+}
+
+function stripBasename(t, n) {
+  return hasBasename(t, n) ? t.substr(n.length) : t;
+}
+
+function stripTrailingSlash(t) {
+  return "/" === t.charAt(t.length - 1) ? t.slice(0, -1) : t;
+}
+
+function parsePath(t) {
+  var n = t || "/",
+      e = "",
+      a = "",
+      r = n.indexOf("#");
+  -1 !== r && (a = n.substr(r), n = n.substr(0, r));
+  var o = n.indexOf("?");
+  return -1 !== o && (e = n.substr(o), n = n.substr(0, o)), {
+    pathname: n,
+    search: "?" === e ? "" : e,
+    hash: "#" === a ? "" : a
+  };
+}
+
+function createPath(t) {
+  var n = t.pathname,
+      e = t.search,
+      a = t.hash,
+      r = n || "/";
+  return e && "?" !== e && (r += "?" === e.charAt(0) ? e : "?" + e), a && "#" !== a && (r += "#" === a.charAt(0) ? a : "#" + a), r;
+}
+
+function createLocation(t, n, e, a) {
+  var r;
+  "string" == typeof t ? (r = parsePath(t)).state = n : (void 0 === (r = _extends({}, t)).pathname && (r.pathname = ""), r.search ? "?" !== r.search.charAt(0) && (r.search = "?" + r.search) : r.search = "", r.hash ? "#" !== r.hash.charAt(0) && (r.hash = "#" + r.hash) : r.hash = "", void 0 !== n && void 0 === r.state && (r.state = n));
+
+  try {
+    r.pathname = decodeURI(r.pathname);
+  } catch (t) {
+    throw t instanceof URIError ? new URIError('Pathname "' + r.pathname + '" could not be decoded. This is likely caused by an invalid percent-encoding.') : t;
+  }
+
+  return e && (r.key = e), a ? r.pathname ? "/" !== r.pathname.charAt(0) && (r.pathname = resolvePathname(r.pathname, a.pathname)) : r.pathname = a.pathname : r.pathname || (r.pathname = "/"), r;
+}
+
+function locationsAreEqual(t, n) {
+  return t.pathname === n.pathname && t.search === n.search && t.hash === n.hash && t.key === n.key && valueEqual(t.state, n.state);
+}
+
+function createTransitionManager() {
+  var o = null;
+  var a = [];
+  return {
+    setPrompt: function (t) {
+      return o = t, function () {
+        o === t && (o = null);
+      };
+    },
+    confirmTransitionTo: function (t, n, e, a) {
+      if (null != o) {
+        var r = "function" == typeof o ? o(t, n) : o;
+        "string" == typeof r ? "function" == typeof e ? e(r, a) : a(!0) : a(!1 !== r);
+      } else a(!0);
+    },
+    appendListener: function (t) {
+      var n = !0;
+
+      function e() {
+        n && t.apply(void 0, arguments);
+      }
+
+      return a.push(e), function () {
+        n = !1, a = a.filter(function (t) {
+          return t !== e;
+        });
+      };
+    },
+    notifyListeners: function () {
+      for (var t = arguments.length, n = new Array(t), e = 0; e < t; e++) n[e] = arguments[e];
+
+      a.forEach(function (t) {
+        return t.apply(void 0, n);
+      });
+    }
+  };
+}
+
+var canUseDOM = !("undefined" == typeof window || !window.document || !window.document.createElement);
+
+function getConfirmation(t, n) {
+  n(window.confirm(t));
+}
+
+function supportsHistory() {
+  var t = window.navigator.userAgent;
+  return (-1 === t.indexOf("Android 2.") && -1 === t.indexOf("Android 4.0") || -1 === t.indexOf("Mobile Safari") || -1 !== t.indexOf("Chrome") || -1 !== t.indexOf("Windows Phone")) && window.history && "pushState" in window.history;
+}
+
+function supportsPopStateOnHashChange() {
+  return -1 === window.navigator.userAgent.indexOf("Trident");
+}
+
+function supportsGoWithoutReloadUsingHash() {
+  return -1 === window.navigator.userAgent.indexOf("Firefox");
+}
+
+function isExtraneousPopstateEvent(t) {
+  return void 0 === t.state && -1 === navigator.userAgent.indexOf("CriOS");
+}
+
+var PopStateEvent = "popstate",
+    HashChangeEvent = "hashchange";
+
+function getHistoryState() {
+  try {
+    return window.history.state || {};
+  } catch (t) {
+    return {};
+  }
+}
+
+function createBrowserHistory(t) {
+  void 0 === t && (t = {}), canUseDOM || invariant(!1);
+  var s = window.history,
+      c = supportsHistory(),
+      n = !supportsPopStateOnHashChange(),
+      e = t,
+      a = e.forceRefresh,
+      h = void 0 !== a && a,
+      r = e.getUserConfirmation,
+      u = void 0 === r ? getConfirmation : r,
+      o = e.keyLength,
+      i = void 0 === o ? 6 : o,
+      f = t.basename ? stripTrailingSlash(addLeadingSlash(t.basename)) : "";
+
+  function l(t) {
+    var n = t || {},
+        e = n.key,
+        a = n.state,
+        r = window.location,
+        o = r.pathname + r.search + r.hash;
+    return f && (o = stripBasename(o, f)), createLocation(o, a, e);
+  }
+
+  function d() {
+    return Math.random().toString(36).substr(2, i);
+  }
+
+  var v = createTransitionManager();
+
+  function p(t) {
+    _extends(T, t), T.length = s.length, v.notifyListeners(T.location, T.action);
+  }
+
+  function g(t) {
+    isExtraneousPopstateEvent(t) || w(l(t.state));
+  }
+
+  function P() {
+    w(l(getHistoryState()));
+  }
+
+  var m = !1;
+
+  function w(n) {
+    if (m) m = !1, p();else {
+      v.confirmTransitionTo(n, "POP", u, function (t) {
+        t ? p({
+          action: "POP",
+          location: n
+        }) : function (t) {
+          var n = T.location,
+              e = H.indexOf(n.key);
+          -1 === e && (e = 0);
+          var a = H.indexOf(t.key);
+          -1 === a && (a = 0);
+          var r = e - a;
+          r && (m = !0, L(r));
+        }(n);
+      });
+    }
+  }
+
+  var y = l(getHistoryState()),
+      H = [y.key];
+
+  function x(t) {
+    return f + createPath(t);
+  }
+
+  function L(t) {
+    s.go(t);
+  }
+
+  var O = 0;
+
+  function E(t) {
+    1 === (O += t) && 1 === t ? (window.addEventListener(PopStateEvent, g), n && window.addEventListener(HashChangeEvent, P)) : 0 === O && (window.removeEventListener(PopStateEvent, g), n && window.removeEventListener(HashChangeEvent, P));
+  }
+
+  var S = !1;
+  var T = {
+    length: s.length,
+    action: "POP",
+    location: y,
+    createHref: x,
+    push: function (t, n) {
+      var i = createLocation(t, n, d(), T.location);
+      v.confirmTransitionTo(i, "PUSH", u, function (t) {
+        if (t) {
+          var n = x(i),
+              e = i.key,
+              a = i.state;
+          if (c) {
+            if (s.pushState({
+              key: e,
+              state: a
+            }, null, n), h) window.location.href = n;else {
+              var r = H.indexOf(T.location.key),
+                  o = H.slice(0, r + 1);
+              o.push(i.key), H = o, p({
+                action: "PUSH",
+                location: i
+              });
+            }
+          } else window.location.href = n;
+        }
+      });
+    },
+    replace: function (t, n) {
+      var o = "REPLACE",
+          i = createLocation(t, n, d(), T.location);
+      v.confirmTransitionTo(i, o, u, function (t) {
+        if (t) {
+          var n = x(i),
+              e = i.key,
+              a = i.state;
+          if (c) {
+            if (s.replaceState({
+              key: e,
+              state: a
+            }, null, n), h) window.location.replace(n);else {
+              var r = H.indexOf(T.location.key);
+              -1 !== r && (H[r] = i.key), p({
+                action: o,
+                location: i
+              });
+            }
+          } else window.location.replace(n);
+        }
+      });
+    },
+    go: L,
+    goBack: function () {
+      L(-1);
+    },
+    goForward: function () {
+      L(1);
+    },
+    block: function (t) {
+      void 0 === t && (t = !1);
+      var n = v.setPrompt(t);
+      return S || (E(1), S = !0), function () {
+        return S && (S = !1, E(-1)), n();
+      };
+    },
+    listen: function (t) {
+      var n = v.appendListener(t);
+      return E(1), function () {
+        E(-1), n();
+      };
+    }
+  };
+  return T;
+}
+
+var HashChangeEvent$1 = "hashchange",
+    HashPathCoders = {
+  hashbang: {
+    encodePath: function (t) {
+      return "!" === t.charAt(0) ? t : "!/" + stripLeadingSlash(t);
+    },
+    decodePath: function (t) {
+      return "!" === t.charAt(0) ? t.substr(1) : t;
+    }
+  },
+  noslash: {
+    encodePath: stripLeadingSlash,
+    decodePath: addLeadingSlash
+  },
+  slash: {
+    encodePath: addLeadingSlash,
+    decodePath: addLeadingSlash
+  }
+};
+
+function stripHash(t) {
+  var n = t.indexOf("#");
+  return -1 === n ? t : t.slice(0, n);
+}
+
+function getHashPath() {
+  var t = window.location.href,
+      n = t.indexOf("#");
+  return -1 === n ? "" : t.substring(n + 1);
+}
+
+function pushHashPath(t) {
+  window.location.hash = t;
+}
+
+function replaceHashPath(t) {
+  window.location.replace(stripHash(window.location.href) + "#" + t);
+}
+
+function createHashHistory(t) {
+  void 0 === t && (t = {}), canUseDOM || invariant(!1);
+  var n = window.history,
+      e = (supportsGoWithoutReloadUsingHash(), t),
+      a = e.getUserConfirmation,
+      i = void 0 === a ? getConfirmation : a,
+      r = e.hashType,
+      o = void 0 === r ? "slash" : r,
+      s = t.basename ? stripTrailingSlash(addLeadingSlash(t.basename)) : "",
+      c = HashPathCoders[o],
+      h = c.encodePath,
+      u = c.decodePath;
+
+  function f() {
+    var t = u(getHashPath());
+    return s && (t = stripBasename(t, s)), createLocation(t);
+  }
+
+  var l = createTransitionManager();
+
+  function d(t) {
+    _extends(E, t), E.length = n.length, l.notifyListeners(E.location, E.action);
+  }
+
+  var v = !1,
+      p = null;
+
+  function g() {
+    var t = getHashPath(),
+        n = h(t);
+    if (t !== n) replaceHashPath(n);else {
+      var e = f(),
+          a = E.location;
+      if (!v && function (t, n) {
+        return t.pathname === n.pathname && t.search === n.search && t.hash === n.hash;
+      }(a, e)) return;
+      if (p === createPath(e)) return;
+      p = null, function (n) {
+        if (v) v = !1, d();else {
+          l.confirmTransitionTo(n, "POP", i, function (t) {
+            t ? d({
+              action: "POP",
+              location: n
+            }) : function (t) {
+              var n = E.location,
+                  e = y.lastIndexOf(createPath(n));
+              -1 === e && (e = 0);
+              var a = y.lastIndexOf(createPath(t));
+              -1 === a && (a = 0);
+              var r = e - a;
+              r && (v = !0, H(r));
+            }(n);
+          });
+        }
+      }(e);
+    }
+  }
+
+  var P = getHashPath(),
+      m = h(P);
+  P !== m && replaceHashPath(m);
+  var w = f(),
+      y = [createPath(w)];
+
+  function H(t) {
+    n.go(t);
+  }
+
+  var x = 0;
+
+  function L(t) {
+    1 === (x += t) && 1 === t ? window.addEventListener(HashChangeEvent$1, g) : 0 === x && window.removeEventListener(HashChangeEvent$1, g);
+  }
+
+  var O = !1;
+  var E = {
+    length: n.length,
+    action: "POP",
+    location: w,
+    createHref: function (t) {
+      var n = document.querySelector("base"),
+          e = "";
+      return n && n.getAttribute("href") && (e = stripHash(window.location.href)), e + "#" + h(s + createPath(t));
+    },
+    push: function (t, n) {
+      var o = createLocation(t, void 0, void 0, E.location);
+      l.confirmTransitionTo(o, "PUSH", i, function (t) {
+        if (t) {
+          var n = createPath(o),
+              e = h(s + n);
+
+          if (getHashPath() !== e) {
+            p = n, pushHashPath(e);
+            var a = y.lastIndexOf(createPath(E.location)),
+                r = y.slice(0, a + 1);
+            r.push(n), y = r, d({
+              action: "PUSH",
+              location: o
+            });
+          } else d();
+        }
+      });
+    },
+    replace: function (t, n) {
+      var r = "REPLACE",
+          o = createLocation(t, void 0, void 0, E.location);
+      l.confirmTransitionTo(o, r, i, function (t) {
+        if (t) {
+          var n = createPath(o),
+              e = h(s + n);
+          getHashPath() !== e && (p = n, replaceHashPath(e));
+          var a = y.indexOf(createPath(E.location));
+          -1 !== a && (y[a] = n), d({
+            action: r,
+            location: o
+          });
+        }
+      });
+    },
+    go: H,
+    goBack: function () {
+      H(-1);
+    },
+    goForward: function () {
+      H(1);
+    },
+    block: function (t) {
+      void 0 === t && (t = !1);
+      var n = l.setPrompt(t);
+      return O || (L(1), O = !0), function () {
+        return O && (O = !1, L(-1)), n();
+      };
+    },
+    listen: function (t) {
+      var n = l.appendListener(t);
+      return L(1), function () {
+        L(-1), n();
+      };
+    }
+  };
+  return E;
+}
+
+function clamp(t, n, e) {
+  return Math.min(Math.max(t, n), e);
+}
+
+function createMemoryHistory(t) {
+  void 0 === t && (t = {});
+  var n = t,
+      r = n.getUserConfirmation,
+      e = n.initialEntries,
+      a = void 0 === e ? ["/"] : e,
+      o = n.initialIndex,
+      i = void 0 === o ? 0 : o,
+      s = n.keyLength,
+      c = void 0 === s ? 6 : s,
+      h = createTransitionManager();
+
+  function u(t) {
+    _extends(g, t), g.length = g.entries.length, h.notifyListeners(g.location, g.action);
+  }
+
+  function f() {
+    return Math.random().toString(36).substr(2, c);
+  }
+
+  var l = clamp(i, 0, a.length - 1),
+      d = a.map(function (t) {
+    return createLocation(t, void 0, "string" == typeof t ? f() : t.key || f());
+  }),
+      v = createPath;
+
+  function p(t) {
+    var n = clamp(g.index + t, 0, g.entries.length - 1),
+        e = g.entries[n];
+    h.confirmTransitionTo(e, "POP", r, function (t) {
+      t ? u({
+        action: "POP",
+        location: e,
+        index: n
+      }) : u();
+    });
+  }
+
+  var g = {
+    length: d.length,
+    action: "POP",
+    location: d[l],
+    index: l,
+    entries: d,
+    createHref: v,
+    push: function (t, n) {
+      var a = createLocation(t, n, f(), g.location);
+      h.confirmTransitionTo(a, "PUSH", r, function (t) {
+        if (t) {
+          var n = g.index + 1,
+              e = g.entries.slice(0);
+          e.length > n ? e.splice(n, e.length - n, a) : e.push(a), u({
+            action: "PUSH",
+            location: a,
+            index: n,
+            entries: e
+          });
+        }
+      });
+    },
+    replace: function (t, n) {
+      var e = "REPLACE",
+          a = createLocation(t, n, f(), g.location);
+      h.confirmTransitionTo(a, e, r, function (t) {
+        t && (g.entries[g.index] = a, u({
+          action: e,
+          location: a
+        }));
+      });
+    },
+    go: p,
+    goBack: function () {
+      p(-1);
+    },
+    goForward: function () {
+      p(1);
+    },
+    canGo: function (t) {
+      var n = g.index + t;
+      return 0 <= n && n < g.entries.length;
+    },
+    block: function (t) {
+      return void 0 === t && (t = !1), h.setPrompt(t);
+    },
+    listen: function (t) {
+      return h.appendListener(t);
+    }
+  };
+  return g;
+}
+
+exports.createBrowserHistory = createBrowserHistory, exports.createHashHistory = createHashHistory, exports.createMemoryHistory = createMemoryHistory, exports.createLocation = createLocation, exports.locationsAreEqual = locationsAreEqual, exports.parsePath = parsePath, exports.createPath = createPath;
+});
+
+function _interopDefault(ex) {
+  return ex && typeof ex === 'object' && 'default' in ex ? ex['default'] : ex;
+}
+
+var resolvePathname = _interopDefault(resolvePathname$1);
+
+var valueEqual = _interopDefault(valueEqual$1);
+
+var warning = _interopDefault(tinyWarning_cjs);
+
+var invariant = _interopDefault(tinyInvariant_cjs);
+
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
 function addLeadingSlash(path) {
   return path.charAt(0) === '/' ? path : '/' + path;
+}
+
+function stripLeadingSlash(path) {
+  return path.charAt(0) === '/' ? path.substr(1) : path;
 }
 
 function hasBasename(path, prefix) {
@@ -3569,7 +4284,7 @@ function createLocation(path, state, key, currentLocation) {
     location.state = state;
   } else {
     // One-arg form: push(location)
-    location = _extends$1({}, path);
+    location = _extends({}, path);
     if (location.pathname === undefined) location.pathname = '';
 
     if (location.search) {
@@ -3616,11 +4331,15 @@ function createLocation(path, state, key, currentLocation) {
   return location;
 }
 
+function locationsAreEqual(a, b) {
+  return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash && a.key === b.key && valueEqual(a.state, b.state);
+}
+
 function createTransitionManager() {
   var prompt = null;
 
   function setPrompt(nextPrompt) {
-    process.env.NODE_ENV !== "production" ? warning$1(prompt == null, 'A history supports only one prompt at a time') : void 0;
+    warning(prompt == null, 'A history supports only one prompt at a time');
     prompt = nextPrompt;
     return function () {
       if (prompt === nextPrompt) prompt = null;
@@ -3638,7 +4357,7 @@ function createTransitionManager() {
         if (typeof getUserConfirmation === 'function') {
           getUserConfirmation(result, callback);
         } else {
-          process.env.NODE_ENV !== "production" ? warning$1(false, 'A history needs a getUserConfirmation function in order to use a prompt message') : void 0;
+          warning(false, 'A history needs a getUserConfirmation function in order to use a prompt message');
           callback(true);
         }
       } else {
@@ -3715,6 +4434,14 @@ function supportsPopStateOnHashChange() {
   return window.navigator.userAgent.indexOf('Trident') === -1;
 }
 /**
+ * Returns false if using go(n) with hash history causes a full page reload.
+ */
+
+
+function supportsGoWithoutReloadUsingHash() {
+  return window.navigator.userAgent.indexOf('Firefox') === -1;
+}
+/**
  * Returns true if a given popstate event is an extraneous WebKit event.
  * Accounts for the fact that Chrome on iOS fires real popstate events
  * containing undefined state when pressing the back button.
@@ -3748,7 +4475,7 @@ function createBrowserHistory(props) {
     props = {};
   }
 
-  !canUseDOM ? process.env.NODE_ENV !== "production" ? invariant(false, 'Browser history needs a DOM') : invariant(false) : void 0;
+  !canUseDOM ? invariant(false, 'Browser history needs a DOM') : void 0;
   var globalHistory = window.history;
   var canUseHistory = supportsHistory();
   var needsHashChangeListener = !supportsPopStateOnHashChange();
@@ -3771,7 +4498,7 @@ function createBrowserHistory(props) {
         search = _window$location.search,
         hash = _window$location.hash;
     var path = pathname + search + hash;
-    process.env.NODE_ENV !== "production" ? warning$1(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
+    warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
     if (basename) path = stripBasename(path, basename);
     return createLocation(path, state, key);
   }
@@ -3783,7 +4510,7 @@ function createBrowserHistory(props) {
   var transitionManager = createTransitionManager();
 
   function setState(nextState) {
-    _extends$1(history, nextState);
+    _extends(history, nextState);
 
     history.length = globalHistory.length;
     transitionManager.notifyListeners(history.location, history.action);
@@ -3845,7 +4572,7 @@ function createBrowserHistory(props) {
   }
 
   function push(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$1(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
     var action = 'PUSH';
     var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3873,14 +4600,14 @@ function createBrowserHistory(props) {
           });
         }
       } else {
-        process.env.NODE_ENV !== "production" ? warning$1(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history') : void 0;
+        warning(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history');
         window.location.href = href;
       }
     });
   }
 
   function replace(path, state) {
-    process.env.NODE_ENV !== "production" ? warning$1(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
     var action = 'REPLACE';
     var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
@@ -3906,7 +4633,7 @@ function createBrowserHistory(props) {
           });
         }
       } else {
-        process.env.NODE_ENV !== "production" ? warning$1(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history') : void 0;
+        warning(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history');
         window.location.replace(href);
       }
     });
@@ -3986,6 +4713,463 @@ function createBrowserHistory(props) {
   };
   return history;
 }
+
+var HashChangeEvent$1 = 'hashchange';
+var HashPathCoders = {
+  hashbang: {
+    encodePath: function encodePath(path) {
+      return path.charAt(0) === '!' ? path : '!/' + stripLeadingSlash(path);
+    },
+    decodePath: function decodePath(path) {
+      return path.charAt(0) === '!' ? path.substr(1) : path;
+    }
+  },
+  noslash: {
+    encodePath: stripLeadingSlash,
+    decodePath: addLeadingSlash
+  },
+  slash: {
+    encodePath: addLeadingSlash,
+    decodePath: addLeadingSlash
+  }
+};
+
+function stripHash(url) {
+  var hashIndex = url.indexOf('#');
+  return hashIndex === -1 ? url : url.slice(0, hashIndex);
+}
+
+function getHashPath() {
+  // We can't use window.location.hash here because it's not
+  // consistent across browsers - Firefox will pre-decode it!
+  var href = window.location.href;
+  var hashIndex = href.indexOf('#');
+  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
+}
+
+function pushHashPath(path) {
+  window.location.hash = path;
+}
+
+function replaceHashPath(path) {
+  window.location.replace(stripHash(window.location.href) + '#' + path);
+}
+
+function createHashHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  !canUseDOM ? invariant(false, 'Hash history needs a DOM') : void 0;
+  var globalHistory = window.history;
+  var canGoWithoutReload = supportsGoWithoutReloadUsingHash();
+  var _props = props,
+      _props$getUserConfirm = _props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
+      _props$hashType = _props.hashType,
+      hashType = _props$hashType === void 0 ? 'slash' : _props$hashType;
+  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
+  var _HashPathCoders$hashT = HashPathCoders[hashType],
+      encodePath = _HashPathCoders$hashT.encodePath,
+      decodePath = _HashPathCoders$hashT.decodePath;
+
+  function getDOMLocation() {
+    var path = decodePath(getHashPath());
+    warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
+    if (basename) path = stripBasename(path, basename);
+    return createLocation(path);
+  }
+
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = globalHistory.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  var forceNextPop = false;
+  var ignorePath = null;
+
+  function locationsAreEqual$$1(a, b) {
+    return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash;
+  }
+
+  function handleHashChange() {
+    var path = getHashPath();
+    var encodedPath = encodePath(path);
+
+    if (path !== encodedPath) {
+      // Ensure we always have a properly-encoded hash.
+      replaceHashPath(encodedPath);
+    } else {
+      var location = getDOMLocation();
+      var prevLocation = history.location;
+      if (!forceNextPop && locationsAreEqual$$1(prevLocation, location)) return; // A hashchange doesn't always == location change.
+
+      if (ignorePath === createPath(location)) return; // Ignore this change; we already setState in push/replace.
+
+      ignorePath = null;
+      handlePop(location);
+    }
+  }
+
+  function handlePop(location) {
+    if (forceNextPop) {
+      forceNextPop = false;
+      setState();
+    } else {
+      var action = 'POP';
+      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+        if (ok) {
+          setState({
+            action: action,
+            location: location
+          });
+        } else {
+          revertPop(location);
+        }
+      });
+    }
+  }
+
+  function revertPop(fromLocation) {
+    var toLocation = history.location; // TODO: We could probably make this more reliable by
+    // keeping a list of paths we've seen in sessionStorage.
+    // Instead, we just default to 0 for paths we don't know.
+
+    var toIndex = allPaths.lastIndexOf(createPath(toLocation));
+    if (toIndex === -1) toIndex = 0;
+    var fromIndex = allPaths.lastIndexOf(createPath(fromLocation));
+    if (fromIndex === -1) fromIndex = 0;
+    var delta = toIndex - fromIndex;
+
+    if (delta) {
+      forceNextPop = true;
+      go(delta);
+    }
+  } // Ensure the hash is encoded properly before doing anything else.
+
+
+  var path = getHashPath();
+  var encodedPath = encodePath(path);
+  if (path !== encodedPath) replaceHashPath(encodedPath);
+  var initialLocation = getDOMLocation();
+  var allPaths = [createPath(initialLocation)]; // Public interface
+
+  function createHref(location) {
+    var baseTag = document.querySelector('base');
+    var href = '';
+
+    if (baseTag && baseTag.getAttribute('href')) {
+      href = stripHash(window.location.href);
+    }
+
+    return href + '#' + encodePath(basename + createPath(location));
+  }
+
+  function push(path, state) {
+    warning(state === undefined, 'Hash history cannot push state; it is ignored');
+    var action = 'PUSH';
+    var location = createLocation(path, undefined, undefined, history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var path = createPath(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a PUSH, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        pushHashPath(encodedPath);
+        var prevIndex = allPaths.lastIndexOf(createPath(history.location));
+        var nextPaths = allPaths.slice(0, prevIndex + 1);
+        nextPaths.push(path);
+        allPaths = nextPaths;
+        setState({
+          action: action,
+          location: location
+        });
+      } else {
+        warning(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack');
+        setState();
+      }
+    });
+  }
+
+  function replace(path, state) {
+    warning(state === undefined, 'Hash history cannot replace state; it is ignored');
+    var action = 'REPLACE';
+    var location = createLocation(path, undefined, undefined, history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var path = createPath(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        replaceHashPath(encodedPath);
+      }
+
+      var prevIndex = allPaths.indexOf(createPath(history.location));
+      if (prevIndex !== -1) allPaths[prevIndex] = path;
+      setState({
+        action: action,
+        location: location
+      });
+    });
+  }
+
+  function go(n) {
+    warning(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser');
+    globalHistory.go(n);
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  var listenerCount = 0;
+
+  function checkDOMListeners(delta) {
+    listenerCount += delta;
+
+    if (listenerCount === 1 && delta === 1) {
+      window.addEventListener(HashChangeEvent$1, handleHashChange);
+    } else if (listenerCount === 0) {
+      window.removeEventListener(HashChangeEvent$1, handleHashChange);
+    }
+  }
+
+  var isBlocked = false;
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    var unblock = transitionManager.setPrompt(prompt);
+
+    if (!isBlocked) {
+      checkDOMListeners(1);
+      isBlocked = true;
+    }
+
+    return function () {
+      if (isBlocked) {
+        isBlocked = false;
+        checkDOMListeners(-1);
+      }
+
+      return unblock();
+    };
+  }
+
+  function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  }
+
+  var history = {
+    length: globalHistory.length,
+    action: 'POP',
+    location: initialLocation,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+
+function clamp(n, lowerBound, upperBound) {
+  return Math.min(Math.max(n, lowerBound), upperBound);
+}
+/**
+ * Creates a history object that stores locations in memory.
+ */
+
+
+function createMemoryHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  var _props = props,
+      getUserConfirmation = _props.getUserConfirmation,
+      _props$initialEntries = _props.initialEntries,
+      initialEntries = _props$initialEntries === void 0 ? ['/'] : _props$initialEntries,
+      _props$initialIndex = _props.initialIndex,
+      initialIndex = _props$initialIndex === void 0 ? 0 : _props$initialIndex,
+      _props$keyLength = _props.keyLength,
+      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = history.entries.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  function createKey() {
+    return Math.random().toString(36).substr(2, keyLength);
+  }
+
+  var index = clamp(initialIndex, 0, initialEntries.length - 1);
+  var entries = initialEntries.map(function (entry) {
+    return typeof entry === 'string' ? createLocation(entry, undefined, createKey()) : createLocation(entry, undefined, entry.key || createKey());
+  }); // Public interface
+
+  var createHref = createPath;
+
+  function push(path, state) {
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+    var action = 'PUSH';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var prevIndex = history.index;
+      var nextIndex = prevIndex + 1;
+      var nextEntries = history.entries.slice(0);
+
+      if (nextEntries.length > nextIndex) {
+        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
+      } else {
+        nextEntries.push(location);
+      }
+
+      setState({
+        action: action,
+        location: location,
+        index: nextIndex,
+        entries: nextEntries
+      });
+    });
+  }
+
+  function replace(path, state) {
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+    var action = 'REPLACE';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      history.entries[history.index] = location;
+      setState({
+        action: action,
+        location: location
+      });
+    });
+  }
+
+  function go(n) {
+    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
+    var action = 'POP';
+    var location = history.entries[nextIndex];
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (ok) {
+        setState({
+          action: action,
+          location: location,
+          index: nextIndex
+        });
+      } else {
+        // Mimic the behavior of DOM histories by
+        // causing a render after a cancelled POP.
+        setState();
+      }
+    });
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  function canGo(n) {
+    var nextIndex = history.index + n;
+    return nextIndex >= 0 && nextIndex < history.entries.length;
+  }
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    return transitionManager.setPrompt(prompt);
+  }
+
+  function listen(listener) {
+    return transitionManager.appendListener(listener);
+  }
+
+  var history = {
+    length: entries.length,
+    action: 'POP',
+    location: entries[index],
+    index: index,
+    entries: entries,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    canGo: canGo,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+
+var createBrowserHistory_1 = createBrowserHistory;
+var createHashHistory_1 = createHashHistory;
+var createMemoryHistory_1 = createMemoryHistory;
+var createLocation_1 = createLocation;
+var locationsAreEqual_1 = locationsAreEqual;
+var parsePath_1 = parsePath;
+var createPath_1 = createPath;
+
+var history$1 = /*#__PURE__*/Object.defineProperty({
+	createBrowserHistory: createBrowserHistory_1,
+	createHashHistory: createHashHistory_1,
+	createMemoryHistory: createMemoryHistory_1,
+	createLocation: createLocation_1,
+	locationsAreEqual: locationsAreEqual_1,
+	parsePath: parsePath_1,
+	createPath: createPath_1
+}, '__esModule', {value: true});
+
+var history = createCommonjsModule(function (module) {
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = history_min;
+} else {
+  module.exports = history$1;
+}
+});
 
 setRouteConfig({
   NotifyNativeRouter: {
@@ -4083,14 +5267,14 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 }(BaseNativeRouter);
 
 function createClientRouter() {
-  var history = createBrowserHistory();
+  var history$1 = history.createBrowserHistory();
   var nativeRequest = {
     request: {
-      url: locationToUrl(history.location)
+      url: locationToUrl(history$1.location)
     },
     response: {}
   };
-  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
+  var browserNativeRouter = new BrowserNativeRouter(history$1, nativeRequest);
   return browserNativeRouter.router;
 }
 function createServerRouter(nativeRequest) {
@@ -4099,16 +5283,16 @@ function createServerRouter(nativeRequest) {
   return browserNativeRouter.router;
 }
 
-var EluxContextComponent = React__default['default'].createContext({
+var EluxContextComponent = _react.createContext({
   documentHead: '',
   router: null
 });
 function UseRouter() {
-  var eluxContext = React.useContext(EluxContextComponent);
+  var eluxContext = useContext(EluxContextComponent);
   return eluxContext.router;
 }
 
-function _objectWithoutPropertiesLoose$1(source, excluded) {
+function _objectWithoutPropertiesLoose(source, excluded) {
   if (source == null) return {};
   var target = {};
   var sourceKeys = Object.keys(source);
@@ -4123,16 +5307,16 @@ function _objectWithoutPropertiesLoose$1(source, excluded) {
   return target;
 }
 
-var _excluded$4 = ["forwardedRef", "store"];
+var _excluded$1 = ["forwardedRef", "store"];
 var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
-  return jsxRuntime.jsx("div", {
+  return jsx("div", {
     className: "g-component-error",
     children: message
   });
 };
 var LoadComponentOnLoading = function LoadComponentOnLoading() {
-  return jsxRuntime.jsx("div", {
+  return jsx("div", {
     className: "g-component-loading",
     children: "loading..."
   });
@@ -4230,31 +5414,31 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
       var _this$props = this.props,
           forwardedRef = _this$props.forwardedRef;
           _this$props.store;
-          var rest = _objectWithoutPropertiesLoose$1(_this$props, _excluded$4);
+          var rest = _objectWithoutPropertiesLoose(_this$props, _excluded$1);
 
       if (this.view) {
         var View = this.view;
-        return jsxRuntime.jsx(View, _extends$2({
+        return jsx(View, _extends$1({
           ref: forwardedRef
         }, rest));
       }
 
       if (this.loading) {
         var Loading = OnLoading;
-        return jsxRuntime.jsx(Loading, {});
+        return jsx(Loading, {});
       }
 
-      return jsxRuntime.jsx(OnError, {
+      return jsx(OnError, {
         message: this.error
       });
     };
 
     return Loader;
-  }(React.Component);
+  }(Component$3);
 
-  return React__default['default'].forwardRef(function (props, ref) {
+  return _react.forwardRef(function (props, ref) {
     var store = coreConfig.UseStore();
-    return jsxRuntime.jsx(Loader, _extends$2({}, props, {
+    return jsx(Loader, _extends$1({}, props, {
       store: store,
       forwardedRef: ref
     }));
@@ -4264,7 +5448,7 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
 var RouterComponent = function RouterComponent(props) {
   var router = coreConfig.UseRouter();
 
-  var _useState = React.useState({
+  var _useState = useState({
     classname: 'elux-app',
     pages: router.getWindowPages().reverse()
   }),
@@ -4273,10 +5457,10 @@ var RouterComponent = function RouterComponent(props) {
 
   var classname = data.classname,
       pages = data.pages;
-  var pagesRef = React.useRef(pages);
+  var pagesRef = useRef(pages);
   pagesRef.current = pages;
-  var containerRef = React.useRef(null);
-  React.useEffect(function () {
+  var containerRef = useRef(null);
+  useEffect(function () {
     return router.addListener(function (_ref) {
       var action = _ref.action,
           windowChanged = _ref.windowChanged;
@@ -4327,17 +5511,17 @@ var RouterComponent = function RouterComponent(props) {
       });
     });
   }, [router]);
-  return jsxRuntime.jsx("div", {
+  return jsx("div", {
     ref: containerRef,
     className: classname,
     children: pages.map(function (item) {
       var store = item.store,
           url = item.url;
-      return jsxRuntime.jsx("div", {
+      return jsx("div", {
         "data-sid": store.sid,
         className: "elux-window",
         "data-url": url,
-        children: jsxRuntime.jsx(EWindow, {
+        children: jsx(EWindow, {
           store: store,
           view: props.page
         })
@@ -4345,34 +5529,34 @@ var RouterComponent = function RouterComponent(props) {
     })
   });
 };
-var EWindow = React.memo(function (_ref2) {
+var EWindow = memo(function (_ref2) {
   var store = _ref2.store,
       view = _ref2.view;
   var View = view;
   var StoreProvider = coreConfig.StoreProvider;
-  return jsxRuntime.jsx(StoreProvider, {
+  return jsx(StoreProvider, {
     store: store,
-    children: jsxRuntime.jsx(View, {})
+    children: jsx(View, {})
   });
 });
 
 var AppRender = {
   toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
-    var renderFun = fromSSR ? reactDom.hydrate : reactDom.render;
+    var renderFun = fromSSR ? hydrate : render;
     var panel = env.document.getElementById(id);
     var appView = getEntryComponent();
-    renderFun(jsxRuntime.jsx(EluxContextComponent.Provider, {
+    renderFun(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
-      children: jsxRuntime.jsx(RouterComponent, {
+      children: jsx(RouterComponent, {
         page: appView
       })
     }), panel);
   },
   toString: function toString(id, eluxContext, app, store) {
     var appView = getEntryComponent();
-    var html = server.renderToString(jsxRuntime.jsx(EluxContextComponent.Provider, {
+    var html = renderToString(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
-      children: jsxRuntime.jsx(RouterComponent, {
+      children: jsx(RouterComponent, {
         page: appView
       })
     }));
@@ -4409,7 +5593,7 @@ function recoverClientHead(eluxContext, documentHead) {
 var Component$2 = function Component(_ref) {
   var title = _ref.title,
       html = _ref.html;
-  var eluxContext = React.useContext(EluxContextComponent);
+  var eluxContext = useContext(EluxContextComponent);
 
   if (!html) {
     html = eluxContext.documentHead || '<title>Elux</title>';
@@ -4423,7 +5607,7 @@ var Component$2 = function Component(_ref) {
     eluxContext.documentHead = html;
   }
 
-  React.useEffect(function () {
+  useEffect(function () {
     var raw = eluxContext.documentHead;
     setClientHead(eluxContext, html);
     recoverLock = false;
@@ -4434,52 +5618,52 @@ var Component$2 = function Component(_ref) {
   return null;
 };
 
-var DocumentHead = React__default['default'].memo(Component$2);
+var DocumentHead = _react.memo(Component$2);
 
 var Component$1 = function Component(_ref) {
   var children = _ref.children,
       elseView = _ref.elseView;
   var arr = [];
-  React__default['default'].Children.forEach(children, function (item) {
+  _react.Children.forEach(children, function (item) {
     item && arr.push(item);
   });
 
   if (arr.length > 0) {
-    return jsxRuntime.jsx(jsxRuntime.Fragment, {
+    return jsx(Fragment$2, {
       children: arr
     });
   }
 
-  return jsxRuntime.jsx(jsxRuntime.Fragment, {
+  return jsx(Fragment$2, {
     children: elseView
   });
 };
 
-var Else = React__default['default'].memo(Component$1);
+var Else = _react.memo(Component$1);
 
 var Component = function Component(_ref) {
   var children = _ref.children,
       elseView = _ref.elseView;
   var arr = [];
-  React__default['default'].Children.forEach(children, function (item) {
+  _react.Children.forEach(children, function (item) {
     item && arr.push(item);
   });
 
   if (arr.length > 0) {
-    return jsxRuntime.jsx(jsxRuntime.Fragment, {
+    return jsx(Fragment$2, {
       children: arr[0]
     });
   }
 
-  return jsxRuntime.jsx(jsxRuntime.Fragment, {
+  return jsx(Fragment$2, {
     children: elseView
   });
 };
 
-var Switch = React__default['default'].memo(Component);
+var Switch = _react.memo(Component);
 
-var _excluded$3 = ["onClick", "disabled", "to", "target", "action"];
-var Link = React__default['default'].forwardRef(function (_ref, ref) {
+var _excluded = ["onClick", "disabled", "to", "target", "action"];
+var Link = _react.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       _ref$to = _ref.to,
@@ -4488,10 +5672,10 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
       target = _ref$target === void 0 ? 'page' : _ref$target,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
-      props = _objectWithoutPropertiesLoose$1(_ref, _excluded$3);
+      props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
   var router = coreConfig.UseRouter();
-  var onClick = React.useCallback(function (event) {
+  var onClick = useCallback(function (event) {
     event.preventDefault();
 
     if (!disabled) {
@@ -4515,7 +5699,7 @@ var Link = React__default['default'].forwardRef(function (_ref, ref) {
   }
 
   props['href'] = href;
-  return jsxRuntime.jsx("a", _extends$2({}, props, {
+  return jsx("a", _extends$1({}, props, {
     ref: ref
   }));
 });
@@ -4526,6 +5710,86 @@ setCoreConfig({
   LoadComponent: LoadComponent,
   LoadComponentOnError: LoadComponentOnError,
   LoadComponentOnLoading: LoadComponentOnLoading
+});
+
+var interopRequireDefault = createCommonjsModule(function (module) {
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : {
+    "default": obj
+  };
+}
+
+module.exports = _interopRequireDefault, module.exports.__esModule = true, module.exports["default"] = module.exports;
+});
+
+var _typeof_1 = createCommonjsModule(function (module) {
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  return (module.exports = _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  }, module.exports.__esModule = true, module.exports["default"] = module.exports), _typeof(obj);
+}
+
+module.exports = _typeof, module.exports.__esModule = true, module.exports["default"] = module.exports;
+});
+
+var interopRequireWildcard = createCommonjsModule(function (module) {
+var _typeof = _typeof_1["default"];
+
+function _getRequireWildcardCache(nodeInterop) {
+  if (typeof WeakMap !== "function") return null;
+  var cacheBabelInterop = new WeakMap();
+  var cacheNodeInterop = new WeakMap();
+  return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) {
+    return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+  })(nodeInterop);
+}
+
+function _interopRequireWildcard(obj, nodeInterop) {
+  if (!nodeInterop && obj && obj.__esModule) {
+    return obj;
+  }
+
+  if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+    return {
+      "default": obj
+    };
+  }
+
+  var cache = _getRequireWildcardCache(nodeInterop);
+
+  if (cache && cache.has(obj)) {
+    return cache.get(obj);
+  }
+
+  var newObj = {};
+  var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+
+  for (var key in obj) {
+    if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+      var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+
+      if (desc && (desc.get || desc.set)) {
+        Object.defineProperty(newObj, key, desc);
+      } else {
+        newObj[key] = obj[key];
+      }
+    }
+  }
+
+  newObj["default"] = obj;
+
+  if (cache) {
+    cache.set(obj, newObj);
+  }
+
+  return newObj;
+}
+
+module.exports = _interopRequireWildcard, module.exports.__esModule = true, module.exports["default"] = module.exports;
 });
 
 /** @license React v16.13.1
@@ -5847,13 +7111,32 @@ if (process.env.NODE_ENV !== 'production') {
 }
 });
 
-var ReactReduxContext = /*#__PURE__*/React__default['default'].createContext(null);
+var Context = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+exports.__esModule = true;
+exports["default"] = exports.ReactReduxContext = void 0;
+
+var _react$1 = _interopRequireDefault(_react);
+
+var ReactReduxContext = /*#__PURE__*/_react$1["default"].createContext(null);
+
+exports.ReactReduxContext = ReactReduxContext;
 
 if (process.env.NODE_ENV !== 'production') {
   ReactReduxContext.displayName = 'ReactRedux';
 }
 
-// Default to a dummy "batch" implementation that just runs the callback
+var _default = ReactReduxContext;
+exports["default"] = _default;
+});
+
+var batch_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports.setBatch = exports.getBatch = void 0; // Default to a dummy "batch" implementation that just runs the callback
+
 function defaultNoopBatch(callback) {
   callback();
 }
@@ -5864,15 +7147,25 @@ var setBatch = function setBatch(newBatch) {
   return batch = newBatch;
 }; // Supply a getter just to skip dealing with ESM bindings
 
+
+exports.setBatch = setBatch;
+
 var getBatch = function getBatch() {
   return batch;
 };
 
+exports.getBatch = getBatch;
+});
+
+var createSubscription_1 = createSubscription;
+
+ // encapsulates the subscription logic for connecting a component to the redux store, as
 // well as nesting subscriptions of descendant components, so that we can ensure the
 // ancestor components re-render before descendants
 
+
 function createListenerCollection() {
-  var batch = getBatch();
+  var batch = (0, batch_1.getBatch)();
   var first = null;
   var last = null;
   return {
@@ -5941,6 +7234,7 @@ var nullListeners = {
     return [];
   }
 };
+
 function createSubscription(store, parentSub) {
   var unsubscribe;
   var listeners = nullListeners;
@@ -5994,6 +7288,16 @@ function createSubscription(store, parentSub) {
   return subscription;
 }
 
+var Subscription = /*#__PURE__*/Object.defineProperty({
+	createSubscription: createSubscription_1
+}, '__esModule', {value: true});
+
+var useIsomorphicLayoutEffect_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports.useIsomorphicLayoutEffect = void 0;
+
+ // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser. We need useLayoutEffect to ensure the store
 // subscription callback always has the selector from the latest render commit
@@ -6002,24 +7306,46 @@ function createSubscription(store, parentSub) {
 // is created synchronously, otherwise a store update may occur before the
 // subscription is created and an inconsistent state may be observed
 
-var useIsomorphicLayoutEffect = typeof window !== 'undefined' && typeof window.document !== 'undefined' && typeof window.document.createElement !== 'undefined' ? React.useLayoutEffect : React.useEffect;
+
+var useIsomorphicLayoutEffect = typeof window !== 'undefined' && typeof window.document !== 'undefined' && typeof window.document.createElement !== 'undefined' ? _react.useLayoutEffect : _react.useEffect;
+exports.useIsomorphicLayoutEffect = useIsomorphicLayoutEffect;
+});
+
+var Provider_1 = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+var _interopRequireWildcard = interopRequireWildcard["default"];
+
+exports.__esModule = true;
+exports["default"] = void 0;
+
+var _react$1 = _interopRequireWildcard(_react);
+
+var _propTypes = _interopRequireDefault(propTypes);
+
+
+
+
+
+
 
 function Provider(_ref) {
   var store = _ref.store,
       context = _ref.context,
       children = _ref.children;
-  var contextValue = React.useMemo(function () {
-    var subscription = createSubscription(store);
+  var contextValue = (0, _react$1.useMemo)(function () {
+    var subscription = (0, Subscription.createSubscription)(store);
     subscription.onStateChange = subscription.notifyNestedSubs;
     return {
       store: store,
       subscription: subscription
     };
   }, [store]);
-  var previousState = React.useMemo(function () {
+  var previousState = (0, _react$1.useMemo)(function () {
     return store.getState();
   }, [store]);
-  useIsomorphicLayoutEffect(function () {
+  (0, useIsomorphicLayoutEffect_1.useIsomorphicLayoutEffect)(function () {
     var subscription = contextValue.subscription;
     subscription.trySubscribe();
 
@@ -6032,26 +7358,31 @@ function Provider(_ref) {
       subscription.onStateChange = null;
     };
   }, [contextValue, previousState]);
-  var Context = context || ReactReduxContext;
-  return /*#__PURE__*/React__default['default'].createElement(Context.Provider, {
+  var Context$1 = context || Context.ReactReduxContext;
+  return /*#__PURE__*/_react$1["default"].createElement(Context$1.Provider, {
     value: contextValue
   }, children);
 }
 
 if (process.env.NODE_ENV !== 'production') {
   Provider.propTypes = {
-    store: propTypes.shape({
-      subscribe: propTypes.func.isRequired,
-      dispatch: propTypes.func.isRequired,
-      getState: propTypes.func.isRequired
+    store: _propTypes["default"].shape({
+      subscribe: _propTypes["default"].func.isRequired,
+      dispatch: _propTypes["default"].func.isRequired,
+      getState: _propTypes["default"].func.isRequired
     }),
-    context: propTypes.object,
-    children: propTypes.any
+    context: _propTypes["default"].object,
+    children: _propTypes["default"].any
   };
 }
 
+var _default = Provider;
+exports["default"] = _default;
+});
+
+var _extends_1 = createCommonjsModule(function (module) {
 function _extends() {
-  _extends = Object.assign || function (target) {
+  module.exports = _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i];
 
@@ -6063,11 +7394,14 @@ function _extends() {
     }
 
     return target;
-  };
-
+  }, module.exports.__esModule = true, module.exports["default"] = module.exports;
   return _extends.apply(this, arguments);
 }
 
+module.exports = _extends, module.exports.__esModule = true, module.exports["default"] = module.exports;
+});
+
+var objectWithoutPropertiesLoose = createCommonjsModule(function (module) {
 function _objectWithoutPropertiesLoose(source, excluded) {
   if (source == null) return {};
   var target = {};
@@ -6082,6 +7416,9 @@ function _objectWithoutPropertiesLoose(source, excluded) {
 
   return target;
 }
+
+module.exports = _objectWithoutPropertiesLoose, module.exports.__esModule = true, module.exports["default"] = module.exports;
+});
 
 /**
  * Copyright 2015, Yahoo! Inc.
@@ -6620,8 +7957,33 @@ if (process.env.NODE_ENV === 'production') {
 }
 });
 
-var _excluded$2 = ["getDisplayName", "methodName", "renderCountProp", "shouldHandleStateChanges", "storeKey", "withRef", "forwardRef", "context"],
-    _excluded2 = ["reactReduxForwardedRef"];
+var connectAdvanced_1 = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+var _interopRequireWildcard = interopRequireWildcard["default"];
+
+exports.__esModule = true;
+exports["default"] = connectAdvanced;
+
+var _extends2 = _interopRequireDefault(_extends_1);
+
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault(objectWithoutPropertiesLoose);
+
+var _hoistNonReactStatics = _interopRequireDefault(hoistNonReactStatics_cjs);
+
+var _react$1 = _interopRequireWildcard(_react);
+
+
+
+
+
+
+
+
+
+var _excluded = ["getDisplayName", "methodName", "renderCountProp", "shouldHandleStateChanges", "storeKey", "withRef", "forwardRef", "context"],
+    _excluded2 = ["reactReduxForwardedRef"]; // Define some constant arrays just to avoid re-creating these
 
 var EMPTY_ARRAY = [];
 var NO_SUBSCRIPTION_ARRAY = [null, null];
@@ -6640,7 +8002,7 @@ function storeStateUpdatesReducer(state, action) {
 }
 
 function useIsomorphicLayoutEffectWithArgs(effectFunc, effectArgs, dependencies) {
-  useIsomorphicLayoutEffect(function () {
+  (0, useIsomorphicLayoutEffect_1.useIsomorphicLayoutEffect)(function () {
     return effectFunc.apply(void 0, effectArgs);
   }, dependencies);
 }
@@ -6778,8 +8140,8 @@ _ref) {
       _ref2$forwardRef = _ref2.forwardRef,
       forwardRef = _ref2$forwardRef === void 0 ? false : _ref2$forwardRef,
       _ref2$context = _ref2.context,
-      context = _ref2$context === void 0 ? ReactReduxContext : _ref2$context,
-      connectOptions = _objectWithoutPropertiesLoose(_ref2, _excluded$2);
+      context = _ref2$context === void 0 ? Context.ReactReduxContext : _ref2$context,
+      connectOptions = (0, _objectWithoutPropertiesLoose2["default"])(_ref2, _excluded);
 
   if (process.env.NODE_ENV !== 'production') {
     if (renderCountProp !== undefined) {
@@ -6797,16 +8159,15 @@ _ref) {
     }
   }
 
-  var Context = context;
+  var Context$1 = context;
   return function wrapWithConnect(WrappedComponent) {
-    if (process.env.NODE_ENV !== 'production' && !reactIs.isValidElementType(WrappedComponent)) {
+    if (process.env.NODE_ENV !== 'production' && !(0, reactIs.isValidElementType)(WrappedComponent)) {
       throw new Error("You must pass a component to the function returned by " + (methodName + ". Instead received " + stringifyComponent(WrappedComponent)));
     }
 
     var wrappedComponentName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
     var displayName = getDisplayName(wrappedComponentName);
-
-    var selectorFactoryOptions = _extends({}, connectOptions, {
+    var selectorFactoryOptions = (0, _extends2["default"])({}, connectOptions, {
       getDisplayName: getDisplayName,
       methodName: methodName,
       renderCountProp: renderCountProp,
@@ -6816,7 +8177,6 @@ _ref) {
       wrappedComponentName: wrappedComponentName,
       WrappedComponent: WrappedComponent
     });
-
     var pure = connectOptions.pure;
 
     function createChildSelector(store) {
@@ -6826,31 +8186,30 @@ _ref) {
     // that just executes the given callback immediately.
 
 
-    var usePureOnlyMemo = pure ? React.useMemo : function (callback) {
+    var usePureOnlyMemo = pure ? _react$1.useMemo : function (callback) {
       return callback();
     };
 
     function ConnectFunction(props) {
-      var _useMemo = React.useMemo(function () {
+      var _useMemo = (0, _react$1.useMemo)(function () {
         // Distinguish between actual "data" props that were passed to the wrapper component,
         // and values needed to control behavior (forwarded refs, alternate context instances).
         // To maintain the wrapperProps object reference, memoize this destructuring.
         var reactReduxForwardedRef = props.reactReduxForwardedRef,
-            wrapperProps = _objectWithoutPropertiesLoose(props, _excluded2);
-
+            wrapperProps = (0, _objectWithoutPropertiesLoose2["default"])(props, _excluded2);
         return [props.context, reactReduxForwardedRef, wrapperProps];
       }, [props]),
           propsContext = _useMemo[0],
           reactReduxForwardedRef = _useMemo[1],
           wrapperProps = _useMemo[2];
 
-      var ContextToUse = React.useMemo(function () {
+      var ContextToUse = (0, _react$1.useMemo)(function () {
         // Users may optionally pass in a custom context instance to use instead of our ReactReduxContext.
         // Memoize the check that determines which context instance we should use.
-        return propsContext && propsContext.Consumer && reactIs.isContextConsumer( /*#__PURE__*/React__default['default'].createElement(propsContext.Consumer, null)) ? propsContext : Context;
-      }, [propsContext, Context]); // Retrieve the store and ancestor subscription via context, if available
+        return propsContext && propsContext.Consumer && (0, reactIs.isContextConsumer)( /*#__PURE__*/_react$1["default"].createElement(propsContext.Consumer, null)) ? propsContext : Context$1;
+      }, [propsContext, Context$1]); // Retrieve the store and ancestor subscription via context, if available
 
-      var contextValue = React.useContext(ContextToUse); // The store _must_ exist as either a prop or in context.
+      var contextValue = (0, _react$1.useContext)(ContextToUse); // The store _must_ exist as either a prop or in context.
       // We'll check to see if it _looks_ like a Redux store first.
       // This allows us to pass through a `store` prop that is just a plain value.
 
@@ -6863,19 +8222,19 @@ _ref) {
 
 
       var store = didStoreComeFromProps ? props.store : contextValue.store;
-      var childPropsSelector = React.useMemo(function () {
+      var childPropsSelector = (0, _react$1.useMemo)(function () {
         // The child props selector needs the store reference as an input.
         // Re-create this selector whenever the store changes.
         return createChildSelector(store);
       }, [store]);
 
-      var _useMemo2 = React.useMemo(function () {
+      var _useMemo2 = (0, _react$1.useMemo)(function () {
         if (!shouldHandleStateChanges) return NO_SUBSCRIPTION_ARRAY; // This Subscription's source should match where store came from: props vs. context. A component
         // connected to the store via props shouldn't use subscription from context, or vice versa.
         // This Subscription's source should match where store came from: props vs. context. A component
         // connected to the store via props shouldn't use subscription from context, or vice versa.
 
-        var subscription = createSubscription(store, didStoreComeFromProps ? null : contextValue.subscription); // `notifyNestedSubs` is duplicated to handle the case where the component is unmounted in
+        var subscription = (0, Subscription.createSubscription)(store, didStoreComeFromProps ? null : contextValue.subscription); // `notifyNestedSubs` is duplicated to handle the case where the component is unmounted in
         // the middle of the notification loop, where `subscription` will then be null. This can
         // probably be avoided if Subscription's listeners logic is changed to not call listeners
         // that have been unsubscribed in the  middle of the notification loop.
@@ -6892,7 +8251,7 @@ _ref) {
       // and memoize that value to avoid unnecessary context updates.
 
 
-      var overriddenContextValue = React.useMemo(function () {
+      var overriddenContextValue = (0, _react$1.useMemo)(function () {
         if (didStoreComeFromProps) {
           // This component is directly subscribed to a store from props.
           // We don't want descendants reading from this store - pass down whatever
@@ -6902,13 +8261,13 @@ _ref) {
         // connected descendants won't update until after this component is done
 
 
-        return _extends({}, contextValue, {
+        return (0, _extends2["default"])({}, contextValue, {
           subscription: subscription
         });
       }, [didStoreComeFromProps, contextValue, subscription]); // We need to force this wrapper component to re-render whenever a Redux store update
       // causes a change to the calculated child component props (or we caught an error in mapState)
 
-      var _useReducer = React.useReducer(storeStateUpdatesReducer, EMPTY_ARRAY, initStateUpdates),
+      var _useReducer = (0, _react$1.useReducer)(storeStateUpdatesReducer, EMPTY_ARRAY, initStateUpdates),
           _useReducer$ = _useReducer[0],
           previousStateUpdateResult = _useReducer$[0],
           forceComponentUpdateDispatch = _useReducer[1]; // Propagate any mapState/mapDispatch errors upwards
@@ -6919,10 +8278,10 @@ _ref) {
       } // Set up refs to coordinate values between the subscription effect and the render logic
 
 
-      var lastChildProps = React.useRef();
-      var lastWrapperProps = React.useRef(wrapperProps);
-      var childPropsFromStoreUpdate = React.useRef();
-      var renderIsScheduled = React.useRef(false);
+      var lastChildProps = (0, _react$1.useRef)();
+      var lastWrapperProps = (0, _react$1.useRef)(wrapperProps);
+      var childPropsFromStoreUpdate = (0, _react$1.useRef)();
+      var renderIsScheduled = (0, _react$1.useRef)(false);
       var actualChildProps = usePureOnlyMemo(function () {
         // Tricky logic here:
         // - This render may have been triggered by a Redux store update that produced new child props
@@ -6948,19 +8307,19 @@ _ref) {
       useIsomorphicLayoutEffectWithArgs(subscribeUpdates, [shouldHandleStateChanges, store, subscription, childPropsSelector, lastWrapperProps, lastChildProps, renderIsScheduled, childPropsFromStoreUpdate, notifyNestedSubs, forceComponentUpdateDispatch], [store, subscription, childPropsSelector]); // Now that all that's done, we can finally try to actually render the child component.
       // We memoize the elements for the rendered child component as an optimization.
 
-      var renderedWrappedComponent = React.useMemo(function () {
-        return /*#__PURE__*/React__default['default'].createElement(WrappedComponent, _extends({}, actualChildProps, {
+      var renderedWrappedComponent = (0, _react$1.useMemo)(function () {
+        return /*#__PURE__*/_react$1["default"].createElement(WrappedComponent, (0, _extends2["default"])({}, actualChildProps, {
           ref: reactReduxForwardedRef
         }));
       }, [reactReduxForwardedRef, WrappedComponent, actualChildProps]); // If React sees the exact same element reference as last time, it bails out of re-rendering
       // that child, same as if it was wrapped in React.memo() or returned false from shouldComponentUpdate.
 
-      var renderedChild = React.useMemo(function () {
+      var renderedChild = (0, _react$1.useMemo)(function () {
         if (shouldHandleStateChanges) {
           // If this component is subscribed to store updates, we need to pass its own
           // subscription instance down to our descendants. That means rendering the same
           // Context instance, and putting a different value into the context.
-          return /*#__PURE__*/React__default['default'].createElement(ContextToUse.Provider, {
+          return /*#__PURE__*/_react$1["default"].createElement(ContextToUse.Provider, {
             value: overriddenContextValue
           }, renderedWrappedComponent);
         }
@@ -6971,24 +8330,31 @@ _ref) {
     } // If we're in "pure" mode, ensure our wrapper component only re-renders when incoming props have changed.
 
 
-    var Connect = pure ? React__default['default'].memo(ConnectFunction) : ConnectFunction;
+    var Connect = pure ? _react$1["default"].memo(ConnectFunction) : ConnectFunction;
     Connect.WrappedComponent = WrappedComponent;
     Connect.displayName = ConnectFunction.displayName = displayName;
 
     if (forwardRef) {
-      var forwarded = React__default['default'].forwardRef(function forwardConnectRef(props, ref) {
-        return /*#__PURE__*/React__default['default'].createElement(Connect, _extends({}, props, {
+      var forwarded = _react$1["default"].forwardRef(function forwardConnectRef(props, ref) {
+        return /*#__PURE__*/_react$1["default"].createElement(Connect, (0, _extends2["default"])({}, props, {
           reactReduxForwardedRef: ref
         }));
       });
+
       forwarded.displayName = displayName;
       forwarded.WrappedComponent = WrappedComponent;
-      return hoistNonReactStatics_cjs(forwarded, WrappedComponent);
+      return (0, _hoistNonReactStatics["default"])(forwarded, WrappedComponent);
     }
 
-    return hoistNonReactStatics_cjs(Connect, WrappedComponent);
+    return (0, _hoistNonReactStatics["default"])(Connect, WrappedComponent);
   };
 }
+});
+
+var shallowEqual_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports["default"] = shallowEqual;
 
 function is(x, y) {
   if (x === y) {
@@ -7017,6 +8383,12 @@ function shallowEqual(objA, objB) {
 
   return true;
 }
+});
+
+var bindActionCreators_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports["default"] = bindActionCreators;
 
 function bindActionCreators(actionCreators, dispatch) {
   var boundActionCreators = {};
@@ -7037,11 +8409,17 @@ function bindActionCreators(actionCreators, dispatch) {
 
   return boundActionCreators;
 }
+});
 
+var isPlainObject_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports["default"] = isPlainObject;
 /**
  * @param {any} obj The object to inspect.
  * @returns {boolean} True if the argument appears to be a plain object.
  */
+
 function isPlainObject(obj) {
   if (typeof obj !== 'object' || obj === null) return false;
   var proto = Object.getPrototypeOf(obj);
@@ -7054,13 +8432,19 @@ function isPlainObject(obj) {
 
   return proto === baseProto;
 }
+});
 
+var warning_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports["default"] = warning;
 /**
  * Prints a warning in the console if it exists.
  *
  * @param {String} message The warning message.
  * @returns {void}
  */
+
 function warning(message) {
   /* eslint-disable no-console */
   if (typeof console !== 'undefined' && typeof console.error === 'function') {
@@ -7079,12 +8463,34 @@ function warning(message) {
   /* eslint-enable no-empty */
 
 }
+});
+
+var verifyPlainObject_1 = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+exports.__esModule = true;
+exports["default"] = verifyPlainObject;
+
+var _isPlainObject = _interopRequireDefault(isPlainObject_1);
+
+var _warning = _interopRequireDefault(warning_1);
 
 function verifyPlainObject(value, displayName, methodName) {
-  if (!isPlainObject(value)) {
-    warning(methodName + "() in " + displayName + " must return a plain object. Instead received " + value + ".");
+  if (!(0, _isPlainObject["default"])(value)) {
+    (0, _warning["default"])(methodName + "() in " + displayName + " must return a plain object. Instead received " + value + ".");
   }
 }
+});
+
+var _interopRequireDefault$1 = interopRequireDefault["default"];
+
+
+var getDependsOnOwnProps_1 = getDependsOnOwnProps;
+var wrapMapToPropsConstant_1 = wrapMapToPropsConstant;
+var wrapMapToPropsFunc_1 = wrapMapToPropsFunc;
+
+var _verifyPlainObject = _interopRequireDefault$1(verifyPlainObject_1);
 
 function wrapMapToPropsConstant(getConstant) {
   return function initConstantSelector(dispatch, options) {
@@ -7105,6 +8511,7 @@ function wrapMapToPropsConstant(getConstant) {
 // A length of zero is assumed to mean mapToProps is getting args via arguments or ...args and
 // therefore not reporting its length accurately..
 
+
 function getDependsOnOwnProps(mapToProps) {
   return mapToProps.dependsOnOwnProps !== null && mapToProps.dependsOnOwnProps !== undefined ? Boolean(mapToProps.dependsOnOwnProps) : mapToProps.length !== 1;
 } // Used by whenMapStateToPropsIsFunction and whenMapDispatchToPropsIsFunction,
@@ -7119,6 +8526,7 @@ function getDependsOnOwnProps(mapToProps) {
 //  * On first call, verifies the first result is a plain object, in order to warn
 //    the developer that their mapToProps function is not returning a valid result.
 //
+
 
 function wrapMapToPropsFunc(mapToProps, methodName) {
   return function initProxySelector(dispatch, _ref) {
@@ -7142,7 +8550,7 @@ function wrapMapToPropsFunc(mapToProps, methodName) {
         props = proxy(stateOrDispatch, ownProps);
       }
 
-      if (process.env.NODE_ENV !== 'production') verifyPlainObject(props, displayName, methodName);
+      if (process.env.NODE_ENV !== 'production') (0, _verifyPlainObject["default"])(props, displayName, methodName);
       return props;
     };
 
@@ -7150,36 +8558,90 @@ function wrapMapToPropsFunc(mapToProps, methodName) {
   };
 }
 
+var wrapMapToProps = /*#__PURE__*/Object.defineProperty({
+	getDependsOnOwnProps: getDependsOnOwnProps_1,
+	wrapMapToPropsConstant: wrapMapToPropsConstant_1,
+	wrapMapToPropsFunc: wrapMapToPropsFunc_1
+}, '__esModule', {value: true});
+
+var mapDispatchToProps = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+exports.__esModule = true;
+exports["default"] = void 0;
+exports.whenMapDispatchToPropsIsFunction = whenMapDispatchToPropsIsFunction;
+exports.whenMapDispatchToPropsIsMissing = whenMapDispatchToPropsIsMissing;
+exports.whenMapDispatchToPropsIsObject = whenMapDispatchToPropsIsObject;
+
+var _bindActionCreators = _interopRequireDefault(bindActionCreators_1);
+
+
+
 function whenMapDispatchToPropsIsFunction(mapDispatchToProps) {
-  return typeof mapDispatchToProps === 'function' ? wrapMapToPropsFunc(mapDispatchToProps, 'mapDispatchToProps') : undefined;
+  return typeof mapDispatchToProps === 'function' ? (0, wrapMapToProps.wrapMapToPropsFunc)(mapDispatchToProps, 'mapDispatchToProps') : undefined;
 }
+
 function whenMapDispatchToPropsIsMissing(mapDispatchToProps) {
-  return !mapDispatchToProps ? wrapMapToPropsConstant(function (dispatch) {
+  return !mapDispatchToProps ? (0, wrapMapToProps.wrapMapToPropsConstant)(function (dispatch) {
     return {
       dispatch: dispatch
     };
   }) : undefined;
 }
+
 function whenMapDispatchToPropsIsObject(mapDispatchToProps) {
-  return mapDispatchToProps && typeof mapDispatchToProps === 'object' ? wrapMapToPropsConstant(function (dispatch) {
-    return bindActionCreators(mapDispatchToProps, dispatch);
+  return mapDispatchToProps && typeof mapDispatchToProps === 'object' ? (0, wrapMapToProps.wrapMapToPropsConstant)(function (dispatch) {
+    return (0, _bindActionCreators["default"])(mapDispatchToProps, dispatch);
   }) : undefined;
 }
-var defaultMapDispatchToPropsFactories = [whenMapDispatchToPropsIsFunction, whenMapDispatchToPropsIsMissing, whenMapDispatchToPropsIsObject];
+
+var _default = [whenMapDispatchToPropsIsFunction, whenMapDispatchToPropsIsMissing, whenMapDispatchToPropsIsObject];
+exports["default"] = _default;
+});
+
+var mapStateToProps = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports["default"] = void 0;
+exports.whenMapStateToPropsIsFunction = whenMapStateToPropsIsFunction;
+exports.whenMapStateToPropsIsMissing = whenMapStateToPropsIsMissing;
+
+
 
 function whenMapStateToPropsIsFunction(mapStateToProps) {
-  return typeof mapStateToProps === 'function' ? wrapMapToPropsFunc(mapStateToProps, 'mapStateToProps') : undefined;
+  return typeof mapStateToProps === 'function' ? (0, wrapMapToProps.wrapMapToPropsFunc)(mapStateToProps, 'mapStateToProps') : undefined;
 }
+
 function whenMapStateToPropsIsMissing(mapStateToProps) {
-  return !mapStateToProps ? wrapMapToPropsConstant(function () {
+  return !mapStateToProps ? (0, wrapMapToProps.wrapMapToPropsConstant)(function () {
     return {};
   }) : undefined;
 }
-var defaultMapStateToPropsFactories = [whenMapStateToPropsIsFunction, whenMapStateToPropsIsMissing];
+
+var _default = [whenMapStateToPropsIsFunction, whenMapStateToPropsIsMissing];
+exports["default"] = _default;
+});
+
+var mergeProps = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+exports.__esModule = true;
+exports["default"] = void 0;
+exports.defaultMergeProps = defaultMergeProps;
+exports.whenMergePropsIsFunction = whenMergePropsIsFunction;
+exports.whenMergePropsIsOmitted = whenMergePropsIsOmitted;
+exports.wrapMergePropsFunc = wrapMergePropsFunc;
+
+var _extends2 = _interopRequireDefault(_extends_1);
+
+var _verifyPlainObject = _interopRequireDefault(verifyPlainObject_1);
 
 function defaultMergeProps(stateProps, dispatchProps, ownProps) {
-  return _extends({}, ownProps, stateProps, dispatchProps);
+  return (0, _extends2["default"])({}, ownProps, stateProps, dispatchProps);
 }
+
 function wrapMergePropsFunc(mergeProps) {
   return function initMergePropsProxy(dispatch, _ref) {
     var displayName = _ref.displayName,
@@ -7195,29 +8657,43 @@ function wrapMergePropsFunc(mergeProps) {
       } else {
         hasRunOnce = true;
         mergedProps = nextMergedProps;
-        if (process.env.NODE_ENV !== 'production') verifyPlainObject(mergedProps, displayName, 'mergeProps');
+        if (process.env.NODE_ENV !== 'production') (0, _verifyPlainObject["default"])(mergedProps, displayName, 'mergeProps');
       }
 
       return mergedProps;
     };
   };
 }
+
 function whenMergePropsIsFunction(mergeProps) {
   return typeof mergeProps === 'function' ? wrapMergePropsFunc(mergeProps) : undefined;
 }
+
 function whenMergePropsIsOmitted(mergeProps) {
   return !mergeProps ? function () {
     return defaultMergeProps;
   } : undefined;
 }
-var defaultMergePropsFactories = [whenMergePropsIsFunction, whenMergePropsIsOmitted];
+
+var _default = [whenMergePropsIsFunction, whenMergePropsIsOmitted];
+exports["default"] = _default;
+});
+
+var verifySubselectors_1 = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+exports.__esModule = true;
+exports["default"] = verifySubselectors;
+
+var _warning = _interopRequireDefault(warning_1);
 
 function verify(selector, methodName, displayName) {
   if (!selector) {
     throw new Error("Unexpected value for " + methodName + " in " + displayName + ".");
   } else if (methodName === 'mapStateToProps' || methodName === 'mapDispatchToProps') {
     if (!Object.prototype.hasOwnProperty.call(selector, 'dependsOnOwnProps')) {
-      warning("The selector for " + methodName + " of " + displayName + " did not specify a value for dependsOnOwnProps.");
+      (0, _warning["default"])("The selector for " + methodName + " of " + displayName + " did not specify a value for dependsOnOwnProps.");
     }
   }
 }
@@ -7227,13 +8703,29 @@ function verifySubselectors(mapStateToProps, mapDispatchToProps, mergeProps, dis
   verify(mapDispatchToProps, 'mapDispatchToProps', displayName);
   verify(mergeProps, 'mergeProps', displayName);
 }
+});
 
-var _excluded$1 = ["initMapStateToProps", "initMapDispatchToProps", "initMergeProps"];
+var selectorFactory = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+exports.__esModule = true;
+exports["default"] = finalPropsSelectorFactory;
+exports.impureFinalPropsSelectorFactory = impureFinalPropsSelectorFactory;
+exports.pureFinalPropsSelectorFactory = pureFinalPropsSelectorFactory;
+
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault(objectWithoutPropertiesLoose);
+
+var _verifySubselectors = _interopRequireDefault(verifySubselectors_1);
+
+var _excluded = ["initMapStateToProps", "initMapDispatchToProps", "initMergeProps"];
+
 function impureFinalPropsSelectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch) {
   return function impureFinalPropsSelector(state, ownProps) {
     return mergeProps(mapStateToProps(state, ownProps), mapDispatchToProps(dispatch, ownProps), ownProps);
   };
 }
+
 function pureFinalPropsSelectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch, _ref) {
   var areStatesEqual = _ref.areStatesEqual,
       areOwnPropsEqual = _ref.areOwnPropsEqual,
@@ -7297,23 +8789,48 @@ function pureFinalPropsSelectorFactory(mapStateToProps, mapDispatchToProps, merg
 // props have not changed. If false, the selector will always return a new
 // object and shouldComponentUpdate will always return true.
 
+
 function finalPropsSelectorFactory(dispatch, _ref2) {
   var initMapStateToProps = _ref2.initMapStateToProps,
       initMapDispatchToProps = _ref2.initMapDispatchToProps,
       initMergeProps = _ref2.initMergeProps,
-      options = _objectWithoutPropertiesLoose(_ref2, _excluded$1);
-
+      options = (0, _objectWithoutPropertiesLoose2["default"])(_ref2, _excluded);
   var mapStateToProps = initMapStateToProps(dispatch, options);
   var mapDispatchToProps = initMapDispatchToProps(dispatch, options);
   var mergeProps = initMergeProps(dispatch, options);
 
   if (process.env.NODE_ENV !== 'production') {
-    verifySubselectors(mapStateToProps, mapDispatchToProps, mergeProps, options.displayName);
+    (0, _verifySubselectors["default"])(mapStateToProps, mapDispatchToProps, mergeProps, options.displayName);
   }
 
   var selectorFactory = options.pure ? pureFinalPropsSelectorFactory : impureFinalPropsSelectorFactory;
   return selectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch, options);
 }
+});
+
+var connect$1 = createCommonjsModule(function (module, exports) {
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+exports.__esModule = true;
+exports.createConnect = createConnect;
+exports["default"] = void 0;
+
+var _extends2 = _interopRequireDefault(_extends_1);
+
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault(objectWithoutPropertiesLoose);
+
+var _connectAdvanced = _interopRequireDefault(connectAdvanced_1);
+
+var _shallowEqual = _interopRequireDefault(shallowEqual_1);
+
+var _mapDispatchToProps = _interopRequireDefault(mapDispatchToProps);
+
+var _mapStateToProps = _interopRequireDefault(mapStateToProps);
+
+var _mergeProps = _interopRequireDefault(mergeProps);
+
+var _selectorFactory = _interopRequireDefault(selectorFactory);
 
 var _excluded = ["pure", "areStatesEqual", "areOwnPropsEqual", "areStatePropsEqual", "areMergedPropsEqual"];
 /*
@@ -7353,15 +8870,15 @@ function strictEqual(a, b) {
 function createConnect(_temp) {
   var _ref = _temp === void 0 ? {} : _temp,
       _ref$connectHOC = _ref.connectHOC,
-      connectHOC = _ref$connectHOC === void 0 ? connectAdvanced : _ref$connectHOC,
+      connectHOC = _ref$connectHOC === void 0 ? _connectAdvanced["default"] : _ref$connectHOC,
       _ref$mapStateToPropsF = _ref.mapStateToPropsFactories,
-      mapStateToPropsFactories = _ref$mapStateToPropsF === void 0 ? defaultMapStateToPropsFactories : _ref$mapStateToPropsF,
+      mapStateToPropsFactories = _ref$mapStateToPropsF === void 0 ? _mapStateToProps["default"] : _ref$mapStateToPropsF,
       _ref$mapDispatchToPro = _ref.mapDispatchToPropsFactories,
-      mapDispatchToPropsFactories = _ref$mapDispatchToPro === void 0 ? defaultMapDispatchToPropsFactories : _ref$mapDispatchToPro,
+      mapDispatchToPropsFactories = _ref$mapDispatchToPro === void 0 ? _mapDispatchToProps["default"] : _ref$mapDispatchToPro,
       _ref$mergePropsFactor = _ref.mergePropsFactories,
-      mergePropsFactories = _ref$mergePropsFactor === void 0 ? defaultMergePropsFactories : _ref$mergePropsFactor,
+      mergePropsFactories = _ref$mergePropsFactor === void 0 ? _mergeProps["default"] : _ref$mergePropsFactor,
       _ref$selectorFactory = _ref.selectorFactory,
-      selectorFactory = _ref$selectorFactory === void 0 ? finalPropsSelectorFactory : _ref$selectorFactory;
+      selectorFactory = _ref$selectorFactory === void 0 ? _selectorFactory["default"] : _ref$selectorFactory;
 
   return function connect(mapStateToProps, mapDispatchToProps, mergeProps, _ref2) {
     if (_ref2 === void 0) {
@@ -7374,17 +8891,16 @@ function createConnect(_temp) {
         _ref3$areStatesEqual = _ref3.areStatesEqual,
         areStatesEqual = _ref3$areStatesEqual === void 0 ? strictEqual : _ref3$areStatesEqual,
         _ref3$areOwnPropsEqua = _ref3.areOwnPropsEqual,
-        areOwnPropsEqual = _ref3$areOwnPropsEqua === void 0 ? shallowEqual : _ref3$areOwnPropsEqua,
+        areOwnPropsEqual = _ref3$areOwnPropsEqua === void 0 ? _shallowEqual["default"] : _ref3$areOwnPropsEqua,
         _ref3$areStatePropsEq = _ref3.areStatePropsEqual,
-        areStatePropsEqual = _ref3$areStatePropsEq === void 0 ? shallowEqual : _ref3$areStatePropsEq,
+        areStatePropsEqual = _ref3$areStatePropsEq === void 0 ? _shallowEqual["default"] : _ref3$areStatePropsEq,
         _ref3$areMergedPropsE = _ref3.areMergedPropsEqual,
-        areMergedPropsEqual = _ref3$areMergedPropsE === void 0 ? shallowEqual : _ref3$areMergedPropsE,
-        extraOptions = _objectWithoutPropertiesLoose(_ref3, _excluded);
-
+        areMergedPropsEqual = _ref3$areMergedPropsE === void 0 ? _shallowEqual["default"] : _ref3$areMergedPropsE,
+        extraOptions = (0, _objectWithoutPropertiesLoose2["default"])(_ref3, _excluded);
     var initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps');
     var initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps');
     var initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps');
-    return connectHOC(selectorFactory, _extends({
+    return connectHOC(selectorFactory, (0, _extends2["default"])({
       // used in error messages
       methodName: 'connect',
       // used to compute Connect's displayName from the wrapped component's displayName.
@@ -7405,7 +8921,16 @@ function createConnect(_temp) {
     }, extraOptions));
   };
 }
-var connect = /*#__PURE__*/createConnect();
+
+var _default = /*#__PURE__*/createConnect();
+
+exports["default"] = _default;
+});
+
+var useReduxContext_2 = useReduxContext;
+
+
+
 
 /**
  * A hook to access the value of the `ReactReduxContext`. This is a low-level
@@ -7424,8 +8949,9 @@ var connect = /*#__PURE__*/createConnect();
  * }
  */
 
+
 function useReduxContext() {
-  var contextValue = React.useContext(ReactReduxContext);
+  var contextValue = (0, _react.useContext)(Context.ReactReduxContext);
 
   if (process.env.NODE_ENV !== 'production' && !contextValue) {
     throw new Error('could not find react-redux context value; please ensure the component is wrapped in a <Provider>');
@@ -7434,6 +8960,21 @@ function useReduxContext() {
   return contextValue;
 }
 
+var useReduxContext_1 = /*#__PURE__*/Object.defineProperty({
+	useReduxContext: useReduxContext_2
+}, '__esModule', {value: true});
+
+var useStore_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports.createStoreHook = createStoreHook;
+exports.useStore = void 0;
+
+
+
+
+
+
 /**
  * Hook factory, which creates a `useStore` hook bound to a given context.
  *
@@ -7441,16 +8982,17 @@ function useReduxContext() {
  * @returns {Function} A `useStore` hook bound to the specified context.
  */
 
+
 function createStoreHook(context) {
   if (context === void 0) {
-    context = ReactReduxContext;
+    context = Context.ReactReduxContext;
   }
 
-  var useReduxContext$1 = context === ReactReduxContext ? useReduxContext : function () {
-    return React.useContext(context);
+  var useReduxContext = context === Context.ReactReduxContext ? useReduxContext_1.useReduxContext : function () {
+    return (0, _react.useContext)(context);
   };
   return function useStore() {
-    var _useReduxContext = useReduxContext$1(),
+    var _useReduxContext = useReduxContext(),
         store = _useReduxContext.store;
 
     return store;
@@ -7472,25 +9014,99 @@ function createStoreHook(context) {
  * }
  */
 
+
 var useStore = /*#__PURE__*/createStoreHook();
+exports.useStore = useStore;
+});
+
+var useDispatch_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports.createDispatchHook = createDispatchHook;
+exports.useDispatch = void 0;
+
+
+
+
+/**
+ * Hook factory, which creates a `useDispatch` hook bound to a given context.
+ *
+ * @param {React.Context} [context=ReactReduxContext] Context passed to your `<Provider>`.
+ * @returns {Function} A `useDispatch` hook bound to the specified context.
+ */
+
+
+function createDispatchHook(context) {
+  if (context === void 0) {
+    context = Context.ReactReduxContext;
+  }
+
+  var useStore = context === Context.ReactReduxContext ? useStore_1.useStore : (0, useStore_1.createStoreHook)(context);
+  return function useDispatch() {
+    var store = useStore();
+    return store.dispatch;
+  };
+}
+/**
+ * A hook to access the redux `dispatch` function.
+ *
+ * @returns {any|function} redux store's `dispatch` function
+ *
+ * @example
+ *
+ * import React, { useCallback } from 'react'
+ * import { useDispatch } from 'react-redux'
+ *
+ * export const CounterComponent = ({ value }) => {
+ *   const dispatch = useDispatch()
+ *   const increaseCounter = useCallback(() => dispatch({ type: 'increase-counter' }), [])
+ *   return (
+ *     <div>
+ *       <span>{value}</span>
+ *       <button onClick={increaseCounter}>Increase counter</button>
+ *     </div>
+ *   )
+ * }
+ */
+
+
+var useDispatch = /*#__PURE__*/createDispatchHook();
+exports.useDispatch = useDispatch;
+});
+
+var useSelector_1 = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports.createSelectorHook = createSelectorHook;
+exports.useSelector = void 0;
+
+
+
+
+
+
+
+
+
+
 
 var refEquality = function refEquality(a, b) {
   return a === b;
 };
 
 function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contextSub) {
-  var _useReducer = React.useReducer(function (s) {
+  var _useReducer = (0, _react.useReducer)(function (s) {
     return s + 1;
   }, 0),
       forceRender = _useReducer[1];
 
-  var subscription = React.useMemo(function () {
-    return createSubscription(store, contextSub);
+  var subscription = (0, _react.useMemo)(function () {
+    return (0, Subscription.createSubscription)(store, contextSub);
   }, [store, contextSub]);
-  var latestSubscriptionCallbackError = React.useRef();
-  var latestSelector = React.useRef();
-  var latestStoreState = React.useRef();
-  var latestSelectedState = React.useRef();
+  var latestSubscriptionCallbackError = (0, _react.useRef)();
+  var latestSelector = (0, _react.useRef)();
+  var latestStoreState = (0, _react.useRef)();
+  var latestSelectedState = (0, _react.useRef)();
   var storeState = store.getState();
   var selectedState;
 
@@ -7514,13 +9130,13 @@ function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contex
     throw err;
   }
 
-  useIsomorphicLayoutEffect(function () {
+  (0, useIsomorphicLayoutEffect_1.useIsomorphicLayoutEffect)(function () {
     latestSelector.current = selector;
     latestStoreState.current = storeState;
     latestSelectedState.current = selectedState;
     latestSubscriptionCallbackError.current = undefined;
   });
-  useIsomorphicLayoutEffect(function () {
+  (0, useIsomorphicLayoutEffect_1.useIsomorphicLayoutEffect)(function () {
     function checkForUpdates() {
       try {
         var newStoreState = store.getState(); // Avoid calling selector multiple times if the store's state has not changed
@@ -7567,11 +9183,11 @@ function useSelectorWithStoreAndSubscription(selector, equalityFn, store, contex
 
 function createSelectorHook(context) {
   if (context === void 0) {
-    context = ReactReduxContext;
+    context = Context.ReactReduxContext;
   }
 
-  var useReduxContext$1 = context === ReactReduxContext ? useReduxContext : function () {
-    return React.useContext(context);
+  var useReduxContext = context === Context.ReactReduxContext ? useReduxContext_1.useReduxContext : function () {
+    return (0, _react.useContext)(context);
   };
   return function useSelector(selector, equalityFn) {
     if (equalityFn === void 0) {
@@ -7592,12 +9208,12 @@ function createSelectorHook(context) {
       }
     }
 
-    var _useReduxContext = useReduxContext$1(),
+    var _useReduxContext = useReduxContext(),
         store = _useReduxContext.store,
         contextSub = _useReduxContext.subscription;
 
     var selectedState = useSelectorWithStoreAndSubscription(selector, equalityFn, store, contextSub);
-    React.useDebugValue(selectedState);
+    (0, _react.useDebugValue)(selectedState);
     return selectedState;
   };
 }
@@ -7625,20 +9241,109 @@ function createSelectorHook(context) {
  * }
  */
 
-var useSelector = /*#__PURE__*/createSelectorHook();
 
+var useSelector = /*#__PURE__*/createSelectorHook();
+exports.useSelector = useSelector;
+});
+
+var _interopRequireDefault = interopRequireDefault["default"];
+
+
+
+var _Provider = _interopRequireDefault(Provider_1);
+
+var Provider = _Provider["default"];
+
+var _connectAdvanced = _interopRequireDefault(connectAdvanced_1);
+
+var connectAdvanced = _connectAdvanced["default"];
+
+
+
+var ReactReduxContext = Context.ReactReduxContext;
+
+var _connect = _interopRequireDefault(connect$1);
+
+var connect = _connect["default"];
+
+
+
+var useDispatch = useDispatch_1.useDispatch;
+var createDispatchHook = useDispatch_1.createDispatchHook;
+
+
+
+var useSelector = useSelector_1.useSelector;
+var createSelectorHook = useSelector_1.createSelectorHook;
+
+
+
+var useStore = useStore_1.useStore;
+var createStoreHook = useStore_1.createStoreHook;
+
+var _shallowEqual = _interopRequireDefault(shallowEqual_1);
+
+var shallowEqual = _shallowEqual["default"];
+
+var exports = /*#__PURE__*/Object.defineProperty({
+	Provider: Provider,
+	connectAdvanced: connectAdvanced,
+	ReactReduxContext: ReactReduxContext,
+	connect: connect,
+	useDispatch: useDispatch,
+	createDispatchHook: createDispatchHook,
+	useSelector: useSelector,
+	createSelectorHook: createSelectorHook,
+	useStore: useStore,
+	createStoreHook: createStoreHook,
+	shallowEqual: shallowEqual
+}, '__esModule', {value: true});
+
+var reactBatchedUpdates = createCommonjsModule(function (module, exports) {
+
+exports.__esModule = true;
+exports.unstable_batchedUpdates = void 0;
+
+
+
+exports.unstable_batchedUpdates = _reactDom.unstable_batchedUpdates;
+});
+
+var lib = createCommonjsModule(function (module, exports$1) {
+
+exports$1.__esModule = true;
+var _exportNames = {
+  batch: true
+};
+
+
+
+Object.keys(exports).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports$1 && exports$1[key] === exports[key]) return;
+  exports$1[key] = exports[key];
+});
+
+
+
+exports$1.batch = reactBatchedUpdates.unstable_batchedUpdates;
+
+ // Enable batched updates in our subscriptions for use
 // with standard React renderers (ReactDOM, React Native)
 
-setBatch(reactDom.unstable_batchedUpdates);
+
+(0, batch_1.setBatch)(reactBatchedUpdates.unstable_batchedUpdates);
+});
 
 function connectRedux(mapStateToProps, options) {
   return function (component) {
-    return exportView(connect(mapStateToProps, options)(component));
+    return exportView(lib.connect(mapStateToProps, options)(component));
   };
 }
 setCoreConfig({
-  UseStore: useStore,
-  StoreProvider: Provider
+  UseStore: lib.useStore,
+  StoreProvider: lib.Provider
 });
 
 var appConfig = Symbol();
@@ -7672,37 +9377,7 @@ function createSSR(appConfig, nativeRequest) {
   return buildSSR({}, router);
 }
 
-exports.BaseModel = BaseModel;
-exports.DocumentHead = DocumentHead;
-exports.Else = Else;
-exports.EmptyModel = EmptyModel;
-exports.ErrorCodes = ErrorCodes;
-exports.Link = Link;
-exports.Switch = Switch;
-exports.connectRedux = connectRedux;
-exports.createApp = createApp;
-exports.createSSR = createSSR;
-exports.createSelectorHook = createSelectorHook;
-exports.deepMerge = deepMerge;
-exports.effect = effect;
-exports.effectLogger = effectLogger;
-exports.env = env;
-exports.errorAction = errorAction;
-exports.exportComponent = exportComponent;
-exports.exportModule = exportModule;
-exports.exportView = exportView;
-exports.getApi = getApi;
-exports.isServer = isServer;
-exports.locationToNativeLocation = locationToNativeLocation;
-exports.locationToUrl = locationToUrl;
-exports.modelHotReplacement = modelHotReplacement;
-exports.nativeLocationToLocation = nativeLocationToLocation;
-exports.nativeUrlToUrl = nativeUrlToUrl;
-exports.patchActions = patchActions;
-exports.reducer = reducer;
-exports.setConfig = setConfig;
-exports.setLoading = setLoading;
-exports.shallowEqual = shallowEqual;
-exports.urlToLocation = urlToLocation;
-exports.urlToNativeUrl = urlToNativeUrl;
-exports.useSelector = useSelector;
+var createSelectorHook$1 = lib.createSelectorHook;
+var shallowEqual$1 = lib.shallowEqual;
+var useSelector$1 = lib.useSelector;
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSSR, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };

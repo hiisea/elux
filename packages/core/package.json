@@ -20,9 +20,8 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "jsnext:main": "dist/next/index.js",
+  "main": "dist/es5/index.js",
+  "module": "dist/es6/index.js",
   "types": "types/",
   "files": [
     "runtime/",
@@ -33,10 +32,9 @@
     "test": "jest",
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
     "build:types": "rimraf ./types && tsc --build ./src",
-    "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts\"",
-    "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts\"",
-    "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts\"",
-    "build": "yarn build:types && rimraf ./dist && yarn build:next && yarn build:esm && yarn build:cjs"
+    "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts\"",
+    "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts\"",
+    "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }
