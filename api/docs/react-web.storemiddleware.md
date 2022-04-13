@@ -10,11 +10,11 @@ Store的中间件
 
 ```typescript
 export declare type StoreMiddleware = (api: {
-    getStore: () => UStore;
+    getStore: () => IStore;
     dispatch: Dispatch;
 }) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 ```
-<b>References:</b> [UStore](./react-web.ustore.md)<!-- -->, [Dispatch](./react-web.dispatch.md)<!-- -->, [Action](./react-web.action.md)
+<b>References:</b> [IStore](./react-web.istore.md)<!-- -->, [Dispatch](./react-web.dispatch.md)<!-- -->, [Action](./react-web.action.md)
 
 ## Remarks
 

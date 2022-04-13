@@ -14,10 +14,10 @@ export declare function getApi<TAPI extends {
     GetActions: any;
     LoadComponent: any;
     Modules: any;
-}, R extends URouter>(demoteForProductionOnly?: boolean, injectActions?: Record<string, string[]>): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'Modules'> & {
-    GetRouter: () => R;
-    useRouter: () => R;
-    useStore: () => UStore<TAPI['State'], R['routeState']['params']>;
+}>(demoteForProductionOnly?: boolean, injectActions?: Record<string, string[]>): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'Modules'> & {
+    GetClientRouter: () => IRouter;
+    useRouter: () => IRouter;
+    useStore: () => IStore<TAPI['State']>;
 };
 ```
 
@@ -30,16 +30,13 @@ export declare function getApi<TAPI extends {
 
 <b>Returns:</b>
 
-Pick&lt;TAPI, 'GetActions' \| 'LoadComponent' \| 'Modules'&gt; &amp; { GetRouter: () =&gt; R; useRouter: () =&gt; R; useStore: () =&gt; [UStore](./react-web.ustore.md)<!-- -->&lt;TAPI\['State'\], R\['routeState'\]\['params'\]&gt;; }
+Pick&lt;TAPI, 'GetActions' \| 'LoadComponent' \| 'Modules'&gt; &amp; { GetClientRouter: () =&gt; [IRouter](./react-web.irouter.md)<!-- -->; useRouter: () =&gt; [IRouter](./react-web.irouter.md)<!-- -->; useStore: () =&gt; [IStore](./react-web.istore.md)<!-- -->&lt;TAPI\['State'\]&gt;; }
 
 返回包含多个全局方法的结构体：
 
-- `LoadComponent`<!-- -->：用于加载其它模块导出的[EluxUI组件](./react-web.exportview.md)<!-- -->，参见 [LoadComponent](./react-web.loadcomponent.md)<!-- -->。 相比直接 `import`<!-- -->，使用此方法加载组件不仅可以`按需加载`<!-- -->，而且还可以自动初始化其所属 Model，例如：
+- `LoadComponent`<!-- -->：用于加载其它模块导出的[UI组件](./react-web.exportview.md)<!-- -->，参见 [ILoadComponent](./react-web.iloadcomponent.md)<!-- -->。
 
-```js
-  const Article = LoadComponent('article', 'main')
-```
-- `Modules`<!-- -->：用于获取所有模块的对外接口，参见 [FacadeModules](./react-web.facademodules.md)<!-- -->，例如：
+- `Modules`<!-- -->：用于获取所有模块的对外接口，参见 [ModuleFacade](./react-web.modulefacade.md)<!-- -->，例如：
 
 ```js
   dispatch(Modules.article.actions.refresh())
@@ -57,16 +54,16 @@ Pick&lt;TAPI, 'GetActions' \| 'LoadComponent' \| 'Modules'&gt; &amp; { GetRouter
   dispatch(a.a1())
   dispatch(b.b1())
 ```
-- `GetRouter`<!-- -->：用于获取全局Roter，注意此方法不能运行在SSR（`服务端渲染`<!-- -->）中，因为服务端每个 `request` 都将生成一个 Router，不存在全局 Roter，请使用 `useRouter()`
+- `GetClientRouter`<!-- -->：在CSR（`客户端渲染`<!-- -->）环境中用于获取全局Router。
 
-- `useRouter`<!-- -->：React Hook，用于获取当前 Router，在CSR（`客户端渲染`<!-- -->）中，因为只存在一个Router，所以其值等于`GetRouter()`<!-- -->，例如：
+- `useRouter`<!-- -->：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`<!-- -->）中其值等于`GetClientRouter()`<!-- -->，例如：
 
 ```js
-  const blobalRouter = GetRouter()
+  const globalRouter = GetClientRouter()
   const currentRouter = useRouter()
   console.log(blobalRouter===currentRouter)
 ```
-- `useStore`<!-- -->：React Hook，用于获取当前 Store，例如：
+- `useStore`<!-- -->：用于在 UI Render 中获取当前 Store，例如：
 
 ```js
   const store = useStore()
@@ -75,12 +72,12 @@ Pick&lt;TAPI, 'GetActions' \| 'LoadComponent' \| 'Modules'&gt; &amp; { GetRouter
 
 ## Remarks
 
-参数 `components` 支持异步获取组件，当组件代码量大时，可以使用 `import(...)` 返回Promise
+通常不需要参数，仅在兼容不支持Proxy的环境中需要传参
 
 ## Example
 
 
 ```js
-const {Modules, LoadComponent, GetActions, GetRouter, useStore, useRouter} = getApi<API, Router>();
+const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API, Router>();
 ```
 

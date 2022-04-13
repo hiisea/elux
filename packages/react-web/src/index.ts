@@ -1,12 +1,12 @@
-import {buildApp, buildSSR, NativeRequest} from '@elux/core';
-import {createClientRouter, createServerRouter} from '@elux/route-browser';
 import {AppConfig} from '@elux/app';
+import {buildApp, buildSSR, NativeRequest, RenderOptions} from '@elux/core';
+import {createClientRouter, createServerRouter} from '@elux/route-browser';
 
-export {DocumentHead, Switch, Else, Link} from '@elux/react-components';
-export type {DocumentHeadProps, SwitchProps, ElseProps, LinkProps} from '@elux/react-components';
+export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
+export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';
 
-export {connectRedux, shallowEqual, useSelector, createSelectorHook} from '@elux/react-redux';
-export type {InferableComponentEnhancerWithProps, GetProps} from '@elux/react-redux';
+export {connectRedux, createSelectorHook, shallowEqual, useSelector} from '@elux/react-redux';
+export type {GetProps, InferableComponentEnhancerWithProps} from '@elux/react-redux';
 
 export * from '@elux/app';
 
@@ -14,18 +14,16 @@ export * from '@elux/app';
  * 创建应用(CSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR | createSSR(...)}
+ * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR}
  *
- * @param moduleGetter - 模块工厂
- * @param storeMiddlewares - store中间件
- * @param storeLogger - store日志记录器
+ * @param appConfig - 应用配置
  *
  * @returns
- * 返回包含`render(options: RenderOptions): Promise<void>`方法的下一步实例，参见{@link RenderOptions}
+ * 返回包含`render`方法的实例，参见{@link RenderOptions}
  *
  * @example
  * ```js
- * createApp(moduleGetter)
+ * createApp(config)
  * .render()
  * .then(() => {
  *   const initLoading = document.getElementById('root-loading');
@@ -37,8 +35,9 @@ export * from '@elux/app';
  *
  * @public
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createApp(appConfig: AppConfig) {
+export function createApp(appConfig: AppConfig): {
+  render(options?: RenderOptions): Promise<void>;
+} {
   const router = createClientRouter();
   return buildApp({}, router);
 }
@@ -47,16 +46,13 @@ export function createApp(appConfig: AppConfig) {
  * 创建应用(SSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp | createApp(...)}
+ * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp}
  *
- * @param moduleGetter - 模块工厂
- * @param url - 服务器收到的原始url
- * @param nativeData - 可存放任何原始请求数据
- * @param storeMiddlewares - store中间件
- * @param storeLogger - store日志记录器
+ * @param appConfig - 应用配置
+ * @param nativeRequest - 原生请求
  *
  * @returns
- * 返回包含`render(options: RenderOptions): Promise<string>`方法的下一步实例，参见{@link RenderOptions}
+ * 返回包含`render`方法的下一步实例，参见{@link RenderOptions}
  *
  * @example
  * ```js
@@ -66,8 +62,12 @@ export function createApp(appConfig: AppConfig) {
  * ```
  * @public
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createSSR(appConfig: AppConfig, nativeRequest: NativeRequest) {
+export function createSSR(
+  appConfig: AppConfig,
+  nativeRequest: NativeRequest
+): {
+  render(options?: RenderOptions | undefined): Promise<string>;
+} {
   const router = createServerRouter(nativeRequest);
   return buildSSR({}, router);
 }

@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, memo } from 'react';
-import { env, coreConfig } from '@elux/core';
+import React, { memo, useEffect, useRef, useState } from 'react';
+import { coreConfig, env } from '@elux/core';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var RouterComponent = function RouterComponent(props) {
   var router = coreConfig.UseRouter();

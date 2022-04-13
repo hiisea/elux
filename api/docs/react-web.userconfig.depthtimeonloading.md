@@ -4,7 +4,7 @@
 
 ## UserConfig.DepthTimeOnLoading property
 
-超过多少秒Loading视为深度加载
+定义Loading超过多少秒视为深度加载
 
 <b>Signature:</b>
 
@@ -16,5 +16,5 @@ DepthTimeOnLoading?: number;
 
 默认: `2`
 
-框架将Loading状态分为3种：[LoadingState](./react-web.loadingstate.md)<!-- -->，可根据不同的状态来个性化显示，如：浅度loading时仅显示icon图标，深度loading时显示icon图标+灰色蒙层
+框架将Loading状态分为3种：[LoadingState](./react-web.loadingstate.md)<!-- -->，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层
 

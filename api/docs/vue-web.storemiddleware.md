@@ -10,11 +10,11 @@ Store的中间件
 
 ```typescript
 export declare type StoreMiddleware = (api: {
-    getStore: () => UStore;
+    getStore: () => IStore;
     dispatch: Dispatch;
 }) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 ```
-<b>References:</b> [UStore](./vue-web.ustore.md)<!-- -->, [Dispatch](./vue-web.dispatch.md)<!-- -->, [Action](./vue-web.action.md)
+<b>References:</b> [IStore](./vue-web.istore.md)<!-- -->, [Dispatch](./vue-web.dispatch.md)<!-- -->, [Action](./vue-web.action.md)
 
 ## Remarks
 

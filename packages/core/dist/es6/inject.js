@@ -1,6 +1,6 @@
+import { coreConfig, isEluxComponent, MetaData } from './basic';
 import env from './env';
 import { isPromise, promiseCaseCallback } from './utils';
-import { MetaData, coreConfig, isEluxComponent } from './basic';
 export function getModule(moduleName) {
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName];

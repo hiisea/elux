@@ -2,8 +2,8 @@ import _applyDecoratedDescriptor from "@babel/runtime/helpers/esm/applyDecorated
 
 var _class;
 
+import { coreConfig, mergeState, MetaData } from './basic';
 import env from './env';
-import { MetaData, coreConfig, mergeState } from './basic';
 import { getModuleApiMap } from './inject';
 import { exportModuleFacade, reducer } from './module';
 export function exportModule(moduleName, ModelClass, components, data) {
@@ -20,7 +20,7 @@ export function getApi(demoteForProductionOnly, injectActions) {
     },
     GetClientRouter: () => {
       if (env.isServer) {
-        throw 'Cannot use GetRouter() in the server side, please use useRouter() instead';
+        throw 'Cannot use GetClientRouter() in the server side, please use useRouter() instead';
       }
 
       return MetaData.clientRouter;

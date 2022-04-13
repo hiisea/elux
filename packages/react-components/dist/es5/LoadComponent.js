@@ -3,7 +3,7 @@ import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWith
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 var _excluded = ["forwardedRef", "store"];
 import React, { Component } from 'react';
-import { env, injectComponent, isPromise, coreConfig } from '@elux/core';
+import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;

@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-new (moduleName: string, store: UStore): H;
+new (moduleName: string, store: IStore): H;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ new (moduleName: string, store: UStore): H;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  moduleName | string |  |
-|  store | [UStore](./react-web.ustore.md) |  |
+|  store | [IStore](./react-web.istore.md) |  |
 
 <b>Returns:</b>
 

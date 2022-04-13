@@ -17,5 +17,5 @@ export declare type AsyncEluxComponent = () => Promise<{
 
 ## Remarks
 
-EluxUI组件通常通过 [exportComponent()](./vue-web.exportcomponent.md) 导出，可使用 [LoadComponent](./vue-web.loadcomponent.md) 加载
+EluxUI组件通常通过 [exportComponent()](./vue-web.exportcomponent.md) 导出，可使用 [ILoadComponent](./vue-web.iloadcomponent.md) 加载
 

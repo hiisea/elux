@@ -21,7 +21,7 @@ export declare type ModuleGetter = {
 
 - 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`
 
-- 根模块（stage）和路由模块（route）通常定义为同步获取
+- 根模块`stage`<!-- -->通常定义为同步获取
 
 ## Example
 
@@ -30,7 +30,6 @@ export declare type ModuleGetter = {
 import stage from '@/modules/stage';
 
 export const moduleGetter = {
-  route: () => routeModule,
   stage: () => stage,
   article: () => import('@/modules/article'),
   my: () => import('@/modules/my'),

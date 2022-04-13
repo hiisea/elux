@@ -4,7 +4,7 @@
 
 ## exportView() function
 
-向外导出一个EluxUI组件
+向外导出UI组件
 
 <b>Signature:</b>
 
@@ -26,7 +26,7 @@ T &amp; [EluxComponent](./react-web.eluxcomponent.md)
 
 ## Remarks
 
-不同于普通UI组件，EluxUI组件可通过 [LoadComponent](./react-web.loadcomponent.md) 来加载，参见 [exportModule()](./react-web.exportmodule.md)
+不同于普通UI组件，EluxUI组件可通过 [ILoadComponent](./react-web.iloadcomponent.md) 按需加载
 
 [exportComponent()](./react-web.exportcomponent.md) VS [exportView()](./react-web.exportview.md) 参见：`Elux中组件与视图的区别`
 

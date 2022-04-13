@@ -1,5 +1,5 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import { coreConfig, buildConfigSetter } from '@elux/core';
+import { buildConfigSetter, coreConfig } from '@elux/core';
 export var ErrorCodes = {
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
   ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'

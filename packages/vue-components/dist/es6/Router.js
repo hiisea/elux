@@ -1,6 +1,6 @@
 import { createVNode as _createVNode } from "vue";
-import { h, provide, defineComponent, shallowRef, ref, onBeforeUnmount } from 'vue';
-import { env, coreConfig, getEntryComponent } from '@elux/core';
+import { defineComponent, h, onBeforeUnmount, provide, ref, shallowRef } from 'vue';
+import { coreConfig, env, getEntryComponent } from '@elux/core';
 import { EluxStoreContextKey } from './base';
 export const RouterComponent = defineComponent({
   setup() {

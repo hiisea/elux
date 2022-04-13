@@ -7,7 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-actions: {
-        [actionName: string]: ActionCreator;
-    };
+actions: ModelAsCreators;
 ```

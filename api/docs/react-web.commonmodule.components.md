@@ -8,6 +8,6 @@
 
 ```typescript
 components: {
-        [componentName: string]: EluxComponent | AsyncEluxComponent;
+        [componentName: string]: EluxComponent;
     };
 ```

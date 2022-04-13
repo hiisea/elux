@@ -1,5 +1,5 @@
+import {Action, ActionError, coreConfig} from './basic';
 import {LoadingState} from './utils';
-import {Action, coreConfig, ActionError} from './basic';
 
 export const errorProcessed = '__eluxProcessed__';
 
@@ -15,12 +15,6 @@ export function setProcessedError(error: any, processed: boolean): {[errorProces
   return error;
 }
 
-// const ActionTypes = {
-//   Init: 'initState',
-//   Loading: 'loadingState',
-//   Error: `error`,
-// };
-
 export function moduleLoadingAction(moduleName: string, loadingState: {[group: string]: LoadingState}): Action {
   return {
     type: `${moduleName}${coreConfig.NSP}_loadingState`,
@@ -28,6 +22,16 @@ export function moduleLoadingAction(moduleName: string, loadingState: {[group: s
   };
 }
 
+/**
+ * 创建一个内置的ErrorAction
+ *
+ * @remarks
+ * 该 action 可以被 dispatch，可以被 model 捕获并处理
+ *
+ * @param error - 错误体
+ *
+ * @public
+ */
 export function errorAction(error: any): Action {
   if (typeof error !== 'object') {
     error = {message: error};

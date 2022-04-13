@@ -4,7 +4,7 @@
 
 ## ModuleState type
 
-模块状态描述
+模块状态
 
 <b>Signature:</b>
 
@@ -16,5 +16,5 @@ export declare type ModuleState = {
 
 ## Remarks
 
-通常为简单的 `plainObject` 对象
+通常为简单的 `PlainObject` 对象
 

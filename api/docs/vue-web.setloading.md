@@ -9,7 +9,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function setLoading<T extends Promise<any>>(item: T, store: UStore, moduleName: string, groupName: string): T;
+export declare function setLoading<T extends Promise<any>>(item: T, store: IStore, _moduleName?: string, _groupName?: string): T;
 ```
 
 ## Parameters
@@ -17,13 +17,13 @@ export declare function setLoading<T extends Promise<any>>(item: T, store: UStor
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  item | T | 要跟踪的异步任务，必须是一个Promise |
-|  store | [UStore](./vue-web.ustore.md) | 指明注入哪一个Store中 |
-|  moduleName | string | 指明注入哪一个Modulde状态中 |
-|  groupName | string | 指明注入Modulde状态的loading\[<code>groupName</code>\]中 |
+|  store | [IStore](./vue-web.istore.md) | 指明注入哪一个Store中 |
+|  \_moduleName | string |  |
+|  \_groupName | string |  |
 
 <b>Returns:</b>
 
 T
 
-返回第一个入参
+返回跟踪的异步任务
 

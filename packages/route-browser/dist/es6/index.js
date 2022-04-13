@@ -1,6 +1,6 @@
-import { Router, BaseNativeRouter, setRouteConfig, routeConfig, locationToUrl } from '@elux/route';
-import { env } from '@elux/core';
 import { createBrowserHistory } from 'history';
+import { env } from '@elux/core';
+import { BaseNativeRouter, locationToUrl, routeConfig, Router, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,

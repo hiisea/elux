@@ -1,27 +1,25 @@
-import env from './env';
-import {isPromise, promiseCaseCallback} from './utils';
 import {
   ActionHandler,
   ActionHandlersMap,
-  ModelAsHandlers,
+  AsyncEluxComponent,
   CommonModel,
   CommonModule,
-  MetaData,
-  IStore,
-  EluxComponent,
-  AsyncEluxComponent,
-  ModuleApiMap,
   coreConfig,
+  EluxComponent,
   isEluxComponent,
+  IStore,
+  MetaData,
+  ModelAsHandlers,
+  ModuleApiMap,
 } from './basic';
+import env from './env';
+import {isPromise, promiseCaseCallback} from './utils';
 
 /**
- * 获取导出的Module
+ * 获取Module
  *
  * @remarks
- * {@link exportModule | exportModule(...)} 导出的 Module，可以通过此方法获得，返回结果有可能是一个Promise
- *
- * @param moduleName - 要获取的模块名
+ * 获取通过 {@link exportModule} 导出的 Module
  *
  * @public
  */
@@ -51,17 +49,10 @@ export function getModule(moduleName: string): Promise<CommonModule> | CommonMod
 }
 
 /**
- * 获取Module导出的EluxUI组件
+ * 获取导出的UI组件
  *
  * @remarks
- * {@link exportModule | exportModule(...)} 导出的 Component，可以通过此方法获得。
- *
- * - 与 {@link LoadComponent} 不同的是本方法只获取 Component 构造器，并不会实例化和Install
- *
- * - 返回结果有可能是一个Promise
- *
- * @param moduleName - 组件所属模块名
- * @param componentName - 组件被导出的名称
+ * 获取通过 {@link exportModule} 导出的 Component。与 {@link ILoadComponent} 不同的是本方法只获取 Component 构造器，并不会render
  *
  * @public
  */

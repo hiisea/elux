@@ -1,6 +1,8 @@
 /* eslint-disable vue/one-component-per-file */
-import {h, provide, defineComponent, shallowRef, ref, onBeforeUnmount, PropType} from 'vue';
-import {env, coreConfig, getEntryComponent, EluxComponent, CoreRouter, IStore, EluxStoreContext} from '@elux/core';
+import {defineComponent, h, onBeforeUnmount, PropType, provide, ref, shallowRef} from 'vue';
+
+import {coreConfig, CoreRouter, EluxComponent, EluxStoreContext, env, getEntryComponent, IStore} from '@elux/core';
+
 import {EluxStoreContextKey} from './base';
 
 export const RouterComponent = defineComponent({

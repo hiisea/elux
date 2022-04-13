@@ -1,5 +1,5 @@
-import { inject, defineComponent } from 'vue';
-import { env, coreConfig } from '@elux/core';
+import { defineComponent, inject } from 'vue';
+import { coreConfig, env } from '@elux/core';
 import { EluxContextKey } from './base';
 let clientTimer = 0;
 

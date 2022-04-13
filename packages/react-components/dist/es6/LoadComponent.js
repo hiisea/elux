@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { env, injectComponent, isPromise, coreConfig } from '@elux/core';
+import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
 import { jsx as _jsx } from "react/jsx-runtime";
 export const LoadComponentOnError = ({
   message

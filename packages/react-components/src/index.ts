@@ -1,7 +1,8 @@
 import {setCoreConfig} from '@elux/core';
+
+import AppRender from './App';
 import {UseRouter} from './base';
 import {LoadComponent, LoadComponentOnError, LoadComponentOnLoading} from './LoadComponent';
-import AppRender from './App';
 
 setCoreConfig({
   UseRouter,

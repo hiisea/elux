@@ -14,8 +14,8 @@ export declare type Facade<G extends {
         default: CommonModule<N>;
     }>;
 } = any> = {
-    [K in Extract<keyof G, string>]: ModuleAPI<GetPromiseModule<ReturnType<G[K]>>>;
+    [K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>;
 };
 ```
-<b>References:</b> [CommonModule](./react-web.commonmodule.md)<!-- -->, [ModuleAPI](./react-web.moduleapi.md)<!-- -->, [GetPromiseModule](./react-web.getpromisemodule.md)
+<b>References:</b> [CommonModule](./react-web.commonmodule.md)<!-- -->, [ModuleFacade](./react-web.modulefacade.md)<!-- -->, [GetPromiseModule](./react-web.getpromisemodule.md)
 

@@ -1,4 +1,5 @@
 import env from './env';
+
 /**
  * 常用于取消监听
  *
@@ -191,6 +192,11 @@ export function compose(...funcs: Function[]): Function {
   );
 }
 
+/**
+ * 当前是否是Server运行环境
+ *
+ * @public
+ */
 export function isServer(): boolean {
   return env.isServer;
 }

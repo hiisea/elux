@@ -1,26 +1,26 @@
-import env from './env';
-import {TaskCounter} from './utils';
+import {moduleLoadingAction} from './actions';
 import {
   Action,
   ActionHandler,
+  AsyncEluxComponent,
   CommonModel,
   CommonModelClass,
   CommonModule,
-  EluxComponent,
-  MetaData,
-  AsyncEluxComponent,
-  isEluxComponent,
-  ModuleState,
-  IStore,
   coreConfig,
+  EluxComponent,
+  isEluxComponent,
+  IStore,
+  MetaData,
+  ModuleState,
 } from './basic';
-import {moduleLoadingAction} from './actions';
+import env from './env';
+import {TaskCounter} from './utils';
 
 /**
- * 向外导出一个EluxUI组件
+ * 向外导出UI组件
  *
  * @remarks
- * 不同于普通UI组件，EluxUI组件可通过 {@link LoadComponent} 来加载，参见 {@link exportModule}
+ * 不同于普通UI组件，EluxUI组件可通过 {@link ILoadComponent} 按需加载
  *
  * {@link exportComponent} VS {@link exportView} 参见：`Elux中组件与视图的区别`
  *
@@ -50,10 +50,10 @@ export function exportView<T>(component: T): T & EluxComponent {
 }
 
 /**
- * 一个空的Model
+ * 实现了CommonModel的空Model
  *
  * @remarks
- * 常用于Mock一个空Module
+ * 常用于 mock 假数据
  *
  * @public
  */
@@ -112,11 +112,9 @@ export function exportModuleFacade(
  *
  * @param item - 要跟踪的异步任务，必须是一个Promise
  * @param store - 指明注入哪一个Store中
- * @param moduleName - 指明注入哪一个Modulde状态中
- * @param groupName - 指明注入Modulde状态的loading[`groupName`]中
  *
  * @returns
- * 返回第一个入参
+ * 返回跟踪的异步任务
  *
  * @public
  */
@@ -137,7 +135,7 @@ export function setLoading<T extends Promise<any>>(item: T, store: IStore, _modu
 }
 
 /**
- * Model Decorator函数-申明effect执行钩子
+ * Model类的装饰器函数:跟踪effect执行钩子
  *
  * @remarks
  * 用于在以下 effect 中注入 before 和 after 的钩子，常用来跟踪effect执行情况
@@ -168,10 +166,7 @@ export function effectLogger(
 }
 
 /**
- * Model Decorator函数-申明reducer
- *
- * @remarks
- * 申明以下方法为一个 action reducer
+ * Model类的装饰器函数:申明reducer
  *
  * @public
  */
@@ -188,17 +183,12 @@ export function reducer(target: any, key: string, descriptor: PropertyDescriptor
 }
 
 /**
- * Model Decorator函数-申明effect
- *
- * @remarks
- * 申明以下方法为一个 action effect，
- * 参数 `loadingKey` 不传时默认为 stage.loading.global，
- * 如果不需要跟踪其执行状态，请使用 null 参数，如：`@effect(null)`
+ * Model类的装饰器函数:申明effect
  *
  * @example
- * - `@effect('this.loading.searchTable')` 将该 effect 执行状态注入本模块的 `loading.searchTable` 状态中
+ * - `@effect('this.searchTableLoading')` 将该 effect 执行状态注入本模块的 `searchTableLoading` 状态中
  *
- * - `@effect()` 等于 `@effect('stage.loading.global')`
+ * - `@effect()` 等于 `@effect('stage.globalLoading')`
  *
  * - `@effect(null)` 不跟踪其执行状态
  *

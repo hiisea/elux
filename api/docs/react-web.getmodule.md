@@ -4,7 +4,7 @@
 
 ## getModule() function
 
-获取导出的Module
+获取Module
 
 <b>Signature:</b>
 
@@ -16,7 +16,7 @@ export declare function getModule(moduleName: string): Promise<CommonModule> | C
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  moduleName | string | 要获取的模块名 |
+|  moduleName | string |  |
 
 <b>Returns:</b>
 
@@ -24,5 +24,5 @@ Promise&lt;[CommonModule](./react-web.commonmodule.md)<!-- -->&gt; \| [CommonMod
 
 ## Remarks
 
-[exportModule(...)](./react-web.exportmodule.md) 导出的 Module，可以通过此方法获得，返回结果有可能是一个Promise
+获取通过 [exportModule()](./react-web.exportmodule.md) 导出的 Module
 

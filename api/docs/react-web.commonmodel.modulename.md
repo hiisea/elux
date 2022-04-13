@@ -4,8 +4,10 @@
 
 ## CommonModel.moduleName property
 
+模块名称
+
 <b>Signature:</b>
 
 ```typescript
-moduleName: string;
+readonly moduleName: string;
 ```

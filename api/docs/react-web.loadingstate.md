@@ -2,21 +2,12 @@
 
 [Home](./index.md) &gt; [@elux/react-web](./react-web.md) &gt; [LoadingState](./react-web.loadingstate.md)
 
-## LoadingState enum
+## LoadingState type
 
 描述异步状态
 
 <b>Signature:</b>
 
 ```typescript
-export declare enum LoadingState 
+export declare type LoadingState = 'Start' | 'Stop' | 'Depth';
 ```
-
-## Enumeration Members
-
-|  Member | Value | Description |
-|  --- | --- | --- |
-|  Depth | <code>&quot;Depth&quot;</code> | 进入深度加载，加载时间超过 [UserConfig.DepthTimeOnLoading](./react-web.userconfig.depthtimeonloading.md) 时将视为深度加载 |
-|  Start | <code>&quot;Start&quot;</code> | 开始加载. |
-|  Stop | <code>&quot;Stop&quot;</code> | 加载完成. |
-

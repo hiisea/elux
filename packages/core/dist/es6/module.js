@@ -2,10 +2,10 @@ import _applyDecoratedDescriptor from "@babel/runtime/helpers/esm/applyDecorated
 
 var _class;
 
+import { moduleLoadingAction } from './actions';
+import { coreConfig, isEluxComponent, MetaData } from './basic';
 import env from './env';
 import { TaskCounter } from './utils';
-import { MetaData, isEluxComponent, coreConfig } from './basic';
-import { moduleLoadingAction } from './actions';
 export function exportComponent(component) {
   const eluxComponent = component;
   eluxComponent.__elux_component__ = 'component';

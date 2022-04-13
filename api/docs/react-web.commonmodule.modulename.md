@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-moduleName: ModuleName;
+moduleName: TModuleName;
 ```

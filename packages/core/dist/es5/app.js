@@ -1,5 +1,5 @@
-import env from './env';
 import { coreConfig } from './basic';
+import env from './env';
 export function buildApp(ins, router) {
   var store = router.getCurrentPage().store;
   var ssrData = env[coreConfig.SSRDataKey];

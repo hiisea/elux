@@ -4,7 +4,7 @@
 
 ## reducer() function
 
-Model Decorator函数-申明reducer
+Model类的装饰器函数:申明reducer
 
 <b>Signature:</b>
 
@@ -23,8 +23,4 @@ export declare function reducer(target: any, key: string, descriptor: PropertyDe
 <b>Returns:</b>
 
 any
-
-## Remarks
-
-申明以下方法为一个 action reducer
 

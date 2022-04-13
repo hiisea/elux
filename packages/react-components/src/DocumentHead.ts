@@ -1,9 +1,11 @@
 import React, {useContext, useEffect} from 'react';
-import {env, coreConfig, EluxContext} from '@elux/core';
+
+import {coreConfig, EluxContext, env} from '@elux/core';
+
 import {EluxContextComponent} from './base';
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
@@ -67,7 +69,7 @@ const Component: React.FC<DocumentHeadProps> = ({title, html}) => {
 };
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link DocumentHeadProps}

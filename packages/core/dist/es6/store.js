@@ -1,9 +1,9 @@
-import env from './env';
-import { promiseCaseCallback, toPromise, compose, isPromise } from './utils';
-import { MetaData, coreConfig, mergeState } from './basic';
+import { errorAction, getErrorActionType, getInitActionType, isProcessedError, setProcessedError } from './actions';
+import { coreConfig, mergeState, MetaData } from './basic';
 import { devLogger } from './devtools';
+import env from './env';
 import { getModule, injectActions } from './inject';
-import { errorAction, isProcessedError, setProcessedError, getErrorActionType, getInitActionType } from './actions';
+import { compose, isPromise, promiseCaseCallback, toPromise } from './utils';
 export function getActionData(action) {
   return Array.isArray(action.payload) ? action.payload : [];
 }

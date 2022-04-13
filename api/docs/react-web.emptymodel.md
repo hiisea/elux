@@ -4,7 +4,7 @@
 
 ## EmptyModel class
 
-一个空的Model
+实现了CommonModel的空Model
 
 <b>Signature:</b>
 
@@ -15,7 +15,7 @@ export declare class EmptyModel implements CommonModel
 
 ## Remarks
 
-常用于Mock一个空Module
+常用于 mock 假数据
 
 ## Constructors
 
@@ -27,15 +27,16 @@ export declare class EmptyModel implements CommonModel
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [defaultRouteParams](./react-web.emptymodel.defaultrouteparams.md) |  | any |  |
-|  [initState](./react-web.emptymodel.initstate.md) |  | any |  |
 |  [moduleName](./react-web.emptymodel.modulename.md) |  | string |  |
-|  [store](./react-web.emptymodel.store.md) |  | [UStore](./react-web.ustore.md) |  |
+|  [state](./react-web.emptymodel.state.md) |  | [ModuleState](./react-web.modulestate.md) |  |
+|  [store](./react-web.emptymodel.store.md) |  | [IStore](./react-web.istore.md) |  |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [destroy()](./react-web.emptymodel.destroy.md) |  |  |
-|  [init()](./react-web.emptymodel.init.md) |  |  |
+|  [\_initState(state)](./react-web.emptymodel._initstate.md) |  |  |
+|  [onActive()](./react-web.emptymodel.onactive.md) |  |  |
+|  [onInactive()](./react-web.emptymodel.oninactive.md) |  |  |
+|  [onMount()](./react-web.emptymodel.onmount.md) |  |  |
 

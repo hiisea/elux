@@ -4,10 +4,15 @@
 
 ## RenderOptions.id property
 
-挂载 Dom 的 id，默认为 `root`
+挂载应用 Dom 的 id
 
 <b>Signature:</b>
 
 ```typescript
 id?: string;
 ```
+
+## Remarks
+
+默认: `root`
+

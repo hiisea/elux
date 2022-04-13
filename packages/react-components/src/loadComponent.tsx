@@ -1,5 +1,6 @@
-import React, {ComponentType, Component} from 'react';
-import {env, injectComponent, isPromise, coreConfig, ILoadComponent, IStore, EluxComponent} from '@elux/core';
+import React, {Component, ComponentType} from 'react';
+
+import {coreConfig, EluxComponent, env, ILoadComponent, injectComponent, isPromise, IStore} from '@elux/core';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
   <div className="g-component-error">{message}</div>

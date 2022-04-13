@@ -1,5 +1,5 @@
-import { Listener, UNListener, TaskCounter } from './utils';
-import { Action, CommonModelClass, StoreMiddleware, StoreState, ModuleState, NativeRequest, IRouter, IStore, RouteRuntime, Dispatch, IRouteRecord, Location, RouteAction, RouteTarget } from './basic';
+import { Action, CommonModelClass, Dispatch, IRouter, IRouteRecord, IStore, Location, ModuleState, NativeRequest, RouteAction, RouteRuntime, RouteTarget, StoreMiddleware, StoreState } from './basic';
+import { Listener, TaskCounter, UNListener } from './utils';
 export declare function getActionData(action: Action): any[];
 export declare const preMiddleware: StoreMiddleware;
 interface RouterEvent {
@@ -81,7 +81,7 @@ export declare class Store implements IStore {
  * model热更新
  *
  * @remarks
- * 修改了Model时热更新runtime，通常由脚手架自动调用
+ * 修改了Model时热更新，通常由脚手架自动调用
  *
  * @param moduleName - Model所属模块名称
  * @param ModelClass - 新的Model

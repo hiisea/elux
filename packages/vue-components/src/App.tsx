@@ -1,7 +1,9 @@
 import type {App} from 'vue';
-import {env, IAppRender, EluxContext} from '@elux/core';
+
+import {EluxContext, env, IAppRender} from '@elux/core';
 // eslint-disable-next-line
 import {renderToString} from '@elux/vue-components/server';
+
 import {EluxContextKey} from './base';
 
 const AppRender: IAppRender = {

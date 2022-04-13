@@ -1,22 +1,58 @@
-import {Action, RouteAction, Location, coreConfig, buildConfigSetter} from '@elux/core';
+import {Action, buildConfigSetter, coreConfig, Location, RouteAction} from '@elux/core';
 
+/**
+ * 内置ErrorCode
+ *
+ * @public
+ */
 export const ErrorCodes = {
+  /**
+   * 在SSR服务器渲染时，操作路由跳转会抛出该错误
+   */
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
+  /**
+   * 在路由后退时，如果步数溢出则抛出该错误
+   */
   ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW',
 };
 
+/**
+ * 原生路由Url转换为内部路由Url
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
 export function nativeUrlToUrl(nativeUrl: string): string {
   const [path = '', search = '', hash = ''] = nativeUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 
+/**
+ * 内部路由Url转换为原生路由Url
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
 export function urlToNativeUrl(eluxUrl: string): string {
   const [path = '', search = '', hash = ''] = eluxUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 
+/**
+ * Url转换为Location
+ *
+ * @public
+ */
 export function urlToLocation(url: string): Location {
   const [path = '', search = '', hash = ''] = url.split(/[?#]/);
   //const pathname = ('/' + path.split('//').pop()).replace(/\/(\/|$)/, '');
@@ -27,6 +63,11 @@ export function urlToLocation(url: string): Location {
   return {url: `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`, pathname, search, hash, searchQuery, hashQuery};
 }
 
+/**
+ * Location转换为Url
+ *
+ * @public
+ */
 export function locationToUrl({url, pathname, search, hash, searchQuery, hashQuery}: Partial<Location>): string {
   if (url) {
     [pathname, search, hash] = url.split(/[?#]/);
@@ -39,12 +80,32 @@ export function locationToUrl({url, pathname, search, hash, searchQuery, hashQue
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 
+/**
+ * 内部路由Location转换为原生路由Location
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
 export function locationToNativeLocation(location: Location): Location {
   const pathname = routeConfig.NativePathnameMapping.out(location.pathname);
   const url = location.url.replace(location.pathname, pathname);
   return {...location, pathname, url};
 }
 
+/**
+ * 原生路由Location转换为内部路由Location
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
 export function nativeLocationToLocation(location: Location): Location {
   const pathname = routeConfig.NativePathnameMapping.in(location.pathname);
   const url = location.url.replace(location.pathname, pathname);

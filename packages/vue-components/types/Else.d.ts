@@ -1,6 +1,6 @@
-import { VNode, DefineComponent } from 'vue';
+import { DefineComponent, VNode } from 'vue';
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
  * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`，
@@ -20,7 +20,7 @@ export interface ElseProps {
     elseView?: VNode;
 }
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link ElseProps}

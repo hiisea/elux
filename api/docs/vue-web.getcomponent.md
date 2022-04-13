@@ -4,7 +4,7 @@
 
 ## getComponent() function
 
-获取Module导出的EluxUI组件
+获取导出的UI组件
 
 <b>Signature:</b>
 
@@ -16,8 +16,8 @@ export declare function getComponent(moduleName: string, componentName: string):
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  moduleName | string | 组件所属模块名 |
-|  componentName | string | 组件被导出的名称 |
+|  moduleName | string |  |
+|  componentName | string |  |
 
 <b>Returns:</b>
 
@@ -25,9 +25,5 @@ export declare function getComponent(moduleName: string, componentName: string):
 
 ## Remarks
 
-[exportModule(...)](./vue-web.exportmodule.md) 导出的 Component，可以通过此方法获得。
-
-- 与 [LoadComponent](./vue-web.loadcomponent.md) 不同的是本方法只获取 Component 构造器，并不会实例化和Install
-
-- 返回结果有可能是一个Promise
+获取通过 [exportModule()](./vue-web.exportmodule.md) 导出的 Component。与 [ILoadComponent](./vue-web.iloadcomponent.md) 不同的是本方法只获取 Component 构造器，并不会render
 

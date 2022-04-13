@@ -1,4 +1,4 @@
-import { coreConfig, buildConfigSetter } from '@elux/core';
+import { buildConfigSetter, coreConfig } from '@elux/core';
 export const ErrorCodes = {
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
   ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'

@@ -1,6 +1,6 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
 import { defineAsyncComponent, h } from 'vue';
-import { env, injectComponent, isPromise, coreConfig } from '@elux/core';
+import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
 export var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
   return _createVNode("div", {

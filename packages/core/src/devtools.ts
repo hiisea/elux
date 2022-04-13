@@ -1,5 +1,5 @@
-import env from './env';
 import {StoreLogger} from './basic';
+import env from './env';
 
 type LogItem = {type: string; payload: any[]; priority: string[]; handers: string[]; effects?: LogItem[]};
 

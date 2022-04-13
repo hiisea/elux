@@ -1,4 +1,4 @@
-import { Store, Location, IRouteRecord } from '@elux/core';
+import { IRouteRecord, Location, Store } from '@elux/core';
 export declare class HistoryStack<T extends {
     destroy: () => void;
     setActive: () => void;

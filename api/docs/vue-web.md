@@ -8,109 +8,99 @@
 
 |  Class | Description |
 |  --- | --- |
-|  [BaseModel](./vue-web.basemodel.md) | Model基类 |
-|  [EmptyModel](./vue-web.emptymodel.md) | 一个空的Model |
-
-## Enumerations
-
-|  Enumeration | Description |
-|  --- | --- |
-|  [LoadingState](./vue-web.loadingstate.md) | 描述异步状态 |
-|  [RouteHistoryAction](./vue-web.routehistoryaction.md) | 路由切换方式 |
+|  [BaseModel](./vue-web.basemodel.md) | 实现了CommonModel的Model基类 |
+|  [EmptyModel](./vue-web.emptymodel.md) | 实现了CommonModel的空Model |
 
 ## Functions
 
 |  Function | Description |
 |  --- | --- |
-|  [createApp(moduleGetter, storeMiddlewares, storeLogger)](./vue-web.createapp.md) | 创建应用(CSR) |
-|  [createRouteModule(moduleName, pagenameMap, nativeLocationMap)](./vue-web.createroutemodule.md) | 创建Route模块 |
-|  [createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger)](./vue-web.createssr.md) | 创建应用(SSR) |
+|  [createApp(appConfig)](./vue-web.createapp.md) | 创建应用(CSR) |
+|  [createSSR(appConfig, nativeRequest)](./vue-web.createssr.md) | 创建应用(SSR) |
 |  [deepMerge(target, args)](./vue-web.deepmerge.md) | 多个PlainObject的深度Merge |
-|  [effect(loadingKey)](./vue-web.effect.md) | Model Decorator函数-申明effect |
-|  [effectLogger(before, after)](./vue-web.effectlogger.md) | Model Decorator函数-申明effect执行钩子 |
-|  [errorAction(error)](./vue-web.erroraction.md) | 创建一个ErrorAction |
-|  [exportComponent(component)](./vue-web.exportcomponent.md) | 向外导出一个EluxUI组件 |
+|  [effect(loadingKey)](./vue-web.effect.md) | Model类的装饰器函数:申明effect |
+|  [effectLogger(before, after)](./vue-web.effectlogger.md) | Model类的装饰器函数:跟踪effect执行钩子 |
+|  [errorAction(error)](./vue-web.erroraction.md) | 创建一个内置的ErrorAction |
+|  [exportComponent(component)](./vue-web.exportcomponent.md) | 向外导出UI组件 |
 |  [exportModule(moduleName, ModelClass, components, data)](./vue-web.exportmodule.md) | 向外封装并导出Module |
-|  [exportView(component)](./vue-web.exportview.md) | 向外导出一个EluxUI组件 |
+|  [exportView(component)](./vue-web.exportview.md) | 向外导出UI组件 |
 |  [getApi(demoteForProductionOnly, injectActions)](./vue-web.getapi.md) | 获取应用全局方法 |
-|  [getComponent(moduleName, componentName)](./vue-web.getcomponent.md) | 获取Module导出的EluxUI组件 |
-|  [getModule(moduleName)](./vue-web.getmodule.md) | 获取导出的Module |
-|  [isServer()](./vue-web.isserver.md) | 当前环境是否是服务器环境 |
-|  [loadModel(moduleName, store)](./vue-web.loadmodel.md) | 手动加载并初始化一个Model |
-|  [location(dataOrUrl)](./vue-web.location.md) | 创建路由Location转换器 |
+|  [getComponent(moduleName, componentName)](./vue-web.getcomponent.md) | 获取导出的UI组件 |
+|  [getModule(moduleName)](./vue-web.getmodule.md) | 获取Module |
+|  [isServer()](./vue-web.isserver.md) | 当前是否是Server运行环境 |
+|  [locationToNativeLocation(location)](./vue-web.locationtonativelocation.md) | 内部路由Location转换为原生路由Location |
+|  [locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery })](./vue-web.locationtourl.md) | Location转换为Url |
 |  [modelHotReplacement(moduleName, ModelClass)](./vue-web.modelhotreplacement.md) | model热更新 |
-|  [reducer(target, key, descriptor)](./vue-web.reducer.md) | Model Decorator函数-申明reducer |
-|  [routeJsonParse(json)](./vue-web.routejsonparse.md) | 解析JSON格式的路由参数 |
+|  [nativeLocationToLocation(location)](./vue-web.nativelocationtolocation.md) | 原生路由Location转换为内部路由Location |
+|  [nativeUrlToUrl(nativeUrl)](./vue-web.nativeurltourl.md) | 原生路由Url转换为内部路由Url |
+|  [patchActions(typeName, json)](./vue-web.patchactions.md) | 用于兼容不支持Proxy的低版本浏览器 |
+|  [reducer(target, key, descriptor)](./vue-web.reducer.md) | Model类的装饰器函数:申明reducer |
 |  [setConfig(conf)](./vue-web.setconfig.md) | 全局参数设置 |
-|  [setLoading(item, store, moduleName, groupName)](./vue-web.setloading.md) | 将[LoadingState](./vue-web.loadingstate.md)<!-- -->注入指定ModuleState |
+|  [setLoading(item, store, \_moduleName, \_groupName)](./vue-web.setloading.md) | 将[LoadingState](./vue-web.loadingstate.md)<!-- -->注入指定ModuleState |
+|  [urlToLocation(url)](./vue-web.urltolocation.md) | Url转换为Location |
+|  [urlToNativeUrl(eluxUrl)](./vue-web.urltonativeurl.md) | 内部路由Url转换为原生路由Url |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
 |  [Action](./vue-web.action.md) | 定义Action |
-|  [CommonModel](./vue-web.commonmodel.md) | Model的一般形态<!-- -->通常通过继承 [BaseModel](./vue-web.basemodel.md) 类生成 |
-|  [CommonModelClass](./vue-web.commonmodelclass.md) | \* |
+|  [ActionError](./vue-web.actionerror.md) | 内置的错误描述格式 |
+|  [CommonModel](./vue-web.commonmodel.md) | Model的一般形态 |
+|  [CommonModelClass](./vue-web.commonmodelclass.md) | Model的构造类 |
 |  [CommonModule](./vue-web.commonmodule.md) | Module的一般形态 |
-|  [DocumentHeadProps](./vue-web.documentheadprops.md) | 内置VUE组件 |
-|  [ElseProps](./vue-web.elseprops.md) | 内置VUE组件 |
-|  [EluxComponent](./vue-web.eluxcomponent.md) | 表示该UI组件是一个EluxUI |
-|  [EluxLocation](./vue-web.eluxlocation.md) | 内置3种路由描述之一 |
+|  [DocumentHeadProps](./vue-web.documentheadprops.md) | 内置UI组件 |
+|  [ElseProps](./vue-web.elseprops.md) | 内置UI组件 |
+|  [EluxComponent](./vue-web.eluxcomponent.md) | 表示该UI组件是一个导出的UI组件 |
 |  [GetState](./vue-web.getstate.md) | 获取Store状态 |
-|  [LinkProps](./vue-web.linkprops.md) | 内置VUE组件 |
-|  [LoadComponentOptions](./vue-web.loadcomponentoptions.md) | EluxUI组件加载参数 |
-|  [NativeLocation](./vue-web.nativelocation.md) | 内置3种路由描述之一 |
-|  [NativeLocationMap](./vue-web.nativelocationmap.md) | NativeLocation与EluxLocation的转换 |
-|  [RenderOptions](./vue-web.renderoptions.md) | APP Render参数 |
-|  [RouteState](./vue-web.routestate.md) | 路由状态描述 |
-|  [StateLocation](./vue-web.statelocation.md) | 内置3种路由描述之一 |
-|  [SwitchProps](./vue-web.switchprops.md) | 内置VUE组件 |
-|  [ULocationTransform](./vue-web.ulocationtransform.md) | 用于3种路由描述之间的转换 |
-|  [URouter](./vue-web.urouter.md) | 路由实例 |
-|  [URouteRecord](./vue-web.urouterecord.md) | 路由历史记录 |
+|  [IRouter](./vue-web.irouter.md) | 路由实例 |
+|  [IRouteRecord](./vue-web.irouterecord.md) | 路由历史记录 |
+|  [IStore](./vue-web.istore.md) | Store实例 |
+|  [LinkProps](./vue-web.linkprops.md) | 内置UI组件 |
+|  [Location](./vue-web.location.md) | 路由描述 |
+|  [NativeRequest](./vue-web.nativerequest.md) | 路由初始化时原生数据，常用于SSR |
+|  [RenderOptions](./vue-web.renderoptions.md) | 应用Render参数 |
+|  [RouteRuntime](./vue-web.routeruntime.md) | 路由的运行状态 |
+|  [SwitchProps](./vue-web.switchprops.md) | 内置UI组件 |
 |  [UserConfig](./vue-web.userconfig.md) | 全局参数设置 |
-|  [UStore](./vue-web.ustore.md) | Store实例 |
 
 ## Variables
 
 |  Variable | Description |
 |  --- | --- |
-|  [DocumentHead](./vue-web.documenthead.md) | 内置VUE组件 |
-|  [Else](./vue-web.else.md) | 内置VUE组件 |
+|  [DocumentHead](./vue-web.documenthead.md) | 内置UI组件 |
+|  [Else](./vue-web.else.md) | 内置UI组件 |
 |  [env](./vue-web.env.md) | 运行环境的引用 |
-|  [Link](./vue-web.link.md) | 内置VUE组件 |
-|  [Switch](./vue-web.switch.md) | 内置VUE组件 |
+|  [ErrorCodes](./vue-web.errorcodes.md) | 内置ErrorCode |
+|  [Link](./vue-web.link.md) | 内置UI组件 |
+|  [Switch](./vue-web.switch.md) | 内置UI组件 |
 
 ## Type Aliases
 
 |  Type Alias | Description |
 |  --- | --- |
 |  [ActionCreator](./vue-web.actioncreator.md) | \* |
-|  [ActionsThis](./vue-web.actionsthis.md) | \* |
+|  [API](./vue-web.api.md) | \* |
+|  [AppConfig](./vue-web.appconfig.md) | \* |
 |  [AsyncEluxComponent](./vue-web.asynceluxcomponent.md) | 表示该UI组件是一个异步EluxUI |
 |  [ComputedStore](./vue-web.computedstore.md) | \* |
-|  [DeepPartial](./vue-web.deeppartial.md) | \* |
 |  [Dispatch](./vue-web.dispatch.md) | 派发Action |
 |  [Facade](./vue-web.facade.md) | \* |
-|  [FacadeActions](./vue-web.facadeactions.md) | \* |
-|  [FacadeModules](./vue-web.facademodules.md) | \* |
-|  [FacadeRoutes](./vue-web.facaderoutes.md) | \* |
-|  [FacadeStates](./vue-web.facadestates.md) | \* |
-|  [GetBaseFacade](./vue-web.getbasefacade.md) | \* |
-|  [GetFacade](./vue-web.getfacade.md) | 获取应用顶级API类型 |
 |  [GetPromiseComponent](./vue-web.getpromisecomponent.md) | \* |
 |  [GetPromiseModule](./vue-web.getpromisemodule.md) | \* |
-|  [HandlerThis](./vue-web.handlerthis.md) | \* |
-|  [LoadComponent](./vue-web.loadcomponent.md) | EluxUI组件加载器 |
-|  [ModuleAPI](./vue-web.moduleapi.md) | \* |
+|  [HandlerToAction](./vue-web.handlertoaction.md) | \* |
+|  [ILoadComponent](./vue-web.iloadcomponent.md) | UI组件加载器 |
+|  [LoadingState](./vue-web.loadingstate.md) | 描述异步状态 |
+|  [ModelAsCreators](./vue-web.modelascreators.md) |  |
+|  [ModuleFacade](./vue-web.modulefacade.md) | \* |
 |  [ModuleGetter](./vue-web.modulegetter.md) | 配置模块的获取方式 |
-|  [ModuleState](./vue-web.modulestate.md) | 模块状态描述 |
-|  [PagenameMap](./vue-web.pagenamemap.md) | 定义路由Page及映射PathParams |
-|  [PickActions](./vue-web.pickactions.md) | \* |
-|  [PickHandler](./vue-web.pickhandler.md) | \* |
+|  [ModuleState](./vue-web.modulestate.md) | 模块状态 |
+|  [PickModelActions](./vue-web.pickmodelactions.md) | \* |
 |  [ReturnComponents](./vue-web.returncomponents.md) | \* |
-|  [RootState](./vue-web.rootstate.md) | 全局状态描述 |
+|  [RouteAction](./vue-web.routeaction.md) | 路由动作 |
+|  [RouteTarget](./vue-web.routetarget.md) | 路由历史栈 |
 |  [StoreLogger](./vue-web.storelogger.md) | Store的日志记录器 |
+|  [storeLoggerInfo](./vue-web.storeloggerinfo.md) |  |
 |  [StoreMiddleware](./vue-web.storemiddleware.md) | Store的中间件 |
-|  [UNListener](./vue-web.unlistener.md) | 常用于取消监听 |
+|  [StoreState](./vue-web.storestate.md) | 全局状态 |
 

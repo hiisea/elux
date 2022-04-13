@@ -9,8 +9,8 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function createApp(moduleGetter: ModuleGetter, storeMiddlewares?: StoreMiddleware[], storeLogger?: StoreLogger): {
-    render({ id, ssrKey, viewName }?: RenderOptions): Promise<void>;
+export declare function createApp(appConfig: AppConfig): {
+    render(options?: RenderOptions): Promise<void>;
 };
 ```
 
@@ -18,25 +18,23 @@ export declare function createApp(moduleGetter: ModuleGetter, storeMiddlewares?:
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  moduleGetter | [ModuleGetter](./react-web.modulegetter.md) | 模块工厂 |
-|  storeMiddlewares | [StoreMiddleware](./react-web.storemiddleware.md)<!-- -->\[\] | store中间件 |
-|  storeLogger | [StoreLogger](./react-web.storelogger.md) | store日志记录器 |
+|  appConfig | [AppConfig](./react-web.appconfig.md) | 应用配置 |
 
 <b>Returns:</b>
 
-{ render({ id, ssrKey, viewName }?: [RenderOptions](./react-web.renderoptions.md)<!-- -->): Promise&lt;void&gt;; }
+{ render(options?: [RenderOptions](./react-web.renderoptions.md)<!-- -->): Promise&lt;void&gt;; }
 
-返回包含`render(options: RenderOptions): Promise<void>`<!-- -->方法的下一步实例，参见[RenderOptions](./react-web.renderoptions.md)
+返回包含`render`<!-- -->方法的实例，参见[RenderOptions](./react-web.renderoptions.md)
 
 ## Remarks
 
-应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用[createSSR(...)](./react-web.createssr.md)
+应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用[createSSR()](./react-web.createssr.md)
 
 ## Example
 
 
 ```js
-createApp(moduleGetter)
+createApp(config)
 .render()
 .then(() => {
   const initLoading = document.getElementById('root-loading');

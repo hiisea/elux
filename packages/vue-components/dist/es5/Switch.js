@@ -1,4 +1,4 @@
-import { Fragment, h, Comment } from 'vue';
+import { Comment, Fragment, h } from 'vue';
 export var Switch = function Switch(props, context) {
   var arr = [];
   var children = context.slots.default ? context.slots.default() : [];

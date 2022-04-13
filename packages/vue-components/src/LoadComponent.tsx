@@ -1,5 +1,6 @@
 import {defineAsyncComponent, h} from 'vue';
-import {env, injectComponent, isPromise, coreConfig, ILoadComponent, EluxComponent} from '@elux/core';
+
+import {coreConfig, EluxComponent, env, ILoadComponent, injectComponent, isPromise} from '@elux/core';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
   <div class="g-component-error">{message}</div>

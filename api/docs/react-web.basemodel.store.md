@@ -4,8 +4,10 @@
 
 ## BaseModel.store property
 
+被关联的 store
+
 <b>Signature:</b>
 
 ```typescript
-store: UStore;
+protected readonly store: IStore<TStoreState>;
 ```

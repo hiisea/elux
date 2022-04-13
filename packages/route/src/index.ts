@@ -1,42 +1,43 @@
 import {
   ActionError,
-  Location,
-  RouteTarget,
-  IRouteRecord,
-  CoreRouter,
-  Store,
-  StoreState,
-  NativeRequest,
-  deepClone,
   coreConfig,
+  CoreRouter,
+  deepClone,
+  env,
+  IRouteRecord,
+  Location,
+  NativeRequest,
+  RouteTarget,
   setLoading,
   setProcessedError,
-  env,
+  Store,
+  StoreState,
 } from '@elux/core';
+
 import {
-  ErrorCodes,
-  urlToLocation,
-  testChangeAction,
-  beforeChangeAction,
   afterChangeAction,
-  routeConfig,
-  urlToNativeUrl,
+  beforeChangeAction,
+  ErrorCodes,
+  locationToNativeLocation,
   locationToUrl,
   nativeUrlToUrl,
-  locationToNativeLocation,
+  routeConfig,
+  testChangeAction,
+  urlToLocation,
+  urlToNativeUrl,
 } from './basic';
-import {WindowStack, PageStack, RouteRecord} from './history';
+import {PageStack, RouteRecord, WindowStack} from './history';
 
 export {
   ErrorCodes,
-  setRouteConfig,
-  routeConfig,
-  locationToUrl,
-  urlToLocation,
   locationToNativeLocation,
+  locationToUrl,
   nativeLocationToLocation,
-  urlToNativeUrl,
   nativeUrlToUrl,
+  routeConfig,
+  setRouteConfig,
+  urlToLocation,
+  urlToNativeUrl,
 } from './basic';
 
 export abstract class BaseNativeRouter {

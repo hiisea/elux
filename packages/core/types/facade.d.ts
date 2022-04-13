@@ -1,4 +1,4 @@
-import { Action, EluxComponent, AsyncEluxComponent, CommonModule, CommonModel, CommonModelClass, ModuleState, StoreState, IRouter, IStore } from './basic';
+import { Action, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, EluxComponent, IRouter, IStore, ModuleState, StoreState } from './basic';
 import { LoadingState } from './utils';
 /*** @public */
 export declare type GetPromiseModule<T> = T extends Promise<{
@@ -43,12 +43,9 @@ export declare type GetPromiseReturn<T> = T extends Promise<infer R> ? R : T;
 /**
  * 向外封装并导出Module
  *
- * @remarks
- * 参数 `components` 支持异步获取组件，当组件代码量大时，可以使用 `import(...)` 返回Promise
- *
  * @param moduleName - 模块名称，不能重复
- * @param ModelClass - Model类，模块必须有一个Model来维护State
- * @param components - EluxUI组件或视图，参见 {@link exportView}
+ * @param ModelClass - Model构造类
+ * @param components - 导出的组件或视图，参见 {@link exportView}，当组件代码量大时可以使用`import(...)`异步组件
  * @param data - 导出其它任何数据
  *
  * @returns
@@ -74,6 +71,22 @@ export declare function exportModule<TModuleName extends string, TModel extends 
     components: ReturnComponents<TComponents>;
     data: D;
 };
+/**
+ * UI组件加载器
+ *
+ * @remarks
+ * 该方法可通过{@link getApi}获得，用于加载其它模块导出的{@link exportView | UI组件}，相比直接 `import`，使用此方法加载组件不仅可以`按需加载`，
+ * 还可以自动初始化其所属 Model（仅当加载组件为view时），例如：
+ * ```js
+ *   const Article = LoadComponent('article', 'main')
+ * ```
+ *
+ * @param moduleName - 组件所属模块名
+ * @param componentName - 组件导出名，参见{@link exportModule}
+ * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 {@link UserConfig} 中的设置
+ *
+ * @public
+ */
 export declare type ILoadComponent<TFacade extends Facade = {}> = <M extends keyof TFacade, V extends keyof TFacade[M]['components']>(moduleName: M, componentName: V, options?: {
     onError?: Elux.Component<{
         message: string;
@@ -100,7 +113,7 @@ export declare type API<TFacade extends Facade> = {
  * 获取应用全局方法
  *
  * @remarks
- * 参数 `components` 支持异步获取组件，当组件代码量大时，可以使用 `import(...)` 返回Promise
+ * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参
  *
  * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
  * @param injectActions -  用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
@@ -108,13 +121,9 @@ export declare type API<TFacade extends Facade> = {
  * @returns
  * 返回包含多个全局方法的结构体：
  *
- * - `LoadComponent`：用于加载其它模块导出的{@link exportView | EluxUI组件}，参见 {@link LoadComponent}。
- * 相比直接 `import`，使用此方法加载组件不仅可以`按需加载`，而且还可以自动初始化其所属 Model，例如：
- * ```js
- *   const Article = LoadComponent('article', 'main')
- * ```
+ * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。
  *
- * - `Modules`：用于获取所有模块的对外接口，参见 {@link FacadeModules}，例如：
+ * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：
  * ```js
  *   dispatch(Modules.article.actions.refresh())
  * ```
@@ -131,16 +140,16 @@ export declare type API<TFacade extends Facade> = {
  *   dispatch(b.b1())
  * ```
  *
- * - `GetRouter`：用于获取全局Roter，注意此方法不能运行在SSR（`服务端渲染`）中，因为服务端每个 `request` 都将生成一个 Router，不存在全局 Roter，请使用 `useRouter()`
+ * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。
  *
- * - `useRouter`：React Hook，用于获取当前 Router，在CSR（`客户端渲染`）中，因为只存在一个Router，所以其值等于`GetRouter()`，例如：
+ * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：
  * ```js
- *   const blobalRouter = GetRouter()
+ *   const globalRouter = GetClientRouter()
  *   const currentRouter = useRouter()
  *   console.log(blobalRouter===currentRouter)
  * ```
  *
- * - `useStore`：React Hook，用于获取当前 Store，例如：
+ * - `useStore`：用于在 UI Render 中获取当前 Store，例如：
  * ```js
  *   const store = useStore()
  *   store.dispatch(Modules.article.actions.refresh())
@@ -148,7 +157,7 @@ export declare type API<TFacade extends Facade> = {
  *
  * @example
  * ```js
- * const {Modules, LoadComponent, GetActions, GetRouter, useStore, useRouter} = getApi<API, Router>();
+ * const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API, Router>();
  * ```
  *
  * @public
@@ -164,31 +173,50 @@ export declare function getApi<TAPI extends {
     useStore: () => IStore<TAPI['State']>;
 };
 /**
- * Model基类
+ * 实现了CommonModel的Model基类
  *
  * @remarks
- * Model基类中提供了一些常用的方法，泛型参数：
- *
- * - `TModuleState`: 本模块的状态结构
- *
- * - `TStoreState`: 全局状态结构
- *
- * @typeParam TModuleState - 本模块的状态结构
- * @typeParam TRouteParams - 本模块的路由参数结构
- * @typeParam TStoreState - 全局状态结构
+ * Model基类实现了{@link CommonModel}，并提供了一些常用的方法
  *
  * @public
  */
 export declare abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreState extends StoreState = {}> implements CommonModel {
     readonly moduleName: string;
+    /**
+     * 被关联的 store
+     */
     protected readonly store: IStore<TStoreState>;
+    /**
+     * 当前模块的状态
+     */
     get state(): TModuleState;
     constructor(moduleName: string, store: IStore);
+    /**
+     * 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次
+     */
     abstract onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
+    /**
+     * 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发
+     */
     onActive(): void;
+    /**
+     * 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发
+     */
     onInactive(): void;
+    /**
+     * 获取关联的 Router
+     */
     protected getRouter(): IRouter<TStoreState>;
+    /**
+     * 获取本模块路由跳转之前的状态
+     */
     protected getPrevState(): TModuleState | undefined;
+    /**
+     * 获取 Store 的全部状态
+     *
+     * @param type - 不传表示当前状态，previous表示路由跳转之前的状态，uncommitted表示未提交的状态
+     *
+     */
     protected getRootState(type?: 'previous' | 'uncommitted'): TStoreState;
     /**
      * 获取本模块的`公开actions`构造器
@@ -198,7 +226,7 @@ export declare abstract class BaseModel<TModuleState extends ModuleState = {}, T
      * 获取本模块的`私有actions`构造器
      *
      * @remarks
-     * 有些 action 只在本 Model 内部调用，应将其定义为 protected 或 private 权限，将无法通过 `this.actions` 获得其构造器，此时可以使用 `this.getPrivateActions(...)`
+     * 有些 action 只在本 Model 内部调用，应将其定义为 protected 或 private 权限，此时将无法通过 `this.actions` 调用，可以使用 `this.getPrivateActions(...)`
      *
      * @example
      * ```js
@@ -217,11 +245,32 @@ export declare abstract class BaseModel<TModuleState extends ModuleState = {}, T
     };
     /**
      * 获取当前触发的action.type
+     *
+     * @remarks
+     * 当一个 ActionHandler 监听了多个 Action 时，可以使用此方法区别当前 Action
      */
     protected getCurrentAction(): Action;
+    /**
+     * 等同于this.store.dispatch(action)
+     */
     protected dispatch(action: Action): void | Promise<void>;
+    /**
+     * reducer 监听 `moduleName._initState` Action，注入初始状态
+     *
+     * @remarks
+     * model 被挂载到 store 时会派发 `moduleName._initState` Action
+     */
     protected _initState(state: TModuleState): TModuleState;
+    /**
+     * reducer 监听 `moduleName._updateState Action`，合并至当前状态
+     */
     protected _updateState(subject: string, state: Partial<TModuleState>): TModuleState;
+    /**
+     * reducer 监听 `moduleName._loadingState` Action，合并至当前状态
+     *
+     * @remarks
+     * 执行 effect 时会派发 `moduleName._loadingState` Action
+     */
     protected _loadingState(loadingState: {
         [group: string]: LoadingState;
     }): TModuleState;

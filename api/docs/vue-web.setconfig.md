@@ -9,31 +9,20 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function setConfig(conf: UserConfig & {
-    LoadComponentOnError?: Component<{
-        message: string;
-    }>;
-    LoadComponentOnLoading?: Component<{}>;
-}): void;
+export declare function setConfig(conf: UserConfig): AppConfig;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  conf | [UserConfig](./vue-web.userconfig.md) &amp; { LoadComponentOnError?: Component&lt;{ message: string; }&gt;; LoadComponentOnLoading?: Component&lt;{}&gt;; } | 全局参数 |
+|  conf | [UserConfig](./vue-web.userconfig.md) | 全局参数 |
 
 <b>Returns:</b>
 
-void
+[AppConfig](./vue-web.appconfig.md)
 
 ## Remarks
 
-必须放在初始化最前面，通常没必要也不支持二次修改
-
 - UserConfig：[UserConfig](./vue-web.userconfig.md)
-
-- LoadComponentOnError：用于LoadComponent(...)，组件加载失败时的显示组件，此设置为全局默认，LoadComponent方法中可以单独设置
-
-- LoadComponentOnLoading：用于LoadComponent(...)，组件加载中的Loading组件，此设置为全局默认，LoadComponent方法中可以单独设置
 

@@ -49,5 +49,10 @@ export declare class TaskCounter extends SingleDispatcher<LoadingState> {
     private completeItem;
 }
 export declare function compose(...funcs: Function[]): Function;
+/**
+ * 当前是否是Server运行环境
+ *
+ * @public
+ */
 export declare function isServer(): boolean;
 //# sourceMappingURL=utils.d.ts.map

@@ -1,5 +1,6 @@
-import React, {useEffect, useState, useRef, memo, ComponentType} from 'react';
-import {env, coreConfig, CoreRouter, IStore} from '@elux/core';
+import React, {ComponentType, memo, useEffect, useRef, useState} from 'react';
+
+import {coreConfig, CoreRouter, env, IStore} from '@elux/core';
 
 export const RouterComponent: React.FC<{page: ComponentType}> = (props) => {
   const router = coreConfig.UseRouter!() as CoreRouter;

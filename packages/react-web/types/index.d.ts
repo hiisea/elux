@@ -1,26 +1,24 @@
-import { NativeRequest } from '@elux/core';
 import { AppConfig } from '@elux/app';
-export { DocumentHead, Switch, Else, Link } from '@elux/react-components';
-export type { DocumentHeadProps, SwitchProps, ElseProps, LinkProps } from '@elux/react-components';
-export { connectRedux, shallowEqual, useSelector, createSelectorHook } from '@elux/react-redux';
-export type { InferableComponentEnhancerWithProps, GetProps } from '@elux/react-redux';
+import { NativeRequest, RenderOptions } from '@elux/core';
+export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
+export type { DocumentHeadProps, ElseProps, LinkProps, SwitchProps } from '@elux/react-components';
+export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
+export type { GetProps, InferableComponentEnhancerWithProps } from '@elux/react-redux';
 export * from '@elux/app';
 /**
  * 创建应用(CSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR | createSSR(...)}
+ * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR}
  *
- * @param moduleGetter - 模块工厂
- * @param storeMiddlewares - store中间件
- * @param storeLogger - store日志记录器
+ * @param appConfig - 应用配置
  *
  * @returns
- * 返回包含`render(options: RenderOptions): Promise<void>`方法的下一步实例，参见{@link RenderOptions}
+ * 返回包含`render`方法的实例，参见{@link RenderOptions}
  *
  * @example
  * ```js
- * createApp(moduleGetter)
+ * createApp(config)
  * .render()
  * .then(() => {
  *   const initLoading = document.getElementById('root-loading');
@@ -33,22 +31,19 @@ export * from '@elux/app';
  * @public
  */
 export declare function createApp(appConfig: AppConfig): {
-    render(options?: import("@elux/core").RenderOptions | undefined): Promise<void>;
+    render(options?: RenderOptions): Promise<void>;
 };
 /**
  * 创建应用(SSR)
  *
  * @remarks
- * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp | createApp(...)}
+ * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp}
  *
- * @param moduleGetter - 模块工厂
- * @param url - 服务器收到的原始url
- * @param nativeData - 可存放任何原始请求数据
- * @param storeMiddlewares - store中间件
- * @param storeLogger - store日志记录器
+ * @param appConfig - 应用配置
+ * @param nativeRequest - 原生请求
  *
  * @returns
- * 返回包含`render(options: RenderOptions): Promise<string>`方法的下一步实例，参见{@link RenderOptions}
+ * 返回包含`render`方法的下一步实例，参见{@link RenderOptions}
  *
  * @example
  * ```js
@@ -59,6 +54,6 @@ export declare function createApp(appConfig: AppConfig): {
  * @public
  */
 export declare function createSSR(appConfig: AppConfig, nativeRequest: NativeRequest): {
-    render(options?: import("@elux/core").RenderOptions | undefined): Promise<string>;
+    render(options?: RenderOptions | undefined): Promise<string>;
 };
 //# sourceMappingURL=index.d.ts.map

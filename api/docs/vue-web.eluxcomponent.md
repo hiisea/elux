@@ -4,7 +4,7 @@
 
 ## EluxComponent interface
 
-表示该UI组件是一个EluxUI
+表示该UI组件是一个导出的UI组件
 
 <b>Signature:</b>
 
@@ -14,7 +14,7 @@ export interface EluxComponent
 
 ## Remarks
 
-EluxUI组件通常通过 [exportComponent()](./vue-web.exportcomponent.md) 导出，可使用 [LoadComponent](./vue-web.loadcomponent.md) 加载
+EluxUI组件通常通过 [exportComponent()](./vue-web.exportcomponent.md) 导出，可使用 [ILoadComponent](./vue-web.iloadcomponent.md) 加载
 
 ## Properties
 

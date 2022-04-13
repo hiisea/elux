@@ -1,31 +1,31 @@
-import env from './env';
-import {promiseCaseCallback, toPromise, Listener, UNListener, TaskCounter, compose, isPromise} from './utils';
+import {errorAction, getErrorActionType, getInitActionType, isProcessedError, setProcessedError} from './actions';
 import {
   Action,
   ActionHandler,
-  CommonModule,
   CommonModel,
   CommonModelClass,
+  CommonModule,
+  coreConfig,
+  Dispatch,
+  IRouter,
+  IRouteRecord,
+  IStore,
+  Location,
+  mergeState,
   MetaData,
-  StoreMiddleware,
-  StoreState,
-  storeLoggerInfo,
   ModuleState,
   NativeRequest,
-  IRouter,
-  IStore,
-  RouteRuntime,
-  Dispatch,
-  IRouteRecord,
-  Location,
   RouteAction,
+  RouteRuntime,
   RouteTarget,
-  coreConfig,
-  mergeState,
+  storeLoggerInfo,
+  StoreMiddleware,
+  StoreState,
 } from './basic';
 import {devLogger} from './devtools';
+import env from './env';
 import {getModule, injectActions} from './inject';
-import {errorAction, isProcessedError, setProcessedError, getErrorActionType, getInitActionType} from './actions';
+import {compose, isPromise, Listener, promiseCaseCallback, TaskCounter, toPromise, UNListener} from './utils';
 
 export function getActionData(action: Action): any[] {
   return Array.isArray(action.payload) ? action.payload : [];
@@ -423,7 +423,7 @@ export class Store implements IStore {
  * model热更新
  *
  * @remarks
- * 修改了Model时热更新runtime，通常由脚手架自动调用
+ * 修改了Model时热更新，通常由脚手架自动调用
  *
  * @param moduleName - Model所属模块名称
  * @param ModelClass - 新的Model

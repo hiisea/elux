@@ -4,7 +4,7 @@
 
 ## Else variable
 
-内置VUE组件
+内置UI组件
 
 <b>Signature:</b>
 

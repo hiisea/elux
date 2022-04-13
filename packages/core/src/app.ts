@@ -1,10 +1,20 @@
+import {coreConfig, EluxContext} from './basic';
 import env from './env';
-import {EluxContext, coreConfig} from './basic';
 import {CoreRouter} from './store';
 
+/**
+ * 应用Render参数
+ *
+ * @public
+ */
 export interface RenderOptions {
   /**
-   * 挂载 Dom 的 id，默认为 `root`
+   * 挂载应用 Dom 的 id
+   *
+   * @defaultValue `root`
+   *
+   * @remarks
+   * 默认: `root`
    */
   id?: string;
 }

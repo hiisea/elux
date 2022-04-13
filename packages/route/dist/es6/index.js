@@ -1,7 +1,7 @@
-import { CoreRouter, Store, deepClone, coreConfig, setLoading, setProcessedError, env } from '@elux/core';
-import { ErrorCodes, urlToLocation, testChangeAction, beforeChangeAction, afterChangeAction, routeConfig, urlToNativeUrl, locationToUrl, nativeUrlToUrl, locationToNativeLocation } from './basic';
-import { WindowStack, PageStack, RouteRecord } from './history';
-export { ErrorCodes, setRouteConfig, routeConfig, locationToUrl, urlToLocation, locationToNativeLocation, nativeLocationToLocation, urlToNativeUrl, nativeUrlToUrl } from './basic';
+import { coreConfig, CoreRouter, deepClone, env, setLoading, setProcessedError, Store } from '@elux/core';
+import { afterChangeAction, beforeChangeAction, ErrorCodes, locationToNativeLocation, locationToUrl, nativeUrlToUrl, routeConfig, testChangeAction, urlToLocation, urlToNativeUrl } from './basic';
+import { PageStack, RouteRecord, WindowStack } from './history';
+export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, routeConfig, setRouteConfig, urlToLocation, urlToNativeUrl } from './basic';
 export class BaseNativeRouter {
   constructor(nativeRequest) {
     this.curTask = void 0;

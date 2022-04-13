@@ -1,8 +1,8 @@
 import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
-import { Router, BaseNativeRouter, setRouteConfig, routeConfig, locationToUrl } from '@elux/route';
-import { env } from '@elux/core';
 import { createBrowserHistory } from 'history';
+import { env } from '@elux/core';
+import { BaseNativeRouter, locationToUrl, routeConfig, Router, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,

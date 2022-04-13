@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react';
-import { env, coreConfig } from '@elux/core';
+import { coreConfig, env } from '@elux/core';
 import { EluxContextComponent } from './base';
 let clientTimer = 0;
 let recoverLock = false;

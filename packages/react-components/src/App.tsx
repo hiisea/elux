@@ -1,7 +1,9 @@
 import {hydrate, render} from 'react-dom';
+
 import {env, getEntryComponent, IAppRender} from '@elux/core';
 // eslint-disable-next-line
 import {renderToString} from '@elux/react-components/server';
+
 import {EluxContextComponent} from './base';
 import {RouterComponent} from './Router';
 

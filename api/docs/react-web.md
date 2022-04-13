@@ -8,112 +8,102 @@
 
 |  Class | Description |
 |  --- | --- |
-|  [BaseModel](./react-web.basemodel.md) | Model基类 |
-|  [EmptyModel](./react-web.emptymodel.md) | 一个空的Model |
-
-## Enumerations
-
-|  Enumeration | Description |
-|  --- | --- |
-|  [LoadingState](./react-web.loadingstate.md) | 描述异步状态 |
-|  [RouteHistoryAction](./react-web.routehistoryaction.md) | 路由切换方式 |
+|  [BaseModel](./react-web.basemodel.md) | 实现了CommonModel的Model基类 |
+|  [EmptyModel](./react-web.emptymodel.md) | 实现了CommonModel的空Model |
 
 ## Functions
 
 |  Function | Description |
 |  --- | --- |
 |  [connectRedux(mapStateToProps, options)](./react-web.connectredux.md) | 连接store与react组件 |
-|  [createApp(moduleGetter, storeMiddlewares, storeLogger)](./react-web.createapp.md) | 创建应用(CSR) |
-|  [createRouteModule(moduleName, pagenameMap, nativeLocationMap)](./react-web.createroutemodule.md) | 创建Route模块 |
-|  [createSSR(moduleGetter, url, nativeData, storeMiddlewares, storeLogger)](./react-web.createssr.md) | 创建应用(SSR) |
+|  [createApp(appConfig)](./react-web.createapp.md) | 创建应用(CSR) |
+|  [createSSR(appConfig, nativeRequest)](./react-web.createssr.md) | 创建应用(SSR) |
 |  [deepMerge(target, args)](./react-web.deepmerge.md) | 多个PlainObject的深度Merge |
-|  [effect(loadingKey)](./react-web.effect.md) | Model Decorator函数-申明effect |
-|  [effectLogger(before, after)](./react-web.effectlogger.md) | Model Decorator函数-申明effect执行钩子 |
-|  [errorAction(error)](./react-web.erroraction.md) | 创建一个ErrorAction |
-|  [exportComponent(component)](./react-web.exportcomponent.md) | 向外导出一个EluxUI组件 |
+|  [effect(loadingKey)](./react-web.effect.md) | Model类的装饰器函数:申明effect |
+|  [effectLogger(before, after)](./react-web.effectlogger.md) | Model类的装饰器函数:跟踪effect执行钩子 |
+|  [errorAction(error)](./react-web.erroraction.md) | 创建一个内置的ErrorAction |
+|  [exportComponent(component)](./react-web.exportcomponent.md) | 向外导出UI组件 |
 |  [exportModule(moduleName, ModelClass, components, data)](./react-web.exportmodule.md) | 向外封装并导出Module |
-|  [exportView(component)](./react-web.exportview.md) | 向外导出一个EluxUI组件 |
+|  [exportView(component)](./react-web.exportview.md) | 向外导出UI组件 |
 |  [getApi(demoteForProductionOnly, injectActions)](./react-web.getapi.md) | 获取应用全局方法 |
-|  [getComponent(moduleName, componentName)](./react-web.getcomponent.md) | 获取Module导出的EluxUI组件 |
-|  [getModule(moduleName)](./react-web.getmodule.md) | 获取导出的Module |
-|  [isServer()](./react-web.isserver.md) | 当前环境是否是服务器环境 |
-|  [loadModel(moduleName, store)](./react-web.loadmodel.md) | 手动加载并初始化一个Model |
-|  [location(dataOrUrl)](./react-web.location.md) | 创建路由Location转换器 |
+|  [getComponent(moduleName, componentName)](./react-web.getcomponent.md) | 获取导出的UI组件 |
+|  [getModule(moduleName)](./react-web.getmodule.md) | 获取Module |
+|  [isServer()](./react-web.isserver.md) | 当前是否是Server运行环境 |
+|  [locationToNativeLocation(location)](./react-web.locationtonativelocation.md) | 内部路由Location转换为原生路由Location |
+|  [locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery })](./react-web.locationtourl.md) | Location转换为Url |
 |  [modelHotReplacement(moduleName, ModelClass)](./react-web.modelhotreplacement.md) | model热更新 |
-|  [reducer(target, key, descriptor)](./react-web.reducer.md) | Model Decorator函数-申明reducer |
-|  [routeJsonParse(json)](./react-web.routejsonparse.md) | 解析JSON格式的路由参数 |
+|  [nativeLocationToLocation(location)](./react-web.nativelocationtolocation.md) | 原生路由Location转换为内部路由Location |
+|  [nativeUrlToUrl(nativeUrl)](./react-web.nativeurltourl.md) | 原生路由Url转换为内部路由Url |
+|  [patchActions(typeName, json)](./react-web.patchactions.md) | 用于兼容不支持Proxy的低版本浏览器 |
+|  [reducer(target, key, descriptor)](./react-web.reducer.md) | Model类的装饰器函数:申明reducer |
 |  [setConfig(conf)](./react-web.setconfig.md) | 全局参数设置 |
-|  [setLoading(item, store, moduleName, groupName)](./react-web.setloading.md) | 将[LoadingState](./react-web.loadingstate.md)<!-- -->注入指定ModuleState |
+|  [setLoading(item, store, \_moduleName, \_groupName)](./react-web.setloading.md) | 将[LoadingState](./react-web.loadingstate.md)<!-- -->注入指定ModuleState |
+|  [urlToLocation(url)](./react-web.urltolocation.md) | Url转换为Location |
+|  [urlToNativeUrl(eluxUrl)](./react-web.urltonativeurl.md) | 内部路由Url转换为原生路由Url |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
 |  [Action](./react-web.action.md) | 定义Action |
-|  [CommonModel](./react-web.commonmodel.md) | Model的一般形态<!-- -->通常通过继承 [BaseModel](./react-web.basemodel.md) 类生成 |
-|  [CommonModelClass](./react-web.commonmodelclass.md) | \* |
+|  [ActionError](./react-web.actionerror.md) | 内置的错误描述格式 |
+|  [CommonModel](./react-web.commonmodel.md) | Model的一般形态 |
+|  [CommonModelClass](./react-web.commonmodelclass.md) | Model的构造类 |
 |  [CommonModule](./react-web.commonmodule.md) | Module的一般形态 |
-|  [DocumentHeadProps](./react-web.documentheadprops.md) | 内置React组件 |
-|  [ElseProps](./react-web.elseprops.md) | 内置React组件 |
-|  [EluxComponent](./react-web.eluxcomponent.md) | 表示该UI组件是一个EluxUI |
-|  [EluxLocation](./react-web.eluxlocation.md) | 内置3种路由描述之一 |
+|  [DocumentHeadProps](./react-web.documentheadprops.md) | 内置UI组件 |
+|  [ElseProps](./react-web.elseprops.md) | 内置UI组件 |
+|  [EluxComponent](./react-web.eluxcomponent.md) | 表示该UI组件是一个导出的UI组件 |
 |  [GetState](./react-web.getstate.md) | 获取Store状态 |
-|  [LinkProps](./react-web.linkprops.md) | 内置React组件 |
-|  [LoadComponentOptions](./react-web.loadcomponentoptions.md) | EluxUI组件加载参数 |
-|  [NativeLocation](./react-web.nativelocation.md) | 内置3种路由描述之一 |
-|  [NativeLocationMap](./react-web.nativelocationmap.md) | NativeLocation与EluxLocation的转换 |
-|  [RenderOptions](./react-web.renderoptions.md) | APP Render参数 |
-|  [RouteState](./react-web.routestate.md) | 路由状态描述 |
-|  [StateLocation](./react-web.statelocation.md) | 内置3种路由描述之一 |
-|  [SwitchProps](./react-web.switchprops.md) | 内置React组件 |
-|  [ULocationTransform](./react-web.ulocationtransform.md) | 用于3种路由描述之间的转换 |
-|  [URouter](./react-web.urouter.md) | 路由实例 |
-|  [URouteRecord](./react-web.urouterecord.md) | 路由历史记录 |
+|  [IRouter](./react-web.irouter.md) | 路由实例 |
+|  [IRouteRecord](./react-web.irouterecord.md) | 路由历史记录 |
+|  [IStore](./react-web.istore.md) | Store实例 |
+|  [LinkProps](./react-web.linkprops.md) | 内置UI组件 |
+|  [Location](./react-web.location.md) | 路由描述 |
+|  [NativeRequest](./react-web.nativerequest.md) | 路由初始化时原生数据，常用于SSR |
+|  [RenderOptions](./react-web.renderoptions.md) | 应用Render参数 |
+|  [RouteRuntime](./react-web.routeruntime.md) | 路由的运行状态 |
+|  [SwitchProps](./react-web.switchprops.md) | 内置UI组件 |
 |  [UserConfig](./react-web.userconfig.md) | 全局参数设置 |
-|  [UStore](./react-web.ustore.md) | Store实例 |
 
 ## Variables
 
 |  Variable | Description |
 |  --- | --- |
-|  [DocumentHead](./react-web.documenthead.md) | 内置React组件 |
-|  [Else](./react-web.else.md) | 内置React组件 |
+|  [DocumentHead](./react-web.documenthead.md) | 内置UI组件 |
+|  [Else](./react-web.else.md) | 内置UI组件 |
 |  [env](./react-web.env.md) | 运行环境的引用 |
-|  [Link](./react-web.link.md) | 内置React组件 |
-|  [Switch](./react-web.switch.md) | 内置React组件 |
+|  [ErrorCodes](./react-web.errorcodes.md) | 内置ErrorCode |
+|  [Link](./react-web.link.md) | 内置UI组件 |
+|  [Switch](./react-web.switch.md) | 内置UI组件 |
 
 ## Type Aliases
 
 |  Type Alias | Description |
 |  --- | --- |
 |  [ActionCreator](./react-web.actioncreator.md) | \* |
-|  [ActionsThis](./react-web.actionsthis.md) | \* |
+|  [API](./react-web.api.md) | \* |
+|  [AppConfig](./react-web.appconfig.md) | \* |
 |  [AsyncEluxComponent](./react-web.asynceluxcomponent.md) | 表示该UI组件是一个异步EluxUI |
 |  [ComputedStore](./react-web.computedstore.md) | \* |
-|  [DeepPartial](./react-web.deeppartial.md) | \* |
 |  [Dispatch](./react-web.dispatch.md) | 派发Action |
 |  [Facade](./react-web.facade.md) | \* |
-|  [FacadeActions](./react-web.facadeactions.md) | \* |
-|  [FacadeModules](./react-web.facademodules.md) | \* |
-|  [FacadeRoutes](./react-web.facaderoutes.md) | \* |
-|  [FacadeStates](./react-web.facadestates.md) | \* |
-|  [GetBaseFacade](./react-web.getbasefacade.md) | \* |
-|  [GetFacade](./react-web.getfacade.md) | 获取应用顶级API类型 |
 |  [GetPromiseComponent](./react-web.getpromisecomponent.md) | \* |
 |  [GetPromiseModule](./react-web.getpromisemodule.md) | \* |
 |  [GetProps](./react-web.getprops.md) | 用于[connectRedux()](./react-web.connectredux.md) |
-|  [HandlerThis](./react-web.handlerthis.md) | \* |
+|  [HandlerToAction](./react-web.handlertoaction.md) | \* |
+|  [ILoadComponent](./react-web.iloadcomponent.md) | UI组件加载器 |
 |  [InferableComponentEnhancerWithProps](./react-web.inferablecomponentenhancerwithprops.md) | 用于[connectRedux()](./react-web.connectredux.md) |
-|  [LoadComponent](./react-web.loadcomponent.md) | EluxUI组件加载器 |
-|  [ModuleAPI](./react-web.moduleapi.md) | \* |
+|  [LoadingState](./react-web.loadingstate.md) | 描述异步状态 |
+|  [ModelAsCreators](./react-web.modelascreators.md) |  |
+|  [ModuleFacade](./react-web.modulefacade.md) | \* |
 |  [ModuleGetter](./react-web.modulegetter.md) | 配置模块的获取方式 |
-|  [ModuleState](./react-web.modulestate.md) | 模块状态描述 |
-|  [PagenameMap](./react-web.pagenamemap.md) | 定义路由Page及映射PathParams |
-|  [PickActions](./react-web.pickactions.md) | \* |
-|  [PickHandler](./react-web.pickhandler.md) | \* |
+|  [ModuleState](./react-web.modulestate.md) | 模块状态 |
+|  [PickModelActions](./react-web.pickmodelactions.md) | \* |
 |  [ReturnComponents](./react-web.returncomponents.md) | \* |
-|  [RootState](./react-web.rootstate.md) | 全局状态描述 |
+|  [RouteAction](./react-web.routeaction.md) | 路由动作 |
+|  [RouteTarget](./react-web.routetarget.md) | 路由历史栈 |
 |  [StoreLogger](./react-web.storelogger.md) | Store的日志记录器 |
+|  [storeLoggerInfo](./react-web.storeloggerinfo.md) |  |
 |  [StoreMiddleware](./react-web.storemiddleware.md) | Store的中间件 |
-|  [UNListener](./react-web.unlistener.md) | 常用于取消监听 |
+|  [StoreState](./react-web.storestate.md) | 全局状态 |
 

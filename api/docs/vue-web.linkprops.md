@@ -4,7 +4,7 @@
 
 ## LinkProps interface
 
-内置VUE组件
+内置UI组件
 
 <b>Signature:</b>
 
@@ -15,28 +15,27 @@ export interface LinkProps extends HTMLAttributes
 
 ## Remarks
 
-类似于Html标签 `<a>`<!-- -->，用组件的方式执行路由切换，参见 [URouter](./vue-web.urouter.md)
+类似于Html标签 `<a>`<!-- -->，用组件的方式执行路由切换，参见 [IRouter](./vue-web.irouter.md)
 
 ## Example
 
 
 ```html
-<Link disabled={pagename==='/home'} route='/home' href='/home' action='push' root>home</Link>
+<Link disabled={pagename==='/home'} to='/home' action='push' target='window'>home</Link>
 ```
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [action?](./vue-web.linkprops.action.md) | 'push' \| 'replace' \| 'relaunch' | <i>(Optional)</i> 路由的切换方式，参见 [RouteHistoryAction](./vue-web.routehistoryaction.md) |
+|  [action?](./vue-web.linkprops.action.md) | [RouteAction](./vue-web.routeaction.md) | <i>(Optional)</i> 指定路由的切换方式 |
 |  [disabled?](./vue-web.linkprops.disabled.md) | boolean | <i>(Optional)</i> 是否 disable |
-|  [href?](./vue-web.linkprops.href.md) | string | <i>(Optional)</i> href属性仅用于SSR时提供给搜索引擎爬取，指定跳转的url请使用 [LinkProps.route](./vue-web.linkprops.route.md) 替代 |
-|  [root?](./vue-web.linkprops.root.md) | boolean | <i>(Optional)</i> 是否操作顶级路由栈（EWindow栈），虚拟多页下使用 |
-|  [route?](./vue-web.linkprops.route.md) | string | <i>(Optional)</i> 指定跳转的url，支持[3种路由协议](./vue-web.eluxlocation.md)<!-- -->：eluxUrl \[<code>e://...</code>\]，nativeUrl \[<code>n://...</code>\]，stateUrl \[<code>s://...</code>\] |
+|  [target?](./vue-web.linkprops.target.md) | [RouteTarget](./vue-web.routetarget.md) | <i>(Optional)</i> 指定要操作的路由栈 |
+|  [to?](./vue-web.linkprops.to.md) | string | <i>(Optional)</i> 指定跳转的url或后退步数 |
 
 ## Methods
 
 |  Method | Description |
 |  --- | --- |
-|  [onClick(event)?](./vue-web.linkprops.onclick.md) | <i>(Optional)</i> |
+|  [onClick(event)?](./vue-web.linkprops.onclick.md) | <i>(Optional)</i> 点击事件 |
 

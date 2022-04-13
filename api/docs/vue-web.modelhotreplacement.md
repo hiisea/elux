@@ -25,5 +25,5 @@ void
 
 ## Remarks
 
-修改了Model时热更新runtime，通常由脚手架自动调用
+修改了Model时热更新，通常由脚手架自动调用
 

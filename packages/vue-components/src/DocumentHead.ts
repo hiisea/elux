@@ -1,9 +1,11 @@
-import {inject, defineComponent, DefineComponent} from 'vue';
-import {env, coreConfig, EluxContext} from '@elux/core';
+import {defineComponent, DefineComponent, inject} from 'vue';
+
+import {coreConfig, EluxContext, env} from '@elux/core';
+
 import {EluxContextKey} from './base';
 
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
  * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
@@ -39,7 +41,7 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
 }
 
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link DocumentHeadProps}

@@ -9,22 +9,17 @@ Module的一般形态
 <b>Signature:</b>
 
 ```typescript
-export interface CommonModule<ModuleName extends string = string, Store extends UStore = UStore> 
+export interface CommonModule<TModuleName extends string = string> 
 ```
-
-## Remarks
-
-通常通过 [exportModule(...)](./vue-web.exportmodule.md) 生成
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [actions](./vue-web.commonmodule.actions.md) | { \[actionName: string\]: [ActionCreator](./vue-web.actioncreator.md)<!-- -->; } |  |
-|  [components](./vue-web.commonmodule.components.md) | { \[componentName: string\]: [EluxComponent](./vue-web.eluxcomponent.md) \| [AsyncEluxComponent](./vue-web.asynceluxcomponent.md)<!-- -->; } |  |
+|  [actions](./vue-web.commonmodule.actions.md) | [ModelAsCreators](./vue-web.modelascreators.md) |  |
+|  [components](./vue-web.commonmodule.components.md) | { \[componentName: string\]: [EluxComponent](./vue-web.eluxcomponent.md)<!-- -->; } |  |
 |  [data?](./vue-web.commonmodule.data.md) | any | <i>(Optional)</i> |
-|  [initModel](./vue-web.commonmodule.initmodel.md) | (store: Store) =&gt; void \| Promise&lt;void&gt; |  |
-|  [moduleName](./vue-web.commonmodule.modulename.md) | ModuleName |  |
-|  [routeParams](./vue-web.commonmodule.routeparams.md) | [ModuleState](./vue-web.modulestate.md) |  |
+|  [ModelClass](./vue-web.commonmodule.modelclass.md) | [CommonModelClass](./vue-web.commonmodelclass.md) |  |
+|  [moduleName](./vue-web.commonmodule.modulename.md) | TModuleName |  |
 |  [state](./vue-web.commonmodule.state.md) | [ModuleState](./vue-web.modulestate.md) |  |
 

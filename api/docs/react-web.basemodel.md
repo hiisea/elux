@@ -4,24 +4,18 @@
 
 ## BaseModel class
 
-Model基类
+实现了CommonModel的Model基类
 
 <b>Signature:</b>
 
 ```typescript
-export declare abstract class BaseModel<TModuleState extends ModuleState = {}, TRouteParams extends ModuleState = {}, TRootState extends RootState = {}> implements CommonModel 
+export declare abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreState extends StoreState = {}> implements CommonModel 
 ```
 <b>Implements:</b> [CommonModel](./react-web.commonmodel.md)
 
 ## Remarks
 
-Model基类中提供了一些常用的方法，泛型参数：
-
-- `TModuleState`<!-- -->: 本模块的状态结构
-
-- `TRouteParams`<!-- -->: 本模块的路由参数结构
-
-- `TRootState`<!-- -->: 全局状态结构
+Model基类实现了[CommonModel](./react-web.commonmodel.md)<!-- -->，并提供了一些常用的方法
 
 ## Constructors
 
@@ -33,25 +27,25 @@ Model基类中提供了一些常用的方法，泛型参数：
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [actions](./react-web.basemodel.actions.md) |  | [ActionsThis](./react-web.actionsthis.md)<!-- -->&lt;this&gt; | 获取本模块的<code>公开actions</code>构造器 |
-|  [defaultRouteParams](./react-web.basemodel.defaultrouteparams.md) |  | TRouteParams | 本模块路由参数默认值 |
+|  [actions](./react-web.basemodel.actions.md) |  | [PickModelActions](./react-web.pickmodelactions.md)<!-- -->&lt;this&gt; | 获取本模块的<code>公开actions</code>构造器 |
 |  [moduleName](./react-web.basemodel.modulename.md) |  | string |  |
-|  [router](./react-web.basemodel.router.md) |  | unknown | 获取当前[Router](./react-web.urouter.md) |
-|  [store](./react-web.basemodel.store.md) |  | [UStore](./react-web.ustore.md) |  |
+|  [state](./react-web.basemodel.state.md) |  | TModuleState | 当前模块的状态 |
+|  [store](./react-web.basemodel.store.md) |  | [IStore](./react-web.istore.md)<!-- -->&lt;TStoreState&gt; | 被关联的 store |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [destroy()](./react-web.basemodel.destroy.md) |  | 本Model实例被销毁时自动执行的Hook钩子 |
+|  [\_initState(state)](./react-web.basemodel._initstate.md) |  | reducer 监听 <code>moduleName._initState</code> Action，注入初始状态 |
+|  [\_loadingState(loadingState)](./react-web.basemodel._loadingstate.md) |  | reducer 监听 <code>moduleName._loadingState</code> Action，合并至当前状态 |
+|  [\_updateState(subject, state)](./react-web.basemodel._updatestate.md) |  | reducer 监听 <code>moduleName._updateState Action</code>，合并至当前状态 |
 |  [dispatch(action)](./react-web.basemodel.dispatch.md) |  | 等同于this.store.dispatch(action) |
-|  [getCurrentActionName()](./react-web.basemodel.getcurrentactionname.md) |  | 获取当前触发的action.type |
-|  [getLatestState()](./react-web.basemodel.getlateststate.md) |  | 获取全局状态 |
+|  [getCurrentAction()](./react-web.basemodel.getcurrentaction.md) |  | 获取当前触发的action.type |
+|  [getPrevState()](./react-web.basemodel.getprevstate.md) |  | 获取本模块路由跳转之前的状态 |
 |  [getPrivateActions(actionsMap)](./react-web.basemodel.getprivateactions.md) |  | 获取本模块的<code>私有actions</code>构造器 |
-|  [getRootState()](./react-web.basemodel.getrootstate.md) |  | 获取全局状态 |
-|  [getRouteParams()](./react-web.basemodel.getrouteparams.md) |  | 获取本模块当前路由参数 |
-|  [getState()](./react-web.basemodel.getstate.md) |  | 获取本模块的状态 |
-|  [getUncommittedState()](./react-web.basemodel.getuncommittedstate.md) |  | 获取全局状态 |
-|  [init(latestState, preState)](./react-web.basemodel.init.md) |  | 计算并返回本模块状态初始值 |
-|  [loadModel(moduleName)](./react-web.basemodel.loadmodel.md) |  | 手动加载并初始化一个Model |
+|  [getRootState(type)](./react-web.basemodel.getrootstate.md) |  | 获取 Store 的全部状态 |
+|  [getRouter()](./react-web.basemodel.getrouter.md) |  | 获取关联的 Router |
+|  [onActive()](./react-web.basemodel.onactive.md) |  | 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发 |
+|  [onInactive()](./react-web.basemodel.oninactive.md) |  | 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发 |
+|  [onMount(env)](./react-web.basemodel.onmount.md) |  | 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次 |
 

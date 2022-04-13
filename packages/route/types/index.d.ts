@@ -1,5 +1,5 @@
-import { Location, RouteTarget, IRouteRecord, CoreRouter, Store, StoreState, NativeRequest } from '@elux/core';
-export { ErrorCodes, setRouteConfig, routeConfig, locationToUrl, urlToLocation, locationToNativeLocation, nativeLocationToLocation, urlToNativeUrl, nativeUrlToUrl, } from './basic';
+import { CoreRouter, IRouteRecord, Location, NativeRequest, RouteTarget, Store, StoreState } from '@elux/core';
+export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, routeConfig, setRouteConfig, urlToLocation, urlToNativeUrl, } from './basic';
 export declare abstract class BaseNativeRouter {
     readonly nativeRequest: NativeRequest;
     protected curTask?: {
