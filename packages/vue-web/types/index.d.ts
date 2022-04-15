@@ -5,6 +5,12 @@ export { DocumentHead, Else, Link, Switch } from '@elux/vue-components';
 export type { DocumentHeadProps, ElseProps, LinkProps, SwitchProps } from '@elux/vue-components';
 export * from '@elux/app';
 /**
+ * @public
+ */
+export declare type EluxApp = App & {
+    render(options?: RenderOptions): Promise<void>;
+};
+/**
  * 创建应用(CSR)
  *
  * @remarks
@@ -29,9 +35,7 @@ export * from '@elux/app';
  *
  * @public
  */
-export declare function createApp(appConfig: AppConfig): App & {
-    render(options?: RenderOptions): Promise<void>;
-};
+export declare function createApp(appConfig: AppConfig): EluxApp;
 /**
  * 创建应用(SSR)
  *

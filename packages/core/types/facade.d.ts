@@ -157,7 +157,7 @@ export declare type API<TFacade extends Facade> = {
  *
  * @example
  * ```js
- * const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API, Router>();
+ * const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();
  * ```
  *
  * @public

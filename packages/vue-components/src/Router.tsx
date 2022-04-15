@@ -1,13 +1,13 @@
 /* eslint-disable vue/one-component-per-file */
 import {defineComponent, h, onBeforeUnmount, PropType, provide, ref, shallowRef} from 'vue';
 
-import {coreConfig, CoreRouter, EluxComponent, EluxStoreContext, env, getEntryComponent, IStore} from '@elux/core';
+import {coreConfig, EluxComponent, EluxStoreContext, env, getEntryComponent, IStore} from '@elux/core';
 
 import {EluxStoreContextKey} from './base';
 
 export const RouterComponent = defineComponent({
   setup() {
-    const router = coreConfig.UseRouter!() as CoreRouter;
+    const router = coreConfig.UseRouter!();
     const data = shallowRef<{
       classname: string;
       pages: {

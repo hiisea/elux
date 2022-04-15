@@ -87,7 +87,7 @@ export class RouteRecord {
     this.key = void 0;
     this.location = location;
     this.pageStack = pageStack;
-    this.key = [pageStack.key, pageStack.id++].join('-');
+    this.key = [pageStack.key, pageStack.id++].join('_');
   }
 
   setActive() {
@@ -271,7 +271,7 @@ export class WindowStack extends HistoryStack {
   }
 
   findRecordByKey(key) {
-    const arr = key.split('-');
+    const arr = key.split('_');
 
     for (let i = 0, k = this.records.length; i < k; i++) {
       const pageStack = this.records[i];

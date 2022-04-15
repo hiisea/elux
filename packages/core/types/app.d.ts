@@ -1,4 +1,4 @@
-import { CoreRouter } from './store';
+import { IRouter } from './basic';
 /**
  * 应用Render参数
  *
@@ -15,10 +15,18 @@ export interface RenderOptions {
      */
     id?: string;
 }
-export declare function buildApp<INS = {}>(ins: INS, router: CoreRouter): INS & {
+export declare function buildApp<INS = {}>(ins: INS, router: IRouter): INS & {
     render(options?: RenderOptions): Promise<void>;
 };
-export declare function buildSSR<INS = {}>(ins: INS, router: CoreRouter): INS & {
+export declare function buildProvider<INS = {}>(ins: INS, router: IRouter): INS & {
+    render(options?: RenderOptions): Elux.Component<{
+        children: any;
+    }>;
+};
+export declare function buildSSR<INS = {}>(ins: INS, router: IRouter): INS & {
     render(options?: RenderOptions): Promise<string>;
 };
+export declare function getAppProvider(): Elux.Component<{
+    children: any;
+}>;
 //# sourceMappingURL=app.d.ts.map

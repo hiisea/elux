@@ -1,18 +1,17 @@
 import { CoreRouter, IRouteRecord, Location, NativeRequest, RouteTarget, Store, StoreState } from '@elux/core';
 export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, routeConfig, setRouteConfig, urlToLocation, urlToNativeUrl, } from './basic';
 export declare abstract class BaseNativeRouter {
-    readonly nativeRequest: NativeRequest;
+    router: Router;
     protected curTask?: {
         resolve: () => void;
-        reject: () => void;
+        timeout: number;
     };
     constructor(nativeRequest: NativeRequest);
-    protected abstract push(nativeLocation: Location, key: string): boolean;
-    protected abstract replace(nativeLocation: Location, key: string): boolean;
-    protected abstract relaunch(nativeLocation: Location, key: string): boolean;
-    protected abstract back(nativeLocation: Location, key: string, index: [number, number]): boolean;
-    protected onSuccess(key: string): void;
-    protected onError(key: string): void;
+    protected abstract push(nativeLocation: Location, key: string): void | Promise<void>;
+    protected abstract replace(nativeLocation: Location, key: string): void | Promise<void>;
+    protected abstract relaunch(nativeLocation: Location, key: string): void | Promise<void>;
+    protected abstract back(nativeLocation: Location, key: string, index: [number, number]): void | Promise<void>;
+    testExecute(method: 'relaunch' | 'push' | 'replace' | 'back', location: Location, backIndex?: number[]): void;
     execute(method: 'relaunch' | 'push' | 'replace' | 'back', location: Location, key: string, backIndex?: number[]): void | Promise<void>;
 }
 export declare class Router extends CoreRouter {
@@ -21,7 +20,7 @@ export declare class Router extends CoreRouter {
     private taskList;
     private readonly windowStack;
     private onTaskComplete;
-    constructor(nativeRouter: BaseNativeRouter);
+    constructor(nativeRouter: BaseNativeRouter, nativeRequest: NativeRequest);
     private addTask;
     getHistoryLength(target?: RouteTarget): number;
     findRecordByKey(recordKey: string): {
@@ -29,7 +28,7 @@ export declare class Router extends CoreRouter {
         overflow: boolean;
         index: [number, number];
     };
-    findRecordByStep(delta: number, rootOnly: boolean): {
+    findRecordByStep(delta: number, rootOnly?: boolean): {
         record: IRouteRecord;
         overflow: boolean;
         index: [number, number];

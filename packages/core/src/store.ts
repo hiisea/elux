@@ -16,6 +16,7 @@ import {
   ModuleState,
   NativeRequest,
   RouteAction,
+  RouteEvent,
   RouteRuntime,
   RouteTarget,
   storeLoggerInfo,
@@ -55,17 +56,11 @@ export const preMiddleware: StoreMiddleware =
     return next(action);
   };
 
-interface RouterEvent {
-  location: Location;
-  action: RouteAction;
-  prevStore: Store;
-  newStore: Store;
-  windowChanged: boolean;
-}
 export abstract class CoreRouter implements IRouter {
   declare runtime: RouteRuntime;
   protected listenerId = 0;
-  protected readonly listenerMap: {[id: string]: (data: RouterEvent) => void | Promise<void>} = {};
+  protected readonly listenerMap: {[id: string]: (data: RouteEvent) => void | Promise<void>} = {};
+  public routeKey: string = '';
 
   constructor(public location: Location, public action: RouteAction, public readonly nativeRequest: NativeRequest) {
     if (!MetaData.clientRouter) {
@@ -73,7 +68,7 @@ export abstract class CoreRouter implements IRouter {
     }
   }
 
-  addListener(callback: (data: RouterEvent) => void | Promise<void>): UNListener {
+  addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener {
     this.listenerId++;
     const id = `${this.listenerId}`;
     const listenerMap = this.listenerMap;
@@ -82,7 +77,7 @@ export abstract class CoreRouter implements IRouter {
       delete listenerMap[id];
     };
   }
-  dispatch(data: RouterEvent): void | Promise<void> {
+  dispatch(data: RouteEvent): void | Promise<void> {
     const listenerMap = this.listenerMap;
     const promiseResults: Promise<void>[] = [];
     Object.keys(listenerMap).forEach((id) => {
@@ -165,7 +160,7 @@ export class Store implements IStore {
   };
   public loadingGroups: {[moduleNameAndGroupName: string]: TaskCounter} = {};
 
-  constructor(public readonly sid: number, public readonly router: CoreRouter) {
+  constructor(public readonly sid: number, public readonly router: IRouter) {
     const middlewareAPI = {
       getStore: () => this,
       dispatch: (action: Action) => this.dispatch(action),

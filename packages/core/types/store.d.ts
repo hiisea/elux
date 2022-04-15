@@ -1,14 +1,7 @@
-import { Action, CommonModelClass, Dispatch, IRouter, IRouteRecord, IStore, Location, ModuleState, NativeRequest, RouteAction, RouteRuntime, RouteTarget, StoreMiddleware, StoreState } from './basic';
+import { Action, CommonModelClass, Dispatch, IRouter, IRouteRecord, IStore, Location, ModuleState, NativeRequest, RouteAction, RouteEvent, RouteRuntime, RouteTarget, StoreMiddleware, StoreState } from './basic';
 import { Listener, TaskCounter, UNListener } from './utils';
 export declare function getActionData(action: Action): any[];
 export declare const preMiddleware: StoreMiddleware;
-interface RouterEvent {
-    location: Location;
-    action: RouteAction;
-    prevStore: Store;
-    newStore: Store;
-    windowChanged: boolean;
-}
 export declare abstract class CoreRouter implements IRouter {
     location: Location;
     action: RouteAction;
@@ -16,11 +9,12 @@ export declare abstract class CoreRouter implements IRouter {
     runtime: RouteRuntime;
     protected listenerId: number;
     protected readonly listenerMap: {
-        [id: string]: (data: RouterEvent) => void | Promise<void>;
+        [id: string]: (data: RouteEvent) => void | Promise<void>;
     };
+    routeKey: string;
     constructor(location: Location, action: RouteAction, nativeRequest: NativeRequest);
-    addListener(callback: (data: RouterEvent) => void | Promise<void>): UNListener;
-    dispatch(data: RouterEvent): void | Promise<void>;
+    addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
+    dispatch(data: RouteEvent): void | Promise<void>;
     abstract init(prevState: StoreState): Promise<void>;
     abstract getCurrentPage(): {
         url: string;
@@ -48,7 +42,7 @@ export declare abstract class CoreRouter implements IRouter {
 }
 export declare class Store implements IStore {
     readonly sid: number;
-    readonly router: CoreRouter;
+    readonly router: IRouter;
     private state;
     private injectedModels;
     private mountedModules;
@@ -61,7 +55,7 @@ export declare class Store implements IStore {
     loadingGroups: {
         [moduleNameAndGroupName: string]: TaskCounter;
     };
-    constructor(sid: number, router: CoreRouter);
+    constructor(sid: number, router: IRouter);
     clone(): Store;
     hotReplaceModel(moduleName: string, ModelClass: CommonModelClass): void;
     getCurrentAction(): Action;
@@ -89,5 +83,4 @@ export declare class Store implements IStore {
  * @public
  */
 export declare function modelHotReplacement(moduleName: string, ModelClass: CommonModelClass): void;
-export {};
 //# sourceMappingURL=store.d.ts.map

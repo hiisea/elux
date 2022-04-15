@@ -93,7 +93,7 @@ export var RouteRecord = function () {
     this.key = void 0;
     this.location = location;
     this.pageStack = pageStack;
-    this.key = [pageStack.key, pageStack.id++].join('-');
+    this.key = [pageStack.key, pageStack.id++].join('_');
   }
 
   var _proto2 = RouteRecord.prototype;
@@ -313,7 +313,7 @@ export var WindowStack = function (_HistoryStack2) {
   };
 
   _proto4.findRecordByKey = function findRecordByKey(key) {
-    var arr = key.split('-');
+    var arr = key.split('_');
 
     for (var i = 0, k = this.records.length; i < k; i++) {
       var _pageStack4 = this.records[i];

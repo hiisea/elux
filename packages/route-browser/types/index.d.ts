@@ -1,5 +1,4 @@
-import { NativeRequest } from '@elux/core';
-import { Router } from '@elux/route';
-export declare function createClientRouter(): Router;
-export declare function createServerRouter(nativeRequest: NativeRequest): Router;
+import { IRouter, NativeRequest } from '@elux/core';
+export declare function createClientRouter(): IRouter;
+export declare function createServerRouter(nativeRequest: NativeRequest): IRouter;
 //# sourceMappingURL=index.d.ts.map

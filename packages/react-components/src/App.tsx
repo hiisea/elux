@@ -28,11 +28,9 @@ const AppRender: IAppRender = {
     );
     return Promise.resolve(html);
   },
+  toProvider(eluxContext, app, store): Elux.Component<{children: any}> {
+    return (props) => <EluxContextComponent.Provider value={eluxContext}>{props.children}</EluxContextComponent.Provider>;
+  },
 };
 
 export default AppRender;
-
-// export function renderToMP(eluxContext: EluxContext): ComponentType<any> {
-//   const Component: React.FC = ({children}) => <EluxContextComponent.Provider value={eluxContext}>{children}</EluxContextComponent.Provider>;
-//   return Component;
-// }

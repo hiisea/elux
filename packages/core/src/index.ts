@@ -1,6 +1,6 @@
 export {default as env} from './env';
 export type {LoadingState, UNListener} from './utils';
-export {buildConfigSetter, deepClone, deepMerge, isPromise, isServer, toPromise} from './utils';
+export {buildConfigSetter, deepClone, deepMerge, isPromise, isServer, SingleDispatcher, toPromise} from './utils';
 export type {
   Action,
   ActionCreator,
@@ -24,6 +24,7 @@ export type {
   ModuleState,
   NativeRequest,
   RouteAction,
+  RouteEvent,
   RouteRuntime,
   RouteTarget,
   StoreLogger,
@@ -49,4 +50,4 @@ export type {
 } from './facade';
 export {BaseModel, exportModule, getApi} from './facade';
 export type {RenderOptions} from './app';
-export {buildApp, buildSSR} from './app';
+export {buildApp, buildProvider, buildSSR, getAppProvider} from './app';

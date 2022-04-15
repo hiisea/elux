@@ -11,6 +11,15 @@ export type {GetProps, InferableComponentEnhancerWithProps} from '@elux/react-re
 export * from '@elux/app';
 
 /**
+ * @public
+ */
+export type EluxApp = {
+  render(options?: RenderOptions): Promise<void>;
+};
+
+let cientSingleton: EluxApp = undefined as any;
+
+/**
  * 创建应用(CSR)
  *
  * @remarks
@@ -35,10 +44,16 @@ export * from '@elux/app';
  *
  * @public
  */
-export function createApp(appConfig: AppConfig): {
-  render(options?: RenderOptions): Promise<void>;
-} {
+export function createApp(appConfig: AppConfig): EluxApp {
+  if (cientSingleton) {
+    return cientSingleton;
+  }
   const router = createClientRouter();
+  cientSingleton = {
+    render() {
+      return Promise.resolve();
+    },
+  };
   return buildApp({}, router);
 }
 

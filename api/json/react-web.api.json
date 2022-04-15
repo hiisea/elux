@@ -4321,6 +4321,69 @@
             },
             {
               "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#addListener:member(1)",
+              "docComment": "/**\n * 监听路由事件\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addListener(callback: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(data: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteEvent",
+                  "canonicalReference": "@elux/react-web!RouteEvent:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "UNListener",
+                  "canonicalReference": "@elux/react-web!UNListener:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "callback",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 6
+                  }
+                }
+              ],
+              "name": "addListener"
+            },
+            {
+              "kind": "MethodSignature",
               "canonicalReference": "@elux/react-web!IRouter#back:member(1)",
               "docComment": "/**\n * 回退历史记录\n *\n * @param stepOrKey - 需要回退的步数或者历史记录的唯一id\n *\n * @param target - 指定要操作的路由栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}\n */\n",
               "excerptTokens": [
@@ -4620,6 +4683,93 @@
                 }
               ],
               "name": "getHistoryLength"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#getWindowPages:member(1)",
+              "docComment": "/**\n * 获取所有窗口中显示的页面\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getWindowPages(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        url: string;\n        store: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getWindowPages"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#init:member(1)",
+              "docComment": "/**\n * 初始化\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "init(prevState: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "StoreState",
+                  "canonicalReference": "@elux/react-web!StoreState:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "prevState",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "init"
             },
             {
               "kind": "PropertySignature",
@@ -6637,6 +6787,156 @@
         },
         {
           "kind": "Interface",
+          "canonicalReference": "@elux/react-web!RouteEvent:interface",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RouteEvent "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "RouteEvent",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!RouteEvent#action:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "action: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteAction",
+                  "canonicalReference": "@elux/react-web!RouteAction:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "action",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!RouteEvent#location:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "location: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Location",
+                  "canonicalReference": "@elux/react-web!Location:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "location",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!RouteEvent#newStore:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "newStore: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "newStore",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!RouteEvent#prevStore:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "prevStore: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "prevStore",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!RouteEvent#windowChanged:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "windowChanged: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "windowChanged",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
           "canonicalReference": "@elux/react-web!RouteRuntime:interface",
           "docComment": "/**\n * 路由的运行状态\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.runtime} 获得\n *\n * @public\n */\n",
           "excerptTokens": [
@@ -7242,6 +7542,31 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-web!UNListener:type",
+          "docComment": "/**\n * 常用于取消监听\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type UNListener = "
+            },
+            {
+              "kind": "Content",
+              "text": "() => void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "UNListener",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
         },
         {
           "kind": "Function",

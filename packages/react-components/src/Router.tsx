@@ -1,9 +1,9 @@
 import React, {ComponentType, memo, useEffect, useRef, useState} from 'react';
 
-import {coreConfig, CoreRouter, env, IStore} from '@elux/core';
+import {coreConfig, env, IStore} from '@elux/core';
 
 export const RouterComponent: React.FC<{page: ComponentType}> = (props) => {
-  const router = coreConfig.UseRouter!() as CoreRouter;
+  const router = coreConfig.UseRouter!();
   const [data, setData] = useState<{
     classname: string;
     pages: {

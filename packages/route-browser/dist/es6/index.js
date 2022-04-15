@@ -1,6 +1,6 @@
 import { createBrowserHistory } from 'history';
 import { env } from '@elux/core';
-import { BaseNativeRouter, locationToUrl, routeConfig, Router, setRouteConfig } from '@elux/route';
+import { BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -35,16 +35,14 @@ class BrowserNativeRouter extends BaseNativeRouter {
   constructor(history, nativeRequest) {
     super(nativeRequest);
     this.unlistenHistory = void 0;
-    this.router = void 0;
     this.history = history;
-    this.router = new Router(this);
     const {
       window,
       page
     } = routeConfig.NotifyNativeRouter;
 
     if (window || page) {
-      this.unlistenHistory = this.history.block((locationData, action) => {
+      this.unlistenHistory = history.block((locationData, action) => {
         if (action === 'POP') {
           env.setTimeout(() => this.router.back(1), 100);
           return false;
@@ -57,22 +55,18 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
   push(location, key) {
     this.history.push(location);
-    return false;
   }
 
   replace(location, key) {
     this.history.push(location);
-    return false;
   }
 
   relaunch(location, key) {
     this.history.push(location);
-    return false;
   }
 
   back(location, key, index) {
     this.history.replace(location);
-    return false;
   }
 
   destroy() {

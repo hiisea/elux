@@ -9,7 +9,8 @@ export const MetaData = {
   componentCaches: {},
   reducersMap: {},
   effectsMap: {},
-  clientRouter: undefined
+  clientRouter: undefined,
+  AppProvider: undefined
 };
 export const coreConfig = {
   NSP: '.',

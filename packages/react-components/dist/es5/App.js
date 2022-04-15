@@ -25,6 +25,14 @@ var AppRender = {
       })
     }));
     return Promise.resolve(html);
+  },
+  toProvider: function toProvider(eluxContext, app, store) {
+    return function (props) {
+      return _jsx(EluxContextComponent.Provider, {
+        value: eluxContext,
+        children: props.children
+      });
+    };
   }
 };
 export default AppRender;

@@ -1,3 +1,4 @@
+import { UNListener } from './utils';
 /**
  * 定义Action
  *
@@ -239,6 +240,16 @@ export interface NativeRequest {
     response: any;
 }
 /**
+ * @public
+ */
+export interface RouteEvent {
+    location: Location;
+    action: RouteAction;
+    prevStore: IStore;
+    newStore: IStore;
+    windowChanged: boolean;
+}
+/**
  * 路由实例
  *
  * @remarks
@@ -252,6 +263,14 @@ export interface NativeRequest {
  */
 export interface IRouter<TStoreState extends StoreState = StoreState> {
     /**
+     * 初始化
+     */
+    init(prevState: StoreState): Promise<void>;
+    /**
+     * 监听路由事件
+     */
+    addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
+    /**
      * 原生路由请求，常用于SSR
      */
     nativeRequest: NativeRequest;
@@ -264,6 +283,10 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      */
     location: Location;
     /**
+     * 每次路由变化都会产生唯一ID
+     */
+    routeKey: string;
+    /**
      * 路由运行状态
      */
     runtime: RouteRuntime<TStoreState>;
@@ -274,6 +297,13 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
         url: string;
         store: IStore;
     };
+    /**
+     * 获取所有窗口中显示的页面
+     */
+    getWindowPages(): {
+        url: string;
+        store: IStore;
+    }[];
     /**
      * 获取指定路由栈的长度
      */
@@ -443,6 +473,9 @@ export declare const MetaData: {
     reducersMap: ActionHandlersMap;
     effectsMap: ActionHandlersMap;
     clientRouter?: IRouter;
+    AppProvider?: Elux.Component<{
+        children: any;
+    }>;
 };
 /**
  * Store的中间件
@@ -488,6 +521,9 @@ export interface EluxStoreContext {
 export interface IAppRender {
     toDocument(id: string, eluxContext: EluxContext, fromSSR: boolean, app: any, store: IStore): void;
     toString(id: string, eluxContext: EluxContext, app: {}, store: IStore): Promise<string>;
+    toProvider(eluxContext: EluxContext, app: any, store: IStore): Elux.Component<{
+        children: any;
+    }>;
 }
 export declare const coreConfig: {
     NSP: string;

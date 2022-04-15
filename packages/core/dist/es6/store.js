@@ -39,6 +39,7 @@ export class CoreRouter {
   constructor(location, action, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
+    this.routeKey = '';
     this.location = location;
     this.action = action;
     this.nativeRequest = nativeRequest;

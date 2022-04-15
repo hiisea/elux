@@ -1,5 +1,5 @@
 import env from './env';
-import {buildConfigSetter, deepMerge} from './utils';
+import {buildConfigSetter, deepMerge, UNListener} from './utils';
 
 /**
  * 定义Action
@@ -243,6 +243,16 @@ export interface NativeRequest {
   request: {url: string};
   response: any;
 }
+/**
+ * @public
+ */
+export interface RouteEvent {
+  location: Location;
+  action: RouteAction;
+  prevStore: IStore;
+  newStore: IStore;
+  windowChanged: boolean;
+}
 
 /**
  * 路由实例
@@ -258,6 +268,14 @@ export interface NativeRequest {
  */
 export interface IRouter<TStoreState extends StoreState = StoreState> {
   /**
+   * 初始化
+   */
+  init(prevState: StoreState): Promise<void>;
+  /**
+   * 监听路由事件
+   */
+  addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
+  /**
    * 原生路由请求，常用于SSR
    */
   nativeRequest: NativeRequest;
@@ -270,6 +288,10 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
    */
   location: Location;
   /**
+   * 每次路由变化都会产生唯一ID
+   */
+  routeKey: string;
+  /**
    * 路由运行状态
    */
   runtime: RouteRuntime<TStoreState>;
@@ -277,6 +299,10 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
    * 获取当前被激活显示的页面
    */
   getCurrentPage(): {url: string; store: IStore};
+  /**
+   * 获取所有窗口中显示的页面
+   */
+  getWindowPages(): {url: string; store: IStore}[];
   /**
    * 获取指定路由栈的长度
    */
@@ -435,6 +461,7 @@ export const MetaData: {
   reducersMap: ActionHandlersMap;
   effectsMap: ActionHandlersMap;
   clientRouter?: IRouter;
+  AppProvider?: Elux.Component<{children: any}>;
 } = {
   moduleApiMap: null as any,
   moduleCaches: {},
@@ -442,6 +469,7 @@ export const MetaData: {
   reducersMap: {},
   effectsMap: {},
   clientRouter: undefined,
+  AppProvider: undefined,
 };
 
 /**
@@ -490,6 +518,7 @@ export interface EluxStoreContext {
 export interface IAppRender {
   toDocument(id: string, eluxContext: EluxContext, fromSSR: boolean, app: any, store: IStore): void;
   toString(id: string, eluxContext: EluxContext, app: {}, store: IStore): Promise<string>;
+  toProvider(eluxContext: EluxContext, app: any, store: IStore): Elux.Component<{children: any}>;
 }
 
 export const coreConfig: {

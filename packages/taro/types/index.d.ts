@@ -16,12 +16,6 @@ declare type RouteChangeEventData = {
     action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH';
 };
 export declare const eventBus: SingleDispatcher<RouteChangeEventData>;
-export declare const tabPages: {
-    [path: string]: boolean;
-};
 export declare const taroHistory: IHistory;
-export declare function getTabPages(): {
-    [path: string]: boolean;
-};
 export {};
 //# sourceMappingURL=index.d.ts.map

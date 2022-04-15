@@ -1,4 +1,4 @@
-declare namespace EluxRuntime {
+declare namespace Elux {
   interface ENV {
     __taroAppConfig: {
       tabBar: {list: {pagePath: string}[]};

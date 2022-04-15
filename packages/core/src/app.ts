@@ -1,6 +1,5 @@
-import {coreConfig, EluxContext} from './basic';
+import {coreConfig, EluxContext, IRouter, MetaData} from './basic';
 import env from './env';
-import {CoreRouter} from './store';
 
 /**
  * 应用Render参数
@@ -21,7 +20,7 @@ export interface RenderOptions {
 
 export function buildApp<INS = {}>(
   ins: INS,
-  router: CoreRouter
+  router: IRouter
 ): INS & {
   render(options?: RenderOptions): Promise<void>;
 } {
@@ -37,9 +36,26 @@ export function buildApp<INS = {}>(
   });
 }
 
+export function buildProvider<INS = {}>(
+  ins: INS,
+  router: IRouter
+): INS & {
+  render(options?: RenderOptions): Elux.Component<{children: any}>;
+} {
+  const store = router.getCurrentPage().store;
+  const AppRender = coreConfig.AppRender!;
+  return Object.assign(ins, {
+    render() {
+      router.init({});
+      MetaData.AppProvider = AppRender.toProvider({router, documentHead: ''}, ins, store);
+      return MetaData.AppProvider;
+    },
+  });
+}
+
 export function buildSSR<INS = {}>(
   ins: INS,
-  router: CoreRouter
+  router: IRouter
 ): INS & {
   render(options?: RenderOptions): Promise<string>;
 } {
@@ -65,4 +81,7 @@ export function buildSSR<INS = {}>(
       });
     },
   });
+}
+export function getAppProvider(): Elux.Component<{children: any}> {
+  return MetaData.AppProvider!;
 }

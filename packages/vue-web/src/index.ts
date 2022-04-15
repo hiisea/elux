@@ -11,6 +11,15 @@ export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/v
 export * from '@elux/app';
 
 /**
+ * @public
+ */
+export type EluxApp = App & {
+  render(options?: RenderOptions): Promise<void>;
+};
+
+let cientSingleton: EluxApp = undefined as any;
+
+/**
  * 创建应用(CSR)
  *
  * @remarks
@@ -35,11 +44,17 @@ export * from '@elux/app';
  *
  * @public
  */
-export function createApp(appConfig: AppConfig): App & {
-  render(options?: RenderOptions): Promise<void>;
-} {
+export function createApp(appConfig: AppConfig): EluxApp {
+  if (cientSingleton) {
+    return cientSingleton;
+  }
   const router = createClientRouter();
   const app = createCSRApp(RouterComponent);
+  cientSingleton = Object.assign(app, {
+    render() {
+      return Promise.resolve();
+    },
+  });
   return buildApp(app, router);
 }
 

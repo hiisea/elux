@@ -51,12 +51,14 @@ export type {
   RenderOptions,
   ReturnComponents,
   RouteAction,
+  RouteEvent,
   RouteRuntime,
   RouteTarget,
   StoreLogger,
   storeLoggerInfo,
   StoreMiddleware,
   StoreState,
+  UNListener,
 } from '@elux/core';
 
 export {

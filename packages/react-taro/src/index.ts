@@ -1,31 +1,59 @@
-import {ComponentType} from 'react';
-import Taro from '@tarojs/taro';
-import {RootModuleFacade, defineModuleGetter} from '@elux/core';
-import {setReactComponentsConfig, loadComponent, LoadComponentOptions, useRouter} from '@elux/react-components';
-import {setAppConfig, setUserConfig, UserConfig, GetBaseAPP, createBaseMP, CreateMP} from '@elux/app';
-import {renderToMP} from '@elux/react-components/stage';
+import {AppConfig} from '@elux/app';
+import {buildProvider, getAppProvider} from '@elux/core';
 import {createRouter} from '@elux/route-mp';
-import {taroHistory, getTabPages} from '@elux/taro';
+import {taroHistory} from '@elux/taro';
 
-export {DocumentHead, Switch, Else, Link, loadComponent} from '@elux/react-components';
+export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
+export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';
+
+export {connectRedux, createSelectorHook, shallowEqual, useSelector} from '@elux/react-redux';
+export type {GetProps, InferableComponentEnhancerWithProps} from '@elux/react-redux';
+
 export * from '@elux/app';
 
-setAppConfig({loadComponent, useRouter});
-
-export type GetApp<A extends RootModuleFacade> = GetBaseAPP<A, LoadComponentOptions>;
-
-export function setConfig(
-  conf: UserConfig & {LoadComponentOnError?: ComponentType<{message: string}>; LoadComponentOnLoading?: ComponentType<{}>}
-): void {
-  setReactComponentsConfig(conf);
-  setUserConfig(conf);
-}
-
-setReactComponentsConfig({setPageTitle: (title) => Taro.setNavigationBarTitle({title})});
-
-export const createMP: CreateMP = (moduleGetter, middlewares) => {
-  defineModuleGetter(moduleGetter);
-  const tabPages = getTabPages();
-  const router = createRouter(taroHistory, tabPages);
-  return createBaseMP({}, router, renderToMP, middlewares);
+/**
+ * @public
+ */
+export type EluxApp = {
+  render(): Elux.Component<{children: any}>;
 };
+
+let cientSingleton: EluxApp = undefined as any;
+
+/**
+ * 创建应用(CSR)
+ *
+ * @remarks
+ * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR}
+ *
+ * @param appConfig - 应用配置
+ *
+ * @returns
+ * 返回包含`render`方法的实例，参见{@link RenderOptions}
+ *
+ * @example
+ * ```js
+ * createApp(config)
+ * .render()
+ * .then(() => {
+ *   const initLoading = document.getElementById('root-loading');
+ *   if (initLoading) {
+ *     initLoading.parentNode!.removeChild(initLoading);
+ *   }
+ * });
+ * ```
+ *
+ * @public
+ */
+export function createApp(appConfig: AppConfig): EluxApp {
+  if (cientSingleton) {
+    return cientSingleton;
+  }
+  const router = createRouter(taroHistory);
+  cientSingleton = {
+    render() {
+      return getAppProvider();
+    },
+  };
+  return buildProvider({}, router);
+}

@@ -1,4 +1,4 @@
-import { coreConfig } from './basic';
+import { coreConfig, MetaData } from './basic';
 import env from './env';
 export function buildApp(ins, router) {
   var store = router.getCurrentPage().store;
@@ -16,6 +16,20 @@ export function buildApp(ins, router) {
           documentHead: ''
         }, !!ssrData, ins, store);
       });
+    }
+  });
+}
+export function buildProvider(ins, router) {
+  var store = router.getCurrentPage().store;
+  var AppRender = coreConfig.AppRender;
+  return Object.assign(ins, {
+    render: function render() {
+      router.init({});
+      MetaData.AppProvider = AppRender.toProvider({
+        router: router,
+        documentHead: ''
+      }, ins, store);
+      return MetaData.AppProvider;
     }
   });
 }
@@ -49,4 +63,7 @@ export function buildSSR(ins, router) {
       });
     }
   });
+}
+export function getAppProvider() {
+  return MetaData.AppProvider;
 }

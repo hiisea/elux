@@ -1,8 +1,7 @@
-import _assertThisInitialized from "@babel/runtime/helpers/esm/assertThisInitialized";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import { createBrowserHistory } from 'history';
 import { env } from '@elux/core';
-import { BaseNativeRouter, locationToUrl, routeConfig, Router, setRouteConfig } from '@elux/route';
+import { BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -46,15 +45,13 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
     _this = _BaseNativeRouter.call(this, nativeRequest) || this;
     _this.unlistenHistory = void 0;
-    _this.router = void 0;
     _this.history = history;
-    _this.router = new Router(_assertThisInitialized(_this));
     var _routeConfig$NotifyNa = routeConfig.NotifyNativeRouter,
         window = _routeConfig$NotifyNa.window,
         page = _routeConfig$NotifyNa.page;
 
     if (window || page) {
-      _this.unlistenHistory = _this.history.block(function (locationData, action) {
+      _this.unlistenHistory = history.block(function (locationData, action) {
         if (action === 'POP') {
           env.setTimeout(function () {
             return _this.router.back(1);
@@ -73,22 +70,18 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   _proto.push = function push(location, key) {
     this.history.push(location);
-    return false;
   };
 
   _proto.replace = function replace(location, key) {
     this.history.push(location);
-    return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
     this.history.push(location);
-    return false;
   };
 
   _proto.back = function back(location, key, index) {
     this.history.replace(location);
-    return false;
   };
 
   _proto.destroy = function destroy() {

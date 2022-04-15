@@ -1,7 +1,11 @@
 import Taro from '@tarojs/taro';
-import { env, SingleDispatcher } from '@elux/core';
+import { env, SingleDispatcher, setCoreConfig } from '@elux/core';
+setCoreConfig({
+  SetPageTitle: title => Taro.setNavigationBarTitle({
+    title
+  })
+});
 export const eventBus = new SingleDispatcher();
-export const tabPages = {};
 
 function routeToPathname(route) {
   return `/${route.replace(/^\/+|\/+$/g, '')}`;
@@ -79,12 +83,27 @@ function patchPageOptions(pageOptions) {
   };
 }
 
+let tabPages = undefined;
 export const taroHistory = {
   reLaunch: Taro.reLaunch,
   redirectTo: Taro.redirectTo,
   navigateTo: Taro.navigateTo,
   navigateBack: Taro.navigateBack,
   switchTab: Taro.switchTab,
+  isTabPage: pathname => {
+    if (!tabPages) {
+      if (env.__taroAppConfig.tabBar) {
+        tabPages = env.__taroAppConfig.tabBar.list.reduce((obj, item) => {
+          obj[routeToPathname(item.pagePath)] = true;
+          return obj;
+        }, {});
+      } else {
+        tabPages = {};
+      }
+    }
+
+    return !!tabPages[pathname];
+  },
   getLocation: () => {
     const arr = Taro.getCurrentPages();
     let path;
@@ -141,7 +160,7 @@ if (process.env.TARO_ENV === 'h5') {
     }) => {
       let routeAction = action;
 
-      if (action !== 'POP' && tabPages[location.pathname]) {
+      if (action !== 'POP' && taroHistory.isTabPage(location.pathname)) {
         routeAction = 'RELAUNCH';
       }
 
@@ -168,16 +187,4 @@ if (process.env.TARO_ENV === 'h5') {
     patchPageOptions(pageOptions);
     return originalPage(pageOptions);
   };
-}
-
-export function getTabPages() {
-  if (env.__taroAppConfig.tabBar) {
-    env.__taroAppConfig.tabBar.list.forEach(({
-      pagePath
-    }) => {
-      tabPages[routeToPathname(pagePath)] = true;
-    });
-  }
-
-  return tabPages;
 }

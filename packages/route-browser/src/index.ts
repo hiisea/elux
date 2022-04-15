@@ -1,7 +1,7 @@
 import {createBrowserHistory} from 'history';
 
-import {env, Location, NativeRequest, UNListener} from '@elux/core';
-import {BaseNativeRouter, locationToUrl, routeConfig, Router, setRouteConfig} from '@elux/route';
+import {env, IRouter, Location, NativeRequest, UNListener} from '@elux/core';
+import {BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig} from '@elux/route';
 
 setRouteConfig({NotifyNativeRouter: {window: true, page: true}});
 
@@ -30,14 +30,12 @@ function createServerHistory(nativeRequest: NativeRequest): IHistory {
 
 class BrowserNativeRouter extends BaseNativeRouter {
   private unlistenHistory: UNListener | undefined;
-  public router: Router;
 
   constructor(private history: IHistory, nativeRequest: NativeRequest) {
     super(nativeRequest);
-    this.router = new Router(this);
     const {window, page} = routeConfig.NotifyNativeRouter;
     if (window || page) {
-      this.unlistenHistory = this.history.block((locationData, action) => {
+      this.unlistenHistory = history.block((locationData, action) => {
         // browser与elux简化为松散关系，操作elux一定不会触发POP，触发POP一定是操作browser
         if (action === 'POP') {
           env.setTimeout(() => this.router.back(1), 100);
@@ -48,24 +46,20 @@ class BrowserNativeRouter extends BaseNativeRouter {
     }
   }
 
-  protected push(location: Location, key: string): boolean {
+  protected push(location: Location, key: string): void {
     this.history.push(location);
-    return false;
   }
 
-  protected replace(location: Location, key: string): boolean {
+  protected replace(location: Location, key: string): void {
     this.history.push(location);
-    return false;
   }
 
-  protected relaunch(location: Location, key: string): boolean {
+  protected relaunch(location: Location, key: string): void {
     this.history.push(location);
-    return false;
   }
 
-  protected back(location: Location, key: string, index: [number, number]): boolean {
+  protected back(location: Location, key: string, index: [number, number]): void {
     this.history.replace(location);
-    return false;
   }
 
   public destroy(): void {
@@ -73,7 +67,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 }
 
-export function createClientRouter(): Router {
+export function createClientRouter(): IRouter {
   const history: IHistory = createBrowserHistory();
   const nativeRequest: NativeRequest = {
     request: {url: locationToUrl(history.location)},
@@ -82,7 +76,8 @@ export function createClientRouter(): Router {
   const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }
-export function createServerRouter(nativeRequest: NativeRequest): Router {
+
+export function createServerRouter(nativeRequest: NativeRequest): IRouter {
   const history: IHistory = createServerHistory(nativeRequest);
   const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;

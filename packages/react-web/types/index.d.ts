@@ -6,6 +6,12 @@ export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@el
 export type { GetProps, InferableComponentEnhancerWithProps } from '@elux/react-redux';
 export * from '@elux/app';
 /**
+ * @public
+ */
+export declare type EluxApp = {
+    render(options?: RenderOptions): Promise<void>;
+};
+/**
  * 创建应用(CSR)
  *
  * @remarks
@@ -30,9 +36,7 @@ export * from '@elux/app';
  *
  * @public
  */
-export declare function createApp(appConfig: AppConfig): {
-    render(options?: RenderOptions): Promise<void>;
-};
+export declare function createApp(appConfig: AppConfig): EluxApp;
 /**
  * 创建应用(SSR)
  *

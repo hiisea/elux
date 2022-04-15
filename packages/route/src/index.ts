@@ -41,33 +41,32 @@ export {
 } from './basic';
 
 export abstract class BaseNativeRouter {
-  protected curTask?: {resolve: () => void; reject: () => void};
+  public router: Router;
 
-  constructor(public readonly nativeRequest: NativeRequest) {}
+  protected curTask?: {resolve: () => void; timeout: number};
 
-  // 只有当native不处理时返回false，返回true将依赖onSuccess和onError来关闭task
-  protected abstract push(nativeLocation: Location, key: string): boolean;
-
-  protected abstract replace(nativeLocation: Location, key: string): boolean;
-
-  protected abstract relaunch(nativeLocation: Location, key: string): boolean;
-
-  protected abstract back(nativeLocation: Location, key: string, index: [number, number]): boolean;
-
-  protected onSuccess(key: string): void {
-    this.curTask?.resolve();
-    // return key !== this.eluxRouter.routeState.key;
+  constructor(nativeRequest: NativeRequest) {
+    this.router = new Router(this, nativeRequest);
   }
-  protected onError(key: string): void {
-    this.curTask?.reject();
-    //return key !== this.eluxRouter.routeState.key;
+
+  protected abstract push(nativeLocation: Location, key: string): void | Promise<void>;
+  protected abstract replace(nativeLocation: Location, key: string): void | Promise<void>;
+  protected abstract relaunch(nativeLocation: Location, key: string): void | Promise<void>;
+  protected abstract back(nativeLocation: Location, key: string, index: [number, number]): void | Promise<void>;
+
+  public testExecute(method: 'relaunch' | 'push' | 'replace' | 'back', location: Location, backIndex?: number[]): void {
+    const testMethod = '_' + method;
+    this[testMethod] && this[testMethod](locationToNativeLocation(location), backIndex);
   }
   public execute(method: 'relaunch' | 'push' | 'replace' | 'back', location: Location, key: string, backIndex?: number[]): void | Promise<void> {
-    const result: boolean = this[method as string](locationToNativeLocation(location), key, backIndex);
+    const result: void | Promise<void> = this[method as string](locationToNativeLocation(location), key, backIndex);
     if (result) {
-      return new Promise((resolve, reject) => {
-        this.curTask = {resolve, reject};
-      });
+      return result.then(
+        () => undefined,
+        (e: any) => {
+          env.console.warn('Native route error:' + e.toString());
+        }
+      );
     }
   }
 }
@@ -90,9 +89,10 @@ export class Router extends CoreRouter {
     }
   };
 
-  constructor(private nativeRouter: BaseNativeRouter) {
-    super(urlToLocation(nativeUrlToUrl(nativeRouter.nativeRequest.request.url)), 'relaunch', nativeRouter.nativeRequest);
+  constructor(private nativeRouter: BaseNativeRouter, nativeRequest: NativeRequest) {
+    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), 'relaunch', nativeRequest);
     this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
   }
 
   // private addTask(execute: () => Promise<void>): void | Promise<void> {
@@ -132,12 +132,12 @@ export class Router extends CoreRouter {
     return {overflow, index, record: {key, location}};
   }
 
-  findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
+  findRecordByStep(delta: number, rootOnly?: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
     const {
       record: {key, location},
       overflow,
       index,
-    } = this.windowStack.testBack(delta, rootOnly);
+    } = this.windowStack.testBack(delta, !!rootOnly);
     return {overflow, index, record: {key, location}};
   }
 
@@ -207,6 +207,10 @@ export class Router extends CoreRouter {
   private async _relaunch(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'relaunch';
     const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
+    if (!_nativeCaller && NotifyNativeRouter) {
+      this.nativeRouter.testExecute(action, location);
+    }
     const prevStore = this.getCurrentPage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
@@ -215,6 +219,7 @@ export class Router extends CoreRouter {
     const newStore = prevStore.clone();
     const pageStack = this.windowStack.getCurrentItem();
     const newRecord = new RouteRecord(location, pageStack);
+    this.routeKey = newRecord.key;
     if (target === 'window') {
       pageStack.relaunch(newRecord);
       this.windowStack.relaunch(pageStack);
@@ -223,7 +228,6 @@ export class Router extends CoreRouter {
     }
     pageStack.replaceStore(newStore);
     await this.mountStore(payload, prevStore, newStore);
-    const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, newRecord.key);
     }
@@ -239,6 +243,10 @@ export class Router extends CoreRouter {
   private async _replace(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'replace';
     const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
+    if (!_nativeCaller && NotifyNativeRouter) {
+      this.nativeRouter.testExecute(action, location);
+    }
     const prevStore = this.getCurrentPage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
@@ -247,6 +255,7 @@ export class Router extends CoreRouter {
     const newStore = prevStore.clone();
     const pageStack = this.windowStack.getCurrentItem();
     const newRecord = new RouteRecord(location, pageStack);
+    this.routeKey = newRecord.key;
     if (target === 'window') {
       pageStack.relaunch(newRecord);
     } else {
@@ -254,7 +263,6 @@ export class Router extends CoreRouter {
     }
     pageStack.replaceStore(newStore);
     await this.mountStore(payload, prevStore, newStore);
-    const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, newRecord.key);
     }
@@ -270,6 +278,10 @@ export class Router extends CoreRouter {
   private async _push(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'push';
     const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
+    if (!_nativeCaller && NotifyNativeRouter) {
+      this.nativeRouter.testExecute(action, location);
+    }
     const prevStore = this.getCurrentPage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
@@ -281,15 +293,16 @@ export class Router extends CoreRouter {
     if (target === 'window') {
       const newPageStack = new PageStack(this.windowStack, location, newStore);
       newRecord = newPageStack.getCurrentItem();
+      this.routeKey = newRecord.key;
       this.windowStack.push(newPageStack);
       await this.mountStore(payload, prevStore, newStore);
     } else {
       newRecord = new RouteRecord(location, pageStack);
+      this.routeKey = newRecord.key;
       pageStack.push(newRecord);
       pageStack.replaceStore(newStore);
       await this.mountStore(payload, prevStore, newStore);
     }
-    const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, newRecord.key);
     }
@@ -324,18 +337,26 @@ export class Router extends CoreRouter {
       throw 'Route backward invalid.';
     }
     const location = record.location;
+    const NotifyNativeRouter: boolean[] = [];
+    if (index[0]) {
+      NotifyNativeRouter[0] = routeConfig.NotifyNativeRouter.window;
+    }
+    if (index[1]) {
+      NotifyNativeRouter[1] = routeConfig.NotifyNativeRouter.page;
+    }
+    if (!_nativeCaller && NotifyNativeRouter.length) {
+      this.nativeRouter.testExecute(action, location, index);
+    }
     const prevStore = this.getCurrentPage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
     this.action = action;
-    const NotifyNativeRouter: boolean[] = [];
+    this.routeKey = record.key;
     if (index[0]) {
-      NotifyNativeRouter[0] = routeConfig.NotifyNativeRouter.window;
       this.windowStack.back(index[0]);
     }
     if (index[1]) {
-      NotifyNativeRouter[1] = routeConfig.NotifyNativeRouter.page;
       this.windowStack.getCurrentItem().back(index[1]);
     }
     const pageStack = this.windowStack.getCurrentItem();

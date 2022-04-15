@@ -92,7 +92,7 @@ export class HistoryStack<T extends {destroy: () => void; setActive: () => void;
 export class RouteRecord implements IRouteRecord {
   public readonly key: string;
   constructor(public readonly location: Location, public readonly pageStack: PageStack) {
-    this.key = [pageStack.key, pageStack.id++].join('-');
+    this.key = [pageStack.key, pageStack.id++].join('_');
   }
   setActive(): void {
     return;
@@ -234,7 +234,7 @@ export class WindowStack extends HistoryStack<PageStack> {
     }
   }
   findRecordByKey(key: string): {record: RouteRecord; overflow: boolean; index: [number, number]} {
-    const arr = key.split('-');
+    const arr = key.split('_');
     for (let i = 0, k = this.records.length; i < k; i++) {
       const pageStack = this.records[i];
       if (pageStack.key === arr[0]) {
