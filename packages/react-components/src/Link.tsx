@@ -32,7 +32,7 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * 指定路由的切换方式
    */
-  action?: RouteAction;
+  action?: Exclude<RouteAction, 'init'>;
   /**
    * 指定要操作的路由栈
    */
@@ -72,6 +72,10 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       href = '#';
     }
     props['href'] = href;
-    return <a {...props} ref={ref} />;
+    if (process.env.TARO_ENV) {
+      return <span {...props} ref={ref} />;
+    } else {
+      return <a {...props} ref={ref} />;
+    }
   }
 );

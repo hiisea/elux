@@ -55,7 +55,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
         if (action === 'POP') {
           env.setTimeout(function () {
             return _this.router.back(1);
-          }, 100);
+          }, 0);
           return false;
         }
 
@@ -68,20 +68,28 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   var _proto = BrowserNativeRouter.prototype;
 
+  _proto.init = function init(location, key) {
+    return false;
+  };
+
   _proto.push = function push(location, key) {
     this.history.push(location);
+    return false;
   };
 
   _proto.replace = function replace(location, key) {
     this.history.push(location);
+    return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
     this.history.push(location);
+    return false;
   };
 
   _proto.back = function back(location, key, index) {
     this.history.replace(location);
+    return false;
   };
 
   _proto.destroy = function destroy() {

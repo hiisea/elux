@@ -1,3 +1,3 @@
-declare module '@elux/react-components/server' {
+declare module '@elux/react-web/server' {
   export function renderToString(component: any): string;
 }

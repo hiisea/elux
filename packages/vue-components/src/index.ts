@@ -17,6 +17,7 @@ setCoreConfig({
   LoadComponentOnLoading,
 });
 
+export {setVueComponentsConfig} from './base';
 export {RouterComponent} from './Router';
 export {DocumentHead} from './DocumentHead';
 export {Switch} from './Switch';

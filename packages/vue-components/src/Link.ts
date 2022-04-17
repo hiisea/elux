@@ -32,7 +32,7 @@ export interface LinkProps extends HTMLAttributes {
   /**
    * 指定路由的切换方式
    */
-  action?: RouteAction;
+  action?: Exclude<RouteAction, 'init'>;
   /**
    * 指定要操作的路由栈
    */
@@ -72,5 +72,9 @@ export const Link: DefineComponent<LinkProps> = function (
     href = '#';
   }
   props['href'] = href;
-  return h('a', props, context.slots.default!());
+  if (process.env.TARO_ENV) {
+    return h('span', props, context.slots.default!());
+  } else {
+    return h('a', props, context.slots.default!());
+  }
 } as any;

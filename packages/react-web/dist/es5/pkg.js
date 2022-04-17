@@ -1,7 +1,7 @@
 import _reactDom, { hydrate, render } from 'react-dom';
-import { renderToString } from '@elux/react-components/server';
-import _react, { useContext, memo, useState, useRef, useEffect, Component as Component$3, useCallback } from 'react';
+import _react, { useContext, memo, useState, useRef, useEffect, useCallback } from 'react';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
+import { renderToString } from '@elux/react-web/server';
 
 var root;
 
@@ -875,12 +875,12 @@ var preMiddleware = function preMiddleware(_ref) {
   };
 };
 var CoreRouter = function () {
-  function CoreRouter(location, action, nativeRequest) {
+  function CoreRouter(location, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
+    this.action = 'init';
     this.routeKey = '';
     this.location = location;
-    this.action = action;
     this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
@@ -1436,10 +1436,2407 @@ function buildSSR(ins, router) {
   });
 }
 
+var EluxContextComponent = _react.createContext({
+  documentHead: '',
+  router: null
+});
+function UseRouter() {
+  var eluxContext = useContext(EluxContextComponent);
+  return eluxContext.router;
+}
+var reactComponentsConfig = {
+  hydrate: undefined,
+  render: undefined,
+  renderToString: undefined
+};
+var setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
+
+var EWindow = memo(function (_ref) {
+  var store = _ref.store;
+  var AppView = getEntryComponent();
+  var StoreProvider = coreConfig.StoreProvider;
+
+  if (store) {
+    return jsx(StoreProvider, {
+      store: store,
+      children: jsx(AppView, {})
+    });
+  } else {
+    return jsx("div", {
+      className: "g-page-loading",
+      children: "Loading..."
+    });
+  }
+});
+
+var RouterComponent = function RouterComponent() {
+  var router = coreConfig.UseRouter();
+
+  var _useState = useState({
+    classname: 'elux-app',
+    pages: router.getWindowPages().reverse()
+  }),
+      data = _useState[0],
+      setData = _useState[1];
+
+  var classname = data.classname,
+      pages = data.pages;
+  var pagesRef = useRef(pages);
+  pagesRef.current = pages;
+  var containerRef = useRef(null);
+  useEffect(function () {
+    return router.addListener(function (_ref) {
+      var action = _ref.action,
+          windowChanged = _ref.windowChanged;
+      var pages = router.getWindowPages().reverse();
+      return new Promise(function (completeCallback) {
+        if (windowChanged) {
+          if (action === 'push') {
+            setData({
+              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              pages: pages
+            });
+            env.setTimeout(function () {
+              containerRef.current.className = 'elux-app elux-animation';
+            }, 100);
+            env.setTimeout(function () {
+              containerRef.current.className = 'elux-app';
+              completeCallback();
+            }, 400);
+          } else if (action === 'back') {
+            setData({
+              classname: 'elux-app ' + Date.now(),
+              pages: [].concat(pages, [pagesRef.current[pagesRef.current.length - 1]])
+            });
+            env.setTimeout(function () {
+              containerRef.current.className = 'elux-app elux-animation elux-change elux-back';
+            }, 100);
+            env.setTimeout(function () {
+              setData({
+                classname: 'elux-app ' + Date.now(),
+                pages: pages
+              });
+              completeCallback();
+            }, 400);
+          } else if (action === 'relaunch') {
+            setData({
+              classname: 'elux-app ',
+              pages: pages
+            });
+            env.setTimeout(completeCallback, 50);
+          }
+        } else {
+          setData({
+            classname: 'elux-app',
+            pages: pages
+          });
+          env.setTimeout(completeCallback, 50);
+        }
+      });
+    });
+  }, [router]);
+  return jsx("div", {
+    ref: containerRef,
+    className: classname,
+    children: pages.map(function (item) {
+      var store = item.store,
+          url = item.url;
+      return jsx("div", {
+        "data-sid": store.sid,
+        className: "elux-window",
+        "data-url": url,
+        children: jsx(EWindow, {
+          store: store
+        })
+      }, store.sid);
+    })
+  });
+};
+
+var AppRender = {
+  toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
+    var renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
+    var panel = env.document.getElementById(id);
+    renderFun(jsx(EluxContextComponent.Provider, {
+      value: eluxContext,
+      children: jsx(RouterComponent, {})
+    }), panel);
+  },
+  toString: function toString(id, eluxContext, app, store) {
+    var html = reactComponentsConfig.renderToString(jsx(EluxContextComponent.Provider, {
+      value: eluxContext,
+      children: jsx(RouterComponent, {})
+    }));
+    return Promise.resolve(html);
+  },
+  toProvider: function toProvider(eluxContext, app, store) {
+    return function (props) {
+      return jsx(EluxContextComponent.Provider, {
+        value: eluxContext,
+        children: props.children
+      });
+    };
+  }
+};
+
+var LoadComponentOnError = function LoadComponentOnError(_ref) {
+  var message = _ref.message;
+  return jsx("div", {
+    className: "g-component-error",
+    children: message
+  });
+};
+var LoadComponentOnLoading = function LoadComponentOnLoading() {
+  return jsx("div", {
+    className: "g-component-loading",
+    children: "loading..."
+  });
+};
+var LoadComponent = function LoadComponent(moduleName, componentName, options) {
+  if (options === void 0) {
+    options = {};
+  }
+
+  var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
+  var OnError = options.onError || coreConfig.LoadComponentOnError;
+  return _react.forwardRef(function (props, ref) {
+    var execute = function execute(curStore) {
+      var View = OnLoading;
+
+      try {
+        var result = injectComponent(moduleName, componentName, curStore || store);
+
+        if (isPromise(result)) {
+          if (env.isServer) {
+            throw 'can not use async component in SSR';
+          }
+
+          result.then(function (view) {
+            active && setView(view || 'not found!');
+          }, function (e) {
+            env.console.error(e);
+            active && setView(e.message || "" + e || 'error');
+          });
+        } else {
+          View = result;
+        }
+      } catch (e) {
+        env.console.error(e);
+        View = e.message || "" + e || 'error';
+      }
+
+      return View;
+    };
+
+    var _useState = useState(true),
+        active = _useState[0],
+        setActive = _useState[1];
+
+    useEffect(function () {
+      return function () {
+        setActive(false);
+      };
+    }, []);
+    var newStore = coreConfig.UseStore();
+
+    var _useState2 = useState(newStore),
+        store = _useState2[0],
+        setStore = _useState2[1];
+
+    var _useState3 = useState(execute),
+        View = _useState3[0],
+        setView = _useState3[1];
+
+    if (store !== newStore) {
+      setStore(newStore);
+      setView(execute(newStore));
+    }
+
+    if (typeof View === 'string') {
+      return jsx(OnError, {
+        message: View
+      });
+    } else {
+      return jsx(View, _extends$1({
+        ref: ref
+      }, props));
+    }
+  });
+};
+
+var clientTimer = 0;
+var recoverLock = false;
+
+function setClientHead(eluxContext, documentHead) {
+  eluxContext.documentHead = documentHead;
+
+  if (!clientTimer) {
+    clientTimer = env.setTimeout(function () {
+      clientTimer = 0;
+      recoverLock = false;
+      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
+
+      if (arr[1]) {
+        coreConfig.SetPageTitle(arr[1]);
+      }
+    }, 0);
+  }
+}
+
+function recoverClientHead(eluxContext, documentHead) {
+  if (!recoverLock) {
+    recoverLock = true;
+    setClientHead(eluxContext, documentHead);
+  }
+}
+
+var Component$2 = function Component(_ref) {
+  var title = _ref.title,
+      html = _ref.html;
+  var eluxContext = useContext(EluxContextComponent);
+
+  if (!html) {
+    html = eluxContext.documentHead || '<title>Elux</title>';
+  }
+
+  if (title) {
+    html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
+  }
+
+  if (env.isServer) {
+    eluxContext.documentHead = html;
+  }
+
+  useEffect(function () {
+    var raw = eluxContext.documentHead;
+    setClientHead(eluxContext, html);
+    recoverLock = false;
+    return function () {
+      return recoverClientHead(eluxContext, raw);
+    };
+  }, [eluxContext, html]);
+  return null;
+};
+
+var DocumentHead = _react.memo(Component$2);
+
+var Component$1 = function Component(_ref) {
+  var children = _ref.children,
+      elseView = _ref.elseView;
+  var arr = [];
+  _react.Children.forEach(children, function (item) {
+    item && arr.push(item);
+  });
+
+  if (arr.length > 0) {
+    return jsx(Fragment$2, {
+      children: arr
+    });
+  }
+
+  return jsx(Fragment$2, {
+    children: elseView
+  });
+};
+
+var Else = _react.memo(Component$1);
+
+var Component = function Component(_ref) {
+  var children = _ref.children,
+      elseView = _ref.elseView;
+  var arr = [];
+  _react.Children.forEach(children, function (item) {
+    item && arr.push(item);
+  });
+
+  if (arr.length > 0) {
+    return jsx(Fragment$2, {
+      children: arr[0]
+    });
+  }
+
+  return jsx(Fragment$2, {
+    children: elseView
+  });
+};
+
+var Switch = _react.memo(Component);
+
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
+}
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+
 function createCommonjsModule(fn) {
   var module = { exports: {} };
 	return fn(module, module.exports), module.exports;
 }
+
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var runtime_1 = createCommonjsModule(function (module) {
+var runtime = function (exports) {
+
+  var Op = Object.prototype;
+  var hasOwn = Op.hasOwnProperty;
+  var undefined$1; // More compressible than void 0.
+
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+  function define(obj, key, value) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+    return obj[key];
+  }
+
+  try {
+    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+    define({}, "");
+  } catch (err) {
+    define = function (obj, key, value) {
+      return obj[key] = value;
+    };
+  }
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []); // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+    return generator;
+  }
+
+  exports.wrap = wrap; // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
+
+  function tryCatch(fn, obj, arg) {
+    try {
+      return {
+        type: "normal",
+        arg: fn.call(obj, arg)
+      };
+    } catch (err) {
+      return {
+        type: "throw",
+        arg: err
+      };
+    }
+  }
+
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed"; // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
+
+  var ContinueSentinel = {}; // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+
+  function Generator() {}
+
+  function GeneratorFunction() {}
+
+  function GeneratorFunctionPrototype() {} // This is a polyfill for %IteratorPrototype% for environments that
+  // don't natively support it.
+
+
+  var IteratorPrototype = {};
+  define(IteratorPrototype, iteratorSymbol, function () {
+    return this;
+  });
+  var getProto = Object.getPrototypeOf;
+  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+
+  if (NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+    // This environment has a native %IteratorPrototype%; use it instead
+    // of the polyfill.
+    IteratorPrototype = NativeIteratorPrototype;
+  }
+
+  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
+  GeneratorFunction.prototype = GeneratorFunctionPrototype;
+  define(Gp, "constructor", GeneratorFunctionPrototype);
+  define(GeneratorFunctionPrototype, "constructor", GeneratorFunction);
+  GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"); // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function (method) {
+      define(prototype, method, function (arg) {
+        return this._invoke(method, arg);
+      });
+    });
+  }
+
+  exports.isGeneratorFunction = function (genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
+    // do is to check its .name property.
+    (ctor.displayName || ctor.name) === "GeneratorFunction" : false;
+  };
+
+  exports.mark = function (genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+      define(genFun, toStringTagSymbol, "GeneratorFunction");
+    }
+
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  }; // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+  // meant to be awaited.
+
+
+  exports.awrap = function (arg) {
+    return {
+      __await: arg
+    };
+  };
+
+  function AsyncIterator(generator, PromiseImpl) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+
+        if (value && typeof value === "object" && hasOwn.call(value, "__await")) {
+          return PromiseImpl.resolve(value.__await).then(function (value) {
+            invoke("next", value, resolve, reject);
+          }, function (err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return PromiseImpl.resolve(value).then(function (unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration.
+          result.value = unwrapped;
+          resolve(result);
+        }, function (error) {
+          // If a rejected Promise was yielded, throw the rejection back
+          // into the async generator function so it can be handled there.
+          return invoke("throw", error, resolve, reject);
+        });
+      }
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new PromiseImpl(function (resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise = // If enqueue has been called before, then we want to wait until
+      // all previous Promises have been resolved before calling invoke,
+      // so that results are always delivered in the correct order. If
+      // enqueue has not been called before, then it is important to
+      // call invoke immediately, without waiting on a callback to fire,
+      // so that the async generator function has the opportunity to do
+      // any necessary setup in a predictable way. This predictability
+      // is why the Promise constructor synchronously invokes its
+      // executor callback, and why async functions synchronously
+      // execute code before the first await. Since we implement simple
+      // async functions in terms of async generators, it is especially
+      // important to get this right, even though it requires care.
+      previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, // Avoid propagating failures to Promises returned by later
+      // invocations of the iterator.
+      callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
+    } // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+
+
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+  define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
+    return this;
+  });
+  exports.AsyncIterator = AsyncIterator; // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+
+  exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+    if (PromiseImpl === void 0) PromiseImpl = Promise;
+    var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl);
+    return exports.isGeneratorFunction(outerFn) ? iter // If outerFn is a generator, return the full iterator.
+    : iter.next().then(function (result) {
+      return result.done ? result.value : iter.next();
+    });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        } // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+
+
+        return doneResult();
+      }
+
+      context.method = method;
+      context.arg = arg;
+
+      while (true) {
+        var delegate = context.delegate;
+
+        if (delegate) {
+          var delegateResult = maybeInvokeDelegate(delegate, context);
+
+          if (delegateResult) {
+            if (delegateResult === ContinueSentinel) continue;
+            return delegateResult;
+          }
+        }
+
+        if (context.method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = context.arg;
+        } else if (context.method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw context.arg;
+          }
+
+          context.dispatchException(context.arg);
+        } else if (context.method === "return") {
+          context.abrupt("return", context.arg);
+        }
+
+        state = GenStateExecuting;
+        var record = tryCatch(innerFn, self, context);
+
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done ? GenStateCompleted : GenStateSuspendedYield;
+
+          if (record.arg === ContinueSentinel) {
+            continue;
+          }
+
+          return {
+            value: record.arg,
+            done: context.done
+          };
+        } else if (record.type === "throw") {
+          state = GenStateCompleted; // Dispatch the exception by looping back around to the
+          // context.dispatchException(context.arg) call above.
+
+          context.method = "throw";
+          context.arg = record.arg;
+        }
+      }
+    };
+  } // Call delegate.iterator[context.method](context.arg) and handle the
+  // result, either by returning a { value, done } result from the
+  // delegate iterator, or by modifying context.method and context.arg,
+  // setting context.delegate to null, and returning the ContinueSentinel.
+
+
+  function maybeInvokeDelegate(delegate, context) {
+    var method = delegate.iterator[context.method];
+
+    if (method === undefined$1) {
+      // A .throw or .return when the delegate iterator has no .throw
+      // method always terminates the yield* loop.
+      context.delegate = null;
+
+      if (context.method === "throw") {
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (delegate.iterator["return"]) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined$1;
+          maybeInvokeDelegate(delegate, context);
+
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
+          }
+        }
+
+        context.method = "throw";
+        context.arg = new TypeError("The iterator does not provide a 'throw' method");
+      }
+
+      return ContinueSentinel;
+    }
+
+    var record = tryCatch(method, delegate.iterator, context.arg);
+
+    if (record.type === "throw") {
+      context.method = "throw";
+      context.arg = record.arg;
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    var info = record.arg;
+
+    if (!info) {
+      context.method = "throw";
+      context.arg = new TypeError("iterator result is not an object");
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    if (info.done) {
+      // Assign the result of the finished delegate to the temporary
+      // variable specified by delegate.resultName (see delegateYield).
+      context[delegate.resultName] = info.value; // Resume execution at the desired location (see delegateYield).
+
+      context.next = delegate.nextLoc; // If context.method was "throw" but the delegate handled the
+      // exception, let the outer generator proceed normally. If
+      // context.method was "next", forget context.arg since it has been
+      // "consumed" by the delegate iterator. If context.method was
+      // "return", allow the original .return call to continue in the
+      // outer generator.
+
+      if (context.method !== "return") {
+        context.method = "next";
+        context.arg = undefined$1;
+      }
+    } else {
+      // Re-yield the result returned by the delegate method.
+      return info;
+    } // The delegate iterator is finished, so forget it and continue with
+    // the outer generator.
+
+
+    context.delegate = null;
+    return ContinueSentinel;
+  } // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+
+
+  defineIteratorMethods(Gp);
+  define(Gp, toStringTagSymbol, "Generator"); // A Generator should always return itself as the iterator object when the
+  // @@iterator function is called on it. Some browsers' implementations of the
+  // iterator prototype chain incorrectly implement this, causing the Generator
+  // object to not be returned from this call. This ensures that doesn't happen.
+  // See https://github.com/facebook/regenerator/issues/274 for more details.
+
+  define(Gp, iteratorSymbol, function () {
+    return this;
+  });
+  define(Gp, "toString", function () {
+    return "[object Generator]";
+  });
+
+  function pushTryEntry(locs) {
+    var entry = {
+      tryLoc: locs[0]
+    };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{
+      tryLoc: "root"
+    }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  exports.keys = function (object) {
+    var keys = [];
+
+    for (var key in object) {
+      keys.push(key);
+    }
+
+    keys.reverse(); // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      } // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+
+
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1,
+            next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined$1;
+          next.done = true;
+          return next;
+        };
+
+        return next.next = next;
+      }
+    } // Return an iterator with no values.
+
+
+    return {
+      next: doneResult
+    };
+  }
+
+  exports.values = values;
+
+  function doneResult() {
+    return {
+      value: undefined$1,
+      done: true
+    };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+    reset: function (skipTempReset) {
+      this.prev = 0;
+      this.next = 0; // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+
+      this.sent = this._sent = undefined$1;
+      this.done = false;
+      this.delegate = null;
+      this.method = "next";
+      this.arg = undefined$1;
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" && hasOwn.call(this, name) && !isNaN(+name.slice(1))) {
+            this[name] = undefined$1;
+          }
+        }
+      }
+    },
+    stop: function () {
+      this.done = true;
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+    dispatchException: function (exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+
+        if (caught) {
+          // If the dispatched exception was caught by a catch block,
+          // then let that catch block handle the exception normally.
+          context.method = "next";
+          context.arg = undefined$1;
+        }
+
+        return !!caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+    abrupt: function (type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry && (type === "break" || type === "continue") && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.method = "next";
+        this.next = finallyEntry.finallyLoc;
+        return ContinueSentinel;
+      }
+
+      return this.complete(record);
+    },
+    complete: function (record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" || record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = this.arg = record.arg;
+        this.method = "return";
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+
+      return ContinueSentinel;
+    },
+    finish: function (finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+    "catch": function (tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+
+          return thrown;
+        }
+      } // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+
+
+      throw new Error("illegal catch attempt");
+    },
+    delegateYield: function (iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      if (this.method === "next") {
+        // Deliberately forget the last sent value so that we don't
+        // accidentally pass it on to the delegate.
+        this.arg = undefined$1;
+      }
+
+      return ContinueSentinel;
+    }
+  }; // Regardless of whether this script is executing as a CommonJS module
+  // or not, return the runtime object so that we can declare the variable
+  // regeneratorRuntime in the outer scope, which allows this module to be
+  // injected easily by `bin/regenerator --include-runtime script.js`.
+
+  return exports;
+}( // If this script is executing as a CommonJS module, use module.exports
+// as the regeneratorRuntime namespace. Otherwise create a new empty
+// object. Either way, the resulting object will be used to initialize
+// the regeneratorRuntime variable at the top of this file.
+module.exports );
+
+try {
+  regeneratorRuntime = runtime;
+} catch (accidentalStrictMode) {
+  // This module should not be running in strict mode, so the above
+  // assignment should always work unless something is misconfigured. Just
+  // in case runtime.js accidentally runs in strict mode, in modern engines
+  // we can explicitly access globalThis. In older engines we can escape
+  // strict mode using a global Function call. This could conceivably fail
+  // if a Content Security Policy forbids using Function, but in that case
+  // the proper solution is to fix the accidental strict mode problem. If
+  // you've misconfigured your bundler to force strict mode and applied a
+  // CSP to forbid Function, and you're not willing to fix either of those
+  // problems, please detail your unique predicament in a GitHub issue.
+  if (typeof globalThis === "object") {
+    globalThis.regeneratorRuntime = runtime;
+  } else {
+    Function("r", "regeneratorRuntime = r")(runtime);
+  }
+}
+});
+
+var regenerator = runtime_1;
+
+var ErrorCodes = {
+  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
+};
+function nativeUrlToUrl(nativeUrl) {
+  var _nativeUrl$split = nativeUrl.split(/[?#]/),
+      _nativeUrl$split$ = _nativeUrl$split[0],
+      path = _nativeUrl$split$ === void 0 ? '' : _nativeUrl$split$,
+      _nativeUrl$split$2 = _nativeUrl$split[1],
+      search = _nativeUrl$split$2 === void 0 ? '' : _nativeUrl$split$2,
+      _nativeUrl$split$3 = _nativeUrl$split[2],
+      hash = _nativeUrl$split$3 === void 0 ? '' : _nativeUrl$split$3;
+
+  var pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
+  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+}
+function urlToNativeUrl(eluxUrl) {
+  var _eluxUrl$split = eluxUrl.split(/[?#]/),
+      _eluxUrl$split$ = _eluxUrl$split[0],
+      path = _eluxUrl$split$ === void 0 ? '' : _eluxUrl$split$,
+      _eluxUrl$split$2 = _eluxUrl$split[1],
+      search = _eluxUrl$split$2 === void 0 ? '' : _eluxUrl$split$2,
+      _eluxUrl$split$3 = _eluxUrl$split[2],
+      hash = _eluxUrl$split$3 === void 0 ? '' : _eluxUrl$split$3;
+
+  var pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
+  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+}
+function urlToLocation(url) {
+  var _url$split = url.split(/[?#]/),
+      _url$split$ = _url$split[0],
+      path = _url$split$ === void 0 ? '' : _url$split$,
+      _url$split$2 = _url$split[1],
+      search = _url$split$2 === void 0 ? '' : _url$split$2,
+      _url$split$3 = _url$split[2],
+      hash = _url$split$3 === void 0 ? '' : _url$split$3;
+
+  var pathname = '/' + path.replace(/^\/|\/$/g, '');
+  var parse = routeConfig.QueryString.parse;
+  var searchQuery = parse(search);
+  var hashQuery = parse(hash);
+  return {
+    url: "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : ''),
+    pathname: pathname,
+    search: search,
+    hash: hash,
+    searchQuery: searchQuery,
+    hashQuery: hashQuery
+  };
+}
+function locationToUrl(_ref) {
+  var url = _ref.url,
+      pathname = _ref.pathname,
+      search = _ref.search,
+      hash = _ref.hash,
+      searchQuery = _ref.searchQuery,
+      hashQuery = _ref.hashQuery;
+
+  if (url) {
+    var _url$split2 = url.split(/[?#]/);
+
+    pathname = _url$split2[0];
+    search = _url$split2[1];
+    hash = _url$split2[2];
+  }
+
+  pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
+  var stringify = routeConfig.QueryString.stringify;
+  search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
+  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+}
+function locationToNativeLocation(location) {
+  var pathname = routeConfig.NativePathnameMapping.out(location.pathname);
+  var url = location.url.replace(location.pathname, pathname);
+  return _extends$1({}, location, {
+    pathname: pathname,
+    url: url
+  });
+}
+function nativeLocationToLocation(location) {
+  var pathname = routeConfig.NativePathnameMapping.in(location.pathname);
+  var url = location.url.replace(location.pathname, pathname);
+  return _extends$1({}, location, {
+    pathname: pathname,
+    url: url
+  });
+}
+function testChangeAction(location, routeAction) {
+  return {
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_testRouteChange",
+    payload: [location, routeAction]
+  };
+}
+function beforeChangeAction(location, routeAction) {
+  return {
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_beforeRouteChange",
+    payload: [location, routeAction]
+  };
+}
+function afterChangeAction(location, routeAction) {
+  return {
+    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_afterRouteChange",
+    payload: [location, routeAction]
+  };
+}
+var routeConfig = {
+  NotifyNativeRouter: {
+    window: true,
+    page: false
+  },
+  HomeUrl: '/',
+  QueryString: {
+    parse: function parse(str) {
+      return {};
+    },
+    stringify: function stringify() {
+      return '';
+    }
+  },
+  NativePathnameMapping: {
+    in: function _in(pathname) {
+      return pathname === '/' ? routeConfig.HomeUrl : pathname;
+    },
+    out: function out(pathname) {
+      return pathname === routeConfig.HomeUrl ? '/' : pathname;
+    }
+  }
+};
+var setRouteConfig = buildConfigSetter(routeConfig);
+
+var HistoryStack = function () {
+  function HistoryStack(limit) {
+    this.currentRecord = undefined;
+    this.records = [];
+    this.limit = limit;
+  }
+
+  var _proto = HistoryStack.prototype;
+
+  _proto.init = function init(record) {
+    this.records = [record];
+    this.currentRecord = record;
+    record.setActive();
+  };
+
+  _proto.onChanged = function onChanged() {
+    if (this.currentRecord !== this.records[0]) {
+      this.currentRecord.setInactive();
+      this.currentRecord = this.records[0];
+      this.currentRecord.setActive();
+    }
+  };
+
+  _proto.getCurrentItem = function getCurrentItem() {
+    return this.currentRecord;
+  };
+
+  _proto.getEarliestItem = function getEarliestItem() {
+    return this.records[this.records.length - 1];
+  };
+
+  _proto.getItemAt = function getItemAt(n) {
+    return this.records[n];
+  };
+
+  _proto.getLength = function getLength() {
+    return this.records.length;
+  };
+
+  _proto.push = function push(item) {
+    var records = this.records;
+    records.unshift(item);
+
+    if (records.length > this.limit) {
+      var delItem = records.pop();
+      delItem !== item && delItem.destroy();
+    }
+
+    this.onChanged();
+  };
+
+  _proto.replace = function replace(item) {
+    var records = this.records;
+    var delItem = records[0];
+    records[0] = item;
+    delItem !== item && delItem.destroy();
+    this.onChanged();
+  };
+
+  _proto.relaunch = function relaunch(item) {
+    var delList = this.records;
+    this.records = [item];
+    this.currentRecord = item;
+    delList.forEach(function (delItem) {
+      delItem !== item && delItem.destroy();
+    });
+    this.onChanged();
+  };
+
+  _proto.back = function back(delta) {
+    var delList = this.records.splice(0, delta);
+
+    if (this.records.length === 0) {
+      var last = delList.pop();
+      this.records.push(last);
+    }
+
+    delList.forEach(function (delItem) {
+      if (delItem.destroy) {
+        delItem.destroy();
+      }
+    });
+    this.onChanged();
+  };
+
+  return HistoryStack;
+}();
+var RouteRecord = function () {
+  function RouteRecord(location, pageStack) {
+    this.key = void 0;
+    this.location = location;
+    this.pageStack = pageStack;
+    this.key = [pageStack.key, pageStack.id++].join('_');
+  }
+
+  var _proto2 = RouteRecord.prototype;
+
+  _proto2.setActive = function setActive() {
+    return;
+  };
+
+  _proto2.setInactive = function setInactive() {
+    return;
+  };
+
+  _proto2.destroy = function destroy() {
+    return;
+  };
+
+  return RouteRecord;
+}();
+var PageStack = function (_HistoryStack) {
+  _inheritsLoose(PageStack, _HistoryStack);
+
+  function PageStack(windowStack, location, store) {
+    var _this;
+
+    _this = _HistoryStack.call(this, 20) || this;
+    _this.id = 0;
+    _this.key = void 0;
+    _this._store = void 0;
+    _this.windowStack = windowStack;
+    _this._store = store;
+    _this.key = '' + windowStack.id++;
+
+    _this.init(new RouteRecord(location, _assertThisInitialized(_this)));
+
+    return _this;
+  }
+
+  var _proto3 = PageStack.prototype;
+
+  _proto3.replaceStore = function replaceStore(store) {
+    if (this._store !== store) {
+      this._store.destroy();
+
+      this._store = store;
+      store.setActive();
+    }
+  };
+
+  _proto3.findRecordByKey = function findRecordByKey(key) {
+    for (var i = 0, k = this.records.length; i < k; i++) {
+      var item = this.records[i];
+
+      if (item.key === key) {
+        return [item, i];
+      }
+    }
+
+    return undefined;
+  };
+
+  _proto3.setActive = function setActive() {
+    this.store.setActive();
+  };
+
+  _proto3.setInactive = function setInactive() {
+    this.store.setInactive();
+  };
+
+  _proto3.destroy = function destroy() {
+    this.store.destroy();
+  };
+
+  _createClass(PageStack, [{
+    key: "store",
+    get: function get() {
+      return this._store;
+    }
+  }]);
+
+  return PageStack;
+}(HistoryStack);
+var WindowStack = function (_HistoryStack2) {
+  _inheritsLoose(WindowStack, _HistoryStack2);
+
+  function WindowStack(location, store) {
+    var _this2;
+
+    _this2 = _HistoryStack2.call(this, 10) || this;
+    _this2.id = 0;
+
+    _this2.init(new PageStack(_assertThisInitialized(_this2), location, store));
+
+    return _this2;
+  }
+
+  var _proto4 = WindowStack.prototype;
+
+  _proto4.getCurrentWindowPage = function getCurrentWindowPage() {
+    var item = this.getCurrentItem();
+    var store = item.store;
+    var record = item.getCurrentItem();
+    var url = record.location.url;
+    return {
+      url: url,
+      store: store
+    };
+  };
+
+  _proto4.getWindowPages = function getWindowPages() {
+    return this.records.map(function (item) {
+      var store = item.store;
+      var record = item.getCurrentItem();
+      var url = record.location.url;
+      return {
+        url: url,
+        store: store
+      };
+    });
+  };
+
+  _proto4.countBack = function countBack(delta) {
+    var historyStacks = this.records;
+    var backSteps = [0, 0];
+
+    for (var i = 0, k = historyStacks.length; i < k; i++) {
+      var _pageStack = historyStacks[i];
+
+      var recordNum = _pageStack.getLength();
+
+      delta = delta - recordNum;
+
+      if (delta > 0) {
+        backSteps[0]++;
+      } else if (delta === 0) {
+        backSteps[0]++;
+        break;
+      } else {
+        backSteps[1] = recordNum + delta;
+        break;
+      }
+    }
+
+    return backSteps;
+  };
+
+  _proto4.testBack = function testBack(stepOrKey, rootOnly) {
+    if (typeof stepOrKey === 'string') {
+      return this.findRecordByKey(stepOrKey);
+    }
+
+    var delta = stepOrKey;
+
+    if (delta === 0) {
+      var record = this.getCurrentItem().getCurrentItem();
+      return {
+        record: record,
+        overflow: false,
+        index: [0, 0]
+      };
+    }
+
+    if (rootOnly) {
+      if (delta < 0 || delta >= this.records.length) {
+        var _record = this.getEarliestItem().getCurrentItem();
+
+        return {
+          record: _record,
+          overflow: !(delta < 0),
+          index: [this.records.length - 1, 0]
+        };
+      } else {
+        var _record2 = this.getItemAt(delta).getCurrentItem();
+
+        return {
+          record: _record2,
+          overflow: false,
+          index: [delta, 0]
+        };
+      }
+    }
+
+    if (delta < 0) {
+      var _pageStack2 = this.getEarliestItem();
+
+      var _record3 = _pageStack2.getEarliestItem();
+
+      return {
+        record: _record3,
+        overflow: false,
+        index: [this.records.length - 1, _pageStack2.getLength() - 1]
+      };
+    }
+
+    var _this$countBack = this.countBack(delta),
+        rootDelta = _this$countBack[0],
+        recordDelta = _this$countBack[1];
+
+    if (rootDelta < this.records.length) {
+      var _record4 = this.getItemAt(rootDelta).getItemAt(recordDelta);
+
+      return {
+        record: _record4,
+        overflow: false,
+        index: [rootDelta, recordDelta]
+      };
+    } else {
+      var _pageStack3 = this.getEarliestItem();
+
+      var _record5 = _pageStack3.getEarliestItem();
+
+      return {
+        record: _record5,
+        overflow: true,
+        index: [this.records.length - 1, _pageStack3.getLength() - 1]
+      };
+    }
+  };
+
+  _proto4.findRecordByKey = function findRecordByKey(key) {
+    var arr = key.split('_');
+
+    for (var i = 0, k = this.records.length; i < k; i++) {
+      var _pageStack4 = this.records[i];
+
+      if (_pageStack4.key === arr[0]) {
+        var item = _pageStack4.findRecordByKey(key);
+
+        if (item) {
+          return {
+            record: item[0],
+            index: [i, item[1]],
+            overflow: false
+          };
+        }
+      }
+    }
+
+    return {
+      record: this.getCurrentItem().getCurrentItem(),
+      index: [0, 0],
+      overflow: true
+    };
+  };
+
+  return WindowStack;
+}(HistoryStack);
+
+var BaseNativeRouter = function () {
+  function BaseNativeRouter(nativeRequest) {
+    this.router = void 0;
+    this.routeKey = '';
+    this.curTask = void 0;
+    this.router = new Router(this, nativeRequest);
+  }
+
+  var _proto = BaseNativeRouter.prototype;
+
+  _proto.onSuccess = function onSuccess() {
+    if (this.curTask) {
+      var _this$curTask = this.curTask,
+          resolve = _this$curTask.resolve,
+          timeout = _this$curTask.timeout;
+      this.curTask = undefined;
+      env.clearTimeout(timeout);
+      this.routeKey = '';
+      resolve();
+    }
+  };
+
+  _proto.testExecute = function testExecute(method, location, backIndex) {
+    var testMethod = '_' + method;
+    this[testMethod] && this[testMethod](locationToNativeLocation(location), backIndex);
+  };
+
+  _proto.execute = function execute(method, location, key, backIndex) {
+    var _this = this;
+
+    var result = this[method](locationToNativeLocation(location), key, backIndex);
+
+    if (result) {
+      this.routeKey = key;
+      return new Promise(function (resolve) {
+        var timeout = env.setTimeout(function () {
+          return _this.onSuccess();
+        }, 2000);
+        _this.curTask = {
+          resolve: resolve,
+          timeout: timeout
+        };
+      });
+    }
+  };
+
+  return BaseNativeRouter;
+}();
+var Router = function (_CoreRouter) {
+  _inheritsLoose(Router, _CoreRouter);
+
+  function Router(nativeRouter, nativeRequest) {
+    var _this2;
+
+    _this2 = _CoreRouter.call(this, urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest) || this;
+    _this2.curTask = void 0;
+    _this2.taskList = [];
+    _this2.windowStack = void 0;
+
+    _this2.onTaskComplete = function () {
+      var task = _this2.taskList.shift();
+
+      if (task) {
+        _this2.curTask = task;
+        var onTaskComplete = _this2.onTaskComplete;
+        env.setTimeout(function () {
+          return task[0]().finally(onTaskComplete).then(task[1], task[2]);
+        }, 0);
+      } else {
+        _this2.curTask = undefined;
+      }
+    };
+
+    _this2.nativeRouter = nativeRouter;
+    _this2.windowStack = new WindowStack(_this2.location, new Store(0, _assertThisInitialized(_this2)));
+    _this2.routeKey = _this2.findRecordByStep(0).record.key;
+    return _this2;
+  }
+
+  var _proto2 = Router.prototype;
+
+  _proto2.addTask = function addTask(execute) {
+    var _this3 = this;
+
+    return new Promise(function (resolve, reject) {
+      var task = [function () {
+        return setLoading(execute(), _this3.getCurrentPage().store);
+      }, resolve, reject];
+
+      if (_this3.curTask) {
+        _this3.taskList.push(task);
+      } else {
+        _this3.curTask = task;
+        task[0]().finally(_this3.onTaskComplete).then(task[1], task[2]);
+      }
+    });
+  };
+
+  _proto2.nativeInitiated = function nativeInitiated() {
+    return !this.nativeRouter.routeKey;
+  };
+
+  _proto2.getHistoryLength = function getHistoryLength(target) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  };
+
+  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
+    var _this$windowStack$fin = this.windowStack.findRecordByKey(recordKey),
+        _this$windowStack$fin2 = _this$windowStack$fin.record,
+        key = _this$windowStack$fin2.key,
+        location = _this$windowStack$fin2.location,
+        overflow = _this$windowStack$fin.overflow,
+        index = _this$windowStack$fin.index;
+
+    return {
+      overflow: overflow,
+      index: index,
+      record: {
+        key: key,
+        location: location
+      }
+    };
+  };
+
+  _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
+    var _this$windowStack$tes = this.windowStack.testBack(delta, !!rootOnly),
+        _this$windowStack$tes2 = _this$windowStack$tes.record,
+        key = _this$windowStack$tes2.key,
+        location = _this$windowStack$tes2.location,
+        overflow = _this$windowStack$tes.overflow,
+        index = _this$windowStack$tes.index;
+
+    return {
+      overflow: overflow,
+      index: index,
+      record: {
+        key: key,
+        location: location
+      }
+    };
+  };
+
+  _proto2.getCurrentPage = function getCurrentPage() {
+    return this.windowStack.getCurrentWindowPage();
+  };
+
+  _proto2.getWindowPages = function getWindowPages() {
+    return this.windowStack.getWindowPages();
+  };
+
+  _proto2.mountStore = function () {
+    var _mountStore = _asyncToGenerator(regenerator.mark(function _callee(payload, prevStore, newStore, historyStore) {
+      var prevState;
+      return regenerator.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              prevState = prevStore.getState();
+              this.runtime = {
+                timestamp: Date.now(),
+                payload: payload,
+                prevState: coreConfig.MutableData ? deepClone(prevState) : prevState,
+                completed: false
+              };
+
+              if (!(newStore === historyStore)) {
+                _context.next = 5;
+                break;
+              }
+
+              this.runtime.completed = true;
+              return _context.abrupt("return");
+
+            case 5:
+              _context.prev = 5;
+              _context.next = 8;
+              return newStore.mount(coreConfig.StageModuleName, 'route');
+
+            case 8:
+              _context.next = 13;
+              break;
+
+            case 10:
+              _context.prev = 10;
+              _context.t0 = _context["catch"](5);
+              env.console.error(_context.t0);
+
+            case 13:
+              this.runtime.completed = true;
+
+            case 14:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this, [[5, 10]]);
+    }));
+
+    function mountStore(_x, _x2, _x3, _x4) {
+      return _mountStore.apply(this, arguments);
+    }
+
+    return mountStore;
+  }();
+
+  _proto2.redirectOnServer = function redirectOnServer(urlOrLocation) {
+    if (env.isServer) {
+      var url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      var nativeUrl = urlToNativeUrl(url);
+      var err = {
+        code: ErrorCodes.ROUTE_REDIRECT,
+        message: 'Route change in server is not allowed.',
+        detail: nativeUrl
+      };
+      throw err;
+    }
+  };
+
+  _proto2.init = function init(prevState) {
+    var task = [this._init.bind(this, prevState), function () {
+      return undefined;
+    }, function () {
+      return undefined;
+    }];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  };
+
+  _proto2._init = function () {
+    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2(prevState) {
+      var store, action, location, routeKey;
+      return regenerator.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              this.runtime = {
+                timestamp: Date.now(),
+                payload: null,
+                prevState: prevState,
+                completed: false
+              };
+              store = this.getCurrentPage().store;
+              action = this.action, location = this.location, routeKey = this.routeKey;
+              _context2.next = 5;
+              return this.nativeRouter.execute(action, location, routeKey);
+
+            case 5:
+              _context2.prev = 5;
+              _context2.next = 8;
+              return store.mount(coreConfig.StageModuleName, 'init');
+
+            case 8:
+              _context2.next = 10;
+              return store.dispatch(testChangeAction(this.location, this.action));
+
+            case 10:
+              _context2.next = 18;
+              break;
+
+            case 12:
+              _context2.prev = 12;
+              _context2.t0 = _context2["catch"](5);
+
+              if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
+                _context2.next = 17;
+                break;
+              }
+
+              this.taskList = [];
+              throw _context2.t0;
+
+            case 17:
+              env.console.error(_context2.t0);
+
+            case 18:
+              this.runtime.completed = true;
+              this.dispatch({
+                location: location,
+                action: action,
+                prevStore: store,
+                newStore: store,
+                windowChanged: true
+              });
+
+            case 20:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this, [[5, 12]]);
+    }));
+
+    function _init(_x5) {
+      return _init2.apply(this, arguments);
+    }
+
+    return _init;
+  }();
+
+  _proto2.relaunch = function relaunch(urlOrLocation, target, payload, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    if (payload === void 0) {
+      payload = null;
+    }
+
+    if (_nativeCaller === void 0) {
+      _nativeCaller = false;
+    }
+
+    this.redirectOnServer(urlOrLocation);
+    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  };
+
+  _proto2._relaunch = function () {
+    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee3(urlOrLocation, target, payload, _nativeCaller) {
+      var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
+      return regenerator.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              action = 'relaunch';
+              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
+
+              if (!_nativeCaller && NotifyNativeRouter) {
+                this.nativeRouter.testExecute(action, location);
+              }
+
+              prevStore = this.getCurrentPage().store;
+              _context3.next = 7;
+              return prevStore.dispatch(testChangeAction(location, action));
+
+            case 7:
+              _context3.next = 9;
+              return prevStore.dispatch(beforeChangeAction(location, action));
+
+            case 9:
+              this.location = location;
+              this.action = action;
+              newStore = prevStore.clone();
+              pageStack = this.windowStack.getCurrentItem();
+              newRecord = new RouteRecord(location, pageStack);
+              this.routeKey = newRecord.key;
+
+              if (target === 'window') {
+                pageStack.relaunch(newRecord);
+                this.windowStack.relaunch(pageStack);
+              } else {
+                pageStack.relaunch(newRecord);
+              }
+
+              pageStack.replaceStore(newStore);
+              _context3.next = 19;
+              return this.mountStore(payload, prevStore, newStore);
+
+            case 19:
+              if (!(!_nativeCaller && NotifyNativeRouter)) {
+                _context3.next = 22;
+                break;
+              }
+
+              _context3.next = 22;
+              return this.nativeRouter.execute(action, location, newRecord.key);
+
+            case 22:
+              _context3.next = 24;
+              return this.dispatch({
+                location: location,
+                action: action,
+                prevStore: prevStore,
+                newStore: newStore,
+                windowChanged: target === 'window'
+              });
+
+            case 24:
+              newStore.dispatch(afterChangeAction(location, action));
+
+            case 25:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3, this);
+    }));
+
+    function _relaunch(_x6, _x7, _x8, _x9) {
+      return _relaunch2.apply(this, arguments);
+    }
+
+    return _relaunch;
+  }();
+
+  _proto2.replace = function replace(urlOrLocation, target, payload, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    if (payload === void 0) {
+      payload = null;
+    }
+
+    if (_nativeCaller === void 0) {
+      _nativeCaller = false;
+    }
+
+    this.redirectOnServer(urlOrLocation);
+    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  };
+
+  _proto2._replace = function () {
+    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee4(urlOrLocation, target, payload, _nativeCaller) {
+      var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
+      return regenerator.wrap(function _callee4$(_context4) {
+        while (1) {
+          switch (_context4.prev = _context4.next) {
+            case 0:
+              action = 'replace';
+              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
+
+              if (!_nativeCaller && NotifyNativeRouter) {
+                this.nativeRouter.testExecute(action, location);
+              }
+
+              prevStore = this.getCurrentPage().store;
+              _context4.next = 7;
+              return prevStore.dispatch(testChangeAction(location, action));
+
+            case 7:
+              _context4.next = 9;
+              return prevStore.dispatch(beforeChangeAction(location, action));
+
+            case 9:
+              this.location = location;
+              this.action = action;
+              newStore = prevStore.clone();
+              pageStack = this.windowStack.getCurrentItem();
+              newRecord = new RouteRecord(location, pageStack);
+              this.routeKey = newRecord.key;
+
+              if (target === 'window') {
+                pageStack.relaunch(newRecord);
+              } else {
+                pageStack.replace(newRecord);
+              }
+
+              pageStack.replaceStore(newStore);
+              _context4.next = 19;
+              return this.mountStore(payload, prevStore, newStore);
+
+            case 19:
+              if (!(!_nativeCaller && NotifyNativeRouter)) {
+                _context4.next = 22;
+                break;
+              }
+
+              _context4.next = 22;
+              return this.nativeRouter.execute(action, location, newRecord.key);
+
+            case 22:
+              _context4.next = 24;
+              return this.dispatch({
+                location: location,
+                action: action,
+                prevStore: prevStore,
+                newStore: newStore,
+                windowChanged: target === 'window'
+              });
+
+            case 24:
+              newStore.dispatch(afterChangeAction(location, action));
+
+            case 25:
+            case "end":
+              return _context4.stop();
+          }
+        }
+      }, _callee4, this);
+    }));
+
+    function _replace(_x10, _x11, _x12, _x13) {
+      return _replace2.apply(this, arguments);
+    }
+
+    return _replace;
+  }();
+
+  _proto2.push = function push(urlOrLocation, target, payload, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    if (payload === void 0) {
+      payload = null;
+    }
+
+    if (_nativeCaller === void 0) {
+      _nativeCaller = false;
+    }
+
+    this.redirectOnServer(urlOrLocation);
+    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  };
+
+  _proto2._push = function () {
+    var _push2 = _asyncToGenerator(regenerator.mark(function _callee5(urlOrLocation, target, payload, _nativeCaller) {
+      var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord, newPageStack;
+      return regenerator.wrap(function _callee5$(_context5) {
+        while (1) {
+          switch (_context5.prev = _context5.next) {
+            case 0:
+              action = 'push';
+              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
+
+              if (!_nativeCaller && NotifyNativeRouter) {
+                this.nativeRouter.testExecute(action, location);
+              }
+
+              prevStore = this.getCurrentPage().store;
+              _context5.next = 7;
+              return prevStore.dispatch(testChangeAction(location, action));
+
+            case 7:
+              _context5.next = 9;
+              return prevStore.dispatch(beforeChangeAction(location, action));
+
+            case 9:
+              this.location = location;
+              this.action = action;
+              newStore = prevStore.clone();
+              pageStack = this.windowStack.getCurrentItem();
+
+              if (!(target === 'window')) {
+                _context5.next = 22;
+                break;
+              }
+
+              newPageStack = new PageStack(this.windowStack, location, newStore);
+              newRecord = newPageStack.getCurrentItem();
+              this.routeKey = newRecord.key;
+              this.windowStack.push(newPageStack);
+              _context5.next = 20;
+              return this.mountStore(payload, prevStore, newStore);
+
+            case 20:
+              _context5.next = 28;
+              break;
+
+            case 22:
+              newRecord = new RouteRecord(location, pageStack);
+              this.routeKey = newRecord.key;
+              pageStack.push(newRecord);
+              pageStack.replaceStore(newStore);
+              _context5.next = 28;
+              return this.mountStore(payload, prevStore, newStore);
+
+            case 28:
+              if (!(!_nativeCaller && NotifyNativeRouter)) {
+                _context5.next = 31;
+                break;
+              }
+
+              _context5.next = 31;
+              return this.nativeRouter.execute(action, location, newRecord.key);
+
+            case 31:
+              _context5.next = 33;
+              return this.dispatch({
+                location: location,
+                action: action,
+                prevStore: prevStore,
+                newStore: newStore,
+                windowChanged: target === 'window'
+              });
+
+            case 33:
+              newStore.dispatch(afterChangeAction(location, action));
+
+            case 34:
+            case "end":
+              return _context5.stop();
+          }
+        }
+      }, _callee5, this);
+    }));
+
+    function _push(_x14, _x15, _x16, _x17) {
+      return _push2.apply(this, arguments);
+    }
+
+    return _push;
+  }();
+
+  _proto2.back = function back(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
+    if (stepOrKey === void 0) {
+      stepOrKey = 1;
+    }
+
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    if (payload === void 0) {
+      payload = null;
+    }
+
+    if (overflowRedirect === void 0) {
+      overflowRedirect = '';
+    }
+
+    if (_nativeCaller === void 0) {
+      _nativeCaller = false;
+    }
+
+    if (!stepOrKey) {
+      return Promise.resolve();
+    }
+
+    this.redirectOnServer({
+      url: overflowRedirect || routeConfig.HomeUrl
+    });
+    return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
+  };
+
+  _proto2._back = function () {
+    var _back2 = _asyncToGenerator(regenerator.mark(function _callee6(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
+      var action, _this$windowStack$tes3, record, overflow, index, url, err, location, NotifyNativeRouter, prevStore, pageStack, historyStore, newStore;
+
+      return regenerator.wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              action = 'back';
+              _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, target === 'window'), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
+
+              if (!overflow) {
+                _context6.next = 7;
+                break;
+              }
+
+              url = overflowRedirect || routeConfig.HomeUrl;
+              this.relaunch({
+                url: url
+              }, 'window');
+              err = {
+                code: ErrorCodes.ROUTE_BACK_OVERFLOW,
+                message: 'Overflowed on route backward.',
+                detail: stepOrKey
+              };
+              throw setProcessedError(err, true);
+
+            case 7:
+              if (!(!index[0] && !index[1])) {
+                _context6.next = 9;
+                break;
+              }
+
+              throw 'Route backward invalid.';
+
+            case 9:
+              location = record.location;
+              NotifyNativeRouter = [];
+
+              if (index[0]) {
+                NotifyNativeRouter[0] = routeConfig.NotifyNativeRouter.window;
+              }
+
+              if (index[1]) {
+                NotifyNativeRouter[1] = routeConfig.NotifyNativeRouter.page;
+              }
+
+              if (!_nativeCaller && NotifyNativeRouter.length) {
+                this.nativeRouter.testExecute(action, location, index);
+              }
+
+              prevStore = this.getCurrentPage().store;
+              _context6.next = 17;
+              return prevStore.dispatch(testChangeAction(location, action));
+
+            case 17:
+              _context6.next = 19;
+              return prevStore.dispatch(beforeChangeAction(location, action));
+
+            case 19:
+              this.location = location;
+              this.action = action;
+              this.routeKey = record.key;
+
+              if (index[0]) {
+                this.windowStack.back(index[0]);
+              }
+
+              if (index[1]) {
+                this.windowStack.getCurrentItem().back(index[1]);
+              }
+
+              pageStack = this.windowStack.getCurrentItem();
+              historyStore = pageStack.store;
+              newStore = historyStore;
+
+              if (index[1] !== 0) {
+                newStore = prevStore.clone();
+                pageStack.replaceStore(newStore);
+              }
+
+              _context6.next = 30;
+              return this.mountStore(payload, prevStore, newStore);
+
+            case 30:
+              if (!(!_nativeCaller && NotifyNativeRouter.length)) {
+                _context6.next = 33;
+                break;
+              }
+
+              _context6.next = 33;
+              return this.nativeRouter.execute(action, location, record.key, index);
+
+            case 33:
+              _context6.next = 35;
+              return this.dispatch({
+                location: location,
+                action: action,
+                prevStore: prevStore,
+                newStore: newStore,
+                windowChanged: !!index[0]
+              });
+
+            case 35:
+              newStore.dispatch(afterChangeAction(location, action));
+
+            case 36:
+            case "end":
+              return _context6.stop();
+          }
+        }
+      }, _callee6, this);
+    }));
+
+    function _back(_x18, _x19, _x20, _x21, _x22) {
+      return _back2.apply(this, arguments);
+    }
+
+    return _back;
+  }();
+
+  return Router;
+}(CoreRouter);
+
+var _excluded = ["onClick", "disabled", "to", "target", "action"];
+var Link = _react.forwardRef(function (_ref, ref) {
+  var _onClick = _ref.onClick,
+      disabled = _ref.disabled,
+      _ref$to = _ref.to,
+      to = _ref$to === void 0 ? '' : _ref$to,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
+      _ref$action = _ref.action,
+      action = _ref$action === void 0 ? 'push' : _ref$action,
+      props = _objectWithoutPropertiesLoose(_ref, _excluded);
+
+  var router = coreConfig.UseRouter();
+  var onClick = useCallback(function (event) {
+    event.preventDefault();
+
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {
+        url: to
+      }, target);
+    }
+  }, [_onClick, disabled, to, router, action, target]);
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
+  disabled && (props['disabled'] = true);
+  var href = action !== 'back' ? to : '';
+
+  if (href) {
+    href = urlToNativeUrl(href);
+  } else {
+    href = '#';
+  }
+
+  props['href'] = href;
+
+  if (process.env.TARO_ENV) {
+    return jsx("span", _extends$1({}, props, {
+      ref: ref
+    }));
+  } else {
+    return jsx("a", _extends$1({}, props, {
+      ref: ref
+    }));
+  }
+});
+
+setCoreConfig({
+  UseRouter: UseRouter,
+  AppRender: AppRender,
+  LoadComponent: LoadComponent,
+  LoadComponentOnError: LoadComponentOnError,
+  LoadComponentOnLoading: LoadComponentOnLoading
+});
 
 function isAbsolute$1(e) {
   return "/" === e.charAt(0);
@@ -3230,1969 +5627,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 });
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-  try {
-    var info = gen[key](arg);
-    var value = info.value;
-  } catch (error) {
-    reject(error);
-    return;
-  }
-
-  if (info.done) {
-    resolve(value);
-  } else {
-    Promise.resolve(value).then(_next, _throw);
-  }
-}
-
-function _asyncToGenerator(fn) {
-  return function () {
-    var self = this,
-        args = arguments;
-    return new Promise(function (resolve, reject) {
-      var gen = fn.apply(self, args);
-
-      function _next(value) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-      }
-
-      function _throw(err) {
-        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-      }
-
-      _next(undefined);
-    });
-  };
-}
-
-function _assertThisInitialized(self) {
-  if (self === void 0) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return self;
-}
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-var runtime_1 = createCommonjsModule(function (module) {
-var runtime = function (exports) {
-
-  var Op = Object.prototype;
-  var hasOwn = Op.hasOwnProperty;
-  var undefined$1; // More compressible than void 0.
-
-  var $Symbol = typeof Symbol === "function" ? Symbol : {};
-  var iteratorSymbol = $Symbol.iterator || "@@iterator";
-  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
-  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-
-  function define(obj, key, value) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-    return obj[key];
-  }
-
-  try {
-    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
-    define({}, "");
-  } catch (err) {
-    define = function (obj, key, value) {
-      return obj[key] = value;
-    };
-  }
-
-  function wrap(innerFn, outerFn, self, tryLocsList) {
-    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
-    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
-    var generator = Object.create(protoGenerator.prototype);
-    var context = new Context(tryLocsList || []); // The ._invoke method unifies the implementations of the .next,
-    // .throw, and .return methods.
-
-    generator._invoke = makeInvokeMethod(innerFn, self, context);
-    return generator;
-  }
-
-  exports.wrap = wrap; // Try/catch helper to minimize deoptimizations. Returns a completion
-  // record like context.tryEntries[i].completion. This interface could
-  // have been (and was previously) designed to take a closure to be
-  // invoked without arguments, but in all the cases we care about we
-  // already have an existing method we want to call, so there's no need
-  // to create a new function object. We can even get away with assuming
-  // the method takes exactly one argument, since that happens to be true
-  // in every case, so we don't have to touch the arguments object. The
-  // only additional allocation required is the completion record, which
-  // has a stable shape and so hopefully should be cheap to allocate.
-
-  function tryCatch(fn, obj, arg) {
-    try {
-      return {
-        type: "normal",
-        arg: fn.call(obj, arg)
-      };
-    } catch (err) {
-      return {
-        type: "throw",
-        arg: err
-      };
-    }
-  }
-
-  var GenStateSuspendedStart = "suspendedStart";
-  var GenStateSuspendedYield = "suspendedYield";
-  var GenStateExecuting = "executing";
-  var GenStateCompleted = "completed"; // Returning this object from the innerFn has the same effect as
-  // breaking out of the dispatch switch statement.
-
-  var ContinueSentinel = {}; // Dummy constructor functions that we use as the .constructor and
-  // .constructor.prototype properties for functions that return Generator
-  // objects. For full spec compliance, you may wish to configure your
-  // minifier not to mangle the names of these two functions.
-
-  function Generator() {}
-
-  function GeneratorFunction() {}
-
-  function GeneratorFunctionPrototype() {} // This is a polyfill for %IteratorPrototype% for environments that
-  // don't natively support it.
-
-
-  var IteratorPrototype = {};
-  define(IteratorPrototype, iteratorSymbol, function () {
-    return this;
-  });
-  var getProto = Object.getPrototypeOf;
-  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
-
-  if (NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
-    // This environment has a native %IteratorPrototype%; use it instead
-    // of the polyfill.
-    IteratorPrototype = NativeIteratorPrototype;
-  }
-
-  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
-  GeneratorFunction.prototype = GeneratorFunctionPrototype;
-  define(Gp, "constructor", GeneratorFunctionPrototype);
-  define(GeneratorFunctionPrototype, "constructor", GeneratorFunction);
-  GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"); // Helper for defining the .next, .throw, and .return methods of the
-  // Iterator interface in terms of a single ._invoke method.
-
-  function defineIteratorMethods(prototype) {
-    ["next", "throw", "return"].forEach(function (method) {
-      define(prototype, method, function (arg) {
-        return this._invoke(method, arg);
-      });
-    });
-  }
-
-  exports.isGeneratorFunction = function (genFun) {
-    var ctor = typeof genFun === "function" && genFun.constructor;
-    return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
-    // do is to check its .name property.
-    (ctor.displayName || ctor.name) === "GeneratorFunction" : false;
-  };
-
-  exports.mark = function (genFun) {
-    if (Object.setPrototypeOf) {
-      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
-    } else {
-      genFun.__proto__ = GeneratorFunctionPrototype;
-      define(genFun, toStringTagSymbol, "GeneratorFunction");
-    }
-
-    genFun.prototype = Object.create(Gp);
-    return genFun;
-  }; // Within the body of any async function, `await x` is transformed to
-  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
-  // `hasOwn.call(value, "__await")` to determine if the yielded value is
-  // meant to be awaited.
-
-
-  exports.awrap = function (arg) {
-    return {
-      __await: arg
-    };
-  };
-
-  function AsyncIterator(generator, PromiseImpl) {
-    function invoke(method, arg, resolve, reject) {
-      var record = tryCatch(generator[method], generator, arg);
-
-      if (record.type === "throw") {
-        reject(record.arg);
-      } else {
-        var result = record.arg;
-        var value = result.value;
-
-        if (value && typeof value === "object" && hasOwn.call(value, "__await")) {
-          return PromiseImpl.resolve(value.__await).then(function (value) {
-            invoke("next", value, resolve, reject);
-          }, function (err) {
-            invoke("throw", err, resolve, reject);
-          });
-        }
-
-        return PromiseImpl.resolve(value).then(function (unwrapped) {
-          // When a yielded Promise is resolved, its final value becomes
-          // the .value of the Promise<{value,done}> result for the
-          // current iteration.
-          result.value = unwrapped;
-          resolve(result);
-        }, function (error) {
-          // If a rejected Promise was yielded, throw the rejection back
-          // into the async generator function so it can be handled there.
-          return invoke("throw", error, resolve, reject);
-        });
-      }
-    }
-
-    var previousPromise;
-
-    function enqueue(method, arg) {
-      function callInvokeWithMethodAndArg() {
-        return new PromiseImpl(function (resolve, reject) {
-          invoke(method, arg, resolve, reject);
-        });
-      }
-
-      return previousPromise = // If enqueue has been called before, then we want to wait until
-      // all previous Promises have been resolved before calling invoke,
-      // so that results are always delivered in the correct order. If
-      // enqueue has not been called before, then it is important to
-      // call invoke immediately, without waiting on a callback to fire,
-      // so that the async generator function has the opportunity to do
-      // any necessary setup in a predictable way. This predictability
-      // is why the Promise constructor synchronously invokes its
-      // executor callback, and why async functions synchronously
-      // execute code before the first await. Since we implement simple
-      // async functions in terms of async generators, it is especially
-      // important to get this right, even though it requires care.
-      previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, // Avoid propagating failures to Promises returned by later
-      // invocations of the iterator.
-      callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
-    } // Define the unified helper method that is used to implement .next,
-    // .throw, and .return (see defineIteratorMethods).
-
-
-    this._invoke = enqueue;
-  }
-
-  defineIteratorMethods(AsyncIterator.prototype);
-  define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
-    return this;
-  });
-  exports.AsyncIterator = AsyncIterator; // Note that simple async functions are implemented on top of
-  // AsyncIterator objects; they just return a Promise for the value of
-  // the final result produced by the iterator.
-
-  exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) {
-    if (PromiseImpl === void 0) PromiseImpl = Promise;
-    var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl);
-    return exports.isGeneratorFunction(outerFn) ? iter // If outerFn is a generator, return the full iterator.
-    : iter.next().then(function (result) {
-      return result.done ? result.value : iter.next();
-    });
-  };
-
-  function makeInvokeMethod(innerFn, self, context) {
-    var state = GenStateSuspendedStart;
-    return function invoke(method, arg) {
-      if (state === GenStateExecuting) {
-        throw new Error("Generator is already running");
-      }
-
-      if (state === GenStateCompleted) {
-        if (method === "throw") {
-          throw arg;
-        } // Be forgiving, per 25.3.3.3.3 of the spec:
-        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-
-
-        return doneResult();
-      }
-
-      context.method = method;
-      context.arg = arg;
-
-      while (true) {
-        var delegate = context.delegate;
-
-        if (delegate) {
-          var delegateResult = maybeInvokeDelegate(delegate, context);
-
-          if (delegateResult) {
-            if (delegateResult === ContinueSentinel) continue;
-            return delegateResult;
-          }
-        }
-
-        if (context.method === "next") {
-          // Setting context._sent for legacy support of Babel's
-          // function.sent implementation.
-          context.sent = context._sent = context.arg;
-        } else if (context.method === "throw") {
-          if (state === GenStateSuspendedStart) {
-            state = GenStateCompleted;
-            throw context.arg;
-          }
-
-          context.dispatchException(context.arg);
-        } else if (context.method === "return") {
-          context.abrupt("return", context.arg);
-        }
-
-        state = GenStateExecuting;
-        var record = tryCatch(innerFn, self, context);
-
-        if (record.type === "normal") {
-          // If an exception is thrown from innerFn, we leave state ===
-          // GenStateExecuting and loop back for another invocation.
-          state = context.done ? GenStateCompleted : GenStateSuspendedYield;
-
-          if (record.arg === ContinueSentinel) {
-            continue;
-          }
-
-          return {
-            value: record.arg,
-            done: context.done
-          };
-        } else if (record.type === "throw") {
-          state = GenStateCompleted; // Dispatch the exception by looping back around to the
-          // context.dispatchException(context.arg) call above.
-
-          context.method = "throw";
-          context.arg = record.arg;
-        }
-      }
-    };
-  } // Call delegate.iterator[context.method](context.arg) and handle the
-  // result, either by returning a { value, done } result from the
-  // delegate iterator, or by modifying context.method and context.arg,
-  // setting context.delegate to null, and returning the ContinueSentinel.
-
-
-  function maybeInvokeDelegate(delegate, context) {
-    var method = delegate.iterator[context.method];
-
-    if (method === undefined$1) {
-      // A .throw or .return when the delegate iterator has no .throw
-      // method always terminates the yield* loop.
-      context.delegate = null;
-
-      if (context.method === "throw") {
-        // Note: ["return"] must be used for ES3 parsing compatibility.
-        if (delegate.iterator["return"]) {
-          // If the delegate iterator has a return method, give it a
-          // chance to clean up.
-          context.method = "return";
-          context.arg = undefined$1;
-          maybeInvokeDelegate(delegate, context);
-
-          if (context.method === "throw") {
-            // If maybeInvokeDelegate(context) changed context.method from
-            // "return" to "throw", let that override the TypeError below.
-            return ContinueSentinel;
-          }
-        }
-
-        context.method = "throw";
-        context.arg = new TypeError("The iterator does not provide a 'throw' method");
-      }
-
-      return ContinueSentinel;
-    }
-
-    var record = tryCatch(method, delegate.iterator, context.arg);
-
-    if (record.type === "throw") {
-      context.method = "throw";
-      context.arg = record.arg;
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    var info = record.arg;
-
-    if (!info) {
-      context.method = "throw";
-      context.arg = new TypeError("iterator result is not an object");
-      context.delegate = null;
-      return ContinueSentinel;
-    }
-
-    if (info.done) {
-      // Assign the result of the finished delegate to the temporary
-      // variable specified by delegate.resultName (see delegateYield).
-      context[delegate.resultName] = info.value; // Resume execution at the desired location (see delegateYield).
-
-      context.next = delegate.nextLoc; // If context.method was "throw" but the delegate handled the
-      // exception, let the outer generator proceed normally. If
-      // context.method was "next", forget context.arg since it has been
-      // "consumed" by the delegate iterator. If context.method was
-      // "return", allow the original .return call to continue in the
-      // outer generator.
-
-      if (context.method !== "return") {
-        context.method = "next";
-        context.arg = undefined$1;
-      }
-    } else {
-      // Re-yield the result returned by the delegate method.
-      return info;
-    } // The delegate iterator is finished, so forget it and continue with
-    // the outer generator.
-
-
-    context.delegate = null;
-    return ContinueSentinel;
-  } // Define Generator.prototype.{next,throw,return} in terms of the
-  // unified ._invoke helper method.
-
-
-  defineIteratorMethods(Gp);
-  define(Gp, toStringTagSymbol, "Generator"); // A Generator should always return itself as the iterator object when the
-  // @@iterator function is called on it. Some browsers' implementations of the
-  // iterator prototype chain incorrectly implement this, causing the Generator
-  // object to not be returned from this call. This ensures that doesn't happen.
-  // See https://github.com/facebook/regenerator/issues/274 for more details.
-
-  define(Gp, iteratorSymbol, function () {
-    return this;
-  });
-  define(Gp, "toString", function () {
-    return "[object Generator]";
-  });
-
-  function pushTryEntry(locs) {
-    var entry = {
-      tryLoc: locs[0]
-    };
-
-    if (1 in locs) {
-      entry.catchLoc = locs[1];
-    }
-
-    if (2 in locs) {
-      entry.finallyLoc = locs[2];
-      entry.afterLoc = locs[3];
-    }
-
-    this.tryEntries.push(entry);
-  }
-
-  function resetTryEntry(entry) {
-    var record = entry.completion || {};
-    record.type = "normal";
-    delete record.arg;
-    entry.completion = record;
-  }
-
-  function Context(tryLocsList) {
-    // The root entry object (effectively a try statement without a catch
-    // or a finally block) gives us a place to store values thrown from
-    // locations where there is no enclosing try statement.
-    this.tryEntries = [{
-      tryLoc: "root"
-    }];
-    tryLocsList.forEach(pushTryEntry, this);
-    this.reset(true);
-  }
-
-  exports.keys = function (object) {
-    var keys = [];
-
-    for (var key in object) {
-      keys.push(key);
-    }
-
-    keys.reverse(); // Rather than returning an object with a next method, we keep
-    // things simple and return the next function itself.
-
-    return function next() {
-      while (keys.length) {
-        var key = keys.pop();
-
-        if (key in object) {
-          next.value = key;
-          next.done = false;
-          return next;
-        }
-      } // To avoid creating an additional object, we just hang the .value
-      // and .done properties off the next function object itself. This
-      // also ensures that the minifier will not anonymize the function.
-
-
-      next.done = true;
-      return next;
-    };
-  };
-
-  function values(iterable) {
-    if (iterable) {
-      var iteratorMethod = iterable[iteratorSymbol];
-
-      if (iteratorMethod) {
-        return iteratorMethod.call(iterable);
-      }
-
-      if (typeof iterable.next === "function") {
-        return iterable;
-      }
-
-      if (!isNaN(iterable.length)) {
-        var i = -1,
-            next = function next() {
-          while (++i < iterable.length) {
-            if (hasOwn.call(iterable, i)) {
-              next.value = iterable[i];
-              next.done = false;
-              return next;
-            }
-          }
-
-          next.value = undefined$1;
-          next.done = true;
-          return next;
-        };
-
-        return next.next = next;
-      }
-    } // Return an iterator with no values.
-
-
-    return {
-      next: doneResult
-    };
-  }
-
-  exports.values = values;
-
-  function doneResult() {
-    return {
-      value: undefined$1,
-      done: true
-    };
-  }
-
-  Context.prototype = {
-    constructor: Context,
-    reset: function (skipTempReset) {
-      this.prev = 0;
-      this.next = 0; // Resetting context._sent for legacy support of Babel's
-      // function.sent implementation.
-
-      this.sent = this._sent = undefined$1;
-      this.done = false;
-      this.delegate = null;
-      this.method = "next";
-      this.arg = undefined$1;
-      this.tryEntries.forEach(resetTryEntry);
-
-      if (!skipTempReset) {
-        for (var name in this) {
-          // Not sure about the optimal order of these conditions:
-          if (name.charAt(0) === "t" && hasOwn.call(this, name) && !isNaN(+name.slice(1))) {
-            this[name] = undefined$1;
-          }
-        }
-      }
-    },
-    stop: function () {
-      this.done = true;
-      var rootEntry = this.tryEntries[0];
-      var rootRecord = rootEntry.completion;
-
-      if (rootRecord.type === "throw") {
-        throw rootRecord.arg;
-      }
-
-      return this.rval;
-    },
-    dispatchException: function (exception) {
-      if (this.done) {
-        throw exception;
-      }
-
-      var context = this;
-
-      function handle(loc, caught) {
-        record.type = "throw";
-        record.arg = exception;
-        context.next = loc;
-
-        if (caught) {
-          // If the dispatched exception was caught by a catch block,
-          // then let that catch block handle the exception normally.
-          context.method = "next";
-          context.arg = undefined$1;
-        }
-
-        return !!caught;
-      }
-
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-        var record = entry.completion;
-
-        if (entry.tryLoc === "root") {
-          // Exception thrown outside of any try block that could handle
-          // it, so set the completion value of the entire function to
-          // throw the exception.
-          return handle("end");
-        }
-
-        if (entry.tryLoc <= this.prev) {
-          var hasCatch = hasOwn.call(entry, "catchLoc");
-          var hasFinally = hasOwn.call(entry, "finallyLoc");
-
-          if (hasCatch && hasFinally) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            } else if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-          } else if (hasCatch) {
-            if (this.prev < entry.catchLoc) {
-              return handle(entry.catchLoc, true);
-            }
-          } else if (hasFinally) {
-            if (this.prev < entry.finallyLoc) {
-              return handle(entry.finallyLoc);
-            }
-          } else {
-            throw new Error("try statement without catch or finally");
-          }
-        }
-      }
-    },
-    abrupt: function (type, arg) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-
-        if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) {
-          var finallyEntry = entry;
-          break;
-        }
-      }
-
-      if (finallyEntry && (type === "break" || type === "continue") && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc) {
-        // Ignore the finally entry if control is not jumping to a
-        // location outside the try/catch block.
-        finallyEntry = null;
-      }
-
-      var record = finallyEntry ? finallyEntry.completion : {};
-      record.type = type;
-      record.arg = arg;
-
-      if (finallyEntry) {
-        this.method = "next";
-        this.next = finallyEntry.finallyLoc;
-        return ContinueSentinel;
-      }
-
-      return this.complete(record);
-    },
-    complete: function (record, afterLoc) {
-      if (record.type === "throw") {
-        throw record.arg;
-      }
-
-      if (record.type === "break" || record.type === "continue") {
-        this.next = record.arg;
-      } else if (record.type === "return") {
-        this.rval = this.arg = record.arg;
-        this.method = "return";
-        this.next = "end";
-      } else if (record.type === "normal" && afterLoc) {
-        this.next = afterLoc;
-      }
-
-      return ContinueSentinel;
-    },
-    finish: function (finallyLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-
-        if (entry.finallyLoc === finallyLoc) {
-          this.complete(entry.completion, entry.afterLoc);
-          resetTryEntry(entry);
-          return ContinueSentinel;
-        }
-      }
-    },
-    "catch": function (tryLoc) {
-      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-        var entry = this.tryEntries[i];
-
-        if (entry.tryLoc === tryLoc) {
-          var record = entry.completion;
-
-          if (record.type === "throw") {
-            var thrown = record.arg;
-            resetTryEntry(entry);
-          }
-
-          return thrown;
-        }
-      } // The context.catch method must only be called with a location
-      // argument that corresponds to a known catch block.
-
-
-      throw new Error("illegal catch attempt");
-    },
-    delegateYield: function (iterable, resultName, nextLoc) {
-      this.delegate = {
-        iterator: values(iterable),
-        resultName: resultName,
-        nextLoc: nextLoc
-      };
-
-      if (this.method === "next") {
-        // Deliberately forget the last sent value so that we don't
-        // accidentally pass it on to the delegate.
-        this.arg = undefined$1;
-      }
-
-      return ContinueSentinel;
-    }
-  }; // Regardless of whether this script is executing as a CommonJS module
-  // or not, return the runtime object so that we can declare the variable
-  // regeneratorRuntime in the outer scope, which allows this module to be
-  // injected easily by `bin/regenerator --include-runtime script.js`.
-
-  return exports;
-}( // If this script is executing as a CommonJS module, use module.exports
-// as the regeneratorRuntime namespace. Otherwise create a new empty
-// object. Either way, the resulting object will be used to initialize
-// the regeneratorRuntime variable at the top of this file.
-module.exports );
-
-try {
-  regeneratorRuntime = runtime;
-} catch (accidentalStrictMode) {
-  // This module should not be running in strict mode, so the above
-  // assignment should always work unless something is misconfigured. Just
-  // in case runtime.js accidentally runs in strict mode, in modern engines
-  // we can explicitly access globalThis. In older engines we can escape
-  // strict mode using a global Function call. This could conceivably fail
-  // if a Content Security Policy forbids using Function, but in that case
-  // the proper solution is to fix the accidental strict mode problem. If
-  // you've misconfigured your bundler to force strict mode and applied a
-  // CSP to forbid Function, and you're not willing to fix either of those
-  // problems, please detail your unique predicament in a GitHub issue.
-  if (typeof globalThis === "object") {
-    globalThis.regeneratorRuntime = runtime;
-  } else {
-    Function("r", "regeneratorRuntime = r")(runtime);
-  }
-}
-});
-
-var regenerator = runtime_1;
-
-var ErrorCodes = {
-  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
-  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
-};
-function nativeUrlToUrl(nativeUrl) {
-  var _nativeUrl$split = nativeUrl.split(/[?#]/),
-      _nativeUrl$split$ = _nativeUrl$split[0],
-      path = _nativeUrl$split$ === void 0 ? '' : _nativeUrl$split$,
-      _nativeUrl$split$2 = _nativeUrl$split[1],
-      search = _nativeUrl$split$2 === void 0 ? '' : _nativeUrl$split$2,
-      _nativeUrl$split$3 = _nativeUrl$split[2],
-      hash = _nativeUrl$split$3 === void 0 ? '' : _nativeUrl$split$3;
-
-  var pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
-  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
-}
-function urlToNativeUrl(eluxUrl) {
-  var _eluxUrl$split = eluxUrl.split(/[?#]/),
-      _eluxUrl$split$ = _eluxUrl$split[0],
-      path = _eluxUrl$split$ === void 0 ? '' : _eluxUrl$split$,
-      _eluxUrl$split$2 = _eluxUrl$split[1],
-      search = _eluxUrl$split$2 === void 0 ? '' : _eluxUrl$split$2,
-      _eluxUrl$split$3 = _eluxUrl$split[2],
-      hash = _eluxUrl$split$3 === void 0 ? '' : _eluxUrl$split$3;
-
-  var pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
-  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
-}
-function urlToLocation(url) {
-  var _url$split = url.split(/[?#]/),
-      _url$split$ = _url$split[0],
-      path = _url$split$ === void 0 ? '' : _url$split$,
-      _url$split$2 = _url$split[1],
-      search = _url$split$2 === void 0 ? '' : _url$split$2,
-      _url$split$3 = _url$split[2],
-      hash = _url$split$3 === void 0 ? '' : _url$split$3;
-
-  var pathname = '/' + path.replace(/^\/|\/$/g, '');
-  var parse = routeConfig.QueryString.parse;
-  var searchQuery = parse(search);
-  var hashQuery = parse(hash);
-  return {
-    url: "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : ''),
-    pathname: pathname,
-    search: search,
-    hash: hash,
-    searchQuery: searchQuery,
-    hashQuery: hashQuery
-  };
-}
-function locationToUrl(_ref) {
-  var url = _ref.url,
-      pathname = _ref.pathname,
-      search = _ref.search,
-      hash = _ref.hash,
-      searchQuery = _ref.searchQuery,
-      hashQuery = _ref.hashQuery;
-
-  if (url) {
-    var _url$split2 = url.split(/[?#]/);
-
-    pathname = _url$split2[0];
-    search = _url$split2[1];
-    hash = _url$split2[2];
-  }
-
-  pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
-  var stringify = routeConfig.QueryString.stringify;
-  search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
-  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
-}
-function locationToNativeLocation(location) {
-  var pathname = routeConfig.NativePathnameMapping.out(location.pathname);
-  var url = location.url.replace(location.pathname, pathname);
-  return _extends$1({}, location, {
-    pathname: pathname,
-    url: url
-  });
-}
-function nativeLocationToLocation(location) {
-  var pathname = routeConfig.NativePathnameMapping.in(location.pathname);
-  var url = location.url.replace(location.pathname, pathname);
-  return _extends$1({}, location, {
-    pathname: pathname,
-    url: url
-  });
-}
-function testChangeAction(location, routeAction) {
-  return {
-    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_testRouteChange",
-    payload: [location, routeAction]
-  };
-}
-function beforeChangeAction(location, routeAction) {
-  return {
-    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_beforeRouteChange",
-    payload: [location, routeAction]
-  };
-}
-function afterChangeAction(location, routeAction) {
-  return {
-    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_afterRouteChange",
-    payload: [location, routeAction]
-  };
-}
-var routeConfig = {
-  NotifyNativeRouter: {
-    window: true,
-    page: false
-  },
-  HomeUrl: '/',
-  QueryString: {
-    parse: function parse(str) {
-      return {};
-    },
-    stringify: function stringify() {
-      return '';
-    }
-  },
-  NativePathnameMapping: {
-    in: function _in(pathname) {
-      return pathname === '/' ? routeConfig.HomeUrl : pathname;
-    },
-    out: function out(pathname) {
-      return pathname === routeConfig.HomeUrl ? '/' : pathname;
-    }
-  }
-};
-var setRouteConfig = buildConfigSetter(routeConfig);
-
-var HistoryStack = function () {
-  function HistoryStack(limit) {
-    this.currentRecord = undefined;
-    this.records = [];
-    this.limit = limit;
-  }
-
-  var _proto = HistoryStack.prototype;
-
-  _proto.init = function init(record) {
-    this.records = [record];
-    this.currentRecord = record;
-    record.setActive();
-  };
-
-  _proto.onChanged = function onChanged() {
-    if (this.currentRecord !== this.records[0]) {
-      this.currentRecord.setInactive();
-      this.currentRecord = this.records[0];
-      this.currentRecord.setActive();
-    }
-  };
-
-  _proto.getCurrentItem = function getCurrentItem() {
-    return this.currentRecord;
-  };
-
-  _proto.getEarliestItem = function getEarliestItem() {
-    return this.records[this.records.length - 1];
-  };
-
-  _proto.getItemAt = function getItemAt(n) {
-    return this.records[n];
-  };
-
-  _proto.getLength = function getLength() {
-    return this.records.length;
-  };
-
-  _proto.push = function push(item) {
-    var records = this.records;
-    records.unshift(item);
-
-    if (records.length > this.limit) {
-      var delItem = records.pop();
-      delItem !== item && delItem.destroy();
-    }
-
-    this.onChanged();
-  };
-
-  _proto.replace = function replace(item) {
-    var records = this.records;
-    var delItem = records[0];
-    records[0] = item;
-    delItem !== item && delItem.destroy();
-    this.onChanged();
-  };
-
-  _proto.relaunch = function relaunch(item) {
-    var delList = this.records;
-    this.records = [item];
-    this.currentRecord = item;
-    delList.forEach(function (delItem) {
-      delItem !== item && delItem.destroy();
-    });
-    this.onChanged();
-  };
-
-  _proto.back = function back(delta) {
-    var delList = this.records.splice(0, delta);
-
-    if (this.records.length === 0) {
-      var last = delList.pop();
-      this.records.push(last);
-    }
-
-    delList.forEach(function (delItem) {
-      if (delItem.destroy) {
-        delItem.destroy();
-      }
-    });
-    this.onChanged();
-  };
-
-  return HistoryStack;
-}();
-var RouteRecord = function () {
-  function RouteRecord(location, pageStack) {
-    this.key = void 0;
-    this.location = location;
-    this.pageStack = pageStack;
-    this.key = [pageStack.key, pageStack.id++].join('_');
-  }
-
-  var _proto2 = RouteRecord.prototype;
-
-  _proto2.setActive = function setActive() {
-    return;
-  };
-
-  _proto2.setInactive = function setInactive() {
-    return;
-  };
-
-  _proto2.destroy = function destroy() {
-    return;
-  };
-
-  return RouteRecord;
-}();
-var PageStack = function (_HistoryStack) {
-  _inheritsLoose(PageStack, _HistoryStack);
-
-  function PageStack(windowStack, location, store) {
-    var _this;
-
-    _this = _HistoryStack.call(this, 20) || this;
-    _this.id = 0;
-    _this.key = void 0;
-    _this._store = void 0;
-    _this.windowStack = windowStack;
-    _this._store = store;
-    _this.key = '' + windowStack.id++;
-
-    _this.init(new RouteRecord(location, _assertThisInitialized(_this)));
-
-    return _this;
-  }
-
-  var _proto3 = PageStack.prototype;
-
-  _proto3.replaceStore = function replaceStore(store) {
-    if (this._store !== store) {
-      this._store.destroy();
-
-      this._store = store;
-      store.setActive();
-    }
-  };
-
-  _proto3.findRecordByKey = function findRecordByKey(key) {
-    for (var i = 0, k = this.records.length; i < k; i++) {
-      var item = this.records[i];
-
-      if (item.key === key) {
-        return [item, i];
-      }
-    }
-
-    return undefined;
-  };
-
-  _proto3.setActive = function setActive() {
-    this.store.setActive();
-  };
-
-  _proto3.setInactive = function setInactive() {
-    this.store.setInactive();
-  };
-
-  _proto3.destroy = function destroy() {
-    this.store.destroy();
-  };
-
-  _createClass(PageStack, [{
-    key: "store",
-    get: function get() {
-      return this._store;
-    }
-  }]);
-
-  return PageStack;
-}(HistoryStack);
-var WindowStack = function (_HistoryStack2) {
-  _inheritsLoose(WindowStack, _HistoryStack2);
-
-  function WindowStack(location, store) {
-    var _this2;
-
-    _this2 = _HistoryStack2.call(this, 10) || this;
-    _this2.id = 0;
-
-    _this2.init(new PageStack(_assertThisInitialized(_this2), location, store));
-
-    return _this2;
-  }
-
-  var _proto4 = WindowStack.prototype;
-
-  _proto4.getCurrentWindowPage = function getCurrentWindowPage() {
-    var item = this.getCurrentItem();
-    var store = item.store;
-    var record = item.getCurrentItem();
-    var url = record.location.url;
-    return {
-      url: url,
-      store: store
-    };
-  };
-
-  _proto4.getWindowPages = function getWindowPages() {
-    return this.records.map(function (item) {
-      var store = item.store;
-      var record = item.getCurrentItem();
-      var url = record.location.url;
-      return {
-        url: url,
-        store: store
-      };
-    });
-  };
-
-  _proto4.countBack = function countBack(delta) {
-    var historyStacks = this.records;
-    var backSteps = [0, 0];
-
-    for (var i = 0, k = historyStacks.length; i < k; i++) {
-      var _pageStack = historyStacks[i];
-
-      var recordNum = _pageStack.getLength();
-
-      delta = delta - recordNum;
-
-      if (delta > 0) {
-        backSteps[0]++;
-      } else if (delta === 0) {
-        backSteps[0]++;
-        break;
-      } else {
-        backSteps[1] = recordNum + delta;
-        break;
-      }
-    }
-
-    return backSteps;
-  };
-
-  _proto4.testBack = function testBack(stepOrKey, rootOnly) {
-    if (typeof stepOrKey === 'string') {
-      return this.findRecordByKey(stepOrKey);
-    }
-
-    var delta = stepOrKey;
-
-    if (delta === 0) {
-      var record = this.getCurrentItem().getCurrentItem();
-      return {
-        record: record,
-        overflow: false,
-        index: [0, 0]
-      };
-    }
-
-    if (rootOnly) {
-      if (delta < 0 || delta >= this.records.length) {
-        var _record = this.getEarliestItem().getCurrentItem();
-
-        return {
-          record: _record,
-          overflow: !(delta < 0),
-          index: [this.records.length - 1, 0]
-        };
-      } else {
-        var _record2 = this.getItemAt(delta).getCurrentItem();
-
-        return {
-          record: _record2,
-          overflow: false,
-          index: [delta, 0]
-        };
-      }
-    }
-
-    if (delta < 0) {
-      var _pageStack2 = this.getEarliestItem();
-
-      var _record3 = _pageStack2.getEarliestItem();
-
-      return {
-        record: _record3,
-        overflow: false,
-        index: [this.records.length - 1, _pageStack2.getLength() - 1]
-      };
-    }
-
-    var _this$countBack = this.countBack(delta),
-        rootDelta = _this$countBack[0],
-        recordDelta = _this$countBack[1];
-
-    if (rootDelta < this.records.length) {
-      var _record4 = this.getItemAt(rootDelta).getItemAt(recordDelta);
-
-      return {
-        record: _record4,
-        overflow: false,
-        index: [rootDelta, recordDelta]
-      };
-    } else {
-      var _pageStack3 = this.getEarliestItem();
-
-      var _record5 = _pageStack3.getEarliestItem();
-
-      return {
-        record: _record5,
-        overflow: true,
-        index: [this.records.length - 1, _pageStack3.getLength() - 1]
-      };
-    }
-  };
-
-  _proto4.findRecordByKey = function findRecordByKey(key) {
-    var arr = key.split('_');
-
-    for (var i = 0, k = this.records.length; i < k; i++) {
-      var _pageStack4 = this.records[i];
-
-      if (_pageStack4.key === arr[0]) {
-        var item = _pageStack4.findRecordByKey(key);
-
-        if (item) {
-          return {
-            record: item[0],
-            index: [i, item[1]],
-            overflow: false
-          };
-        }
-      }
-    }
-
-    return {
-      record: this.getCurrentItem().getCurrentItem(),
-      index: [0, 0],
-      overflow: true
-    };
-  };
-
-  return WindowStack;
-}(HistoryStack);
-
-var BaseNativeRouter = function () {
-  function BaseNativeRouter(nativeRequest) {
-    this.router = void 0;
-    this.curTask = void 0;
-    this.router = new Router(this, nativeRequest);
-  }
-
-  var _proto = BaseNativeRouter.prototype;
-
-  _proto.testExecute = function testExecute(method, location, backIndex) {
-    var testMethod = '_' + method;
-    this[testMethod] && this[testMethod](locationToNativeLocation(location), backIndex);
-  };
-
-  _proto.execute = function execute(method, location, key, backIndex) {
-    var result = this[method](locationToNativeLocation(location), key, backIndex);
-
-    if (result) {
-      return result.then(function () {
-        return undefined;
-      }, function (e) {
-        env.console.warn('Native route error:' + e.toString());
-      });
-    }
-  };
-
-  return BaseNativeRouter;
-}();
-var Router = function (_CoreRouter) {
-  _inheritsLoose(Router, _CoreRouter);
-
-  function Router(nativeRouter, nativeRequest) {
-    var _this;
-
-    _this = _CoreRouter.call(this, urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), 'relaunch', nativeRequest) || this;
-    _this.curTask = void 0;
-    _this.taskList = [];
-    _this.windowStack = void 0;
-
-    _this.onTaskComplete = function () {
-      var task = _this.taskList.shift();
-
-      if (task) {
-        _this.curTask = task;
-        var onTaskComplete = _this.onTaskComplete;
-        env.setTimeout(function () {
-          return task[0]().finally(onTaskComplete).then(task[1], task[2]);
-        }, 0);
-      } else {
-        _this.curTask = undefined;
-      }
-    };
-
-    _this.nativeRouter = nativeRouter;
-    _this.windowStack = new WindowStack(_this.location, new Store(0, _assertThisInitialized(_this)));
-    _this.routeKey = _this.findRecordByStep(0).record.key;
-    return _this;
-  }
-
-  var _proto2 = Router.prototype;
-
-  _proto2.addTask = function addTask(execute) {
-    var _this2 = this;
-
-    return new Promise(function (resolve, reject) {
-      var task = [function () {
-        return setLoading(execute(), _this2.getCurrentPage().store);
-      }, resolve, reject];
-
-      if (_this2.curTask) {
-        _this2.taskList.push(task);
-      } else {
-        _this2.curTask = task;
-        task[0]().finally(_this2.onTaskComplete).then(task[1], task[2]);
-      }
-    });
-  };
-
-  _proto2.getHistoryLength = function getHistoryLength(target) {
-    if (target === void 0) {
-      target = 'page';
-    }
-
-    return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
-  };
-
-  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
-    var _this$windowStack$fin = this.windowStack.findRecordByKey(recordKey),
-        _this$windowStack$fin2 = _this$windowStack$fin.record,
-        key = _this$windowStack$fin2.key,
-        location = _this$windowStack$fin2.location,
-        overflow = _this$windowStack$fin.overflow,
-        index = _this$windowStack$fin.index;
-
-    return {
-      overflow: overflow,
-      index: index,
-      record: {
-        key: key,
-        location: location
-      }
-    };
-  };
-
-  _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
-    var _this$windowStack$tes = this.windowStack.testBack(delta, !!rootOnly),
-        _this$windowStack$tes2 = _this$windowStack$tes.record,
-        key = _this$windowStack$tes2.key,
-        location = _this$windowStack$tes2.location,
-        overflow = _this$windowStack$tes.overflow,
-        index = _this$windowStack$tes.index;
-
-    return {
-      overflow: overflow,
-      index: index,
-      record: {
-        key: key,
-        location: location
-      }
-    };
-  };
-
-  _proto2.getCurrentPage = function getCurrentPage() {
-    return this.windowStack.getCurrentWindowPage();
-  };
-
-  _proto2.getWindowPages = function getWindowPages() {
-    return this.windowStack.getWindowPages();
-  };
-
-  _proto2.mountStore = function () {
-    var _mountStore = _asyncToGenerator(regenerator.mark(function _callee(payload, prevStore, newStore, historyStore) {
-      var prevState;
-      return regenerator.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              prevState = prevStore.getState();
-              this.runtime = {
-                timestamp: Date.now(),
-                payload: payload,
-                prevState: coreConfig.MutableData ? deepClone(prevState) : prevState,
-                completed: false
-              };
-
-              if (!(newStore === historyStore)) {
-                _context.next = 5;
-                break;
-              }
-
-              this.runtime.completed = true;
-              return _context.abrupt("return");
-
-            case 5:
-              _context.prev = 5;
-              _context.next = 8;
-              return newStore.mount(coreConfig.StageModuleName, 'route');
-
-            case 8:
-              _context.next = 13;
-              break;
-
-            case 10:
-              _context.prev = 10;
-              _context.t0 = _context["catch"](5);
-              env.console.error(_context.t0);
-
-            case 13:
-              this.runtime.completed = true;
-
-            case 14:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, this, [[5, 10]]);
-    }));
-
-    function mountStore(_x, _x2, _x3, _x4) {
-      return _mountStore.apply(this, arguments);
-    }
-
-    return mountStore;
-  }();
-
-  _proto2.init = function init(prevState) {
-    var task = [this._init.bind(this, prevState), function () {
-      return undefined;
-    }, function () {
-      return undefined;
-    }];
-    this.curTask = task;
-    return task[0]().finally(this.onTaskComplete);
-  };
-
-  _proto2._init = function () {
-    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2(prevState) {
-      var store;
-      return regenerator.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              this.runtime = {
-                timestamp: Date.now(),
-                payload: null,
-                prevState: prevState,
-                completed: false
-              };
-              store = this.getCurrentPage().store;
-              _context2.prev = 2;
-              _context2.next = 5;
-              return store.mount(coreConfig.StageModuleName, 'init');
-
-            case 5:
-              _context2.next = 7;
-              return store.dispatch(testChangeAction(this.location, this.action));
-
-            case 7:
-              _context2.next = 15;
-              break;
-
-            case 9:
-              _context2.prev = 9;
-              _context2.t0 = _context2["catch"](2);
-
-              if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
-                _context2.next = 14;
-                break;
-              }
-
-              this.taskList = [];
-              throw _context2.t0;
-
-            case 14:
-              env.console.error(_context2.t0);
-
-            case 15:
-              this.runtime.completed = true;
-
-            case 16:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2, this, [[2, 9]]);
-    }));
-
-    function _init(_x5) {
-      return _init2.apply(this, arguments);
-    }
-
-    return _init;
-  }();
-
-  _proto2.redirectOnServer = function redirectOnServer(urlOrLocation) {
-    if (env.isServer) {
-      var url = urlOrLocation.url || locationToUrl(urlOrLocation);
-      var nativeUrl = urlToNativeUrl(url);
-      var err = {
-        code: ErrorCodes.ROUTE_REDIRECT,
-        message: 'Route change in server is not allowed.',
-        detail: nativeUrl
-      };
-      throw err;
-    }
-  };
-
-  _proto2.relaunch = function relaunch(urlOrLocation, target, payload, _nativeCaller) {
-    if (target === void 0) {
-      target = 'page';
-    }
-
-    if (payload === void 0) {
-      payload = null;
-    }
-
-    if (_nativeCaller === void 0) {
-      _nativeCaller = false;
-    }
-
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
-  };
-
-  _proto2._relaunch = function () {
-    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee3(urlOrLocation, target, payload, _nativeCaller) {
-      var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
-      return regenerator.wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              action = 'relaunch';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
-              NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
-
-              if (!_nativeCaller && NotifyNativeRouter) {
-                this.nativeRouter.testExecute(action, location);
-              }
-
-              prevStore = this.getCurrentPage().store;
-              _context3.next = 7;
-              return prevStore.dispatch(testChangeAction(location, action));
-
-            case 7:
-              _context3.next = 9;
-              return prevStore.dispatch(beforeChangeAction(location, action));
-
-            case 9:
-              this.location = location;
-              this.action = action;
-              newStore = prevStore.clone();
-              pageStack = this.windowStack.getCurrentItem();
-              newRecord = new RouteRecord(location, pageStack);
-              this.routeKey = newRecord.key;
-
-              if (target === 'window') {
-                pageStack.relaunch(newRecord);
-                this.windowStack.relaunch(pageStack);
-              } else {
-                pageStack.relaunch(newRecord);
-              }
-
-              pageStack.replaceStore(newStore);
-              _context3.next = 19;
-              return this.mountStore(payload, prevStore, newStore);
-
-            case 19:
-              if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context3.next = 22;
-                break;
-              }
-
-              _context3.next = 22;
-              return this.nativeRouter.execute(action, location, newRecord.key);
-
-            case 22:
-              _context3.next = 24;
-              return this.dispatch({
-                location: location,
-                action: action,
-                prevStore: prevStore,
-                newStore: newStore,
-                windowChanged: target === 'window'
-              });
-
-            case 24:
-              newStore.dispatch(afterChangeAction(location, action));
-
-            case 25:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3, this);
-    }));
-
-    function _relaunch(_x6, _x7, _x8, _x9) {
-      return _relaunch2.apply(this, arguments);
-    }
-
-    return _relaunch;
-  }();
-
-  _proto2.replace = function replace(urlOrLocation, target, payload, _nativeCaller) {
-    if (target === void 0) {
-      target = 'page';
-    }
-
-    if (payload === void 0) {
-      payload = null;
-    }
-
-    if (_nativeCaller === void 0) {
-      _nativeCaller = false;
-    }
-
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
-  };
-
-  _proto2._replace = function () {
-    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee4(urlOrLocation, target, payload, _nativeCaller) {
-      var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
-      return regenerator.wrap(function _callee4$(_context4) {
-        while (1) {
-          switch (_context4.prev = _context4.next) {
-            case 0:
-              action = 'replace';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
-              NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
-
-              if (!_nativeCaller && NotifyNativeRouter) {
-                this.nativeRouter.testExecute(action, location);
-              }
-
-              prevStore = this.getCurrentPage().store;
-              _context4.next = 7;
-              return prevStore.dispatch(testChangeAction(location, action));
-
-            case 7:
-              _context4.next = 9;
-              return prevStore.dispatch(beforeChangeAction(location, action));
-
-            case 9:
-              this.location = location;
-              this.action = action;
-              newStore = prevStore.clone();
-              pageStack = this.windowStack.getCurrentItem();
-              newRecord = new RouteRecord(location, pageStack);
-              this.routeKey = newRecord.key;
-
-              if (target === 'window') {
-                pageStack.relaunch(newRecord);
-              } else {
-                pageStack.replace(newRecord);
-              }
-
-              pageStack.replaceStore(newStore);
-              _context4.next = 19;
-              return this.mountStore(payload, prevStore, newStore);
-
-            case 19:
-              if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context4.next = 22;
-                break;
-              }
-
-              _context4.next = 22;
-              return this.nativeRouter.execute(action, location, newRecord.key);
-
-            case 22:
-              _context4.next = 24;
-              return this.dispatch({
-                location: location,
-                action: action,
-                prevStore: prevStore,
-                newStore: newStore,
-                windowChanged: target === 'window'
-              });
-
-            case 24:
-              newStore.dispatch(afterChangeAction(location, action));
-
-            case 25:
-            case "end":
-              return _context4.stop();
-          }
-        }
-      }, _callee4, this);
-    }));
-
-    function _replace(_x10, _x11, _x12, _x13) {
-      return _replace2.apply(this, arguments);
-    }
-
-    return _replace;
-  }();
-
-  _proto2.push = function push(urlOrLocation, target, payload, _nativeCaller) {
-    if (target === void 0) {
-      target = 'page';
-    }
-
-    if (payload === void 0) {
-      payload = null;
-    }
-
-    if (_nativeCaller === void 0) {
-      _nativeCaller = false;
-    }
-
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
-  };
-
-  _proto2._push = function () {
-    var _push2 = _asyncToGenerator(regenerator.mark(function _callee5(urlOrLocation, target, payload, _nativeCaller) {
-      var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord, newPageStack;
-      return regenerator.wrap(function _callee5$(_context5) {
-        while (1) {
-          switch (_context5.prev = _context5.next) {
-            case 0:
-              action = 'push';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
-              NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
-
-              if (!_nativeCaller && NotifyNativeRouter) {
-                this.nativeRouter.testExecute(action, location);
-              }
-
-              prevStore = this.getCurrentPage().store;
-              _context5.next = 7;
-              return prevStore.dispatch(testChangeAction(location, action));
-
-            case 7:
-              _context5.next = 9;
-              return prevStore.dispatch(beforeChangeAction(location, action));
-
-            case 9:
-              this.location = location;
-              this.action = action;
-              newStore = prevStore.clone();
-              pageStack = this.windowStack.getCurrentItem();
-
-              if (!(target === 'window')) {
-                _context5.next = 22;
-                break;
-              }
-
-              newPageStack = new PageStack(this.windowStack, location, newStore);
-              newRecord = newPageStack.getCurrentItem();
-              this.routeKey = newRecord.key;
-              this.windowStack.push(newPageStack);
-              _context5.next = 20;
-              return this.mountStore(payload, prevStore, newStore);
-
-            case 20:
-              _context5.next = 28;
-              break;
-
-            case 22:
-              newRecord = new RouteRecord(location, pageStack);
-              this.routeKey = newRecord.key;
-              pageStack.push(newRecord);
-              pageStack.replaceStore(newStore);
-              _context5.next = 28;
-              return this.mountStore(payload, prevStore, newStore);
-
-            case 28:
-              if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context5.next = 31;
-                break;
-              }
-
-              _context5.next = 31;
-              return this.nativeRouter.execute(action, location, newRecord.key);
-
-            case 31:
-              _context5.next = 33;
-              return this.dispatch({
-                location: location,
-                action: action,
-                prevStore: prevStore,
-                newStore: newStore,
-                windowChanged: target === 'window'
-              });
-
-            case 33:
-              newStore.dispatch(afterChangeAction(location, action));
-
-            case 34:
-            case "end":
-              return _context5.stop();
-          }
-        }
-      }, _callee5, this);
-    }));
-
-    function _push(_x14, _x15, _x16, _x17) {
-      return _push2.apply(this, arguments);
-    }
-
-    return _push;
-  }();
-
-  _proto2.back = function back(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
-    if (stepOrKey === void 0) {
-      stepOrKey = 1;
-    }
-
-    if (target === void 0) {
-      target = 'page';
-    }
-
-    if (payload === void 0) {
-      payload = null;
-    }
-
-    if (overflowRedirect === void 0) {
-      overflowRedirect = '';
-    }
-
-    if (_nativeCaller === void 0) {
-      _nativeCaller = false;
-    }
-
-    if (!stepOrKey) {
-      return;
-    }
-
-    this.redirectOnServer({
-      url: overflowRedirect || routeConfig.HomeUrl
-    });
-    return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
-  };
-
-  _proto2._back = function () {
-    var _back2 = _asyncToGenerator(regenerator.mark(function _callee6(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
-      var action, _this$windowStack$tes3, record, overflow, index, url, err, location, NotifyNativeRouter, prevStore, pageStack, historyStore, newStore;
-
-      return regenerator.wrap(function _callee6$(_context6) {
-        while (1) {
-          switch (_context6.prev = _context6.next) {
-            case 0:
-              action = 'back';
-              _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, target === 'window'), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
-
-              if (!overflow) {
-                _context6.next = 7;
-                break;
-              }
-
-              url = overflowRedirect || routeConfig.HomeUrl;
-              this.relaunch({
-                url: url
-              }, 'window');
-              err = {
-                code: ErrorCodes.ROUTE_BACK_OVERFLOW,
-                message: 'Overflowed on route backward.',
-                detail: stepOrKey
-              };
-              throw setProcessedError(err, true);
-
-            case 7:
-              if (!(!index[0] && !index[1])) {
-                _context6.next = 9;
-                break;
-              }
-
-              throw 'Route backward invalid.';
-
-            case 9:
-              location = record.location;
-              NotifyNativeRouter = [];
-
-              if (index[0]) {
-                NotifyNativeRouter[0] = routeConfig.NotifyNativeRouter.window;
-              }
-
-              if (index[1]) {
-                NotifyNativeRouter[1] = routeConfig.NotifyNativeRouter.page;
-              }
-
-              if (!_nativeCaller && NotifyNativeRouter.length) {
-                this.nativeRouter.testExecute(action, location, index);
-              }
-
-              prevStore = this.getCurrentPage().store;
-              _context6.next = 17;
-              return prevStore.dispatch(testChangeAction(location, action));
-
-            case 17:
-              _context6.next = 19;
-              return prevStore.dispatch(beforeChangeAction(location, action));
-
-            case 19:
-              this.location = location;
-              this.action = action;
-              this.routeKey = record.key;
-
-              if (index[0]) {
-                this.windowStack.back(index[0]);
-              }
-
-              if (index[1]) {
-                this.windowStack.getCurrentItem().back(index[1]);
-              }
-
-              pageStack = this.windowStack.getCurrentItem();
-              historyStore = pageStack.store;
-              newStore = historyStore;
-
-              if (index[1] !== 0) {
-                newStore = prevStore.clone();
-                pageStack.replaceStore(newStore);
-              }
-
-              _context6.next = 30;
-              return this.mountStore(payload, prevStore, newStore);
-
-            case 30:
-              if (!(!_nativeCaller && NotifyNativeRouter.length)) {
-                _context6.next = 33;
-                break;
-              }
-
-              _context6.next = 33;
-              return this.nativeRouter.execute(action, location, record.key, index);
-
-            case 33:
-              _context6.next = 35;
-              return this.dispatch({
-                location: location,
-                action: action,
-                prevStore: prevStore,
-                newStore: newStore,
-                windowChanged: !!index[0]
-              });
-
-            case 35:
-              newStore.dispatch(afterChangeAction(location, action));
-
-            case 36:
-            case "end":
-              return _context6.stop();
-          }
-        }
-      }, _callee6, this);
-    }));
-
-    function _back(_x18, _x19, _x20, _x21, _x22) {
-      return _back2.apply(this, arguments);
-    }
-
-    return _back;
-  }();
-
-  return Router;
-}(CoreRouter);
-
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -5246,7 +5680,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
         if (action === 'POP') {
           env.setTimeout(function () {
             return _this.router.back(1);
-          }, 100);
+          }, 0);
           return false;
         }
 
@@ -5259,20 +5693,28 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
   var _proto = BrowserNativeRouter.prototype;
 
+  _proto.init = function init(location, key) {
+    return false;
+  };
+
   _proto.push = function push(location, key) {
     this.history.push(location);
+    return false;
   };
 
   _proto.replace = function replace(location, key) {
     this.history.push(location);
+    return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
     this.history.push(location);
+    return false;
   };
 
   _proto.back = function back(location, key, index) {
     this.history.replace(location);
+    return false;
   };
 
   _proto.destroy = function destroy() {
@@ -5298,443 +5740,6 @@ function createServerRouter(nativeRequest) {
   var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
   return browserNativeRouter.router;
 }
-
-var EluxContextComponent = _react.createContext({
-  documentHead: '',
-  router: null
-});
-function UseRouter() {
-  var eluxContext = useContext(EluxContextComponent);
-  return eluxContext.router;
-}
-
-var RouterComponent = function RouterComponent(props) {
-  var router = coreConfig.UseRouter();
-
-  var _useState = useState({
-    classname: 'elux-app',
-    pages: router.getWindowPages().reverse()
-  }),
-      data = _useState[0],
-      setData = _useState[1];
-
-  var classname = data.classname,
-      pages = data.pages;
-  var pagesRef = useRef(pages);
-  pagesRef.current = pages;
-  var containerRef = useRef(null);
-  useEffect(function () {
-    return router.addListener(function (_ref) {
-      var action = _ref.action,
-          windowChanged = _ref.windowChanged;
-      var pages = router.getWindowPages().reverse();
-      return new Promise(function (completeCallback) {
-        if (windowChanged) {
-          if (action === 'push') {
-            setData({
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
-              pages: pages
-            });
-            env.setTimeout(function () {
-              containerRef.current.className = 'elux-app elux-animation';
-            }, 100);
-            env.setTimeout(function () {
-              containerRef.current.className = 'elux-app';
-              completeCallback();
-            }, 400);
-          } else if (action === 'back') {
-            setData({
-              classname: 'elux-app ' + Date.now(),
-              pages: [].concat(pages, [pagesRef.current[pagesRef.current.length - 1]])
-            });
-            env.setTimeout(function () {
-              containerRef.current.className = 'elux-app elux-animation elux-change elux-back';
-            }, 100);
-            env.setTimeout(function () {
-              setData({
-                classname: 'elux-app ' + Date.now(),
-                pages: pages
-              });
-              completeCallback();
-            }, 400);
-          } else if (action === 'relaunch') {
-            setData({
-              classname: 'elux-app ',
-              pages: pages
-            });
-            env.setTimeout(completeCallback, 50);
-          }
-        } else {
-          setData({
-            classname: 'elux-app',
-            pages: pages
-          });
-          env.setTimeout(completeCallback, 50);
-        }
-      });
-    });
-  }, [router]);
-  return jsx("div", {
-    ref: containerRef,
-    className: classname,
-    children: pages.map(function (item) {
-      var store = item.store,
-          url = item.url;
-      return jsx("div", {
-        "data-sid": store.sid,
-        className: "elux-window",
-        "data-url": url,
-        children: jsx(EWindow, {
-          store: store,
-          view: props.page
-        })
-      }, store.sid);
-    })
-  });
-};
-var EWindow = memo(function (_ref2) {
-  var store = _ref2.store,
-      view = _ref2.view;
-  var View = view;
-  var StoreProvider = coreConfig.StoreProvider;
-  return jsx(StoreProvider, {
-    store: store,
-    children: jsx(View, {})
-  });
-});
-
-var AppRender = {
-  toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
-    var renderFun = fromSSR ? hydrate : render;
-    var panel = env.document.getElementById(id);
-    var appView = getEntryComponent();
-    renderFun(jsx(EluxContextComponent.Provider, {
-      value: eluxContext,
-      children: jsx(RouterComponent, {
-        page: appView
-      })
-    }), panel);
-  },
-  toString: function toString(id, eluxContext, app, store) {
-    var appView = getEntryComponent();
-    var html = renderToString(jsx(EluxContextComponent.Provider, {
-      value: eluxContext,
-      children: jsx(RouterComponent, {
-        page: appView
-      })
-    }));
-    return Promise.resolve(html);
-  },
-  toProvider: function toProvider(eluxContext, app, store) {
-    return function (props) {
-      return jsx(EluxContextComponent.Provider, {
-        value: eluxContext,
-        children: props.children
-      });
-    };
-  }
-};
-
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-
-  return target;
-}
-
-var _excluded$1 = ["forwardedRef", "store"];
-var LoadComponentOnError = function LoadComponentOnError(_ref) {
-  var message = _ref.message;
-  return jsx("div", {
-    className: "g-component-error",
-    children: message
-  });
-};
-var LoadComponentOnLoading = function LoadComponentOnLoading() {
-  return jsx("div", {
-    className: "g-component-loading",
-    children: "loading..."
-  });
-};
-var LoadComponent = function LoadComponent(moduleName, componentName, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
-  var OnError = options.onError || coreConfig.LoadComponentOnError;
-
-  var Loader = function (_Component) {
-    _inheritsLoose(Loader, _Component);
-
-    function Loader(props) {
-      var _this;
-
-      _this = _Component.call(this, props) || this;
-      _this.active = true;
-      _this.loading = false;
-      _this.error = '';
-      _this.view = void 0;
-      _this.state = {
-        ver: 0
-      };
-
-      _this.execute();
-
-      return _this;
-    }
-
-    var _proto = Loader.prototype;
-
-    _proto.componentWillUnmount = function componentWillUnmount() {
-      this.active = false;
-    };
-
-    _proto.shouldComponentUpdate = function shouldComponentUpdate() {
-      this.execute();
-      return true;
-    };
-
-    _proto.componentDidMount = function componentDidMount() {
-      this.error = '';
-    };
-
-    _proto.execute = function execute() {
-      var _this2 = this;
-
-      if (!this.view && !this.loading && !this.error) {
-        var store = this.props.store;
-        this.loading = true;
-        var result;
-
-        try {
-          result = injectComponent(moduleName, componentName, store);
-
-          if (env.isServer && isPromise(result)) {
-            result = undefined;
-            throw 'can not use async component in SSR';
-          }
-        } catch (e) {
-          this.loading = false;
-          this.error = e.message || "" + e;
-        }
-
-        if (result) {
-          if (isPromise(result)) {
-            result.then(function (view) {
-              if (view) {
-                _this2.loading = false;
-                _this2.view = view;
-                _this2.active && _this2.setState({
-                  ver: _this2.state.ver + 1
-                });
-              }
-            }, function (e) {
-              env.console.error(e);
-              _this2.loading = false;
-              _this2.error = e.message || "" + e || 'error';
-              _this2.active && _this2.setState({
-                ver: _this2.state.ver + 1
-              });
-            });
-          } else {
-            this.loading = false;
-            this.view = result;
-          }
-        }
-      }
-    };
-
-    _proto.render = function render() {
-      var _this$props = this.props,
-          forwardedRef = _this$props.forwardedRef;
-          _this$props.store;
-          var rest = _objectWithoutPropertiesLoose(_this$props, _excluded$1);
-
-      if (this.view) {
-        var View = this.view;
-        return jsx(View, _extends$1({
-          ref: forwardedRef
-        }, rest));
-      }
-
-      if (this.loading) {
-        var Loading = OnLoading;
-        return jsx(Loading, {});
-      }
-
-      return jsx(OnError, {
-        message: this.error
-      });
-    };
-
-    return Loader;
-  }(Component$3);
-
-  return _react.forwardRef(function (props, ref) {
-    var store = coreConfig.UseStore();
-    return jsx(Loader, _extends$1({}, props, {
-      store: store,
-      forwardedRef: ref
-    }));
-  });
-};
-
-var clientTimer = 0;
-var recoverLock = false;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(function () {
-      clientTimer = 0;
-      recoverLock = false;
-      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
-function recoverClientHead(eluxContext, documentHead) {
-  if (!recoverLock) {
-    recoverLock = true;
-    setClientHead(eluxContext, documentHead);
-  }
-}
-
-var Component$2 = function Component(_ref) {
-  var title = _ref.title,
-      html = _ref.html;
-  var eluxContext = useContext(EluxContextComponent);
-
-  if (!html) {
-    html = eluxContext.documentHead || '<title>Elux</title>';
-  }
-
-  if (title) {
-    html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
-  }
-
-  if (env.isServer) {
-    eluxContext.documentHead = html;
-  }
-
-  useEffect(function () {
-    var raw = eluxContext.documentHead;
-    setClientHead(eluxContext, html);
-    recoverLock = false;
-    return function () {
-      return recoverClientHead(eluxContext, raw);
-    };
-  }, [eluxContext, html]);
-  return null;
-};
-
-var DocumentHead = _react.memo(Component$2);
-
-var Component$1 = function Component(_ref) {
-  var children = _ref.children,
-      elseView = _ref.elseView;
-  var arr = [];
-  _react.Children.forEach(children, function (item) {
-    item && arr.push(item);
-  });
-
-  if (arr.length > 0) {
-    return jsx(Fragment$2, {
-      children: arr
-    });
-  }
-
-  return jsx(Fragment$2, {
-    children: elseView
-  });
-};
-
-var Else = _react.memo(Component$1);
-
-var Component = function Component(_ref) {
-  var children = _ref.children,
-      elseView = _ref.elseView;
-  var arr = [];
-  _react.Children.forEach(children, function (item) {
-    item && arr.push(item);
-  });
-
-  if (arr.length > 0) {
-    return jsx(Fragment$2, {
-      children: arr[0]
-    });
-  }
-
-  return jsx(Fragment$2, {
-    children: elseView
-  });
-};
-
-var Switch = _react.memo(Component);
-
-var _excluded = ["onClick", "disabled", "to", "target", "action"];
-var Link = _react.forwardRef(function (_ref, ref) {
-  var _onClick = _ref.onClick,
-      disabled = _ref.disabled,
-      _ref$to = _ref.to,
-      to = _ref$to === void 0 ? '' : _ref$to,
-      _ref$target = _ref.target,
-      target = _ref$target === void 0 ? 'page' : _ref$target,
-      _ref$action = _ref.action,
-      action = _ref$action === void 0 ? 'push' : _ref$action,
-      props = _objectWithoutPropertiesLoose(_ref, _excluded);
-
-  var router = coreConfig.UseRouter();
-  var onClick = useCallback(function (event) {
-    event.preventDefault();
-
-    if (!disabled) {
-      _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {
-        url: to
-      }, target);
-    }
-  }, [_onClick, disabled, to, router, action, target]);
-  props['onClick'] = onClick;
-  props['action'] = action;
-  props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  var href = action !== 'back' ? to : '';
-
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
-  }
-
-  props['href'] = href;
-  return jsx("a", _extends$1({}, props, {
-    ref: ref
-  }));
-});
-
-setCoreConfig({
-  UseRouter: UseRouter,
-  AppRender: AppRender,
-  LoadComponent: LoadComponent,
-  LoadComponentOnError: LoadComponentOnError,
-  LoadComponentOnLoading: LoadComponentOnLoading
-});
 
 var interopRequireDefault = createCommonjsModule(function (module) {
 function _interopRequireDefault(obj) {
@@ -9392,6 +9397,11 @@ function patchActions(typeName, json) {
   }
 }
 
+setReactComponentsConfig({
+  hydrate: hydrate,
+  render: render,
+  renderToString: renderToString
+});
 var cientSingleton = undefined;
 function createApp(appConfig) {
   if (cientSingleton) {
@@ -9414,4 +9424,4 @@ function createSSR(appConfig, nativeRequest) {
 var createSelectorHook$1 = lib.createSelectorHook;
 var shallowEqual$1 = lib.shallowEqual;
 var useSelector$1 = lib.useSelector;
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSSR, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };
+export { BaseModel, DocumentHead, EWindow, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSSR, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };

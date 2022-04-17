@@ -88,8 +88,8 @@ export interface RouteConfig {
     };
     HomeUrl: string;
     NativePathnameMapping: {
-        in(pathname: string): string;
-        out(pathname: string): string;
+        in(nativePathname: string): string;
+        out(internalPathname: string): string;
     };
 }
 export declare const routeConfig: RouteConfig;

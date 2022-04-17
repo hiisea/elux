@@ -137,7 +137,7 @@ export interface IStore<TStoreState extends StoreState = StoreState> {
  *
  * @public
  */
-export declare type RouteAction = 'relaunch' | 'push' | 'replace' | 'back';
+export declare type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
 /**
  * 路由历史栈
  *
@@ -262,10 +262,6 @@ export interface RouteEvent {
  * @public
  */
 export interface IRouter<TStoreState extends StoreState = StoreState> {
-    /**
-     * 初始化
-     */
-    init(prevState: StoreState): Promise<void>;
     /**
      * 监听路由事件
      */

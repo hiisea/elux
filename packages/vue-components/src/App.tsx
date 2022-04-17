@@ -1,10 +1,8 @@
 import type {App} from 'vue';
 
 import {EluxContext, env, IAppRender} from '@elux/core';
-// eslint-disable-next-line
-import {renderToString} from '@elux/vue-components/server';
 
-import {EluxContextKey} from './base';
+import {EluxContextKey, vueComponentsConfig} from './base';
 
 const AppRender: IAppRender = {
   toDocument(id, eluxContext, fromSSR, app: App, store): void {
@@ -16,7 +14,11 @@ const AppRender: IAppRender = {
   },
   toString(id, eluxContext, app: App, store): Promise<string> {
     app.provide<EluxContext>(EluxContextKey, eluxContext);
-    return renderToString(app);
+    return vueComponentsConfig.renderToString!(app);
+  },
+  toProvider(eluxContext, app: App, store): Elux.Component<{children: any}> {
+    app.provide<EluxContext>(EluxContextKey, eluxContext);
+    return () => <div></div>;
   },
 };
 

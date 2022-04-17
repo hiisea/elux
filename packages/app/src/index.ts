@@ -107,8 +107,8 @@ export interface UserConfig {
    * 定义内部和宿主平台路由之间的转换与映射
    */
   NativePathnameMapping?: {
-    in(pathname: string): string;
-    out(pathname: string): string;
+    in(nativePathname: string): string;
+    out(internalPathname: string): string;
   };
   /**
    * 定义Loading超过多少秒视为深度加载

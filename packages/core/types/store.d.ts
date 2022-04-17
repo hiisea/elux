@@ -4,15 +4,15 @@ export declare function getActionData(action: Action): any[];
 export declare const preMiddleware: StoreMiddleware;
 export declare abstract class CoreRouter implements IRouter {
     location: Location;
-    action: RouteAction;
     readonly nativeRequest: NativeRequest;
     runtime: RouteRuntime;
     protected listenerId: number;
     protected readonly listenerMap: {
         [id: string]: (data: RouteEvent) => void | Promise<void>;
     };
+    action: RouteAction;
     routeKey: string;
-    constructor(location: Location, action: RouteAction, nativeRequest: NativeRequest);
+    constructor(location: Location, nativeRequest: NativeRequest);
     addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
     dispatch(data: RouteEvent): void | Promise<void>;
     abstract init(prevState: StoreState): Promise<void>;

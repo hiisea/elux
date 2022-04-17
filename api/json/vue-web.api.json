@@ -1933,30 +1933,8 @@
             },
             {
               "kind": "Reference",
-              "text": "App",
-              "canonicalReference": "@vue/runtime-core!App:interface"
-            },
-            {
-              "kind": "Content",
-              "text": " & {\n    render(options?: "
-            },
-            {
-              "kind": "Reference",
-              "text": "RenderOptions",
-              "canonicalReference": "@elux/vue-web!RenderOptions:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Reference",
-              "text": "Promise",
-              "canonicalReference": "!Promise:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<void>;\n}"
+              "text": "EluxApp",
+              "canonicalReference": "@elux/vue-web!EluxApp:type"
             },
             {
               "kind": "Content",
@@ -1965,7 +1943,7 @@
           ],
           "returnTypeTokenRange": {
             "startIndex": 3,
-            "endIndex": 9
+            "endIndex": 4
           },
           "releaseTag": "Public",
           "overloadIndex": 1,
@@ -2473,6 +2451,54 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/vue-web!EluxApp:type",
+          "docComment": "/**\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type EluxApp = "
+            },
+            {
+              "kind": "Reference",
+              "text": "App",
+              "canonicalReference": "@vue/runtime-core!App:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " & {\n    render(options?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "RenderOptions",
+              "canonicalReference": "@elux/vue-web!RenderOptions:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<void>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "EluxApp",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 7
+          }
         },
         {
           "kind": "Interface",
@@ -3356,7 +3382,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-web!getApi:function(1)",
-          "docComment": "/**\n * 获取应用全局方法\n *\n * @remarks\n *\n * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参\n *\n * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @param injectActions - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @returns 返回包含多个全局方法的结构体：\n *\n * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。\n *\n * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：\n * ```js\n *   dispatch(Modules.article.actions.refresh())\n * ```\n *\n * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：\n * ```js\n *   dispatch(Modules.a.actions.a1())\n *   dispatch(Modules.b.actions.b1())\n * ```\n *\n * 这种写法可以简化为：\n * ```js\n *   const {a, b} = GetActions('a', 'b')\n *   dispatch(a.a1())\n *   dispatch(b.b1())\n * ```\n *\n * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。\n *\n * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：\n * ```js\n *   const globalRouter = GetClientRouter()\n *   const currentRouter = useRouter()\n *   console.log(blobalRouter===currentRouter)\n * ```\n *\n * - `useStore`：用于在 UI Render 中获取当前 Store，例如：\n * ```js\n *   const store = useStore()\n *   store.dispatch(Modules.article.actions.refresh())\n * ```\n *\n * @example\n * ```js\n * const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API, Router>();\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 获取应用全局方法\n *\n * @remarks\n *\n * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参\n *\n * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @param injectActions - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @returns 返回包含多个全局方法的结构体：\n *\n * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。\n *\n * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：\n * ```js\n *   dispatch(Modules.article.actions.refresh())\n * ```\n *\n * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：\n * ```js\n *   dispatch(Modules.a.actions.a1())\n *   dispatch(Modules.b.actions.b1())\n * ```\n *\n * 这种写法可以简化为：\n * ```js\n *   const {a, b} = GetActions('a', 'b')\n *   dispatch(a.a1())\n *   dispatch(b.b1())\n * ```\n *\n * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。\n *\n * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：\n * ```js\n *   const globalRouter = GetClientRouter()\n *   const currentRouter = useRouter()\n *   console.log(blobalRouter===currentRouter)\n * ```\n *\n * - `useStore`：用于在 UI Render 中获取当前 Store，例如：\n * ```js\n *   const store = useStore()\n *   store.dispatch(Modules.article.actions.refresh())\n * ```\n *\n * @example\n * ```js\n * const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4838,6 +4864,32 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@elux/vue-web!IRouter#routeKey:member",
+              "docComment": "/**\n * 每次路由变化都会产生唯一ID\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "routeKey: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "routeKey",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-web!IRouter#runtime:member",
               "docComment": "/**\n * 路由运行状态\n */\n",
               "excerptTokens": [
@@ -6205,6 +6257,63 @@
           "name": "patchActions"
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "@elux/vue-web!PathToRegexp:var",
+          "docComment": "/**\n * * 引用path-to-regexp\n *\n * @remarks\n *\n * 参见{@link https://www.npmjs.com/package/path-to-regexp | path-to-regexp}\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "PathToRegexp: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    pathToRegexp: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "pathToRegexp",
+              "canonicalReference": "path-to-regexp!pathToRegexp:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    match: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "match",
+              "canonicalReference": "path-to-regexp!match:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    parse: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "parse",
+              "canonicalReference": "path-to-regexp!parse:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    compile: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "compile",
+              "canonicalReference": "path-to-regexp!compile:function"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "PathToRegexp",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 10
+          }
+        },
+        {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-web!PickModelActions:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
@@ -7513,7 +7622,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "{\n        in(pathname: string): string;\n        out(pathname: string): string;\n    }"
+                  "text": "{\n        in(nativePathname: string): string;\n        out(internalPathname: string): string;\n    }"
                 },
                 {
                   "kind": "Content",

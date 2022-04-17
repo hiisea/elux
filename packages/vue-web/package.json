@@ -13,10 +13,15 @@
   },
   "main": "dist/es5/pkg.js",
   "module": "dist/es6/pkg.js",
+  "browser": {
+    "./server.js": "./server.mock.js"
+  },
   "types": "types/",
   "files": [
     "types/",
-    "dist/"
+    "dist/",
+    "server.js",
+    "server.mock.js"
   ],
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
@@ -30,7 +35,7 @@
   },
   "externals": {
     "vue": true,
-    "@elux/vue-components/server": true
+    "@elux/vue-web/server": true
   },
   "peerDependencies": {
     "vue": "^3.0.0"
@@ -40,7 +45,8 @@
     "@elux/core": "^1.2.0",
     "@elux/route": "^1.2.1",
     "@elux/route-browser": "^1.2.1",
-    "@elux/vue-components": "^1.2.1"
+    "@elux/vue-components": "^1.2.1",
+    "@vue/server-renderer": "^3.0.0"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

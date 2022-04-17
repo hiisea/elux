@@ -1,8 +1,7 @@
-import Taro from '@tarojs/taro';
-import { hydrate, render, unstable_batchedUpdates } from 'react-dom';
-import require$$0 from 'react-dom/server';
-import React, { useContext, memo, useState, useRef, useEffect, Component as Component$3, useCallback, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import React, { useContext, memo, useState, useRef, useEffect, useCallback, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
+import { unstable_batchedUpdates } from 'react-dom';
 
 let root;
 
@@ -745,12 +744,12 @@ const preMiddleware = ({
   return next(action);
 };
 class CoreRouter {
-  constructor(location, action, nativeRequest) {
+  constructor(location, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
+    this.action = 'init';
     this.routeKey = '';
     this.location = location;
-    this.action = action;
     this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
@@ -1625,8 +1624,22 @@ class WindowStack extends HistoryStack {
 class BaseNativeRouter {
   constructor(nativeRequest) {
     this.router = void 0;
+    this.routeKey = '';
     this.curTask = void 0;
     this.router = new Router(this, nativeRequest);
+  }
+
+  onSuccess() {
+    if (this.curTask) {
+      const {
+        resolve,
+        timeout
+      } = this.curTask;
+      this.curTask = undefined;
+      env.clearTimeout(timeout);
+      this.routeKey = '';
+      resolve();
+    }
   }
 
   testExecute(method, location, backIndex) {
@@ -1638,8 +1651,13 @@ class BaseNativeRouter {
     const result = this[method](locationToNativeLocation(location), key, backIndex);
 
     if (result) {
-      return result.then(() => undefined, e => {
-        env.console.warn('Native route error:' + e.toString());
+      this.routeKey = key;
+      return new Promise(resolve => {
+        const timeout = env.setTimeout(() => this.onSuccess(), 2000);
+        this.curTask = {
+          resolve,
+          timeout
+        };
       });
     }
   }
@@ -1647,7 +1665,7 @@ class BaseNativeRouter {
 }
 class Router extends CoreRouter {
   constructor(nativeRouter, nativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), 'relaunch', nativeRequest);
+    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -1680,6 +1698,10 @@ class Router extends CoreRouter {
         task[0]().finally(this.onTaskComplete).then(task[1], task[2]);
       }
     });
+  }
+
+  nativeInitiated() {
+    return !this.nativeRouter.routeKey;
   }
 
   getHistoryLength(target = 'page') {
@@ -1755,6 +1777,19 @@ class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
+  redirectOnServer(urlOrLocation) {
+    if (env.isServer) {
+      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const nativeUrl = urlToNativeUrl(url);
+      const err = {
+        code: ErrorCodes.ROUTE_REDIRECT,
+        message: 'Route change in server is not allowed.',
+        detail: nativeUrl
+      };
+      throw err;
+    }
+  }
+
   init(prevState) {
     const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
     this.curTask = task;
@@ -1769,6 +1804,12 @@ class Router extends CoreRouter {
       completed: false
     };
     const store = this.getCurrentPage().store;
+    const {
+      action,
+      location,
+      routeKey
+    } = this;
+    await this.nativeRouter.execute(action, location, routeKey);
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -1783,19 +1824,13 @@ class Router extends CoreRouter {
     }
 
     this.runtime.completed = true;
-  }
-
-  redirectOnServer(urlOrLocation) {
-    if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
-      const nativeUrl = urlToNativeUrl(url);
-      const err = {
-        code: ErrorCodes.ROUTE_REDIRECT,
-        message: 'Route change in server is not allowed.',
-        detail: nativeUrl
-      };
-      throw err;
-    }
+    this.dispatch({
+      location,
+      action,
+      prevStore: store,
+      newStore: store,
+      windowChanged: true
+    });
   }
 
   relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
@@ -1946,7 +1981,7 @@ class Router extends CoreRouter {
 
   back(stepOrKey = 1, target = 'page', payload = null, overflowRedirect = '', _nativeCaller = false) {
     if (!stepOrKey) {
-      return;
+      return Promise.resolve();
     }
 
     this.redirectOnServer({
@@ -2054,21 +2089,26 @@ class MPNativeRouter extends BaseNativeRouter {
     } = routeConfig.NotifyNativeRouter;
 
     if (window || page) {
-      this.unlistenHistory = history.onRouteChange((pathname, search, action) => {
-        const url = [pathname, search].filter(Boolean).join('?');
-        const arr = search.match(/__key__=(\w+)/);
-        let key = arr ? arr[1] : '';
+      this.unlistenHistory = history.onRouteChange(({
+        pathname,
+        search,
+        action
+      }) => {
+        let key = this.routeKey;
 
-        if (action === 'POP' && !key) {
-          const {
-            record
-          } = this.router.findRecordByStep(-1, false);
-          key = record.key;
-        }
+        if (!key) {
+          const nativeUrl = [pathname, search].filter(Boolean).join('?');
+          const url = nativeUrlToUrl(nativeUrl);
 
-        if (key !== this.router.routeKey) {
           if (action === 'POP') {
-            this.router.back(key, 'window', null, '', true);
+            const arr = search.match(/__=(\w+)/);
+            key = arr ? arr[1] : '';
+
+            if (!key) {
+              this.router.back(-1, 'page', null, '', true);
+            } else {
+              this.router.back(key, 'page', null, '', true);
+            }
           } else if (action === 'REPLACE') {
             this.router.replace({
               url
@@ -2082,13 +2122,19 @@ class MPNativeRouter extends BaseNativeRouter {
               url
             }, 'window', null, true);
           }
+        } else {
+          this.onSuccess();
         }
       });
     }
   }
 
   addKey(url, key) {
-    return url.indexOf('?') > -1 ? `${url}&__key__=${key}` : `${url}?__key__=${key}`;
+    return url.indexOf('?') > -1 ? `${url}&__=${key}` : `${url}?__=${key}`;
+  }
+
+  init(location, key) {
+    return true;
   }
 
   _push(location) {
@@ -2098,9 +2144,10 @@ class MPNativeRouter extends BaseNativeRouter {
   }
 
   push(location, key) {
-    return this.history.navigateTo({
+    this.history.navigateTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   }
 
   _replace(location) {
@@ -2110,27 +2157,31 @@ class MPNativeRouter extends BaseNativeRouter {
   }
 
   replace(location, key) {
-    return this.history.redirectTo({
+    this.history.redirectTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   }
 
   relaunch(location, key) {
     if (this.history.isTabPage(location.pathname)) {
-      return this.history.switchTab({
+      this.history.switchTab({
         url: location.url
+      });
+    } else {
+      this.history.reLaunch({
+        url: this.addKey(location.url, key)
       });
     }
 
-    return this.history.reLaunch({
-      url: this.addKey(location.url, key)
-    });
+    return true;
   }
 
   back(location, key, index) {
-    return this.history.navigateBack({
+    this.history.navigateBack({
       delta: index[0]
     });
+    return true;
   }
 
   destroy() {
@@ -2154,6 +2205,10 @@ setCoreConfig({
     title
   })
 });
+let TaroRouter;
+let prevPageInfo;
+let tabPages = undefined;
+let curLocation;
 const eventBus = new SingleDispatcher();
 
 function routeToPathname(route) {
@@ -2168,78 +2223,14 @@ function queryTosearch(query = {}) {
   return parts.join('&');
 }
 
-let prevPageInfo;
-
-function patchPageOptions(pageOptions) {
-  const onShow = pageOptions.onShow;
-
-  pageOptions.onShow = function () {
-    const arr = Taro.getCurrentPages();
-    const currentPage = arr[arr.length - 1];
-    const currentPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-
-    if (prevPageInfo) {
-      let action = 'PUSH';
-
-      if (currentPageInfo.count < prevPageInfo.count) {
-        action = 'POP';
-      } else if (currentPageInfo.count === prevPageInfo.count) {
-        if (currentPageInfo.count === 1) {
-          action = 'RELAUNCH';
-        } else {
-          action = 'REPLACE';
-        }
-      }
-
-      eventBus.dispatch({
-        pathname: currentPageInfo.pathname,
-        search: currentPageInfo.search,
-        action
-      });
-    }
-
-    return onShow == null ? void 0 : onShow.call(this);
-  };
-
-  const onHide = pageOptions.onHide;
-
-  pageOptions.onHide = function () {
-    const arr = Taro.getCurrentPages();
-    const currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onHide == null ? void 0 : onHide.call(this);
-  };
-
-  const onUnload = pageOptions.onUnload;
-
-  pageOptions.onUnload = function () {
-    const arr = Taro.getCurrentPages();
-    const currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onUnload == null ? void 0 : onUnload.call(this);
-  };
-}
-
-let tabPages = undefined;
 const taroHistory = {
   reLaunch: Taro.reLaunch,
   redirectTo: Taro.redirectTo,
   navigateTo: Taro.navigateTo,
   navigateBack: Taro.navigateBack,
   switchTab: Taro.switchTab,
-  isTabPage: pathname => {
+
+  isTabPage(pathname) {
     if (!tabPages) {
       if (env.__taroAppConfig.tabBar) {
         tabPages = env.__taroAppConfig.tabBar.list.reduce((obj, item) => {
@@ -2253,92 +2244,141 @@ const taroHistory = {
 
     return !!tabPages[pathname];
   },
-  getLocation: () => {
-    const arr = Taro.getCurrentPages();
-    let path;
-    let query;
 
-    if (arr.length === 0) {
-      ({
-        path,
-        query
-      } = Taro.getLaunchOptionsSync());
-    } else {
-      const current = arr[arr.length - 1];
-      path = current.route;
-      query = current.options;
+  getLocation() {
+    if (!curLocation) {
+      if (process.env.TARO_ENV === 'h5') {
+        TaroRouter.history.listen(({
+          location: {
+            pathname,
+            search
+          },
+          action
+        }) => {
+          if (action !== 'POP' && taroHistory.isTabPage(pathname)) {
+            action = 'RELAUNCH';
+          }
+
+          curLocation = {
+            pathname,
+            search: search.replace(/^\?/, ''),
+            action
+          };
+        });
+        const {
+          pathname,
+          search
+        } = TaroRouter.history.location;
+        curLocation = {
+          pathname,
+          search: search.replace(/^\?/, ''),
+          action: 'RELAUNCH'
+        };
+      } else {
+        const arr = Taro.getCurrentPages();
+        let path;
+        let query;
+
+        if (arr.length === 0) {
+          ({
+            path,
+            query
+          } = Taro.getLaunchOptionsSync());
+        } else {
+          const current = arr[arr.length - 1];
+          path = current.route;
+          query = current.options;
+        }
+
+        curLocation = {
+          pathname: routeToPathname(path),
+          search: queryTosearch(query),
+          action: 'RELAUNCH'
+        };
+      }
     }
 
-    return {
-      pathname: routeToPathname(path),
-      search: queryTosearch(query)
-    };
+    return curLocation;
   },
 
   onRouteChange(callback) {
-    return eventBus.addListener(data => {
-      const {
-        pathname,
-        search,
-        action
-      } = data;
-      callback(pathname, search, action);
-    });
+    return eventBus.addListener(callback);
   }
 
 };
 
 if (process.env.TARO_ENV === 'h5') {
-  const taroRouter = require('@tarojs/router');
-
-  taroHistory.getLocation = () => {
-    const {
-      pathname,
-      search
-    } = taroRouter.history.location;
-    return {
-      pathname,
-      search: search.replace(/^\?/, '')
-    };
-  };
-
-  taroHistory.onRouteChange = callback => {
-    const unhandle = taroRouter.history.listen(({
-      location,
-      action
-    }) => {
-      let routeAction = action;
-
-      if (action !== 'POP' && taroHistory.isTabPage(location.pathname)) {
-        routeAction = 'RELAUNCH';
-      }
-
-      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
-    });
-    return unhandle;
-  };
-
-  Taro.onUnhandledRejection = callback => {
-    window.addEventListener('unhandledrejection', callback, false);
-  };
-
-  Taro.onError = callback => {
-    window.addEventListener('error', callback, false);
-  };
+  TaroRouter = require('@tarojs/router');
 } else {
-  if (!Taro.onUnhandledRejection) {
-    Taro.onUnhandledRejection = () => undefined;
-  }
-
   const originalPage = Page;
 
   Page = function (pageOptions) {
-    patchPageOptions(pageOptions);
+    const onShow = pageOptions.onShow;
+    const onHide = pageOptions.onHide;
+    const onUnload = pageOptions.onUnload;
+
+    pageOptions.onShow = function () {
+      const arr = Taro.getCurrentPages();
+      const currentPage = arr[arr.length - 1];
+      const currentPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      curLocation = {
+        pathname: currentPageInfo.pathname,
+        search: currentPageInfo.search,
+        action: 'RELAUNCH'
+      };
+
+      if (prevPageInfo) {
+        let action = 'PUSH';
+
+        if (currentPageInfo.count < prevPageInfo.count) {
+          action = 'POP';
+        } else if (currentPageInfo.count === prevPageInfo.count) {
+          if (currentPageInfo.count === 1) {
+            action = 'RELAUNCH';
+          } else {
+            action = 'REPLACE';
+          }
+        }
+
+        curLocation.action = action;
+      }
+
+      return onShow == null ? void 0 : onShow.call(this);
+    };
+
+    pageOptions.onHide = function () {
+      const arr = Taro.getCurrentPages();
+      const currentPage = arr[arr.length - 1];
+      prevPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      return onHide == null ? void 0 : onHide.call(this);
+    };
+
+    pageOptions.onUnload = function () {
+      const arr = Taro.getCurrentPages();
+      const currentPage = arr[arr.length - 1];
+      prevPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      return onUnload == null ? void 0 : onUnload.call(this);
+    };
+
     return originalPage(pageOptions);
   };
 }
 
-var server = require$$0;
+function onShow() {
+  eventBus.dispatch(taroHistory.getLocation());
+}
 
 const EluxContextComponent = React.createContext({
   documentHead: '',
@@ -2348,8 +2388,32 @@ function UseRouter() {
   const eluxContext = useContext(EluxContextComponent);
   return eluxContext.router;
 }
+const reactComponentsConfig = {
+  hydrate: undefined,
+  render: undefined,
+  renderToString: undefined
+};
 
-const RouterComponent = props => {
+const EWindow = memo(function ({
+  store
+}) {
+  const AppView = getEntryComponent();
+  const StoreProvider = coreConfig.StoreProvider;
+
+  if (store) {
+    return jsx(StoreProvider, {
+      store: store,
+      children: jsx(AppView, {})
+    });
+  } else {
+    return jsx("div", {
+      className: "g-page-loading",
+      children: "Loading..."
+    });
+  }
+});
+
+const RouterComponent = () => {
   const router = coreConfig.UseRouter();
   const [data, setData] = useState({
     classname: 'elux-app',
@@ -2427,45 +2491,27 @@ const RouterComponent = props => {
         className: "elux-window",
         "data-url": url,
         children: jsx(EWindow, {
-          store: store,
-          view: props.page
+          store: store
         })
       }, store.sid);
     })
   });
 };
-const EWindow = memo(function ({
-  store,
-  view
-}) {
-  const View = view;
-  const StoreProvider = coreConfig.StoreProvider;
-  return jsx(StoreProvider, {
-    store: store,
-    children: jsx(View, {})
-  });
-});
 
 const AppRender = {
   toDocument(id, eluxContext, fromSSR, app, store) {
-    const renderFun = fromSSR ? hydrate : render;
+    const renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
     const panel = env.document.getElementById(id);
-    const appView = getEntryComponent();
     renderFun(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
-      children: jsx(RouterComponent, {
-        page: appView
-      })
+      children: jsx(RouterComponent, {})
     }), panel);
   },
 
   toString(id, eluxContext, app, store) {
-    const appView = getEntryComponent();
-    const html = server.renderToString(jsx(EluxContextComponent.Provider, {
+    const html = reactComponentsConfig.renderToString(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
-      children: jsx(RouterComponent, {
-        page: appView
-      })
+      children: jsx(RouterComponent, {})
     }));
     return Promise.resolve(html);
   },
@@ -2492,112 +2538,60 @@ const LoadComponentOnLoading = () => jsx("div", {
 const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
+  return React.forwardRef((props, ref) => {
+    const execute = curStore => {
+      let View = OnLoading;
 
-  class Loader extends Component$3 {
-    constructor(props) {
-      super(props);
-      this.active = true;
-      this.loading = false;
-      this.error = '';
-      this.view = void 0;
-      this.state = {
-        ver: 0
-      };
-      this.execute();
-    }
+      try {
+        const result = injectComponent(moduleName, componentName, curStore || store);
 
-    componentWillUnmount() {
-      this.active = false;
-    }
-
-    shouldComponentUpdate() {
-      this.execute();
-      return true;
-    }
-
-    componentDidMount() {
-      this.error = '';
-    }
-
-    execute() {
-      if (!this.view && !this.loading && !this.error) {
-        const {
-          store
-        } = this.props;
-        this.loading = true;
-        let result;
-
-        try {
-          result = injectComponent(moduleName, componentName, store);
-
-          if (env.isServer && isPromise(result)) {
-            result = undefined;
+        if (isPromise(result)) {
+          if (env.isServer) {
             throw 'can not use async component in SSR';
           }
-        } catch (e) {
-          this.loading = false;
-          this.error = e.message || `${e}`;
-        }
 
-        if (result) {
-          if (isPromise(result)) {
-            result.then(view => {
-              if (view) {
-                this.loading = false;
-                this.view = view;
-                this.active && this.setState({
-                  ver: this.state.ver + 1
-                });
-              }
-            }, e => {
-              env.console.error(e);
-              this.loading = false;
-              this.error = e.message || `${e}` || 'error';
-              this.active && this.setState({
-                ver: this.state.ver + 1
-              });
-            });
-          } else {
-            this.loading = false;
-            this.view = result;
-          }
+          result.then(view => {
+            active && setView(view || 'not found!');
+          }, e => {
+            env.console.error(e);
+            active && setView(e.message || `${e}` || 'error');
+          });
+        } else {
+          View = result;
         }
+      } catch (e) {
+        env.console.error(e);
+        View = e.message || `${e}` || 'error';
       }
+
+      return View;
+    };
+
+    const [active, setActive] = useState(true);
+    useEffect(() => {
+      return () => {
+        setActive(false);
+      };
+    }, []);
+    const newStore = coreConfig.UseStore();
+    const [store, setStore] = useState(newStore);
+    const [View, setView] = useState(execute);
+
+    if (store !== newStore) {
+      setStore(newStore);
+      setView(execute(newStore));
     }
 
-    render() {
-      const {
-        forwardedRef,
-        store,
-        ...rest
-      } = this.props;
-
-      if (this.view) {
-        const View = this.view;
-        return jsx(View, {
-          ref: forwardedRef,
-          ...rest
-        });
-      }
-
-      if (this.loading) {
-        const Loading = OnLoading;
-        return jsx(Loading, {});
-      }
-
+    if (typeof View === 'string') {
       return jsx(OnError, {
-        message: this.error
+        message: View
+      });
+    } else {
+      return jsx(View, {
+        ref: ref,
+        ...props
       });
     }
-
-  }
-
-  return React.forwardRef((props, ref) => {
-    const store = coreConfig.UseStore();
-    return jsx(Loader, { ...props,
-      store: store,
-      forwardedRef: ref
-    });
   });
 };
 
@@ -2733,9 +2727,16 @@ const Link = React.forwardRef(({
   }
 
   props['href'] = href;
-  return jsx("a", { ...props,
-    ref: ref
-  });
+
+  if (process.env.TARO_ENV) {
+    return jsx("span", { ...props,
+      ref: ref
+    });
+  } else {
+    return jsx("a", { ...props,
+      ref: ref
+    });
+  }
 });
 
 setCoreConfig({
@@ -5886,6 +5887,37 @@ function patchActions(typeName, json) {
   }
 }
 
+function useCurrentStore() {
+  const router = coreConfig.UseRouter();
+  const [store, setStore] = useState();
+  const unlink = useRef();
+  useDidShow(() => {
+    if (!unlink.current) {
+      unlink.current = router.addListener(({
+        newStore
+      }) => {
+        setStore(newStore);
+      });
+    }
+
+    onShow();
+  });
+  useDidHide(() => {
+    if (unlink.current) {
+      unlink.current();
+      unlink.current = undefined;
+    }
+  });
+  useEffect(() => {
+    return () => {
+      if (unlink.current) {
+        unlink.current();
+        unlink.current = undefined;
+      }
+    };
+  }, []);
+  return store;
+}
 let cientSingleton = undefined;
 function createApp(appConfig) {
   if (cientSingleton) {
@@ -5902,4 +5934,4 @@ function createApp(appConfig) {
   return buildProvider({}, router);
 }
 
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };
+export { BaseModel, DocumentHead, EWindow, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useCurrentStore, useSelector };

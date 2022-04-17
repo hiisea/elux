@@ -1,5 +1,5 @@
-import {Location, IRouter, UNListener, NativeRequest} from '@elux/core';
-import {BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig} from '@elux/route';
+import {IRouter, Location, NativeRequest, UNListener} from '@elux/core';
+import {BaseNativeRouter, locationToUrl, nativeUrlToUrl, routeConfig, setRouteConfig} from '@elux/route';
 
 setRouteConfig({NotifyNativeRouter: {window: true, page: false}});
 
@@ -9,15 +9,15 @@ interface RouteOption {
 interface NavigateBackOption {
   delta?: number;
 }
-
+export type MPLocation = {pathname: string; search: string; action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH'};
 export interface IHistory {
-  onRouteChange(callback: (pathname: string, search: string, action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH') => void): () => void;
+  onRouteChange(callback: (data: MPLocation) => void): () => void;
   reLaunch(option: RouteOption): Promise<void>;
   redirectTo(option: RouteOption): Promise<void>;
   navigateTo(option: RouteOption): Promise<void>;
   navigateBack(option: NavigateBackOption): Promise<void>;
   switchTab(option: RouteOption): Promise<void>;
-  getLocation(): {pathname: string; search: string};
+  getLocation(): MPLocation;
   isTabPage(pathname: string): boolean;
 }
 
@@ -29,18 +29,21 @@ export class MPNativeRouter extends BaseNativeRouter {
 
     const {window, page} = routeConfig.NotifyNativeRouter;
     if (window || page) {
-      this.unlistenHistory = history.onRouteChange((pathname: string, search: string, action) => {
-        const url = [pathname, search].filter(Boolean).join('?');
-        const arr = search.match(/__key__=(\w+)/);
-        let key = arr ? arr[1] : '';
-        //key不存在一定是TabPage，TabPage一定是只有一条记录
-        if (action === 'POP' && !key) {
-          const {record} = this.router.findRecordByStep(-1, false);
-          key = record.key;
-        }
-        if (key !== this.router.routeKey) {
+      this.unlistenHistory = history.onRouteChange(({pathname, search, action}) => {
+        let key = this.routeKey;
+        if (!key) {
+          //表示native主动
+          const nativeUrl = [pathname, search].filter(Boolean).join('?');
+          const url = nativeUrlToUrl(nativeUrl);
           if (action === 'POP') {
-            this.router.back(key, 'window', null, '', true);
+            const arr = search.match(/__=(\w+)/);
+            key = arr ? arr[1] : '';
+            if (!key) {
+              //表示Tabpage
+              this.router.back(-1, 'page', null, '', true);
+            } else {
+              this.router.back(key, 'page', null, '', true);
+            }
           } else if (action === 'REPLACE') {
             this.router.replace({url}, 'window', null, true);
           } else if (action === 'PUSH') {
@@ -48,13 +51,19 @@ export class MPNativeRouter extends BaseNativeRouter {
           } else {
             this.router.relaunch({url}, 'window', null, true);
           }
+        } else {
+          this.onSuccess();
         }
       });
     }
   }
 
   protected addKey(url: string, key: string): string {
-    return url.indexOf('?') > -1 ? `${url}&__key__=${key}` : `${url}?__key__=${key}`;
+    return url.indexOf('?') > -1 ? `${url}&__=${key}` : `${url}?__=${key}`;
+  }
+
+  protected init(location: Location, key: string): boolean {
+    return true;
   }
 
   protected _push(location: Location): void {
@@ -63,8 +72,9 @@ export class MPNativeRouter extends BaseNativeRouter {
     }
   }
 
-  protected push(location: Location, key: string): Promise<void> {
-    return this.history.navigateTo({url: this.addKey(location.url, key)});
+  protected push(location: Location, key: string): boolean {
+    this.history.navigateTo({url: this.addKey(location.url, key)});
+    return true;
   }
 
   protected _replace(location: Location): void {
@@ -73,20 +83,24 @@ export class MPNativeRouter extends BaseNativeRouter {
     }
   }
 
-  protected replace(location: Location, key: string): Promise<void> {
-    return this.history.redirectTo({url: this.addKey(location.url, key)});
+  protected replace(location: Location, key: string): boolean {
+    this.history.redirectTo({url: this.addKey(location.url, key)});
+    return true;
   }
 
-  protected relaunch(location: Location, key: string): Promise<void> {
+  protected relaunch(location: Location, key: string): boolean {
     //TODO 如果当前页面和路由页面一致，是否不会onchange，此时应到返回false
     if (this.history.isTabPage(location.pathname)) {
-      return this.history.switchTab({url: location.url});
+      this.history.switchTab({url: location.url});
+    } else {
+      this.history.reLaunch({url: this.addKey(location.url, key)});
     }
-    return this.history.reLaunch({url: this.addKey(location.url, key)});
+    return true;
   }
 
-  protected back(location: Location, key: string, index: [number, number]): Promise<void> {
-    return this.history.navigateBack({delta: index[0]});
+  protected back(location: Location, key: string, index: [number, number]): boolean {
+    this.history.navigateBack({delta: index[0]});
+    return true;
   }
 
   public destroy(): void {

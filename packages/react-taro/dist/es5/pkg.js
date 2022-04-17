@@ -1,8 +1,7 @@
-import Taro from '@tarojs/taro';
-import _reactDom, { hydrate, render } from 'react-dom';
-import require$$0 from 'react-dom/server';
-import _react, { useContext, memo, useState, useRef, useEffect, Component as Component$3, useCallback } from 'react';
+import _react, { useContext, memo, useState, useRef, useEffect, useCallback } from 'react';
+import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
+import _reactDom from 'react-dom';
 
 var root;
 
@@ -876,12 +875,12 @@ var preMiddleware = function preMiddleware(_ref) {
   };
 };
 var CoreRouter = function () {
-  function CoreRouter(location, action, nativeRequest) {
+  function CoreRouter(location, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
+    this.action = 'init';
     this.routeKey = '';
     this.location = location;
-    this.action = action;
     this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
@@ -2655,11 +2654,24 @@ var WindowStack = function (_HistoryStack2) {
 var BaseNativeRouter = function () {
   function BaseNativeRouter(nativeRequest) {
     this.router = void 0;
+    this.routeKey = '';
     this.curTask = void 0;
     this.router = new Router(this, nativeRequest);
   }
 
   var _proto = BaseNativeRouter.prototype;
+
+  _proto.onSuccess = function onSuccess() {
+    if (this.curTask) {
+      var _this$curTask = this.curTask,
+          resolve = _this$curTask.resolve,
+          timeout = _this$curTask.timeout;
+      this.curTask = undefined;
+      env.clearTimeout(timeout);
+      this.routeKey = '';
+      resolve();
+    }
+  };
 
   _proto.testExecute = function testExecute(method, location, backIndex) {
     var testMethod = '_' + method;
@@ -2667,13 +2679,20 @@ var BaseNativeRouter = function () {
   };
 
   _proto.execute = function execute(method, location, key, backIndex) {
+    var _this = this;
+
     var result = this[method](locationToNativeLocation(location), key, backIndex);
 
     if (result) {
-      return result.then(function () {
-        return undefined;
-      }, function (e) {
-        env.console.warn('Native route error:' + e.toString());
+      this.routeKey = key;
+      return new Promise(function (resolve) {
+        var timeout = env.setTimeout(function () {
+          return _this.onSuccess();
+        }, 2000);
+        _this.curTask = {
+          resolve: resolve,
+          timeout: timeout
+        };
       });
     }
   };
@@ -2684,50 +2703,54 @@ var Router = function (_CoreRouter) {
   _inheritsLoose(Router, _CoreRouter);
 
   function Router(nativeRouter, nativeRequest) {
-    var _this;
+    var _this2;
 
-    _this = _CoreRouter.call(this, urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), 'relaunch', nativeRequest) || this;
-    _this.curTask = void 0;
-    _this.taskList = [];
-    _this.windowStack = void 0;
+    _this2 = _CoreRouter.call(this, urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest) || this;
+    _this2.curTask = void 0;
+    _this2.taskList = [];
+    _this2.windowStack = void 0;
 
-    _this.onTaskComplete = function () {
-      var task = _this.taskList.shift();
+    _this2.onTaskComplete = function () {
+      var task = _this2.taskList.shift();
 
       if (task) {
-        _this.curTask = task;
-        var onTaskComplete = _this.onTaskComplete;
+        _this2.curTask = task;
+        var onTaskComplete = _this2.onTaskComplete;
         env.setTimeout(function () {
           return task[0]().finally(onTaskComplete).then(task[1], task[2]);
         }, 0);
       } else {
-        _this.curTask = undefined;
+        _this2.curTask = undefined;
       }
     };
 
-    _this.nativeRouter = nativeRouter;
-    _this.windowStack = new WindowStack(_this.location, new Store(0, _assertThisInitialized(_this)));
-    _this.routeKey = _this.findRecordByStep(0).record.key;
-    return _this;
+    _this2.nativeRouter = nativeRouter;
+    _this2.windowStack = new WindowStack(_this2.location, new Store(0, _assertThisInitialized(_this2)));
+    _this2.routeKey = _this2.findRecordByStep(0).record.key;
+    return _this2;
   }
 
   var _proto2 = Router.prototype;
 
   _proto2.addTask = function addTask(execute) {
-    var _this2 = this;
+    var _this3 = this;
 
     return new Promise(function (resolve, reject) {
       var task = [function () {
-        return setLoading(execute(), _this2.getCurrentPage().store);
+        return setLoading(execute(), _this3.getCurrentPage().store);
       }, resolve, reject];
 
-      if (_this2.curTask) {
-        _this2.taskList.push(task);
+      if (_this3.curTask) {
+        _this3.taskList.push(task);
       } else {
-        _this2.curTask = task;
-        task[0]().finally(_this2.onTaskComplete).then(task[1], task[2]);
+        _this3.curTask = task;
+        task[0]().finally(_this3.onTaskComplete).then(task[1], task[2]);
       }
     });
+  };
+
+  _proto2.nativeInitiated = function nativeInitiated() {
+    return !this.nativeRouter.routeKey;
   };
 
   _proto2.getHistoryLength = function getHistoryLength(target) {
@@ -2837,75 +2860,6 @@ var Router = function (_CoreRouter) {
     return mountStore;
   }();
 
-  _proto2.init = function init(prevState) {
-    var task = [this._init.bind(this, prevState), function () {
-      return undefined;
-    }, function () {
-      return undefined;
-    }];
-    this.curTask = task;
-    return task[0]().finally(this.onTaskComplete);
-  };
-
-  _proto2._init = function () {
-    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2(prevState) {
-      var store;
-      return regenerator.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              this.runtime = {
-                timestamp: Date.now(),
-                payload: null,
-                prevState: prevState,
-                completed: false
-              };
-              store = this.getCurrentPage().store;
-              _context2.prev = 2;
-              _context2.next = 5;
-              return store.mount(coreConfig.StageModuleName, 'init');
-
-            case 5:
-              _context2.next = 7;
-              return store.dispatch(testChangeAction(this.location, this.action));
-
-            case 7:
-              _context2.next = 15;
-              break;
-
-            case 9:
-              _context2.prev = 9;
-              _context2.t0 = _context2["catch"](2);
-
-              if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
-                _context2.next = 14;
-                break;
-              }
-
-              this.taskList = [];
-              throw _context2.t0;
-
-            case 14:
-              env.console.error(_context2.t0);
-
-            case 15:
-              this.runtime.completed = true;
-
-            case 16:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2, this, [[2, 9]]);
-    }));
-
-    function _init(_x5) {
-      return _init2.apply(this, arguments);
-    }
-
-    return _init;
-  }();
-
   _proto2.redirectOnServer = function redirectOnServer(urlOrLocation) {
     if (env.isServer) {
       var url = urlOrLocation.url || locationToUrl(urlOrLocation);
@@ -2918,6 +2872,87 @@ var Router = function (_CoreRouter) {
       throw err;
     }
   };
+
+  _proto2.init = function init(prevState) {
+    var task = [this._init.bind(this, prevState), function () {
+      return undefined;
+    }, function () {
+      return undefined;
+    }];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  };
+
+  _proto2._init = function () {
+    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2(prevState) {
+      var store, action, location, routeKey;
+      return regenerator.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              this.runtime = {
+                timestamp: Date.now(),
+                payload: null,
+                prevState: prevState,
+                completed: false
+              };
+              store = this.getCurrentPage().store;
+              action = this.action, location = this.location, routeKey = this.routeKey;
+              _context2.next = 5;
+              return this.nativeRouter.execute(action, location, routeKey);
+
+            case 5:
+              _context2.prev = 5;
+              _context2.next = 8;
+              return store.mount(coreConfig.StageModuleName, 'init');
+
+            case 8:
+              _context2.next = 10;
+              return store.dispatch(testChangeAction(this.location, this.action));
+
+            case 10:
+              _context2.next = 18;
+              break;
+
+            case 12:
+              _context2.prev = 12;
+              _context2.t0 = _context2["catch"](5);
+
+              if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
+                _context2.next = 17;
+                break;
+              }
+
+              this.taskList = [];
+              throw _context2.t0;
+
+            case 17:
+              env.console.error(_context2.t0);
+
+            case 18:
+              this.runtime.completed = true;
+              this.dispatch({
+                location: location,
+                action: action,
+                prevStore: store,
+                newStore: store,
+                windowChanged: true
+              });
+
+            case 20:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this, [[5, 12]]);
+    }));
+
+    function _init(_x5) {
+      return _init2.apply(this, arguments);
+    }
+
+    return _init;
+  }();
 
   _proto2.relaunch = function relaunch(urlOrLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
@@ -3239,7 +3274,7 @@ var Router = function (_CoreRouter) {
     }
 
     if (!stepOrKey) {
-      return;
+      return Promise.resolve();
     }
 
     this.redirectOnServer({
@@ -3392,21 +3427,25 @@ var MPNativeRouter = function (_BaseNativeRouter) {
         page = _routeConfig$NotifyNa.page;
 
     if (window || page) {
-      _this.unlistenHistory = history.onRouteChange(function (pathname, search, action) {
-        var url = [pathname, search].filter(Boolean).join('?');
-        var arr = search.match(/__key__=(\w+)/);
-        var key = arr ? arr[1] : '';
+      _this.unlistenHistory = history.onRouteChange(function (_ref) {
+        var pathname = _ref.pathname,
+            search = _ref.search,
+            action = _ref.action;
+        var key = _this.routeKey;
 
-        if (action === 'POP' && !key) {
-          var _this$router$findReco = _this.router.findRecordByStep(-1, false),
-              record = _this$router$findReco.record;
+        if (!key) {
+          var nativeUrl = [pathname, search].filter(Boolean).join('?');
+          var url = nativeUrlToUrl(nativeUrl);
 
-          key = record.key;
-        }
-
-        if (key !== _this.router.routeKey) {
           if (action === 'POP') {
-            _this.router.back(key, 'window', null, '', true);
+            var arr = search.match(/__=(\w+)/);
+            key = arr ? arr[1] : '';
+
+            if (!key) {
+              _this.router.back(-1, 'page', null, '', true);
+            } else {
+              _this.router.back(key, 'page', null, '', true);
+            }
           } else if (action === 'REPLACE') {
             _this.router.replace({
               url: url
@@ -3420,6 +3459,8 @@ var MPNativeRouter = function (_BaseNativeRouter) {
               url: url
             }, 'window', null, true);
           }
+        } else {
+          _this.onSuccess();
         }
       });
     }
@@ -3430,7 +3471,11 @@ var MPNativeRouter = function (_BaseNativeRouter) {
   var _proto = MPNativeRouter.prototype;
 
   _proto.addKey = function addKey(url, key) {
-    return url.indexOf('?') > -1 ? url + "&__key__=" + key : url + "?__key__=" + key;
+    return url.indexOf('?') > -1 ? url + "&__=" + key : url + "?__=" + key;
+  };
+
+  _proto.init = function init(location, key) {
+    return true;
   };
 
   _proto._push = function _push(location) {
@@ -3440,9 +3485,10 @@ var MPNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.push = function push(location, key) {
-    return this.history.navigateTo({
+    this.history.navigateTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   };
 
   _proto._replace = function _replace(location) {
@@ -3452,27 +3498,31 @@ var MPNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.replace = function replace(location, key) {
-    return this.history.redirectTo({
+    this.history.redirectTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   };
 
   _proto.relaunch = function relaunch(location, key) {
     if (this.history.isTabPage(location.pathname)) {
-      return this.history.switchTab({
+      this.history.switchTab({
         url: location.url
+      });
+    } else {
+      this.history.reLaunch({
+        url: this.addKey(location.url, key)
       });
     }
 
-    return this.history.reLaunch({
-      url: this.addKey(location.url, key)
-    });
+    return true;
   };
 
   _proto.back = function back(location, key, index) {
-    return this.history.navigateBack({
+    this.history.navigateBack({
       delta: index[0]
     });
+    return true;
   };
 
   _proto.destroy = function destroy() {
@@ -3499,6 +3549,10 @@ setCoreConfig({
     });
   }
 });
+var TaroRouter;
+var prevPageInfo;
+var tabPages = undefined;
+var curLocation;
 var eventBus = new SingleDispatcher();
 
 function routeToPathname(route) {
@@ -3517,71 +3571,6 @@ function queryTosearch(query) {
   return parts.join('&');
 }
 
-var prevPageInfo;
-
-function patchPageOptions(pageOptions) {
-  var onShow = pageOptions.onShow;
-
-  pageOptions.onShow = function () {
-    var arr = Taro.getCurrentPages();
-    var currentPage = arr[arr.length - 1];
-    var currentPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-
-    if (prevPageInfo) {
-      var _action = 'PUSH';
-
-      if (currentPageInfo.count < prevPageInfo.count) {
-        _action = 'POP';
-      } else if (currentPageInfo.count === prevPageInfo.count) {
-        if (currentPageInfo.count === 1) {
-          _action = 'RELAUNCH';
-        } else {
-          _action = 'REPLACE';
-        }
-      }
-
-      eventBus.dispatch({
-        pathname: currentPageInfo.pathname,
-        search: currentPageInfo.search,
-        action: _action
-      });
-    }
-
-    return onShow == null ? void 0 : onShow.call(this);
-  };
-
-  var onHide = pageOptions.onHide;
-
-  pageOptions.onHide = function () {
-    var arr = Taro.getCurrentPages();
-    var currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onHide == null ? void 0 : onHide.call(this);
-  };
-
-  var onUnload = pageOptions.onUnload;
-
-  pageOptions.onUnload = function () {
-    var arr = Taro.getCurrentPages();
-    var currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onUnload == null ? void 0 : onUnload.call(this);
-  };
-}
-
-var tabPages = undefined;
 var taroHistory = {
   reLaunch: Taro.reLaunch,
   redirectTo: Taro.redirectTo,
@@ -3603,87 +3592,137 @@ var taroHistory = {
     return !!tabPages[pathname];
   },
   getLocation: function getLocation() {
-    var arr = Taro.getCurrentPages();
-    var path;
-    var query;
+    if (!curLocation) {
+      if (process.env.TARO_ENV === 'h5') {
+        TaroRouter.history.listen(function (_ref) {
+          var _ref$location = _ref.location,
+              pathname = _ref$location.pathname,
+              search = _ref$location.search,
+              action = _ref.action;
 
-    if (arr.length === 0) {
-      var _Taro$getLaunchOption = Taro.getLaunchOptionsSync();
+          if (action !== 'POP' && taroHistory.isTabPage(pathname)) {
+            action = 'RELAUNCH';
+          }
 
-      path = _Taro$getLaunchOption.path;
-      query = _Taro$getLaunchOption.query;
-    } else {
-      var current = arr[arr.length - 1];
-      path = current.route;
-      query = current.options;
+          curLocation = {
+            pathname: pathname,
+            search: search.replace(/^\?/, ''),
+            action: action
+          };
+        });
+        var _TaroRouter$history$l = TaroRouter.history.location,
+            pathname = _TaroRouter$history$l.pathname,
+            search = _TaroRouter$history$l.search;
+        curLocation = {
+          pathname: pathname,
+          search: search.replace(/^\?/, ''),
+          action: 'RELAUNCH'
+        };
+      } else {
+        var arr = Taro.getCurrentPages();
+
+        var _path;
+
+        var query;
+
+        if (arr.length === 0) {
+          var _Taro$getLaunchOption = Taro.getLaunchOptionsSync();
+
+          _path = _Taro$getLaunchOption.path;
+          query = _Taro$getLaunchOption.query;
+        } else {
+          var current = arr[arr.length - 1];
+          _path = current.route;
+          query = current.options;
+        }
+
+        curLocation = {
+          pathname: routeToPathname(_path),
+          search: queryTosearch(query),
+          action: 'RELAUNCH'
+        };
+      }
     }
 
-    return {
-      pathname: routeToPathname(path),
-      search: queryTosearch(query)
-    };
+    return curLocation;
   },
   onRouteChange: function onRouteChange(callback) {
-    return eventBus.addListener(function (data) {
-      var pathname = data.pathname,
-          search = data.search,
-          action = data.action;
-      callback(pathname, search, action);
-    });
+    return eventBus.addListener(callback);
   }
 };
 
 if (process.env.TARO_ENV === 'h5') {
-  var taroRouter = require('@tarojs/router');
-
-  taroHistory.getLocation = function () {
-    var _taroRouter$history$l = taroRouter.history.location,
-        pathname = _taroRouter$history$l.pathname,
-        search = _taroRouter$history$l.search;
-    return {
-      pathname: pathname,
-      search: search.replace(/^\?/, '')
-    };
-  };
-
-  taroHistory.onRouteChange = function (callback) {
-    var unhandle = taroRouter.history.listen(function (_ref) {
-      var location = _ref.location,
-          action = _ref.action;
-      var routeAction = action;
-
-      if (action !== 'POP' && taroHistory.isTabPage(location.pathname)) {
-        routeAction = 'RELAUNCH';
-      }
-
-      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
-    });
-    return unhandle;
-  };
-
-  Taro.onUnhandledRejection = function (callback) {
-    window.addEventListener('unhandledrejection', callback, false);
-  };
-
-  Taro.onError = function (callback) {
-    window.addEventListener('error', callback, false);
-  };
+  TaroRouter = require('@tarojs/router');
 } else {
-  if (!Taro.onUnhandledRejection) {
-    Taro.onUnhandledRejection = function () {
-      return undefined;
-    };
-  }
-
   var originalPage = Page;
 
   Page = function Page(pageOptions) {
-    patchPageOptions(pageOptions);
+    var onShow = pageOptions.onShow;
+    var onHide = pageOptions.onHide;
+    var onUnload = pageOptions.onUnload;
+
+    pageOptions.onShow = function () {
+      var arr = Taro.getCurrentPages();
+      var currentPage = arr[arr.length - 1];
+      var currentPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      curLocation = {
+        pathname: currentPageInfo.pathname,
+        search: currentPageInfo.search,
+        action: 'RELAUNCH'
+      };
+
+      if (prevPageInfo) {
+        var action = 'PUSH';
+
+        if (currentPageInfo.count < prevPageInfo.count) {
+          action = 'POP';
+        } else if (currentPageInfo.count === prevPageInfo.count) {
+          if (currentPageInfo.count === 1) {
+            action = 'RELAUNCH';
+          } else {
+            action = 'REPLACE';
+          }
+        }
+
+        curLocation.action = action;
+      }
+
+      return onShow == null ? void 0 : onShow.call(this);
+    };
+
+    pageOptions.onHide = function () {
+      var arr = Taro.getCurrentPages();
+      var currentPage = arr[arr.length - 1];
+      prevPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      return onHide == null ? void 0 : onHide.call(this);
+    };
+
+    pageOptions.onUnload = function () {
+      var arr = Taro.getCurrentPages();
+      var currentPage = arr[arr.length - 1];
+      prevPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      return onUnload == null ? void 0 : onUnload.call(this);
+    };
+
     return originalPage(pageOptions);
   };
 }
 
-var server = require$$0;
+function onShow() {
+  eventBus.dispatch(taroHistory.getLocation());
+}
 
 var EluxContextComponent = _react.createContext({
   documentHead: '',
@@ -3693,8 +3732,31 @@ function UseRouter() {
   var eluxContext = useContext(EluxContextComponent);
   return eluxContext.router;
 }
+var reactComponentsConfig = {
+  hydrate: undefined,
+  render: undefined,
+  renderToString: undefined
+};
 
-var RouterComponent = function RouterComponent(props) {
+var EWindow = memo(function (_ref) {
+  var store = _ref.store;
+  var AppView = getEntryComponent();
+  var StoreProvider = coreConfig.StoreProvider;
+
+  if (store) {
+    return jsx(StoreProvider, {
+      store: store,
+      children: jsx(AppView, {})
+    });
+  } else {
+    return jsx("div", {
+      className: "g-page-loading",
+      children: "Loading..."
+    });
+  }
+});
+
+var RouterComponent = function RouterComponent() {
   var router = coreConfig.UseRouter();
 
   var _useState = useState({
@@ -3771,43 +3833,26 @@ var RouterComponent = function RouterComponent(props) {
         className: "elux-window",
         "data-url": url,
         children: jsx(EWindow, {
-          store: store,
-          view: props.page
+          store: store
         })
       }, store.sid);
     })
   });
 };
-var EWindow = memo(function (_ref2) {
-  var store = _ref2.store,
-      view = _ref2.view;
-  var View = view;
-  var StoreProvider = coreConfig.StoreProvider;
-  return jsx(StoreProvider, {
-    store: store,
-    children: jsx(View, {})
-  });
-});
 
 var AppRender = {
   toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
-    var renderFun = fromSSR ? hydrate : render;
+    var renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
     var panel = env.document.getElementById(id);
-    var appView = getEntryComponent();
     renderFun(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
-      children: jsx(RouterComponent, {
-        page: appView
-      })
+      children: jsx(RouterComponent, {})
     }), panel);
   },
   toString: function toString(id, eluxContext, app, store) {
-    var appView = getEntryComponent();
-    var html = server.renderToString(jsx(EluxContextComponent.Provider, {
+    var html = reactComponentsConfig.renderToString(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
-      children: jsx(RouterComponent, {
-        page: appView
-      })
+      children: jsx(RouterComponent, {})
     }));
     return Promise.resolve(html);
   },
@@ -3821,22 +3866,6 @@ var AppRender = {
   }
 };
 
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-
-  return target;
-}
-
-var _excluded$1 = ["forwardedRef", "store"];
 var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
   return jsx("div", {
@@ -3857,120 +3886,68 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
 
   var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   var OnError = options.onError || coreConfig.LoadComponentOnError;
+  return _react.forwardRef(function (props, ref) {
+    var execute = function execute(curStore) {
+      var View = OnLoading;
 
-  var Loader = function (_Component) {
-    _inheritsLoose(Loader, _Component);
+      try {
+        var result = injectComponent(moduleName, componentName, curStore || store);
 
-    function Loader(props) {
-      var _this;
-
-      _this = _Component.call(this, props) || this;
-      _this.active = true;
-      _this.loading = false;
-      _this.error = '';
-      _this.view = void 0;
-      _this.state = {
-        ver: 0
-      };
-
-      _this.execute();
-
-      return _this;
-    }
-
-    var _proto = Loader.prototype;
-
-    _proto.componentWillUnmount = function componentWillUnmount() {
-      this.active = false;
-    };
-
-    _proto.shouldComponentUpdate = function shouldComponentUpdate() {
-      this.execute();
-      return true;
-    };
-
-    _proto.componentDidMount = function componentDidMount() {
-      this.error = '';
-    };
-
-    _proto.execute = function execute() {
-      var _this2 = this;
-
-      if (!this.view && !this.loading && !this.error) {
-        var store = this.props.store;
-        this.loading = true;
-        var result;
-
-        try {
-          result = injectComponent(moduleName, componentName, store);
-
-          if (env.isServer && isPromise(result)) {
-            result = undefined;
+        if (isPromise(result)) {
+          if (env.isServer) {
             throw 'can not use async component in SSR';
           }
-        } catch (e) {
-          this.loading = false;
-          this.error = e.message || "" + e;
-        }
 
-        if (result) {
-          if (isPromise(result)) {
-            result.then(function (view) {
-              if (view) {
-                _this2.loading = false;
-                _this2.view = view;
-                _this2.active && _this2.setState({
-                  ver: _this2.state.ver + 1
-                });
-              }
-            }, function (e) {
-              env.console.error(e);
-              _this2.loading = false;
-              _this2.error = e.message || "" + e || 'error';
-              _this2.active && _this2.setState({
-                ver: _this2.state.ver + 1
-              });
-            });
-          } else {
-            this.loading = false;
-            this.view = result;
-          }
+          result.then(function (view) {
+            active && setView(view || 'not found!');
+          }, function (e) {
+            env.console.error(e);
+            active && setView(e.message || "" + e || 'error');
+          });
+        } else {
+          View = result;
         }
+      } catch (e) {
+        env.console.error(e);
+        View = e.message || "" + e || 'error';
       }
+
+      return View;
     };
 
-    _proto.render = function render() {
-      var _this$props = this.props,
-          forwardedRef = _this$props.forwardedRef;
-          _this$props.store;
-          var rest = _objectWithoutPropertiesLoose(_this$props, _excluded$1);
+    var _useState = useState(true),
+        active = _useState[0],
+        setActive = _useState[1];
 
-      if (this.view) {
-        var View = this.view;
-        return jsx(View, _extends({
-          ref: forwardedRef
-        }, rest));
-      }
+    useEffect(function () {
+      return function () {
+        setActive(false);
+      };
+    }, []);
+    var newStore = coreConfig.UseStore();
 
-      if (this.loading) {
-        var Loading = OnLoading;
-        return jsx(Loading, {});
-      }
+    var _useState2 = useState(newStore),
+        store = _useState2[0],
+        setStore = _useState2[1];
 
+    var _useState3 = useState(execute),
+        View = _useState3[0],
+        setView = _useState3[1];
+
+    if (store !== newStore) {
+      setStore(newStore);
+      setView(execute(newStore));
+    }
+
+    if (typeof View === 'string') {
       return jsx(OnError, {
-        message: this.error
+        message: View
       });
-    };
-
-    return Loader;
-  }(Component$3);
-
-  return _react.forwardRef(function (props, ref) {
-    var store = coreConfig.UseStore();
-    return jsx(Loader, _extends({}, props, {
-      store: store,
-      forwardedRef: ref
-    }));
+    } else {
+      return jsx(View, _extends({
+        ref: ref
+      }, props));
+    }
   });
 };
 
@@ -4072,6 +4049,21 @@ var Component = function Component(_ref) {
 
 var Switch = _react.memo(Component);
 
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
+}
+
 var _excluded = ["onClick", "disabled", "to", "target", "action"];
 var Link = _react.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
@@ -4109,9 +4101,16 @@ var Link = _react.forwardRef(function (_ref, ref) {
   }
 
   props['href'] = href;
-  return jsx("a", _extends({}, props, {
-    ref: ref
-  }));
+
+  if (process.env.TARO_ENV) {
+    return jsx("span", _extends({}, props, {
+      ref: ref
+    }));
+  } else {
+    return jsx("a", _extends({}, props, {
+      ref: ref
+    }));
+  }
 });
 
 setCoreConfig({
@@ -7778,6 +7777,40 @@ function patchActions(typeName, json) {
   }
 }
 
+function useCurrentStore() {
+  var router = coreConfig.UseRouter();
+
+  var _useState = useState(),
+      store = _useState[0],
+      setStore = _useState[1];
+
+  var unlink = useRef();
+  useDidShow(function () {
+    if (!unlink.current) {
+      unlink.current = router.addListener(function (_ref) {
+        var newStore = _ref.newStore;
+        setStore(newStore);
+      });
+    }
+
+    onShow();
+  });
+  useDidHide(function () {
+    if (unlink.current) {
+      unlink.current();
+      unlink.current = undefined;
+    }
+  });
+  useEffect(function () {
+    return function () {
+      if (unlink.current) {
+        unlink.current();
+        unlink.current = undefined;
+      }
+    };
+  }, []);
+  return store;
+}
 var cientSingleton = undefined;
 function createApp(appConfig) {
   if (cientSingleton) {
@@ -7796,4 +7829,4 @@ function createApp(appConfig) {
 var createSelectorHook$1 = lib.createSelectorHook;
 var shallowEqual$1 = lib.shallowEqual;
 var useSelector$1 = lib.useSelector;
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };
+export { BaseModel, DocumentHead, EWindow, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useCurrentStore, useSelector$1 as useSelector };

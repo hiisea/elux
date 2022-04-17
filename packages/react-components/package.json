@@ -16,13 +16,8 @@
   "types": "types/",
   "files": [
     "types/",
-    "dist/",
-    "server.js",
-    "server.mock.js"
+    "dist/"
   ],
-  "browser": {
-    "./server.js": "./server.mock.js"
-  },
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx}",
     "build:types": "rimraf ./types && tsc --build ./src",
@@ -31,8 +26,7 @@
     "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
   },
   "peerDependencies": {
-    "react": "^16.8.0 || ^17 || ^18",
-    "react-dom": "^16.8.0 || ^17 || ^18"
+    "react": "^16.8.0 || ^17 || ^18"
   },
   "dependencies": {
     "@elux/core": "^1.2.0",

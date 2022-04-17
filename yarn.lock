@@ -1261,10 +1261,10 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@elux/babel-preset@~1.0.1":
-  version "1.0.1"
-  resolved "https://registry.npmjs.org/@elux/babel-preset/-/babel-preset-1.0.1.tgz#6ce195260bb7c2c82ca2e23c288252a5b1574358"
-  integrity sha512-fMxiTgkUwKWQIeR5KRmWE5UotuY554OwXjOPT2DnK9D5y5+99p24C46nQi71OfRqlePDk8aWPXB2cYfpeRq1Uw==
+"@elux/babel-preset@~1.0.2":
+  version "1.0.2"
+  resolved "https://registry.npmmirror.com/@elux/babel-preset/-/babel-preset-1.0.2.tgz#9540adf0a069d1b3d40f34a20568fe5262dd680d"
+  integrity sha512-PpIHJPIZoW4XQSNocC6Vd3eQc8o13RBA4gToP7X7bAeK1LdZDtlSSmZN//0Nv4hgsTSYMDTFCbKxQIlbv2PrrQ==
   dependencies:
     "@babel/cli" "~7.15.7"
     "@babel/core" "~7.15.8"
@@ -4928,11 +4928,6 @@ electron-to-chromium@^1.4.71:
   version "1.4.74"
   resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.74.tgz#f444036a90ffe75f6423b635e77edd4cc9e6cb2f"
   integrity sha512-DvQ20M0I4dIH8KcAo7n7E4OEeNafZ1N8z6g6ck+ALCM0ZoV6mpjaX6ekjs31zKlqPzacU3lmjG9PZEa1mQhEpQ==
-
-emitter-component@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/emitter-component/-/emitter-component-1.1.1.tgz#065e2dbed6959bf470679edabeaf7981d1003ab6"
-  integrity sha1-Bl4tvtaVm/RwZ57avq95gdEAOrY=
 
 emittery@^0.7.1:
   version "0.7.2"
@@ -9078,6 +9073,11 @@ path-parse@^1.0.6, path-parse@^1.0.7:
   resolved "https://registry.npmjs.org/path-parse/-/path-parse-1.0.7.tgz#fbc114b60ca42b30d9daf5858e4bd68bbedb6735"
   integrity sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==
 
+path-to-regexp@^6.2.0:
+  version "6.2.0"
+  resolved "https://registry.npmmirror.com/path-to-regexp/-/path-to-regexp-6.2.0.tgz#f7b3803336104c346889adece614669230645f38"
+  integrity sha512-f66KywYG6+43afgE/8j/GoiNyygk/bnoCbps++3ErRKsIYkGGupyv07R2Ok5m9i67Iqc+T2g1eAUGUPzWhYTyg==
+
 path-type@^3.0.0:
   version "3.0.0"
   resolved "https://registry.npmjs.org/path-type/-/path-type-3.0.0.tgz#cef31dc8e0a1a3bb0d105c0cd97cf3bf47f4e36f"
@@ -10506,13 +10506,6 @@ static-extend@^0.1.1:
   dependencies:
     define-property "^0.2.5"
     object-copy "^0.1.0"
-
-stream@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.npmjs.org/stream/-/stream-0.0.2.tgz#7f5363f057f6592c5595f00bc80a27f5cec1f0ef"
-  integrity sha1-f1Nj8Ff2WSxVlfALyAon9c7B8O8=
-  dependencies:
-    emitter-component "^1.1.1"
 
 strict-uri-encode@^2.0.0:
   version "2.0.0"

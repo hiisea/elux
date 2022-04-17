@@ -3,12 +3,18 @@ import {App, createApp as createCSRApp, createSSRApp} from 'vue';
 import {AppConfig} from '@elux/app';
 import {buildApp, buildSSR, NativeRequest, RenderOptions} from '@elux/core';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
-import {RouterComponent} from '@elux/vue-components';
+import {RouterComponent, setVueComponentsConfig} from '@elux/vue-components';
+// eslint-disable-next-line
+import {renderToString} from '@elux/vue-web/server';
 
 export {DocumentHead, Else, Link, Switch} from '@elux/vue-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/vue-components';
 
 export * from '@elux/app';
+
+setVueComponentsConfig({
+  renderToString,
+});
 
 /**
  * @public

@@ -12,6 +12,8 @@ declare namespace Elux {
     };
     location?: {
       href: string;
+      pathname: string;
+      search: string;
     };
     __REDUX_DEVTOOLS_EXTENSION__?: {
       connect: (options?: any) => {
@@ -21,6 +23,9 @@ declare namespace Elux {
       };
     };
     __VUE_DEVTOOLS_GLOBAL_HOOK__?: any;
+    __taroAppConfig: {
+      tabBar: {list: {pagePath: string}[]};
+    };
   }
   interface Component<TProps = {}> {
     (props: TProps): JSX.Element;
@@ -28,6 +33,7 @@ declare namespace Elux {
 }
 
 declare interface ProcessEnv {
+  TARO_ENV: 'weapp' | 'swan' | 'alipay' | 'h5' | 'rn' | 'tt' | 'quickapp' | 'qq' | 'jd';
   NODE_ENV: 'development' | 'production';
   PROJ_ENV: any;
 }

@@ -1,4 +1,4 @@
-import { BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig } from '@elux/route';
+import { BaseNativeRouter, locationToUrl, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -16,21 +16,26 @@ export class MPNativeRouter extends BaseNativeRouter {
     } = routeConfig.NotifyNativeRouter;
 
     if (window || page) {
-      this.unlistenHistory = history.onRouteChange((pathname, search, action) => {
-        const url = [pathname, search].filter(Boolean).join('?');
-        const arr = search.match(/__key__=(\w+)/);
-        let key = arr ? arr[1] : '';
+      this.unlistenHistory = history.onRouteChange(({
+        pathname,
+        search,
+        action
+      }) => {
+        let key = this.routeKey;
 
-        if (action === 'POP' && !key) {
-          const {
-            record
-          } = this.router.findRecordByStep(-1, false);
-          key = record.key;
-        }
+        if (!key) {
+          const nativeUrl = [pathname, search].filter(Boolean).join('?');
+          const url = nativeUrlToUrl(nativeUrl);
 
-        if (key !== this.router.routeKey) {
           if (action === 'POP') {
-            this.router.back(key, 'window', null, '', true);
+            const arr = search.match(/__=(\w+)/);
+            key = arr ? arr[1] : '';
+
+            if (!key) {
+              this.router.back(-1, 'page', null, '', true);
+            } else {
+              this.router.back(key, 'page', null, '', true);
+            }
           } else if (action === 'REPLACE') {
             this.router.replace({
               url
@@ -44,13 +49,19 @@ export class MPNativeRouter extends BaseNativeRouter {
               url
             }, 'window', null, true);
           }
+        } else {
+          this.onSuccess();
         }
       });
     }
   }
 
   addKey(url, key) {
-    return url.indexOf('?') > -1 ? `${url}&__key__=${key}` : `${url}?__key__=${key}`;
+    return url.indexOf('?') > -1 ? `${url}&__=${key}` : `${url}?__=${key}`;
+  }
+
+  init(location, key) {
+    return true;
   }
 
   _push(location) {
@@ -60,9 +71,10 @@ export class MPNativeRouter extends BaseNativeRouter {
   }
 
   push(location, key) {
-    return this.history.navigateTo({
+    this.history.navigateTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   }
 
   _replace(location) {
@@ -72,27 +84,31 @@ export class MPNativeRouter extends BaseNativeRouter {
   }
 
   replace(location, key) {
-    return this.history.redirectTo({
+    this.history.redirectTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   }
 
   relaunch(location, key) {
     if (this.history.isTabPage(location.pathname)) {
-      return this.history.switchTab({
+      this.history.switchTab({
         url: location.url
+      });
+    } else {
+      this.history.reLaunch({
+        url: this.addKey(location.url, key)
       });
     }
 
-    return this.history.reLaunch({
-      url: this.addKey(location.url, key)
-    });
+    return true;
   }
 
   back(location, key, index) {
-    return this.history.navigateBack({
+    this.history.navigateBack({
       delta: index[0]
     });
+    return true;
   }
 
   destroy() {

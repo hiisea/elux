@@ -38,7 +38,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
       this.unlistenHistory = history.block((locationData, action) => {
         // browser与elux简化为松散关系，操作elux一定不会触发POP，触发POP一定是操作browser
         if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1), 100);
+          env.setTimeout(() => this.router.back(1), 0);
           return false;
         }
         return undefined;
@@ -46,20 +46,27 @@ class BrowserNativeRouter extends BaseNativeRouter {
     }
   }
 
-  protected push(location: Location, key: string): void {
+  protected init(location: Location, key: string): boolean {
+    return false;
+  }
+  protected push(location: Location, key: string): boolean {
     this.history.push(location);
+    return false;
   }
 
-  protected replace(location: Location, key: string): void {
+  protected replace(location: Location, key: string): boolean {
     this.history.push(location);
+    return false;
   }
 
-  protected relaunch(location: Location, key: string): void {
+  protected relaunch(location: Location, key: string): boolean {
     this.history.push(location);
+    return false;
   }
 
-  protected back(location: Location, key: string, index: [number, number]): void {
+  protected back(location: Location, key: string, index: [number, number]): boolean {
     this.history.replace(location);
+    return false;
   }
 
   public destroy(): void {

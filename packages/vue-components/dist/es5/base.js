@@ -1,4 +1,5 @@
 import { inject } from 'vue';
+import { buildConfigSetter } from '@elux/core';
 export var EluxContextKey = '__EluxContext__';
 export var EluxStoreContextKey = '__EluxStoreContext__';
 export function UseRouter() {
@@ -13,3 +14,7 @@ export function UseStore() {
 
   return store;
 }
+export var vueComponentsConfig = {
+  renderToString: undefined
+};
+export var setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);

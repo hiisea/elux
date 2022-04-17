@@ -13,10 +13,15 @@
   },
   "main": "dist/es5/pkg.js",
   "module": "dist/es6/pkg.js",
+  "browser": {
+    "./server.js": "./server.mock.js"
+  },
   "types": "types/",
   "files": [
     "types/",
-    "dist/"
+    "dist/",
+    "server.js",
+    "server.mock.js"
   ],
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
@@ -31,11 +36,11 @@
   "externals": {
     "react": true,
     "react-dom": true,
-    "@elux/react-components/server": true
+    "@elux/react-web/server": true
   },
   "peerDependencies": {
-    "react": "^16.8.0 || ^17",
-    "react-dom": "^16.8.0 || ^17"
+    "react": "^16.8.0 || ^17 || ^18",
+    "react-dom": "^16.8.0 || ^17 || ^18"
   },
   "dependencies": {
     "@elux/app": "^1.2.1",

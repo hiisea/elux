@@ -1,6 +1,6 @@
+import { createVNode as _createVNode } from "vue";
 import { env } from '@elux/core';
-import { renderToString } from '@elux/vue-components/server';
-import { EluxContextKey } from './base';
+import { EluxContextKey, vueComponentsConfig } from './base';
 const AppRender = {
   toDocument(id, eluxContext, fromSSR, app, store) {
     app.provide(EluxContextKey, eluxContext);
@@ -14,7 +14,12 @@ const AppRender = {
 
   toString(id, eluxContext, app, store) {
     app.provide(EluxContextKey, eluxContext);
-    return renderToString(app);
+    return vueComponentsConfig.renderToString(app);
+  },
+
+  toProvider(eluxContext, app, store) {
+    app.provide(EluxContextKey, eluxContext);
+    return () => _createVNode("div", null, null);
   }
 
 };

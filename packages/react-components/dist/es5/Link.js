@@ -41,7 +41,14 @@ export var Link = React.forwardRef(function (_ref, ref) {
   }
 
   props['href'] = href;
-  return _jsx("a", _extends({}, props, {
-    ref: ref
-  }));
+
+  if (process.env.TARO_ENV) {
+    return _jsx("span", _extends({}, props, {
+      ref: ref
+    }));
+  } else {
+    return _jsx("a", _extends({}, props, {
+      ref: ref
+    }));
+  }
 });

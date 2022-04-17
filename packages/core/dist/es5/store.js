@@ -44,12 +44,12 @@ export var preMiddleware = function preMiddleware(_ref) {
   };
 };
 export var CoreRouter = function () {
-  function CoreRouter(location, action, nativeRequest) {
+  function CoreRouter(location, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
+    this.action = 'init';
     this.routeKey = '';
     this.location = location;
-    this.action = action;
     this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {

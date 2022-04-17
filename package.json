@@ -82,7 +82,7 @@
     "@rollup/plugin-commonjs": "~18.1.0",
     "@rollup/plugin-node-resolve": "~11.2.0",
     "@rollup/plugin-replace": "~2.4.0",
-    "@elux/babel-preset": "~1.0.1",
+    "@elux/babel-preset": "~1.0.2",
     "@elux/eslint-plugin": "~1.0.1",
     "@elux/stylelint-config": "~1.0.1",
     "jest": "~26.6.3",

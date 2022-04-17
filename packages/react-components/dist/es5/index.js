@@ -9,6 +9,8 @@ setCoreConfig({
   LoadComponentOnError: LoadComponentOnError,
   LoadComponentOnLoading: LoadComponentOnLoading
 });
+export { setReactComponentsConfig } from './base';
+export { EWindow } from './EWindow';
 export { DocumentHead } from './DocumentHead';
 export { Else } from './Else';
 export { Switch } from './Switch';

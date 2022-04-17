@@ -62,7 +62,7 @@ function createConfig(fileName = 'pkg', inputFile, externals, aliasEntries) {
   return config;
 }
 
-export default function (root, fileName, aliasEntries) {
+export default function (root, aliasEntries) {
   const inputFiles = ['src/'];
   const libsDir = path.resolve(root, './src/lib/');
   if (fs.existsSync(libsDir)) {
@@ -74,5 +74,5 @@ export default function (root, fileName, aliasEntries) {
   console.log(inputFiles);
   const pkg = require(path.resolve(root, './package.json'));
   const externals = Object.keys(pkg.externals ? pkg.externals : {...pkg.dependencies, ...pkg.peerDependencies});
-  return inputFiles.map((bundle) => createConfig(fileName, bundle, externals, aliasEntries));
+  return inputFiles.map((bundle) => createConfig(undefined, bundle, externals, aliasEntries));
 }

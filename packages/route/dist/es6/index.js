@@ -5,8 +5,22 @@ export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLo
 export class BaseNativeRouter {
   constructor(nativeRequest) {
     this.router = void 0;
+    this.routeKey = '';
     this.curTask = void 0;
     this.router = new Router(this, nativeRequest);
+  }
+
+  onSuccess() {
+    if (this.curTask) {
+      const {
+        resolve,
+        timeout
+      } = this.curTask;
+      this.curTask = undefined;
+      env.clearTimeout(timeout);
+      this.routeKey = '';
+      resolve();
+    }
   }
 
   testExecute(method, location, backIndex) {
@@ -18,8 +32,13 @@ export class BaseNativeRouter {
     const result = this[method](locationToNativeLocation(location), key, backIndex);
 
     if (result) {
-      return result.then(() => undefined, e => {
-        env.console.warn('Native route error:' + e.toString());
+      this.routeKey = key;
+      return new Promise(resolve => {
+        const timeout = env.setTimeout(() => this.onSuccess(), 2000);
+        this.curTask = {
+          resolve,
+          timeout
+        };
       });
     }
   }
@@ -27,7 +46,7 @@ export class BaseNativeRouter {
 }
 export class Router extends CoreRouter {
   constructor(nativeRouter, nativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), 'relaunch', nativeRequest);
+    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -60,6 +79,10 @@ export class Router extends CoreRouter {
         task[0]().finally(this.onTaskComplete).then(task[1], task[2]);
       }
     });
+  }
+
+  nativeInitiated() {
+    return !this.nativeRouter.routeKey;
   }
 
   getHistoryLength(target = 'page') {
@@ -135,6 +158,19 @@ export class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
+  redirectOnServer(urlOrLocation) {
+    if (env.isServer) {
+      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const nativeUrl = urlToNativeUrl(url);
+      const err = {
+        code: ErrorCodes.ROUTE_REDIRECT,
+        message: 'Route change in server is not allowed.',
+        detail: nativeUrl
+      };
+      throw err;
+    }
+  }
+
   init(prevState) {
     const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
     this.curTask = task;
@@ -149,6 +185,12 @@ export class Router extends CoreRouter {
       completed: false
     };
     const store = this.getCurrentPage().store;
+    const {
+      action,
+      location,
+      routeKey
+    } = this;
+    await this.nativeRouter.execute(action, location, routeKey);
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -163,19 +205,13 @@ export class Router extends CoreRouter {
     }
 
     this.runtime.completed = true;
-  }
-
-  redirectOnServer(urlOrLocation) {
-    if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
-      const nativeUrl = urlToNativeUrl(url);
-      const err = {
-        code: ErrorCodes.ROUTE_REDIRECT,
-        message: 'Route change in server is not allowed.',
-        detail: nativeUrl
-      };
-      throw err;
-    }
+    this.dispatch({
+      location,
+      action,
+      prevStore: store,
+      newStore: store,
+      windowChanged: true
+    });
   }
 
   relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
@@ -326,7 +362,7 @@ export class Router extends CoreRouter {
 
   back(stepOrKey = 1, target = 'page', payload = null, overflowRedirect = '', _nativeCaller = false) {
     if (!stepOrKey) {
-      return;
+      return Promise.resolve();
     }
 
     this.redirectOnServer({

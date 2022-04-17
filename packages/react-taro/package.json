@@ -34,8 +34,8 @@
     "react-dom": true
   },
   "peerDependencies": {
-    "@tarojs/taro": "^3.3.12",
-    "react": "^16.8.0 || ^17"
+    "@tarojs/taro": "^3.4.6",
+    "react": "^16.8.0 || ^17 || ^18"
   },
   "dependencies": {
     "@elux/app": "^1.2.1",

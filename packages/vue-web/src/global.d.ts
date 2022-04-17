@@ -1,3 +1,3 @@
-declare module '@elux/vue-components/server' {
+declare module '@elux/vue-web/server' {
   export function renderToString(component: any): Promise<string>;
 }

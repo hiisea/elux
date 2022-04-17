@@ -7,6 +7,10 @@ setCoreConfig({
     });
   }
 });
+var TaroRouter;
+var prevPageInfo;
+var tabPages = undefined;
+var curLocation;
 export var eventBus = new SingleDispatcher();
 
 function routeToPathname(route) {
@@ -25,71 +29,6 @@ function queryTosearch(query) {
   return parts.join('&');
 }
 
-var prevPageInfo;
-
-function patchPageOptions(pageOptions) {
-  var onShow = pageOptions.onShow;
-
-  pageOptions.onShow = function () {
-    var arr = Taro.getCurrentPages();
-    var currentPage = arr[arr.length - 1];
-    var currentPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-
-    if (prevPageInfo) {
-      var _action = 'PUSH';
-
-      if (currentPageInfo.count < prevPageInfo.count) {
-        _action = 'POP';
-      } else if (currentPageInfo.count === prevPageInfo.count) {
-        if (currentPageInfo.count === 1) {
-          _action = 'RELAUNCH';
-        } else {
-          _action = 'REPLACE';
-        }
-      }
-
-      eventBus.dispatch({
-        pathname: currentPageInfo.pathname,
-        search: currentPageInfo.search,
-        action: _action
-      });
-    }
-
-    return onShow == null ? void 0 : onShow.call(this);
-  };
-
-  var onHide = pageOptions.onHide;
-
-  pageOptions.onHide = function () {
-    var arr = Taro.getCurrentPages();
-    var currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onHide == null ? void 0 : onHide.call(this);
-  };
-
-  var onUnload = pageOptions.onUnload;
-
-  pageOptions.onUnload = function () {
-    var arr = Taro.getCurrentPages();
-    var currentPage = arr[arr.length - 1];
-    prevPageInfo = {
-      count: arr.length,
-      pathname: routeToPathname(currentPage.route),
-      search: queryTosearch(currentPage.options)
-    };
-    return onUnload == null ? void 0 : onUnload.call(this);
-  };
-}
-
-var tabPages = undefined;
 export var taroHistory = {
   reLaunch: Taro.reLaunch,
   redirectTo: Taro.redirectTo,
@@ -111,82 +50,134 @@ export var taroHistory = {
     return !!tabPages[pathname];
   },
   getLocation: function getLocation() {
-    var arr = Taro.getCurrentPages();
-    var path;
-    var query;
+    if (!curLocation) {
+      if (process.env.TARO_ENV === 'h5') {
+        TaroRouter.history.listen(function (_ref) {
+          var _ref$location = _ref.location,
+              pathname = _ref$location.pathname,
+              search = _ref$location.search,
+              action = _ref.action;
 
-    if (arr.length === 0) {
-      var _Taro$getLaunchOption = Taro.getLaunchOptionsSync();
+          if (action !== 'POP' && taroHistory.isTabPage(pathname)) {
+            action = 'RELAUNCH';
+          }
 
-      path = _Taro$getLaunchOption.path;
-      query = _Taro$getLaunchOption.query;
-    } else {
-      var current = arr[arr.length - 1];
-      path = current.route;
-      query = current.options;
+          curLocation = {
+            pathname: pathname,
+            search: search.replace(/^\?/, ''),
+            action: action
+          };
+        });
+        var _TaroRouter$history$l = TaroRouter.history.location,
+            pathname = _TaroRouter$history$l.pathname,
+            search = _TaroRouter$history$l.search;
+        curLocation = {
+          pathname: pathname,
+          search: search.replace(/^\?/, ''),
+          action: 'RELAUNCH'
+        };
+      } else {
+        var arr = Taro.getCurrentPages();
+
+        var _path;
+
+        var query;
+
+        if (arr.length === 0) {
+          var _Taro$getLaunchOption = Taro.getLaunchOptionsSync();
+
+          _path = _Taro$getLaunchOption.path;
+          query = _Taro$getLaunchOption.query;
+        } else {
+          var current = arr[arr.length - 1];
+          _path = current.route;
+          query = current.options;
+        }
+
+        curLocation = {
+          pathname: routeToPathname(_path),
+          search: queryTosearch(query),
+          action: 'RELAUNCH'
+        };
+      }
     }
 
-    return {
-      pathname: routeToPathname(path),
-      search: queryTosearch(query)
-    };
+    return curLocation;
   },
   onRouteChange: function onRouteChange(callback) {
-    return eventBus.addListener(function (data) {
-      var pathname = data.pathname,
-          search = data.search,
-          action = data.action;
-      callback(pathname, search, action);
-    });
+    return eventBus.addListener(callback);
   }
 };
 
 if (process.env.TARO_ENV === 'h5') {
-  var taroRouter = require('@tarojs/router');
-
-  taroHistory.getLocation = function () {
-    var _taroRouter$history$l = taroRouter.history.location,
-        pathname = _taroRouter$history$l.pathname,
-        search = _taroRouter$history$l.search;
-    return {
-      pathname: pathname,
-      search: search.replace(/^\?/, '')
-    };
-  };
-
-  taroHistory.onRouteChange = function (callback) {
-    var unhandle = taroRouter.history.listen(function (_ref) {
-      var location = _ref.location,
-          action = _ref.action;
-      var routeAction = action;
-
-      if (action !== 'POP' && taroHistory.isTabPage(location.pathname)) {
-        routeAction = 'RELAUNCH';
-      }
-
-      callback(location.pathname, location.search.replace(/^\?/, ''), routeAction);
-    });
-    return unhandle;
-  };
-
-  Taro.onUnhandledRejection = function (callback) {
-    window.addEventListener('unhandledrejection', callback, false);
-  };
-
-  Taro.onError = function (callback) {
-    window.addEventListener('error', callback, false);
-  };
+  TaroRouter = require('@tarojs/router');
 } else {
-  if (!Taro.onUnhandledRejection) {
-    Taro.onUnhandledRejection = function () {
-      return undefined;
-    };
-  }
-
   var originalPage = Page;
 
   Page = function Page(pageOptions) {
-    patchPageOptions(pageOptions);
+    var onShow = pageOptions.onShow;
+    var onHide = pageOptions.onHide;
+    var onUnload = pageOptions.onUnload;
+
+    pageOptions.onShow = function () {
+      var arr = Taro.getCurrentPages();
+      var currentPage = arr[arr.length - 1];
+      var currentPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      curLocation = {
+        pathname: currentPageInfo.pathname,
+        search: currentPageInfo.search,
+        action: 'RELAUNCH'
+      };
+
+      if (prevPageInfo) {
+        var action = 'PUSH';
+
+        if (currentPageInfo.count < prevPageInfo.count) {
+          action = 'POP';
+        } else if (currentPageInfo.count === prevPageInfo.count) {
+          if (currentPageInfo.count === 1) {
+            action = 'RELAUNCH';
+          } else {
+            action = 'REPLACE';
+          }
+        }
+
+        curLocation.action = action;
+      }
+
+      return onShow == null ? void 0 : onShow.call(this);
+    };
+
+    pageOptions.onHide = function () {
+      var arr = Taro.getCurrentPages();
+      var currentPage = arr[arr.length - 1];
+      prevPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      return onHide == null ? void 0 : onHide.call(this);
+    };
+
+    pageOptions.onUnload = function () {
+      var arr = Taro.getCurrentPages();
+      var currentPage = arr[arr.length - 1];
+      prevPageInfo = {
+        count: arr.length,
+        pathname: routeToPathname(currentPage.route),
+        search: queryTosearch(currentPage.options)
+      };
+      return onUnload == null ? void 0 : onUnload.call(this);
+    };
+
     return originalPage(pageOptions);
   };
+}
+
+export function onShow() {
+  eventBus.dispatch(taroHistory.getLocation());
 }

@@ -29,7 +29,7 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
     /**
      * 指定路由的切换方式
      */
-    action?: RouteAction;
+    action?: Exclude<RouteAction, 'init'>;
     /**
      * 指定要操作的路由栈
      */

@@ -60,9 +60,10 @@ export abstract class CoreRouter implements IRouter {
   declare runtime: RouteRuntime;
   protected listenerId = 0;
   protected readonly listenerMap: {[id: string]: (data: RouteEvent) => void | Promise<void>} = {};
+  public action: RouteAction = 'init';
   public routeKey: string = '';
 
-  constructor(public location: Location, public action: RouteAction, public readonly nativeRequest: NativeRequest) {
+  constructor(public location: Location, public readonly nativeRequest: NativeRequest) {
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
     }

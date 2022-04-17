@@ -1,7 +1,8 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { coreConfig, env } from '@elux/core';
+import { EWindow } from './EWindow';
 import { jsx as _jsx } from "react/jsx-runtime";
-export var RouterComponent = function RouterComponent(props) {
+export var RouterComponent = function RouterComponent() {
   var router = coreConfig.UseRouter();
 
   var _useState = useState({
@@ -78,20 +79,9 @@ export var RouterComponent = function RouterComponent(props) {
         className: "elux-window",
         "data-url": url,
         children: _jsx(EWindow, {
-          store: store,
-          view: props.page
+          store: store
         })
       }, store.sid);
     })
   });
 };
-var EWindow = memo(function (_ref2) {
-  var store = _ref2.store,
-      view = _ref2.view;
-  var View = view;
-  var StoreProvider = coreConfig.StoreProvider;
-  return _jsx(StoreProvider, {
-    store: store,
-    children: _jsx(View, {})
-  });
-});

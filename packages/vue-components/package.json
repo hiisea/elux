@@ -16,13 +16,8 @@
   "types": "types/",
   "files": [
     "types/",
-    "dist/",
-    "server.js",
-    "server.mock.js"
+    "dist/"
   ],
-  "browser": {
-    "./server.js": "./server.mock.js"
-  },
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx}",
     "build:types": "rimraf ./types && tsc --build ./src",
@@ -35,9 +30,7 @@
   },
   "dependencies": {
     "@elux/core": "^1.2.0",
-    "@elux/route": "^1.2.1",
-    "@vue/server-renderer": "^3.0.0",
-    "stream": "^0.0.2"
+    "@elux/route": "^1.2.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

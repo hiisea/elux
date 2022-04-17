@@ -1,5 +1,5 @@
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
-import { BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig } from '@elux/route';
+import { BaseNativeRouter, locationToUrl, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -20,21 +20,25 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
         page = _routeConfig$NotifyNa.page;
 
     if (window || page) {
-      _this.unlistenHistory = history.onRouteChange(function (pathname, search, action) {
-        var url = [pathname, search].filter(Boolean).join('?');
-        var arr = search.match(/__key__=(\w+)/);
-        var key = arr ? arr[1] : '';
+      _this.unlistenHistory = history.onRouteChange(function (_ref) {
+        var pathname = _ref.pathname,
+            search = _ref.search,
+            action = _ref.action;
+        var key = _this.routeKey;
 
-        if (action === 'POP' && !key) {
-          var _this$router$findReco = _this.router.findRecordByStep(-1, false),
-              record = _this$router$findReco.record;
+        if (!key) {
+          var nativeUrl = [pathname, search].filter(Boolean).join('?');
+          var url = nativeUrlToUrl(nativeUrl);
 
-          key = record.key;
-        }
-
-        if (key !== _this.router.routeKey) {
           if (action === 'POP') {
-            _this.router.back(key, 'window', null, '', true);
+            var arr = search.match(/__=(\w+)/);
+            key = arr ? arr[1] : '';
+
+            if (!key) {
+              _this.router.back(-1, 'page', null, '', true);
+            } else {
+              _this.router.back(key, 'page', null, '', true);
+            }
           } else if (action === 'REPLACE') {
             _this.router.replace({
               url: url
@@ -48,6 +52,8 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
               url: url
             }, 'window', null, true);
           }
+        } else {
+          _this.onSuccess();
         }
       });
     }
@@ -58,7 +64,11 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
   var _proto = MPNativeRouter.prototype;
 
   _proto.addKey = function addKey(url, key) {
-    return url.indexOf('?') > -1 ? url + "&__key__=" + key : url + "?__key__=" + key;
+    return url.indexOf('?') > -1 ? url + "&__=" + key : url + "?__=" + key;
+  };
+
+  _proto.init = function init(location, key) {
+    return true;
   };
 
   _proto._push = function _push(location) {
@@ -68,9 +78,10 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.push = function push(location, key) {
-    return this.history.navigateTo({
+    this.history.navigateTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   };
 
   _proto._replace = function _replace(location) {
@@ -80,27 +91,31 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.replace = function replace(location, key) {
-    return this.history.redirectTo({
+    this.history.redirectTo({
       url: this.addKey(location.url, key)
     });
+    return true;
   };
 
   _proto.relaunch = function relaunch(location, key) {
     if (this.history.isTabPage(location.pathname)) {
-      return this.history.switchTab({
+      this.history.switchTab({
         url: location.url
+      });
+    } else {
+      this.history.reLaunch({
+        url: this.addKey(location.url, key)
       });
     }
 
-    return this.history.reLaunch({
-      url: this.addKey(location.url, key)
-    });
+    return true;
   };
 
   _proto.back = function back(location, key, index) {
-    return this.history.navigateBack({
+    this.history.navigateBack({
       delta: index[0]
     });
+    return true;
   };
 
   _proto.destroy = function destroy() {

@@ -44,7 +44,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
     if (window || page) {
       this.unlistenHistory = history.block((locationData, action) => {
         if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1), 100);
+          env.setTimeout(() => this.router.back(1), 0);
           return false;
         }
 
@@ -53,20 +53,28 @@ class BrowserNativeRouter extends BaseNativeRouter {
     }
   }
 
+  init(location, key) {
+    return false;
+  }
+
   push(location, key) {
     this.history.push(location);
+    return false;
   }
 
   replace(location, key) {
     this.history.push(location);
+    return false;
   }
 
   relaunch(location, key) {
     this.history.push(location);
+    return false;
   }
 
   back(location, key, index) {
     this.history.replace(location);
+    return false;
   }
 
   destroy() {

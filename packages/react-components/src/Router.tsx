@@ -1,8 +1,10 @@
-import React, {ComponentType, memo, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import {coreConfig, env, IStore} from '@elux/core';
 
-export const RouterComponent: React.FC<{page: ComponentType}> = (props) => {
+import {EWindow} from './EWindow';
+
+export const RouterComponent: React.FC = () => {
   const router = coreConfig.UseRouter!();
   const [data, setData] = useState<{
     classname: string;
@@ -56,20 +58,10 @@ export const RouterComponent: React.FC<{page: ComponentType}> = (props) => {
         const {store, url} = item;
         return (
           <div key={store.sid} data-sid={store.sid} className="elux-window" data-url={url}>
-            <EWindow store={store} view={props.page}></EWindow>
+            <EWindow store={store}></EWindow>
           </div>
         );
       })}
     </div>
   );
 };
-
-const EWindow: React.FC<{store: IStore; view: ComponentType}> = memo(function ({store, view}) {
-  const View = view;
-  const StoreProvider = coreConfig.StoreProvider!;
-  return (
-    <StoreProvider store={store}>
-      <View />
-    </StoreProvider>
-  );
-});

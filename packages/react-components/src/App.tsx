@@ -1,29 +1,23 @@
-import {hydrate, render} from 'react-dom';
+import {env, IAppRender} from '@elux/core';
 
-import {env, getEntryComponent, IAppRender} from '@elux/core';
-// eslint-disable-next-line
-import {renderToString} from '@elux/react-components/server';
-
-import {EluxContextComponent} from './base';
+import {EluxContextComponent, reactComponentsConfig} from './base';
 import {RouterComponent} from './Router';
 
 const AppRender: IAppRender = {
   toDocument(id, eluxContext, fromSSR, app, store): void {
-    const renderFun = fromSSR ? hydrate : render;
+    const renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
     const panel = env.document!.getElementById(id);
-    const appView: Elux.Component = getEntryComponent() as any;
-    renderFun(
+    renderFun!(
       <EluxContextComponent.Provider value={eluxContext}>
-        <RouterComponent page={appView} />
+        <RouterComponent />
       </EluxContextComponent.Provider>,
       panel
     );
   },
   toString(id, eluxContext, app, store): Promise<string> {
-    const appView: Elux.Component = getEntryComponent() as any;
-    const html = renderToString(
+    const html = reactComponentsConfig.renderToString!(
       <EluxContextComponent.Provider value={eluxContext}>
-        <RouterComponent page={appView} />
+        <RouterComponent />
       </EluxContextComponent.Provider>
     );
     return Promise.resolve(html);

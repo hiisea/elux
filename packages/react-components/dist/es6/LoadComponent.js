@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
 import { jsx as _jsx } from "react/jsx-runtime";
 export const LoadComponentOnError = ({
@@ -14,111 +14,59 @@ export const LoadComponentOnLoading = () => _jsx("div", {
 export const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
+  return React.forwardRef((props, ref) => {
+    const execute = curStore => {
+      let View = OnLoading;
 
-  class Loader extends Component {
-    constructor(props) {
-      super(props);
-      this.active = true;
-      this.loading = false;
-      this.error = '';
-      this.view = void 0;
-      this.state = {
-        ver: 0
-      };
-      this.execute();
-    }
+      try {
+        const result = injectComponent(moduleName, componentName, curStore || store);
 
-    componentWillUnmount() {
-      this.active = false;
-    }
-
-    shouldComponentUpdate() {
-      this.execute();
-      return true;
-    }
-
-    componentDidMount() {
-      this.error = '';
-    }
-
-    execute() {
-      if (!this.view && !this.loading && !this.error) {
-        const {
-          store
-        } = this.props;
-        this.loading = true;
-        let result;
-
-        try {
-          result = injectComponent(moduleName, componentName, store);
-
-          if (env.isServer && isPromise(result)) {
-            result = undefined;
+        if (isPromise(result)) {
+          if (env.isServer) {
             throw 'can not use async component in SSR';
           }
-        } catch (e) {
-          this.loading = false;
-          this.error = e.message || `${e}`;
-        }
 
-        if (result) {
-          if (isPromise(result)) {
-            result.then(view => {
-              if (view) {
-                this.loading = false;
-                this.view = view;
-                this.active && this.setState({
-                  ver: this.state.ver + 1
-                });
-              }
-            }, e => {
-              env.console.error(e);
-              this.loading = false;
-              this.error = e.message || `${e}` || 'error';
-              this.active && this.setState({
-                ver: this.state.ver + 1
-              });
-            });
-          } else {
-            this.loading = false;
-            this.view = result;
-          }
+          result.then(view => {
+            active && setView(view || 'not found!');
+          }, e => {
+            env.console.error(e);
+            active && setView(e.message || `${e}` || 'error');
+          });
+        } else {
+          View = result;
         }
+      } catch (e) {
+        env.console.error(e);
+        View = e.message || `${e}` || 'error';
       }
+
+      return View;
+    };
+
+    const [active, setActive] = useState(true);
+    useEffect(() => {
+      return () => {
+        setActive(false);
+      };
+    }, []);
+    const newStore = coreConfig.UseStore();
+    const [store, setStore] = useState(newStore);
+    const [View, setView] = useState(execute);
+
+    if (store !== newStore) {
+      setStore(newStore);
+      setView(execute(newStore));
     }
 
-    render() {
-      const {
-        forwardedRef,
-        store,
-        ...rest
-      } = this.props;
-
-      if (this.view) {
-        const View = this.view;
-        return _jsx(View, {
-          ref: forwardedRef,
-          ...rest
-        });
-      }
-
-      if (this.loading) {
-        const Loading = OnLoading;
-        return _jsx(Loading, {});
-      }
-
+    if (typeof View === 'string') {
       return _jsx(OnError, {
-        message: this.error
+        message: View
+      });
+    } else {
+      return _jsx(View, {
+        ref: ref,
+        ...props
       });
     }
-
-  }
-
-  return React.forwardRef((props, ref) => {
-    const store = coreConfig.UseStore();
-    return _jsx(Loader, { ...props,
-      store: store,
-      forwardedRef: ref
-    });
   });
 };
