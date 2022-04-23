@@ -149,6 +149,32 @@ export function getModuleApiMap(data?: Record<string, string[]>): ModuleApiMap {
   return MetaData.moduleApiMap;
 }
 
+/**
+ * 动态注册module
+ *
+ * @remarks
+ * 常于小程序分包加载
+ *
+ * @public
+ */
+export function injectModule(module: CommonModule): void;
+/**
+ * 动态注册module
+ *
+ * @remarks
+ * 常于小程序分包加载
+ *
+ * @public
+ */
+export function injectModule(moduleName: string, moduleGetter: () => CommonModule | Promise<{default: CommonModule}>): void;
+export function injectModule(moduleOrName: string | CommonModule, moduleGetter?: () => CommonModule | Promise<{default: CommonModule}>): void {
+  if (typeof moduleOrName === 'string') {
+    coreConfig.ModuleGetter[moduleOrName] = moduleGetter!;
+  } else {
+    coreConfig.ModuleGetter[moduleOrName.moduleName] = () => moduleOrName;
+  }
+}
+
 export function injectComponent(moduleName: string, componentName: string, store: IStore): EluxComponent | Promise<EluxComponent> {
   return promiseCaseCallback(getComponent(moduleName, componentName), (component) => {
     if (component.__elux_component__ === 'view' && !env.isServer) {

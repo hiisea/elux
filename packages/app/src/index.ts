@@ -15,6 +15,7 @@ export {
   getApi,
   getComponent,
   getModule,
+  injectModule,
   isServer,
   modelHotReplacement,
   reducer,
@@ -48,6 +49,7 @@ export type {
   ModuleState,
   NativeRequest,
   PickModelActions,
+  PickThisActions,
   RenderOptions,
   ReturnComponents,
   RouteAction,
@@ -113,10 +115,10 @@ export interface UserConfig {
   /**
    * 定义Loading超过多少秒视为深度加载
    *
-   * @defaultValue `2`
+   * @defaultValue `1`
    *
    * @remarks
-   * 默认: `2`
+   * 默认: `1`
    *
    * 框架将Loading状态分为3种：{@link LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层
    */

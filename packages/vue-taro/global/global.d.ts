@@ -1,3 +1,4 @@
 declare module '@tarojs/taro' {
-  const setNavigationBarTitle: (options: {title: string}) => Promise<void>;
+  const useDidShow: (callback: () => void) => void;
+  const useDidHide: (callback: () => void) => void;
 }

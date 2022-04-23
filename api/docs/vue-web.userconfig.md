@@ -26,7 +26,7 @@ export interface UserConfig
 |  [LoadComponentOnError?](./vue-web.userconfig.loadcomponentonerror.md) | Elux.Component&lt;{ message: string; }&gt; | <i>(Optional)</i> 定义默认视图加载错误组件 |
 |  [LoadComponentOnLoading?](./vue-web.userconfig.loadcomponentonloading.md) | Elux.Component&lt;{}&gt; | <i>(Optional)</i> 定义默认视图加载中组件 |
 |  [ModuleGetter](./vue-web.userconfig.modulegetter.md) | [ModuleGetter](./vue-web.modulegetter.md) | 定义模块获取方法 |
-|  [NativePathnameMapping?](./vue-web.userconfig.nativepathnamemapping.md) | { in(pathname: string): string; out(pathname: string): string; } | <i>(Optional)</i> 定义内部和宿主平台路由之间的转换与映射 |
+|  [NativePathnameMapping?](./vue-web.userconfig.nativepathnamemapping.md) | { in(nativePathname: string): string; out(internalPathname: string): string; } | <i>(Optional)</i> 定义内部和宿主平台路由之间的转换与映射 |
 |  [QueryString](./vue-web.userconfig.querystring.md) | { parse(str: string): { \[key: string\]: any; }; stringify(query: { \[key: string\]: any; }): string; } | 定义路由参数序列化方法 |
 |  [StageModuleName?](./vue-web.userconfig.stagemodulename.md) | string | <i>(Optional)</i> 定义APP根模块名称 |
 |  [StageViewName?](./vue-web.userconfig.stageviewname.md) | string | <i>(Optional)</i> 定义APP根视图名称 |

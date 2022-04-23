@@ -3,7 +3,7 @@ import { buildApp, buildSSR } from '@elux/core';
 import { setReactComponentsConfig } from '@elux/react-components';
 import { renderToString } from '@elux/react-web/server';
 import { createClientRouter, createServerRouter } from '@elux/route-browser';
-export { DocumentHead, Else, Link, Switch, EWindow } from '@elux/react-components';
+export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
 export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
 export * from '@elux/app';
 setReactComponentsConfig({

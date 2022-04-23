@@ -8,4 +8,3 @@ declare module '@tarojs/taro' {
   const getCurrentPages: () => Array<{route: string; options?: {[key: string]: string}}>;
   const setNavigationBarTitle: (options: {title: string}) => Promise<void>;
 }
-declare let Page: (options: any) => void;

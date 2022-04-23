@@ -7,7 +7,7 @@ import {setReactComponentsConfig} from '@elux/react-components';
 import {renderToString} from '@elux/react-web/server';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
 
-export {DocumentHead, Else, Link, Switch, EWindow} from '@elux/react-components';
+export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';
 
 export {connectRedux, createSelectorHook, shallowEqual, useSelector} from '@elux/react-redux';

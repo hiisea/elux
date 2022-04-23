@@ -27,17 +27,20 @@ export interface IRouter<TStoreState extends StoreState = StoreState>
 |  [action](./vue-web.irouter.action.md) | [RouteAction](./vue-web.routeaction.md) | 路由动作 |
 |  [location](./vue-web.irouter.location.md) | [Location](./vue-web.location.md) | 路由描述 |
 |  [nativeRequest](./vue-web.irouter.nativerequest.md) | [NativeRequest](./vue-web.nativerequest.md) | 原生路由请求，常用于SSR |
+|  [routeKey](./vue-web.irouter.routekey.md) | string | 每次路由变化都会产生唯一ID |
 |  [runtime](./vue-web.irouter.runtime.md) | [RouteRuntime](./vue-web.routeruntime.md)<!-- -->&lt;TStoreState&gt; | 路由运行状态 |
 
 ## Methods
 
 |  Method | Description |
 |  --- | --- |
+|  [addListener(callback)](./vue-web.irouter.addlistener.md) | 监听路由事件 |
 |  [back(stepOrKey, target, payload, overflowRedirect)](./vue-web.irouter.back.md) | 回退历史记录 |
 |  [findRecordByKey(key)](./vue-web.irouter.findrecordbykey.md) | 用<code>唯一key</code>来查找某条路由记录，如果没找到则返回 <code>{overflow: true}</code> |
 |  [findRecordByStep(delta, rootOnly)](./vue-web.irouter.findrecordbystep.md) | 用<code>回退步数</code>来查找某条路由历史记录，如果步数溢出则返回 <code>{overflow: true}</code> |
 |  [getCurrentPage()](./vue-web.irouter.getcurrentpage.md) | 获取当前被激活显示的页面 |
 |  [getHistoryLength(target)](./vue-web.irouter.gethistorylength.md) | 获取指定路由栈的长度 |
+|  [getWindowPages()](./vue-web.irouter.getwindowpages.md) | 获取所有窗口中显示的页面 |
 |  [push(urlOrLocation, target, payload)](./vue-web.irouter.push.md) | 新增一条路由 |
 |  [relaunch(urlOrLocation, target, payload)](./vue-web.irouter.relaunch.md) | 跳转一条路由，并清空所有历史记录 |
 |  [replace(urlOrLocation, target, payload)](./vue-web.irouter.replace.md) | 替换当前路由 |

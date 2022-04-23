@@ -9,5 +9,5 @@
 <b>Signature:</b>
 
 ```typescript
-action?: RouteAction;
+action?: Exclude<RouteAction, 'init'>;
 ```

@@ -1,5 +1,5 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
-import { defineAsyncComponent, h } from 'vue';
+import { h, defineComponent, onBeforeUnmount, shallowRef } from 'vue';
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
 export var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
@@ -17,42 +17,52 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
     options = {};
   }
 
-  var loadingComponent = options.onLoading || coreConfig.LoadComponentOnLoading;
-  var errorComponent = options.onError || coreConfig.LoadComponentOnError;
+  var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
+  var OnError = options.onError || coreConfig.LoadComponentOnError;
+  var component = defineComponent({
+    setup: function setup(props, context) {
+      var store = coreConfig.UseStore();
+      var View = shallowRef(OnLoading);
 
-  var component = function component(props, context) {
-    var store = coreConfig.UseStore();
-    var result;
-    var errorMessage = '';
+      var execute = function execute(curStore) {
+        try {
+          var result = injectComponent(moduleName, componentName, curStore || store);
 
-    try {
-      result = injectComponent(moduleName, componentName, store);
+          if (isPromise(result)) {
+            if (env.isServer) {
+              throw 'can not use async component in SSR';
+            }
 
-      if (env.isServer && isPromise(result)) {
-        result = undefined;
-        throw 'can not use async component in SSR';
-      }
-    } catch (e) {
-      env.console.error(e);
-      errorMessage = e.message || "" + e;
+            result.then(function (view) {
+              active && (View.value = view || 'not found!');
+            }, function (e) {
+              env.console.error(e);
+              active && (View.value = e.message || "" + e || 'error');
+            });
+          } else {
+            View.value = result;
+          }
+        } catch (e) {
+          env.console.error(e);
+          View.value = e.message || "" + e || 'error';
+        }
+      };
+
+      var active = true;
+      onBeforeUnmount(function () {
+        active = false;
+      });
+      execute();
+      return function () {
+        if (typeof View.value === 'string') {
+          return h(OnError, {
+            message: View.value
+          });
+        } else {
+          return h(View.value, props, context.slots);
+        }
+      };
     }
-
-    if (result) {
-      if (isPromise(result)) {
-        return h(defineAsyncComponent({
-          loader: function loader() {
-            return result;
-          },
-          errorComponent: errorComponent,
-          loadingComponent: loadingComponent
-        }), props, context.slots);
-      } else {
-        return h(result, props, context.slots);
-      }
-    } else {
-      return h(errorComponent, null, errorMessage);
-    }
-  };
-
+  });
   return component;
 };

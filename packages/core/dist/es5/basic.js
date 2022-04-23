@@ -9,14 +9,13 @@ export var MetaData = {
   componentCaches: {},
   reducersMap: {},
   effectsMap: {},
-  clientRouter: undefined,
-  AppProvider: undefined
+  clientRouter: undefined
 };
 export var coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2,
+  DepthTimeOnLoading: 1,
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
@@ -34,6 +33,7 @@ export var coreConfig = {
       env.document.title = title;
     }
   },
+  Platform: '',
   StoreProvider: undefined,
   LoadComponent: undefined,
   LoadComponentOnError: undefined,

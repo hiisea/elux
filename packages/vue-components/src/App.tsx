@@ -18,7 +18,7 @@ const AppRender: IAppRender = {
   },
   toProvider(eluxContext, app: App, store): Elux.Component<{children: any}> {
     app.provide<EluxContext>(EluxContextKey, eluxContext);
-    return () => <div></div>;
+    return () => <div />;
   },
 };
 

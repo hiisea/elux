@@ -469,9 +469,6 @@ export declare const MetaData: {
     reducersMap: ActionHandlersMap;
     effectsMap: ActionHandlersMap;
     clientRouter?: IRouter;
-    AppProvider?: Elux.Component<{
-        children: any;
-    }>;
 };
 /**
  * Store的中间件
@@ -535,6 +532,7 @@ export declare const coreConfig: {
     StoreMiddlewares: StoreMiddleware[];
     StoreLogger: StoreLogger;
     SetPageTitle: (title: string) => void;
+    Platform: 'taro' | '';
     StoreProvider?: Elux.Component<{
         store: IStore;
         children: JSX.Element;
@@ -567,6 +565,7 @@ export declare const setCoreConfig: (config: Partial<{
     StoreMiddlewares: StoreMiddleware[];
     StoreLogger: StoreLogger;
     SetPageTitle: (title: string) => void;
+    Platform: 'taro' | '';
     StoreProvider?: Elux.Component<{
         store: IStore;
         children: JSX.Element;

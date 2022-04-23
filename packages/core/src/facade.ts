@@ -45,22 +45,23 @@ export type Facade<
 //     }
 //   : never;
 
-// type PickActions<T> = Pick<
-//   {[K in keyof T]: PickHandler<T[K]>},
-//   {
-//     [K in keyof T]: T[K] extends Function ? Exclude<K, 'onActive' | 'onInactive' | 'onMount'> : never;
-//   }[keyof T]
-// >;
-
 /*** @public */
 export type HandlerToAction<T> = T extends (...args: infer P) => any
   ? (...args: P) => {
       type: string;
     }
-  : undefined;
+  : never;
 
 /*** @public */
-export type PickModelActions<T> = {[K in Exclude<keyof T, 'moduleName' | 'state' | 'onActive' | 'onInactive' | 'onMount'>]: HandlerToAction<T[K]>};
+export type PickModelActions<T> = Pick<
+  {[K in keyof T]: HandlerToAction<T[K]>},
+  {
+    [K in keyof T]: T[K] extends Function ? Exclude<K, 'onActive' | 'onInactive' | 'onMount'> : never;
+  }[keyof T]
+>;
+
+/*** @public */
+export type PickThisActions<T> = {[K in Exclude<keyof T, 'moduleName' | 'state' | 'onActive' | 'onInactive' | 'onMount'>]: HandlerToAction<T[K]>};
 
 /*** @public */
 export type GetPromiseComponent<T> = T extends () => Promise<{default: infer R}> ? R : T;
@@ -305,7 +306,7 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   /**
    * 获取本模块的`公开actions`构造器
    */
-  protected get actions(): PickModelActions<this> {
+  protected get actions(): PickThisActions<this> {
     return MetaData.moduleApiMap[this.moduleName].actions as any;
   }
 

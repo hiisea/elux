@@ -27,7 +27,7 @@ Model基类实现了[CommonModel](./react-web.commonmodel.md)<!-- -->，并提�
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [actions](./react-web.basemodel.actions.md) |  | [PickModelActions](./react-web.pickmodelactions.md)<!-- -->&lt;this&gt; | 获取本模块的<code>公开actions</code>构造器 |
+|  [actions](./react-web.basemodel.actions.md) |  | [PickThisActions](./react-web.pickthisactions.md)<!-- -->&lt;this&gt; | 获取本模块的<code>公开actions</code>构造器 |
 |  [moduleName](./react-web.basemodel.modulename.md) |  | string |  |
 |  [state](./react-web.basemodel.state.md) |  | TModuleState | 当前模块的状态 |
 |  [store](./react-web.basemodel.store.md) |  | [IStore](./react-web.istore.md)<!-- -->&lt;TStoreState&gt; | 被关联的 store |

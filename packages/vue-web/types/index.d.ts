@@ -13,9 +13,6 @@ export declare type EluxApp = App & {
 /**
  * 创建应用(CSR)
  *
- * @remarks
- * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR}
- *
  * @param appConfig - 应用配置
  *
  * @returns

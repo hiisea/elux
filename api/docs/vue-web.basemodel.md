@@ -27,7 +27,7 @@ Model基类实现了[CommonModel](./vue-web.commonmodel.md)<!-- -->，并提供�
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [actions](./vue-web.basemodel.actions.md) |  | [PickModelActions](./vue-web.pickmodelactions.md)<!-- -->&lt;this&gt; | 获取本模块的<code>公开actions</code>构造器 |
+|  [actions](./vue-web.basemodel.actions.md) |  | [PickThisActions](./vue-web.pickthisactions.md)<!-- -->&lt;this&gt; | 获取本模块的<code>公开actions</code>构造器 |
 |  [moduleName](./vue-web.basemodel.modulename.md) |  | string |  |
 |  [state](./vue-web.basemodel.state.md) |  | TModuleState | 当前模块的状态 |
 |  [store](./vue-web.basemodel.store.md) |  | [IStore](./vue-web.istore.md)<!-- -->&lt;TStoreState&gt; | 被关联的 store |

@@ -11,5 +11,5 @@
 ```typescript
 export declare type HandlerToAction<T> = T extends (...args: infer P) => any ? (...args: P) => {
     type: string;
-} : undefined;
+} : never;
 ```

@@ -1,6 +1,6 @@
 import { ModuleGetter, StoreLogger, StoreMiddleware } from '@elux/core';
-export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, modelHotReplacement, reducer, setLoading, } from '@elux/core';
-export type { Action, ActionCreator, ActionError, API, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, Dispatch, EluxComponent, Facade, GetPromiseComponent, GetPromiseModule, GetState, HandlerToAction, ILoadComponent, IRouter, IRouteRecord, IStore, LoadingState, Location, ModelAsCreators, ModuleFacade, ModuleGetter, ModuleState, NativeRequest, PickModelActions, RenderOptions, ReturnComponents, RouteAction, RouteEvent, RouteRuntime, RouteTarget, StoreLogger, storeLoggerInfo, StoreMiddleware, StoreState, UNListener, } from '@elux/core';
+export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, modelHotReplacement, reducer, setLoading, } from '@elux/core';
+export type { Action, ActionCreator, ActionError, API, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, Dispatch, EluxComponent, Facade, GetPromiseComponent, GetPromiseModule, GetState, HandlerToAction, ILoadComponent, IRouter, IRouteRecord, IStore, LoadingState, Location, ModelAsCreators, ModuleFacade, ModuleGetter, ModuleState, NativeRequest, PickModelActions, PickThisActions, RenderOptions, ReturnComponents, RouteAction, RouteEvent, RouteRuntime, RouteTarget, StoreLogger, storeLoggerInfo, StoreMiddleware, StoreState, UNListener, } from '@elux/core';
 export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, urlToLocation, urlToNativeUrl, } from '@elux/route';
 /*** @public */
 export declare type ComputedStore<T> = {
@@ -49,10 +49,10 @@ export interface UserConfig {
     /**
      * 定义Loading超过多少秒视为深度加载
      *
-     * @defaultValue `2`
+     * @defaultValue `1`
      *
      * @remarks
-     * 默认: `2`
+     * 默认: `1`
      *
      * 框架将Loading状态分为3种：{@link LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层
      */

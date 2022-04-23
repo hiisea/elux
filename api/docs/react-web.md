@@ -28,6 +28,8 @@
 |  [getApi(demoteForProductionOnly, injectActions)](./react-web.getapi.md) | 获取应用全局方法 |
 |  [getComponent(moduleName, componentName)](./react-web.getcomponent.md) | 获取导出的UI组件 |
 |  [getModule(moduleName)](./react-web.getmodule.md) | 获取Module |
+|  [injectModule(module)](./react-web.injectmodule.md) | 动态注册module |
+|  [injectModule(moduleName, moduleGetter)](./react-web.injectmodule_1.md) | 动态注册module |
 |  [isServer()](./react-web.isserver.md) | 当前是否是Server运行环境 |
 |  [locationToNativeLocation(location)](./react-web.locationtonativelocation.md) | 内部路由Location转换为原生路由Location |
 |  [locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery })](./react-web.locationtourl.md) | Location转换为Url |
@@ -61,6 +63,7 @@
 |  [Location](./react-web.location.md) | 路由描述 |
 |  [NativeRequest](./react-web.nativerequest.md) | 路由初始化时原生数据，常用于SSR |
 |  [RenderOptions](./react-web.renderoptions.md) | 应用Render参数 |
+|  [RouteEvent](./react-web.routeevent.md) |  |
 |  [RouteRuntime](./react-web.routeruntime.md) | 路由的运行状态 |
 |  [SwitchProps](./react-web.switchprops.md) | 内置UI组件 |
 |  [UserConfig](./react-web.userconfig.md) | 全局参数设置 |
@@ -86,6 +89,7 @@
 |  [AsyncEluxComponent](./react-web.asynceluxcomponent.md) | 表示该UI组件是一个异步EluxUI |
 |  [ComputedStore](./react-web.computedstore.md) | \* |
 |  [Dispatch](./react-web.dispatch.md) | 派发Action |
+|  [EluxApp](./react-web.eluxapp.md) |  |
 |  [Facade](./react-web.facade.md) | \* |
 |  [GetPromiseComponent](./react-web.getpromisecomponent.md) | \* |
 |  [GetPromiseModule](./react-web.getpromisemodule.md) | \* |
@@ -99,6 +103,7 @@
 |  [ModuleGetter](./react-web.modulegetter.md) | 配置模块的获取方式 |
 |  [ModuleState](./react-web.modulestate.md) | 模块状态 |
 |  [PickModelActions](./react-web.pickmodelactions.md) | \* |
+|  [PickThisActions](./react-web.pickthisactions.md) | \* |
 |  [ReturnComponents](./react-web.returncomponents.md) | \* |
 |  [RouteAction](./react-web.routeaction.md) | 路由动作 |
 |  [RouteTarget](./react-web.routetarget.md) | 路由历史栈 |
@@ -106,4 +111,5 @@
 |  [storeLoggerInfo](./react-web.storeloggerinfo.md) |  |
 |  [StoreMiddleware](./react-web.storemiddleware.md) | Store的中间件 |
 |  [StoreState](./react-web.storestate.md) | 全局状态 |
+|  [UNListener](./react-web.unlistener.md) | 常用于取消监听 |
 

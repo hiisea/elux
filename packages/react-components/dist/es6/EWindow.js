@@ -6,16 +6,8 @@ export const EWindow = memo(function ({
 }) {
   const AppView = getEntryComponent();
   const StoreProvider = coreConfig.StoreProvider;
-
-  if (store) {
-    return _jsx(StoreProvider, {
-      store: store,
-      children: _jsx(AppView, {})
-    });
-  } else {
-    return _jsx("div", {
-      className: "g-page-loading",
-      children: "Loading..."
-    });
-  }
+  return _jsx(StoreProvider, {
+    store: store,
+    children: _jsx(AppView, {})
+  });
 });

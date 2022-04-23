@@ -457,7 +457,6 @@ export const MetaData: {
   reducersMap: ActionHandlersMap;
   effectsMap: ActionHandlersMap;
   clientRouter?: IRouter;
-  AppProvider?: Elux.Component<{children: any}>;
 } = {
   moduleApiMap: null as any,
   moduleCaches: {},
@@ -465,7 +464,6 @@ export const MetaData: {
   reducersMap: {},
   effectsMap: {},
   clientRouter: undefined,
-  AppProvider: undefined,
 };
 
 /**
@@ -531,6 +529,7 @@ export const coreConfig: {
   StoreMiddlewares: StoreMiddleware[];
   StoreLogger: StoreLogger;
   SetPageTitle: (title: string) => void;
+  Platform: 'taro' | '';
   StoreProvider?: Elux.Component<{store: IStore; children: JSX.Element}>;
   LoadComponent?: (
     moduleName: string,
@@ -546,7 +545,7 @@ export const coreConfig: {
   NSP: '.',
   MSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2,
+  DepthTimeOnLoading: 1,
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
@@ -560,6 +559,7 @@ export const coreConfig: {
       env.document.title = title;
     }
   },
+  Platform: '',
   StoreProvider: undefined,
   LoadComponent: undefined,
   LoadComponentOnError: undefined,

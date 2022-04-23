@@ -70,11 +70,15 @@ export abstract class BaseNativeRouter {
     this[testMethod] && this[testMethod](locationToNativeLocation(location), backIndex);
   }
   public execute(method: RouteAction, location: Location, key: string, backIndex?: number[]): void | Promise<void> {
-    const result: boolean = this[method as string](locationToNativeLocation(location), key, backIndex);
+    const nativeLocation = locationToNativeLocation(location);
+    const result: boolean = this[method as string](nativeLocation, key, backIndex);
     if (result) {
       this.routeKey = key;
       return new Promise((resolve) => {
-        const timeout = env.setTimeout(() => this.onSuccess(), 2000);
+        const timeout = env.setTimeout(() => {
+          env.console.error('Native router timeout: ' + nativeLocation.url);
+          this.onSuccess();
+        }, 2000);
         this.curTask = {resolve, timeout};
       });
     }

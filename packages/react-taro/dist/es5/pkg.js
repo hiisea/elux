@@ -1,6 +1,6 @@
 import _react, { useContext, memo, useState, useRef, useEffect, useCallback } from 'react';
-import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
+import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 import _reactDom from 'react-dom';
 
 var root;
@@ -279,14 +279,13 @@ var MetaData = {
   componentCaches: {},
   reducersMap: {},
   effectsMap: {},
-  clientRouter: undefined,
-  AppProvider: undefined
+  clientRouter: undefined
 };
 var coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2,
+  DepthTimeOnLoading: 1,
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
@@ -304,6 +303,7 @@ var coreConfig = {
       env.document.title = title;
     }
   },
+  Platform: '',
   StoreProvider: undefined,
   LoadComponent: undefined,
   LoadComponentOnError: undefined,
@@ -526,6 +526,15 @@ function getModuleApiMap(data) {
   }
 
   return MetaData.moduleApiMap;
+}
+function injectModule(moduleOrName, moduleGetter) {
+  if (typeof moduleOrName === 'string') {
+    coreConfig.ModuleGetter[moduleOrName] = moduleGetter;
+  } else {
+    coreConfig.ModuleGetter[moduleOrName.moduleName] = function () {
+      return moduleOrName;
+    };
+  }
 }
 function injectComponent(moduleName, componentName, store) {
   return promiseCaseCallback(getComponent(moduleName, componentName), function (component) {
@@ -1388,19 +1397,343 @@ var BaseModel = (_class = function () {
 function buildProvider(ins, router) {
   var store = router.getCurrentPage().store;
   var AppRender = coreConfig.AppRender;
-  return Object.assign(ins, {
-    render: function render() {
-      router.init({});
-      MetaData.AppProvider = AppRender.toProvider({
-        router: router,
-        documentHead: ''
-      }, ins, store);
-      return MetaData.AppProvider;
+  router.init({});
+  return AppRender.toProvider({
+    router: router,
+    documentHead: ''
+  }, ins, store);
+}
+
+var EluxContextComponent = _react.createContext({
+  documentHead: '',
+  router: null
+});
+function UseRouter() {
+  var eluxContext = useContext(EluxContextComponent);
+  return eluxContext.router;
+}
+var reactComponentsConfig = {
+  hydrate: undefined,
+  render: undefined,
+  renderToString: undefined
+};
+
+var EWindow = memo(function (_ref) {
+  var store = _ref.store;
+  var AppView = getEntryComponent();
+  var StoreProvider = coreConfig.StoreProvider;
+  return jsx(StoreProvider, {
+    store: store,
+    children: jsx(AppView, {})
+  });
+});
+
+var RouterComponent = function RouterComponent() {
+  var router = coreConfig.UseRouter();
+
+  var _useState = useState({
+    classname: 'elux-app',
+    pages: router.getWindowPages().reverse()
+  }),
+      data = _useState[0],
+      setData = _useState[1];
+
+  var classname = data.classname,
+      pages = data.pages;
+  var pagesRef = useRef(pages);
+  pagesRef.current = pages;
+  var containerRef = useRef(null);
+  useEffect(function () {
+    return router.addListener(function (_ref) {
+      var action = _ref.action,
+          windowChanged = _ref.windowChanged;
+      var pages = router.getWindowPages().reverse();
+      return new Promise(function (completeCallback) {
+        if (windowChanged) {
+          if (action === 'push') {
+            setData({
+              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              pages: pages
+            });
+            env.setTimeout(function () {
+              containerRef.current.className = 'elux-app elux-animation';
+            }, 100);
+            env.setTimeout(function () {
+              containerRef.current.className = 'elux-app';
+              completeCallback();
+            }, 400);
+          } else if (action === 'back') {
+            setData({
+              classname: 'elux-app ' + Date.now(),
+              pages: [].concat(pages, [pagesRef.current[pagesRef.current.length - 1]])
+            });
+            env.setTimeout(function () {
+              containerRef.current.className = 'elux-app elux-animation elux-change elux-back';
+            }, 100);
+            env.setTimeout(function () {
+              setData({
+                classname: 'elux-app ' + Date.now(),
+                pages: pages
+              });
+              completeCallback();
+            }, 400);
+          } else if (action === 'relaunch') {
+            setData({
+              classname: 'elux-app ',
+              pages: pages
+            });
+            env.setTimeout(completeCallback, 50);
+          }
+        } else {
+          setData({
+            classname: 'elux-app',
+            pages: pages
+          });
+          env.setTimeout(completeCallback, 50);
+        }
+      });
+    });
+  }, [router]);
+  return jsx("div", {
+    ref: containerRef,
+    className: classname,
+    children: pages.map(function (item) {
+      var store = item.store,
+          url = item.url;
+      return jsx("div", {
+        "data-sid": store.sid,
+        className: "elux-window",
+        "data-url": url,
+        children: jsx(EWindow, {
+          store: store
+        })
+      }, store.sid);
+    })
+  });
+};
+
+var AppRender = {
+  toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
+    var renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
+    var panel = env.document.getElementById(id);
+    renderFun(jsx(EluxContextComponent.Provider, {
+      value: eluxContext,
+      children: jsx(RouterComponent, {})
+    }), panel);
+  },
+  toString: function toString(id, eluxContext, app, store) {
+    var html = reactComponentsConfig.renderToString(jsx(EluxContextComponent.Provider, {
+      value: eluxContext,
+      children: jsx(RouterComponent, {})
+    }));
+    return Promise.resolve(html);
+  },
+  toProvider: function toProvider(eluxContext, app, store) {
+    return function (props) {
+      return jsx(EluxContextComponent.Provider, {
+        value: eluxContext,
+        children: props.children
+      });
+    };
+  }
+};
+
+var LoadComponentOnError = function LoadComponentOnError(_ref) {
+  var message = _ref.message;
+  return jsx("div", {
+    className: "g-component-error",
+    children: message
+  });
+};
+var LoadComponentOnLoading = function LoadComponentOnLoading() {
+  return jsx("div", {
+    className: "g-component-loading",
+    children: "loading..."
+  });
+};
+var LoadComponent = function LoadComponent(moduleName, componentName, options) {
+  if (options === void 0) {
+    options = {};
+  }
+
+  var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
+  var OnError = options.onError || coreConfig.LoadComponentOnError;
+  return _react.forwardRef(function (props, ref) {
+    var execute = function execute(curStore) {
+      var View = OnLoading;
+
+      try {
+        var result = injectComponent(moduleName, componentName, curStore || store);
+
+        if (isPromise(result)) {
+          if (env.isServer) {
+            throw 'can not use async component in SSR';
+          }
+
+          result.then(function (view) {
+            active && setView(view || 'not found!');
+          }, function (e) {
+            env.console.error(e);
+            active && setView(e.message || "" + e || 'error');
+          });
+        } else {
+          View = result;
+        }
+      } catch (e) {
+        env.console.error(e);
+        View = e.message || "" + e || 'error';
+      }
+
+      return View;
+    };
+
+    var _useState = useState(true),
+        active = _useState[0],
+        setActive = _useState[1];
+
+    useEffect(function () {
+      return function () {
+        setActive(false);
+      };
+    }, []);
+    var newStore = coreConfig.UseStore();
+
+    var _useState2 = useState(newStore),
+        store = _useState2[0],
+        setStore = _useState2[1];
+
+    var _useState3 = useState(execute),
+        View = _useState3[0],
+        setView = _useState3[1];
+
+    if (store !== newStore) {
+      setStore(newStore);
+      setView(execute(newStore));
+    }
+
+    if (typeof View === 'string') {
+      return jsx(OnError, {
+        message: View
+      });
+    } else {
+      return jsx(View, _extends({
+        ref: ref
+      }, props));
     }
   });
+};
+
+var clientTimer = 0;
+var recoverLock = false;
+
+function setClientHead(eluxContext, documentHead) {
+  eluxContext.documentHead = documentHead;
+
+  if (!clientTimer) {
+    clientTimer = env.setTimeout(function () {
+      clientTimer = 0;
+      recoverLock = false;
+      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
+
+      if (arr[1]) {
+        coreConfig.SetPageTitle(arr[1]);
+      }
+    }, 0);
+  }
 }
-function getAppProvider() {
-  return MetaData.AppProvider;
+
+function recoverClientHead(eluxContext, documentHead) {
+  if (!recoverLock) {
+    recoverLock = true;
+    setClientHead(eluxContext, documentHead);
+  }
+}
+
+var Component$2 = function Component(_ref) {
+  var title = _ref.title,
+      html = _ref.html;
+  var eluxContext = useContext(EluxContextComponent);
+
+  if (!html) {
+    html = eluxContext.documentHead || '<title>Elux</title>';
+  }
+
+  if (title) {
+    html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
+  }
+
+  if (env.isServer) {
+    eluxContext.documentHead = html;
+  }
+
+  useEffect(function () {
+    var raw = eluxContext.documentHead;
+    setClientHead(eluxContext, html);
+    recoverLock = false;
+    return function () {
+      return recoverClientHead(eluxContext, raw);
+    };
+  }, [eluxContext, html]);
+  return null;
+};
+
+var DocumentHead = _react.memo(Component$2);
+
+var Component$1 = function Component(_ref) {
+  var children = _ref.children,
+      elseView = _ref.elseView;
+  var arr = [];
+  _react.Children.forEach(children, function (item) {
+    item && arr.push(item);
+  });
+
+  if (arr.length > 0) {
+    return jsx(Fragment$2, {
+      children: arr
+    });
+  }
+
+  return jsx(Fragment$2, {
+    children: elseView
+  });
+};
+
+var Else = _react.memo(Component$1);
+
+var Component = function Component(_ref) {
+  var children = _ref.children,
+      elseView = _ref.elseView;
+  var arr = [];
+  _react.Children.forEach(children, function (item) {
+    item && arr.push(item);
+  });
+
+  if (arr.length > 0) {
+    return jsx(Fragment$2, {
+      children: arr[0]
+    });
+  }
+
+  return jsx(Fragment$2, {
+    children: elseView
+  });
+};
+
+var Switch = _react.memo(Component);
+
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
 }
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -2681,13 +3014,16 @@ var BaseNativeRouter = function () {
   _proto.execute = function execute(method, location, key, backIndex) {
     var _this = this;
 
-    var result = this[method](locationToNativeLocation(location), key, backIndex);
+    var nativeLocation = locationToNativeLocation(location);
+    var result = this[method](nativeLocation, key, backIndex);
 
     if (result) {
       this.routeKey = key;
       return new Promise(function (resolve) {
         var timeout = env.setTimeout(function () {
-          return _this.onSuccess();
+          env.console.error('Native router timeout: ' + nativeLocation.url);
+
+          _this.onSuccess();
         }, 2000);
         _this.curTask = {
           resolve: resolve,
@@ -3407,6 +3743,63 @@ var Router = function (_CoreRouter) {
   return Router;
 }(CoreRouter);
 
+var _excluded = ["onClick", "disabled", "to", "target", "action"];
+var Link = _react.forwardRef(function (_ref, ref) {
+  var _onClick = _ref.onClick,
+      disabled = _ref.disabled,
+      _ref$to = _ref.to,
+      to = _ref$to === void 0 ? '' : _ref$to,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
+      _ref$action = _ref.action,
+      action = _ref$action === void 0 ? 'push' : _ref$action,
+      props = _objectWithoutPropertiesLoose(_ref, _excluded);
+
+  var router = coreConfig.UseRouter();
+  var onClick = useCallback(function (event) {
+    event.preventDefault();
+
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {
+        url: to
+      }, target);
+    }
+  }, [_onClick, disabled, to, router, action, target]);
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
+  disabled && (props['disabled'] = true);
+  var href = action !== 'back' ? to : '';
+
+  if (href) {
+    href = urlToNativeUrl(href);
+  } else {
+    href = '#';
+  }
+
+  props['href'] = href;
+
+  if (coreConfig.Platform === 'taro') {
+    return jsx("span", _extends({}, props, {
+      ref: ref
+    }));
+  } else {
+    return jsx("a", _extends({}, props, {
+      ref: ref
+    }));
+  }
+});
+
+setCoreConfig({
+  UseRouter: UseRouter,
+  AppRender: AppRender,
+  LoadComponent: LoadComponent,
+  LoadComponentOnError: LoadComponentOnError,
+  LoadComponentOnLoading: LoadComponentOnLoading
+});
+
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -3550,7 +3943,7 @@ setCoreConfig({
   }
 });
 var TaroRouter;
-var prevPageInfo;
+var beforeOnShow;
 var tabPages = undefined;
 var curLocation;
 var eventBus = new SingleDispatcher();
@@ -3653,473 +4046,54 @@ var taroHistory = {
 
 if (process.env.TARO_ENV === 'h5') {
   TaroRouter = require('@tarojs/router');
+
+  beforeOnShow = function beforeOnShow() {
+    return undefined;
+  };
 } else {
-  var originalPage = Page;
+  TaroRouter = {};
+  var prevPageInfo;
 
-  Page = function Page(pageOptions) {
-    var onShow = pageOptions.onShow;
-    var onHide = pageOptions.onHide;
-    var onUnload = pageOptions.onUnload;
+  beforeOnShow = function beforeOnShow() {
+    var arr = Taro.getCurrentPages();
+    var currentPage = arr[arr.length - 1];
+    var currentPageInfo = {
+      count: arr.length,
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
+    };
+    curLocation = {
+      pathname: currentPageInfo.pathname,
+      search: currentPageInfo.search,
+      action: 'RELAUNCH'
+    };
 
-    pageOptions.onShow = function () {
-      var arr = Taro.getCurrentPages();
-      var currentPage = arr[arr.length - 1];
-      var currentPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options)
-      };
-      curLocation = {
-        pathname: currentPageInfo.pathname,
-        search: currentPageInfo.search,
-        action: 'RELAUNCH'
-      };
+    if (prevPageInfo) {
+      var action = 'PUSH';
 
-      if (prevPageInfo) {
-        var action = 'PUSH';
-
-        if (currentPageInfo.count < prevPageInfo.count) {
-          action = 'POP';
-        } else if (currentPageInfo.count === prevPageInfo.count) {
-          if (currentPageInfo.count === 1) {
-            action = 'RELAUNCH';
-          } else {
-            action = 'REPLACE';
-          }
+      if (currentPageInfo.count < prevPageInfo.count) {
+        action = 'POP';
+      } else if (currentPageInfo.count === prevPageInfo.count) {
+        if (currentPageInfo.count === 1) {
+          action = 'RELAUNCH';
+        } else {
+          action = 'REPLACE';
         }
-
-        curLocation.action = action;
       }
 
-      return onShow == null ? void 0 : onShow.call(this);
-    };
+      curLocation.action = action;
+    }
 
-    pageOptions.onHide = function () {
-      var arr = Taro.getCurrentPages();
-      var currentPage = arr[arr.length - 1];
-      prevPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options)
-      };
-      return onHide == null ? void 0 : onHide.call(this);
+    prevPageInfo = {
+      count: currentPageInfo.count
     };
-
-    pageOptions.onUnload = function () {
-      var arr = Taro.getCurrentPages();
-      var currentPage = arr[arr.length - 1];
-      prevPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options)
-      };
-      return onUnload == null ? void 0 : onUnload.call(this);
-    };
-
-    return originalPage(pageOptions);
   };
 }
 
 function onShow() {
+  beforeOnShow();
   eventBus.dispatch(taroHistory.getLocation());
 }
-
-var EluxContextComponent = _react.createContext({
-  documentHead: '',
-  router: null
-});
-function UseRouter() {
-  var eluxContext = useContext(EluxContextComponent);
-  return eluxContext.router;
-}
-var reactComponentsConfig = {
-  hydrate: undefined,
-  render: undefined,
-  renderToString: undefined
-};
-
-var EWindow = memo(function (_ref) {
-  var store = _ref.store;
-  var AppView = getEntryComponent();
-  var StoreProvider = coreConfig.StoreProvider;
-
-  if (store) {
-    return jsx(StoreProvider, {
-      store: store,
-      children: jsx(AppView, {})
-    });
-  } else {
-    return jsx("div", {
-      className: "g-page-loading",
-      children: "Loading..."
-    });
-  }
-});
-
-var RouterComponent = function RouterComponent() {
-  var router = coreConfig.UseRouter();
-
-  var _useState = useState({
-    classname: 'elux-app',
-    pages: router.getWindowPages().reverse()
-  }),
-      data = _useState[0],
-      setData = _useState[1];
-
-  var classname = data.classname,
-      pages = data.pages;
-  var pagesRef = useRef(pages);
-  pagesRef.current = pages;
-  var containerRef = useRef(null);
-  useEffect(function () {
-    return router.addListener(function (_ref) {
-      var action = _ref.action,
-          windowChanged = _ref.windowChanged;
-      var pages = router.getWindowPages().reverse();
-      return new Promise(function (completeCallback) {
-        if (windowChanged) {
-          if (action === 'push') {
-            setData({
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
-              pages: pages
-            });
-            env.setTimeout(function () {
-              containerRef.current.className = 'elux-app elux-animation';
-            }, 100);
-            env.setTimeout(function () {
-              containerRef.current.className = 'elux-app';
-              completeCallback();
-            }, 400);
-          } else if (action === 'back') {
-            setData({
-              classname: 'elux-app ' + Date.now(),
-              pages: [].concat(pages, [pagesRef.current[pagesRef.current.length - 1]])
-            });
-            env.setTimeout(function () {
-              containerRef.current.className = 'elux-app elux-animation elux-change elux-back';
-            }, 100);
-            env.setTimeout(function () {
-              setData({
-                classname: 'elux-app ' + Date.now(),
-                pages: pages
-              });
-              completeCallback();
-            }, 400);
-          } else if (action === 'relaunch') {
-            setData({
-              classname: 'elux-app ',
-              pages: pages
-            });
-            env.setTimeout(completeCallback, 50);
-          }
-        } else {
-          setData({
-            classname: 'elux-app',
-            pages: pages
-          });
-          env.setTimeout(completeCallback, 50);
-        }
-      });
-    });
-  }, [router]);
-  return jsx("div", {
-    ref: containerRef,
-    className: classname,
-    children: pages.map(function (item) {
-      var store = item.store,
-          url = item.url;
-      return jsx("div", {
-        "data-sid": store.sid,
-        className: "elux-window",
-        "data-url": url,
-        children: jsx(EWindow, {
-          store: store
-        })
-      }, store.sid);
-    })
-  });
-};
-
-var AppRender = {
-  toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
-    var renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
-    var panel = env.document.getElementById(id);
-    renderFun(jsx(EluxContextComponent.Provider, {
-      value: eluxContext,
-      children: jsx(RouterComponent, {})
-    }), panel);
-  },
-  toString: function toString(id, eluxContext, app, store) {
-    var html = reactComponentsConfig.renderToString(jsx(EluxContextComponent.Provider, {
-      value: eluxContext,
-      children: jsx(RouterComponent, {})
-    }));
-    return Promise.resolve(html);
-  },
-  toProvider: function toProvider(eluxContext, app, store) {
-    return function (props) {
-      return jsx(EluxContextComponent.Provider, {
-        value: eluxContext,
-        children: props.children
-      });
-    };
-  }
-};
-
-var LoadComponentOnError = function LoadComponentOnError(_ref) {
-  var message = _ref.message;
-  return jsx("div", {
-    className: "g-component-error",
-    children: message
-  });
-};
-var LoadComponentOnLoading = function LoadComponentOnLoading() {
-  return jsx("div", {
-    className: "g-component-loading",
-    children: "loading..."
-  });
-};
-var LoadComponent = function LoadComponent(moduleName, componentName, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
-  var OnError = options.onError || coreConfig.LoadComponentOnError;
-  return _react.forwardRef(function (props, ref) {
-    var execute = function execute(curStore) {
-      var View = OnLoading;
-
-      try {
-        var result = injectComponent(moduleName, componentName, curStore || store);
-
-        if (isPromise(result)) {
-          if (env.isServer) {
-            throw 'can not use async component in SSR';
-          }
-
-          result.then(function (view) {
-            active && setView(view || 'not found!');
-          }, function (e) {
-            env.console.error(e);
-            active && setView(e.message || "" + e || 'error');
-          });
-        } else {
-          View = result;
-        }
-      } catch (e) {
-        env.console.error(e);
-        View = e.message || "" + e || 'error';
-      }
-
-      return View;
-    };
-
-    var _useState = useState(true),
-        active = _useState[0],
-        setActive = _useState[1];
-
-    useEffect(function () {
-      return function () {
-        setActive(false);
-      };
-    }, []);
-    var newStore = coreConfig.UseStore();
-
-    var _useState2 = useState(newStore),
-        store = _useState2[0],
-        setStore = _useState2[1];
-
-    var _useState3 = useState(execute),
-        View = _useState3[0],
-        setView = _useState3[1];
-
-    if (store !== newStore) {
-      setStore(newStore);
-      setView(execute(newStore));
-    }
-
-    if (typeof View === 'string') {
-      return jsx(OnError, {
-        message: View
-      });
-    } else {
-      return jsx(View, _extends({
-        ref: ref
-      }, props));
-    }
-  });
-};
-
-var clientTimer = 0;
-var recoverLock = false;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(function () {
-      clientTimer = 0;
-      recoverLock = false;
-      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
-function recoverClientHead(eluxContext, documentHead) {
-  if (!recoverLock) {
-    recoverLock = true;
-    setClientHead(eluxContext, documentHead);
-  }
-}
-
-var Component$2 = function Component(_ref) {
-  var title = _ref.title,
-      html = _ref.html;
-  var eluxContext = useContext(EluxContextComponent);
-
-  if (!html) {
-    html = eluxContext.documentHead || '<title>Elux</title>';
-  }
-
-  if (title) {
-    html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
-  }
-
-  if (env.isServer) {
-    eluxContext.documentHead = html;
-  }
-
-  useEffect(function () {
-    var raw = eluxContext.documentHead;
-    setClientHead(eluxContext, html);
-    recoverLock = false;
-    return function () {
-      return recoverClientHead(eluxContext, raw);
-    };
-  }, [eluxContext, html]);
-  return null;
-};
-
-var DocumentHead = _react.memo(Component$2);
-
-var Component$1 = function Component(_ref) {
-  var children = _ref.children,
-      elseView = _ref.elseView;
-  var arr = [];
-  _react.Children.forEach(children, function (item) {
-    item && arr.push(item);
-  });
-
-  if (arr.length > 0) {
-    return jsx(Fragment$2, {
-      children: arr
-    });
-  }
-
-  return jsx(Fragment$2, {
-    children: elseView
-  });
-};
-
-var Else = _react.memo(Component$1);
-
-var Component = function Component(_ref) {
-  var children = _ref.children,
-      elseView = _ref.elseView;
-  var arr = [];
-  _react.Children.forEach(children, function (item) {
-    item && arr.push(item);
-  });
-
-  if (arr.length > 0) {
-    return jsx(Fragment$2, {
-      children: arr[0]
-    });
-  }
-
-  return jsx(Fragment$2, {
-    children: elseView
-  });
-};
-
-var Switch = _react.memo(Component);
-
-function _objectWithoutPropertiesLoose(source, excluded) {
-  if (source == null) return {};
-  var target = {};
-  var sourceKeys = Object.keys(source);
-  var key, i;
-
-  for (i = 0; i < sourceKeys.length; i++) {
-    key = sourceKeys[i];
-    if (excluded.indexOf(key) >= 0) continue;
-    target[key] = source[key];
-  }
-
-  return target;
-}
-
-var _excluded = ["onClick", "disabled", "to", "target", "action"];
-var Link = _react.forwardRef(function (_ref, ref) {
-  var _onClick = _ref.onClick,
-      disabled = _ref.disabled,
-      _ref$to = _ref.to,
-      to = _ref$to === void 0 ? '' : _ref$to,
-      _ref$target = _ref.target,
-      target = _ref$target === void 0 ? 'page' : _ref$target,
-      _ref$action = _ref.action,
-      action = _ref$action === void 0 ? 'push' : _ref$action,
-      props = _objectWithoutPropertiesLoose(_ref, _excluded);
-
-  var router = coreConfig.UseRouter();
-  var onClick = useCallback(function (event) {
-    event.preventDefault();
-
-    if (!disabled) {
-      _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {
-        url: to
-      }, target);
-    }
-  }, [_onClick, disabled, to, router, action, target]);
-  props['onClick'] = onClick;
-  props['action'] = action;
-  props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  var href = action !== 'back' ? to : '';
-
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
-  }
-
-  props['href'] = href;
-
-  if (process.env.TARO_ENV) {
-    return jsx("span", _extends({}, props, {
-      ref: ref
-    }));
-  } else {
-    return jsx("a", _extends({}, props, {
-      ref: ref
-    }));
-  }
-});
-
-setCoreConfig({
-  UseRouter: UseRouter,
-  AppRender: AppRender,
-  LoadComponent: LoadComponent,
-  LoadComponentOnError: LoadComponentOnError,
-  LoadComponentOnLoading: LoadComponentOnLoading
-});
 
 var interopRequireDefault = createCommonjsModule(function (module) {
 function _interopRequireDefault(obj) {
@@ -7777,7 +7751,10 @@ function patchActions(typeName, json) {
   }
 }
 
-function useCurrentStore() {
+setCoreConfig({
+  Platform: 'taro'
+});
+var EluxPage = function EluxPage() {
   var router = coreConfig.UseRouter();
 
   var _useState = useState(),
@@ -7809,24 +7786,24 @@ function useCurrentStore() {
       }
     };
   }, []);
-  return store;
-}
-var cientSingleton = undefined;
+  return store ? jsx(EWindow, {
+    store: store
+  }, store.sid) : jsx("div", {
+    className: "g-page-loading",
+    children: "Loading..."
+  });
+};
+var cientSingleton;
 function createApp(appConfig) {
-  if (cientSingleton) {
-    return cientSingleton;
+  if (!cientSingleton) {
+    var router = createRouter(taroHistory);
+    cientSingleton = buildProvider({}, router);
   }
 
-  var router = createRouter(taroHistory);
-  cientSingleton = {
-    render: function render() {
-      return getAppProvider();
-    }
-  };
-  return buildProvider({}, router);
+  return cientSingleton;
 }
 
 var createSelectorHook$1 = lib.createSelectorHook;
 var shallowEqual$1 = lib.shallowEqual;
 var useSelector$1 = lib.useSelector;
-export { BaseModel, DocumentHead, EWindow, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useCurrentStore, useSelector$1 as useSelector };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };

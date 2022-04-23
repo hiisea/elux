@@ -9,5 +9,5 @@
 <b>Signature:</b>
 
 ```typescript
-protected get actions(): PickModelActions<this>;
+protected get actions(): PickThisActions<this>;
 ```

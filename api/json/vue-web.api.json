@@ -834,8 +834,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "PickModelActions",
-                  "canonicalReference": "@elux/vue-web!PickModelActions:type"
+                  "text": "PickThisActions",
+                  "canonicalReference": "@elux/vue-web!PickThisActions:type"
                 },
                 {
                   "kind": "Content",
@@ -1916,7 +1916,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-web!createApp:function(1)",
-          "docComment": "/**\n * 创建应用(CSR)\n *\n * @remarks\n *\n * 应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用{@link createSSR}\n *\n * @param appConfig - 应用配置\n *\n * @returns 返回包含`render`方法的实例，参见{@link RenderOptions}\n *\n * @example\n * ```js\n * createApp(config)\n * .render()\n * .then(() => {\n *   const initLoading = document.getElementById('root-loading');\n *   if (initLoading) {\n *     initLoading.parentNode!.removeChild(initLoading);\n *   }\n * });\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 创建应用(CSR)\n *\n * @param appConfig - 应用配置\n *\n * @returns 返回包含`render`方法的实例，参见{@link RenderOptions}\n *\n * @example\n * ```js\n * createApp(config)\n * .render()\n * .then(() => {\n *   const initLoading = document.getElementById('root-loading');\n *   if (initLoading) {\n *     initLoading.parentNode!.removeChild(initLoading);\n *   }\n * });\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3883,7 +3883,7 @@
             },
             {
               "kind": "Content",
-              "text": "T extends (...args: infer P) => any ? (...args: P) => {\n    type: string;\n} : undefined"
+              "text": "T extends (...args: infer P) => any ? (...args: P) => {\n    type: string;\n} : never"
             },
             {
               "kind": "Content",
@@ -3986,6 +3986,135 @@
             "startIndex": 6,
             "endIndex": 11
           }
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@elux/vue-web!injectModule:function(1)",
+          "docComment": "/**\n * 动态注册module\n *\n * @remarks\n *\n * 常于小程序分包加载\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function injectModule(module: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CommonModule",
+              "canonicalReference": "@elux/vue-web!CommonModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "module",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "name": "injectModule"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@elux/vue-web!injectModule:function(2)",
+          "docComment": "/**\n * 动态注册module\n *\n * @remarks\n *\n * 常于小程序分包加载\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function injectModule(moduleName: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ", moduleGetter: "
+            },
+            {
+              "kind": "Content",
+              "text": "() => "
+            },
+            {
+              "kind": "Reference",
+              "text": "CommonModule",
+              "canonicalReference": "@elux/vue-web!CommonModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    default: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CommonModule",
+              "canonicalReference": "@elux/vue-web!CommonModule:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}>"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 11,
+            "endIndex": 12
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 2,
+          "parameters": [
+            {
+              "parameterName": "moduleName",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "parameterName": "moduleGetter",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 10
+              }
+            }
+          ],
+          "name": "injectModule"
         },
         {
           "kind": "Interface",
@@ -4463,56 +4592,6 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "getWindowPages"
-            },
-            {
-              "kind": "MethodSignature",
-              "canonicalReference": "@elux/vue-web!IRouter#init:member(1)",
-              "docComment": "/**\n * 初始化\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "init(prevState: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "StoreState",
-                  "canonicalReference": "@elux/vue-web!StoreState:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<void>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 5
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "prevState",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  }
-                }
-              ],
-              "name": "init"
             },
             {
               "kind": "PropertySignature",
@@ -5374,8 +5453,21 @@
                 },
                 {
                   "kind": "Reference",
+                  "text": "Exclude",
+                  "canonicalReference": "!Exclude:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
                   "text": "RouteAction",
                   "canonicalReference": "@elux/vue-web!RouteAction:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", 'init'>"
                 },
                 {
                   "kind": "Content",
@@ -5387,7 +5479,7 @@
               "name": "action",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
+                "endIndex": 5
               }
             },
             {
@@ -6257,63 +6349,6 @@
           "name": "patchActions"
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@elux/vue-web!PathToRegexp:var",
-          "docComment": "/**\n * * 引用path-to-regexp\n *\n * @remarks\n *\n * 参见{@link https://www.npmjs.com/package/path-to-regexp | path-to-regexp}\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "PathToRegexp: "
-            },
-            {
-              "kind": "Content",
-              "text": "{\n    pathToRegexp: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "pathToRegexp",
-              "canonicalReference": "path-to-regexp!pathToRegexp:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    match: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "match",
-              "canonicalReference": "path-to-regexp!match:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    parse: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "parse",
-              "canonicalReference": "path-to-regexp!parse:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n    compile: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "compile",
-              "canonicalReference": "path-to-regexp!compile:function"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n}"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "PathToRegexp",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 10
-          }
-        },
-        {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-web!PickModelActions:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
@@ -6321,6 +6356,76 @@
             {
               "kind": "Content",
               "text": "export declare type PickModelActions<T> = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Pick",
+              "canonicalReference": "!Pick:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<{\n    [K in keyof T]: "
+            },
+            {
+              "kind": "Reference",
+              "text": "HandlerToAction",
+              "canonicalReference": "@elux/vue-web!HandlerToAction:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<T[K]>;\n}, {\n    [K in keyof T]: T[K] extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Function",
+              "canonicalReference": "!Function:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " ? "
+            },
+            {
+              "kind": "Reference",
+              "text": "Exclude",
+              "canonicalReference": "!Exclude:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<K, 'onActive' | 'onInactive' | 'onMount'> : never;\n}[keyof T]>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "PickModelActions",
+          "typeParameters": [
+            {
+              "typeParameterName": "T",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 9
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/vue-web!PickThisActions:type",
+          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type PickThisActions<T> = "
             },
             {
               "kind": "Content",
@@ -6350,7 +6455,7 @@
             }
           ],
           "releaseTag": "Public",
-          "name": "PickModelActions",
+          "name": "PickThisActions",
           "typeParameters": [
             {
               "typeParameterName": "T",
@@ -6574,7 +6679,7 @@
             },
             {
               "kind": "Content",
-              "text": "'relaunch' | 'push' | 'replace' | 'back'"
+              "text": "'init' | 'relaunch' | 'push' | 'replace' | 'back'"
             },
             {
               "kind": "Content",
@@ -7447,7 +7552,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-web!UserConfig#DepthTimeOnLoading:member",
-              "docComment": "/**\n * 定义Loading超过多少秒视为深度加载\n *\n * @remarks\n *\n * 默认: `2`\n *\n * 框架将Loading状态分为3种：{@link LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层\n *\n * @defaultValue\n *\n * `2`\n */\n",
+              "docComment": "/**\n * 定义Loading超过多少秒视为深度加载\n *\n * @remarks\n *\n * 默认: `1`\n *\n * 框架将Loading状态分为3种：{@link LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层\n *\n * @defaultValue\n *\n * `1`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",

@@ -1,6 +1,6 @@
 import { AppConfig } from '@elux/app';
 import { NativeRequest, RenderOptions } from '@elux/core';
-export { DocumentHead, Else, Link, Switch, EWindow } from '@elux/react-components';
+export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
 export type { DocumentHeadProps, ElseProps, LinkProps, SwitchProps } from '@elux/react-components';
 export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
 export type { GetProps, InferableComponentEnhancerWithProps } from '@elux/react-redux';

@@ -14,7 +14,7 @@ DepthTimeOnLoading?: number;
 
 ## Remarks
 
-默认: `2`
+默认: `1`
 
 框架将Loading状态分为3种：[LoadingState](./react-web.loadingstate.md)<!-- -->，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层
 

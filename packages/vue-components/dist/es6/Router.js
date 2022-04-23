@@ -1,7 +1,7 @@
 import { createVNode as _createVNode } from "vue";
-import { defineComponent, h, onBeforeUnmount, provide, ref, shallowRef } from 'vue';
-import { coreConfig, env, getEntryComponent } from '@elux/core';
-import { EluxStoreContextKey } from './base';
+import { defineComponent, onBeforeUnmount, ref, shallowRef } from 'vue';
+import { coreConfig, env } from '@elux/core';
+import { EWindow } from './EWindow';
 export const RouterComponent = defineComponent({
   setup() {
     const router = coreConfig.UseRouter();
@@ -65,7 +65,6 @@ export const RouterComponent = defineComponent({
     onBeforeUnmount(() => {
       removeListener();
     });
-    const appView = getEntryComponent();
     return () => {
       const {
         classname,
@@ -85,32 +84,10 @@ export const RouterComponent = defineComponent({
           "class": "elux-window",
           "data-url": url
         }, [_createVNode(EWindow, {
-          "store": store,
-          "view": appView
+          "store": store
         }, null)]);
       })]);
     };
-  }
-
-});
-export const EWindow = defineComponent({
-  props: {
-    store: {
-      type: Object,
-      required: true
-    },
-    view: {
-      type: Object,
-      required: true
-    }
-  },
-
-  setup(props) {
-    const storeContext = {
-      store: props.store
-    };
-    provide(EluxStoreContextKey, storeContext);
-    return () => h(props.view, null);
   }
 
 });

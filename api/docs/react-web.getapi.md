@@ -78,6 +78,6 @@ Pick&lt;TAPI, 'GetActions' \| 'LoadComponent' \| 'Modules'&gt; &amp; { GetClient
 
 
 ```js
-const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API, Router>();
+const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();
 ```
 

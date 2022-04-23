@@ -72,7 +72,7 @@ export const Link: DefineComponent<LinkProps> = function (
     href = '#';
   }
   props['href'] = href;
-  if (process.env.TARO_ENV) {
+  if (coreConfig.Platform === 'taro') {
     return h('span', props, context.slots.default!());
   } else {
     return h('a', props, context.slots.default!());

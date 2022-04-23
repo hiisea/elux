@@ -1,5 +1,5 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
-import { defineAsyncComponent, h } from 'vue';
+import { h, defineComponent, onBeforeUnmount, shallowRef } from 'vue';
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
 export const LoadComponentOnError = ({
   message
@@ -10,40 +10,53 @@ export const LoadComponentOnLoading = () => _createVNode("div", {
   "class": "g-component-loading"
 }, [_createTextVNode("loading...")]);
 export const LoadComponent = (moduleName, componentName, options = {}) => {
-  const loadingComponent = options.onLoading || coreConfig.LoadComponentOnLoading;
-  const errorComponent = options.onError || coreConfig.LoadComponentOnError;
+  const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
+  const OnError = options.onError || coreConfig.LoadComponentOnError;
+  const component = defineComponent({
+    setup(props, context) {
+      const store = coreConfig.UseStore();
+      const View = shallowRef(OnLoading);
 
-  const component = (props, context) => {
-    const store = coreConfig.UseStore();
-    let result;
-    let errorMessage = '';
+      const execute = curStore => {
+        try {
+          const result = injectComponent(moduleName, componentName, curStore || store);
 
-    try {
-      result = injectComponent(moduleName, componentName, store);
+          if (isPromise(result)) {
+            if (env.isServer) {
+              throw 'can not use async component in SSR';
+            }
 
-      if (env.isServer && isPromise(result)) {
-        result = undefined;
-        throw 'can not use async component in SSR';
-      }
-    } catch (e) {
-      env.console.error(e);
-      errorMessage = e.message || `${e}`;
+            result.then(view => {
+              active && (View.value = view || 'not found!');
+            }, e => {
+              env.console.error(e);
+              active && (View.value = e.message || `${e}` || 'error');
+            });
+          } else {
+            View.value = result;
+          }
+        } catch (e) {
+          env.console.error(e);
+          View.value = e.message || `${e}` || 'error';
+        }
+      };
+
+      let active = true;
+      onBeforeUnmount(() => {
+        active = false;
+      });
+      execute();
+      return () => {
+        if (typeof View.value === 'string') {
+          return h(OnError, {
+            message: View.value
+          });
+        } else {
+          return h(View.value, props, context.slots);
+        }
+      };
     }
 
-    if (result) {
-      if (isPromise(result)) {
-        return h(defineAsyncComponent({
-          loader: () => result,
-          errorComponent,
-          loadingComponent
-        }), props, context.slots);
-      } else {
-        return h(result, props, context.slots);
-      }
-    } else {
-      return h(errorComponent, null, errorMessage);
-    }
-  };
-
+  });
   return component;
 };

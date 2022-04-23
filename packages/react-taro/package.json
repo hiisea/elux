@@ -21,8 +21,8 @@
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
     "build:types": "rimraf ./types && tsc --build ./src",
-    "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts\"",
-    "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts\"",
+    "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts,.tsx\"",
+    "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts,.tsx\"",
     "package:es6": "cross-env NODE_TAG=es6 rollup -c",
     "package:es5": "cross-env NODE_TAG=es5 rollup -c",
     "api:json": "yarn build:types && api-extractor run",
@@ -35,7 +35,8 @@
   },
   "peerDependencies": {
     "@tarojs/taro": "^3.4.6",
-    "react": "^16.8.0 || ^17 || ^18"
+    "react": "^16.8.0 || ^17 || ^18",
+    "react-dom": "^16.8.0 || ^17 || ^18"
   },
   "dependencies": {
     "@elux/app": "^1.2.1",

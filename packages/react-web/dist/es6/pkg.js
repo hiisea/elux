@@ -221,14 +221,13 @@ const MetaData = {
   componentCaches: {},
   reducersMap: {},
   effectsMap: {},
-  clientRouter: undefined,
-  AppProvider: undefined
+  clientRouter: undefined
 };
 const coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2,
+  DepthTimeOnLoading: 1,
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
@@ -242,6 +241,7 @@ const coreConfig = {
       env.document.title = title;
     }
   },
+  Platform: '',
   StoreProvider: undefined,
   LoadComponent: undefined,
   LoadComponentOnError: undefined,
@@ -449,6 +449,13 @@ function getModuleApiMap(data) {
   }
 
   return MetaData.moduleApiMap;
+}
+function injectModule(moduleOrName, moduleGetter) {
+  if (typeof moduleOrName === 'string') {
+    coreConfig.ModuleGetter[moduleOrName] = moduleGetter;
+  } else {
+    coreConfig.ModuleGetter[moduleOrName.moduleName] = () => moduleOrName;
+  }
 }
 function injectComponent(moduleName, componentName, store) {
   return promiseCaseCallback(getComponent(moduleName, componentName), component => {
@@ -1271,18 +1278,10 @@ const EWindow = memo(function ({
 }) {
   const AppView = getEntryComponent();
   const StoreProvider = coreConfig.StoreProvider;
-
-  if (store) {
-    return jsx(StoreProvider, {
-      store: store,
-      children: jsx(AppView, {})
-    });
-  } else {
-    return jsx("div", {
-      className: "g-page-loading",
-      children: "Loading..."
-    });
-  }
+  return jsx(StoreProvider, {
+    store: store,
+    children: jsx(AppView, {})
+  });
 });
 
 const RouterComponent = () => {
@@ -1995,12 +1994,16 @@ class BaseNativeRouter {
   }
 
   execute(method, location, key, backIndex) {
-    const result = this[method](locationToNativeLocation(location), key, backIndex);
+    const nativeLocation = locationToNativeLocation(location);
+    const result = this[method](nativeLocation, key, backIndex);
 
     if (result) {
       this.routeKey = key;
       return new Promise(resolve => {
-        const timeout = env.setTimeout(() => this.onSuccess(), 2000);
+        const timeout = env.setTimeout(() => {
+          env.console.error('Native router timeout: ' + nativeLocation.url);
+          this.onSuccess();
+        }, 2000);
         this.curTask = {
           resolve,
           timeout
@@ -2453,7 +2456,7 @@ const Link = React.forwardRef(({
 
   props['href'] = href;
 
-  if (process.env.TARO_ENV) {
+  if (coreConfig.Platform === 'taro') {
     return jsx("span", { ...props,
       ref: ref
     });
@@ -6333,4 +6336,4 @@ function createSSR(appConfig, nativeRequest) {
   return buildSSR({}, router);
 }
 
-export { BaseModel, DocumentHead, EWindow, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };

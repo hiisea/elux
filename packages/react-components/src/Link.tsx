@@ -72,7 +72,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       href = '#';
     }
     props['href'] = href;
-    if (process.env.TARO_ENV) {
+    if (coreConfig.Platform === 'taro') {
       return <span {...props} ref={ref} />;
     } else {
       return <a {...props} ref={ref} />;

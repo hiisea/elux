@@ -28,7 +28,7 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement>
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [action?](./react-web.linkprops.action.md) | [RouteAction](./react-web.routeaction.md) | <i>(Optional)</i> 指定路由的切换方式 |
+|  [action?](./react-web.linkprops.action.md) | Exclude&lt;[RouteAction](./react-web.routeaction.md)<!-- -->, 'init'&gt; | <i>(Optional)</i> 指定路由的切换方式 |
 |  [disabled?](./react-web.linkprops.disabled.md) | boolean | <i>(Optional)</i> 是否 disable |
 |  [target?](./react-web.linkprops.target.md) | [RouteTarget](./react-web.routetarget.md) | <i>(Optional)</i> 指定要操作的路由栈 |
 |  [to?](./react-web.linkprops.to.md) | string | <i>(Optional)</i> 指定跳转的url或后退步数 |

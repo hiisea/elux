@@ -9,9 +9,11 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type PickModelActions<T> = {
-    [K in Exclude<keyof T, 'moduleName' | 'state' | 'onActive' | 'onInactive' | 'onMount'>]: HandlerToAction<T[K]>;
-};
+export declare type PickModelActions<T> = Pick<{
+    [K in keyof T]: HandlerToAction<T[K]>;
+}, {
+    [K in keyof T]: T[K] extends Function ? Exclude<K, 'onActive' | 'onInactive' | 'onMount'> : never;
+}[keyof T]>;
 ```
 <b>References:</b> [HandlerToAction](./vue-web.handlertoaction.md)
 

@@ -26,9 +26,15 @@ export declare type Facade<G extends {
 /*** @public */
 export declare type HandlerToAction<T> = T extends (...args: infer P) => any ? (...args: P) => {
     type: string;
-} : undefined;
+} : never;
 /*** @public */
-export declare type PickModelActions<T> = {
+export declare type PickModelActions<T> = Pick<{
+    [K in keyof T]: HandlerToAction<T[K]>;
+}, {
+    [K in keyof T]: T[K] extends Function ? Exclude<K, 'onActive' | 'onInactive' | 'onMount'> : never;
+}[keyof T]>;
+/*** @public */
+export declare type PickThisActions<T> = {
     [K in Exclude<keyof T, 'moduleName' | 'state' | 'onActive' | 'onInactive' | 'onMount'>]: HandlerToAction<T[K]>;
 };
 /*** @public */
@@ -221,7 +227,7 @@ export declare abstract class BaseModel<TModuleState extends ModuleState = {}, T
     /**
      * 获取本模块的`公开actions`构造器
      */
-    protected get actions(): PickModelActions<this>;
+    protected get actions(): PickThisActions<this>;
     /**
      * 获取本模块的`私有actions`构造器
      *

@@ -9,9 +9,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function createApp(appConfig: AppConfig): {
-    render(options?: RenderOptions): Promise<void>;
-};
+export declare function createApp(appConfig: AppConfig): EluxApp;
 ```
 
 ## Parameters
@@ -22,7 +20,7 @@ export declare function createApp(appConfig: AppConfig): {
 
 <b>Returns:</b>
 
-{ render(options?: [RenderOptions](./react-web.renderoptions.md)<!-- -->): Promise&lt;void&gt;; }
+[EluxApp](./react-web.eluxapp.md)
 
 返回包含`render`<!-- -->方法的实例，参见[RenderOptions](./react-web.renderoptions.md)
 

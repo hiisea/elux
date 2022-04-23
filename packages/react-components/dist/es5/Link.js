@@ -42,7 +42,7 @@ export var Link = React.forwardRef(function (_ref, ref) {
 
   props['href'] = href;
 
-  if (process.env.TARO_ENV) {
+  if (coreConfig.Platform === 'taro') {
     return _jsx("span", _extends({}, props, {
       ref: ref
     }));

@@ -1,4 +1,4 @@
-import {coreConfig, EluxContext, IRouter, MetaData} from './basic';
+import {coreConfig, EluxContext, IRouter} from './basic';
 import env from './env';
 import type {CoreRouter} from './store';
 
@@ -37,21 +37,11 @@ export function buildApp<INS = {}>(
   });
 }
 
-export function buildProvider<INS = {}>(
-  ins: INS,
-  router: IRouter
-): INS & {
-  render(options?: RenderOptions): Elux.Component<{children: any}>;
-} {
+export function buildProvider<INS = {}>(ins: INS, router: IRouter): Elux.Component<{children: any}> {
   const store = router.getCurrentPage().store;
   const AppRender = coreConfig.AppRender!;
-  return Object.assign(ins, {
-    render() {
-      (router as CoreRouter).init({});
-      MetaData.AppProvider = AppRender.toProvider({router, documentHead: ''}, ins, store);
-      return MetaData.AppProvider;
-    },
-  });
+  (router as CoreRouter).init({});
+  return AppRender.toProvider({router, documentHead: ''}, ins, store);
 }
 
 export function buildSSR<INS = {}>(
@@ -82,7 +72,4 @@ export function buildSSR<INS = {}>(
       });
     },
   });
-}
-export function getAppProvider(): Elux.Component<{children: any}> {
-  return MetaData.AppProvider!;
 }

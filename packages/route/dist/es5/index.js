@@ -36,13 +36,16 @@ export var BaseNativeRouter = function () {
   _proto.execute = function execute(method, location, key, backIndex) {
     var _this = this;
 
-    var result = this[method](locationToNativeLocation(location), key, backIndex);
+    var nativeLocation = locationToNativeLocation(location);
+    var result = this[method](nativeLocation, key, backIndex);
 
     if (result) {
       this.routeKey = key;
       return new Promise(function (resolve) {
         var timeout = env.setTimeout(function () {
-          return _this.onSuccess();
+          env.console.error('Native router timeout: ' + nativeLocation.url);
+
+          _this.onSuccess();
         }, 2000);
         _this.curTask = {
           resolve: resolve,

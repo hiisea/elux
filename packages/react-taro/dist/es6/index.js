@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { buildProvider, coreConfig, getAppProvider } from '@elux/core';
+import { buildProvider, coreConfig, setCoreConfig } from '@elux/core';
+import { EWindow } from '@elux/react-components';
 import { createRouter } from '@elux/route-mp';
-import { taroHistory, onShow } from '@elux/taro';
+import { onShow, taroHistory } from '@elux/taro';
 import { useDidHide, useDidShow } from '@tarojs/taro';
-export { DocumentHead, Else, EWindow, Link, Switch } from '@elux/react-components';
+import { jsx as _jsx } from "react/jsx-runtime";
+export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
 export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
 export * from '@elux/app';
-export function useCurrentStore() {
+setCoreConfig({
+  Platform: 'taro'
+});
+export const EluxPage = () => {
   const router = coreConfig.UseRouter();
   const [store, setStore] = useState();
   const unlink = useRef();
@@ -35,20 +40,19 @@ export function useCurrentStore() {
       }
     };
   }, []);
-  return store;
-}
-let cientSingleton = undefined;
+  return store ? _jsx(EWindow, {
+    store: store
+  }, store.sid) : _jsx("div", {
+    className: "g-page-loading",
+    children: "Loading..."
+  });
+};
+let cientSingleton;
 export function createApp(appConfig) {
-  if (cientSingleton) {
-    return cientSingleton;
+  if (!cientSingleton) {
+    const router = createRouter(taroHistory);
+    cientSingleton = buildProvider({}, router);
   }
 
-  const router = createRouter(taroHistory);
-  cientSingleton = {
-    render() {
-      return getAppProvider();
-    }
-
-  };
-  return buildProvider({}, router);
+  return cientSingleton;
 }

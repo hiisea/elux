@@ -41,5 +41,10 @@ export var Link = function Link(_ref, context) {
   }
 
   props['href'] = href;
-  return h('a', props, context.slots.default());
+
+  if (coreConfig.Platform === 'taro') {
+    return h('span', props, context.slots.default());
+  } else {
+    return h('a', props, context.slots.default());
+  }
 };

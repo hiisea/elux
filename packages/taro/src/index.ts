@@ -1,22 +1,8 @@
-import Taro from '@tarojs/taro';
-import {env, SingleDispatcher, setCoreConfig} from '@elux/core';
+import {env, setCoreConfig, SingleDispatcher} from '@elux/core';
 import {IHistory, MPLocation} from '@elux/route-mp';
+import Taro from '@tarojs/taro';
 
 setCoreConfig({SetPageTitle: (title) => Taro.setNavigationBarTitle({title})});
-
-// export interface PageConfig {
-//   dispatch?(action: {type: string}): any;
-//   onLoad?(options: any): void;
-//   onUnload?(): void;
-//   onShow?(): void;
-//   onHide?(): void;
-// }
-
-// type MPLocation = {
-//   pathname: string;
-//   search: string;
-//   action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH';
-// };
 
 let TaroRouter: {
   history: {
@@ -24,11 +10,7 @@ let TaroRouter: {
     listen: (callback: (data: {location: {pathname: string; search: string}; action: 'PUSH' | 'POP' | 'REPLACE' | 'RELAUNCH'}) => void) => () => void;
   };
 };
-let prevPageInfo: {
-  count: number;
-  pathname: string;
-  search: string;
-};
+let beforeOnShow: () => void;
 let tabPages: {[path: string]: boolean} | undefined = undefined;
 let curLocation: MPLocation | undefined;
 export const eventBus = new SingleDispatcher<MPLocation>();
@@ -101,62 +83,41 @@ export const taroHistory: IHistory = {
 
 if (process.env.TARO_ENV === 'h5') {
   TaroRouter = require('@tarojs/router');
+  beforeOnShow = () => undefined;
 } else {
-  const originalPage = Page;
-  Page = function (pageOptions) {
-    const onShow = pageOptions.onShow;
-    const onHide = pageOptions.onHide;
-    const onUnload = pageOptions.onUnload;
-    pageOptions.onShow = function () {
-      const arr = Taro.getCurrentPages();
-      const currentPage = arr[arr.length - 1];
-      const currentPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options),
-      };
-      curLocation = {pathname: currentPageInfo.pathname, search: currentPageInfo.search, action: 'RELAUNCH'};
-      if (prevPageInfo) {
-        // 仅处理不能使用elux路由的原生交互：原生导航后退、原生TAB
-        let action: 'POP' | 'PUSH' | 'REPLACE' | 'RELAUNCH' = 'PUSH';
-        if (currentPageInfo.count < prevPageInfo.count) {
-          action = 'POP';
-        } else if (currentPageInfo.count === prevPageInfo.count) {
-          if (currentPageInfo.count === 1) {
-            action = 'RELAUNCH';
-          } else {
-            action = 'REPLACE';
-          }
+  TaroRouter = {} as any;
+  let prevPageInfo: {
+    count: number;
+  };
+  beforeOnShow = function () {
+    const arr = Taro.getCurrentPages();
+    const currentPage = arr[arr.length - 1];
+    const currentPageInfo = {
+      count: arr.length,
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options),
+    };
+    curLocation = {pathname: currentPageInfo.pathname, search: currentPageInfo.search, action: 'RELAUNCH'};
+    if (prevPageInfo) {
+      // 仅处理不能使用elux路由的原生交互：原生导航后退、原生TAB
+      let action: 'POP' | 'PUSH' | 'REPLACE' | 'RELAUNCH' = 'PUSH';
+      if (currentPageInfo.count < prevPageInfo.count) {
+        action = 'POP';
+      } else if (currentPageInfo.count === prevPageInfo.count) {
+        if (currentPageInfo.count === 1) {
+          action = 'RELAUNCH';
+        } else {
+          action = 'REPLACE';
         }
-        curLocation.action = action;
       }
-      return onShow?.call(this);
-    };
-    pageOptions.onHide = function () {
-      const arr = Taro.getCurrentPages();
-      const currentPage = arr[arr.length - 1];
-      prevPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options),
-      };
-      return onHide?.call(this);
-    };
-    pageOptions.onUnload = function () {
-      const arr = Taro.getCurrentPages();
-      const currentPage = arr[arr.length - 1];
-      prevPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options),
-      };
-      return onUnload?.call(this);
-    };
-    return originalPage(pageOptions);
+      curLocation.action = action;
+    }
+    prevPageInfo = {count: currentPageInfo.count};
   };
 }
 
 export function onShow(): void {
+  beforeOnShow();
   eventBus.dispatch(taroHistory.getLocation());
   //setTimout保证onChange事件发生在useDidShow钩子之后
   //env.setTimeout(() => eventBus.dispatch(taroHistory.getLocation()), 0);

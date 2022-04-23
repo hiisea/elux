@@ -10,7 +10,7 @@
 
 ```typescript
 NativePathnameMapping?: {
-        in(pathname: string): string;
-        out(pathname: string): string;
+        in(nativePathname: string): string;
+        out(internalPathname: string): string;
     };
 ```

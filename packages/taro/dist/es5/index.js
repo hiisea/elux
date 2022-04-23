@@ -1,5 +1,5 @@
+import { env, setCoreConfig, SingleDispatcher } from '@elux/core';
 import Taro from '@tarojs/taro';
-import { env, SingleDispatcher, setCoreConfig } from '@elux/core';
 setCoreConfig({
   SetPageTitle: function SetPageTitle(title) {
     return Taro.setNavigationBarTitle({
@@ -8,7 +8,7 @@ setCoreConfig({
   }
 });
 var TaroRouter;
-var prevPageInfo;
+var beforeOnShow;
 var tabPages = undefined;
 var curLocation;
 export var eventBus = new SingleDispatcher();
@@ -111,73 +111,51 @@ export var taroHistory = {
 
 if (process.env.TARO_ENV === 'h5') {
   TaroRouter = require('@tarojs/router');
+
+  beforeOnShow = function beforeOnShow() {
+    return undefined;
+  };
 } else {
-  var originalPage = Page;
+  TaroRouter = {};
+  var prevPageInfo;
 
-  Page = function Page(pageOptions) {
-    var onShow = pageOptions.onShow;
-    var onHide = pageOptions.onHide;
-    var onUnload = pageOptions.onUnload;
+  beforeOnShow = function beforeOnShow() {
+    var arr = Taro.getCurrentPages();
+    var currentPage = arr[arr.length - 1];
+    var currentPageInfo = {
+      count: arr.length,
+      pathname: routeToPathname(currentPage.route),
+      search: queryTosearch(currentPage.options)
+    };
+    curLocation = {
+      pathname: currentPageInfo.pathname,
+      search: currentPageInfo.search,
+      action: 'RELAUNCH'
+    };
 
-    pageOptions.onShow = function () {
-      var arr = Taro.getCurrentPages();
-      var currentPage = arr[arr.length - 1];
-      var currentPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options)
-      };
-      curLocation = {
-        pathname: currentPageInfo.pathname,
-        search: currentPageInfo.search,
-        action: 'RELAUNCH'
-      };
+    if (prevPageInfo) {
+      var action = 'PUSH';
 
-      if (prevPageInfo) {
-        var action = 'PUSH';
-
-        if (currentPageInfo.count < prevPageInfo.count) {
-          action = 'POP';
-        } else if (currentPageInfo.count === prevPageInfo.count) {
-          if (currentPageInfo.count === 1) {
-            action = 'RELAUNCH';
-          } else {
-            action = 'REPLACE';
-          }
+      if (currentPageInfo.count < prevPageInfo.count) {
+        action = 'POP';
+      } else if (currentPageInfo.count === prevPageInfo.count) {
+        if (currentPageInfo.count === 1) {
+          action = 'RELAUNCH';
+        } else {
+          action = 'REPLACE';
         }
-
-        curLocation.action = action;
       }
 
-      return onShow == null ? void 0 : onShow.call(this);
-    };
+      curLocation.action = action;
+    }
 
-    pageOptions.onHide = function () {
-      var arr = Taro.getCurrentPages();
-      var currentPage = arr[arr.length - 1];
-      prevPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options)
-      };
-      return onHide == null ? void 0 : onHide.call(this);
+    prevPageInfo = {
+      count: currentPageInfo.count
     };
-
-    pageOptions.onUnload = function () {
-      var arr = Taro.getCurrentPages();
-      var currentPage = arr[arr.length - 1];
-      prevPageInfo = {
-        count: arr.length,
-        pathname: routeToPathname(currentPage.route),
-        search: queryTosearch(currentPage.options)
-      };
-      return onUnload == null ? void 0 : onUnload.call(this);
-    };
-
-    return originalPage(pageOptions);
   };
 }
 
 export function onShow() {
+  beforeOnShow();
   eventBus.dispatch(taroHistory.getLocation());
 }

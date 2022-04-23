@@ -1,4 +1,4 @@
-import { coreConfig, MetaData } from './basic';
+import { coreConfig } from './basic';
 import env from './env';
 export function buildApp(ins, router) {
   var store = router.getCurrentPage().store;
@@ -22,16 +22,11 @@ export function buildApp(ins, router) {
 export function buildProvider(ins, router) {
   var store = router.getCurrentPage().store;
   var AppRender = coreConfig.AppRender;
-  return Object.assign(ins, {
-    render: function render() {
-      router.init({});
-      MetaData.AppProvider = AppRender.toProvider({
-        router: router,
-        documentHead: ''
-      }, ins, store);
-      return MetaData.AppProvider;
-    }
-  });
+  router.init({});
+  return AppRender.toProvider({
+    router: router,
+    documentHead: ''
+  }, ins, store);
 }
 export function buildSSR(ins, router) {
   var store = router.getCurrentPage().store;
@@ -63,7 +58,4 @@ export function buildSSR(ins, router) {
       });
     }
   });
-}
-export function getAppProvider() {
-  return MetaData.AppProvider;
 }

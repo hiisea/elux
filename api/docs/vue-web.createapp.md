@@ -9,9 +9,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function createApp(appConfig: AppConfig): App & {
-    render(options?: RenderOptions): Promise<void>;
-};
+export declare function createApp(appConfig: AppConfig): EluxApp;
 ```
 
 ## Parameters
@@ -22,13 +20,9 @@ export declare function createApp(appConfig: AppConfig): App & {
 
 <b>Returns:</b>
 
-App &amp; { render(options?: [RenderOptions](./vue-web.renderoptions.md)<!-- -->): Promise&lt;void&gt;; }
+[EluxApp](./vue-web.eluxapp.md)
 
 返回包含`render`<!-- -->方法的实例，参见[RenderOptions](./vue-web.renderoptions.md)
-
-## Remarks
-
-应用唯一的创建入口，用于客户端渲染(CSR)。服务端渲染(SSR)请使用[createSSR()](./vue-web.createssr.md)
 
 ## Example
 

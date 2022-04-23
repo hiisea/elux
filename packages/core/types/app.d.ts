@@ -18,15 +18,10 @@ export interface RenderOptions {
 export declare function buildApp<INS = {}>(ins: INS, router: IRouter): INS & {
     render(options?: RenderOptions): Promise<void>;
 };
-export declare function buildProvider<INS = {}>(ins: INS, router: IRouter): INS & {
-    render(options?: RenderOptions): Elux.Component<{
-        children: any;
-    }>;
-};
+export declare function buildProvider<INS = {}>(ins: INS, router: IRouter): Elux.Component<{
+    children: any;
+}>;
 export declare function buildSSR<INS = {}>(ins: INS, router: IRouter): INS & {
     render(options?: RenderOptions): Promise<string>;
 };
-export declare function getAppProvider(): Elux.Component<{
-    children: any;
-}>;
 //# sourceMappingURL=app.d.ts.map

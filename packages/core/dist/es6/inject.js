@@ -133,6 +133,13 @@ export function getModuleApiMap(data) {
 
   return MetaData.moduleApiMap;
 }
+export function injectModule(moduleOrName, moduleGetter) {
+  if (typeof moduleOrName === 'string') {
+    coreConfig.ModuleGetter[moduleOrName] = moduleGetter;
+  } else {
+    coreConfig.ModuleGetter[moduleOrName.moduleName] = () => moduleOrName;
+  }
+}
 export function injectComponent(moduleName, componentName, store) {
   return promiseCaseCallback(getComponent(moduleName, componentName), component => {
     if (component.__elux_component__ === 'view' && !env.isServer) {

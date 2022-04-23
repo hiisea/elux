@@ -29,12 +29,16 @@ export class BaseNativeRouter {
   }
 
   execute(method, location, key, backIndex) {
-    const result = this[method](locationToNativeLocation(location), key, backIndex);
+    const nativeLocation = locationToNativeLocation(location);
+    const result = this[method](nativeLocation, key, backIndex);
 
     if (result) {
       this.routeKey = key;
       return new Promise(resolve => {
-        const timeout = env.setTimeout(() => this.onSuccess(), 2000);
+        const timeout = env.setTimeout(() => {
+          env.console.error('Native router timeout: ' + nativeLocation.url);
+          this.onSuccess();
+        }, 2000);
         this.curTask = {
           resolve,
           timeout

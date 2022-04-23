@@ -1,41 +1,34 @@
 import { AppConfig } from '@elux/app';
-import { IStore } from '@elux/core';
-export { DocumentHead, Else, EWindow, Link, Switch } from '@elux/react-components';
+export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
 export type { DocumentHeadProps, ElseProps, LinkProps, SwitchProps } from '@elux/react-components';
 export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
 export type { GetProps, InferableComponentEnhancerWithProps } from '@elux/react-redux';
 export * from '@elux/app';
 /**
- * 在小程序Page中获取Store
+ * 小程序Page入口
  *
  * @public
  */
-export declare function useCurrentStore(): IStore | undefined;
+export declare const EluxPage: Elux.Component;
 /**
- * @public
- */
-export declare type EluxApp = {
-    render(): Elux.Component<{
-        children: any;
-    }>;
-};
-/**
- * 创建应用(CSR)
+ * 创建应用
  *
  * @param appConfig - 应用配置
  *
  * @returns
- * 返回包含`render`方法的实例
+ * 返回包含Provider组件
  *
  * @example
  * ```js
  * render () {
- *   const Provider = createApp(appConfig).render();
+ *   const Provider = createApp(appConfig);
  *   return <Provider>{this.props.children}</Provider>
  * }
  * ```
  *
  * @public
  */
-export declare function createApp(appConfig: AppConfig): EluxApp;
+export declare function createApp(appConfig: AppConfig): Elux.Component<{
+    children: any;
+}>;
 //# sourceMappingURL=index.d.ts.map

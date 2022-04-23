@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, h, defineAsyncComponent, defineComponent, shallowRef, ref, onBeforeUnmount, provide, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
+import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
 import { renderToString } from '@elux/vue-web/server';
 
 let root;
@@ -219,14 +219,13 @@ const MetaData = {
   componentCaches: {},
   reducersMap: {},
   effectsMap: {},
-  clientRouter: undefined,
-  AppProvider: undefined
+  clientRouter: undefined
 };
 const coreConfig = {
   NSP: '.',
   MSP: ',',
   MutableData: false,
-  DepthTimeOnLoading: 2,
+  DepthTimeOnLoading: 1,
   StageModuleName: 'stage',
   StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
@@ -240,6 +239,7 @@ const coreConfig = {
       env.document.title = title;
     }
   },
+  Platform: '',
   StoreProvider: undefined,
   LoadComponent: undefined,
   LoadComponentOnError: undefined,
@@ -447,6 +447,13 @@ function getModuleApiMap(data) {
   }
 
   return MetaData.moduleApiMap;
+}
+function injectModule(moduleOrName, moduleGetter) {
+  if (typeof moduleOrName === 'string') {
+    coreConfig.ModuleGetter[moduleOrName] = moduleGetter;
+  } else {
+    coreConfig.ModuleGetter[moduleOrName.moduleName] = () => moduleOrName;
+  }
 }
 function injectComponent(moduleName, componentName, store) {
   return promiseCaseCallback(getComponent(moduleName, componentName), component => {
@@ -742,12 +749,12 @@ const preMiddleware = ({
   return next(action);
 };
 class CoreRouter {
-  constructor(location, action, nativeRequest) {
+  constructor(location, nativeRequest) {
     this.listenerId = 0;
     this.listenerMap = {};
+    this.action = 'init';
     this.routeKey = '';
     this.location = location;
-    this.action = action;
     this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
@@ -2251,8 +2258,22 @@ class WindowStack extends HistoryStack {
 class BaseNativeRouter {
   constructor(nativeRequest) {
     this.router = void 0;
+    this.routeKey = '';
     this.curTask = void 0;
     this.router = new Router(this, nativeRequest);
+  }
+
+  onSuccess() {
+    if (this.curTask) {
+      const {
+        resolve,
+        timeout
+      } = this.curTask;
+      this.curTask = undefined;
+      env.clearTimeout(timeout);
+      this.routeKey = '';
+      resolve();
+    }
   }
 
   testExecute(method, location, backIndex) {
@@ -2261,11 +2282,20 @@ class BaseNativeRouter {
   }
 
   execute(method, location, key, backIndex) {
-    const result = this[method](locationToNativeLocation(location), key, backIndex);
+    const nativeLocation = locationToNativeLocation(location);
+    const result = this[method](nativeLocation, key, backIndex);
 
     if (result) {
-      return result.then(() => undefined, e => {
-        env.console.warn('Native route error:' + e.toString());
+      this.routeKey = key;
+      return new Promise(resolve => {
+        const timeout = env.setTimeout(() => {
+          env.console.error('Native router timeout: ' + nativeLocation.url);
+          this.onSuccess();
+        }, 2000);
+        this.curTask = {
+          resolve,
+          timeout
+        };
       });
     }
   }
@@ -2273,7 +2303,7 @@ class BaseNativeRouter {
 }
 class Router extends CoreRouter {
   constructor(nativeRouter, nativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), 'relaunch', nativeRequest);
+    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -2306,6 +2336,10 @@ class Router extends CoreRouter {
         task[0]().finally(this.onTaskComplete).then(task[1], task[2]);
       }
     });
+  }
+
+  nativeInitiated() {
+    return !this.nativeRouter.routeKey;
   }
 
   getHistoryLength(target = 'page') {
@@ -2381,6 +2415,19 @@ class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
+  redirectOnServer(urlOrLocation) {
+    if (env.isServer) {
+      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const nativeUrl = urlToNativeUrl(url);
+      const err = {
+        code: ErrorCodes.ROUTE_REDIRECT,
+        message: 'Route change in server is not allowed.',
+        detail: nativeUrl
+      };
+      throw err;
+    }
+  }
+
   init(prevState) {
     const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
     this.curTask = task;
@@ -2395,6 +2442,12 @@ class Router extends CoreRouter {
       completed: false
     };
     const store = this.getCurrentPage().store;
+    const {
+      action,
+      location,
+      routeKey
+    } = this;
+    await this.nativeRouter.execute(action, location, routeKey);
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -2409,19 +2462,13 @@ class Router extends CoreRouter {
     }
 
     this.runtime.completed = true;
-  }
-
-  redirectOnServer(urlOrLocation) {
-    if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
-      const nativeUrl = urlToNativeUrl(url);
-      const err = {
-        code: ErrorCodes.ROUTE_REDIRECT,
-        message: 'Route change in server is not allowed.',
-        detail: nativeUrl
-      };
-      throw err;
-    }
+    this.dispatch({
+      location,
+      action,
+      prevStore: store,
+      newStore: store,
+      windowChanged: true
+    });
   }
 
   relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
@@ -2572,7 +2619,7 @@ class Router extends CoreRouter {
 
   back(stepOrKey = 1, target = 'page', payload = null, overflowRedirect = '', _nativeCaller = false) {
     if (!stepOrKey) {
-      return;
+      return Promise.resolve();
     }
 
     this.redirectOnServer({
@@ -2715,20 +2762,28 @@ class BrowserNativeRouter extends BaseNativeRouter {
     }
   }
 
+  init(location, key) {
+    return false;
+  }
+
   push(location, key) {
     this.history.push(location);
+    return false;
   }
 
   replace(location, key) {
     this.history.push(location);
+    return false;
   }
 
   relaunch(location, key) {
     this.history.push(location);
+    return false;
   }
 
   back(location, key, index) {
     this.history.replace(location);
+    return false;
   }
 
   destroy() {
@@ -2805,43 +2860,75 @@ const LoadComponentOnLoading = () => createVNode("div", {
   "class": "g-component-loading"
 }, [createTextVNode("loading...")]);
 const LoadComponent = (moduleName, componentName, options = {}) => {
-  const loadingComponent = options.onLoading || coreConfig.LoadComponentOnLoading;
-  const errorComponent = options.onError || coreConfig.LoadComponentOnError;
+  const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
+  const OnError = options.onError || coreConfig.LoadComponentOnError;
+  const component = defineComponent({
+    setup(props, context) {
+      const store = coreConfig.UseStore();
+      const View = shallowRef(OnLoading);
 
-  const component = (props, context) => {
-    const store = coreConfig.UseStore();
-    let result;
-    let errorMessage = '';
+      const execute = curStore => {
+        try {
+          const result = injectComponent(moduleName, componentName, curStore || store);
 
-    try {
-      result = injectComponent(moduleName, componentName, store);
+          if (isPromise(result)) {
+            if (env.isServer) {
+              throw 'can not use async component in SSR';
+            }
 
-      if (env.isServer && isPromise(result)) {
-        result = undefined;
-        throw 'can not use async component in SSR';
-      }
-    } catch (e) {
-      env.console.error(e);
-      errorMessage = e.message || `${e}`;
+            result.then(view => {
+              active && (View.value = view || 'not found!');
+            }, e => {
+              env.console.error(e);
+              active && (View.value = e.message || `${e}` || 'error');
+            });
+          } else {
+            View.value = result;
+          }
+        } catch (e) {
+          env.console.error(e);
+          View.value = e.message || `${e}` || 'error';
+        }
+      };
+
+      let active = true;
+      onBeforeUnmount(() => {
+        active = false;
+      });
+      execute();
+      return () => {
+        if (typeof View.value === 'string') {
+          return h(OnError, {
+            message: View.value
+          });
+        } else {
+          return h(View.value, props, context.slots);
+        }
+      };
     }
 
-    if (result) {
-      if (isPromise(result)) {
-        return h(defineAsyncComponent({
-          loader: () => result,
-          errorComponent,
-          loadingComponent
-        }), props, context.slots);
-      } else {
-        return h(result, props, context.slots);
-      }
-    } else {
-      return h(errorComponent, null, errorMessage);
-    }
-  };
-
+  });
   return component;
 };
+
+const EWindow = defineComponent({
+  props: {
+    store: {
+      type: Object,
+      required: true
+    }
+  },
+
+  setup(props) {
+    const AppView = getEntryComponent();
+    const storeContext = {
+      store: props.store
+    };
+    provide(EluxStoreContextKey, storeContext);
+    return () => h(AppView, null);
+  }
+
+});
 
 const RouterComponent = defineComponent({
   setup() {
@@ -2906,7 +2993,6 @@ const RouterComponent = defineComponent({
     onBeforeUnmount(() => {
       removeListener();
     });
-    const appView = getEntryComponent();
     return () => {
       const {
         classname,
@@ -2926,32 +3012,10 @@ const RouterComponent = defineComponent({
           "class": "elux-window",
           "data-url": url
         }, [createVNode(EWindow, {
-          "store": store,
-          "view": appView
+          "store": store
         }, null)]);
       })]);
     };
-  }
-
-});
-const EWindow = defineComponent({
-  props: {
-    store: {
-      type: Object,
-      required: true
-    },
-    view: {
-      type: Object,
-      required: true
-    }
-  },
-
-  setup(props) {
-    const storeContext = {
-      store: props.store
-    };
-    provide(EluxStoreContextKey, storeContext);
-    return () => h(props.view, null);
   }
 
 });
@@ -3095,7 +3159,12 @@ const Link = function ({
   }
 
   props['href'] = href;
-  return h('a', props, context.slots.default());
+
+  if (coreConfig.Platform === 'taro') {
+    return h('span', props, context.slots.default());
+  } else {
+    return h('a', props, context.slots.default());
+  }
 };
 
 setCoreConfig({
@@ -3109,535 +3178,6 @@ setCoreConfig({
   LoadComponentOnLoading
 });
 
-/**
- * Tokenize input string.
- */
-function lexer(str) {
-  var tokens = [];
-  var i = 0;
-
-  while (i < str.length) {
-    var char = str[i];
-
-    if (char === "*" || char === "+" || char === "?") {
-      tokens.push({
-        type: "MODIFIER",
-        index: i,
-        value: str[i++]
-      });
-      continue;
-    }
-
-    if (char === "\\") {
-      tokens.push({
-        type: "ESCAPED_CHAR",
-        index: i++,
-        value: str[i++]
-      });
-      continue;
-    }
-
-    if (char === "{") {
-      tokens.push({
-        type: "OPEN",
-        index: i,
-        value: str[i++]
-      });
-      continue;
-    }
-
-    if (char === "}") {
-      tokens.push({
-        type: "CLOSE",
-        index: i,
-        value: str[i++]
-      });
-      continue;
-    }
-
-    if (char === ":") {
-      var name = "";
-      var j = i + 1;
-
-      while (j < str.length) {
-        var code = str.charCodeAt(j);
-
-        if ( // `0-9`
-        code >= 48 && code <= 57 || // `A-Z`
-        code >= 65 && code <= 90 || // `a-z`
-        code >= 97 && code <= 122 || // `_`
-        code === 95) {
-          name += str[j++];
-          continue;
-        }
-
-        break;
-      }
-
-      if (!name) throw new TypeError("Missing parameter name at " + i);
-      tokens.push({
-        type: "NAME",
-        index: i,
-        value: name
-      });
-      i = j;
-      continue;
-    }
-
-    if (char === "(") {
-      var count = 1;
-      var pattern = "";
-      var j = i + 1;
-
-      if (str[j] === "?") {
-        throw new TypeError("Pattern cannot start with \"?\" at " + j);
-      }
-
-      while (j < str.length) {
-        if (str[j] === "\\") {
-          pattern += str[j++] + str[j++];
-          continue;
-        }
-
-        if (str[j] === ")") {
-          count--;
-
-          if (count === 0) {
-            j++;
-            break;
-          }
-        } else if (str[j] === "(") {
-          count++;
-
-          if (str[j + 1] !== "?") {
-            throw new TypeError("Capturing groups are not allowed at " + j);
-          }
-        }
-
-        pattern += str[j++];
-      }
-
-      if (count) throw new TypeError("Unbalanced pattern at " + i);
-      if (!pattern) throw new TypeError("Missing pattern at " + i);
-      tokens.push({
-        type: "PATTERN",
-        index: i,
-        value: pattern
-      });
-      i = j;
-      continue;
-    }
-
-    tokens.push({
-      type: "CHAR",
-      index: i,
-      value: str[i++]
-    });
-  }
-
-  tokens.push({
-    type: "END",
-    index: i,
-    value: ""
-  });
-  return tokens;
-}
-/**
- * Parse a string for the raw tokens.
- */
-
-
-function parse(str, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var tokens = lexer(str);
-  var _a = options.prefixes,
-      prefixes = _a === void 0 ? "./" : _a;
-  var defaultPattern = "[^" + escapeString(options.delimiter || "/#?") + "]+?";
-  var result = [];
-  var key = 0;
-  var i = 0;
-  var path = "";
-
-  var tryConsume = function (type) {
-    if (i < tokens.length && tokens[i].type === type) return tokens[i++].value;
-  };
-
-  var mustConsume = function (type) {
-    var value = tryConsume(type);
-    if (value !== undefined) return value;
-    var _a = tokens[i],
-        nextType = _a.type,
-        index = _a.index;
-    throw new TypeError("Unexpected " + nextType + " at " + index + ", expected " + type);
-  };
-
-  var consumeText = function () {
-    var result = "";
-    var value; // tslint:disable-next-line
-
-    while (value = tryConsume("CHAR") || tryConsume("ESCAPED_CHAR")) {
-      result += value;
-    }
-
-    return result;
-  };
-
-  while (i < tokens.length) {
-    var char = tryConsume("CHAR");
-    var name = tryConsume("NAME");
-    var pattern = tryConsume("PATTERN");
-
-    if (name || pattern) {
-      var prefix = char || "";
-
-      if (prefixes.indexOf(prefix) === -1) {
-        path += prefix;
-        prefix = "";
-      }
-
-      if (path) {
-        result.push(path);
-        path = "";
-      }
-
-      result.push({
-        name: name || key++,
-        prefix: prefix,
-        suffix: "",
-        pattern: pattern || defaultPattern,
-        modifier: tryConsume("MODIFIER") || ""
-      });
-      continue;
-    }
-
-    var value = char || tryConsume("ESCAPED_CHAR");
-
-    if (value) {
-      path += value;
-      continue;
-    }
-
-    if (path) {
-      result.push(path);
-      path = "";
-    }
-
-    var open = tryConsume("OPEN");
-
-    if (open) {
-      var prefix = consumeText();
-      var name_1 = tryConsume("NAME") || "";
-      var pattern_1 = tryConsume("PATTERN") || "";
-      var suffix = consumeText();
-      mustConsume("CLOSE");
-      result.push({
-        name: name_1 || (pattern_1 ? key++ : ""),
-        pattern: name_1 && !pattern_1 ? defaultPattern : pattern_1,
-        prefix: prefix,
-        suffix: suffix,
-        modifier: tryConsume("MODIFIER") || ""
-      });
-      continue;
-    }
-
-    mustConsume("END");
-  }
-
-  return result;
-}
-/**
- * Compile a string to a template function for the path.
- */
-
-function compile(str, options) {
-  return tokensToFunction(parse(str, options), options);
-}
-/**
- * Expose a method for transforming tokens into the path function.
- */
-
-function tokensToFunction(tokens, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var reFlags = flags(options);
-  var _a = options.encode,
-      encode = _a === void 0 ? function (x) {
-    return x;
-  } : _a,
-      _b = options.validate,
-      validate = _b === void 0 ? true : _b; // Compile all the tokens into regexps.
-
-  var matches = tokens.map(function (token) {
-    if (typeof token === "object") {
-      return new RegExp("^(?:" + token.pattern + ")$", reFlags);
-    }
-  });
-  return function (data) {
-    var path = "";
-
-    for (var i = 0; i < tokens.length; i++) {
-      var token = tokens[i];
-
-      if (typeof token === "string") {
-        path += token;
-        continue;
-      }
-
-      var value = data ? data[token.name] : undefined;
-      var optional = token.modifier === "?" || token.modifier === "*";
-      var repeat = token.modifier === "*" || token.modifier === "+";
-
-      if (Array.isArray(value)) {
-        if (!repeat) {
-          throw new TypeError("Expected \"" + token.name + "\" to not repeat, but got an array");
-        }
-
-        if (value.length === 0) {
-          if (optional) continue;
-          throw new TypeError("Expected \"" + token.name + "\" to not be empty");
-        }
-
-        for (var j = 0; j < value.length; j++) {
-          var segment = encode(value[j], token);
-
-          if (validate && !matches[i].test(segment)) {
-            throw new TypeError("Expected all \"" + token.name + "\" to match \"" + token.pattern + "\", but got \"" + segment + "\"");
-          }
-
-          path += token.prefix + segment + token.suffix;
-        }
-
-        continue;
-      }
-
-      if (typeof value === "string" || typeof value === "number") {
-        var segment = encode(String(value), token);
-
-        if (validate && !matches[i].test(segment)) {
-          throw new TypeError("Expected \"" + token.name + "\" to match \"" + token.pattern + "\", but got \"" + segment + "\"");
-        }
-
-        path += token.prefix + segment + token.suffix;
-        continue;
-      }
-
-      if (optional) continue;
-      var typeOfMessage = repeat ? "an array" : "a string";
-      throw new TypeError("Expected \"" + token.name + "\" to be " + typeOfMessage);
-    }
-
-    return path;
-  };
-}
-/**
- * Create path match function from `path-to-regexp` spec.
- */
-
-function match(str, options) {
-  var keys = [];
-  var re = pathToRegexp(str, keys, options);
-  return regexpToFunction(re, keys, options);
-}
-/**
- * Create a path match function from `path-to-regexp` output.
- */
-
-function regexpToFunction(re, keys, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var _a = options.decode,
-      decode = _a === void 0 ? function (x) {
-    return x;
-  } : _a;
-  return function (pathname) {
-    var m = re.exec(pathname);
-    if (!m) return false;
-    var path = m[0],
-        index = m.index;
-    var params = Object.create(null);
-
-    var _loop_1 = function (i) {
-      // tslint:disable-next-line
-      if (m[i] === undefined) return "continue";
-      var key = keys[i - 1];
-
-      if (key.modifier === "*" || key.modifier === "+") {
-        params[key.name] = m[i].split(key.prefix + key.suffix).map(function (value) {
-          return decode(value, key);
-        });
-      } else {
-        params[key.name] = decode(m[i], key);
-      }
-    };
-
-    for (var i = 1; i < m.length; i++) {
-      _loop_1(i);
-    }
-
-    return {
-      path: path,
-      index: index,
-      params: params
-    };
-  };
-}
-/**
- * Escape a regular expression string.
- */
-
-function escapeString(str) {
-  return str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
-}
-/**
- * Get the flags for a regexp from the options.
- */
-
-
-function flags(options) {
-  return options && options.sensitive ? "" : "i";
-}
-/**
- * Pull out keys from a regexp.
- */
-
-
-function regexpToRegexp(path, keys) {
-  if (!keys) return path;
-  var groupsRegex = /\((?:\?<(.*?)>)?(?!\?)/g;
-  var index = 0;
-  var execResult = groupsRegex.exec(path.source);
-
-  while (execResult) {
-    keys.push({
-      // Use parenthesized substring match if available, index otherwise
-      name: execResult[1] || index++,
-      prefix: "",
-      suffix: "",
-      modifier: "",
-      pattern: ""
-    });
-    execResult = groupsRegex.exec(path.source);
-  }
-
-  return path;
-}
-/**
- * Transform an array into a regexp.
- */
-
-
-function arrayToRegexp(paths, keys, options) {
-  var parts = paths.map(function (path) {
-    return pathToRegexp(path, keys, options).source;
-  });
-  return new RegExp("(?:" + parts.join("|") + ")", flags(options));
-}
-/**
- * Create a path regexp from string input.
- */
-
-
-function stringToRegexp(path, keys, options) {
-  return tokensToRegexp(parse(path, options), keys, options);
-}
-/**
- * Expose a function for taking tokens and returning a RegExp.
- */
-
-
-function tokensToRegexp(tokens, keys, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var _a = options.strict,
-      strict = _a === void 0 ? false : _a,
-      _b = options.start,
-      start = _b === void 0 ? true : _b,
-      _c = options.end,
-      end = _c === void 0 ? true : _c,
-      _d = options.encode,
-      encode = _d === void 0 ? function (x) {
-    return x;
-  } : _d;
-  var endsWith = "[" + escapeString(options.endsWith || "") + "]|$";
-  var delimiter = "[" + escapeString(options.delimiter || "/#?") + "]";
-  var route = start ? "^" : ""; // Iterate over the tokens and create our regexp string.
-
-  for (var _i = 0, tokens_1 = tokens; _i < tokens_1.length; _i++) {
-    var token = tokens_1[_i];
-
-    if (typeof token === "string") {
-      route += escapeString(encode(token));
-    } else {
-      var prefix = escapeString(encode(token.prefix));
-      var suffix = escapeString(encode(token.suffix));
-
-      if (token.pattern) {
-        if (keys) keys.push(token);
-
-        if (prefix || suffix) {
-          if (token.modifier === "+" || token.modifier === "*") {
-            var mod = token.modifier === "*" ? "?" : "";
-            route += "(?:" + prefix + "((?:" + token.pattern + ")(?:" + suffix + prefix + "(?:" + token.pattern + "))*)" + suffix + ")" + mod;
-          } else {
-            route += "(?:" + prefix + "(" + token.pattern + ")" + suffix + ")" + token.modifier;
-          }
-        } else {
-          route += "(" + token.pattern + ")" + token.modifier;
-        }
-      } else {
-        route += "(?:" + prefix + suffix + ")" + token.modifier;
-      }
-    }
-  }
-
-  if (end) {
-    if (!strict) route += delimiter + "?";
-    route += !options.endsWith ? "$" : "(?=" + endsWith + ")";
-  } else {
-    var endToken = tokens[tokens.length - 1];
-    var isEndDelimited = typeof endToken === "string" ? delimiter.indexOf(endToken[endToken.length - 1]) > -1 : // tslint:disable-next-line
-    endToken === undefined;
-
-    if (!strict) {
-      route += "(?:" + delimiter + "(?=" + endsWith + "))?";
-    }
-
-    if (!isEndDelimited) {
-      route += "(?=" + delimiter + "|" + endsWith + ")";
-    }
-  }
-
-  return new RegExp(route, flags(options));
-}
-/**
- * Normalize the given path string, returning a regular expression.
- *
- * An empty array can be passed in for the keys, which will hold the
- * placeholder key descriptions. For example, using `/user/:id`, `keys` will
- * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
- */
-
-function pathToRegexp(path, keys, options) {
-  if (path instanceof RegExp) return regexpToRegexp(path, keys);
-  if (Array.isArray(path)) return arrayToRegexp(path, keys, options);
-  return stringToRegexp(path, keys, options);
-}
-
-const PathToRegexp = {
-  pathToRegexp,
-  match,
-  parse,
-  compile
-};
 const appConfig = Symbol();
 function setConfig(conf) {
   setCoreConfig(conf);
@@ -3685,4 +3225,4 @@ function createSSR(appConfig, nativeRequest) {
   return buildSSR(app, router);
 }
 
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, PathToRegexp, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

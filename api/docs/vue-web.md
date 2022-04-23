@@ -27,6 +27,8 @@
 |  [getApi(demoteForProductionOnly, injectActions)](./vue-web.getapi.md) | 获取应用全局方法 |
 |  [getComponent(moduleName, componentName)](./vue-web.getcomponent.md) | 获取导出的UI组件 |
 |  [getModule(moduleName)](./vue-web.getmodule.md) | 获取Module |
+|  [injectModule(module)](./vue-web.injectmodule.md) | 动态注册module |
+|  [injectModule(moduleName, moduleGetter)](./vue-web.injectmodule_1.md) | 动态注册module |
 |  [isServer()](./vue-web.isserver.md) | 当前是否是Server运行环境 |
 |  [locationToNativeLocation(location)](./vue-web.locationtonativelocation.md) | 内部路由Location转换为原生路由Location |
 |  [locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery })](./vue-web.locationtourl.md) | Location转换为Url |
@@ -60,6 +62,7 @@
 |  [Location](./vue-web.location.md) | 路由描述 |
 |  [NativeRequest](./vue-web.nativerequest.md) | 路由初始化时原生数据，常用于SSR |
 |  [RenderOptions](./vue-web.renderoptions.md) | 应用Render参数 |
+|  [RouteEvent](./vue-web.routeevent.md) |  |
 |  [RouteRuntime](./vue-web.routeruntime.md) | 路由的运行状态 |
 |  [SwitchProps](./vue-web.switchprops.md) | 内置UI组件 |
 |  [UserConfig](./vue-web.userconfig.md) | 全局参数设置 |
@@ -85,6 +88,7 @@
 |  [AsyncEluxComponent](./vue-web.asynceluxcomponent.md) | 表示该UI组件是一个异步EluxUI |
 |  [ComputedStore](./vue-web.computedstore.md) | \* |
 |  [Dispatch](./vue-web.dispatch.md) | 派发Action |
+|  [EluxApp](./vue-web.eluxapp.md) |  |
 |  [Facade](./vue-web.facade.md) | \* |
 |  [GetPromiseComponent](./vue-web.getpromisecomponent.md) | \* |
 |  [GetPromiseModule](./vue-web.getpromisemodule.md) | \* |
@@ -96,6 +100,7 @@
 |  [ModuleGetter](./vue-web.modulegetter.md) | 配置模块的获取方式 |
 |  [ModuleState](./vue-web.modulestate.md) | 模块状态 |
 |  [PickModelActions](./vue-web.pickmodelactions.md) | \* |
+|  [PickThisActions](./vue-web.pickthisactions.md) | \* |
 |  [ReturnComponents](./vue-web.returncomponents.md) | \* |
 |  [RouteAction](./vue-web.routeaction.md) | 路由动作 |
 |  [RouteTarget](./vue-web.routetarget.md) | 路由历史栈 |
@@ -103,4 +108,5 @@
 |  [storeLoggerInfo](./vue-web.storeloggerinfo.md) |  |
 |  [StoreMiddleware](./vue-web.storemiddleware.md) | Store的中间件 |
 |  [StoreState](./vue-web.storestate.md) | 全局状态 |
+|  [UNListener](./vue-web.unlistener.md) | 常用于取消监听 |
 

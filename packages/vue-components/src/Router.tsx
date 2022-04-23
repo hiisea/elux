@@ -1,9 +1,8 @@
-/* eslint-disable vue/one-component-per-file */
-import {defineComponent, h, onBeforeUnmount, PropType, provide, ref, shallowRef} from 'vue';
+import {defineComponent, onBeforeUnmount, ref, shallowRef} from 'vue';
 
-import {coreConfig, EluxComponent, EluxStoreContext, env, getEntryComponent, IStore} from '@elux/core';
+import {coreConfig, env, IStore} from '@elux/core';
 
-import {EluxStoreContextKey} from './base';
+import {EWindow} from './EWindow';
 
 export const RouterComponent = defineComponent({
   setup() {
@@ -51,7 +50,7 @@ export const RouterComponent = defineComponent({
     onBeforeUnmount(() => {
       removeListener();
     });
-    const appView = getEntryComponent();
+
     return () => {
       const {classname, pages} = data.value;
       return (
@@ -60,30 +59,12 @@ export const RouterComponent = defineComponent({
             const {store, url} = item;
             return (
               <div key={store.sid} data-sid={store.sid} class="elux-window" data-url={url}>
-                <EWindow store={store} view={appView} />
+                <EWindow store={store} />
               </div>
             );
           })}
         </div>
       );
     };
-  },
-});
-
-export const EWindow = defineComponent({
-  props: {
-    store: {
-      type: Object as PropType<IStore>,
-      required: true,
-    },
-    view: {
-      type: Object as PropType<EluxComponent>,
-      required: true,
-    },
-  },
-  setup(props) {
-    const storeContext: EluxStoreContext = {store: props.store};
-    provide(EluxStoreContextKey, storeContext);
-    return () => h(props.view, null);
   },
 });

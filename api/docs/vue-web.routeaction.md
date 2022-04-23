@@ -9,5 +9,5 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type RouteAction = 'relaunch' | 'push' | 'replace' | 'back';
+export declare type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
 ```
