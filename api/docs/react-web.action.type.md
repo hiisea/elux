@@ -4,7 +4,7 @@
 
 ## Action.type property
 
-action名称，不能重复，通常由：ModuleName.ActionName 组成
+action名称不能重复，通常由：ModuleName.ActionName 组成
 
 <b>Signature:</b>
 

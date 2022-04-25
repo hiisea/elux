@@ -14,8 +14,8 @@ export declare type Facade<G extends {
         default: CommonModule<N>;
     }>;
 } = any> = {
-    [K in Extract<keyof G, string>]: ModuleAPI<GetPromiseModule<ReturnType<G[K]>>>;
+    [K in Extract<keyof G, string>]: ModuleFacade<GetPromiseModule<ReturnType<G[K]>>>;
 };
 ```
-<b>References:</b> [CommonModule](./vue-web.commonmodule.md)<!-- -->, [ModuleAPI](./vue-web.moduleapi.md)<!-- -->, [GetPromiseModule](./vue-web.getpromisemodule.md)
+<b>References:</b> [CommonModule](./vue-web.commonmodule.md)<!-- -->, [ModuleFacade](./vue-web.modulefacade.md)<!-- -->, [GetPromiseModule](./vue-web.getpromisemodule.md)
 

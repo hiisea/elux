@@ -13,7 +13,3 @@ export declare type Dispatch = (action: Action) => void | Promise<void>;
 ```
 <b>References:</b> [Action](./vue-web.action.md)
 
-## Remarks
-
-类似于 `Redux` 或 `VUEX` 的 Dispatch
-

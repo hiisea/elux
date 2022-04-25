@@ -9,6 +9,6 @@
  *
  * @public
  */
-declare const env: EluxRuntime.ENV;
+declare const env: Elux.ENV;
 export default env;
 //# sourceMappingURL=env.d.ts.map

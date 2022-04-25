@@ -1,99 +1,25 @@
-import { LoadingState, Action, UStore, RouteState, ModuleState, RootState } from './basic';
-export declare const ActionTypes: {
-    /**
-     * 为模块注入加载状态时使用ActionType：moduleName.MLoading
-     */
-    MLoading: string;
-    /**
-     * 模块初始化时使用ActionType：moduleName.MInit
-     */
-    MInit: string;
-    MRouteTestChange: string;
-    MRouteBeforeChange: string;
-    MRouteChange: string;
-    Error: string;
+import { Action } from './basic';
+import { LoadingState } from './utils';
+export declare const errorProcessed = "__eluxProcessed__";
+export declare function isProcessedError(error: any): boolean;
+export declare function setProcessedError(error: any, processed: boolean): {
+    [errorProcessed]: boolean;
+    [key: string]: any;
 };
-/**
- * 创建一个ErrorAction
- *
- * @remarks
- * action.type 为 `Elux.Error`
- *
- * @param error - error报文
- *
- * @returns
- * 返回一个 type 为 `Elux.Error` 的 action
- *
- * @public
- */
-export declare function errorAction(error: Object): Action;
-export declare function routeChangeAction(routeState: RouteState): Action;
-export declare function routeBeforeChangeAction(routeState: RouteState): Action;
-export declare function routeTestChangeAction(routeState: RouteState): Action;
-export declare function moduleInitAction(moduleName: string, initState: ModuleState): Action;
 export declare function moduleLoadingAction(moduleName: string, loadingState: {
     [group: string]: LoadingState;
 }): Action;
-export declare function moduleRouteChangeAction(moduleName: string, params: RootState, action: string): Action;
 /**
- * Model Decorator函数-申明reducer
+ * 创建一个内置的ErrorAction
  *
  * @remarks
- * 申明以下方法为一个 action reducer
+ * 该 action 可以被 dispatch，可以被 model 捕获并处理
+ *
+ * @param error - 错误体
  *
  * @public
  */
-export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
-/**
- * Model Decorator函数-申明effect
- *
- * @remarks
- * 申明以下方法为一个 action effect，
- * 参数 `loadingKey` 不传时默认为 stage.loading.global，
- * 如果不需要跟踪其执行状态，请使用 null 参数，如：`@effect(null)`
- *
- * @example
- * - `@effect('this.loading.searchTable')` 将该 effect 执行状态注入本模块的 `loading.searchTable` 状态中
- *
- * - `@effect()` 等于 `@effect('stage.loading.global')`
- *
- * - `@effect(null)` 不跟踪其执行状态
- *
- * @param loadingKey - 将该 effect 执行状态作为 {@link LoadingState | LoadingState} 注入指定的 ModuleState 中。
- *
- * @returns
- * 返回ES6装饰器
- *
- * @public
- */
-export declare function effect(loadingKey?: string | null): Function;
-/**
- * Model Decorator函数-申明effect执行钩子
- *
- * @remarks
- * 用于在以下 effect 中注入 before 和 after 的钩子，常用来跟踪effect执行情况
- *
- * @param before - 该 effect 执行前自动调用
- * @param after - 该 effect 执行后自动调用（无论成功与否）
- *
- * @returns
- * 返回ES6装饰器
- *
- * @public
- */
-export declare function effectLogger(before: (action: Action, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
-/**
- * 将{@link LoadingState | LoadingState}注入指定ModuleState
- *
- * @param item - 要跟踪的异步任务，必须是一个Promise
- * @param store - 指明注入哪一个Store中
- * @param moduleName - 指明注入哪一个Modulde状态中
- * @param groupName - 指明注入Modulde状态的loading[`groupName`]中
- *
- * @returns
- * 返回第一个入参
- *
- * @public
- */
-export declare function setLoading<T extends Promise<any>>(item: T, store: UStore, moduleName: string, groupName: string): T;
+export declare function errorAction(error: any): Action;
+export declare function getErrorActionType(): string;
+export declare function getInitActionType(moduleName: string): string;
 //# sourceMappingURL=actions.d.ts.map

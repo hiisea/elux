@@ -9,13 +9,9 @@ Store的日志记录器
 <b>Signature:</b>
 
 ```typescript
-export declare type StoreLogger = ({ id, isActive }: {
-    id: number;
-    isActive: boolean;
-}, actionName: string, payload: any[], priority: string[], handers: string[], state: {
-    [moduleName: string]: any;
-}, effect: boolean) => void;
+export declare type StoreLogger = (info: storeLoggerInfo) => void;
 ```
+<b>References:</b> [storeLoggerInfo](./vue-web.storeloggerinfo.md)
 
 ## Remarks
 

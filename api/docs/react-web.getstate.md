@@ -9,5 +9,5 @@
 <b>Signature:</b>
 
 ```typescript
-export interface GetState<TRootState extends RootState = RootState> 
+export interface GetState<TStoreState extends StoreState = StoreState> 
 ```

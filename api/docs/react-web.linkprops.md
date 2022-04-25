@@ -4,7 +4,7 @@
 
 ## LinkProps interface
 
-内置React组件
+内置UI组件
 
 <b>Signature:</b>
 
@@ -15,28 +15,27 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement>
 
 ## Remarks
 
-类似于Html标签 `<a>`
+类似于Html标签 `<a>`<!-- -->，用组件的方式执行路由切换，参见 [IRouter](./react-web.irouter.md)
 
 ## Example
 
 
 ```html
-<Link disabled={pagename==='/home'} route='/home' href='/home' action='push' root>home</Link>
+<Link disabled={pagename==='/home'} to='/home' action='push' target='window'>home</Link>
 ```
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [action?](./react-web.linkprops.action.md) | 'push' \| 'replace' \| 'relaunch' | <i>(Optional)</i> 路由的切换方式，参见 [RouteHistoryAction](./react-web.routehistoryaction.md) |
+|  [action?](./react-web.linkprops.action.md) | Exclude&lt;[RouteAction](./react-web.routeaction.md)<!-- -->, 'init'&gt; | <i>(Optional)</i> 指定路由的切换方式 |
 |  [disabled?](./react-web.linkprops.disabled.md) | boolean | <i>(Optional)</i> 是否 disable |
-|  [href?](./react-web.linkprops.href.md) | string | <i>(Optional)</i> href属性仅用于SSR时提供给搜索引擎爬取，指定跳转的url请使用 [LinkProps.route](./react-web.linkprops.route.md) 替代 |
-|  [root?](./react-web.linkprops.root.md) | boolean | <i>(Optional)</i> 是否操作顶级路由栈（EWindow栈），虚拟多页下使用 |
-|  [route?](./react-web.linkprops.route.md) | string | <i>(Optional)</i> 指定跳转的url，支持[3种路由协议](./react-web.eluxlocation.md)<!-- -->：eluxUrl \[<code>e://...</code>\]，nativeUrl \[<code>n://...</code>\]，stateUrl \[<code>s://...</code>\] |
+|  [target?](./react-web.linkprops.target.md) | [RouteTarget](./react-web.routetarget.md) | <i>(Optional)</i> 指定要操作的路由栈 |
+|  [to?](./react-web.linkprops.to.md) | string | <i>(Optional)</i> 指定跳转的url或后退步数 |
 
 ## Methods
 
 |  Method | Description |
 |  --- | --- |
-|  [onClick(event)?](./react-web.linkprops.onclick.md) | <i>(Optional)</i> |
+|  [onClick(event)?](./react-web.linkprops.onclick.md) | <i>(Optional)</i> 点击事件 |
 

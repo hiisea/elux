@@ -1,7 +1,7 @@
 import React, {ReactNode} from 'react';
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`，
@@ -34,7 +34,7 @@ const Component: React.FC<ElseProps> = ({children, elseView}) => {
 };
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link ElseProps}

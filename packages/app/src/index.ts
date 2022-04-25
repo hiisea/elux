@@ -1,409 +1,223 @@
-import {
+import {getModuleApiMap, ModuleGetter, setCoreConfig, StoreLogger, StoreMiddleware} from '@elux/core';
+import {setRouteConfig} from '@elux/route';
+
+export {
+  BaseModel,
+  deepMerge,
+  effect,
+  effectLogger,
+  EmptyModel,
   env,
-  getModuleMap,
-  buildConfigSetter,
-  initApp,
-  setCoreConfig,
-  UStore,
-  LoadComponent,
-  ModuleGetter,
-  StoreMiddleware,
-  StoreLogger,
-  RootState,
-  coreConfig,
+  errorAction,
+  exportComponent,
+  exportModule,
+  exportView,
+  getApi,
+  getComponent,
+  getModule,
+  injectModule,
+  isServer,
+  modelHotReplacement,
+  reducer,
+  setLoading,
+} from '@elux/core';
+export type {
+  Action,
+  ActionCreator,
+  ActionError,
+  API,
+  AsyncEluxComponent,
+  CommonModel,
+  CommonModelClass,
+  CommonModule,
+  Dispatch,
+  EluxComponent,
   Facade,
-  FacadeStates,
-  FacadeModules,
-  FacadeActions,
+  GetPromiseComponent,
+  GetPromiseModule,
+  GetState,
+  HandlerToAction,
+  ILoadComponent,
+  IRouter,
+  IRouteRecord,
+  IStore,
+  LoadingState,
+  Location,
+  ModelAsCreators,
+  ModuleFacade,
+  ModuleGetter,
+  ModuleState,
+  NativeRequest,
+  PickModelActions,
+  PickThisActions,
+  RenderOptions,
+  ReturnComponents,
+  RouteAction,
+  RouteEvent,
+  RouteRuntime,
+  RouteTarget,
+  StoreLogger,
+  storeLoggerInfo,
+  StoreMiddleware,
+  StoreState,
+  UNListener,
 } from '@elux/core';
 
-import {setRouteConfig, URouter, BaseEluxRouter, toURouter} from '@elux/route';
+export {
+  ErrorCodes,
+  locationToNativeLocation,
+  locationToUrl,
+  nativeLocationToLocation,
+  nativeUrlToUrl,
+  urlToLocation,
+  urlToNativeUrl,
+} from '@elux/route';
 
 /*** @public */
 export type ComputedStore<T> = {[K in keyof T]-?: () => T[K]};
-
-const appMeta: {
-  SSRTPL: string;
-  router: URouter;
-} = {
-  router: null as any,
-  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
-};
-
-export const appConfig: {
-  loadComponent: LoadComponent;
-  useRouter: () => URouter;
-  useStore: () => UStore;
-} = {
-  loadComponent: null as any,
-  useRouter: null as any,
-  useStore: null as any,
-};
-
-export const setAppConfig = buildConfigSetter(appConfig);
 
 /**
  * 全局参数设置
  *
  * @remarks
- * 可通过 {@link setConfig | setConfig(...)} 个性化设置（通常使用默认设置即可）
+ * 可通过 {@link setConfig} 个性化设置
  *
  * @public
  */
 export interface UserConfig {
   /**
-   * 最大历史记录栈数
-   *
-   * @remarks
-   * 默认: `10`
-   *
-   * 此数值也表示可能同时存在的历史Page数量，设置过大可能导致页面Dom过多
-   *
-   * @defaultValue `10`
+   * 定义模块获取方法
    */
-  maxHistory?: number;
+  ModuleGetter: ModuleGetter;
   /**
-   * 最大路由转换缓存数
-   *
-   * @remarks
-   * 默认: `服务器环境(SSR)：10000; 浏览器环境(CSR): 500`
-   *
-   * 由于elux中存在{@link EluxLocation | 3种路由协议}：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]，为了提高路由协议之间相互转换的性能（尤其是在SSR时，存在大量重复路由协议转换），框架做了缓存，此项目设置最大缓存数量
-   *
-   * @defaultValue `SSR：10000; CSR: 500`
+   * 定义路由参数序列化方法
    */
-  maxLocationCache?: number;
+  QueryString: {
+    parse(str: string): {[key: string]: any};
+    stringify(query: {[key: string]: any}): string;
+  };
   /**
-   * 超过多少秒Loading视为深度加载
+   * 定义应用的首页
+   *
+   * @defaultValue `/`
    *
    * @remarks
-   * 默认: `2`
+   * 默认: `/`
+   */
+  HomeUrl: string;
+  /**
+   * 定义内部和宿主平台路由之间的转换与映射
+   */
+  NativePathnameMapping?: {
+    in(nativePathname: string): string;
+    out(internalPathname: string): string;
+  };
+  /**
+   * 定义Loading超过多少秒视为深度加载
    *
-   * 框架将Loading状态分为3种：{@link LoadingState | LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时仅显示icon图标，深度loading时显示icon图标+灰色蒙层
+   * @defaultValue `1`
    *
-   * @defaultValue `2`
+   * @remarks
+   * 默认: `1`
+   *
+   * 框架将Loading状态分为3种：{@link LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层
    */
   DepthTimeOnLoading?: number;
   /**
-   * 设置应用的首页路由
+   * 定义APP根模块名称
    *
-   * @remarks
-   * 默认: `/index`
-   *
-   * 当调用路由Router.back(...)回退时，如果回退步数溢出（超出历史记录数），默认使用此路由回到应用首页。
-   *
-   * Router.back(...)中可以单独设置，参见 {@link URouter.back | URouter.back() }
-   *
-   * @defaultValue `/index`
-   */
-  indexUrl?: string;
-  /**
-   * 应用默认的404 Pagename
-   *
-   * @remarks
-   * 默认: `/404`
-   *
-   * 未找到页面时默认使用该Pagename替代。
-   *
-   * @defaultValue `/404`
-   */
-  notfoundPagename: string;
-  /**
-   * 序列化路由参数key名
-   *
-   * @remarks
-   * 默认: `_`
-   *
-   * 框架将路由参数序列化为string后，作为该key的value存入url，如：/index?`_`=`{...}`
-   *
-   * @defaultValue `_`
-   */
-  paramsKey: string;
-  /**
-   * APP根模块名称
+   * @defaultValue `stage`
    *
    * @remarks
    * 默认: `stage`
-   *
-   * APP根模块名称，通常约定为stage
-   *
-   * @defaultValue `stage`
    */
-  AppModuleName?: string;
+  StageModuleName?: string;
   /**
-   * 不通知原生路由
+   * 定义APP根视图名称
+   *
+   * @defaultValue `main`
+   *
+   * @remarks
+   * 默认: `main`
+   */
+  StageViewName?: string;
+  /**
+   * 定义默认视图加载错误组件
+   *
+   * @defaultValue `<div className="g-component-error">{message}</div>`
+   *
+   * @remarks
+   * 默认: `<div className="g-component-error">{message}</div>`
+   *
+   * 此设置为全局默认，LoadComponent方法中可以单独设置，参见 {@link ILoadComponent}
+   *
+   */
+  LoadComponentOnError?: Elux.Component<{message: string}>;
+  /**
+   * 定义默认视图加载中组件
+   *
+   * @defaultValue `<div className="g-component-loading">loading...</div>`
+   *
+   * @remarks
+   * 默认: `<div className="g-component-loading">loading...</div>`
+   *
+   * 此设置为全局默认，LoadComponent方法中可以单独设置，参见 {@link ILoadComponent}
+   */
+  LoadComponentOnLoading?: Elux.Component<{}>;
+  /**
+   * 定义Store中间件
+   */
+  StoreMiddlewares?: StoreMiddleware[];
+  /**
+   * 定义Store日志记录器
+   */
+  StoreLogger?: StoreLogger;
+  /**
+   * 是否不通知原生路由
+   *
+   * @defaultValue `false`
    *
    * @remarks
    * 默认: `false`
    *
    * 框架有自己的路由体系，运行平台的原生路由体系作为外挂模式存在。默认情况下二者之间会建立关联，此设置为true可以彻底忽略原生路由体系。
    *
-   * @defaultValue `false`
    */
-  disableNativeRouter?: boolean;
+  DisableNativeRouter?: boolean;
 }
 
-export function setUserConfig(conf: UserConfig): void {
-  setCoreConfig(conf);
-  setRouteConfig(conf);
-  if (conf.disableNativeRouter) {
-    setRouteConfig({notifyNativeRouter: {root: false, internal: false}});
-  }
-}
-
-/**
- * APP Render参数
- *
- * @example
- * ```js
- * createApp(moduleGetter).render({id: 'root', viewName: 'main', ssrKey: 'eluxInitStore'})
- * ```
- *
- * @public
- */
-export interface RenderOptions {
-  /**
-   * 根视图名称，默认为 `main`
-   */
-  viewName?: string;
-  /**
-   * 挂载 Dom 的 id，默认为 `root`
-   */
-  id?: string;
-  /**
-   * SSR脱水数据的变量名称，默认为 `eluxInitStore`
-   */
-  ssrKey?: string;
-}
-
-export interface ContextWrap {}
-
-export type AttachMP<App> = (
-  app: App,
-  moduleGetter: ModuleGetter,
-  storeMiddlewares?: StoreMiddleware[],
-  storeLogger?: StoreLogger
-) => App & {
-  render(): {store: UStore; context: ContextWrap};
-};
-
-export type CreateMP = (
-  moduleGetter: ModuleGetter,
-  storeMiddlewares?: StoreMiddleware[],
-  storeLogger?: StoreLogger
-) => {
-  render(): {store: UStore; context: ContextWrap};
-};
-
-export type ICreateApp<INS = {}> = (
-  moduleGetter: ModuleGetter,
-  storeMiddlewares?: StoreMiddleware[],
-  storeLogger?: StoreLogger
-) => INS & {
-  render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
-};
-
-export type ICreateSSR<INS = {}> = (
-  moduleGetter: ModuleGetter,
-  url: string,
-  nativeData: any,
-  storeMiddlewares?: StoreMiddleware[],
-  storeLogger?: StoreLogger
-) => INS & {
-  render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
-};
-
-export interface EluxContext {
-  deps?: Record<string, boolean>;
-  documentHead: string;
-  router?: URouter;
-}
-
-export function createBaseMP<INS = {}>(
-  ins: INS,
-  router: BaseEluxRouter,
-  render: (eluxContext: EluxContext, ins: INS) => any,
-  storeInitState: (data: RootState) => RootState,
-  storeMiddlewares: StoreMiddleware[] = [],
-  storeLogger?: StoreLogger
-): INS & {
-  render(): {store: UStore; context: ContextWrap};
-} {
-  const urouter = toURouter(router);
-  appMeta.router = urouter;
-  return Object.assign(ins, {
-    render() {
-      const storeData: RootState = {};
-      const {store} = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger);
-      const context: ContextWrap = render({deps: {}, router: urouter, documentHead: ''}, ins);
-      return {store, context};
-    },
-  });
-}
-
-export function createBaseApp<INS = {}>(
-  ins: INS,
-  router: BaseEluxRouter,
-  render: (id: string, component: any, eluxContext: EluxContext, fromSSR: boolean, ins: INS, store: UStore) => void,
-  storeInitState: (data: RootState) => RootState,
-  storeMiddlewares: StoreMiddleware[] = [],
-  storeLogger?: StoreLogger
-): INS & {
-  render({id, ssrKey, viewName}?: RenderOptions): Promise<void>;
-} {
-  const urouter = toURouter(router);
-  appMeta.router = urouter;
-  return Object.assign(ins, {
-    render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
-      const {state, components = []}: {state?: Record<string, any>; components: string[]} = env[ssrKey] || {};
-      return router.initialize.then((routeState) => {
-        const storeData: RootState = {[coreConfig.RouteModuleName]: routeState, ...state};
-        const {store, AppView, setup} = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName, components);
-        return setup.then(() => {
-          render(id, AppView, {deps: {}, router: urouter, documentHead: ''}, !!env[ssrKey], ins, store);
-          //return store;
-        });
-      });
-    },
-  });
-}
-
-export function createBaseSSR<INS = {}>(
-  ins: INS,
-  router: BaseEluxRouter,
-  render: (id: string, component: any, eluxContext: EluxContext, ins: INS, store: UStore) => Promise<string>,
-  storeInitState: (data: RootState) => RootState,
-  storeMiddlewares: StoreMiddleware[] = [],
-  storeLogger?: StoreLogger
-): INS & {
-  render({id, ssrKey, viewName}?: RenderOptions): Promise<string>;
-} {
-  const urouter = toURouter(router);
-  appMeta.router = urouter;
-  return Object.assign(ins, {
-    render({id = 'root', ssrKey = 'eluxInitStore', viewName = 'main'}: RenderOptions = {}) {
-      return router.initialize.then((routeState) => {
-        const storeData: RootState = {[coreConfig.RouteModuleName]: routeState};
-        const {store, AppView, setup} = initApp(router, storeData, storeInitState, storeMiddlewares, storeLogger, viewName);
-        return setup.then(() => {
-          const state = store.getState();
-          const eluxContext: EluxContext = {deps: {}, router: urouter, documentHead: ''};
-          return render(id, AppView, eluxContext, ins, store).then((html) => {
-            const match = appMeta.SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
-            if (match) {
-              return appMeta.SSRTPL.replace(
-                '</head>',
-                `\r\n${eluxContext.documentHead}\r\n<script>window.${ssrKey} = ${JSON.stringify({
-                  state,
-                  components: Object.keys(eluxContext.deps!),
-                })};</script>\r\n</head>`
-              ).replace(match[0], match[0] + html);
-            }
-            return html;
-          });
-        });
-      });
-    },
-  });
-}
-
-export function patchActions(typeName: string, json?: string): void {
-  if (json) {
-    getModuleMap(JSON.parse(json));
-  }
-}
+const appConfig = Symbol();
 
 /*** @public */
-export type GetBaseFacade<F extends Facade, LoadComponentOptions, R extends string> = {
-  State: FacadeStates<F, R>;
-  GetActions<N extends Exclude<keyof F, R>>(...args: N[]): {[K in N]: F[K]['actions']};
-  LoadComponent: LoadComponent<F, LoadComponentOptions>;
-  Modules: FacadeModules<F, R>;
-  Actions: FacadeActions<F, R>;
-};
+export type AppConfig = typeof appConfig;
 
 /**
- * 获取应用全局方法
+ * 全局参数设置
  *
  * @remarks
- * 参数 `components` 支持异步获取组件，当组件代码量大时，可以使用 `import(...)` 返回Promise
  *
- * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
- * @param injectActions -  用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
+ * - UserConfig：{@link UserConfig | UserConfig}
  *
- * @returns
- * 返回包含多个全局方法的结构体：
- *
- * - `LoadComponent`：用于加载其它模块导出的{@link exportView | EluxUI组件}，参见 {@link LoadComponent}。
- * 相比直接 `import`，使用此方法加载组件不仅可以`按需加载`，而且还可以自动初始化其所属 Model，例如：
- * ```js
- *   const Article = LoadComponent('article', 'main')
- * ```
- *
- * - `Modules`：用于获取所有模块的对外接口，参见 {@link FacadeModules}，例如：
- * ```js
- *   dispatch(Modules.article.actions.refresh())
- * ```
- *
- * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：
- * ```js
- *   dispatch(Modules.a.actions.a1())
- *   dispatch(Modules.b.actions.b1())
- * ```
- *   这种写法可以简化为：
- * ```js
- *   const {a, b} = GetActions('a', 'b')
- *   dispatch(a.a1())
- *   dispatch(b.b1())
- * ```
- *
- * - `GetRouter`：用于获取全局Roter，注意此方法不能运行在SSR（`服务端渲染`）中，因为服务端每个 `request` 都将生成一个 Router，不存在全局 Roter，请使用 `useRouter()`
- *
- * - `useRouter`：React Hook，用于获取当前 Router，在CSR（`客户端渲染`）中，因为只存在一个Router，所以其值等于`GetRouter()`，例如：
- * ```js
- *   const blobalRouter = GetRouter()
- *   const currentRouter = useRouter()
- *   console.log(blobalRouter===currentRouter)
- * ```
- *
- * - `useStore`：React Hook，用于获取当前 Store，例如：
- * ```js
- *   const store = useStore()
- *   store.dispatch(Modules.article.actions.refresh())
- * ```
- *
- * @example
- * ```js
- * const {Modules, LoadComponent, GetActions, GetRouter, useStore, useRouter} = getApi<API, Router>();
- * ```
+ * @param conf - 全局参数
  *
  * @public
  */
-export function getApi<TAPI extends {State: any; GetActions: any; LoadComponent: any; Modules: any}, R extends URouter>(
-  demoteForProductionOnly?: boolean,
-  injectActions?: Record<string, string[]>
-): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'Modules'> & {
-  GetRouter: () => R;
-  useRouter: () => R;
-  useStore: () => UStore<TAPI['State'], R['routeState']['params']>;
-} {
-  const modules = getModuleMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
-  return {
-    GetActions: (...args: string[]) => {
-      return args.reduce((prev, moduleName) => {
-        prev[moduleName] = modules[moduleName].actions;
-        return prev;
-      }, {});
-    },
-    useRouter: appConfig.useRouter as any,
-    useStore: appConfig.useStore,
-    GetRouter: () => {
-      if (env.isServer) {
-        throw 'Cannot use GetRouter() in the server side, please use getRouter() instead';
-      }
-      return appMeta.router as any;
-    },
-    LoadComponent: appConfig.loadComponent,
-    Modules: modules,
-  };
+export function setConfig(conf: UserConfig): AppConfig {
+  setCoreConfig(conf);
+  setRouteConfig(conf);
+  if (conf.DisableNativeRouter) {
+    setRouteConfig({NotifyNativeRouter: {window: false, page: false}});
+  }
+  return appConfig;
+}
+
+/**
+ * 用于兼容不支持Proxy的低版本浏览器
+ *
+ * @public
+ */
+export function patchActions(typeName: string, json?: string): void {
+  if (json) {
+    getModuleApiMap(JSON.parse(json));
+  }
 }

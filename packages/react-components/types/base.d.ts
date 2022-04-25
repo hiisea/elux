@@ -1,32 +1,15 @@
-import React, { ComponentType } from 'react';
-import { UStore } from '@elux/core';
-import { URouter } from '@elux/route';
+import React from 'react';
+import { EluxContext, IRouter } from '@elux/core';
+export declare const EluxContextComponent: React.Context<EluxContext>;
+export declare function UseRouter(): IRouter;
 export declare const reactComponentsConfig: {
-    setPageTitle(title: string): void;
-    Provider: ComponentType<{
-        store: UStore;
-    }>;
-    useStore(): UStore;
-    LoadComponentOnError: ComponentType<{
-        message: string;
-    }>;
-    LoadComponentOnLoading: ComponentType<{}>;
+    hydrate?: (component: any, container: any) => void;
+    render?: (component: any, container: any) => void;
+    renderToString?: (component: any) => string;
 };
 export declare const setReactComponentsConfig: (config: Partial<{
-    setPageTitle(title: string): void;
-    Provider: ComponentType<{
-        store: UStore;
-    }>;
-    useStore(): UStore;
-    LoadComponentOnError: ComponentType<{
-        message: string;
-    }>;
-    LoadComponentOnLoading: ComponentType<{}>;
+    hydrate?: ((component: any, container: any) => void) | undefined;
+    render?: ((component: any, container: any) => void) | undefined;
+    renderToString?: ((component: any) => string) | undefined;
 }>) => void;
-export interface EluxContext {
-    deps?: Record<string, boolean>;
-    documentHead: string;
-    router?: URouter;
-}
-export declare const EluxContextComponent: React.Context<EluxContext>;
 //# sourceMappingURL=base.d.ts.map

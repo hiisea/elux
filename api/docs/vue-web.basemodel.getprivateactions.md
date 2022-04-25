@@ -10,7 +10,13 @@
 
 ```typescript
 protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): {
-        [K in keyof T]: PickHandler<T[K]>;
+        [K in keyof T]: HandlerToAction<T[K]>;
+    } & {
+        _initState(state: TModuleState): Action;
+        _updateState(subject: string, state: Partial<TModuleState>): Action;
+        _loadingState(loadingState: {
+            [group: string]: LoadingState;
+        }): Action;
     };
 ```
 
@@ -22,11 +28,11 @@ protected getPrivateActions<T extends Record<string, Function>>(actionsMap: T): 
 
 <b>Returns:</b>
 
-{ \[K in keyof T\]: [PickHandler](./vue-web.pickhandler.md)<!-- -->&lt;T\[K\]&gt;; }
+{ \[K in keyof T\]: [HandlerToAction](./vue-web.handlertoaction.md)<!-- -->&lt;T\[K\]&gt;; } &amp; { \_initState(state: TModuleState): [Action](./vue-web.action.md)<!-- -->; \_updateState(subject: string, state: Partial&lt;TModuleState&gt;): [Action](./vue-web.action.md)<!-- -->; \_loadingState(loadingState: { \[group: string\]: [LoadingState](./vue-web.loadingstate.md)<!-- -->; }): [Action](./vue-web.action.md)<!-- -->; }
 
 ## Remarks
 
-有些 action 只在本 Model 内部调用，应将其定义为 protected 或 private 权限，将无法通过 `this.actions` 获得其构造器，此时可以使用 `this.getPrivateActions(...)`
+有些 action 只在本 Model 内部调用，应将其定义为 protected 或 private 权限，此时将无法通过 `this.actions` 调用，可以使用 `this.getPrivateActions(...)`
 
 ## Example
 

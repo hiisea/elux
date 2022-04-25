@@ -9,22 +9,17 @@ Module的一般形态
 <b>Signature:</b>
 
 ```typescript
-export interface CommonModule<ModuleName extends string = string, Store extends UStore = UStore> 
+export interface CommonModule<TModuleName extends string = string> 
 ```
-
-## Remarks
-
-通常通过 [exportModule(...)](./react-web.exportmodule.md) 生成
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [actions](./react-web.commonmodule.actions.md) | { \[actionName: string\]: [ActionCreator](./react-web.actioncreator.md)<!-- -->; } |  |
-|  [components](./react-web.commonmodule.components.md) | { \[componentName: string\]: [EluxComponent](./react-web.eluxcomponent.md) \| [AsyncEluxComponent](./react-web.asynceluxcomponent.md)<!-- -->; } |  |
+|  [actions](./react-web.commonmodule.actions.md) | [ModelAsCreators](./react-web.modelascreators.md) |  |
+|  [components](./react-web.commonmodule.components.md) | { \[componentName: string\]: [EluxComponent](./react-web.eluxcomponent.md)<!-- -->; } |  |
 |  [data?](./react-web.commonmodule.data.md) | any | <i>(Optional)</i> |
-|  [initModel](./react-web.commonmodule.initmodel.md) | (store: Store) =&gt; void \| Promise&lt;void&gt; |  |
-|  [moduleName](./react-web.commonmodule.modulename.md) | ModuleName |  |
-|  [routeParams](./react-web.commonmodule.routeparams.md) | [ModuleState](./react-web.modulestate.md) |  |
+|  [ModelClass](./react-web.commonmodule.modelclass.md) | [CommonModelClass](./react-web.commonmodelclass.md) |  |
+|  [moduleName](./react-web.commonmodule.modulename.md) | TModuleName |  |
 |  [state](./react-web.commonmodule.state.md) | [ModuleState](./react-web.modulestate.md) |  |
 

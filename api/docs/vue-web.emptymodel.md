@@ -4,7 +4,7 @@
 
 ## EmptyModel class
 
-一个空的Model
+实现了CommonModel的空Model
 
 <b>Signature:</b>
 
@@ -15,7 +15,7 @@ export declare class EmptyModel implements CommonModel
 
 ## Remarks
 
-常用于Mock一个空Module
+常用于 mock 假数据
 
 ## Constructors
 
@@ -27,15 +27,16 @@ export declare class EmptyModel implements CommonModel
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [defaultRouteParams](./vue-web.emptymodel.defaultrouteparams.md) |  | any |  |
-|  [initState](./vue-web.emptymodel.initstate.md) |  | any |  |
 |  [moduleName](./vue-web.emptymodel.modulename.md) |  | string |  |
-|  [store](./vue-web.emptymodel.store.md) |  | [UStore](./vue-web.ustore.md) |  |
+|  [state](./vue-web.emptymodel.state.md) |  | [ModuleState](./vue-web.modulestate.md) |  |
+|  [store](./vue-web.emptymodel.store.md) |  | [IStore](./vue-web.istore.md) |  |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [destroy()](./vue-web.emptymodel.destroy.md) |  |  |
-|  [init()](./vue-web.emptymodel.init.md) |  |  |
+|  [\_initState(state)](./vue-web.emptymodel._initstate.md) |  |  |
+|  [onActive()](./vue-web.emptymodel.onactive.md) |  |  |
+|  [onInactive()](./vue-web.emptymodel.oninactive.md) |  |  |
+|  [onMount()](./vue-web.emptymodel.onmount.md) |  |  |
 

@@ -5,8 +5,7 @@
     "declarationDir": "../types",
     "emitDeclarationOnly": true,
     "removeComments": false,
-    "declarationMap": true,
-    "types": ["../global/global"]
+    "declarationMap": true
   },
   "include": ["./"],
   "exclude": []

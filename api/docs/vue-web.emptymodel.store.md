@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-readonly store: UStore;
+protected readonly store: IStore;
 ```

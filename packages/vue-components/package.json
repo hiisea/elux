@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-components",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "The practice of elux on vue",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-components",
   "author": "hiisea <hiisea@qq.com>",
@@ -11,32 +11,26 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "jsnext:main": "dist/next/index.js",
+  "main": "dist/es5/index.js",
+  "module": "dist/es6/index.js",
   "types": "types/",
   "files": [
-    "runtime/",
     "types/",
-    "dist/",
-    "stage/"
+    "dist/"
   ],
   "scripts": {
     "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts,tsx}",
     "build:types": "rimraf ./types && tsc --build ./src",
-    "build:next": "cross-env NODE_TAG=next babel ./src --out-dir ./dist/next  --extensions \".ts,.tsx\"",
-    "build:esm": "cross-env NODE_TAG=esm babel ./src --out-dir ./dist/esm  --extensions \".ts,.tsx\"",
-    "build:cjs": "cross-env NODE_TAG=cjs babel ./src --out-dir ./dist/cjs  --extensions \".ts,.tsx\"",
-    "build": "yarn build:types && rimraf ./dist && yarn build:next & yarn build:esm & yarn build:cjs"
+    "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts,.tsx\"",
+    "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts,.tsx\"",
+    "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
   },
   "peerDependencies": {
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@elux/core": "^1.2.0",
-    "@elux/route": "^1.2.1",
-    "@vue/server-renderer": "^3.0.0",
-    "stream": "^0.0.2"
+    "@elux/core": "^2.0.0",
+    "@elux/route": "^2.0.0"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

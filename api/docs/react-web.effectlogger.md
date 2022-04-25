@@ -4,20 +4,20 @@
 
 ## effectLogger() function
 
-Model Decorator函数-申明effect执行钩子
+Model类的装饰器函数:跟踪effect执行钩子
 
 <b>Signature:</b>
 
 ```typescript
-export declare function effectLogger(before: (action: Action, promiseResult: Promise<any>) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: any, effectResult: any) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
+export declare function effectLogger(before: (store: IStore, action: Action, effectResult: unknown) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: unknown, effectResult: unknown) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  before | (action: [Action](./react-web.action.md)<!-- -->, promiseResult: Promise&lt;any&gt;) =&gt; void | 该 effect 执行前自动调用 |
-|  after | null \| ((status: 'Rejected' \| 'Resolved', beforeResult: any, effectResult: any) =&gt; void) | 该 effect 执行后自动调用（无论成功与否） |
+|  before | (store: [IStore](./react-web.istore.md)<!-- -->, action: [Action](./react-web.action.md)<!-- -->, effectResult: unknown) =&gt; void | 该 effect 执行前自动调用 |
+|  after | null \| ((status: 'Rejected' \| 'Resolved', beforeResult: unknown, effectResult: unknown) =&gt; void) | 该 effect 执行后自动调用（无论成功与否） |
 
 <b>Returns:</b>
 

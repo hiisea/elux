@@ -4,7 +4,7 @@
 
 ## effect() function
 
-Model Decorator函数-申明effect
+Model类的装饰器函数:申明effect
 
 <b>Signature:</b>
 
@@ -24,15 +24,11 @@ Function
 
 返回ES6装饰器
 
-## Remarks
-
-申明以下方法为一个 action effect， 参数 `loadingKey` 不传时默认为 stage.loading.global， 如果不需要跟踪其执行状态，请使用 null 参数，如：`@effect(null)`
-
 ## Example
 
-- `@effect('this.loading.searchTable')` 将该 effect 执行状态注入本模块的 `loading.searchTable` 状态中
+- `@effect('this.searchTableLoading')` 将该 effect 执行状态注入本模块的 `searchTableLoading` 状态中
 
-- `@effect()` 等于 `@effect('stage.loading.global')`
+- `@effect()` 等于 `@effect('stage.globalLoading')`
 
 - `@effect(null)` 不跟踪其执行状态
 

@@ -4,7 +4,7 @@
 
 ## isServer() function
 
-当前环境是否是服务器环境
+当前是否是Server运行环境
 
 <b>Signature:</b>
 

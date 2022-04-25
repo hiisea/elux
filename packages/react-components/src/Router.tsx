@@ -1,87 +1,67 @@
-import React, {useContext, useEffect, useState, useRef, memo, ComponentType} from 'react';
-import {env, UStore} from '@elux/core';
-import {URouter} from '@elux/route';
-import {EluxContextComponent, reactComponentsConfig} from './base';
+import React, {useEffect, useRef, useState} from 'react';
 
-export const Router: React.FC<{page: ComponentType}> = (props) => {
-  const eluxContext = useContext(EluxContextComponent);
-  const router = eluxContext.router!;
+import {coreConfig, env, IStore} from '@elux/core';
+
+import {EWindow} from './EWindow';
+
+export const RouterComponent: React.FC = () => {
+  const router = coreConfig.UseRouter!();
   const [data, setData] = useState<{
     classname: string;
     pages: {
-      pagename: string;
-      store: UStore;
-      pageComponent?: ComponentType;
+      url: string;
+      store: IStore;
     }[];
-  }>({classname: 'elux-app', pages: router.getCurrentPages().reverse()});
+  }>({classname: 'elux-app', pages: router.getWindowPages().reverse()});
   const {classname, pages} = data;
   const pagesRef = useRef(pages);
   pagesRef.current = pages;
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    return router.addListener('change', ({routeState, root}) => {
-      if (root) {
-        const pages = router.getCurrentPages().reverse();
-        let completeCallback: () => void;
-        if (routeState.action === 'PUSH') {
-          const completePromise = new Promise<void>((resolve) => {
-            completeCallback = resolve;
-          });
-          setData({classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(), pages});
-          env.setTimeout(() => {
-            containerRef.current!.className = 'elux-app elux-animation';
-          }, 100);
-          env.setTimeout(() => {
-            containerRef.current!.className = 'elux-app';
-            completeCallback();
-          }, 400);
-          return completePromise;
-        } else if (routeState.action === 'BACK') {
-          const completePromise = new Promise<void>((resolve) => {
-            completeCallback = resolve;
-          });
-          setData({classname: 'elux-app ' + Date.now(), pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]});
-          env.setTimeout(() => {
-            containerRef.current!.className = 'elux-app elux-animation elux-change elux-back';
-          }, 100);
-          env.setTimeout(() => {
-            setData({classname: 'elux-app ' + Date.now(), pages});
-            completeCallback();
-          }, 400);
-          return completePromise;
-        } else if (routeState.action === 'RELAUNCH') {
-          setData({classname: 'elux-app ' + Date.now(), pages});
+    return router.addListener(({action, windowChanged}) => {
+      const pages = router.getWindowPages().reverse();
+      return new Promise<void>((completeCallback) => {
+        if (windowChanged) {
+          if (action === 'push') {
+            setData({classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(), pages});
+            env.setTimeout(() => {
+              containerRef.current!.className = 'elux-app elux-animation';
+            }, 100);
+            env.setTimeout(() => {
+              containerRef.current!.className = 'elux-app';
+              completeCallback();
+            }, 400);
+          } else if (action === 'back') {
+            setData({classname: 'elux-app ' + Date.now(), pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]});
+            env.setTimeout(() => {
+              containerRef.current!.className = 'elux-app elux-animation elux-change elux-back';
+            }, 100);
+            env.setTimeout(() => {
+              setData({classname: 'elux-app ' + Date.now(), pages});
+              completeCallback();
+            }, 400);
+          } else if (action === 'relaunch') {
+            setData({classname: 'elux-app ', pages});
+            env.setTimeout(completeCallback, 50);
+          }
+        } else {
+          setData({classname: 'elux-app', pages});
+          env.setTimeout(completeCallback, 50);
         }
-      }
-      return;
+      });
     });
   }, [router]);
   return (
     <div ref={containerRef} className={classname}>
       {pages.map((item) => {
-        const {store, pagename} = item;
+        const {store, url} = item;
         return (
-          <div key={store.sid} data-sid={store.sid} className="elux-window" data-pagename={pagename}>
-            <EWindow store={store} view={item.pageComponent || props.page}></EWindow>
+          <div key={store.sid} data-sid={store.sid} className="elux-window" data-url={url}>
+            <EWindow store={store}></EWindow>
           </div>
         );
       })}
     </div>
   );
 };
-
-export const EWindow: React.FC<{store: UStore; view: ComponentType}> = memo(function ({store, view}) {
-  const View = view;
-  return (
-    <reactComponentsConfig.Provider store={store}>
-      <View />
-    </reactComponentsConfig.Provider>
-  );
-});
-
-export function useRouter(): URouter {
-  const eluxContext = useContext(EluxContextComponent);
-  const router = eluxContext.router!;
-  return router;
-}

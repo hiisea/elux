@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0](https://github.com/hiisea/elux/compare/v1.2.1...v2.0.0) (2022-04-25)
+
+
+### Features
+
+* 支持taro ([01f0890](https://github.com/hiisea/elux/commit/01f0890a9ae365b615d5c07b82515b86ac349555))
+* vue支持taro ([7cb2cbc](https://github.com/hiisea/elux/commit/7cb2cbc7153c4ac6d1ec15f15265439094a5a259))
+
+
+
+
+
 ## [1.2.1](https://github.com/hiisea/elux/compare/v1.2.0...v1.2.1) (2022-02-24)
 
 **Note:** Version bump only for package @elux/route-mp

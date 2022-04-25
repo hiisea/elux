@@ -6,8 +6,6 @@
 
 Model的一般形态
 
-通常通过继承 [BaseModel](./react-web.basemodel.md) 类生成
-
 <b>Signature:</b>
 
 ```typescript
@@ -18,14 +16,14 @@ export interface CommonModel
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [defaultRouteParams](./react-web.commonmodel.defaultrouteparams.md) | [ModuleState](./react-web.modulestate.md) |  |
-|  [moduleName](./react-web.commonmodel.modulename.md) | string |  |
-|  [store](./react-web.commonmodel.store.md) | [UStore](./react-web.ustore.md) |  |
+|  [moduleName](./react-web.commonmodel.modulename.md) | string | 模块名称 |
+|  [state](./react-web.commonmodel.state.md) | [ModuleState](./react-web.modulestate.md) | 模块状态 |
 
 ## Methods
 
 |  Method | Description |
 |  --- | --- |
-|  [destroy()](./react-web.commonmodel.destroy.md) |  |
-|  [init(latestState, preState)](./react-web.commonmodel.init.md) |  |
+|  [onActive()](./react-web.commonmodel.onactive.md) | 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发 |
+|  [onInactive()](./react-web.commonmodel.oninactive.md) | 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发 |
+|  [onMount(env)](./react-web.commonmodel.onmount.md) | 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次 |
 

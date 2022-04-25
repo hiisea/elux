@@ -1,59 +1,75 @@
+import {coreConfig, EluxContext, IRouter} from './basic';
 import env from './env';
-import {CoreRouter, StoreMiddleware, StoreLogger, EluxComponent, EStore, MetaData, coreConfig, CommonModule, RootState} from './basic';
-import {createStore} from './store';
-import {getModule, getComponent, getModuleList, getComponentList} from './inject';
+import type {CoreRouter} from './store';
 
-export function initApp(
-  router: CoreRouter,
-  data: RootState,
-  initState: (data: RootState) => RootState,
-  middlewares?: StoreMiddleware[],
-  storeLogger?: StoreLogger,
-  appViewName?: string,
-  preloadComponents: string[] = []
-): {store: EStore; AppView: EluxComponent; setup: Promise<void>} {
-  MetaData.currentRouter = router;
-  const store = createStore(0, router, data, initState, middlewares, storeLogger);
-  router.startup(store);
-  const {AppModuleName, RouteModuleName} = coreConfig;
-  const {moduleGetter} = MetaData;
-  const appModule = getModule(AppModuleName) as CommonModule;
-  const routeModule = getModule(RouteModuleName) as CommonModule;
-  const AppView: EluxComponent = appViewName ? (getComponent(AppModuleName, appViewName) as EluxComponent) : {__elux_component__: 'view'};
-  // 防止view中瀑布式懒加载
-  const preloadModules: Record<string, boolean> = Object.keys(router.routeState.params)
-    .concat(Object.keys(store.getState()))
-    .reduce((data, moduleName) => {
-      if (moduleGetter[moduleName] && moduleName !== AppModuleName && moduleName !== RouteModuleName) {
-        data[moduleName] = true;
-      }
-      return data;
-    }, {});
-  const results = Promise.all([
-    getModuleList(Object.keys(preloadModules)),
-    getComponentList(preloadComponents),
-    routeModule.initModel(store),
-    appModule.initModel(store),
-  ]);
-  let setup: Promise<any>;
-  if (env.isServer) {
-    setup = results.then(([modules]) => {
-      return Promise.all(modules.map((mod) => mod.initModel(store)));
-    });
-  } else {
-    setup = results;
-  }
-  return {
-    store,
-    AppView,
-    setup,
-  };
+/**
+ * 应用Render参数
+ *
+ * @public
+ */
+export interface RenderOptions {
+  /**
+   * 挂载应用 Dom 的 id
+   *
+   * @defaultValue `root`
+   *
+   * @remarks
+   * 默认: `root`
+   */
+  id?: string;
 }
-export function reinitApp(store: EStore): Promise<void> {
-  const {moduleGetter} = MetaData;
-  const preloadModules = Object.keys(store.router.routeState.params).filter((moduleName) => moduleGetter[moduleName] && moduleName !== AppModuleName);
-  const {AppModuleName, RouteModuleName} = coreConfig;
-  const appModule = getModule(AppModuleName) as CommonModule;
-  const routeModule = getModule(RouteModuleName) as CommonModule;
-  return Promise.all([getModuleList(preloadModules), routeModule.initModel(store), appModule.initModel(store)]) as Promise<any>;
+
+export function buildApp<INS = {}>(
+  ins: INS,
+  router: IRouter
+): INS & {
+  render(options?: RenderOptions): Promise<void>;
+} {
+  const store = router.getCurrentPage().store;
+  const ssrData = env[coreConfig.SSRDataKey];
+  const AppRender = coreConfig.AppRender!;
+  return Object.assign(ins, {
+    render({id = 'root'}: RenderOptions = {}) {
+      return (router as CoreRouter).init(ssrData || {}).then(() => {
+        AppRender.toDocument(id, {router, documentHead: ''}, !!ssrData, ins, store);
+      });
+    },
+  });
+}
+
+export function buildProvider<INS = {}>(ins: INS, router: IRouter): Elux.Component<{children: any}> {
+  const store = router.getCurrentPage().store;
+  const AppRender = coreConfig.AppRender!;
+  (router as CoreRouter).init({});
+  return AppRender.toProvider({router, documentHead: ''}, ins, store);
+}
+
+export function buildSSR<INS = {}>(
+  ins: INS,
+  router: IRouter
+): INS & {
+  render(options?: RenderOptions): Promise<string>;
+} {
+  const store = router.getCurrentPage().store;
+  const AppRender = coreConfig.AppRender!;
+  return Object.assign(ins, {
+    render({id = 'root'}: RenderOptions = {}) {
+      return (router as CoreRouter).init({}).then(() => {
+        store.destroy();
+        const eluxContext: EluxContext = {router, documentHead: ''};
+        return AppRender.toString(id, eluxContext, ins, store).then((html) => {
+          const {SSRTPL, SSRDataKey} = coreConfig;
+          const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
+          if (match) {
+            const state = store.getState();
+            return SSRTPL.replace(
+              '</head>',
+              `\r\n${eluxContext.documentHead}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`
+            ).replace(match[0], match[0] + html);
+          }
+          return html;
+        });
+      });
+    },
+  });
 }

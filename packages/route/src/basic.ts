@@ -1,201 +1,168 @@
-import {buildConfigSetter, env, RootState, DeepPartial} from '@elux/core';
+import {Action, buildConfigSetter, coreConfig, Location, RouteAction} from '@elux/core';
 
 /**
- * 内置3种路由描述之一
- *
- * @remarks
- * 框架中内置3种路由描述分别是：NativeLocation，EluxLocation，StateLocation，其中 StateLocation 为`标准形态`，其余2种为临时形态
- *
- * 对应的3种Url路由协议分别是：`n://xxx?_={...}`，`e://xxx?{...}`，`s://xxx?{...}`
- *
- * 其转换关系通常为：NativeLocation -\> EluxLocation -\> StateLocation
- *
- * 以 e 开头的 URL，如：`e://login?{"state":{"userName":"jimmy"}}`，表示此为 `EluxLocation`
- *
- * EluxLocation 通常来源于经过{@link NativeLocationMap.in} 转换后的 {@link NativeLocation}，并最终通过 {@link PagenameMap} 转换为路由标准形态 {@link StateLocation}。
+ * 内置ErrorCode
  *
  * @public
  */
-export interface EluxLocation<P extends RootState = RootState> {
+export const ErrorCodes = {
   /**
-   * EluxUrl 中的 path 部分称为 `pathmatch`
-   *
-   * @remarks
-   * 通常它由 {@link NativeLocation.pathname} 通过 {@link NativeLocationMap.in} 转换而来，并将最终通过{@link PagenameMap} 提取 `PathParams` 后转换为 {@link StateLocation.pagename}
+   * 在SSR服务器渲染时，操作路由跳转会抛出该错误
    */
-  pathmatch: string;
+  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
   /**
-   * EluxUrl 中的传参部分称为 `args`
-   *
-   * @remarks
-   * 通常它由 {@link NativeLocation.query} 通过 {@link routeJsonParse}转换而来，并将合并 {@link PagenameMap | PathParams} 后转化为 {@link StateLocation.payload}
+   * 在路由后退时，如果步数溢出则抛出该错误
    */
-  args: DeepPartial<P>;
-}
-
-/**
- * 内置3种路由描述之一
- *
- * @remarks
- * 框架中内置3种路由描述分别是：NativeLocation，EluxLocation，StateLocation，其中 StateLocation 为`标准形态`，其余2种为临时形态
- *
- * 对应的3种Url路由协议分别是：`n://xxx?_={...}`，`e://xxx?{...}`，`s://xxx?{...}`
- *
- * 其转换关系通常为：NativeLocation -\> EluxLocation -\> StateLocation
- *
- * 以 n 开头的 URL，如：`n://login?_={"state":{"userName":"jimmy"}}`，表示此为 `NativeLocation`
- *
- * NativeLocation 通常来源于运行平台，它不直接在框架中流通和参与计算，将在第一时间通过 {@link NativeLocationMap.in} 转换为{@link EluxLocation}，
- * 并在需要通知运行平台路由系统时，通过 {@link NativeLocationMap.out} 转化为原生路由描述
- *
- * @public
- */
-export interface NativeLocation {
-  /**
-   * NativeUrl 中的 path 部分称为 `pathname`
-   *
-   * @remarks
-   * 其值将通过 {@link NativeLocationMap.in} 转换成为 {@link EluxLocation.pathmatch}
-   */
-  pathname: string;
-  /**
-   * NativeUrl 中的传参部分称为 `query`，其值通过 {@link routeJsonParse} 反序列化后转换为 {@link EluxLocation.args}
-   */
-  query: string;
-}
-
-/**
- * 内置3种路由描述之一
- *
- * @remarks
- * 框架中内置3种路由描述分别是：NativeLocation，EluxLocation，StateLocation，其中 StateLocation 为`标准形态`，其余2种为临时形态
- *
- * 对应的3种Url路由协议分别是：`n://xxx?_={...}`，`e://xxx?{...}`，`s://xxx?{...}`
- *
- * 其转换关系通常为：NativeLocation -\> EluxLocation -\> StateLocation
- *
- * 以 s 开头的 URL，如：`s://login?{"state":{"userName":"jimmy"}}`，表示此为 `StateLocation`
- *
- * StateLocation 是框架中路由请求的`标准形态`，它通常由 {@link EluxLocation} 通过 {@link PagenameMap} 转换为而来
- *
- * @public
- */
-export interface StateLocation<P extends RootState = RootState, N extends string = string> {
-  /**
-   * StateLocation 中的 path 部分称为 `pagename`
-   *
-   * @remarks
-   * 其值即为 {@link PagenameMap} 中定义的key
-   */
-  pagename: N;
-  /**
-   * StateLocation 中的传参部分称为 `payload`
-   *
-   * @remarks
-   * 其值是 {@link EluxLocation.args} 和 {@link PagenameMap | PagenameMap.pathToParams} 合并而来，参见{@link RouteState.params}
-   */
-  payload: DeepPartial<P>;
-}
-
-/**
- * NativeLocation与EluxLocation的转换
- *
- * @public
- */
-export interface NativeLocationMap {
-  /**
-   * NativeLocation不会直接在框架中流通和参与计算，它将在第一时间通过该方法转换为{@link EluxLocation}
-   */
-  in(nativeLocation: NativeLocation): EluxLocation;
-  /**
-   * 当需要通知原生路由时，通过该方法转换为原生路由描述
-   */
-  out(eluxLocation: EluxLocation): NativeLocation;
-}
-
-/**
- * 定义路由Page及映射PathParams
- *
- * @remarks
- * {@link EluxLocation.pathmatch} 中可以隐式的映射某些 params 参数（可称之为 `PathParams`），此处定义如何提取和还原 PathParams
- *
- * - key 名即为 {@link RouteState.pagename}
- *
- * - `pathToParams` 提取 {@link EluxLocation.pathmatch} 中的传参，并映射成为 `PathParams`，并与 {@link EluxLocation.args} 合并后作为 {@link StateLocation.payload}
- *
- * - `paramsToPath` 将 {@link StateLocation.payload} 中的某些参数作为 `PathParams`，放入 {@link EluxLocation.pathmatch} 中储存
- *
- * - `pageComponent` 通常无需设置，如需特别指定该Page的UI组件，可在此定义
- *
- * @public
- */
-export type PagenameMap<TPagenames extends string = string> = {
-  [K in TPagenames]: {
-    pathToParams(pathArgs: Array<string | undefined>): Record<string, any>;
-    paramsToPath(params: Record<string, any>): Array<string | undefined>; // TODO vue下类型推导出错？paramsToArgs(params: Record<string, any>): Array<any>;
-    pageComponent?: any;
-  };
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW',
 };
-export interface RouteConfig {
-  //RouteModuleName: string;
-  maxHistory: number;
-  maxLocationCache: number;
-  notifyNativeRouter: {
-    root: boolean;
-    internal: boolean;
+
+/**
+ * 原生路由Url转换为内部路由Url
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
+export function nativeUrlToUrl(nativeUrl: string): string {
+  const [path = '', search = '', hash = ''] = nativeUrl.split(/[?#]/);
+  const pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
+  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+}
+
+/**
+ * 内部路由Url转换为原生路由Url
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
+export function urlToNativeUrl(eluxUrl: string): string {
+  const [path = '', search = '', hash = ''] = eluxUrl.split(/[?#]/);
+  const pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
+  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+}
+
+/**
+ * Url转换为Location
+ *
+ * @public
+ */
+export function urlToLocation(url: string): Location {
+  const [path = '', search = '', hash = ''] = url.split(/[?#]/);
+  //const pathname = ('/' + path.split('//').pop()).replace(/\/(\/|$)/, '');
+  const pathname = '/' + path.replace(/^\/|\/$/g, '');
+  const {parse} = routeConfig.QueryString;
+  const searchQuery = parse(search);
+  const hashQuery = parse(hash);
+  return {url: `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`, pathname, search, hash, searchQuery, hashQuery};
+}
+
+/**
+ * Location转换为Url
+ *
+ * @public
+ */
+export function locationToUrl({url, pathname, search, hash, searchQuery, hashQuery}: Partial<Location>): string {
+  if (url) {
+    [pathname, search, hash] = url.split(/[?#]/);
+  }
+  //pathname = ('/' + (pathname || '').split('//').pop()).replace(/\/(\/|$)/, '');
+  pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
+  const {stringify} = routeConfig.QueryString;
+  search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
+  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+}
+
+/**
+ * 内部路由Location转换为原生路由Location
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
+export function locationToNativeLocation(location: Location): Location {
+  const pathname = routeConfig.NativePathnameMapping.out(location.pathname);
+  const url = location.url.replace(location.pathname, pathname);
+  return {...location, pathname, url};
+}
+
+/**
+ * 原生路由Location转换为内部路由Location
+ *
+ * @remarks
+ * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。
+ *
+ * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。
+ *
+ * @public
+ */
+export function nativeLocationToLocation(location: Location): Location {
+  const pathname = routeConfig.NativePathnameMapping.in(location.pathname);
+  const url = location.url.replace(location.pathname, pathname);
+  return {...location, pathname, url};
+}
+
+export function testChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_testRouteChange`,
+    payload: [location, routeAction],
   };
-  indexUrl: string;
-  notfoundPagename: string;
-  paramsKey: string;
+}
+export function beforeChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_beforeRouteChange`,
+    payload: [location, routeAction],
+  };
+}
+export function afterChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_afterRouteChange`,
+    payload: [location, routeAction],
+  };
+}
+export interface RouteConfig {
+  NotifyNativeRouter: {
+    window: boolean;
+    page: boolean;
+  };
+  QueryString: {
+    parse(str: string): {[key: string]: any};
+    stringify(query: {[key: string]: any}): string;
+  };
+  HomeUrl: string;
+  NativePathnameMapping: {
+    in(nativePathname: string): string;
+    out(internalPathname: string): string;
+  };
 }
 export const routeConfig: RouteConfig = {
-  //RouteModuleName: 'route',
-  maxHistory: 10,
-  maxLocationCache: env.isServer ? 10000 : 500,
-  notifyNativeRouter: {
-    root: true,
-    internal: false,
+  /**
+   * 实际上只支持三种组合：[false,false],[true,true],[true,false]
+   * 否则back时可以出错
+   */
+  NotifyNativeRouter: {
+    window: true,
+    page: false,
   },
-  indexUrl: '/index',
-  notfoundPagename: '/404',
-  paramsKey: '_',
+  HomeUrl: '/',
+  QueryString: {
+    parse: (str: string) => ({}),
+    stringify: () => '',
+  },
+  NativePathnameMapping: {
+    in: (pathname: string) => (pathname === '/' ? routeConfig.HomeUrl : pathname),
+    out: (pathname: string) => (pathname === routeConfig.HomeUrl ? '/' : pathname),
+  },
 };
 
 export const setRouteConfig = buildConfigSetter(routeConfig);
-
-export const routeMeta: {
-  defaultParams: Record<string, any>;
-  pageComponents: Record<string, any>;
-  pagenameMap: Record<string, any>;
-  pagenameList: string[];
-  nativeLocationMap: NativeLocationMap;
-} = {
-  defaultParams: {},
-  pageComponents: {},
-  pagenameMap: {},
-  pagenameList: [],
-  nativeLocationMap: {} as any,
-};
-
-/**
- * 解析JSON格式的路由参数
- *
- * @remarks
- * 框架中将路由参数直接序列化为JSON字符串，放入URL参数中，该方法用来反解析该字符串，如解析失败将返回空的`{}`，不会throw error
- *
- * @param json - 形如`{...}`的JSON字符串
- *
- * @public
- */
-export function routeJsonParse(json: string): Record<string, any> {
-  if (!json || json === '{}' || json.charAt(0) !== '{' || json.charAt(json.length - 1) !== '}') {
-    return {};
-  }
-  let args = {};
-  try {
-    args = JSON.parse(json);
-  } catch (error) {
-    args = {};
-  }
-  return args;
-}

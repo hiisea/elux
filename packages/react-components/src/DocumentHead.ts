@@ -1,9 +1,11 @@
 import React, {useContext, useEffect} from 'react';
-import {env} from '@elux/core';
-import {EluxContext, EluxContextComponent, reactComponentsConfig} from './base';
+
+import {coreConfig, EluxContext, env} from '@elux/core';
+
+import {EluxContextComponent} from './base';
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
@@ -33,7 +35,7 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
       recoverLock = false;
       const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
       if (arr[1]) {
-        reactComponentsConfig.setPageTitle(arr[1]);
+        coreConfig.SetPageTitle(arr[1]);
       }
     }, 0);
   }
@@ -67,7 +69,7 @@ const Component: React.FC<DocumentHeadProps> = ({title, html}) => {
 };
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link DocumentHeadProps}

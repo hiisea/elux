@@ -9,7 +9,7 @@ Constructs a new instance of the `BaseModel` class
 <b>Signature:</b>
 
 ```typescript
-constructor(moduleName: string, store: UStore);
+constructor(moduleName: string, store: IStore);
 ```
 
 ## Parameters
@@ -17,5 +17,5 @@ constructor(moduleName: string, store: UStore);
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  moduleName | string |  |
-|  store | [UStore](./react-web.ustore.md) |  |
+|  store | [IStore](./react-web.istore.md) |  |
 

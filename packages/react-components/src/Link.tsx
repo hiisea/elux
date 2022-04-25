@@ -1,15 +1,17 @@
-import React, {useContext, useCallback} from 'react';
-import {EluxContextComponent} from './base';
+import React, {useCallback} from 'react';
+
+import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
+import {urlToNativeUrl} from '@elux/route';
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
- * 类似于Html标签 `<a>`，用组件的方式执行路由切换，参见 {@link URouter}
+ * 类似于Html标签 `<a>`，用组件的方式执行路由切换，参见 {@link IRouter}
  *
  * @example
  * ```html
- *<Link disabled={pagename==='/home'} route='/home' href='/home' action='push' root>home</Link>
+ *<Link disabled={pagename==='/home'} to='/home' action='push' target='window'>home</Link>
  * ```
  *
  * @public
@@ -20,26 +22,25 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
    */
   disabled?: boolean;
   /**
-   * 指定跳转的url，支持{@link EluxLocation | 3种路由协议}：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]
+   * 指定跳转的url或后退步数
    */
-  route?: string;
+  to?: string;
   /**
-   * href属性仅用于SSR时提供给搜索引擎爬取，指定跳转的url请使用 {@link LinkProps.route} 替代
+   * 点击事件
    */
-  href?: string;
   onClick?(event: React.MouseEvent): void;
   /**
-   * 路由的切换方式，参见 {@link RouteHistoryAction}
+   * 指定路由的切换方式
    */
-  action?: 'push' | 'replace' | 'relaunch';
+  action?: Exclude<RouteAction, 'init'>;
   /**
-   * 是否操作顶级路由栈（EWindow栈），虚拟多页下使用
+   * 指定要操作的路由栈
    */
-  root?: boolean;
+  target?: RouteTarget;
 }
 
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link LinkProps}
@@ -47,28 +48,34 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
  * @public
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({onClick: _onClick, disabled, href, route, root, action = 'push', ...props}, ref) => {
-    const eluxContext = useContext(EluxContextComponent);
-    const router = eluxContext.router!;
+  ({onClick: _onClick, disabled, to = '', target = 'page', action = 'push', ...props}, ref) => {
+    const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
     const onClick = useCallback(
       (event: React.MouseEvent) => {
         event.preventDefault();
-        _onClick && _onClick(event);
-        route && router[action](route, root);
+        if (!disabled) {
+          _onClick && _onClick(event);
+          to && router[action](action === 'back' ? parseInt(to) : {url: to}, target);
+        }
       },
-      [_onClick, action, root, route, router]
+      [_onClick, disabled, to, router, action, target]
     );
-    !disabled && (props['onClick'] = onClick);
+    props['onClick'] = onClick;
+    props['action'] = action;
+    props['target'] = target;
+    props['to'] = to;
     disabled && (props['disabled'] = true);
-    !disabled && href && (props['href'] = href);
-    route && (props['route'] = route);
-    action && (props['action'] = action);
-    root && (props['target'] = 'root');
-
+    let href = action !== 'back' ? to : '';
     if (href) {
-      return <a {...props} ref={ref} />;
+      href = urlToNativeUrl(href);
     } else {
-      return <div {...props} ref={ref} />;
+      href = '#';
+    }
+    props['href'] = href;
+    if (coreConfig.Platform === 'taro') {
+      return <span {...props} ref={ref} />;
+    } else {
+      return <a {...props} ref={ref} />;
     }
   }
 );

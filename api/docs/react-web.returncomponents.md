@@ -9,11 +9,9 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type ReturnComponents<CS extends Record<string, EluxComponent | (() => Promise<{
-    default: EluxComponent;
-}>)>> = {
+export declare type ReturnComponents<CS extends Record<string, EluxComponent | AsyncEluxComponent>> = {
     [K in keyof CS]: GetPromiseComponent<CS[K]>;
 };
 ```
-<b>References:</b> [EluxComponent](./react-web.eluxcomponent.md)<!-- -->, [GetPromiseComponent](./react-web.getpromisecomponent.md)
+<b>References:</b> [EluxComponent](./react-web.eluxcomponent.md)<!-- -->, [AsyncEluxComponent](./react-web.asynceluxcomponent.md)<!-- -->, [GetPromiseComponent](./react-web.getpromisecomponent.md)
 

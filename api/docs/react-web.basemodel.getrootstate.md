@@ -4,30 +4,21 @@
 
 ## BaseModel.getRootState() method
 
-获取全局状态
+获取 Store 的全部状态
 
 <b>Signature:</b>
 
 ```typescript
-protected getRootState(): TRootState;
+protected getRootState(type?: 'previous' | 'uncommitted'): TStoreState;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  type | 'previous' \| 'uncommitted' | 不传表示当前状态，previous表示路由跳转之前的状态，uncommitted表示未提交的状态 |
+
 <b>Returns:</b>
 
-TRootState
-
-## Remarks
-
-以下三者都是获取全局状态，请注意它们之间的区别：
-
-- [getRootState(): TRootState](./react-web.basemodel.getrootstate.md)
-
-- [getUncommittedState(): TRootState](./react-web.basemodel.getuncommittedstate.md)
-
-- [getLatestState(): TRootState](./react-web.basemodel.getlateststate.md)
-
-- `getRootState()` VS `getUncommittedState()`<!-- -->： 当一个 action 触发多个不同 Module 的 reducer 时，这些 reducer 将顺序执行并返回新的 ModuleState， 当所有 reducer 执行完毕时，最后才一次性 commit 至 store 。所以在执行 commit 之前，通过 getRootState() 得到的依然是原数据，而通过 getUncommittedState() 得到的是实时数据。 比如：ModuleA、ModuleB 都监听了 action(`stage.putUser`<!-- -->)，ModuleA 先执行了 reducer 并返回了 NewModuleAState， 然后 ModuleB 执行 reducer 时，它想通过 getRootState() 获取 NewModuleAState 是无效的，因为此时 NewModuleAState 还未 commit，此时使用 getUncommittedState() 可以获得更实时的状态。
-
-- `getUncommittedState()`<!-- -->：在可变数据（MutableData）模式下（如VUE）无使用的意义，因为可变数据是实时修改的，不存在 commit 的边界。
-
-- `getRootState()` VS `getLatestState()`<!-- -->：使用虚拟多页时，每个 `EWindow` 对应一个独立的 store，每个 store 都有自己独立的 RootState。 `getRootState()` 只能得到自己 store 的 RootState，而 `getLatestState()` 得到的是所有 store 合并后的 RootState，一般用于涉及跨 `EWindow` 之间的场景。
+TStoreState
 

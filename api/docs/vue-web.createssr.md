@@ -9,8 +9,8 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function createSSR(moduleGetter: ModuleGetter, url: string, nativeData: any, storeMiddlewares?: StoreMiddleware[], storeLogger?: StoreLogger): App & {
-    render({ id, ssrKey, viewName }?: RenderOptions): Promise<string>;
+export declare function createSSR(appConfig: AppConfig, nativeRequest: NativeRequest): App & {
+    render(options?: RenderOptions | undefined): Promise<string>;
 };
 ```
 
@@ -18,21 +18,18 @@ export declare function createSSR(moduleGetter: ModuleGetter, url: string, nativ
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  moduleGetter | [ModuleGetter](./vue-web.modulegetter.md) | 模块工厂 |
-|  url | string | 服务器收到的原始url |
-|  nativeData | any | 可存放任何原始请求数据 |
-|  storeMiddlewares | [StoreMiddleware](./vue-web.storemiddleware.md)<!-- -->\[\] | store中间件 |
-|  storeLogger | [StoreLogger](./vue-web.storelogger.md) | store日志记录器 |
+|  appConfig | [AppConfig](./vue-web.appconfig.md) | 应用配置 |
+|  nativeRequest | [NativeRequest](./vue-web.nativerequest.md) | 原生请求 |
 
 <b>Returns:</b>
 
-App &amp; { render({ id, ssrKey, viewName }?: [RenderOptions](./vue-web.renderoptions.md)<!-- -->): Promise&lt;string&gt;; }
+App &amp; { render(options?: [RenderOptions](./vue-web.renderoptions.md) \| undefined): Promise&lt;string&gt;; }
 
-返回包含`render(options: RenderOptions): Promise<string>`<!-- -->方法的下一步实例，参见[RenderOptions](./vue-web.renderoptions.md)
+返回包含`render`<!-- -->方法的下一步实例，参见[RenderOptions](./vue-web.renderoptions.md)
 
 ## Remarks
 
-应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用[createApp(...)](./vue-web.createapp.md)
+应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用[createApp()](./vue-web.createapp.md)
 
 ## Example
 

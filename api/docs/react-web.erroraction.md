@@ -4,27 +4,25 @@
 
 ## errorAction() function
 
-创建一个ErrorAction
+创建一个内置的ErrorAction
 
 <b>Signature:</b>
 
 ```typescript
-export declare function errorAction(error: Object): Action;
+export declare function errorAction(error: any): Action;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  error | Object | error报文 |
+|  error | any | 错误体 |
 
 <b>Returns:</b>
 
 [Action](./react-web.action.md)
 
-返回一个 type 为 `Elux.Error` 的 action
-
 ## Remarks
 
-action.type 为 `Elux.Error`
+该 action 可以被 dispatch，可以被 model 捕获并处理
 

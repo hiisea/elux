@@ -1,4 +1,4 @@
-import { ComponentType, FunctionComponent, ComponentClass } from 'react';
+import { ComponentClass, ComponentType, FunctionComponent } from 'react';
 import { Options } from 'react-redux';
 import { Dispatch, EluxComponent } from '@elux/core';
 /**
@@ -33,5 +33,5 @@ export declare type InferableComponentEnhancerWithProps<TInjectedProps> = <C>(co
 export declare function connectRedux<S = {}, D = {}, W = {}>(mapStateToProps?: (state: any, owner: W) => S, options?: Options<any, S, W>): InferableComponentEnhancerWithProps<S & D & {
     dispatch: Dispatch;
 }>;
-export { shallowEqual, connectAdvanced, batch, useSelector, createSelectorHook, Provider, connect, useStore } from 'react-redux';
+export { batch, connect, connectAdvanced, createSelectorHook, shallowEqual, useSelector } from 'react-redux';
 //# sourceMappingURL=index.d.ts.map

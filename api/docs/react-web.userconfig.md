@@ -14,18 +14,22 @@ export interface UserConfig
 
 ## Remarks
 
-可通过 [setConfig(...)](./react-web.setconfig.md) 个性化设置（通常使用默认设置即可）
+可通过 [setConfig()](./react-web.setconfig.md) 个性化设置
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [AppModuleName?](./react-web.userconfig.appmodulename.md) | string | <i>(Optional)</i> APP根模块名称 |
-|  [DepthTimeOnLoading?](./react-web.userconfig.depthtimeonloading.md) | number | <i>(Optional)</i> 超过多少秒Loading视为深度加载 |
-|  [disableNativeRouter?](./react-web.userconfig.disablenativerouter.md) | boolean | <i>(Optional)</i> 不通知原生路由 |
-|  [indexUrl?](./react-web.userconfig.indexurl.md) | string | <i>(Optional)</i> 设置应用的首页路由 |
-|  [maxHistory?](./react-web.userconfig.maxhistory.md) | number | <i>(Optional)</i> 最大历史记录栈数 |
-|  [maxLocationCache?](./react-web.userconfig.maxlocationcache.md) | number | <i>(Optional)</i> 最大路由转换缓存数 |
-|  [notfoundPagename](./react-web.userconfig.notfoundpagename.md) | string | 应用默认的404 Pagename |
-|  [paramsKey](./react-web.userconfig.paramskey.md) | string | 序列化路由参数key名 |
+|  [DepthTimeOnLoading?](./react-web.userconfig.depthtimeonloading.md) | number | <i>(Optional)</i> 定义Loading超过多少秒视为深度加载 |
+|  [DisableNativeRouter?](./react-web.userconfig.disablenativerouter.md) | boolean | <i>(Optional)</i> 是否不通知原生路由 |
+|  [HomeUrl](./react-web.userconfig.homeurl.md) | string | 定义应用的首页 |
+|  [LoadComponentOnError?](./react-web.userconfig.loadcomponentonerror.md) | Elux.Component&lt;{ message: string; }&gt; | <i>(Optional)</i> 定义默认视图加载错误组件 |
+|  [LoadComponentOnLoading?](./react-web.userconfig.loadcomponentonloading.md) | Elux.Component&lt;{}&gt; | <i>(Optional)</i> 定义默认视图加载中组件 |
+|  [ModuleGetter](./react-web.userconfig.modulegetter.md) | [ModuleGetter](./react-web.modulegetter.md) | 定义模块获取方法 |
+|  [NativePathnameMapping?](./react-web.userconfig.nativepathnamemapping.md) | { in(nativePathname: string): string; out(internalPathname: string): string; } | <i>(Optional)</i> 定义内部和宿主平台路由之间的转换与映射 |
+|  [QueryString](./react-web.userconfig.querystring.md) | { parse(str: string): { \[key: string\]: any; }; stringify(query: { \[key: string\]: any; }): string; } | 定义路由参数序列化方法 |
+|  [StageModuleName?](./react-web.userconfig.stagemodulename.md) | string | <i>(Optional)</i> 定义APP根模块名称 |
+|  [StageViewName?](./react-web.userconfig.stageviewname.md) | string | <i>(Optional)</i> 定义APP根视图名称 |
+|  [StoreLogger?](./react-web.userconfig.storelogger.md) | [StoreLogger](./react-web.storelogger.md) | <i>(Optional)</i> 定义Store日志记录器 |
+|  [StoreMiddlewares?](./react-web.userconfig.storemiddlewares.md) | [StoreMiddleware](./react-web.storemiddleware.md)<!-- -->\[\] | <i>(Optional)</i> 定义Store中间件 |
 

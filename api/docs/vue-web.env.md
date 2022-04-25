@@ -9,7 +9,7 @@
 <b>Signature:</b>
 
 ```typescript
-env: EluxRuntime.ENV
+env: Elux.ENV
 ```
 
 ## Remarks

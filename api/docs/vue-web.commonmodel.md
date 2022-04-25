@@ -6,8 +6,6 @@
 
 Model的一般形态
 
-通常通过继承 [BaseModel](./vue-web.basemodel.md) 类生成
-
 <b>Signature:</b>
 
 ```typescript
@@ -18,14 +16,14 @@ export interface CommonModel
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [defaultRouteParams](./vue-web.commonmodel.defaultrouteparams.md) | [ModuleState](./vue-web.modulestate.md) |  |
-|  [moduleName](./vue-web.commonmodel.modulename.md) | string |  |
-|  [store](./vue-web.commonmodel.store.md) | [UStore](./vue-web.ustore.md) |  |
+|  [moduleName](./vue-web.commonmodel.modulename.md) | string | 模块名称 |
+|  [state](./vue-web.commonmodel.state.md) | [ModuleState](./vue-web.modulestate.md) | 模块状态 |
 
 ## Methods
 
 |  Method | Description |
 |  --- | --- |
-|  [destroy()](./vue-web.commonmodel.destroy.md) |  |
-|  [init(latestState, preState)](./vue-web.commonmodel.init.md) |  |
+|  [onActive()](./vue-web.commonmodel.onactive.md) | 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发 |
+|  [onInactive()](./vue-web.commonmodel.oninactive.md) | 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发 |
+|  [onMount(env)](./vue-web.commonmodel.onmount.md) | 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次 |
 

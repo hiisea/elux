@@ -1,15 +1,17 @@
-import {h, HTMLAttributes, inject, VNode, Events, DefineComponent} from 'vue';
-import {EluxContext, EluxContextKey} from './base';
+import {DefineComponent, Events, h, HTMLAttributes, VNode} from 'vue';
+
+import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
+import {urlToNativeUrl} from '@elux/route';
 
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
- * 类似于Html标签 `<a>`，用组件的方式执行路由切换，参见 {@link URouter}
+ * 类似于Html标签 `<a>`，用组件的方式执行路由切换，参见 {@link IRouter}
  *
  * @example
  * ```html
- *<Link disabled={pagename==='/home'} route='/home' href='/home' action='push' root>home</Link>
+ *<Link disabled={pagename==='/home'} to='/home' action='push' target='window'>home</Link>
  * ```
  *
  * @public
@@ -20,26 +22,25 @@ export interface LinkProps extends HTMLAttributes {
    */
   disabled?: boolean;
   /**
-   * 指定跳转的url，支持{@link EluxLocation | 3种路由协议}：eluxUrl [`e://...`]，nativeUrl [`n://...`]，stateUrl [`s://...`]
+   * 指定跳转的url或后退步数
    */
-  route?: string;
+  to?: string;
   /**
-   * href属性仅用于SSR时提供给搜索引擎爬取，指定跳转的url请使用 {@link LinkProps.route} 替代
+   * 点击事件
    */
-  href?: string;
   onClick?(event: Events['onClick']): void;
   /**
-   * 路由的切换方式，参见 {@link RouteHistoryAction}
+   * 指定路由的切换方式
    */
-  action?: 'push' | 'replace' | 'relaunch';
+  action?: Exclude<RouteAction, 'init'>;
   /**
-   * 是否操作顶级路由栈（EWindow栈），虚拟多页下使用
+   * 指定要操作的路由栈
    */
-  root?: boolean;
+  target?: RouteTarget;
 }
 
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link LinkProps}
@@ -48,25 +49,32 @@ export interface LinkProps extends HTMLAttributes {
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const Link: DefineComponent<LinkProps> = function (
-  {onClick: _onClick, disabled, href, route, action = 'push', root, ...props}: LinkProps,
+  {onClick: _onClick, disabled, to = '', target = 'page', action = 'push', ...props}: LinkProps,
   context: {slots: {default?: () => VNode[]}}
 ) {
-  const {router} = inject<EluxContext>(EluxContextKey, {documentHead: ''});
+  const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
   const onClick = (event: Events['onClick']) => {
     event.preventDefault();
-    _onClick && _onClick(event);
-    route && router![action](route, root);
+    if (!disabled) {
+      _onClick && _onClick(event);
+      to && router[action](action === 'back' ? parseInt(to) : {url: to}, target);
+    }
   };
-  !disabled && (props['onClick'] = onClick);
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = to;
   disabled && (props['disabled'] = true);
-  !disabled && href && (props['href'] = href);
-  route && (props['route'] = route);
-  action && (props['action'] = action);
-  root && (props['target'] = 'root');
-
+  let href = action !== 'back' ? to : '';
   if (href) {
-    return h('a', props, context.slots.default!());
+    href = urlToNativeUrl(href);
   } else {
-    return h('div', props, context.slots.default!());
+    href = '#';
+  }
+  props['href'] = href;
+  if (coreConfig.Platform === 'taro') {
+    return h('span', props, context.slots.default!());
+  } else {
+    return h('a', props, context.slots.default!());
   }
 } as any;

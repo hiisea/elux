@@ -4,7 +4,7 @@
 
 ## CommonModelClass interface
 
-\*
+Model的构造类
 
 <b>Signature:</b>
 

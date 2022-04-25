@@ -4,7 +4,7 @@
 
 ## RenderOptions interface
 
-APP Render参数
+应用Render参数
 
 <b>Signature:</b>
 
@@ -12,18 +12,9 @@ APP Render参数
 export interface RenderOptions 
 ```
 
-## Example
-
-
-```js
-createApp(moduleGetter).render({id: 'root', viewName: 'main', ssrKey: 'eluxInitStore'})
-```
-
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [id?](./react-web.renderoptions.id.md) | string | <i>(Optional)</i> 挂载 Dom 的 id，默认为 <code>root</code> |
-|  [ssrKey?](./react-web.renderoptions.ssrkey.md) | string | <i>(Optional)</i> SSR脱水数据的变量名称，默认为 <code>eluxInitStore</code> |
-|  [viewName?](./react-web.renderoptions.viewname.md) | string | <i>(Optional)</i> 根视图名称，默认为 <code>main</code> |
+|  [id?](./react-web.renderoptions.id.md) | string | <i>(Optional)</i> 挂载应用 Dom 的 id |
 

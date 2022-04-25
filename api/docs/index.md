@@ -8,6 +8,8 @@
 
 |  Package | Description |
 |  --- | --- |
+|  [@elux/react-taro](./react-taro.md) |  |
 |  [@elux/react-web](./react-web.md) |  |
+|  [@elux/vue-taro](./vue-taro.md) |  |
 |  [@elux/vue-web](./vue-web.md) |  |
 

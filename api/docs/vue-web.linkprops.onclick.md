@@ -4,6 +4,8 @@
 
 ## LinkProps.onClick() method
 
+点击事件
+
 <b>Signature:</b>
 
 ```typescript

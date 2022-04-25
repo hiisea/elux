@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-new (moduleName: string, store: UStore): H;
+new (moduleName: string, store: IStore): H;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ new (moduleName: string, store: UStore): H;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  moduleName | string |  |
-|  store | [UStore](./vue-web.ustore.md) |  |
+|  store | [IStore](./vue-web.istore.md) |  |
 
 <b>Returns:</b>
 

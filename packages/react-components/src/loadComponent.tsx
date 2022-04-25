@@ -1,118 +1,60 @@
-import React, {ComponentType, Component, useContext} from 'react';
-import {env, loadComponent as baseLoadComponent, isPromise, LoadComponent, EluxComponent, UStore, EStore} from '@elux/core';
-import {EluxContextComponent, reactComponentsConfig} from './base';
+import React, {useEffect, useState} from 'react';
 
-/**
- * EluxUI组件加载参数
- *
- * @remarks
- * EluxUI组件加载参见 {@link LoadComponent}，加载参数可通过 {@link setConfig | setConfig(...)} 设置全局默认，
- * 也可以直接在 `LoadComponent(...)` 中特别指明
- *
- * @example
- * ```js
- *   const OnError = ({message}) => <div>{message}</div>
- *   const OnLoading = () => <div>loading...</div>
- *
- *   const Article = LoadComponent('article', 'main', {OnLoading, OnError})
- * ```
- *
- * @public
- */
-export interface LoadComponentOptions {
-  OnError?: ComponentType<{message: string}>;
-  OnLoading?: ComponentType<{}>;
-}
+import {coreConfig, env, ILoadComponent, injectComponent, isPromise, IStore} from '@elux/core';
 
-export const loadComponent: LoadComponent<Record<string, any>, LoadComponentOptions> = (moduleName, componentName, options = {}) => {
-  const OnLoading = options.OnLoading || reactComponentsConfig.LoadComponentOnLoading;
-  const OnError = options.OnError || reactComponentsConfig.LoadComponentOnError;
+export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
+  <div className="g-component-error">{message}</div>
+);
+export const LoadComponentOnLoading: Elux.Component = () => <div className="g-component-loading">loading...</div>;
 
-  class Loader extends Component<{store: UStore; deps: Record<string, boolean>; forwardedRef: any}> {
-    private active = true;
+export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, options = {}) => {
+  const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading!;
+  const OnError = options.onError || coreConfig.LoadComponentOnError!;
 
-    private loading = false;
-
-    private error = '';
-
-    private view?: EluxComponent;
-
-    state = {
-      ver: 0,
-    };
-
-    constructor(props: any) {
-      super(props);
-      this.execute();
-    }
-
-    componentWillUnmount() {
-      this.active = false;
-    }
-
-    shouldComponentUpdate() {
-      this.execute();
-      return true;
-    }
-
-    componentDidMount() {
-      this.error = '';
-    }
-
-    execute() {
-      if (!this.view && !this.loading && !this.error) {
-        const {deps, store} = this.props;
-        this.loading = true;
-        let result: EluxComponent | null | Promise<EluxComponent | null> | undefined;
-        try {
-          result = baseLoadComponent(moduleName, componentName as string, store as EStore, deps);
-        } catch (e: any) {
-          this.loading = false;
-          this.error = e.message || `${e}`;
-        }
-        if (result) {
-          if (isPromise(result)) {
-            result.then(
-              (view) => {
-                if (view) {
-                  this.loading = false;
-                  this.view = view;
-                  this.active && this.setState({ver: this.state.ver + 1});
-                }
-              },
-              (e) => {
-                env.console.error(e);
-                this.loading = false;
-                this.error = e.message || `${e}` || 'error';
-                this.active && this.setState({ver: this.state.ver + 1});
-              }
-            );
-          } else {
-            this.loading = false;
-            this.view = result;
-          }
-        }
-      }
-    }
-
-    render() {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const {forwardedRef, deps, store, ...rest} = this.props;
-
-      if (this.view) {
-        const View: ComponentType<any> = this.view as any;
-        return <View ref={forwardedRef} {...rest} />;
-      }
-      if (this.loading) {
-        const Loading: ComponentType<any> = OnLoading as any;
-        return <Loading />;
-      }
-      return <OnError message={this.error} />;
-    }
-  }
   return React.forwardRef((props, ref) => {
-    const {deps = {}} = useContext(EluxContextComponent);
-    const store = reactComponentsConfig.useStore();
-    return <Loader {...props} store={store} deps={deps} forwardedRef={ref} />;
+    const execute = (curStore?: IStore) => {
+      let View: Elux.Component<any> | string = OnLoading;
+      try {
+        const result = injectComponent(moduleName as string, componentName as string, curStore || store);
+        if (isPromise(result)) {
+          if (env.isServer) {
+            throw 'can not use async component in SSR';
+          }
+          result.then(
+            (view: any) => {
+              active && setView(view || 'not found!');
+            },
+            (e) => {
+              env.console.error(e);
+              active && setView(e.message || `${e}` || 'error');
+            }
+          );
+        } else {
+          View = result as any;
+        }
+      } catch (e: any) {
+        env.console.error(e);
+        View = e.message || `${e}` || 'error';
+      }
+      return View;
+    };
+    const [active, setActive] = useState(true);
+    useEffect(() => {
+      return () => {
+        setActive(false);
+      };
+    }, []);
+    const newStore = coreConfig.UseStore!();
+    const [store, setStore] = useState(newStore);
+    const [View, setView] = useState(execute);
+    if (store !== newStore) {
+      setStore(newStore);
+      setView(execute(newStore));
+    }
+    if (typeof View === 'string') {
+      return <OnError message={View} />;
+    } else {
+      return <View ref={ref} {...props} />;
+    }
   }) as any;
 };

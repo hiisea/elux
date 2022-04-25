@@ -13,11 +13,10 @@ export declare function exportModule<TModuleName extends string, TModel extends 
     [componentName: string]: EluxComponent | AsyncEluxComponent;
 }, D>(moduleName: TModuleName, ModelClass: CommonModelClass<TModel>, components: TComponents, data?: D): {
     moduleName: TModuleName;
-    initModel: (store: UStore) => void | Promise<void>;
-    state: ReturnType<TModel['init']>;
-    routeParams: TModel['defaultRouteParams'];
-    actions: PickActions<TModel>;
-    components: TComponents;
+    ModelClass: CommonModelClass;
+    state: TModel['state'];
+    actions: PickModelActions<TModel>;
+    components: ReturnComponents<TComponents>;
     data: D;
 };
 ```
@@ -27,19 +26,15 @@ export declare function exportModule<TModuleName extends string, TModel extends 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  moduleName | TModuleName | 模块名称，不能重复 |
-|  ModelClass | [CommonModelClass](./react-web.commonmodelclass.md)<!-- -->&lt;TModel&gt; | Model类，模块必须有一个Model来维护State |
-|  components | TComponents | EluxUI组件或视图，参见 [exportView()](./react-web.exportview.md) |
+|  ModelClass | [CommonModelClass](./react-web.commonmodelclass.md)<!-- -->&lt;TModel&gt; | Model构造类 |
+|  components | TComponents | 导出的组件或视图，参见 [exportView()](./react-web.exportview.md)<!-- -->，当组件代码量大时可以使用<code>import(...)</code>异步组件 |
 |  data | D | 导出其它任何数据 |
 
 <b>Returns:</b>
 
-{ moduleName: TModuleName; initModel: (store: [UStore](./react-web.ustore.md)<!-- -->) =&gt; void \| Promise&lt;void&gt;; state: ReturnType&lt;TModel\['init'\]&gt;; routeParams: TModel\['defaultRouteParams'\]; actions: [PickActions](./react-web.pickactions.md)<!-- -->&lt;TModel&gt;; components: TComponents; data: D; }
+{ moduleName: TModuleName; ModelClass: [CommonModelClass](./react-web.commonmodelclass.md)<!-- -->; state: TModel\['state'\]; actions: [PickModelActions](./react-web.pickmodelactions.md)<!-- -->&lt;TModel&gt;; components: [ReturnComponents](./react-web.returncomponents.md)<!-- -->&lt;TComponents&gt;; data: D; }
 
 返回实现 [CommonModule](./react-web.commonmodule.md) 接口的模块
-
-## Remarks
-
-参数 `components` 支持异步获取组件，当组件代码量大时，可以使用 `import(...)` 返回Promise
 
 ## Example
 

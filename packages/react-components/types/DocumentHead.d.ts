@@ -1,6 +1,6 @@
 import React from 'react';
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
@@ -20,7 +20,7 @@ export interface DocumentHeadProps {
     html?: string;
 }
 /**
- * 内置React组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link DocumentHeadProps}

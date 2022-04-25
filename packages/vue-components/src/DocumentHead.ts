@@ -1,9 +1,11 @@
-import {env, isServer} from '@elux/core';
-import {inject, defineComponent, DefineComponent} from 'vue';
-import {EluxContext, EluxContextKey} from './base';
+import {defineComponent, DefineComponent, inject} from 'vue';
+
+import {coreConfig, EluxContext, env} from '@elux/core';
+
+import {EluxContextKey} from './base';
 
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
  * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
@@ -32,14 +34,14 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
       clientTimer = 0;
       const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
       if (arr[1]) {
-        env.document.title = arr[1];
+        coreConfig.SetPageTitle(arr[1]);
       }
     }, 0);
   }
 }
 
 /**
- * 内置VUE组件
+ * 内置UI组件
  *
  * @remarks
  * 参见：{@link DocumentHeadProps}
@@ -57,7 +59,7 @@ export const DocumentHead: DefineComponent<DocumentHeadProps> = defineComponent(
   },
   data() {
     return {
-      eluxContext: inject<EluxContext>(EluxContextKey, {documentHead: ''}),
+      eluxContext: inject<EluxContext>(EluxContextKey, {} as any),
       raw: '',
     };
   },
@@ -83,7 +85,7 @@ export const DocumentHead: DefineComponent<DocumentHeadProps> = defineComponent(
     setClientHead(this.eluxContext, this.raw);
   },
   render() {
-    if (isServer()) {
+    if (env.isServer) {
       this.eluxContext.documentHead = this.headText;
     }
     return null;

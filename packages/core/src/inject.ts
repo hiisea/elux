@@ -1,14 +1,25 @@
+import {
+  ActionHandler,
+  ActionHandlersMap,
+  AsyncEluxComponent,
+  CommonModel,
+  CommonModule,
+  coreConfig,
+  EluxComponent,
+  isEluxComponent,
+  IStore,
+  MetaData,
+  ModelAsHandlers,
+  ModuleApiMap,
+} from './basic';
 import env from './env';
-import {isPromise} from './utils';
-import {MetaData, CommonModule, EluxComponent, coreConfig, isEluxComponent, ModuleGetter, UStore, EStore} from './basic';
+import {isPromise, promiseCaseCallback} from './utils';
 
 /**
- * 获取导出的Module
+ * 获取Module
  *
  * @remarks
- * {@link exportModule | exportModule(...)} 导出的 Module，可以通过此方法获得，返回结果有可能是一个Promise
- *
- * @param moduleName - 要获取的模块名
+ * 获取通过 {@link exportModule} 导出的 Module
  *
  * @public
  */
@@ -16,10 +27,11 @@ export function getModule(moduleName: string): Promise<CommonModule> | CommonMod
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName]!;
   }
-  const moduleOrPromise = MetaData.moduleGetter[moduleName]();
+  const moduleOrPromise = coreConfig.ModuleGetter[moduleName]();
   if (isPromise(moduleOrPromise)) {
     const promiseModule = moduleOrPromise.then(
       ({default: module}) => {
+        injectActions(new module.ModelClass(moduleName, null as any));
         MetaData.moduleCaches[moduleName] = module;
         return module;
       },
@@ -31,39 +43,16 @@ export function getModule(moduleName: string): Promise<CommonModule> | CommonMod
     MetaData.moduleCaches[moduleName] = promiseModule;
     return promiseModule;
   }
+  injectActions(new moduleOrPromise.ModelClass(moduleName, null as any));
   MetaData.moduleCaches[moduleName] = moduleOrPromise;
   return moduleOrPromise;
 }
 
-export function getModuleList(moduleNames: string[]): CommonModule[] | Promise<CommonModule[]> {
-  if (moduleNames.length < 1) {
-    return [];
-  }
-  const list = moduleNames.map((moduleName) => {
-    if (MetaData.moduleCaches[moduleName]) {
-      return MetaData.moduleCaches[moduleName]!;
-    }
-    return getModule(moduleName);
-  });
-  if (list.some((item) => isPromise(item))) {
-    return Promise.all(list);
-  } else {
-    return list as CommonModule[];
-  }
-}
-
 /**
- * 获取Module导出的EluxUI组件
+ * 获取导出的UI组件
  *
  * @remarks
- * {@link exportModule | exportModule(...)} 导出的 Component，可以通过此方法获得。
- *
- * - 与 {@link LoadComponent} 不同的是本方法只获取 Component 构造器，并不会实例化和Install
- *
- * - 返回结果有可能是一个Promise
- *
- * @param moduleName - 组件所属模块名
- * @param componentName - 组件被导出的名称
+ * 获取通过 {@link exportModule} 导出的 Component。与 {@link ILoadComponent} 不同的是本方法只获取 Component 构造器，并不会render
  *
  * @public
  */
@@ -73,11 +62,10 @@ export function getComponent(moduleName: string, componentName: string): EluxCom
     return MetaData.componentCaches[key]!;
   }
   const moduleCallback = (module: CommonModule) => {
-    const componentOrFun = module.components[componentName];
+    const componentOrFun = module.components[componentName] as EluxComponent | AsyncEluxComponent;
     if (isEluxComponent(componentOrFun)) {
-      const component = componentOrFun;
-      MetaData.componentCaches[key] = component;
-      return component;
+      MetaData.componentCaches[key] = componentOrFun;
+      return componentOrFun;
     }
     const promiseComponent = componentOrFun().then(
       ({default: component}) => {
@@ -99,82 +87,141 @@ export function getComponent(moduleName: string, componentName: string): EluxCom
   return moduleCallback(moduleOrPromise);
 }
 
-export function getComponentList(keys: string[]): Promise<EluxComponent[]> {
-  if (keys.length < 1) {
-    return Promise.resolve([]);
+export function getEntryComponent(): EluxComponent {
+  return getComponent(coreConfig.StageModuleName, coreConfig.StageViewName) as EluxComponent;
+}
+
+export function getModuleApiMap(data?: Record<string, string[]>): ModuleApiMap {
+  if (!MetaData.moduleApiMap) {
+    if (data) {
+      MetaData.moduleApiMap = Object.keys(data).reduce((prev, moduleName) => {
+        const arr = data[moduleName];
+        const actions: Record<string, any> = {};
+        const actionNames: Record<string, string> = {};
+        arr.forEach((actionName) => {
+          actions[actionName] = (...payload: any[]) => ({type: moduleName + coreConfig.NSP + actionName, payload});
+          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
+        });
+        const moduleFacade = {name: moduleName, actions, actionNames};
+        prev[moduleName] = moduleFacade;
+        return prev;
+      }, {} as ModuleApiMap);
+    } else {
+      const cacheData = {};
+      MetaData.moduleApiMap = new Proxy(
+        {},
+        {
+          set(target, moduleName: string, val, receiver) {
+            return Reflect.set(target, moduleName, val, receiver);
+          },
+          get(target, moduleName: string, receiver) {
+            const val = Reflect.get(target, moduleName, receiver);
+            if (val !== undefined) {
+              return val;
+            }
+            if (!cacheData[moduleName]) {
+              cacheData[moduleName] = {
+                name: moduleName,
+                actionNames: new Proxy(
+                  {},
+                  {
+                    get(__, actionName: string) {
+                      return moduleName + coreConfig.NSP + actionName;
+                    },
+                  }
+                ),
+                actions: new Proxy(
+                  {},
+                  {
+                    get(__, actionName: string) {
+                      return (...payload: any[]) => ({type: moduleName + coreConfig.NSP + actionName, payload});
+                    },
+                  }
+                ),
+              };
+            }
+            return cacheData[moduleName];
+          },
+        }
+      );
+    }
   }
-  return Promise.all(
-    keys.map((key) => {
-      if (MetaData.componentCaches[key]) {
-        return MetaData.componentCaches[key]!;
-      }
-      const [moduleName, componentName] = key.split(coreConfig.NSP);
-      return getComponent(moduleName, componentName);
-    })
-  );
+  return MetaData.moduleApiMap;
 }
 
 /**
- * 手动加载并初始化一个Model
+ * 动态注册module
  *
  * @remarks
- * 通常情况下无需手动加载，因为以下2种情况都将自动加载：
- *
- * - {@link Dispatch} 一个 ModuleA.xxxAction 时，如果 ModuleA 未被注册，将自动加载 ModuleA 并初始化其 Model
- *
- * - UI Render一个通过 {@link LoadComponent} 加载的ModuleA-UI组件，如果 ModuleA 未被注册，将自动加载 ModuleA 并初始化其 Model
- *
- * @param moduleName - 要加载的 module 名称
- * @param store - 要注册该 Model 的 Store
+ * 常于小程序分包加载
  *
  * @public
  */
-export function loadModel<MG extends ModuleGetter>(moduleName: keyof MG, store: UStore): void | Promise<void> {
-  const moduleOrPromise = getModule(moduleName as string);
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then((module) => module.initModel(store as EStore));
+export function injectModule(module: CommonModule): void;
+/**
+ * 动态注册module
+ *
+ * @remarks
+ * 常于小程序分包加载
+ *
+ * @public
+ */
+export function injectModule(moduleName: string, moduleGetter: () => CommonModule | Promise<{default: CommonModule}>): void;
+export function injectModule(moduleOrName: string | CommonModule, moduleGetter?: () => CommonModule | Promise<{default: CommonModule}>): void {
+  if (typeof moduleOrName === 'string') {
+    coreConfig.ModuleGetter[moduleOrName] = moduleGetter!;
+  } else {
+    coreConfig.ModuleGetter[moduleOrName.moduleName] = () => moduleOrName;
   }
-  return moduleOrPromise.initModel(store as EStore);
 }
 
-export function loadComponent(
-  moduleName: string,
-  componentName: string,
-  store: EStore,
-  deps: Record<string, boolean>
-): EluxComponent | null | Promise<EluxComponent | null> {
-  const promiseOrComponent = getComponent(moduleName, componentName);
-  const callback = (component: EluxComponent) => {
-    if (component.__elux_component__ === 'view' && !store.injectedModules[moduleName]) {
-      if (env.isServer) {
-        return null;
-      }
-      const module = getModule(moduleName) as CommonModule;
-      module.initModel(store);
+export function injectComponent(moduleName: string, componentName: string, store: IStore): EluxComponent | Promise<EluxComponent> {
+  return promiseCaseCallback(getComponent(moduleName, componentName), (component) => {
+    if (component.__elux_component__ === 'view' && !env.isServer) {
+      return promiseCaseCallback(store.mount(moduleName, 'update'), () => component);
     }
-    deps[moduleName + coreConfig.NSP + componentName] = true;
     return component;
-  };
-  if (isPromise(promiseOrComponent)) {
-    if (env.isServer) {
-      return null;
+  });
+}
+
+export function injectActions(model: CommonModel, hmr?: boolean): void {
+  const moduleName = model.moduleName;
+  const handlers: ModelAsHandlers = model as any;
+  // eslint-disable-next-line no-restricted-syntax
+  for (const actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      const handler = handlers[actionNames];
+      if (handler.__isReducer__ || handler.__isEffect__) {
+        actionNames.split(coreConfig.MSP).forEach((actionName) => {
+          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+          const arr = actionName.split(coreConfig.NSP);
+          if (arr[1]) {
+            // handler.__isHandler__ = true;
+            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          } else {
+            // handler.__isHandler__ = false;
+            transformAction(
+              moduleName + coreConfig.NSP + actionName,
+              handler,
+              moduleName,
+              handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap,
+              hmr
+            );
+            // addModuleActionCreatorList(moduleName, actionName);
+          }
+        });
+      }
     }
-    return promiseOrComponent.then(callback);
   }
-  return callback(promiseOrComponent);
+  // return MetaData.facadeMap[moduleName].actions;
 }
 
-export function moduleExists(): {[moduleName: string]: boolean} {
-  return MetaData.moduleExists;
-}
-export function getCachedModules(): {[moduleName: string]: undefined | CommonModule | Promise<CommonModule>} {
-  return MetaData.moduleCaches;
-}
-
-export function defineModuleGetter(moduleGetter: ModuleGetter): void {
-  MetaData.moduleGetter = moduleGetter;
-  MetaData.moduleExists = Object.keys(moduleGetter).reduce((data, moduleName) => {
-    data[moduleName] = true;
-    return data;
-  }, {});
+function transformAction(actionName: string, handler: ActionHandler, listenerModule: string, actionHandlerMap: ActionHandlersMap, hmr?: boolean) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
+  }
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    env.console.warn(`Action duplicate : ${actionName}.`);
+  }
+  actionHandlerMap[actionName][listenerModule] = handler;
 }

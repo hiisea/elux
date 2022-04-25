@@ -4,10 +4,10 @@
 
 ## LinkProps.action property
 
-路由的切换方式，参见 [RouteHistoryAction](./vue-web.routehistoryaction.md)
+指定路由的切换方式
 
 <b>Signature:</b>
 
 ```typescript
-action?: 'push' | 'replace' | 'relaunch';
+action?: Exclude<RouteAction, 'init'>;
 ```
