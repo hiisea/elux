@@ -1,4 +1,4 @@
-import { IRouter } from './basic';
+import { IRouter, RouterInitOptions } from './basic';
 /**
  * 应用Render参数
  *
@@ -15,13 +15,13 @@ export interface RenderOptions {
      */
     id?: string;
 }
-export declare function buildApp<INS = {}>(ins: INS, router: IRouter): INS & {
+export declare function buildApp<INS = {}>(ins: INS, router: IRouter, routerOptions: RouterInitOptions): INS & {
     render(options?: RenderOptions): Promise<void>;
 };
 export declare function buildProvider<INS = {}>(ins: INS, router: IRouter): Elux.Component<{
     children: any;
 }>;
-export declare function buildSSR<INS = {}>(ins: INS, router: IRouter): INS & {
+export declare function buildSSR<INS = {}>(ins: INS, router: IRouter, routerOptions: RouterInitOptions): INS & {
     render(options?: RenderOptions): Promise<string>;
 };
 //# sourceMappingURL=app.d.ts.map

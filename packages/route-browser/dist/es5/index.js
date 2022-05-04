@@ -9,13 +9,13 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(nativeRequest) {
-  var _nativeRequest$reques = nativeRequest.request.url.split(/[?#]/),
-      pathname = _nativeRequest$reques[0],
-      _nativeRequest$reques2 = _nativeRequest$reques[1],
-      search = _nativeRequest$reques2 === void 0 ? '' : _nativeRequest$reques2,
-      _nativeRequest$reques3 = _nativeRequest$reques[2],
-      hash = _nativeRequest$reques3 === void 0 ? '' : _nativeRequest$reques3;
+function createServerHistory(url) {
+  var _url$split = url.split(/[?#]/),
+      pathname = _url$split[0],
+      _url$split$ = _url$split[1],
+      search = _url$split$ === void 0 ? '' : _url$split$,
+      _url$split$2 = _url$split[2],
+      hash = _url$split$2 === void 0 ? '' : _url$split$2;
 
   return {
     push: function push() {
@@ -40,10 +40,10 @@ function createServerHistory(nativeRequest) {
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter(history, nativeRequest) {
+  function BrowserNativeRouter(history) {
     var _this;
 
-    _this = _BaseNativeRouter.call(this, nativeRequest) || this;
+    _this = _BaseNativeRouter.call(this) || this;
     _this.unlistenHistory = void 0;
     _this.history = history;
     var _routeConfig$NotifyNa = routeConfig.NotifyNativeRouter,
@@ -101,17 +101,14 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
 export function createClientRouter() {
   var history = createBrowserHistory();
-  var nativeRequest = {
-    request: {
-      url: locationToUrl(history.location)
-    },
-    response: {}
+  var browserNativeRouter = new BrowserNativeRouter(history);
+  return {
+    router: browserNativeRouter.router,
+    url: locationToUrl(history.location)
   };
-  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
-  return browserNativeRouter.router;
 }
-export function createServerRouter(nativeRequest) {
-  var history = createServerHistory(nativeRequest);
-  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
+export function createServerRouter(url) {
+  var history = createServerHistory(url);
+  var browserNativeRouter = new BrowserNativeRouter(history);
   return browserNativeRouter.router;
 }

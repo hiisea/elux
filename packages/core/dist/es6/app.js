@@ -1,46 +1,43 @@
 import { coreConfig } from './basic';
 import env from './env';
-export function buildApp(ins, router) {
-  const store = router.getCurrentPage().store;
+export function buildApp(ins, router, routerOptions) {
   const ssrData = env[coreConfig.SSRDataKey];
   const AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
     render({
       id = 'root'
     } = {}) {
-      return router.init(ssrData || {}).then(() => {
+      return router.init(routerOptions, ssrData || {}).then(() => {
         AppRender.toDocument(id, {
           router,
           documentHead: ''
-        }, !!ssrData, ins, store);
+        }, !!ssrData, ins);
       });
     }
 
   });
 }
 export function buildProvider(ins, router) {
-  const store = router.getCurrentPage().store;
   const AppRender = coreConfig.AppRender;
-  router.init({});
   return AppRender.toProvider({
     router,
     documentHead: ''
-  }, ins, store);
+  }, ins);
 }
-export function buildSSR(ins, router) {
-  const store = router.getCurrentPage().store;
+export function buildSSR(ins, router, routerOptions) {
   const AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
     render({
       id = 'root'
     } = {}) {
-      return router.init({}).then(() => {
+      return router.init(routerOptions, {}).then(() => {
+        const store = router.getCurrentPage().store;
         store.destroy();
         const eluxContext = {
           router,
           documentHead: ''
         };
-        return AppRender.toString(id, eluxContext, ins, store).then(html => {
+        return AppRender.toString(id, eluxContext, ins).then(html => {
           const {
             SSRTPL,
             SSRDataKey

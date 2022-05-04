@@ -258,6 +258,9 @@ function mergeState(target = {}, ...args) {
 
   return Object.assign({}, target, ...args);
 }
+function getClientRouter() {
+  return MetaData.clientRouter;
+}
 
 const errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
@@ -751,13 +754,11 @@ const preMiddleware = ({
   return next(action);
 };
 class CoreRouter {
-  constructor(location, nativeRequest) {
+  constructor() {
     this.listenerId = 0;
     this.listenerMap = {};
     this.action = 'init';
     this.routeKey = '';
-    this.location = location;
-    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
@@ -1208,13 +1209,11 @@ let BaseModel = (_class = class BaseModel {
 }, (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
 
 function buildProvider(ins, router) {
-  const store = router.getCurrentPage().store;
   const AppRender = coreConfig.AppRender;
-  router.init({});
   return AppRender.toProvider({
     router,
     documentHead: ''
-  }, ins, store);
+  }, ins);
 }
 
 const EluxContextComponent = React.createContext({
@@ -1328,7 +1327,7 @@ const RouterComponent = () => {
 };
 
 const AppRender = {
-  toDocument(id, eluxContext, fromSSR, app, store) {
+  toDocument(id, eluxContext, fromSSR, app) {
     const renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
     const panel = env.document.getElementById(id);
     renderFun(jsx(EluxContextComponent.Provider, {
@@ -1337,7 +1336,7 @@ const AppRender = {
     }), panel);
   },
 
-  toString(id, eluxContext, app, store) {
+  toString(id, eluxContext, app) {
     const html = reactComponentsConfig.renderToString(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
       children: jsx(RouterComponent, {})
@@ -1345,7 +1344,7 @@ const AppRender = {
     return Promise.resolve(html);
   },
 
-  toProvider(eluxContext, app, store) {
+  toProvider(eluxContext, app) {
     return props => jsx(EluxContextComponent.Provider, {
       value: eluxContext,
       children: props.children
@@ -1926,11 +1925,11 @@ class WindowStack extends HistoryStack {
 }
 
 class BaseNativeRouter {
-  constructor(nativeRequest) {
+  constructor() {
     this.router = void 0;
     this.routeKey = '';
     this.curTask = void 0;
-    this.router = new Router(this, nativeRequest);
+    this.router = new Router(this);
   }
 
   onSuccess() {
@@ -1972,8 +1971,8 @@ class BaseNativeRouter {
 
 }
 class Router extends CoreRouter {
-  constructor(nativeRouter, nativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
+  constructor(nativeRouter) {
+    super();
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -1991,8 +1990,6 @@ class Router extends CoreRouter {
     };
 
     this.nativeRouter = nativeRouter;
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
-    this.routeKey = this.findRecordByStep(0).record.key;
   }
 
   addTask(execute) {
@@ -2098,26 +2095,32 @@ class Router extends CoreRouter {
     }
   }
 
-  init(prevState) {
-    const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
-    this.curTask = task;
-    return task[0]().finally(this.onTaskComplete);
-  }
+  init(routerInitOptions, prevState) {
+    this.init = () => Promise.resolve();
 
-  async _init(prevState) {
+    this.initOptions = routerInitOptions;
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
       payload: null,
       prevState,
       completed: false
     };
-    const store = this.getCurrentPage().store;
+    const task = [this._init.bind(this), () => undefined, () => undefined];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  }
+
+  async _init() {
     const {
       action,
       location,
       routeKey
     } = this;
     await this.nativeRouter.execute(action, location, routeKey);
+    const store = this.getCurrentPage().store;
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -2440,8 +2443,8 @@ setRouteConfig({
   }
 });
 class MPNativeRouter extends BaseNativeRouter {
-  constructor(history, nativeRequest) {
-    super(nativeRequest);
+  constructor(history) {
+    super();
     this.unlistenHistory = void 0;
     this.history = history;
     const {
@@ -2551,13 +2554,7 @@ class MPNativeRouter extends BaseNativeRouter {
 
 }
 function createRouter(history) {
-  const nativeRequest = {
-    request: {
-      url: locationToUrl(history.getLocation())
-    },
-    response: {}
-  };
-  const mpNativeRouter = new MPNativeRouter(history, nativeRequest);
+  const mpNativeRouter = new MPNativeRouter(history);
   return mpNativeRouter.router;
 }
 
@@ -2593,8 +2590,10 @@ const taroHistory = {
 
   isTabPage(pathname) {
     if (!tabPages) {
-      if (env.__taroAppConfig.tabBar) {
-        tabPages = env.__taroAppConfig.tabBar.list.reduce((obj, item) => {
+      const tabConfig = env.__taroAppConfig.tabBar;
+
+      if (tabConfig) {
+        tabPages = (tabConfig.list || tabConfig.items).reduce((obj, item) => {
           obj[routeToPathname(item.pagePath)] = true;
           return obj;
         }, {});
@@ -2649,6 +2648,14 @@ const taroHistory = {
           const current = arr[arr.length - 1];
           path = current.route;
           query = current.options;
+        }
+
+        if (!path) {
+          return {
+            pathname: '',
+            search: '',
+            action: 'RELAUNCH'
+          };
         }
 
         curLocation = {
@@ -5901,6 +5908,15 @@ function createApp(appConfig) {
   if (!cientSingleton) {
     const router = createRouter(taroHistory);
     cientSingleton = buildProvider({}, router);
+  }
+
+  const location = taroHistory.getLocation();
+
+  if (location.pathname) {
+    const router = getClientRouter();
+    router.init({
+      url: locationToUrl(location)
+    }, {});
   }
 
   return cientSingleton;

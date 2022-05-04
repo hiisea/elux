@@ -4,7 +4,7 @@ import {EluxContextComponent, reactComponentsConfig} from './base';
 import {RouterComponent} from './Router';
 
 const AppRender: IAppRender = {
-  toDocument(id, eluxContext, fromSSR, app, store): void {
+  toDocument(id, eluxContext, fromSSR, app): void {
     const renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
     const panel = env.document!.getElementById(id);
     renderFun!(
@@ -14,7 +14,7 @@ const AppRender: IAppRender = {
       panel
     );
   },
-  toString(id, eluxContext, app, store): Promise<string> {
+  toString(id, eluxContext, app): Promise<string> {
     const html = reactComponentsConfig.renderToString!(
       <EluxContextComponent.Provider value={eluxContext}>
         <RouterComponent />
@@ -22,7 +22,7 @@ const AppRender: IAppRender = {
     );
     return Promise.resolve(html);
   },
-  toProvider(eluxContext, app, store): Elux.Component<{children: any}> {
+  toProvider(eluxContext, app): Elux.Component<{children: any}> {
     return (props) => <EluxContextComponent.Provider value={eluxContext}>{props.children}</EluxContextComponent.Provider>;
   },
 };

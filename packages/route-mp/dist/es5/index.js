@@ -1,5 +1,5 @@
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
-import { BaseNativeRouter, locationToUrl, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
+import { BaseNativeRouter, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -9,10 +9,10 @@ setRouteConfig({
 export var MPNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(MPNativeRouter, _BaseNativeRouter);
 
-  function MPNativeRouter(history, nativeRequest) {
+  function MPNativeRouter(history) {
     var _this;
 
-    _this = _BaseNativeRouter.call(this, nativeRequest) || this;
+    _this = _BaseNativeRouter.call(this) || this;
     _this.unlistenHistory = void 0;
     _this.history = history;
     var _routeConfig$NotifyNa = routeConfig.NotifyNativeRouter,
@@ -125,12 +125,6 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
   return MPNativeRouter;
 }(BaseNativeRouter);
 export function createRouter(history) {
-  var nativeRequest = {
-    request: {
-      url: locationToUrl(history.getLocation())
-    },
-    response: {}
-  };
-  var mpNativeRouter = new MPNativeRouter(history, nativeRequest);
+  var mpNativeRouter = new MPNativeRouter(history);
   return mpNativeRouter.router;
 }

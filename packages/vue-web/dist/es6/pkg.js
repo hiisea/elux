@@ -749,13 +749,11 @@ const preMiddleware = ({
   return next(action);
 };
 class CoreRouter {
-  constructor(location, nativeRequest) {
+  constructor() {
     this.listenerId = 0;
     this.listenerMap = {};
     this.action = 'init';
     this.routeKey = '';
-    this.location = location;
-    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
@@ -1205,38 +1203,37 @@ let BaseModel = (_class = class BaseModel {
 
 }, (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
 
-function buildApp(ins, router) {
-  const store = router.getCurrentPage().store;
+function buildApp(ins, router, routerOptions) {
   const ssrData = env[coreConfig.SSRDataKey];
   const AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
     render({
       id = 'root'
     } = {}) {
-      return router.init(ssrData || {}).then(() => {
+      return router.init(routerOptions, ssrData || {}).then(() => {
         AppRender.toDocument(id, {
           router,
           documentHead: ''
-        }, !!ssrData, ins, store);
+        }, !!ssrData, ins);
       });
     }
 
   });
 }
-function buildSSR(ins, router) {
-  const store = router.getCurrentPage().store;
+function buildSSR(ins, router, routerOptions) {
   const AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
     render({
       id = 'root'
     } = {}) {
-      return router.init({}).then(() => {
+      return router.init(routerOptions, {}).then(() => {
+        const store = router.getCurrentPage().store;
         store.destroy();
         const eluxContext = {
           router,
           documentHead: ''
         };
-        return AppRender.toString(id, eluxContext, ins, store).then(html => {
+        return AppRender.toString(id, eluxContext, ins).then(html => {
           const {
             SSRTPL,
             SSRDataKey
@@ -2256,11 +2253,11 @@ class WindowStack extends HistoryStack {
 }
 
 class BaseNativeRouter {
-  constructor(nativeRequest) {
+  constructor() {
     this.router = void 0;
     this.routeKey = '';
     this.curTask = void 0;
-    this.router = new Router(this, nativeRequest);
+    this.router = new Router(this);
   }
 
   onSuccess() {
@@ -2302,8 +2299,8 @@ class BaseNativeRouter {
 
 }
 class Router extends CoreRouter {
-  constructor(nativeRouter, nativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
+  constructor(nativeRouter) {
+    super();
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -2321,8 +2318,6 @@ class Router extends CoreRouter {
     };
 
     this.nativeRouter = nativeRouter;
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
-    this.routeKey = this.findRecordByStep(0).record.key;
   }
 
   addTask(execute) {
@@ -2428,26 +2423,32 @@ class Router extends CoreRouter {
     }
   }
 
-  init(prevState) {
-    const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
-    this.curTask = task;
-    return task[0]().finally(this.onTaskComplete);
-  }
+  init(routerInitOptions, prevState) {
+    this.init = () => Promise.resolve();
 
-  async _init(prevState) {
+    this.initOptions = routerInitOptions;
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
       payload: null,
       prevState,
       completed: false
     };
-    const store = this.getCurrentPage().store;
+    const task = [this._init.bind(this), () => undefined, () => undefined];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  }
+
+  async _init() {
     const {
       action,
       location,
       routeKey
     } = this;
     await this.nativeRouter.execute(action, location, routeKey);
+    const store = this.getCurrentPage().store;
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -2717,8 +2718,8 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(nativeRequest) {
-  const [pathname, search = '', hash = ''] = nativeRequest.request.url.split(/[?#]/);
+function createServerHistory(url) {
+  const [pathname, search = '', hash = ''] = url.split(/[?#]/);
   return {
     push() {
       return;
@@ -2741,8 +2742,8 @@ function createServerHistory(nativeRequest) {
 }
 
 class BrowserNativeRouter extends BaseNativeRouter {
-  constructor(history, nativeRequest) {
-    super(nativeRequest);
+  constructor(history) {
+    super();
     this.unlistenHistory = void 0;
     this.history = history;
     const {
@@ -2794,18 +2795,15 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
 function createClientRouter() {
   const history = createBrowserHistory();
-  const nativeRequest = {
-    request: {
-      url: locationToUrl(history.location)
-    },
-    response: {}
+  const browserNativeRouter = new BrowserNativeRouter(history);
+  return {
+    router: browserNativeRouter.router,
+    url: locationToUrl(history.location)
   };
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
-  return browserNativeRouter.router;
 }
-function createServerRouter(nativeRequest) {
-  const history = createServerHistory(nativeRequest);
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
+function createServerRouter(url) {
+  const history = createServerHistory(url);
+  const browserNativeRouter = new BrowserNativeRouter(history);
   return browserNativeRouter.router;
 }
 
@@ -2829,7 +2827,7 @@ const vueComponentsConfig = {
 const setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
 
 const AppRender = {
-  toDocument(id, eluxContext, fromSSR, app, store) {
+  toDocument(id, eluxContext, fromSSR, app) {
     app.provide(EluxContextKey, eluxContext);
 
     if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
@@ -2839,12 +2837,12 @@ const AppRender = {
     app.mount(`#${id}`);
   },
 
-  toString(id, eluxContext, app, store) {
+  toString(id, eluxContext, app) {
     app.provide(EluxContextKey, eluxContext);
     return vueComponentsConfig.renderToString(app);
   },
 
-  toProvider(eluxContext, app, store) {
+  toProvider(eluxContext, app) {
     app.provide(EluxContextKey, eluxContext);
     return () => createVNode("div", null, null);
   }
@@ -3209,7 +3207,10 @@ function createApp(appConfig) {
     return cientSingleton;
   }
 
-  const router = createClientRouter();
+  const {
+    router,
+    url
+  } = createClientRouter();
   const app = createApp$1(RouterComponent);
   cientSingleton = Object.assign(app, {
     render() {
@@ -3217,12 +3218,14 @@ function createApp(appConfig) {
     }
 
   });
-  return buildApp(app, router);
+  return buildApp(app, router, {
+    url
+  });
 }
-function createSSR(appConfig, nativeRequest) {
-  const router = createServerRouter(nativeRequest);
+function createSSR(appConfig, routerOptions) {
+  const router = createServerRouter(routerOptions.url);
   const app = createSSRApp(RouterComponent);
-  return buildSSR(app, router);
+  return buildSSR(app, router, routerOptions);
 }
 
 export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

@@ -22,9 +22,9 @@ export type {
   ModelAsCreators,
   ModuleGetter,
   ModuleState,
-  NativeRequest,
   RouteAction,
   RouteEvent,
+  RouterInitOptions,
   RouteRuntime,
   RouteTarget,
   StoreLogger,
@@ -45,8 +45,8 @@ export type {
   HandlerToAction,
   ILoadComponent,
   ModuleFacade,
-  PickThisActions,
   PickModelActions,
+  PickThisActions,
   ReturnComponents,
 } from './facade';
 export {BaseModel, exportModule, getApi} from './facade';

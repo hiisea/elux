@@ -1,4 +1,4 @@
-import { CoreRouter, IRouteRecord, Location, NativeRequest, RouteTarget, RouteAction, Store, StoreState } from '@elux/core';
+import { CoreRouter, IRouteRecord, Location, RouteAction, RouterInitOptions, RouteTarget, Store, StoreState } from '@elux/core';
 export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, routeConfig, setRouteConfig, urlToLocation, urlToNativeUrl, } from './basic';
 export declare abstract class BaseNativeRouter {
     router: Router;
@@ -7,7 +7,7 @@ export declare abstract class BaseNativeRouter {
         resolve: () => void;
         timeout: number;
     };
-    constructor(nativeRequest: NativeRequest);
+    constructor();
     protected abstract push(nativeLocation: Location, key: string): boolean;
     protected abstract replace(nativeLocation: Location, key: string): boolean;
     protected abstract relaunch(nativeLocation: Location, key: string): boolean;
@@ -20,9 +20,9 @@ export declare class Router extends CoreRouter {
     private nativeRouter;
     private curTask?;
     private taskList;
-    private readonly windowStack;
+    private windowStack;
     private onTaskComplete;
-    constructor(nativeRouter: BaseNativeRouter, nativeRequest: NativeRequest);
+    constructor(nativeRouter: BaseNativeRouter);
     private addTask;
     nativeInitiated(): boolean;
     getHistoryLength(target?: RouteTarget): number;
@@ -46,7 +46,7 @@ export declare class Router extends CoreRouter {
     }[];
     private mountStore;
     private redirectOnServer;
-    init(prevState: StoreState): Promise<void>;
+    init(routerInitOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
     private _init;
     relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _relaunch;

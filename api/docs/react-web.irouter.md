@@ -16,7 +16,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState>
 
 - 在 CSR 中全局只有一个 Router
 
-- 在 SSR 中每个 NativeRequest 都会生成一个路由实例
+- 在 SSR 中每个请求都会生成一个路由实例
 
 - 每个 IRouter 下面可以存在多个 [IStore](./react-web.istore.md)
 
@@ -25,8 +25,8 @@ export interface IRouter<TStoreState extends StoreState = StoreState>
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [action](./react-web.irouter.action.md) | [RouteAction](./react-web.routeaction.md) | 路由动作 |
+|  [initOptions](./react-web.irouter.initoptions.md) | [RouterInitOptions](./react-web.routerinitoptions.md) | 路由初始化时的参数 |
 |  [location](./react-web.irouter.location.md) | [Location](./react-web.location.md) | 路由描述 |
-|  [nativeRequest](./react-web.irouter.nativerequest.md) | [NativeRequest](./react-web.nativerequest.md) | 原生路由请求，常用于SSR |
 |  [routeKey](./react-web.irouter.routekey.md) | string | 每次路由变化都会产生唯一ID |
 |  [runtime](./react-web.irouter.runtime.md) | [RouteRuntime](./react-web.routeruntime.md)<!-- -->&lt;TStoreState&gt; | 路由运行状态 |
 

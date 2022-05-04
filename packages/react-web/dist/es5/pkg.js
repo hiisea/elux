@@ -884,13 +884,11 @@ var preMiddleware = function preMiddleware(_ref) {
   };
 };
 var CoreRouter = function () {
-  function CoreRouter(location, nativeRequest) {
+  function CoreRouter() {
     this.listenerId = 0;
     this.listenerMap = {};
     this.action = 'init';
     this.routeKey = '';
-    this.location = location;
-    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
@@ -1394,8 +1392,7 @@ var BaseModel = (_class = function () {
   return BaseModel;
 }(), (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
 
-function buildApp(ins, router) {
-  var store = router.getCurrentPage().store;
+function buildApp(ins, router, routerOptions) {
   var ssrData = env[coreConfig.SSRDataKey];
   var AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
@@ -1404,17 +1401,16 @@ function buildApp(ins, router) {
           _ref$id = _ref.id,
           id = _ref$id === void 0 ? 'root' : _ref$id;
 
-      return router.init(ssrData || {}).then(function () {
+      return router.init(routerOptions, ssrData || {}).then(function () {
         AppRender.toDocument(id, {
           router: router,
           documentHead: ''
-        }, !!ssrData, ins, store);
+        }, !!ssrData, ins);
       });
     }
   });
 }
-function buildSSR(ins, router) {
-  var store = router.getCurrentPage().store;
+function buildSSR(ins, router, routerOptions) {
   var AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
     render: function render(_temp2) {
@@ -1422,13 +1418,14 @@ function buildSSR(ins, router) {
           _ref2$id = _ref2.id,
           id = _ref2$id === void 0 ? 'root' : _ref2$id;
 
-      return router.init({}).then(function () {
+      return router.init(routerOptions, {}).then(function () {
+        var store = router.getCurrentPage().store;
         store.destroy();
         var eluxContext = {
           router: router,
           documentHead: ''
         };
-        return AppRender.toString(id, eluxContext, ins, store).then(function (html) {
+        return AppRender.toString(id, eluxContext, ins).then(function (html) {
           var SSRTPL = coreConfig.SSRTPL,
               SSRDataKey = coreConfig.SSRDataKey;
           var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
@@ -1555,7 +1552,7 @@ var RouterComponent = function RouterComponent() {
 };
 
 var AppRender = {
-  toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
+  toDocument: function toDocument(id, eluxContext, fromSSR, app) {
     var renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
     var panel = env.document.getElementById(id);
     renderFun(jsx(EluxContextComponent.Provider, {
@@ -1563,14 +1560,14 @@ var AppRender = {
       children: jsx(RouterComponent, {})
     }), panel);
   },
-  toString: function toString(id, eluxContext, app, store) {
+  toString: function toString(id, eluxContext, app) {
     var html = reactComponentsConfig.renderToString(jsx(EluxContextComponent.Provider, {
       value: eluxContext,
       children: jsx(RouterComponent, {})
     }));
     return Promise.resolve(html);
   },
-  toProvider: function toProvider(eluxContext, app, store) {
+  toProvider: function toProvider(eluxContext, app) {
     return function (props) {
       return jsx(EluxContextComponent.Provider, {
         value: eluxContext,
@@ -1812,14 +1809,6 @@ function _asyncToGenerator(fn) {
       _next(undefined);
     });
   };
-}
-
-function _assertThisInitialized(self) {
-  if (self === void 0) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return self;
 }
 
 function createCommonjsModule(fn) {
@@ -2686,6 +2675,14 @@ var routeConfig = {
 };
 var setRouteConfig = buildConfigSetter(routeConfig);
 
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+
 var HistoryStack = function () {
   function HistoryStack(limit) {
     this.currentRecord = undefined;
@@ -3027,11 +3024,11 @@ var WindowStack = function (_HistoryStack2) {
 }(HistoryStack);
 
 var BaseNativeRouter = function () {
-  function BaseNativeRouter(nativeRequest) {
+  function BaseNativeRouter() {
     this.router = void 0;
     this.routeKey = '';
     this.curTask = void 0;
-    this.router = new Router(this, nativeRequest);
+    this.router = new Router(this);
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -3080,10 +3077,10 @@ var BaseNativeRouter = function () {
 var Router = function (_CoreRouter) {
   _inheritsLoose(Router, _CoreRouter);
 
-  function Router(nativeRouter, nativeRequest) {
+  function Router(nativeRouter) {
     var _this2;
 
-    _this2 = _CoreRouter.call(this, urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest) || this;
+    _this2 = _CoreRouter.call(this) || this;
     _this2.curTask = void 0;
     _this2.taskList = [];
     _this2.windowStack = void 0;
@@ -3103,8 +3100,6 @@ var Router = function (_CoreRouter) {
     };
 
     _this2.nativeRouter = nativeRouter;
-    _this2.windowStack = new WindowStack(_this2.location, new Store(0, _assertThisInitialized(_this2)));
-    _this2.routeKey = _this2.findRecordByStep(0).record.key;
     return _this2;
   }
 
@@ -3251,8 +3246,22 @@ var Router = function (_CoreRouter) {
     }
   };
 
-  _proto2.init = function init(prevState) {
-    var task = [this._init.bind(this, prevState), function () {
+  _proto2.init = function init(routerInitOptions, prevState) {
+    this.init = function () {
+      return Promise.resolve();
+    };
+
+    this.initOptions = routerInitOptions;
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
+    this.runtime = {
+      timestamp: Date.now(),
+      payload: null,
+      prevState: prevState,
+      completed: false
+    };
+    var task = [this._init.bind(this), function () {
       return undefined;
     }, function () {
       return undefined;
@@ -3262,52 +3271,46 @@ var Router = function (_CoreRouter) {
   };
 
   _proto2._init = function () {
-    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2(prevState) {
-      var store, action, location, routeKey;
+    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2() {
+      var action, location, routeKey, store;
       return regenerator.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
-              this.runtime = {
-                timestamp: Date.now(),
-                payload: null,
-                prevState: prevState,
-                completed: false
-              };
-              store = this.getCurrentPage().store;
               action = this.action, location = this.location, routeKey = this.routeKey;
-              _context2.next = 5;
+              _context2.next = 3;
               return this.nativeRouter.execute(action, location, routeKey);
 
-            case 5:
-              _context2.prev = 5;
-              _context2.next = 8;
+            case 3:
+              store = this.getCurrentPage().store;
+              _context2.prev = 4;
+              _context2.next = 7;
               return store.mount(coreConfig.StageModuleName, 'init');
 
-            case 8:
-              _context2.next = 10;
+            case 7:
+              _context2.next = 9;
               return store.dispatch(testChangeAction(this.location, this.action));
 
-            case 10:
-              _context2.next = 18;
+            case 9:
+              _context2.next = 17;
               break;
 
-            case 12:
-              _context2.prev = 12;
-              _context2.t0 = _context2["catch"](5);
+            case 11:
+              _context2.prev = 11;
+              _context2.t0 = _context2["catch"](4);
 
               if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
-                _context2.next = 17;
+                _context2.next = 16;
                 break;
               }
 
               this.taskList = [];
               throw _context2.t0;
 
-            case 17:
+            case 16:
               env.console.error(_context2.t0);
 
-            case 18:
+            case 17:
               this.runtime.completed = true;
               this.dispatch({
                 location: location,
@@ -3317,15 +3320,15 @@ var Router = function (_CoreRouter) {
                 windowChanged: true
               });
 
-            case 20:
+            case 19:
             case "end":
               return _context2.stop();
           }
         }
-      }, _callee2, this, [[5, 12]]);
+      }, _callee2, this, [[4, 11]]);
     }));
 
-    function _init(_x5) {
+    function _init() {
       return _init2.apply(this, arguments);
     }
 
@@ -3421,7 +3424,7 @@ var Router = function (_CoreRouter) {
       }, _callee3, this);
     }));
 
-    function _relaunch(_x6, _x7, _x8, _x9) {
+    function _relaunch(_x5, _x6, _x7, _x8) {
       return _relaunch2.apply(this, arguments);
     }
 
@@ -3516,7 +3519,7 @@ var Router = function (_CoreRouter) {
       }, _callee4, this);
     }));
 
-    function _replace(_x10, _x11, _x12, _x13) {
+    function _replace(_x9, _x10, _x11, _x12) {
       return _replace2.apply(this, arguments);
     }
 
@@ -3623,7 +3626,7 @@ var Router = function (_CoreRouter) {
       }, _callee5, this);
     }));
 
-    function _push(_x14, _x15, _x16, _x17) {
+    function _push(_x13, _x14, _x15, _x16) {
       return _push2.apply(this, arguments);
     }
 
@@ -3775,7 +3778,7 @@ var Router = function (_CoreRouter) {
       }, _callee6, this);
     }));
 
-    function _back(_x18, _x19, _x20, _x21, _x22) {
+    function _back(_x17, _x18, _x19, _x20, _x21) {
       return _back2.apply(this, arguments);
     }
 
@@ -5638,13 +5641,13 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(nativeRequest) {
-  var _nativeRequest$reques = nativeRequest.request.url.split(/[?#]/),
-      pathname = _nativeRequest$reques[0],
-      _nativeRequest$reques2 = _nativeRequest$reques[1],
-      search = _nativeRequest$reques2 === void 0 ? '' : _nativeRequest$reques2,
-      _nativeRequest$reques3 = _nativeRequest$reques[2],
-      hash = _nativeRequest$reques3 === void 0 ? '' : _nativeRequest$reques3;
+function createServerHistory(url) {
+  var _url$split = url.split(/[?#]/),
+      pathname = _url$split[0],
+      _url$split$ = _url$split[1],
+      search = _url$split$ === void 0 ? '' : _url$split$,
+      _url$split$2 = _url$split[2],
+      hash = _url$split$2 === void 0 ? '' : _url$split$2;
 
   return {
     push: function push() {
@@ -5669,10 +5672,10 @@ function createServerHistory(nativeRequest) {
 var BrowserNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(BrowserNativeRouter, _BaseNativeRouter);
 
-  function BrowserNativeRouter(history, nativeRequest) {
+  function BrowserNativeRouter(history) {
     var _this;
 
-    _this = _BaseNativeRouter.call(this, nativeRequest) || this;
+    _this = _BaseNativeRouter.call(this) || this;
     _this.unlistenHistory = void 0;
     _this.history = history;
     var _routeConfig$NotifyNa = routeConfig.NotifyNativeRouter,
@@ -5730,18 +5733,15 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
 
 function createClientRouter() {
   var history$1 = history.createBrowserHistory();
-  var nativeRequest = {
-    request: {
-      url: locationToUrl(history$1.location)
-    },
-    response: {}
+  var browserNativeRouter = new BrowserNativeRouter(history$1);
+  return {
+    router: browserNativeRouter.router,
+    url: locationToUrl(history$1.location)
   };
-  var browserNativeRouter = new BrowserNativeRouter(history$1, nativeRequest);
-  return browserNativeRouter.router;
 }
-function createServerRouter(nativeRequest) {
-  var history = createServerHistory(nativeRequest);
-  var browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
+function createServerRouter(url) {
+  var history = createServerHistory(url);
+  var browserNativeRouter = new BrowserNativeRouter(history);
   return browserNativeRouter.router;
 }
 
@@ -9412,17 +9412,22 @@ function createApp(appConfig) {
     return cientSingleton;
   }
 
-  var router = createClientRouter();
+  var _createClientRouter = createClientRouter(),
+      router = _createClientRouter.router,
+      url = _createClientRouter.url;
+
   cientSingleton = {
     render: function render() {
       return Promise.resolve();
     }
   };
-  return buildApp({}, router);
+  return buildApp({}, router, {
+    url: url
+  });
 }
-function createSSR(appConfig, nativeRequest) {
-  var router = createServerRouter(nativeRequest);
-  return buildSSR({}, router);
+function createSSR(appConfig, routerOptions) {
+  var router = createServerRouter(routerOptions.url);
+  return buildSSR({}, router, routerOptions);
 }
 
 var createSelectorHook$1 = lib.createSelectorHook;

@@ -1,5 +1,5 @@
-import {IRouter, Location, NativeRequest, UNListener} from '@elux/core';
-import {BaseNativeRouter, locationToUrl, nativeUrlToUrl, routeConfig, setRouteConfig} from '@elux/route';
+import {IRouter, Location, UNListener} from '@elux/core';
+import {BaseNativeRouter, nativeUrlToUrl, routeConfig, setRouteConfig} from '@elux/route';
 
 setRouteConfig({NotifyNativeRouter: {window: true, page: false}});
 
@@ -24,8 +24,8 @@ export interface IHistory {
 export class MPNativeRouter extends BaseNativeRouter {
   private unlistenHistory: UNListener | undefined;
 
-  constructor(private history: IHistory, nativeRequest: NativeRequest) {
-    super(nativeRequest);
+  constructor(private history: IHistory) {
+    super();
 
     const {window, page} = routeConfig.NotifyNativeRouter;
     if (window || page) {
@@ -109,10 +109,6 @@ export class MPNativeRouter extends BaseNativeRouter {
 }
 
 export function createRouter(history: IHistory): IRouter {
-  const nativeRequest: NativeRequest = {
-    request: {url: locationToUrl(history.getLocation())},
-    response: {},
-  };
-  const mpNativeRouter = new MPNativeRouter(history, nativeRequest);
+  const mpNativeRouter = new MPNativeRouter(history);
   return mpNativeRouter.router;
 }

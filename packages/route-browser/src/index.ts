@@ -1,6 +1,6 @@
 import {createBrowserHistory} from 'history';
 
-import {env, IRouter, Location, NativeRequest, UNListener} from '@elux/core';
+import {env, IRouter, Location, UNListener} from '@elux/core';
 import {BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig} from '@elux/route';
 
 setRouteConfig({NotifyNativeRouter: {window: true, page: true}});
@@ -12,8 +12,8 @@ interface IHistory {
   location: {pathname: string; search: string; hash: string};
 }
 
-function createServerHistory(nativeRequest: NativeRequest): IHistory {
-  const [pathname, search = '', hash = ''] = nativeRequest.request.url.split(/[?#]/);
+function createServerHistory(url: string): IHistory {
+  const [pathname, search = '', hash = ''] = url.split(/[?#]/);
   return {
     push() {
       return;
@@ -31,8 +31,8 @@ function createServerHistory(nativeRequest: NativeRequest): IHistory {
 class BrowserNativeRouter extends BaseNativeRouter {
   private unlistenHistory: UNListener | undefined;
 
-  constructor(private history: IHistory, nativeRequest: NativeRequest) {
-    super(nativeRequest);
+  constructor(private history: IHistory) {
+    super();
     const {window, page} = routeConfig.NotifyNativeRouter;
     if (window || page) {
       this.unlistenHistory = history.block((locationData, action) => {
@@ -74,18 +74,14 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 }
 
-export function createClientRouter(): IRouter {
+export function createClientRouter(): {router: IRouter; url: string} {
   const history: IHistory = createBrowserHistory();
-  const nativeRequest: NativeRequest = {
-    request: {url: locationToUrl(history.location)},
-    response: {},
-  };
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
-  return browserNativeRouter.router;
+  const browserNativeRouter = new BrowserNativeRouter(history);
+  return {router: browserNativeRouter.router, url: locationToUrl(history.location)};
 }
 
-export function createServerRouter(nativeRequest: NativeRequest): IRouter {
-  const history: IHistory = createServerHistory(nativeRequest);
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
+export function createServerRouter(url: string): IRouter {
+  const history: IHistory = createServerHistory(url);
+  const browserNativeRouter = new BrowserNativeRouter(history);
   return browserNativeRouter.router;
 }

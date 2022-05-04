@@ -17,15 +17,20 @@ export function createApp(appConfig) {
     return cientSingleton;
   }
 
-  var router = createClientRouter();
+  var _createClientRouter = createClientRouter(),
+      router = _createClientRouter.router,
+      url = _createClientRouter.url;
+
   cientSingleton = {
     render: function render() {
       return Promise.resolve();
     }
   };
-  return buildApp({}, router);
+  return buildApp({}, router, {
+    url: url
+  });
 }
-export function createSSR(appConfig, nativeRequest) {
-  var router = createServerRouter(nativeRequest);
-  return buildSSR({}, router);
+export function createSSR(appConfig, routerOptions) {
+  var router = createServerRouter(routerOptions.url);
+  return buildSSR({}, router, routerOptions);
 }

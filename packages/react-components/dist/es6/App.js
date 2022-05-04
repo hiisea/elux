@@ -3,7 +3,7 @@ import { EluxContextComponent, reactComponentsConfig } from './base';
 import { RouterComponent } from './Router';
 import { jsx as _jsx } from "react/jsx-runtime";
 const AppRender = {
-  toDocument(id, eluxContext, fromSSR, app, store) {
+  toDocument(id, eluxContext, fromSSR, app) {
     const renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
     const panel = env.document.getElementById(id);
     renderFun(_jsx(EluxContextComponent.Provider, {
@@ -12,7 +12,7 @@ const AppRender = {
     }), panel);
   },
 
-  toString(id, eluxContext, app, store) {
+  toString(id, eluxContext, app) {
     const html = reactComponentsConfig.renderToString(_jsx(EluxContextComponent.Provider, {
       value: eluxContext,
       children: _jsx(RouterComponent, {})
@@ -20,7 +20,7 @@ const AppRender = {
     return Promise.resolve(html);
   },
 
-  toProvider(eluxContext, app, store) {
+  toProvider(eluxContext, app) {
     return props => _jsx(EluxContextComponent.Provider, {
       value: eluxContext,
       children: props.children

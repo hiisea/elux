@@ -1,4 +1,4 @@
-import { IRouter, Location, NativeRequest } from '@elux/core';
+import { IRouter, Location } from '@elux/core';
 import { BaseNativeRouter } from '@elux/route';
 interface RouteOption {
     url: string;
@@ -24,7 +24,7 @@ export interface IHistory {
 export declare class MPNativeRouter extends BaseNativeRouter {
     private history;
     private unlistenHistory;
-    constructor(history: IHistory, nativeRequest: NativeRequest);
+    constructor(history: IHistory);
     protected addKey(url: string, key: string): string;
     protected init(location: Location, key: string): boolean;
     protected _push(location: Location): void;

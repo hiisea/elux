@@ -14,7 +14,10 @@ export function createApp(appConfig) {
     return cientSingleton;
   }
 
-  const router = createClientRouter();
+  const {
+    router,
+    url
+  } = createClientRouter();
   const app = createCSRApp(RouterComponent);
   cientSingleton = Object.assign(app, {
     render() {
@@ -22,10 +25,12 @@ export function createApp(appConfig) {
     }
 
   });
-  return buildApp(app, router);
+  return buildApp(app, router, {
+    url
+  });
 }
-export function createSSR(appConfig, nativeRequest) {
-  const router = createServerRouter(nativeRequest);
+export function createSSR(appConfig, routerOptions) {
+  const router = createServerRouter(routerOptions.url);
   const app = createSSRApp(RouterComponent);
-  return buildSSR(app, router);
+  return buildSSR(app, router, routerOptions);
 }

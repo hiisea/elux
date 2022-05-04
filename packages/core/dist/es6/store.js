@@ -36,13 +36,11 @@ export const preMiddleware = ({
   return next(action);
 };
 export class CoreRouter {
-  constructor(location, nativeRequest) {
+  constructor() {
     this.listenerId = 0;
     this.listenerMap = {};
     this.action = 'init';
     this.routeKey = '';
-    this.location = location;
-    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;

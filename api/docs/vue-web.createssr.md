@@ -9,7 +9,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function createSSR(appConfig: AppConfig, nativeRequest: NativeRequest): App & {
+export declare function createSSR(appConfig: AppConfig, routerOptions: RouterInitOptions): App & {
     render(options?: RenderOptions | undefined): Promise<string>;
 };
 ```
@@ -19,7 +19,7 @@ export declare function createSSR(appConfig: AppConfig, nativeRequest: NativeReq
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  appConfig | [AppConfig](./vue-web.appconfig.md) | 应用配置 |
-|  nativeRequest | [NativeRequest](./vue-web.nativerequest.md) | 原生请求 |
+|  routerOptions | [RouterInitOptions](./vue-web.routerinitoptions.md) | 原生请求 |
 
 <b>Returns:</b>
 

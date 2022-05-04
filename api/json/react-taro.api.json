@@ -4307,7 +4307,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/react-taro!IRouter:interface",
-          "docComment": "/**\n * 路由实例\n *\n * @remarks\n *\n * - 在 CSR 中全局只有一个 Router\n *\n * - 在 SSR 中每个 NativeRequest 都会生成一个路由实例\n *\n * - 每个 IRouter 下面可以存在多个 {@link IStore}\n *\n * @public\n */\n",
+          "docComment": "/**\n * 路由实例\n *\n * @remarks\n *\n * - 在 CSR 中全局只有一个 Router\n *\n * - 在 SSR 中每个请求都会生成一个路由实例\n *\n * - 每个 IRouter 下面可以存在多个 {@link IStore}\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4783,6 +4783,33 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-taro!IRouter#initOptions:member",
+              "docComment": "/**\n * 路由初始化时的参数\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "initOptions: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouterInitOptions",
+                  "canonicalReference": "@elux/react-taro!RouterInitOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "initOptions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@elux/react-taro!IRouter#location:member",
               "docComment": "/**\n * 路由描述\n */\n",
               "excerptTokens": [
@@ -4803,33 +4830,6 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "location",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouter#nativeRequest:member",
-              "docComment": "/**\n * 原生路由请求，常用于SSR\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "nativeRequest: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "NativeRequest",
-                  "canonicalReference": "@elux/react-taro!NativeRequest:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "nativeRequest",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -6391,74 +6391,6 @@
           "name": "nativeLocationToLocation"
         },
         {
-          "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!NativeRequest:interface",
-          "docComment": "/**\n * 路由初始化时原生数据，常用于SSR\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.nativeRequest} 获得\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export interface NativeRequest "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "NativeRequest",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!NativeRequest#request:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "request: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        url: string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "request",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!NativeRequest#response:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "response: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "response",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "extendsTokenRanges": []
-        },
-        {
           "kind": "Function",
           "canonicalReference": "@elux/react-taro!nativeUrlToUrl:function(1)",
           "docComment": "/**\n * 原生路由Url转换为内部路由Url\n *\n * @remarks\n *\n * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。\n *\n * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。\n *\n * @public\n */\n",
@@ -7046,6 +6978,48 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "windowChanged",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@elux/react-taro!RouterInitOptions:interface",
+          "docComment": "/**\n * 路由初始化时参数\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.initOptions} 获得\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface RouterInitOptions "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "RouterInitOptions",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-taro!RouterInitOptions#url:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "url: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "url",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2

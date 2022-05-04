@@ -6,9 +6,9 @@ import {
   env,
   IRouteRecord,
   Location,
-  NativeRequest,
-  RouteTarget,
   RouteAction,
+  RouterInitOptions,
+  RouteTarget,
   setLoading,
   setProcessedError,
   Store,
@@ -47,8 +47,8 @@ export abstract class BaseNativeRouter {
 
   protected curTask?: {resolve: () => void; timeout: number};
 
-  constructor(nativeRequest: NativeRequest) {
-    this.router = new Router(this, nativeRequest);
+  constructor() {
+    this.router = new Router(this);
   }
 
   protected abstract push(nativeLocation: Location, key: string): boolean;
@@ -90,7 +90,7 @@ type RouteTask = [() => Promise<void>, (value: void) => void, (reason?: any) => 
 export class Router extends CoreRouter {
   private curTask?: RouteTask;
   private taskList: RouteTask[] = [];
-  private readonly windowStack: WindowStack;
+  private windowStack!: WindowStack;
 
   private onTaskComplete = () => {
     const task = this.taskList.shift();
@@ -103,10 +103,8 @@ export class Router extends CoreRouter {
     }
   };
 
-  constructor(private nativeRouter: BaseNativeRouter, nativeRequest: NativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
-    this.routeKey = this.findRecordByStep(0).record.key;
+  constructor(private nativeRouter: BaseNativeRouter) {
+    super();
   }
 
   // private addTask(execute: () => Promise<void>): void | Promise<void> {
@@ -196,17 +194,22 @@ export class Router extends CoreRouter {
     }
   }
 
-  public init(prevState: StoreState): Promise<void> {
-    const task: RouteTask = [this._init.bind(this, prevState), () => undefined, () => undefined];
+  public init(routerInitOptions: RouterInitOptions, prevState: StoreState): Promise<void> {
+    this.init = () => Promise.resolve();
+    this.initOptions = routerInitOptions;
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
+    this.runtime = {timestamp: Date.now(), payload: null, prevState, completed: false};
+    const task: RouteTask = [this._init.bind(this), () => undefined, () => undefined];
     this.curTask = task;
     return task[0]().finally(this.onTaskComplete);
   }
 
-  private async _init(prevState: StoreState) {
-    this.runtime = {timestamp: Date.now(), payload: null, prevState, completed: false};
-    const store = this.getCurrentPage().store;
+  private async _init() {
     const {action, location, routeKey} = this;
     await this.nativeRouter.execute(action, location, routeKey);
+    const store = this.getCurrentPage().store;
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
       await store.dispatch(testChangeAction(this.location, this.action));
