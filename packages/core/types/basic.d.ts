@@ -226,18 +226,15 @@ export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
     completed: boolean;
 }
 /**
- * 路由初始化时原生数据，常用于SSR
+ * 路由初始化时参数
  *
  * @remarks
- * 可以通过 {@link IRouter.nativeRequest} 获得
+ * 可以通过 {@link IRouter.initOptions} 获得
  *
  * @public
  */
-export interface NativeRequest {
-    request: {
-        url: string;
-    };
-    response: any;
+export interface RouterInitOptions {
+    url: string;
 }
 /**
  * @public
@@ -255,7 +252,7 @@ export interface RouteEvent {
  * @remarks
  * - 在 CSR 中全局只有一个 Router
  *
- * - 在 SSR 中每个 NativeRequest 都会生成一个路由实例
+ * - 在 SSR 中每个请求都会生成一个路由实例
  *
  * - 每个 IRouter 下面可以存在多个 {@link IStore}
  *
@@ -267,9 +264,9 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      */
     addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
     /**
-     * 原生路由请求，常用于SSR
+     * 路由初始化时的参数
      */
-    nativeRequest: NativeRequest;
+    initOptions: RouterInitOptions;
     /**
      * 路由动作
      */
@@ -512,9 +509,9 @@ export interface EluxStoreContext {
     store: IStore;
 }
 export interface IAppRender {
-    toDocument(id: string, eluxContext: EluxContext, fromSSR: boolean, app: any, store: IStore): void;
-    toString(id: string, eluxContext: EluxContext, app: {}, store: IStore): Promise<string>;
-    toProvider(eluxContext: EluxContext, app: any, store: IStore): Elux.Component<{
+    toDocument(id: string, eluxContext: EluxContext, fromSSR: boolean, app: any): void;
+    toString(id: string, eluxContext: EluxContext, app: {}): Promise<string>;
+    toProvider(eluxContext: EluxContext, app: any): Elux.Component<{
         children: any;
     }>;
 }

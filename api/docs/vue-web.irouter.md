@@ -16,7 +16,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState>
 
 - 在 CSR 中全局只有一个 Router
 
-- 在 SSR 中每个 NativeRequest 都会生成一个路由实例
+- 在 SSR 中每个请求都会生成一个路由实例
 
 - 每个 IRouter 下面可以存在多个 [IStore](./vue-web.istore.md)
 
@@ -25,8 +25,8 @@ export interface IRouter<TStoreState extends StoreState = StoreState>
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [action](./vue-web.irouter.action.md) | [RouteAction](./vue-web.routeaction.md) | 路由动作 |
+|  [initOptions](./vue-web.irouter.initoptions.md) | [RouterInitOptions](./vue-web.routerinitoptions.md) | 路由初始化时的参数 |
 |  [location](./vue-web.irouter.location.md) | [Location](./vue-web.location.md) | 路由描述 |
-|  [nativeRequest](./vue-web.irouter.nativerequest.md) | [NativeRequest](./vue-web.nativerequest.md) | 原生路由请求，常用于SSR |
 |  [routeKey](./vue-web.irouter.routekey.md) | string | 每次路由变化都会产生唯一ID |
 |  [runtime](./vue-web.irouter.runtime.md) | [RouteRuntime](./vue-web.routeruntime.md)<!-- -->&lt;TStoreState&gt; | 路由运行状态 |
 

@@ -1,4 +1,4 @@
-import { BaseNativeRouter, locationToUrl, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
+import { BaseNativeRouter, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -6,8 +6,8 @@ setRouteConfig({
   }
 });
 export class MPNativeRouter extends BaseNativeRouter {
-  constructor(history, nativeRequest) {
-    super(nativeRequest);
+  constructor(history) {
+    super();
     this.unlistenHistory = void 0;
     this.history = history;
     const {
@@ -117,12 +117,6 @@ export class MPNativeRouter extends BaseNativeRouter {
 
 }
 export function createRouter(history) {
-  const nativeRequest = {
-    request: {
-      url: locationToUrl(history.getLocation())
-    },
-    response: {}
-  };
-  const mpNativeRouter = new MPNativeRouter(history, nativeRequest);
+  const mpNativeRouter = new MPNativeRouter(history);
   return mpNativeRouter.router;
 }

@@ -16,7 +16,7 @@
 |  Function | Description |
 |  --- | --- |
 |  [createApp(appConfig)](./vue-web.createapp.md) | 创建应用(CSR) |
-|  [createSSR(appConfig, nativeRequest)](./vue-web.createssr.md) | 创建应用(SSR) |
+|  [createSSR(appConfig, routerOptions)](./vue-web.createssr.md) | 创建应用(SSR) |
 |  [deepMerge(target, args)](./vue-web.deepmerge.md) | 多个PlainObject的深度Merge |
 |  [effect(loadingKey)](./vue-web.effect.md) | Model类的装饰器函数:申明effect |
 |  [effectLogger(before, after)](./vue-web.effectlogger.md) | Model类的装饰器函数:跟踪effect执行钩子 |
@@ -60,9 +60,9 @@
 |  [IStore](./vue-web.istore.md) | Store实例 |
 |  [LinkProps](./vue-web.linkprops.md) | 内置UI组件 |
 |  [Location](./vue-web.location.md) | 路由描述 |
-|  [NativeRequest](./vue-web.nativerequest.md) | 路由初始化时原生数据，常用于SSR |
 |  [RenderOptions](./vue-web.renderoptions.md) | 应用Render参数 |
 |  [RouteEvent](./vue-web.routeevent.md) |  |
+|  [RouterInitOptions](./vue-web.routerinitoptions.md) | 路由初始化时参数 |
 |  [RouteRuntime](./vue-web.routeruntime.md) | 路由的运行状态 |
 |  [SwitchProps](./vue-web.switchprops.md) | 内置UI组件 |
 |  [UserConfig](./vue-web.userconfig.md) | 全局参数设置 |

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { buildProvider, coreConfig, setCoreConfig } from '@elux/core';
+import { buildProvider, coreConfig, getClientRouter, setCoreConfig } from '@elux/core';
 import { EWindow } from '@elux/react-components';
+import { locationToUrl } from '@elux/route';
 import { createRouter } from '@elux/route-mp';
 import { onShow, taroHistory } from '@elux/taro';
 import { useDidHide, useDidShow } from '@tarojs/taro';
@@ -55,6 +56,16 @@ export function createApp(appConfig) {
   if (!cientSingleton) {
     var router = createRouter(taroHistory);
     cientSingleton = buildProvider({}, router);
+  }
+
+  var location = taroHistory.getLocation();
+
+  if (location.pathname) {
+    var _router = getClientRouter();
+
+    _router.init({
+      url: locationToUrl(location)
+    }, {});
   }
 
   return cientSingleton;

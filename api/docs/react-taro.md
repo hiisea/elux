@@ -60,9 +60,9 @@
 |  [IStore](./react-taro.istore.md) | Store实例 |
 |  [LinkProps](./react-taro.linkprops.md) | 内置UI组件 |
 |  [Location](./react-taro.location.md) | 路由描述 |
-|  [NativeRequest](./react-taro.nativerequest.md) | 路由初始化时原生数据，常用于SSR |
 |  [RenderOptions](./react-taro.renderoptions.md) | 应用Render参数 |
 |  [RouteEvent](./react-taro.routeevent.md) |  |
+|  [RouterInitOptions](./react-taro.routerinitoptions.md) | 路由初始化时参数 |
 |  [RouteRuntime](./react-taro.routeruntime.md) | 路由的运行状态 |
 |  [SwitchProps](./react-taro.switchprops.md) | 内置UI组件 |
 |  [UserConfig](./react-taro.userconfig.md) | 全局参数设置 |

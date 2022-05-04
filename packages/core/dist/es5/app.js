@@ -1,7 +1,6 @@
 import { coreConfig } from './basic';
 import env from './env';
-export function buildApp(ins, router) {
-  var store = router.getCurrentPage().store;
+export function buildApp(ins, router, routerOptions) {
   var ssrData = env[coreConfig.SSRDataKey];
   var AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
@@ -10,26 +9,23 @@ export function buildApp(ins, router) {
           _ref$id = _ref.id,
           id = _ref$id === void 0 ? 'root' : _ref$id;
 
-      return router.init(ssrData || {}).then(function () {
+      return router.init(routerOptions, ssrData || {}).then(function () {
         AppRender.toDocument(id, {
           router: router,
           documentHead: ''
-        }, !!ssrData, ins, store);
+        }, !!ssrData, ins);
       });
     }
   });
 }
 export function buildProvider(ins, router) {
-  var store = router.getCurrentPage().store;
   var AppRender = coreConfig.AppRender;
-  router.init({});
   return AppRender.toProvider({
     router: router,
     documentHead: ''
-  }, ins, store);
+  }, ins);
 }
-export function buildSSR(ins, router) {
-  var store = router.getCurrentPage().store;
+export function buildSSR(ins, router, routerOptions) {
   var AppRender = coreConfig.AppRender;
   return Object.assign(ins, {
     render: function render(_temp2) {
@@ -37,13 +33,14 @@ export function buildSSR(ins, router) {
           _ref2$id = _ref2.id,
           id = _ref2$id === void 0 ? 'root' : _ref2$id;
 
-      return router.init({}).then(function () {
+      return router.init(routerOptions, {}).then(function () {
+        var store = router.getCurrentPage().store;
         store.destroy();
         var eluxContext = {
           router: router,
           documentHead: ''
         };
-        return AppRender.toString(id, eluxContext, ins, store).then(function (html) {
+        return AppRender.toString(id, eluxContext, ins).then(function (html) {
           var SSRTPL = coreConfig.SSRTPL,
               SSRDataKey = coreConfig.SSRDataKey;
           var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));

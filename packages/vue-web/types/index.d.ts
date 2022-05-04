@@ -1,6 +1,6 @@
 import { App } from 'vue';
 import { AppConfig } from '@elux/app';
-import { NativeRequest, RenderOptions } from '@elux/core';
+import { RenderOptions, RouterInitOptions } from '@elux/core';
 export { DocumentHead, Else, Link, Switch } from '@elux/vue-components';
 export type { DocumentHeadProps, ElseProps, LinkProps, SwitchProps } from '@elux/vue-components';
 export * from '@elux/app';
@@ -40,7 +40,7 @@ export declare function createApp(appConfig: AppConfig): EluxApp;
  * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp}
  *
  * @param appConfig - 应用配置
- * @param nativeRequest - 原生请求
+ * @param routerOptions - 原生请求
  *
  * @returns
  * 返回包含`render`方法的下一步实例，参见{@link RenderOptions}
@@ -53,7 +53,7 @@ export declare function createApp(appConfig: AppConfig): EluxApp;
  * ```
  * @public
  */
-export declare function createSSR(appConfig: AppConfig, nativeRequest: NativeRequest): App & {
+export declare function createSSR(appConfig: AppConfig, routerOptions: RouterInitOptions): App & {
     render(options?: RenderOptions | undefined): Promise<string>;
 };
 //# sourceMappingURL=index.d.ts.map

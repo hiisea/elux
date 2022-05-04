@@ -1,7 +1,7 @@
 import {hydrate, render} from 'react-dom';
 
 import {AppConfig} from '@elux/app';
-import {buildApp, buildSSR, NativeRequest, RenderOptions} from '@elux/core';
+import {buildApp, buildSSR, RenderOptions, RouterInitOptions} from '@elux/core';
 import {setReactComponentsConfig} from '@elux/react-components';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {renderToString} from '@elux/react-web/server';
@@ -58,13 +58,13 @@ export function createApp(appConfig: AppConfig): EluxApp {
   if (cientSingleton) {
     return cientSingleton;
   }
-  const router = createClientRouter();
+  const {router, url} = createClientRouter();
   cientSingleton = {
     render() {
       return Promise.resolve();
     },
   };
-  return buildApp({}, router);
+  return buildApp({}, router, {url});
 }
 
 /**
@@ -74,7 +74,7 @@ export function createApp(appConfig: AppConfig): EluxApp {
  * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp}
  *
  * @param appConfig - 应用配置
- * @param nativeRequest - 原生请求
+ * @param routerOptions - 原生请求
  *
  * @returns
  * 返回包含`render`方法的下一步实例，参见{@link RenderOptions}
@@ -89,10 +89,10 @@ export function createApp(appConfig: AppConfig): EluxApp {
  */
 export function createSSR(
   appConfig: AppConfig,
-  nativeRequest: NativeRequest
+  routerOptions: RouterInitOptions
 ): {
   render(options?: RenderOptions | undefined): Promise<string>;
 } {
-  const router = createServerRouter(nativeRequest);
-  return buildSSR({}, router);
+  const router = createServerRouter(routerOptions.url);
+  return buildSSR({}, router, routerOptions);
 }

@@ -8,8 +8,8 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(nativeRequest) {
-  const [pathname, search = '', hash = ''] = nativeRequest.request.url.split(/[?#]/);
+function createServerHistory(url) {
+  const [pathname, search = '', hash = ''] = url.split(/[?#]/);
   return {
     push() {
       return;
@@ -32,8 +32,8 @@ function createServerHistory(nativeRequest) {
 }
 
 class BrowserNativeRouter extends BaseNativeRouter {
-  constructor(history, nativeRequest) {
-    super(nativeRequest);
+  constructor(history) {
+    super();
     this.unlistenHistory = void 0;
     this.history = history;
     const {
@@ -85,17 +85,14 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
 export function createClientRouter() {
   const history = createBrowserHistory();
-  const nativeRequest = {
-    request: {
-      url: locationToUrl(history.location)
-    },
-    response: {}
+  const browserNativeRouter = new BrowserNativeRouter(history);
+  return {
+    router: browserNativeRouter.router,
+    url: locationToUrl(history.location)
   };
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
-  return browserNativeRouter.router;
 }
-export function createServerRouter(nativeRequest) {
-  const history = createServerHistory(nativeRequest);
-  const browserNativeRouter = new BrowserNativeRouter(history, nativeRequest);
+export function createServerRouter(url) {
+  const history = createServerHistory(url);
+  const browserNativeRouter = new BrowserNativeRouter(history);
   return browserNativeRouter.router;
 }

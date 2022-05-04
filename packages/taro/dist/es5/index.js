@@ -37,8 +37,10 @@ export var taroHistory = {
   switchTab: Taro.switchTab,
   isTabPage: function isTabPage(pathname) {
     if (!tabPages) {
-      if (env.__taroAppConfig.tabBar) {
-        tabPages = env.__taroAppConfig.tabBar.list.reduce(function (obj, item) {
+      var tabConfig = env.__taroAppConfig.tabBar;
+
+      if (tabConfig) {
+        tabPages = (tabConfig.list || tabConfig.items).reduce(function (obj, item) {
           obj[routeToPathname(item.pagePath)] = true;
           return obj;
         }, {});
@@ -92,6 +94,14 @@ export var taroHistory = {
           var current = arr[arr.length - 1];
           _path = current.route;
           query = current.options;
+        }
+
+        if (!_path) {
+          return {
+            pathname: '',
+            search: '',
+            action: 'RELAUNCH'
+          };
         }
 
         curLocation = {

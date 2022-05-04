@@ -17,7 +17,7 @@
 |  --- | --- |
 |  [connectRedux(mapStateToProps, options)](./react-web.connectredux.md) | 连接store与react组件 |
 |  [createApp(appConfig)](./react-web.createapp.md) | 创建应用(CSR) |
-|  [createSSR(appConfig, nativeRequest)](./react-web.createssr.md) | 创建应用(SSR) |
+|  [createSSR(appConfig, routerOptions)](./react-web.createssr.md) | 创建应用(SSR) |
 |  [deepMerge(target, args)](./react-web.deepmerge.md) | 多个PlainObject的深度Merge |
 |  [effect(loadingKey)](./react-web.effect.md) | Model类的装饰器函数:申明effect |
 |  [effectLogger(before, after)](./react-web.effectlogger.md) | Model类的装饰器函数:跟踪effect执行钩子 |
@@ -61,9 +61,9 @@
 |  [IStore](./react-web.istore.md) | Store实例 |
 |  [LinkProps](./react-web.linkprops.md) | 内置UI组件 |
 |  [Location](./react-web.location.md) | 路由描述 |
-|  [NativeRequest](./react-web.nativerequest.md) | 路由初始化时原生数据，常用于SSR |
 |  [RenderOptions](./react-web.renderoptions.md) | 应用Render参数 |
 |  [RouteEvent](./react-web.routeevent.md) |  |
+|  [RouterInitOptions](./react-web.routerinitoptions.md) | 路由初始化时参数 |
 |  [RouteRuntime](./react-web.routeruntime.md) | 路由的运行状态 |
 |  [SwitchProps](./react-web.switchprops.md) | 内置UI组件 |
 |  [UserConfig](./react-web.userconfig.md) | 全局参数设置 |

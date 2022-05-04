@@ -1,21 +1,21 @@
-import { Action, CommonModelClass, Dispatch, IRouter, IRouteRecord, IStore, Location, ModuleState, NativeRequest, RouteAction, RouteEvent, RouteRuntime, RouteTarget, StoreMiddleware, StoreState } from './basic';
+import { Action, CommonModelClass, Dispatch, IRouter, IRouteRecord, IStore, Location, ModuleState, RouteAction, RouteEvent, RouterInitOptions, RouteRuntime, RouteTarget, StoreMiddleware, StoreState } from './basic';
 import { Listener, TaskCounter, UNListener } from './utils';
 export declare function getActionData(action: Action): any[];
 export declare const preMiddleware: StoreMiddleware;
 export declare abstract class CoreRouter implements IRouter {
-    location: Location;
-    readonly nativeRequest: NativeRequest;
     runtime: RouteRuntime;
+    location: Location;
+    initOptions: RouterInitOptions;
     protected listenerId: number;
     protected readonly listenerMap: {
         [id: string]: (data: RouteEvent) => void | Promise<void>;
     };
     action: RouteAction;
     routeKey: string;
-    constructor(location: Location, nativeRequest: NativeRequest);
+    constructor();
     addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
     dispatch(data: RouteEvent): void | Promise<void>;
-    abstract init(prevState: StoreState): Promise<void>;
+    abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
     abstract getCurrentPage(): {
         url: string;
         store: IStore;

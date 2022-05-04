@@ -32,8 +32,10 @@ export const taroHistory = {
 
   isTabPage(pathname) {
     if (!tabPages) {
-      if (env.__taroAppConfig.tabBar) {
-        tabPages = env.__taroAppConfig.tabBar.list.reduce((obj, item) => {
+      const tabConfig = env.__taroAppConfig.tabBar;
+
+      if (tabConfig) {
+        tabPages = (tabConfig.list || tabConfig.items).reduce((obj, item) => {
           obj[routeToPathname(item.pagePath)] = true;
           return obj;
         }, {});
@@ -88,6 +90,14 @@ export const taroHistory = {
           const current = arr[arr.length - 1];
           path = current.route;
           query = current.options;
+        }
+
+        if (!path) {
+          return {
+            pathname: '',
+            search: '',
+            action: 'RELAUNCH'
+          };
         }
 
         curLocation = {

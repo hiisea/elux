@@ -1,7 +1,7 @@
 import {App, createApp as createCSRApp, createSSRApp} from 'vue';
 
 import {AppConfig} from '@elux/app';
-import {buildApp, buildSSR, NativeRequest, RenderOptions} from '@elux/core';
+import {buildApp, buildSSR, RenderOptions, RouterInitOptions} from '@elux/core';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
 import {RouterComponent, setVueComponentsConfig} from '@elux/vue-components';
 // eslint-disable-next-line
@@ -51,14 +51,14 @@ export function createApp(appConfig: AppConfig): EluxApp {
   if (cientSingleton) {
     return cientSingleton;
   }
-  const router = createClientRouter();
+  const {router, url} = createClientRouter();
   const app = createCSRApp(RouterComponent);
   cientSingleton = Object.assign(app, {
     render() {
       return Promise.resolve();
     },
   });
-  return buildApp(app, router);
+  return buildApp(app, router, {url});
 }
 
 /**
@@ -68,7 +68,7 @@ export function createApp(appConfig: AppConfig): EluxApp {
  * 应用唯一的创建入口，用于服务端渲染(SSR)。客户端渲染(CSR)请使用{@link createApp}
  *
  * @param appConfig - 应用配置
- * @param nativeRequest - 原生请求
+ * @param routerOptions - 原生请求
  *
  * @returns
  * 返回包含`render`方法的下一步实例，参见{@link RenderOptions}
@@ -83,11 +83,11 @@ export function createApp(appConfig: AppConfig): EluxApp {
  */
 export function createSSR(
   appConfig: AppConfig,
-  nativeRequest: NativeRequest
+  routerOptions: RouterInitOptions
 ): App & {
   render(options?: RenderOptions | undefined): Promise<string>;
 } {
-  const router = createServerRouter(nativeRequest);
+  const router = createServerRouter(routerOptions.url);
   const app = createSSRApp(RouterComponent);
-  return buildSSR(app, router);
+  return buildSSR(app, router, routerOptions);
 }

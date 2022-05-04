@@ -14,9 +14,9 @@ import {
   mergeState,
   MetaData,
   ModuleState,
-  NativeRequest,
   RouteAction,
   RouteEvent,
+  RouterInitOptions,
   RouteRuntime,
   RouteTarget,
   storeLoggerInfo,
@@ -58,12 +58,14 @@ export const preMiddleware: StoreMiddleware =
 
 export abstract class CoreRouter implements IRouter {
   declare runtime: RouteRuntime;
+  declare location: Location;
+  declare initOptions: RouterInitOptions;
   protected listenerId = 0;
   protected readonly listenerMap: {[id: string]: (data: RouteEvent) => void | Promise<void>} = {};
   public action: RouteAction = 'init';
   public routeKey: string = '';
 
-  constructor(public location: Location, public readonly nativeRequest: NativeRequest) {
+  constructor() {
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
     }
@@ -96,7 +98,7 @@ export abstract class CoreRouter implements IRouter {
     }
   }
 
-  abstract init(prevState: StoreState): Promise<void>;
+  abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
   abstract getCurrentPage(): {url: string; store: IStore};
   abstract getWindowPages(): {url: string; store: IStore}[];
   abstract getHistoryLength(target?: RouteTarget): number;

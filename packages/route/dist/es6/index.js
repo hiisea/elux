@@ -3,11 +3,11 @@ import { afterChangeAction, beforeChangeAction, ErrorCodes, locationToNativeLoca
 import { PageStack, RouteRecord, WindowStack } from './history';
 export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, routeConfig, setRouteConfig, urlToLocation, urlToNativeUrl } from './basic';
 export class BaseNativeRouter {
-  constructor(nativeRequest) {
+  constructor() {
     this.router = void 0;
     this.routeKey = '';
     this.curTask = void 0;
-    this.router = new Router(this, nativeRequest);
+    this.router = new Router(this);
   }
 
   onSuccess() {
@@ -49,8 +49,8 @@ export class BaseNativeRouter {
 
 }
 export class Router extends CoreRouter {
-  constructor(nativeRouter, nativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
+  constructor(nativeRouter) {
+    super();
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -68,8 +68,6 @@ export class Router extends CoreRouter {
     };
 
     this.nativeRouter = nativeRouter;
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
-    this.routeKey = this.findRecordByStep(0).record.key;
   }
 
   addTask(execute) {
@@ -175,26 +173,32 @@ export class Router extends CoreRouter {
     }
   }
 
-  init(prevState) {
-    const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
-    this.curTask = task;
-    return task[0]().finally(this.onTaskComplete);
-  }
+  init(routerInitOptions, prevState) {
+    this.init = () => Promise.resolve();
 
-  async _init(prevState) {
+    this.initOptions = routerInitOptions;
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
       payload: null,
       prevState,
       completed: false
     };
-    const store = this.getCurrentPage().store;
+    const task = [this._init.bind(this), () => undefined, () => undefined];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  }
+
+  async _init() {
     const {
       action,
       location,
       routeKey
     } = this;
     await this.nativeRouter.execute(action, location, routeKey);
+    const store = this.getCurrentPage().store;
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');

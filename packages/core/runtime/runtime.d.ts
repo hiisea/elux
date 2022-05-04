@@ -24,7 +24,7 @@ declare namespace Elux {
     };
     __VUE_DEVTOOLS_GLOBAL_HOOK__?: any;
     __taroAppConfig: {
-      tabBar: {list: {pagePath: string}[]};
+      tabBar: {list: {pagePath: string}[]; items: {pagePath: string}[]};
     };
   }
   interface Component<TProps = {}> {
