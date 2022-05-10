@@ -6,4 +6,5 @@ storage/
 .api/
 .temp/
 .cache/
+docs/.vuepress/dist/
 tsconfig.tsbuildinfo
