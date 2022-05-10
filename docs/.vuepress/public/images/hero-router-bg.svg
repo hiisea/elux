@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 26.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="root" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1000 355" style="enable-background:new 0 0 1000 355;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FF7464;}
+	.st1{fill:#FF9F31;}
+	.st2{fill:#44C25A;}
+	.st3{opacity:0.15;fill:none;stroke:#FFFFFF;stroke-miterlimit:10;enable-background:new    ;}
+	.st4{opacity:0.15;fill:none;stroke:#FFFFFF;stroke-width:1;stroke-miterlimit:9.9999;enable-background:new    ;}
+	.st5{opacity:0.15;fill:none;stroke:#FFFFFF;stroke-width:1;stroke-miterlimit:9.9996;enable-background:new    ;}
+	.st6{opacity:0.4;fill:url(#right-shadow_00000025410422443526657360000006163652235543642549_);enable-background:new    ;}
+	.st7{opacity:0.4;fill:url(#left-shadow_00000036242256349150660700000003060183459797332154_);enable-background:new    ;}
+</style>
+<polygon id="left" class="st0" points="0,120.1 0,335 493,335 493,170.1 443,120.1 "/>
+<polygon id="right" class="st1" points="557,120.1 507,170.1 507,335 1000,335 1000,120.1 "/>
+<path id="top" class="st2" d="M806,0H195.4C186.9,0,180,6.9,180,15.4V91c0,7.7,6.3,14,14,14h264.2c3.7,0,7.3,1.5,9.9,4.1L500,141
+	l31.9-31.9c2.6-2.6,6.2-4.1,9.9-4.1H806c7.7,0,14-6.3,14-14V14C820,6.3,813.7,0,806,0z"/>
+<g id="circle">
+	<circle class="st3" cx="519" cy="123.2" r="44.2"/>
+	<ellipse class="st4" cx="285" cy="187.6" rx="35.4" ry="35.4"/>
+	<circle class="st3" cx="412.2" cy="158.4" r="16.5"/>
+	<ellipse class="st4" cx="389.9" cy="294.1" rx="77.4" ry="77.4"/>
+	<path class="st3" d="M660,192.2c-34.1,0-61.9,27.7-61.9,61.9S625.8,316,660,316c34.1,0,61.8-27.7,61.8-61.8S694.1,192.2,660,192.2z
+		"/>
+	<path class="st3" d="M535.7,208.7c-19.5,0-35.4,15.8-35.4,35.4c0,19.6,15.8,35.4,35.4,35.4s35.4-15.8,35.4-35.4
+		C571.2,224.4,555.2,208.7,535.7,208.7z"/>
+	
+		<ellipse transform="matrix(0.9732 -0.2298 0.2298 0.9732 -3.9635 101.2206)" class="st5" cx="432.6" cy="67.6" rx="23.8" ry="23.8"/>
+	<circle class="st3" cx="555.6" cy="23.3" r="36.6"/>
+</g>
+<linearGradient id="right-shadow_00000118379835505767852270000006541188336511306627_" gradientUnits="userSpaceOnUse" x1="507" y1="17.1" x2="1000" y2="17.1" gradientTransform="matrix(1 0 0 -1 0 362.1)">
+	<stop  offset="0" style="stop-color:#FF9F31"/>
+	<stop  offset="1" style="stop-color:#FFFFFF"/>
+</linearGradient>
+<rect id="right-shadow" x="507" y="335" style="opacity:0.4;fill:url(#right-shadow_00000118379835505767852270000006541188336511306627_);enable-background:new    ;" width="493" height="19.9"/>
+<linearGradient id="left-shadow_00000171683125773609705370000006716534299304351392_" gradientUnits="userSpaceOnUse" x1="0" y1="17.1" x2="493" y2="17.1" gradientTransform="matrix(1 0 0 -1 0 362.1)">
+	<stop  offset="0" style="stop-color:#FFFFFF"/>
+	<stop  offset="1" style="stop-color:#FF7464"/>
+</linearGradient>
+<rect id="left-shadow" y="335" style="opacity:0.4;fill:url(#left-shadow_00000171683125773609705370000006716534299304351392_);enable-background:new    ;" width="493" height="19.9"/>
+</svg>

@@ -1,5 +1,5 @@
 {
   "extends": "@elux/babel-preset/tsconfig.lint.json",
   "include": ["./"],
-  "exclude": ["**/dist", "**/docs"]
+  "exclude": ["**/dist", "**/.api", "**/.cache", "**/.temp"]
 }

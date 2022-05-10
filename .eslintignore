@@ -1,4 +1,7 @@
+!docs/.vuepress/
 dist/
-docs/
 types/
 storage/
+.api/
+.temp/
+.cache/

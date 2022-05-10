@@ -24,17 +24,19 @@
     "commit": "git-cz",
     "pnpm": "verdaccio",
     "eslint": "cross-env NODE_ENV=production eslint --cache **/*.{js,jsx,ts,tsx,vue} --ignore-pattern **/*.d.ts",
-    "stylelint": "cross-env NODE_ENV=production stylelint --cache **/*.{css,less,vue}",
+    "stylelint": "cross-env NODE_ENV=production stylelint --cache **/*.{css,less}",
     "jsonlint": "prettier --write **/*.json",
     "lint": "yarn eslint && yarn stylelint && yarn jsonlint",
-    "api:md": "api-documenter markdown -i ./api/json -o ./api/docs",
     "recommit": "git commit --amend --no-edit",
     "build:types": "lerna run build:types",
     "publish-lerna": "lerna publish",
     "publish-next": "lerna publish --npm-tag=next",
     "publish-test": "lerna publish --registry=http://localhost:4873/ --no-git-tag-version --conventional-commits=0",
     "publish-nopush": "lerna publish --no-push",
-    "publish-only": "lerna publish from-package"
+    "publish-only": "lerna publish from-package",
+    "docs:api": "api-documenter markdown -i ./docs/.vuepress/.api/json -o ./docs/.vuepress/.api/docs",
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
   },
   "husky": {
     "hooks": {
@@ -49,13 +51,12 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,vue}": "cross-env NODE_ENV=production eslint --fix --quiet --cache",
-    "*.{css,less,vue}": "cross-env NODE_ENV=production stylelint --fix --quiet --cache",
+    "*.{css,less}": "cross-env NODE_ENV=production stylelint --fix --quiet --cache",
     "*.json": "prettier --write"
   },
   "dependencies": {
     "@babel/runtime": "~7.15.4",
-    "react": "~17.0.1",
-    "vue": "~3.0.0"
+    "react": "~17.0.1"
   },
   "devDependencies": {
     "@types/node": "~14.14.7",
@@ -88,6 +89,7 @@
     "jest": "~26.6.3",
     "typescript": "~4.2.0",
     "@microsoft/api-documenter": "^7.15.3",
-    "@microsoft/api-extractor": "^7.19.4"
+    "@microsoft/api-extractor": "^7.19.4",
+    "vuepress": "^2.0.0-beta.43"
   }
 }
