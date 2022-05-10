@@ -4,6 +4,13 @@ import {defaultTheme} from '@vuepress/theme-default';
 import {path} from '@vuepress/utils';
 
 export default defineUserConfig({
+  shouldPrefetch: false,
+  // shouldPrefetch: (file, type) => {
+  //   if (file.startsWith('assets/vue-web.') || file.startsWith('assets/vue-taro.')) {
+  //     return false;
+  //   }
+  //   return true;
+  // },
   locales: {
     '/': {
       lang: 'zh-CN',
@@ -27,70 +34,95 @@ export default defineUserConfig({
         navbar: [
           {
             text: '设计思想',
-            link: '/designed/micro-module',
+            link: '/designed/micro-module.html',
           },
           {
             text: '开发指南',
-            link: '/guide/summary',
+            link: '/guide/summary.html',
           },
           {
             text: 'API文档',
-            link: '/api',
+            link: '/api/',
           },
           {
             text: 'CLI工具',
-            link: '/api',
+            link: '/cli/',
           },
         ],
-        sidebar: [
-          {
-            text: '设计思想',
-            children: [
-              {
-                text: '微模块',
-                link: '/designed/micro-module',
-              },
-              {
-                text: '模型驱动',
-                link: '/designed/model-driven',
-              },
-              {
-                text: '路由与历史',
-                link: '/designed/route-history',
-              },
-            ],
-          },
-          {
-            text: '开发指南',
-            children: [
-              {
-                text: '介绍',
-                link: '/guide/summary',
-              },
-              {
-                text: '安装',
-                link: '/guide/install',
-              },
-              {
-                text: '配置',
-                link: '/guide/configure',
-              },
-              {
-                text: '基础',
-                link: '/guide/basics.md',
-              },
-              {
-                text: '案例',
-                children: [
-                  {
-                    text: '划分模块',
-                    link: '/guide/case-module.md',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        sidebar: {
+          '/': [
+            {
+              text: '设计思想',
+              children: [
+                {
+                  text: '微模块',
+                  link: '/designed/micro-module',
+                },
+                {
+                  text: '模型驱动',
+                  link: '/designed/model-driven',
+                },
+                {
+                  text: '路由与历史',
+                  link: '/designed/route-history',
+                },
+              ],
+            },
+            {
+              text: '开发指南',
+              children: [
+                {
+                  text: '介绍',
+                  link: '/guide/summary',
+                },
+                {
+                  text: '安装',
+                  link: '/guide/install',
+                },
+                {
+                  text: '配置',
+                  link: '/guide/configure',
+                },
+                {
+                  text: '基础',
+                  link: '/guide/basics.md',
+                },
+                {
+                  text: '案例',
+                  children: [
+                    {
+                      text: '划分模块',
+                      link: '/guide/case-module.md',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          '/api/': [
+            {
+              text: 'API手册',
+              children: [
+                {
+                  text: '@elux/react-web',
+                  link: '/api/react-web.md',
+                },
+                {
+                  text: '@elux/react-taro',
+                  link: '/api/react-taro.md',
+                },
+                {
+                  text: '@elux/vue-web',
+                  link: '/api/vue-web.md',
+                },
+                {
+                  text: '@elux/vue-taro',
+                  link: '/api/vue-taro.md',
+                },
+              ],
+            },
+          ],
+        },
       },
       '/en/': {
         selectLanguageName: 'English',

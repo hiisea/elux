@@ -7,4 +7,6 @@ storage/
 .temp/
 .cache/
 docs/.vuepress/dist/
+docs/api/
 tsconfig.tsbuildinfo
+tsdoc-metadata.json
