@@ -3,4 +3,7 @@ storage/
 *.log
 .eslintcache
 .DS_Store
+.api/
+.temp/
+.cache/
 tsconfig.tsbuildinfo

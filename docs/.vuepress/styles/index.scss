@@ -1,0 +1,356 @@
+/* stylelint-disable font-family-no-missing-generic-family-keyword */
+:root {
+  --c-brand: #44c25a;
+  --c-brand-light: #38b14c;
+  --homepage-width: 1000px;
+  --c-text: #555;
+}
+
+@font-face {
+  font-family: iconfont;
+  src: url('/fonts/iconfont.woff2?t=1651480653242') format('woff2'), url('/fonts/iconfont.woff?t=1651480653242') format('woff'),
+    url('/fonts/iconfont.ttf?t=1651480653242') format('truetype');
+}
+
+.iconfont {
+  font-family: iconfont !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-all::before {
+  content: '\e6ef';
+}
+
+.icon-laptop::before {
+  content: '\e61d';
+}
+
+.icon-mobile::before {
+  content: '\e610';
+}
+
+.icon-cloud-server::before {
+  content: '\e7d9';
+}
+
+.icon-yes-f::before {
+  content: '\e662';
+}
+
+.icon-mini-program::before {
+  content: '\e6f1';
+}
+
+.navbar .site-name {
+  display: none;
+}
+
+.home {
+  width: var(--homepage-width);
+
+  .stress {
+    color: #ff7464;
+  }
+
+  .hero-logo {
+    .logo-text {
+      margin-top: 2rem;
+    }
+  }
+
+  .hero-description {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+    color: #666;
+  }
+
+  .hero-summary {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    height: 230px;
+    padding: 20px 40px 0;
+    margin-top: 5rem;
+    color: #fff;
+    text-align: left;
+    background: url('/images/hero-summary-bg.svg');
+
+    > :first-child {
+      width: 368px;
+
+      h2 {
+        text-align: right;
+      }
+    }
+
+    > :last-child {
+      width: 380px;
+    }
+
+    h2 {
+      margin-top: 2rem;
+      margin-bottom: 0;
+      border: none;
+
+      &::before {
+        content: '<';
+      }
+
+      &::after {
+        content: '>';
+      }
+    }
+  }
+
+  .feats {
+    h2 {
+      margin-top: 6rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      border: none;
+    }
+  }
+
+  .feats-cross {
+    text-align: center;
+
+    ul {
+      display: flex;
+      justify-content: center;
+      padding: 0;
+      list-style: none;
+    }
+
+    .anywhere {
+      margin-bottom: 0;
+      line-height: 4;
+      color: #888;
+      border-bottom: 1px solid var(--c-border);
+    }
+
+    .framework {
+      li {
+        position: relative;
+        padding: 10px;
+        margin: 0 10px;
+        overflow: hidden;
+        background-color: #f8f8f8;
+        border: 1px #ddd dashed;
+
+        &::after {
+          position: absolute;
+          top: 0;
+          right: 5px;
+          display: block;
+          font-family: iconfont !important;
+          font-size: 20px;
+          font-style: normal;
+          color: var(--c-brand);
+          text-shadow: #fff 1px 1px 3px;
+          content: '\e662';
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+        &::before {
+          display: block;
+          width: 150px;
+          height: 150px;
+          content: '';
+          background: url('/images/logo-vue.png') no-repeat center center;
+          background-size: contain;
+        }
+
+        &.react {
+          &::before {
+            background-image: url('/images/logo-react.png');
+          }
+        }
+
+        &.taro {
+          &::before {
+            background-image: url('/images/logo-taro.png');
+          }
+        }
+
+        &.rn {
+          &::before {
+            background-image: url('/images/logo-rn.png');
+          }
+        }
+
+        &.more {
+          padding-top: 80px;
+          font-size: 60px;
+          line-height: 0;
+          color: #ccc;
+          background: none;
+          border: none;
+
+          &::before {
+            display: none;
+          }
+
+          &::after {
+            display: none;
+          }
+        }
+      }
+    }
+
+    .platform {
+      margin-top: 0;
+      border-bottom: 1px solid var(--c-border);
+
+      li {
+        margin: 0 20px;
+      }
+
+      .iconfont {
+        margin-right: 5px;
+        font-size: 40px;
+        color: #888;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  .feats-router {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    height: 355px;
+    color: #fff;
+    background: url('/images/hero-router-bg.svg') no-repeat center center;
+    background-size: contain;
+
+    > :first-child {
+      width: 600px;
+      padding: 28px 30px 0;
+      margin-bottom: 12px;
+      line-height: 25px;
+      text-align: center;
+    }
+
+    > :nth-child(2) {
+      padding-right: 52px;
+      text-align: right;
+
+      .item-hd {
+        justify-content: flex-end;
+
+        .title {
+          padding-right: 10px;
+          margin-right: 10px;
+          border-right: 1px solid #fff;
+        }
+      }
+    }
+
+    > :last-child {
+      padding-left: 52px;
+      text-align: left;
+
+      .item-hd {
+        justify-content: flex-start;
+
+        .title {
+          padding-left: 10px;
+          margin-left: 10px;
+          border-left: 1px solid #fff;
+        }
+      }
+    }
+
+    > .item {
+      position: relative;
+      box-sizing: border-box;
+      width: 49%;
+      height: 200px;
+      padding-top: 22px;
+    }
+
+    .item-hd {
+      display: flex;
+      align-items: center;
+
+      h4 {
+        margin: 0;
+      }
+
+      cite {
+        font-size: 50px;
+        font-style: normal;
+        font-weight: bold;
+        line-height: 1em;
+      }
+    }
+
+    .item-bd {
+      padding: 0;
+      margin: 0;
+      margin-top: 1rem;
+      font-size: 13px;
+      line-height: 1.8;
+      list-style: none;
+    }
+  }
+
+  .feats-easy {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4rem;
+
+    .note {
+      flex: none;
+      width: 300px;
+      height: 280px;
+      margin-right: 40px;
+      color: #888;
+
+      &::before {
+        display: block;
+        width: 200px;
+        height: 200px;
+        margin: auto;
+        content: '';
+        background: url('/images/easy-bg.svg') no-repeat center center;
+        background-size: contain;
+      }
+
+      .text {
+        display: block;
+        padding: 10px 30px;
+        font-size: 16px;
+        color: #999;
+        text-align: center;
+        background: url('/images/easy-code.svg') no-repeat center center;
+        background-size: contain;
+      }
+    }
+
+    .cli {
+      flex: none;
+      padding: 10px;
+      background-color: #f8f8f8;
+
+      &::after {
+        display: block;
+        width: 550px;
+        height: 240px;
+        content: '';
+        background: url('/images/cli-bg.png') no-repeat;
+        background-size: contain;
+      }
+    }
+  }
+
+  .footer {
+    font-size: 12px;
+    color: #666;
+  }
+}

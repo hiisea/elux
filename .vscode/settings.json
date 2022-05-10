@@ -3,7 +3,6 @@
     "**/yarn.lock": true,
     "**/node_modules": true,
     "**/dist": true,
-    "**/docs": true,
     "**/types": true,
     "**/storage": true,
     "**/.eslintcache": true
