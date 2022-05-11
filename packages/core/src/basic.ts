@@ -241,6 +241,7 @@ export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
  */
 export interface RouterInitOptions {
   url: string;
+  [key: string]: any;
 }
 /**
  * @public
