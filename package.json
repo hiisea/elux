@@ -34,7 +34,9 @@
     "publish-test": "lerna publish --registry=http://localhost:4873/ --no-git-tag-version --conventional-commits=0",
     "publish-nopush": "lerna publish --no-push",
     "publish-only": "lerna publish from-package",
-    "docs:api": "api-documenter markdown -i ./docs/.vuepress/.api -o ./docs/api && node patch-api.js",
+    "api:md": "api-documenter markdown -i ./api/.vuepress/.api -o ./api/api && node patch-api.js",
+    "api:dev": "vuepress dev api",
+    "api:build": "vuepress build api",
     "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs"
   },
