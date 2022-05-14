@@ -43,6 +43,8 @@ export type {
   GetPromiseComponent,
   GetPromiseModule,
   HandlerToAction,
+  IGetComponent,
+  IGetData,
   ILoadComponent,
   ModuleFacade,
   PickModelActions,

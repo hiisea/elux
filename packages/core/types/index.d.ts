@@ -7,7 +7,7 @@ export { errorAction, setProcessedError } from './actions';
 export { getComponent, getEntryComponent, getModule, getModuleApiMap, injectComponent, injectModule } from './inject';
 export { effect, effectLogger, EmptyModel, exportComponent, exportView, reducer, setLoading } from './module';
 export { CoreRouter, modelHotReplacement, Store } from './store';
-export type { API, Facade, GetPromiseComponent, GetPromiseModule, HandlerToAction, ILoadComponent, ModuleFacade, PickModelActions, PickThisActions, ReturnComponents, } from './facade';
+export type { API, Facade, GetPromiseComponent, GetPromiseModule, HandlerToAction, IGetComponent, IGetData, ILoadComponent, ModuleFacade, PickModelActions, PickThisActions, ReturnComponents, } from './facade';
 export { BaseModel, exportModule, getApi } from './facade';
 export type { RenderOptions } from './app';
 export { buildApp, buildProvider, buildSSR } from './app';

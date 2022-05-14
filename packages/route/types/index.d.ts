@@ -26,6 +26,7 @@ export declare class Router extends CoreRouter {
     private addTask;
     nativeInitiated(): boolean;
     getHistoryLength(target?: RouteTarget): number;
+    getHistory(target?: RouteTarget): IRouteRecord[];
     findRecordByKey(recordKey: string): {
         record: IRouteRecord;
         overflow: boolean;
@@ -36,11 +37,11 @@ export declare class Router extends CoreRouter {
         overflow: boolean;
         index: [number, number];
     };
-    getCurrentPage(): {
+    getActivePage(): {
         url: string;
         store: Store;
     };
-    getWindowPages(): {
+    getCurrentPages(): {
         url: string;
         store: Store;
     }[];

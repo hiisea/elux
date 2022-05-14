@@ -172,7 +172,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/react-web!Action:interface",
-          "docComment": "/**\n * 定义Action\n *\n * @remarks\n *\n * 类似于 `Redux` 或 `Vuex` 的 Action，增加了 `priority` 设置，用来指明同时有多个 handelr 时的处理顺序\n *\n * @public\n */\n",
+          "docComment": "/**\n * 定义Action\n *\n * @remarks\n *\n * 类似于 `Redux` 或 `Vuex` 的 Action，增加了 `priority` 设置，用来指明同时有多个 handler 时的处理顺序\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -211,7 +211,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/react-web!Action#priority:member",
-              "docComment": "/**\n * 通常无需设置，同时有多个 handelr 时，可以特别指明处理顺序，其值为 moduleName 数组\n */\n",
+              "docComment": "/**\n * 通常无需设置，同时有多个 handler 时，可以特别指明处理顺序，其值为 moduleName 数组\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -416,6 +416,24 @@
             },
             {
               "kind": "Content",
+              "text": "<TFacade>;\n    GetComponent: "
+            },
+            {
+              "kind": "Reference",
+              "text": "IGetComponent",
+              "canonicalReference": "@elux/react-web!IGetComponent:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<TFacade>;\n    GetData: "
+            },
+            {
+              "kind": "Reference",
+              "text": "IGetData",
+              "canonicalReference": "@elux/react-web!IGetData:type"
+            },
+            {
+              "kind": "Content",
               "text": "<TFacade>;\n    Modules: {\n        [N in keyof TFacade]: "
             },
             {
@@ -449,7 +467,7 @@
           ],
           "typeTokenRange": {
             "startIndex": 3,
-            "endIndex": 8
+            "endIndex": 12
           }
         },
         {
@@ -3535,7 +3553,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/react-web!getApi:function(1)",
-          "docComment": "/**\n * 获取应用全局方法\n *\n * @remarks\n *\n * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参\n *\n * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @param injectActions - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @returns 返回包含多个全局方法的结构体：\n *\n * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。\n *\n * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：\n * ```js\n *   dispatch(Modules.article.actions.refresh())\n * ```\n *\n * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：\n * ```js\n *   dispatch(Modules.a.actions.a1())\n *   dispatch(Modules.b.actions.b1())\n * ```\n *\n * 这种写法可以简化为：\n * ```js\n *   const {a, b} = GetActions('a', 'b')\n *   dispatch(a.a1())\n *   dispatch(b.b1())\n * ```\n *\n * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。\n *\n * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：\n * ```js\n *   const globalRouter = GetClientRouter()\n *   const currentRouter = useRouter()\n *   console.log(blobalRouter===currentRouter)\n * ```\n *\n * - `useStore`：用于在 UI Render 中获取当前 Store，例如：\n * ```js\n *   const store = useStore()\n *   store.dispatch(Modules.article.actions.refresh())\n * ```\n *\n * @example\n * ```js\n * const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 获取应用全局方法\n *\n * @remarks\n *\n * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参\n *\n * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @param injectActions - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @returns 返回包含多个全局方法的结构体：\n *\n * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。\n *\n * - `GetComponent`：用于获取其它模块导出的{@link exportView | UI组件}，参见 {@link IGetComponent}。\n *\n * - `GetData`：用于获取其它模块导出的{@link exportModule | Data}，参见 {@link IGetData}。\n *\n * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：\n * ```js\n *   dispatch(Modules.article.actions.refresh())\n * ```\n *\n * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：\n * ```js\n *   dispatch(Modules.a.actions.a1())\n *   dispatch(Modules.b.actions.b1())\n * ```\n *\n * 这种写法可以简化为：\n * ```js\n *   const {a, b} = GetActions('a', 'b')\n *   dispatch(a.a1())\n *   dispatch(b.b1())\n * ```\n *\n * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。\n *\n * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：\n * ```js\n *   const globalRouter = GetClientRouter()\n *   const currentRouter = useRouter()\n *   console.log(blobalRouter===currentRouter)\n * ```\n *\n * - `useStore`：用于在 UI Render 中获取当前 Store，例如：\n * ```js\n *   const store = useStore()\n *   store.dispatch(Modules.article.actions.refresh())\n * ```\n *\n * @example\n * ```js\n * const {Modules, LoadComponent, GetComponent, GetData, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3543,7 +3561,7 @@
             },
             {
               "kind": "Content",
-              "text": "{\n    State: any;\n    GetActions: any;\n    LoadComponent: any;\n    Modules: any;\n}"
+              "text": "{\n    State: any;\n    GetActions: any;\n    LoadComponent: any;\n    GetComponent: any;\n    GetData: any;\n    Modules: any;\n}"
             },
             {
               "kind": "Content",
@@ -3577,7 +3595,7 @@
             },
             {
               "kind": "Content",
-              "text": "<TAPI, 'GetActions' | 'LoadComponent' | 'Modules'> & {\n    GetClientRouter: () => "
+              "text": "<TAPI, 'GetActions' | 'LoadComponent' | 'GetComponent' | 'GetData' | 'Modules'> & {\n    GetClientRouter: () => "
             },
             {
               "kind": "Reference",
@@ -4117,6 +4135,142 @@
           "typeTokenRange": {
             "startIndex": 1,
             "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-web!IGetComponent:type",
+          "docComment": "/**\n * 获取指定模块的UI组件\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于获取其它模块导出的{@link exportView | UI组件}，例如：\n * ```js\n *   const Article = GetComponent('article', 'main')\n * ```\n *\n * 不同于{@link ILoadComponent}，该方法仅获取组建，并不Render它\n *\n * @param moduleName - 组件所属模块名\n *\n * @param componentName - 组件导出名，参见{@link exportModule}\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type IGetComponent<TFacade extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Facade",
+              "canonicalReference": "@elux/react-web!Facade:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "{}"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "<M extends keyof TFacade, V extends keyof TFacade[M]['components']>(moduleName: M, componentName: V) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TFacade[M]['components'][V]>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "IGetComponent",
+          "typeParameters": [
+            {
+              "typeParameterName": "TFacade",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 6,
+            "endIndex": 9
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@elux/react-web!IGetData:type",
+          "docComment": "/**\n * 获取指定模块导出的Data\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于获取其它模块导出的{@link exportModule | Data}，例如：\n * ```js\n *   const ArticleData = GetData('article')\n * ```\n *\n * @param moduleName - 组件所属模块名\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare type IGetData<TFacade extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Facade",
+              "canonicalReference": "@elux/react-web!Facade:type"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "= "
+            },
+            {
+              "kind": "Content",
+              "text": "{}"
+            },
+            {
+              "kind": "Content",
+              "text": "> = "
+            },
+            {
+              "kind": "Content",
+              "text": "<M extends keyof TFacade>(moduleName: M) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TFacade[M]['data']>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "IGetData",
+          "typeParameters": [
+            {
+              "typeParameterName": "TFacade",
+              "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              }
+            }
+          ],
+          "typeTokenRange": {
+            "startIndex": 6,
+            "endIndex": 9
           }
         },
         {
@@ -4759,12 +4913,12 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-web!IRouter#getCurrentPage:member(1)",
+              "canonicalReference": "@elux/react-web!IRouter#getActivePage:member(1)",
               "docComment": "/**\n * 获取当前被激活显示的页面\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "getCurrentPage(): "
+                  "text": "getActivePage(): "
                 },
                 {
                   "kind": "Content",
@@ -4792,7 +4946,94 @@
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [],
-              "name": "getCurrentPage"
+              "name": "getActivePage"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#getCurrentPages:member(1)",
+              "docComment": "/**\n * 获取所有window中的当前页面\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getCurrentPages(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        url: string;\n        store: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IStore",
+                  "canonicalReference": "@elux/react-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getCurrentPages"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#getHistory:member(1)",
+              "docComment": "/**\n * 获取指定路由栈中的记录\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getHistory(target?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteTarget",
+                  "canonicalReference": "@elux/react-web!RouteTarget:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IRouteRecord",
+                  "canonicalReference": "@elux/react-web!IRouteRecord:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "target",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "getHistory"
             },
             {
               "kind": "MethodSignature",
@@ -4840,46 +5081,9 @@
               "name": "getHistoryLength"
             },
             {
-              "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-web!IRouter#getWindowPages:member(1)",
-              "docComment": "/**\n * 获取所有窗口中显示的页面\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "getWindowPages(): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        url: string;\n        store: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "IStore",
-                  "canonicalReference": "@elux/react-web!IStore:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";\n    }[]"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [],
-              "name": "getWindowPages"
-            },
-            {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/react-web!IRouter#initOptions:member",
-              "docComment": "/**\n * 路由初始化时的参数\n */\n",
+              "docComment": "/**\n * 路由初始化时的参数，SSR时可用来引用用户请求\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4906,7 +5110,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/react-web!IRouter#location:member",
-              "docComment": "/**\n * 路由描述\n */\n",
+              "docComment": "/**\n * 路由信息\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5383,7 +5587,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/react-web!IStore:interface",
-          "docComment": "/**\n * Store实例\n *\n * @remarks\n *\n * - 每个 Store 都挂载在 {@link IRouter} 下面，router 和 store 是一对多的关系\n *\n * - 每次路由发生变化都会生成一个独立的 Store\n *\n * @public\n */\n",
+          "docComment": "/**\n * Store实例\n *\n * @remarks\n *\n * - 每个 Store 都挂载在 {@link IRouter} 下面，router 和 store 是一对多的关系\n *\n * - 每次路由发生变化都会生成一个新的 Store\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5428,6 +5632,32 @@
           ],
           "name": "IStore",
           "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!IStore#active:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "active: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "active",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/react-web!IStore#destroy:member(1)",
@@ -5486,7 +5716,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/react-web!IStore#getState:member",
-              "docComment": "/**\n * 获取有效状态\n */\n",
+              "docComment": "/**\n * 获取已提交的状态\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5515,17 +5745,17 @@
               }
             },
             {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-web!IStore#getUncommittedState:member",
-              "docComment": "/**\n * 获取未提交的未生效状态\n *\n * @remarks\n *\n * store 状态由多个 module 状态组成，更新的时候必须等所有 module 状态全部完成更新后才一次性 commit 到 store 中\n */\n",
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IStore#getUncommittedState:member(1)",
+              "docComment": "/**\n * 获取未提交的状态\n *\n * @remarks\n *\n * store 状态由多个 module 状态组成，更新的时候必须等所有 module 状态全部完成更新后才一次性 commit 到 store 中\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "getUncommittedState: "
+                  "text": "getUncommittedState(): "
                 },
                 {
                   "kind": "Content",
-                  "text": "() => TStoreState"
+                  "text": "TStoreState"
                 },
                 {
                   "kind": "Content",
@@ -5533,12 +5763,14 @@
                 }
               ],
               "isOptional": false,
-              "releaseTag": "Public",
-              "name": "getUncommittedState",
-              "propertyTypeTokenRange": {
+              "returnTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
-              }
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getUncommittedState"
             },
             {
               "kind": "MethodSignature",
@@ -7094,6 +7326,48 @@
           "releaseTag": "Public",
           "name": "RouterInitOptions",
           "members": [
+            {
+              "kind": "IndexSignature",
+              "canonicalReference": "@elux/react-web!RouterInitOptions:index(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "[key: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "]: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "any"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "key",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            },
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/react-web!RouterInitOptions#url:member",

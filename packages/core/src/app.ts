@@ -54,7 +54,7 @@ export function buildSSR<INS = {}>(
   return Object.assign(ins, {
     render({id = 'root'}: RenderOptions = {}) {
       return (router as CoreRouter).init(routerOptions, {}).then(() => {
-        const store = router.getCurrentPage().store;
+        const store = router.getActivePage().store;
         store.destroy();
         const eluxContext: EluxContext = {router, documentHead: ''};
         return AppRender.toString(id, eluxContext, ins).then((html) => {

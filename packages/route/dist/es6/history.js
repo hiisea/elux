@@ -31,6 +31,10 @@ export class HistoryStack {
     return this.records[n];
   }
 
+  getItems() {
+    return [...this.records];
+  }
+
   getLength() {
     return this.records.length;
   }
@@ -160,6 +164,10 @@ export class WindowStack extends HistoryStack {
     this.init(new PageStack(this, location, store));
   }
 
+  getRecords() {
+    return this.records.map(item => item.getCurrentItem());
+  }
+
   getCurrentWindowPage() {
     const item = this.getCurrentItem();
     const store = item.store;
@@ -171,7 +179,7 @@ export class WindowStack extends HistoryStack {
     };
   }
 
-  getWindowPages() {
+  getCurrentPages() {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();

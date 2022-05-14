@@ -72,7 +72,7 @@ export class Router extends CoreRouter {
 
   addTask(execute) {
     return new Promise((resolve, reject) => {
-      const task = [() => setLoading(execute(), this.getCurrentPage().store), resolve, reject];
+      const task = [() => setLoading(execute(), this.getActivePage().store), resolve, reject];
 
       if (this.curTask) {
         this.taskList.push(task);
@@ -89,6 +89,10 @@ export class Router extends CoreRouter {
 
   getHistoryLength(target = 'page') {
     return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  }
+
+  getHistory(target = 'page') {
+    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
   }
 
   findRecordByKey(recordKey) {
@@ -129,12 +133,12 @@ export class Router extends CoreRouter {
     };
   }
 
-  getCurrentPage() {
+  getActivePage() {
     return this.windowStack.getCurrentWindowPage();
   }
 
-  getWindowPages() {
-    return this.windowStack.getWindowPages();
+  getCurrentPages() {
+    return this.windowStack.getCurrentPages();
   }
 
   async mountStore(payload, prevStore, newStore, historyStore) {
@@ -198,7 +202,7 @@ export class Router extends CoreRouter {
       routeKey
     } = this;
     await this.nativeRouter.execute(action, location, routeKey);
-    const store = this.getCurrentPage().store;
+    const store = this.getActivePage().store;
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -236,7 +240,7 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -284,7 +288,7 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -331,7 +335,7 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -419,7 +423,7 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location, index);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;

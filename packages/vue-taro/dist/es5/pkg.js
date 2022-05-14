@@ -556,13 +556,17 @@ function injectActions(model, hmr) {
 
         if (handler.__isReducer__ || handler.__isEffect__) {
           actionNames.split(coreConfig.MSP).forEach(function (actionName) {
-            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
-            var arr = actionName.split(coreConfig.NSP);
+            actionName = actionName.trim();
 
-            if (arr[1]) {
-              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-            } else {
-              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            if (actionName) {
+              actionName = actionName.replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
+              var arr = actionName.split(coreConfig.NSP);
+
+              if (arr[1]) {
+                transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+              } else {
+                transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+              }
             }
           });
         }
@@ -882,13 +886,11 @@ var preMiddleware = function preMiddleware(_ref) {
   };
 };
 var CoreRouter = function () {
-  function CoreRouter(location, nativeRequest) {
+  function CoreRouter() {
     this.listenerId = 0;
     this.listenerMap = {};
     this.action = 'init';
     this.routeKey = '';
-    this.location = location;
-    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
@@ -896,6 +898,10 @@ var CoreRouter = function () {
   }
 
   var _proto = CoreRouter.prototype;
+
+  _proto.getHistoryUrls = function getHistoryUrls(target) {
+    throw new Error('Method not implemented.');
+  };
 
   _proto.addListener = function addListener(callback) {
     this.listenerId++;
@@ -972,9 +978,9 @@ var Store = function () {
     this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
-    this.active = false;
     this.currentAction = void 0;
     this.uncommittedState = {};
+    this.active = false;
 
     this.dispatch = function (action) {
       throw 'Dispatching action while constructing your middleware is not allowed.';
@@ -1273,7 +1279,7 @@ function modelHotReplacement(moduleName, ModelClass) {
       module.ModelClass = ModelClass;
       var newModel = new ModelClass(moduleName, null);
       injectActions(newModel, true);
-      var page = MetaData.clientRouter.getCurrentPage();
+      var page = MetaData.clientRouter.getActivePage();
       page.store.hotReplaceModel(moduleName, ModelClass);
     });
   }
@@ -1287,6 +1293,29 @@ function exportModule(moduleName, ModelClass, components, data) {
 }
 function getApi(demoteForProductionOnly, injectActions) {
   var modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+
+  var GetComponent = function GetComponent(moduleName, componentName) {
+    var result = getComponent(moduleName, componentName);
+
+    if (isPromise(result)) {
+      return result;
+    } else {
+      return Promise.resolve(result);
+    }
+  };
+
+  var GetData = function GetData(moduleName) {
+    var result = getModule(moduleName);
+
+    if (isPromise(result)) {
+      return result.then(function (mod) {
+        return mod.data;
+      });
+    } else {
+      return Promise.resolve(result.data);
+    }
+  };
+
   return {
     GetActions: function GetActions() {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -1306,6 +1335,8 @@ function getApi(demoteForProductionOnly, injectActions) {
       return MetaData.clientRouter;
     },
     LoadComponent: coreConfig.LoadComponent,
+    GetComponent: GetComponent,
+    GetData: GetData,
     Modules: modules,
     useRouter: coreConfig.UseRouter,
     useStore: coreConfig.UseStore
@@ -1393,13 +1424,11 @@ var BaseModel = (_class = function () {
 }(), (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
 
 function buildProvider(ins, router) {
-  var store = router.getCurrentPage().store;
   var AppRender = coreConfig.AppRender;
-  router.init({});
   return AppRender.toProvider({
     router: router,
     documentHead: ''
-  }, ins, store);
+  }, ins);
 }
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -1436,14 +1465,6 @@ function _asyncToGenerator(fn) {
       _next(undefined);
     });
   };
-}
-
-function _assertThisInitialized(self) {
-  if (self === void 0) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return self;
 }
 
 function createCommonjsModule(fn) {
@@ -2310,6 +2331,14 @@ var routeConfig = {
 };
 var setRouteConfig = buildConfigSetter(routeConfig);
 
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+
 var HistoryStack = function () {
   function HistoryStack(limit) {
     this.currentRecord = undefined;
@@ -2343,6 +2372,10 @@ var HistoryStack = function () {
 
   _proto.getItemAt = function getItemAt(n) {
     return this.records[n];
+  };
+
+  _proto.getItems = function getItems() {
+    return [].concat(this.records);
   };
 
   _proto.getLength = function getLength() {
@@ -2500,6 +2533,12 @@ var WindowStack = function (_HistoryStack2) {
 
   var _proto4 = WindowStack.prototype;
 
+  _proto4.getRecords = function getRecords() {
+    return this.records.map(function (item) {
+      return item.getCurrentItem();
+    });
+  };
+
   _proto4.getCurrentWindowPage = function getCurrentWindowPage() {
     var item = this.getCurrentItem();
     var store = item.store;
@@ -2511,7 +2550,7 @@ var WindowStack = function (_HistoryStack2) {
     };
   };
 
-  _proto4.getWindowPages = function getWindowPages() {
+  _proto4.getCurrentPages = function getCurrentPages() {
     return this.records.map(function (item) {
       var store = item.store;
       var record = item.getCurrentItem();
@@ -2651,11 +2690,11 @@ var WindowStack = function (_HistoryStack2) {
 }(HistoryStack);
 
 var BaseNativeRouter = function () {
-  function BaseNativeRouter(nativeRequest) {
+  function BaseNativeRouter() {
     this.router = void 0;
     this.routeKey = '';
     this.curTask = void 0;
-    this.router = new Router(this, nativeRequest);
+    this.router = new Router(this);
   }
 
   var _proto = BaseNativeRouter.prototype;
@@ -2704,10 +2743,10 @@ var BaseNativeRouter = function () {
 var Router = function (_CoreRouter) {
   _inheritsLoose(Router, _CoreRouter);
 
-  function Router(nativeRouter, nativeRequest) {
+  function Router(nativeRouter) {
     var _this2;
 
-    _this2 = _CoreRouter.call(this, urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest) || this;
+    _this2 = _CoreRouter.call(this) || this;
     _this2.curTask = void 0;
     _this2.taskList = [];
     _this2.windowStack = void 0;
@@ -2727,8 +2766,6 @@ var Router = function (_CoreRouter) {
     };
 
     _this2.nativeRouter = nativeRouter;
-    _this2.windowStack = new WindowStack(_this2.location, new Store(0, _assertThisInitialized(_this2)));
-    _this2.routeKey = _this2.findRecordByStep(0).record.key;
     return _this2;
   }
 
@@ -2739,7 +2776,7 @@ var Router = function (_CoreRouter) {
 
     return new Promise(function (resolve, reject) {
       var task = [function () {
-        return setLoading(execute(), _this3.getCurrentPage().store);
+        return setLoading(execute(), _this3.getActivePage().store);
       }, resolve, reject];
 
       if (_this3.curTask) {
@@ -2761,6 +2798,14 @@ var Router = function (_CoreRouter) {
     }
 
     return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  };
+
+  _proto2.getHistory = function getHistory(target) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
   };
 
   _proto2.findRecordByKey = function findRecordByKey(recordKey) {
@@ -2799,12 +2844,12 @@ var Router = function (_CoreRouter) {
     };
   };
 
-  _proto2.getCurrentPage = function getCurrentPage() {
+  _proto2.getActivePage = function getActivePage() {
     return this.windowStack.getCurrentWindowPage();
   };
 
-  _proto2.getWindowPages = function getWindowPages() {
-    return this.windowStack.getWindowPages();
+  _proto2.getCurrentPages = function getCurrentPages() {
+    return this.windowStack.getCurrentPages();
   };
 
   _proto2.mountStore = function () {
@@ -2875,8 +2920,22 @@ var Router = function (_CoreRouter) {
     }
   };
 
-  _proto2.init = function init(prevState) {
-    var task = [this._init.bind(this, prevState), function () {
+  _proto2.init = function init(routerInitOptions, prevState) {
+    this.init = function () {
+      return Promise.resolve();
+    };
+
+    this.initOptions = routerInitOptions;
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
+    this.runtime = {
+      timestamp: Date.now(),
+      payload: null,
+      prevState: prevState,
+      completed: false
+    };
+    var task = [this._init.bind(this), function () {
       return undefined;
     }, function () {
       return undefined;
@@ -2886,52 +2945,46 @@ var Router = function (_CoreRouter) {
   };
 
   _proto2._init = function () {
-    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2(prevState) {
-      var store, action, location, routeKey;
+    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2() {
+      var action, location, routeKey, store;
       return regenerator.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
-              this.runtime = {
-                timestamp: Date.now(),
-                payload: null,
-                prevState: prevState,
-                completed: false
-              };
-              store = this.getCurrentPage().store;
               action = this.action, location = this.location, routeKey = this.routeKey;
-              _context2.next = 5;
+              _context2.next = 3;
               return this.nativeRouter.execute(action, location, routeKey);
 
-            case 5:
-              _context2.prev = 5;
-              _context2.next = 8;
+            case 3:
+              store = this.getActivePage().store;
+              _context2.prev = 4;
+              _context2.next = 7;
               return store.mount(coreConfig.StageModuleName, 'init');
 
-            case 8:
-              _context2.next = 10;
+            case 7:
+              _context2.next = 9;
               return store.dispatch(testChangeAction(this.location, this.action));
 
-            case 10:
-              _context2.next = 18;
+            case 9:
+              _context2.next = 17;
               break;
 
-            case 12:
-              _context2.prev = 12;
-              _context2.t0 = _context2["catch"](5);
+            case 11:
+              _context2.prev = 11;
+              _context2.t0 = _context2["catch"](4);
 
               if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
-                _context2.next = 17;
+                _context2.next = 16;
                 break;
               }
 
               this.taskList = [];
               throw _context2.t0;
 
-            case 17:
+            case 16:
               env.console.error(_context2.t0);
 
-            case 18:
+            case 17:
               this.runtime.completed = true;
               this.dispatch({
                 location: location,
@@ -2941,15 +2994,15 @@ var Router = function (_CoreRouter) {
                 windowChanged: true
               });
 
-            case 20:
+            case 19:
             case "end":
               return _context2.stop();
           }
         }
-      }, _callee2, this, [[5, 12]]);
+      }, _callee2, this, [[4, 11]]);
     }));
 
-    function _init(_x5) {
+    function _init() {
       return _init2.apply(this, arguments);
     }
 
@@ -2988,7 +3041,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context3.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -3045,7 +3098,7 @@ var Router = function (_CoreRouter) {
       }, _callee3, this);
     }));
 
-    function _relaunch(_x6, _x7, _x8, _x9) {
+    function _relaunch(_x5, _x6, _x7, _x8) {
       return _relaunch2.apply(this, arguments);
     }
 
@@ -3084,7 +3137,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context4.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -3140,7 +3193,7 @@ var Router = function (_CoreRouter) {
       }, _callee4, this);
     }));
 
-    function _replace(_x10, _x11, _x12, _x13) {
+    function _replace(_x9, _x10, _x11, _x12) {
       return _replace2.apply(this, arguments);
     }
 
@@ -3179,7 +3232,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context5.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -3247,7 +3300,7 @@ var Router = function (_CoreRouter) {
       }, _callee5, this);
     }));
 
-    function _push(_x14, _x15, _x16, _x17) {
+    function _push(_x13, _x14, _x15, _x16) {
       return _push2.apply(this, arguments);
     }
 
@@ -3336,7 +3389,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location, index);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context6.next = 17;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -3399,7 +3452,7 @@ var Router = function (_CoreRouter) {
       }, _callee6, this);
     }));
 
-    function _back(_x18, _x19, _x20, _x21, _x22) {
+    function _back(_x17, _x18, _x19, _x20, _x21) {
       return _back2.apply(this, arguments);
     }
 
@@ -3418,10 +3471,10 @@ setRouteConfig({
 var MPNativeRouter = function (_BaseNativeRouter) {
   _inheritsLoose(MPNativeRouter, _BaseNativeRouter);
 
-  function MPNativeRouter(history, nativeRequest) {
+  function MPNativeRouter(history) {
     var _this;
 
-    _this = _BaseNativeRouter.call(this, nativeRequest) || this;
+    _this = _BaseNativeRouter.call(this) || this;
     _this.unlistenHistory = void 0;
     _this.history = history;
     var _routeConfig$NotifyNa = routeConfig.NotifyNativeRouter,
@@ -3534,13 +3587,7 @@ var MPNativeRouter = function (_BaseNativeRouter) {
   return MPNativeRouter;
 }(BaseNativeRouter);
 function createRouter(history) {
-  var nativeRequest = {
-    request: {
-      url: locationToUrl(history.getLocation())
-    },
-    response: {}
-  };
-  var mpNativeRouter = new MPNativeRouter(history, nativeRequest);
+  var mpNativeRouter = new MPNativeRouter(history);
   return mpNativeRouter.router;
 }
 
@@ -3581,8 +3628,10 @@ var taroHistory = {
   switchTab: Taro.switchTab,
   isTabPage: function isTabPage(pathname) {
     if (!tabPages) {
-      if (env.__taroAppConfig.tabBar) {
-        tabPages = env.__taroAppConfig.tabBar.list.reduce(function (obj, item) {
+      var tabConfig = env.__taroAppConfig.tabBar;
+
+      if (tabConfig) {
+        tabPages = (tabConfig.list || tabConfig.items).reduce(function (obj, item) {
           obj[routeToPathname(item.pagePath)] = true;
           return obj;
         }, {});
@@ -3636,6 +3685,14 @@ var taroHistory = {
           var current = arr[arr.length - 1];
           _path = current.route;
           query = current.options;
+        }
+
+        if (!_path) {
+          return {
+            pathname: '',
+            search: '',
+            action: 'RELAUNCH'
+          };
         }
 
         curLocation = {
@@ -3723,7 +3780,7 @@ var vueComponentsConfig = {
 };
 
 var AppRender = {
-  toDocument: function toDocument(id, eluxContext, fromSSR, app, store) {
+  toDocument: function toDocument(id, eluxContext, fromSSR, app) {
     app.provide(EluxContextKey, eluxContext);
 
     if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
@@ -3732,11 +3789,11 @@ var AppRender = {
 
     app.mount("#" + id);
   },
-  toString: function toString(id, eluxContext, app, store) {
+  toString: function toString(id, eluxContext, app) {
     app.provide(EluxContextKey, eluxContext);
     return vueComponentsConfig.renderToString(app);
   },
-  toProvider: function toProvider(eluxContext, app, store) {
+  toProvider: function toProvider(eluxContext, app) {
     app.provide(EluxContextKey, eluxContext);
     return function () {
       return createVNode("div", null, null);
@@ -3834,7 +3891,7 @@ defineComponent({
     var router = coreConfig.UseRouter();
     var data = shallowRef({
       classname: 'elux-app',
-      pages: router.getWindowPages().reverse()
+      pages: router.getCurrentPages().reverse()
     });
     var containerRef = ref({
       className: ''
@@ -3842,7 +3899,7 @@ defineComponent({
     var removeListener = router.addListener(function (_ref) {
       var action = _ref.action,
           windowChanged = _ref.windowChanged;
-      var pages = router.getWindowPages().reverse();
+      var pages = router.getCurrentPages().reverse();
       return new Promise(function (completeCallback) {
         if (windowChanged) {
           if (action === 'push') {

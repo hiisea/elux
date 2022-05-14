@@ -85,16 +85,74 @@ export default defineUserConfig({
                 },
                 {
                   text: '基础',
-                  link: '/guide/basics.md',
-                },
-                {
-                  text: '案例',
                   children: [
                     {
-                      text: '划分模块',
-                      link: '/guide/case-module.md',
+                      text: '概述',
+                      link: '/guide/basics/summary.md',
+                    },
+                    {
+                      text: 'Module',
+                      link: '/guide/basics/module.md',
+                    },
+                    {
+                      text: 'Model',
+                      link: '/guide/basics/model.md',
+                    },
+                    {
+                      text: 'Store',
+                      link: '/guide/basics/store.md',
+                    },
+                    {
+                      text: 'Action与Handler',
+                      link: '/guide/basics/action.md',
+                    },
+                    {
+                      text: 'Component与View',
+                      link: '/guide/basics/view.md',
+                    },
+                    {
+                      text: 'Router',
+                      link: '/guide/basics/router.md',
                     },
                   ],
+                },
+                {
+                  text: 'UI框架',
+                  children: [
+                    {
+                      text: 'React',
+                      link: '/guide/ui-framework/react.md',
+                    },
+                    {
+                      text: 'Vue',
+                      link: '/guide/ui-framework/vue.md',
+                    },
+                  ],
+                },
+                {
+                  text: 'CSS框架',
+                  link: '/guide/css.md',
+                },
+                {
+                  text: '微前端',
+                  link: '/guide/css.md',
+                },
+                {
+                  text: '跨平台',
+                  children: [
+                    {
+                      text: 'SSR服务器渲染',
+                      link: '/guide/ui-framework/react.md',
+                    },
+                    {
+                      text: 'Taro小程序',
+                      link: '/guide/ui-framework/vue.md',
+                    },
+                  ],
+                },
+                {
+                  text: 'DevTools',
+                  link: '/guide/dev-tools.md',
                 },
               ],
             },

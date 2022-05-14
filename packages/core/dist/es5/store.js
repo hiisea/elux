@@ -57,6 +57,10 @@ export var CoreRouter = function () {
 
   var _proto = CoreRouter.prototype;
 
+  _proto.getHistoryUrls = function getHistoryUrls(target) {
+    throw new Error('Method not implemented.');
+  };
+
   _proto.addListener = function addListener(callback) {
     this.listenerId++;
     var id = "" + this.listenerId;
@@ -132,9 +136,9 @@ export var Store = function () {
     this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
-    this.active = false;
     this.currentAction = void 0;
     this.uncommittedState = {};
+    this.active = false;
 
     this.dispatch = function (action) {
       throw 'Dispatching action while constructing your middleware is not allowed.';
@@ -433,7 +437,7 @@ export function modelHotReplacement(moduleName, ModelClass) {
       module.ModelClass = ModelClass;
       var newModel = new ModelClass(moduleName, null);
       injectActions(newModel, true);
-      var page = MetaData.clientRouter.getCurrentPage();
+      var page = MetaData.clientRouter.getActivePage();
       page.store.hotReplaceModel(moduleName, ModelClass);
     });
   }

@@ -193,21 +193,24 @@ export function injectActions(model: CommonModel, hmr?: boolean): void {
       const handler = handlers[actionNames];
       if (handler.__isReducer__ || handler.__isEffect__) {
         actionNames.split(coreConfig.MSP).forEach((actionName) => {
-          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
-          const arr = actionName.split(coreConfig.NSP);
-          if (arr[1]) {
-            // handler.__isHandler__ = true;
-            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-          } else {
-            // handler.__isHandler__ = false;
-            transformAction(
-              moduleName + coreConfig.NSP + actionName,
-              handler,
-              moduleName,
-              handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap,
-              hmr
-            );
-            // addModuleActionCreatorList(moduleName, actionName);
+          actionName = actionName.trim();
+          if (actionName) {
+            actionName = actionName.replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+            const arr = actionName.split(coreConfig.NSP);
+            if (arr[1]) {
+              // handler.__isHandler__ = true;
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            } else {
+              // handler.__isHandler__ = false;
+              transformAction(
+                moduleName + coreConfig.NSP + actionName,
+                handler,
+                moduleName,
+                handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap,
+                hmr
+              );
+              // addModuleActionCreatorList(moduleName, actionName);
+            }
           }
         });
       }

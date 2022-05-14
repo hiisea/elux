@@ -474,13 +474,17 @@ function injectActions(model, hmr) {
 
       if (handler.__isReducer__ || handler.__isEffect__) {
         actionNames.split(coreConfig.MSP).forEach(actionName => {
-          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
-          const arr = actionName.split(coreConfig.NSP);
+          actionName = actionName.trim();
 
-          if (arr[1]) {
-            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-          } else {
-            transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          if (actionName) {
+            actionName = actionName.replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+            const arr = actionName.split(coreConfig.NSP);
+
+            if (arr[1]) {
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            } else {
+              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            }
           }
         });
       }
@@ -749,17 +753,19 @@ const preMiddleware = ({
   return next(action);
 };
 class CoreRouter {
-  constructor(location, nativeRequest) {
+  constructor() {
     this.listenerId = 0;
     this.listenerMap = {};
     this.action = 'init';
     this.routeKey = '';
-    this.location = location;
-    this.nativeRequest = nativeRequest;
 
     if (!MetaData.clientRouter) {
       MetaData.clientRouter = this;
     }
+  }
+
+  getHistoryUrls(target) {
+    throw new Error('Method not implemented.');
   }
 
   addListener(callback) {
@@ -828,9 +834,9 @@ class Store {
     this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
-    this.active = false;
     this.currentAction = void 0;
     this.uncommittedState = {};
+    this.active = false;
 
     this.dispatch = action => {
       throw 'Dispatching action while constructing your middleware is not allowed.';
@@ -1097,7 +1103,7 @@ function modelHotReplacement(moduleName, ModelClass) {
       module.ModelClass = ModelClass;
       const newModel = new ModelClass(moduleName, null);
       injectActions(newModel, true);
-      const page = MetaData.clientRouter.getCurrentPage();
+      const page = MetaData.clientRouter.getActivePage();
       page.store.hotReplaceModel(moduleName, ModelClass);
     });
   }
@@ -1111,6 +1117,27 @@ function exportModule(moduleName, ModelClass, components, data) {
 }
 function getApi(demoteForProductionOnly, injectActions) {
   const modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+
+  const GetComponent = (moduleName, componentName) => {
+    const result = getComponent(moduleName, componentName);
+
+    if (isPromise(result)) {
+      return result;
+    } else {
+      return Promise.resolve(result);
+    }
+  };
+
+  const GetData = moduleName => {
+    const result = getModule(moduleName);
+
+    if (isPromise(result)) {
+      return result.then(mod => mod.data);
+    } else {
+      return Promise.resolve(result.data);
+    }
+  };
+
   return {
     GetActions: (...args) => {
       return args.reduce((prev, moduleName) => {
@@ -1126,6 +1153,8 @@ function getApi(demoteForProductionOnly, injectActions) {
       return MetaData.clientRouter;
     },
     LoadComponent: coreConfig.LoadComponent,
+    GetComponent: GetComponent,
+    GetData: GetData,
     Modules: modules,
     useRouter: coreConfig.UseRouter,
     useStore: coreConfig.UseStore
@@ -1206,13 +1235,11 @@ let BaseModel = (_class = class BaseModel {
 }, (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
 
 function buildProvider(ins, router) {
-  const store = router.getCurrentPage().store;
   const AppRender = coreConfig.AppRender;
-  router.init({});
   return AppRender.toProvider({
     router,
     documentHead: ''
-  }, ins, store);
+  }, ins);
 }
 
 const ErrorCodes = {
@@ -1350,6 +1377,10 @@ class HistoryStack {
     return this.records[n];
   }
 
+  getItems() {
+    return [...this.records];
+  }
+
   getLength() {
     return this.records.length;
   }
@@ -1479,6 +1510,10 @@ class WindowStack extends HistoryStack {
     this.init(new PageStack(this, location, store));
   }
 
+  getRecords() {
+    return this.records.map(item => item.getCurrentItem());
+  }
+
   getCurrentWindowPage() {
     const item = this.getCurrentItem();
     const store = item.store;
@@ -1490,7 +1525,7 @@ class WindowStack extends HistoryStack {
     };
   }
 
-  getWindowPages() {
+  getCurrentPages() {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
@@ -1618,11 +1653,11 @@ class WindowStack extends HistoryStack {
 }
 
 class BaseNativeRouter {
-  constructor(nativeRequest) {
+  constructor() {
     this.router = void 0;
     this.routeKey = '';
     this.curTask = void 0;
-    this.router = new Router(this, nativeRequest);
+    this.router = new Router(this);
   }
 
   onSuccess() {
@@ -1664,8 +1699,8 @@ class BaseNativeRouter {
 
 }
 class Router extends CoreRouter {
-  constructor(nativeRouter, nativeRequest) {
-    super(urlToLocation(nativeUrlToUrl(nativeRequest.request.url)), nativeRequest);
+  constructor(nativeRouter) {
+    super();
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
@@ -1683,13 +1718,11 @@ class Router extends CoreRouter {
     };
 
     this.nativeRouter = nativeRouter;
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
-    this.routeKey = this.findRecordByStep(0).record.key;
   }
 
   addTask(execute) {
     return new Promise((resolve, reject) => {
-      const task = [() => setLoading(execute(), this.getCurrentPage().store), resolve, reject];
+      const task = [() => setLoading(execute(), this.getActivePage().store), resolve, reject];
 
       if (this.curTask) {
         this.taskList.push(task);
@@ -1706,6 +1739,10 @@ class Router extends CoreRouter {
 
   getHistoryLength(target = 'page') {
     return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  }
+
+  getHistory(target = 'page') {
+    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
   }
 
   findRecordByKey(recordKey) {
@@ -1746,12 +1783,12 @@ class Router extends CoreRouter {
     };
   }
 
-  getCurrentPage() {
+  getActivePage() {
     return this.windowStack.getCurrentWindowPage();
   }
 
-  getWindowPages() {
-    return this.windowStack.getWindowPages();
+  getCurrentPages() {
+    return this.windowStack.getCurrentPages();
   }
 
   async mountStore(payload, prevStore, newStore, historyStore) {
@@ -1790,26 +1827,32 @@ class Router extends CoreRouter {
     }
   }
 
-  init(prevState) {
-    const task = [this._init.bind(this, prevState), () => undefined, () => undefined];
-    this.curTask = task;
-    return task[0]().finally(this.onTaskComplete);
-  }
+  init(routerInitOptions, prevState) {
+    this.init = () => Promise.resolve();
 
-  async _init(prevState) {
+    this.initOptions = routerInitOptions;
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
       payload: null,
       prevState,
       completed: false
     };
-    const store = this.getCurrentPage().store;
+    const task = [this._init.bind(this), () => undefined, () => undefined];
+    this.curTask = task;
+    return task[0]().finally(this.onTaskComplete);
+  }
+
+  async _init() {
     const {
       action,
       location,
       routeKey
     } = this;
     await this.nativeRouter.execute(action, location, routeKey);
+    const store = this.getActivePage().store;
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -1847,7 +1890,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -1895,7 +1938,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -1942,7 +1985,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -2030,7 +2073,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location, index);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -2079,8 +2122,8 @@ setRouteConfig({
   }
 });
 class MPNativeRouter extends BaseNativeRouter {
-  constructor(history, nativeRequest) {
-    super(nativeRequest);
+  constructor(history) {
+    super();
     this.unlistenHistory = void 0;
     this.history = history;
     const {
@@ -2190,13 +2233,7 @@ class MPNativeRouter extends BaseNativeRouter {
 
 }
 function createRouter(history) {
-  const nativeRequest = {
-    request: {
-      url: locationToUrl(history.getLocation())
-    },
-    response: {}
-  };
-  const mpNativeRouter = new MPNativeRouter(history, nativeRequest);
+  const mpNativeRouter = new MPNativeRouter(history);
   return mpNativeRouter.router;
 }
 
@@ -2232,8 +2269,10 @@ const taroHistory = {
 
   isTabPage(pathname) {
     if (!tabPages) {
-      if (env.__taroAppConfig.tabBar) {
-        tabPages = env.__taroAppConfig.tabBar.list.reduce((obj, item) => {
+      const tabConfig = env.__taroAppConfig.tabBar;
+
+      if (tabConfig) {
+        tabPages = (tabConfig.list || tabConfig.items).reduce((obj, item) => {
           obj[routeToPathname(item.pagePath)] = true;
           return obj;
         }, {});
@@ -2288,6 +2327,14 @@ const taroHistory = {
           const current = arr[arr.length - 1];
           path = current.route;
           query = current.options;
+        }
+
+        if (!path) {
+          return {
+            pathname: '',
+            search: '',
+            action: 'RELAUNCH'
+          };
         }
 
         curLocation = {
@@ -2375,7 +2422,7 @@ const vueComponentsConfig = {
 };
 
 const AppRender = {
-  toDocument(id, eluxContext, fromSSR, app, store) {
+  toDocument(id, eluxContext, fromSSR, app) {
     app.provide(EluxContextKey, eluxContext);
 
     if (process.env.NODE_ENV === 'development' && env.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
@@ -2385,12 +2432,12 @@ const AppRender = {
     app.mount(`#${id}`);
   },
 
-  toString(id, eluxContext, app, store) {
+  toString(id, eluxContext, app) {
     app.provide(EluxContextKey, eluxContext);
     return vueComponentsConfig.renderToString(app);
   },
 
-  toProvider(eluxContext, app, store) {
+  toProvider(eluxContext, app) {
     app.provide(EluxContextKey, eluxContext);
     return () => createVNode("div", null, null);
   }
@@ -2481,7 +2528,7 @@ defineComponent({
     const router = coreConfig.UseRouter();
     const data = shallowRef({
       classname: 'elux-app',
-      pages: router.getWindowPages().reverse()
+      pages: router.getCurrentPages().reverse()
     });
     const containerRef = ref({
       className: ''
@@ -2490,7 +2537,7 @@ defineComponent({
       action,
       windowChanged
     }) => {
-      const pages = router.getWindowPages().reverse();
+      const pages = router.getCurrentPages().reverse();
       return new Promise(completeCallback => {
         if (windowChanged) {
           if (action === 'push') {

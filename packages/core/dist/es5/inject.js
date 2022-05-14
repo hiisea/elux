@@ -170,13 +170,17 @@ export function injectActions(model, hmr) {
 
         if (handler.__isReducer__ || handler.__isEffect__) {
           actionNames.split(coreConfig.MSP).forEach(function (actionName) {
-            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
-            var arr = actionName.split(coreConfig.NSP);
+            actionName = actionName.trim();
 
-            if (arr[1]) {
-              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-            } else {
-              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            if (actionName) {
+              actionName = actionName.replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
+              var arr = actionName.split(coreConfig.NSP);
+
+              if (arr[1]) {
+                transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+              } else {
+                transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+              }
             }
           });
         }

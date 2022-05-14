@@ -37,6 +37,8 @@ export type {
   GetPromiseModule,
   GetState,
   HandlerToAction,
+  IGetComponent,
+  IGetData,
   ILoadComponent,
   IRouter,
   IRouteRecord,

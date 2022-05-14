@@ -109,7 +109,7 @@ export class Router extends CoreRouter {
 
   // private addTask(execute: () => Promise<void>): void | Promise<void> {
   //   return new Promise((resolve, reject) => {
-  //     const task = () => setLoading(execute(), this.getCurrentPage().store).then(resolve, reject);
+  //     const task = () => setLoading(execute(), this.getActivePage().store).then(resolve, reject);
   //     if (this.curTask) {
   //       this.taskList.push(task);
   //     } else {
@@ -121,7 +121,7 @@ export class Router extends CoreRouter {
 
   private addTask(execute: () => Promise<void>): Promise<void> {
     return new Promise((resolve, reject) => {
-      const task: RouteTask = [() => setLoading(execute(), this.getCurrentPage().store), resolve, reject];
+      const task: RouteTask = [() => setLoading(execute(), this.getActivePage().store), resolve, reject];
       if (this.curTask) {
         this.taskList.push(task);
       } else {
@@ -137,6 +137,10 @@ export class Router extends CoreRouter {
 
   getHistoryLength(target: RouteTarget = 'page'): number {
     return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  }
+
+  getHistory(target: RouteTarget = 'page'): IRouteRecord[] {
+    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
   }
 
   findRecordByKey(recordKey: string): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
@@ -157,12 +161,12 @@ export class Router extends CoreRouter {
     return {overflow, index, record: {key, location}};
   }
 
-  getCurrentPage(): {url: string; store: Store} {
+  getActivePage(): {url: string; store: Store} {
     return this.windowStack.getCurrentWindowPage();
   }
 
-  getWindowPages(): {url: string; store: Store}[] {
-    return this.windowStack.getWindowPages();
+  getCurrentPages(): {url: string; store: Store}[] {
+    return this.windowStack.getCurrentPages();
   }
 
   private async mountStore(payload: unknown, prevStore: Store, newStore: Store, historyStore?: Store): Promise<void> {
@@ -209,7 +213,7 @@ export class Router extends CoreRouter {
   private async _init() {
     const {action, location, routeKey} = this;
     await this.nativeRouter.execute(action, location, routeKey);
-    const store = this.getCurrentPage().store;
+    const store = this.getActivePage().store;
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
       await store.dispatch(testChangeAction(this.location, this.action));
@@ -236,7 +240,7 @@ export class Router extends CoreRouter {
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
     }
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -272,7 +276,7 @@ export class Router extends CoreRouter {
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
     }
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -307,7 +311,7 @@ export class Router extends CoreRouter {
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
     }
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -372,7 +376,7 @@ export class Router extends CoreRouter {
     if (!_nativeCaller && NotifyNativeRouter.length) {
       this.nativeRouter.testExecute(action, location, index);
     }
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;

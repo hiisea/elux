@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 const replace = require('replace-in-file');
 
-const indexPage = `# API手册
+const indexPage = `# API手册V2.0
 
 根据UI框架和运行环境的不同，请使用不同的Package：
 

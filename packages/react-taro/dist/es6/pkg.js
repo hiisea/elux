@@ -479,13 +479,17 @@ function injectActions(model, hmr) {
 
       if (handler.__isReducer__ || handler.__isEffect__) {
         actionNames.split(coreConfig.MSP).forEach(actionName => {
-          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
-          const arr = actionName.split(coreConfig.NSP);
+          actionName = actionName.trim();
 
-          if (arr[1]) {
-            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-          } else {
-            transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+          if (actionName) {
+            actionName = actionName.replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+            const arr = actionName.split(coreConfig.NSP);
+
+            if (arr[1]) {
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            } else {
+              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            }
           }
         });
       }
@@ -765,6 +769,10 @@ class CoreRouter {
     }
   }
 
+  getHistoryUrls(target) {
+    throw new Error('Method not implemented.');
+  }
+
   addListener(callback) {
     this.listenerId++;
     const id = `${this.listenerId}`;
@@ -831,9 +839,9 @@ class Store {
     this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
-    this.active = false;
     this.currentAction = void 0;
     this.uncommittedState = {};
+    this.active = false;
 
     this.dispatch = action => {
       throw 'Dispatching action while constructing your middleware is not allowed.';
@@ -1100,7 +1108,7 @@ function modelHotReplacement(moduleName, ModelClass) {
       module.ModelClass = ModelClass;
       const newModel = new ModelClass(moduleName, null);
       injectActions(newModel, true);
-      const page = MetaData.clientRouter.getCurrentPage();
+      const page = MetaData.clientRouter.getActivePage();
       page.store.hotReplaceModel(moduleName, ModelClass);
     });
   }
@@ -1114,6 +1122,27 @@ function exportModule(moduleName, ModelClass, components, data) {
 }
 function getApi(demoteForProductionOnly, injectActions) {
   const modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+
+  const GetComponent = (moduleName, componentName) => {
+    const result = getComponent(moduleName, componentName);
+
+    if (isPromise(result)) {
+      return result;
+    } else {
+      return Promise.resolve(result);
+    }
+  };
+
+  const GetData = moduleName => {
+    const result = getModule(moduleName);
+
+    if (isPromise(result)) {
+      return result.then(mod => mod.data);
+    } else {
+      return Promise.resolve(result.data);
+    }
+  };
+
   return {
     GetActions: (...args) => {
       return args.reduce((prev, moduleName) => {
@@ -1129,6 +1158,8 @@ function getApi(demoteForProductionOnly, injectActions) {
       return MetaData.clientRouter;
     },
     LoadComponent: coreConfig.LoadComponent,
+    GetComponent: GetComponent,
+    GetData: GetData,
     Modules: modules,
     useRouter: coreConfig.UseRouter,
     useStore: coreConfig.UseStore
@@ -1245,7 +1276,7 @@ const RouterComponent = () => {
   const router = coreConfig.UseRouter();
   const [data, setData] = useState({
     classname: 'elux-app',
-    pages: router.getWindowPages().reverse()
+    pages: router.getCurrentPages().reverse()
   });
   const {
     classname,
@@ -1259,7 +1290,7 @@ const RouterComponent = () => {
       action,
       windowChanged
     }) => {
-      const pages = router.getWindowPages().reverse();
+      const pages = router.getCurrentPages().reverse();
       return new Promise(completeCallback => {
         if (windowChanged) {
           if (action === 'push') {
@@ -1657,6 +1688,10 @@ class HistoryStack {
     return this.records[n];
   }
 
+  getItems() {
+    return [...this.records];
+  }
+
   getLength() {
     return this.records.length;
   }
@@ -1786,6 +1821,10 @@ class WindowStack extends HistoryStack {
     this.init(new PageStack(this, location, store));
   }
 
+  getRecords() {
+    return this.records.map(item => item.getCurrentItem());
+  }
+
   getCurrentWindowPage() {
     const item = this.getCurrentItem();
     const store = item.store;
@@ -1797,7 +1836,7 @@ class WindowStack extends HistoryStack {
     };
   }
 
-  getWindowPages() {
+  getCurrentPages() {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
@@ -1994,7 +2033,7 @@ class Router extends CoreRouter {
 
   addTask(execute) {
     return new Promise((resolve, reject) => {
-      const task = [() => setLoading(execute(), this.getCurrentPage().store), resolve, reject];
+      const task = [() => setLoading(execute(), this.getActivePage().store), resolve, reject];
 
       if (this.curTask) {
         this.taskList.push(task);
@@ -2011,6 +2050,10 @@ class Router extends CoreRouter {
 
   getHistoryLength(target = 'page') {
     return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  }
+
+  getHistory(target = 'page') {
+    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
   }
 
   findRecordByKey(recordKey) {
@@ -2051,12 +2094,12 @@ class Router extends CoreRouter {
     };
   }
 
-  getCurrentPage() {
+  getActivePage() {
     return this.windowStack.getCurrentWindowPage();
   }
 
-  getWindowPages() {
-    return this.windowStack.getWindowPages();
+  getCurrentPages() {
+    return this.windowStack.getCurrentPages();
   }
 
   async mountStore(payload, prevStore, newStore, historyStore) {
@@ -2120,7 +2163,7 @@ class Router extends CoreRouter {
       routeKey
     } = this;
     await this.nativeRouter.execute(action, location, routeKey);
-    const store = this.getCurrentPage().store;
+    const store = this.getActivePage().store;
 
     try {
       await store.mount(coreConfig.StageModuleName, 'init');
@@ -2158,7 +2201,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -2206,7 +2249,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -2253,7 +2296,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;
@@ -2341,7 +2384,7 @@ class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location, index);
     }
 
-    const prevStore = this.getCurrentPage().store;
+    const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.location = location;

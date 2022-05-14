@@ -6,7 +6,7 @@ export const RouterComponent = () => {
   const router = coreConfig.UseRouter();
   const [data, setData] = useState({
     classname: 'elux-app',
-    pages: router.getWindowPages().reverse()
+    pages: router.getCurrentPages().reverse()
   });
   const {
     classname,
@@ -20,7 +20,7 @@ export const RouterComponent = () => {
       action,
       windowChanged
     }) => {
-      const pages = router.getWindowPages().reverse();
+      const pages = router.getCurrentPages().reverse();
       return new Promise(completeCallback => {
         if (windowChanged) {
           if (action === 'push') {

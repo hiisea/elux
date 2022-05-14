@@ -6,3 +6,4 @@ storage/
 .api/
 .temp/
 .cache/
+*.md

@@ -34,7 +34,7 @@ export function buildSSR(ins, router, routerOptions) {
           id = _ref2$id === void 0 ? 'root' : _ref2$id;
 
       return router.init(routerOptions, {}).then(function () {
-        var store = router.getCurrentPage().store;
+        var store = router.getActivePage().store;
         store.destroy();
         var eluxContext = {
           router: router,

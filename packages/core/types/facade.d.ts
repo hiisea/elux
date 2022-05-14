@@ -99,6 +99,39 @@ export declare type ILoadComponent<TFacade extends Facade = {}> = <M extends key
     }>;
     onLoading?: Elux.Component<{}>;
 }) => TFacade[M]['components'][V];
+/**
+ * 获取指定模块的UI组件
+ *
+ * @remarks
+ * 该方法可通过{@link getApi}获得，用于获取其它模块导出的{@link exportView | UI组件}，例如：
+ *
+ * ```js
+ *   const Article = GetComponent('article', 'main')
+ * ```
+ *
+ * 不同于{@link ILoadComponent}，该方法仅获取组建，并不Render它
+ *
+ * @param moduleName - 组件所属模块名
+ * @param componentName - 组件导出名，参见{@link exportModule}
+ *
+ * @public
+ */
+export declare type IGetComponent<TFacade extends Facade = {}> = <M extends keyof TFacade, V extends keyof TFacade[M]['components']>(moduleName: M, componentName: V) => Promise<TFacade[M]['components'][V]>;
+/**
+ * 获取指定模块导出的Data
+ *
+ * @remarks
+ * 该方法可通过{@link getApi}获得，用于获取其它模块导出的{@link exportModule | Data}，例如：
+ *
+ * ```js
+ *   const ArticleData = GetData('article')
+ * ```
+ *
+ * @param moduleName - 组件所属模块名
+ *
+ * @public
+ */
+export declare type IGetData<TFacade extends Facade = {}> = <M extends keyof TFacade>(moduleName: M) => Promise<TFacade[M]['data']>;
 /*** @public */
 export declare type API<TFacade extends Facade> = {
     State: {
@@ -108,6 +141,8 @@ export declare type API<TFacade extends Facade> = {
         [K in N]: TFacade[K]['actions'];
     };
     LoadComponent: ILoadComponent<TFacade>;
+    GetComponent: IGetComponent<TFacade>;
+    GetData: IGetData<TFacade>;
     Modules: {
         [N in keyof TFacade]: Pick<TFacade[N], 'name' | 'actions' | 'actionNames' | 'data'>;
     };
@@ -128,6 +163,10 @@ export declare type API<TFacade extends Facade> = {
  * 返回包含多个全局方法的结构体：
  *
  * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。
+ *
+ * - `GetComponent`：用于获取其它模块导出的{@link exportView | UI组件}，参见 {@link IGetComponent}。
+ *
+ * - `GetData`：用于获取其它模块导出的{@link exportModule | Data}，参见 {@link IGetData}。
  *
  * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：
  * ```js
@@ -163,7 +202,7 @@ export declare type API<TFacade extends Facade> = {
  *
  * @example
  * ```js
- * const {Modules, LoadComponent, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();
+ * const {Modules, LoadComponent, GetComponent, GetData, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();
  * ```
  *
  * @public
@@ -172,8 +211,10 @@ export declare function getApi<TAPI extends {
     State: any;
     GetActions: any;
     LoadComponent: any;
+    GetComponent: any;
+    GetData: any;
     Modules: any;
-}>(demoteForProductionOnly?: boolean, injectActions?: Record<string, string[]>): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'Modules'> & {
+}>(demoteForProductionOnly?: boolean, injectActions?: Record<string, string[]>): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'GetComponent' | 'GetData' | 'Modules'> & {
     GetClientRouter: () => IRouter;
     useRouter: () => IRouter;
     useStore: () => IStore<TAPI['State']>;

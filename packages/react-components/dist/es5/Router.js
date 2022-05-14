@@ -7,7 +7,7 @@ export var RouterComponent = function RouterComponent() {
 
   var _useState = useState({
     classname: 'elux-app',
-    pages: router.getWindowPages().reverse()
+    pages: router.getCurrentPages().reverse()
   }),
       data = _useState[0],
       setData = _useState[1];
@@ -21,7 +21,7 @@ export var RouterComponent = function RouterComponent() {
     return router.addListener(function (_ref) {
       var action = _ref.action,
           windowChanged = _ref.windowChanged;
-      var pages = router.getWindowPages().reverse();
+      var pages = router.getCurrentPages().reverse();
       return new Promise(function (completeCallback) {
         if (windowChanged) {
           if (action === 'push') {

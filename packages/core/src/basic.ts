@@ -5,7 +5,7 @@ import {buildConfigSetter, deepMerge, UNListener} from './utils';
  * 定义Action
  *
  * @remarks
- * 类似于 `Redux` 或 `Vuex` 的 Action，增加了 `priority` 设置，用来指明同时有多个 handelr 时的处理顺序
+ * 类似于 `Redux` 或 `Vuex` 的 Action，增加了 `priority` 设置，用来指明同时有多个 handler 时的处理顺序
  *
  * @public
  */
@@ -15,7 +15,7 @@ export interface Action {
    */
   type: string;
   /**
-   * 通常无需设置，同时有多个 handelr 时，可以特别指明处理顺序，其值为 moduleName 数组
+   * 通常无需设置，同时有多个 handler 时，可以特别指明处理顺序，其值为 moduleName 数组
    */
   priority?: string[];
   /**
@@ -92,7 +92,7 @@ export interface GetState<TStoreState extends StoreState = StoreState> {
  * @remarks
  * - 每个 Store 都挂载在 {@link IRouter} 下面，router 和 store 是一对多的关系
  *
- * - 每次路由发生变化都会生成一个独立的 Store
+ * - 每次路由发生变化都会生成一个新的 Store
  *
  * @public
  */
@@ -101,6 +101,10 @@ export interface IStore<TStoreState extends StoreState = StoreState> {
    * 每个 store 实例都有一个 ID 标识
    */
   sid: number;
+  /**
+   * 当前是否是时激活状态
+   */
+  active: boolean;
   /**
    * 每个 store 实例都会挂载在 router 路由器下面
    *
@@ -113,16 +117,16 @@ export interface IStore<TStoreState extends StoreState = StoreState> {
    */
   dispatch: Dispatch;
   /**
-   * 获取有效状态
+   * 获取已提交的状态
    */
   getState: GetState<TStoreState>;
   /**
-   * 获取未提交的未生效状态
+   * 获取未提交的状态
    *
    * @remarks
    * store 状态由多个 module 状态组成，更新的时候必须等所有 module 状态全部完成更新后才一次性 commit 到 store 中
    */
-  getUncommittedState: () => TStoreState;
+  getUncommittedState(): TStoreState;
   /**
    * 在该 store 中挂载指定的 module
    *
@@ -272,7 +276,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
    */
   addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
   /**
-   * 路由初始化时的参数
+   * 路由初始化时的参数，SSR时可用来引用用户请求
    */
   initOptions: RouterInitOptions;
   /**
@@ -280,7 +284,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
    */
   action: RouteAction;
   /**
-   * 路由描述
+   * 路由信息
    */
   location: Location;
   /**
@@ -294,15 +298,19 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
   /**
    * 获取当前被激活显示的页面
    */
-  getCurrentPage(): {url: string; store: IStore};
+  getActivePage(): {url: string; store: IStore};
   /**
-   * 获取所有窗口中显示的页面
+   * 获取所有window中的当前页面
    */
-  getWindowPages(): {url: string; store: IStore}[];
+  getCurrentPages(): {url: string; store: IStore}[];
   /**
    * 获取指定路由栈的长度
    */
   getHistoryLength(target?: RouteTarget): number;
+  /**
+   * 获取指定路由栈中的记录
+   */
+  getHistory(target?: RouteTarget): IRouteRecord[];
   /**
    * 用`唯一key`来查找某条路由记录，如果没找到则返回 `{overflow: true}`
    */
