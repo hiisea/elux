@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {defineUserConfig} from 'vuepress';
 import {defaultTheme} from '@vuepress/theme-default';
+import {path} from '@vuepress/utils';
 
 export default defineUserConfig({
   shouldPrefetch: false,
@@ -72,4 +73,8 @@ export default defineUserConfig({
       },
     },
   }),
+  alias: {
+    '@theme/NavbarBrand.vue': path.resolve(__dirname, './components/NavbarBrand.vue'),
+    '@theme/NavbarItems.vue': path.resolve(__dirname, './components/NavbarItems.vue'),
+  },
 });

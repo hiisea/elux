@@ -4,7 +4,7 @@ import {defaultTheme} from '@vuepress/theme-default';
 import {path} from '@vuepress/utils';
 
 export default defineUserConfig({
-  shouldPrefetch: false,
+  // shouldPrefetch: false,
   // shouldPrefetch: (file, type) => {
   //   if (file.startsWith('assets/vue-web.') || file.startsWith('assets/vue-taro.')) {
   //     return false;
@@ -42,7 +42,7 @@ export default defineUserConfig({
           },
           {
             text: 'API文档',
-            link: '/api/',
+            link: 'http://eluxjs.com/api/',
           },
           {
             text: 'CLI工具',
@@ -114,6 +114,10 @@ export default defineUserConfig({
                       text: 'Router',
                       link: '/guide/basics/router.md',
                     },
+                    {
+                      text: 'Mutable与Immutable',
+                      link: '/guide/basics/immutable.md',
+                    },
                   ],
                 },
                 {
@@ -134,21 +138,25 @@ export default defineUserConfig({
                   link: '/guide/css.md',
                 },
                 {
-                  text: '微前端',
-                  link: '/guide/css.md',
+                  text: '微前端与微模块',
+                  link: '/guide/mfd.md',
                 },
                 {
                   text: '跨平台',
                   children: [
                     {
                       text: 'SSR服务器渲染',
-                      link: '/guide/ui-framework/react.md',
+                      link: '/guide/platform/ssr.md',
                     },
                     {
                       text: 'Taro小程序',
-                      link: '/guide/ui-framework/vue.md',
+                      link: '/guide/platform/taro.md',
                     },
                   ],
+                },
+                {
+                  text: '兼容IE浏览器',
+                  link: '/guide/demote.md',
                 },
                 {
                   text: 'DevTools',

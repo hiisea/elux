@@ -5,3 +5,11 @@
   --homepage-width: 1000px;
   --c-text: #555;
 }
+.navbar {
+  .site-name {
+    display: none;
+  }
+  .external-link span {
+    display: none;
+  }
+}

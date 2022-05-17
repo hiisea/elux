@@ -2,13 +2,6 @@ import { Action, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule
 /**
  * 向外导出UI组件
  *
- * @remarks
- * 不同于普通UI组件，EluxUI组件可通过 {@link ILoadComponent} 按需加载
- *
- * {@link exportComponent} VS {@link exportView} 参见：`Elux中组件与视图的区别`
- *
- * @param component - 普通UI组件（如React组件、Vue组件）
- *
  * @returns
  * 返回实现 EluxComponent 接口的UI组件
  *
@@ -16,17 +9,16 @@ import { Action, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule
  */
 export declare function exportComponent<T>(component: T): T & EluxComponent;
 /**
+ * 向外导出业务视图
  *
- * {@inheritDoc exportComponent}
+ * @returns
+ * 返回实现 EluxComponent 接口的业务视图
  *
  * @public
  */
 export declare function exportView<T>(component: T): T & EluxComponent;
 /**
- * 实现了CommonModel的空Model
- *
- * @remarks
- * 常用于 mock 假数据
+ * 空Model常用于mock假数据
  *
  * @public
  */
@@ -56,7 +48,7 @@ export declare function exportModuleFacade(moduleName: string, ModelClass: Commo
  */
 export declare function setLoading<T extends Promise<any>>(item: T, store: IStore, _moduleName?: string, _groupName?: string): T;
 /**
- * Model类的装饰器函数:跟踪effect执行钩子
+ * 跟踪effect执行的钩子
  *
  * @remarks
  * 用于在以下 effect 中注入 before 和 after 的钩子，常用来跟踪effect执行情况
@@ -71,13 +63,13 @@ export declare function setLoading<T extends Promise<any>>(item: T, store: IStor
  */
 export declare function effectLogger(before: (store: IStore, action: Action, effectResult: unknown) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: unknown, effectResult: unknown) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
 /**
- * Model类的装饰器函数:申明reducer
+ * 申明reducer
  *
  * @public
  */
 export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
 /**
- * Model类的装饰器函数:申明effect
+ * 申明effect
  *
  * @example
  * - `@effect('this.searchTableLoading')` 将该 effect 执行状态注入本模块的 `searchTableLoading` 状态中

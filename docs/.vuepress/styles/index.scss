@@ -44,8 +44,13 @@
   content: '\e6f1';
 }
 
-.navbar .site-name {
-  display: none;
+.navbar {
+  .site-name {
+    display: none;
+  }
+  .external-link span {
+    display: none;
+  }
 }
 
 .home {

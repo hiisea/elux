@@ -5965,4 +5965,4 @@ function createApp(appConfig) {
   return cientSingleton;
 }
 
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };

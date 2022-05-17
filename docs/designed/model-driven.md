@@ -12,13 +12,7 @@
 
 ## 轻UI，重Model
 
-你是否仍在纠结采用React还是Vue？是否仍被困于各种生命周期之中？是否迷惑于把获取数据写在onMounted还是onCreated中？那么你应当尝试着：
-
-::: tip 将更多逻辑从UI转移到Model中
-
-轻UI，重Model
-
-:::
+你是否仍在纠结采用React还是Vue？是否仍被困于各种生命周期之中？是否迷惑于把获取数据写在onMounted还是onCreated中？那么你应当尝试着：将更多逻辑从UI转移到Model中
 
 ## 为什么需要模型驱动？
 

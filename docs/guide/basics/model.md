@@ -11,6 +11,21 @@
 
 Model是一个普通的JS类，可以通过继承来复用一些公共逻辑。
 
+## Modle的基础定义
+
+```ts
+export interface CommonModel {
+  readonly moduleName: string; //模块名称
+  readonly state: ModuleState; //模块状态
+  //model被挂载到store时触发，在一个store中一个model只会被挂载一次
+  onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
+  //当前page被激活时触发
+  onActive(): void;
+  //当前page被变为历史快照时触发
+  onInactive(): void;
+}
+```
+
 ## 创建一个Model
 
 下面我们用一个比较复杂的根模块stage.model作为示例：

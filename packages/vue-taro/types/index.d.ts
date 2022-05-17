@@ -4,7 +4,7 @@ export { DocumentHead, Else, Link, Switch } from '@elux/vue-components';
 export type { DocumentHeadProps, ElseProps, LinkProps, SwitchProps } from '@elux/vue-components';
 export * from '@elux/app';
 /**
- * 小程序Page入口
+ * 小程序Page页面
  *
  * @public
  */

@@ -28,7 +28,7 @@ export type {
   RouteRuntime,
   RouteTarget,
   StoreLogger,
-  storeLoggerInfo,
+  StoreLoggerInfo,
   StoreMiddleware,
   StoreState,
 } from './basic';

@@ -19,7 +19,7 @@ import {
   RouterInitOptions,
   RouteRuntime,
   RouteTarget,
-  storeLoggerInfo,
+  StoreLoggerInfo,
   StoreMiddleware,
   StoreState,
 } from './basic';
@@ -345,7 +345,7 @@ export class Store implements IStore {
     const handlers = {...commonHandlers, ...universalHandlers};
     const handlerModuleNames = Object.keys(handlers);
     const prevState = this.getState();
-    const logs: storeLoggerInfo = {
+    const logs: StoreLoggerInfo = {
       id: this.sid,
       isActive: this.active,
       actionName,

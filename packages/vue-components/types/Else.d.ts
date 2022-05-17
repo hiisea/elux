@@ -1,9 +1,9 @@
-import { DefineComponent, VNode } from 'vue';
+import { FunctionalComponent, VNode } from 'vue';
 /**
  * 内置UI组件
  *
  * @remarks
- * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`，
+ * 用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`，
  * 与 {@link Switch | `<Switch>`} 的区别在于：`<Switch>` 仅渲染非空子元素中的第1个
  *
  * @example
@@ -27,5 +27,5 @@ export interface ElseProps {
  *
  * @public
  */
-export declare const Else: DefineComponent<ElseProps>;
+export declare const Else: FunctionalComponent<ElseProps>;
 //# sourceMappingURL=Else.d.ts.map

@@ -1,10 +1,10 @@
-import { DefineComponent, Events, HTMLAttributes } from 'vue';
+import { FunctionalComponent, Events, HTMLAttributes } from 'vue';
 import { RouteAction, RouteTarget } from '@elux/core';
 /**
  * 内置UI组件
  *
  * @remarks
- * 类似于Html标签 `<a>`，用组件的方式执行路由切换，参见 {@link IRouter}
+ * 类似于Html标签`<a>`，用组件的方式执行路由跳转，参见 {@link IRouter}
  *
  * @example
  * ```html
@@ -15,7 +15,7 @@ import { RouteAction, RouteTarget } from '@elux/core';
  */
 export interface LinkProps extends HTMLAttributes {
     /**
-     * 是否 disable
+     * 如果disabled将不执行路由及onClick事件
      */
     disabled?: boolean;
     /**
@@ -27,11 +27,11 @@ export interface LinkProps extends HTMLAttributes {
      */
     onClick?(event: Events['onClick']): void;
     /**
-     * 指定路由的切换方式
+     * 路由跳转动作
      */
     action?: Exclude<RouteAction, 'init'>;
     /**
-     * 指定要操作的路由栈
+     * 指定要操作的历史栈
      */
     target?: RouteTarget;
 }
@@ -43,5 +43,5 @@ export interface LinkProps extends HTMLAttributes {
  *
  * @public
  */
-export declare const Link: DefineComponent<LinkProps>;
+export declare const Link: FunctionalComponent<LinkProps>;
 //# sourceMappingURL=Link.d.ts.map

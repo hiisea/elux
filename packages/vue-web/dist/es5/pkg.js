@@ -5838,4 +5838,4 @@ function createSSR(appConfig, routerOptions) {
   return buildSSR(app, router, routerOptions);
 }
 
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

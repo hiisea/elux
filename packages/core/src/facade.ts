@@ -78,11 +78,11 @@ export type GetPromiseReturn<T> = T extends Promise<infer R> ? R : T;
  *
  * @param moduleName - 模块名称，不能重复
  * @param ModelClass - Model构造类
- * @param components - 导出的组件或视图，参见 {@link exportView}，当组件代码量大时可以使用`import(...)`异步组件
+ * @param components - 导出的组件或视图，参见 {@link exportView}
  * @param data - 导出其它任何数据
  *
  * @returns
- * 返回实现 {@link CommonModule} 接口的模块
+ * 返回实现 {@link CommonModule} 接口的微模块
  *
  * @example
  * ```js
@@ -113,7 +113,7 @@ export function exportModule<
 }
 
 /**
- * UI组件加载器
+ * 加载指定模块的UI组件
  *
  * @remarks
  * 该方法可通过{@link getApi}获得，用于加载其它模块导出的{@link exportView | UI组件}，相比直接 `import`，使用此方法加载组件不仅可以`按需加载`，
@@ -189,8 +189,8 @@ export type API<TFacade extends Facade> = {
  * @remarks
  * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参
  *
- * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
- * @param injectActions -  用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
+ * @param demoteForProductionOnly - 用于不支持Proxy的运行环境
+ * @param injectActions -  用于不支持Proxy的运行环境
  *
  * @returns
  * 返回包含多个全局方法的结构体：
@@ -288,7 +288,7 @@ export function getApi<TAPI extends {State: any; GetActions: any; LoadComponent:
 }
 
 /**
- * 实现了CommonModel的Model基类
+ * Model基类
  *
  * @remarks
  * Model基类实现了{@link CommonModel}，并提供了一些常用的方法
@@ -297,12 +297,12 @@ export function getApi<TAPI extends {State: any; GetActions: any; LoadComponent:
  */
 export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreState extends StoreState = {}> implements CommonModel {
   /**
-   * 被关联的 store
+   * 所属store，model挂载在store下
    */
   protected readonly store: IStore<TStoreState>;
 
   /**
-   * 当前模块的状态
+   * 获取模块的状态
    */
   public get state(): TModuleState {
     return this.store.getState(this.moduleName) as any;
@@ -313,26 +313,26 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   }
 
   /**
-   * 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次
+   * 被挂载到store时触发
    */
   public abstract onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
 
   /**
-   * 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发
+   * 当前page被激活时触发
    */
   public onActive(): void {
     return;
   }
 
   /**
-   * 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发
+   * 当前page被变为历史快照时触发
    */
   public onInactive(): void {
     return;
   }
 
   /**
-   * 获取关联的 Router
+   * 等于this.store.router
    */
   protected getRouter(): IRouter<TStoreState> {
     return this.store.router;
@@ -347,7 +347,7 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   }
 
   /**
-   * 获取 Store 的全部状态
+   * 获取Store的全局状态，参见{@link IStore}
    *
    * @param type - 不传表示当前状态，previous表示路由跳转之前的状态，uncommitted表示未提交的状态
    *
@@ -366,17 +366,17 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   }
 
   /**
-   * 获取本模块的`公开actions`构造器
+   * 获取本模块的公开actions
    */
   protected get actions(): PickThisActions<this> {
     return MetaData.moduleApiMap[this.moduleName].actions as any;
   }
 
   /**
-   * 获取本模块的`私有actions`构造器
+   * 获取本模块的私有actions
    *
    * @remarks
-   * 有些 action 只在本 Model 内部调用，应将其定义为 protected 或 private 权限，此时将无法通过 `this.actions` 调用，可以使用 `this.getPrivateActions(...)`
+   * 有些action只在本Model内部调用，应将其定义为非public权限，此时将无法通过`this.actions`调用，可以使用`this.getPrivateActions(...)`
    *
    * @example
    * ```js
@@ -398,7 +398,7 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
    * 获取当前触发的action.type
    *
    * @remarks
-   * 当一个 ActionHandler 监听了多个 Action 时，可以使用此方法区别当前 Action
+   * 当一个ActionHandler监听了多个Action，可以使用此方法区别当前Action
    */
   protected getCurrentAction(): Action {
     const store: Store = this.store as any;
@@ -413,10 +413,7 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   }
 
   /**
-   * reducer 监听 `moduleName._initState` Action，注入初始状态
-   *
-   * @remarks
-   * model 被挂载到 store 时会派发 `moduleName._initState` Action
+   * 定义reducer监听`moduleName._initState`，用来注入初始状态
    */
   @reducer
   protected _initState(state: TModuleState): TModuleState {
@@ -424,7 +421,7 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   }
 
   /**
-   * reducer 监听 `moduleName._updateState Action`，合并至当前状态
+   * 定义reducer监听`moduleName._updateState`，用来合并当前状态
    */
   @reducer
   protected _updateState(subject: string, state: Partial<TModuleState>): TModuleState {
@@ -432,10 +429,7 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
   }
 
   /**
-   * reducer 监听 `moduleName._loadingState` Action，合并至当前状态
-   *
-   * @remarks
-   * 执行 effect 时会派发 `moduleName._loadingState` Action
+   * 定义reducer监听`moduleName._loadingState`，用来注入Loading状态
    */
   @reducer
   protected _loadingState(loadingState: {[group: string]: LoadingState}): TModuleState {

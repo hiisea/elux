@@ -172,7 +172,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!Action:interface",
-          "docComment": "/**\n * 定义Action\n *\n * @remarks\n *\n * 类似于 `Redux` 或 `Vuex` 的 Action，增加了 `priority` 设置，用来指明同时有多个 handler 时的处理顺序\n *\n * @public\n */\n",
+          "docComment": "/**\n * 定义Action\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -185,7 +185,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!Action#payload:member",
-              "docComment": "/**\n * action数据\n */\n",
+              "docComment": "/**\n * action载体\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -211,7 +211,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!Action#priority:member",
-              "docComment": "/**\n * 通常无需设置，同时有多个 handler 时，可以特别指明处理顺序，其值为 moduleName 数组\n */\n",
+              "docComment": "/**\n * 同时有多个handler时，可以特别指明处理顺序，通常无需设置\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -237,7 +237,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!Action#type:member",
-              "docComment": "/**\n * action名称不能重复，通常由：ModuleName.ActionName 组成\n */\n",
+              "docComment": "/**\n * type通常由ModuleName.ActionName组成\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -296,7 +296,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!ActionError:interface",
-          "docComment": "/**\n * 内置的错误描述格式\n *\n * @remarks\n *\n * @public\n */\n",
+          "docComment": "/**\n * 内置的错误描述接口\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -503,7 +503,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!AsyncEluxComponent:type",
-          "docComment": "/**\n * 表示该UI组件是一个异步EluxUI\n *\n * @remarks\n *\n * EluxUI组件通常通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载\n *\n * @public\n */\n",
+          "docComment": "/**\n * 异步EluxComponent定义\n *\n * @remarks\n *\n * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -546,7 +546,7 @@
         {
           "kind": "Class",
           "canonicalReference": "@elux/vue-taro!BaseModel:class",
-          "docComment": "/**\n * 实现了CommonModel的Model基类\n *\n * @remarks\n *\n * Model基类实现了{@link CommonModel}，并提供了一些常用的方法\n *\n * @public\n */\n",
+          "docComment": "/**\n * Model基类\n *\n * @remarks\n *\n * Model基类实现了{@link CommonModel}，并提供了一些常用的方法\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -634,7 +634,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#_initState:member(1)",
-              "docComment": "/**\n * reducer 监听 `moduleName._initState` Action，注入初始状态\n *\n * @remarks\n *\n * model 被挂载到 store 时会派发 `moduleName._initState` Action\n */\n",
+              "docComment": "/**\n * 定义reducer监听`moduleName._initState`，用来注入初始状态\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -679,7 +679,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#_loadingState:member(1)",
-              "docComment": "/**\n * reducer 监听 `moduleName._loadingState` Action，合并至当前状态\n *\n * @remarks\n *\n * 执行 effect 时会派发 `moduleName._loadingState` Action\n */\n",
+              "docComment": "/**\n * 定义reducer监听`moduleName._loadingState`，用来注入Loading状态\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -733,7 +733,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#_updateState:member(1)",
-              "docComment": "/**\n * reducer 监听 `moduleName._updateState Action`，合并至当前状态\n */\n",
+              "docComment": "/**\n * 定义reducer监听`moduleName._updateState`，用来合并当前状态\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -844,7 +844,7 @@
             {
               "kind": "Property",
               "canonicalReference": "@elux/vue-taro!BaseModel#actions:member",
-              "docComment": "/**\n * 获取本模块的`公开actions`构造器\n */\n",
+              "docComment": "/**\n * 获取本模块的公开actions\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -931,7 +931,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#getCurrentAction:member(1)",
-              "docComment": "/**\n * 获取当前触发的action.type\n *\n * @remarks\n *\n * 当一个 ActionHandler 监听了多个 Action 时，可以使用此方法区别当前 Action\n */\n",
+              "docComment": "/**\n * 获取当前触发的action.type\n *\n * @remarks\n *\n * 当一个ActionHandler监听了多个Action，可以使用此方法区别当前Action\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -990,7 +990,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#getPrivateActions:member(1)",
-              "docComment": "/**\n * 获取本模块的`私有actions`构造器\n *\n * @remarks\n *\n * 有些 action 只在本 Model 内部调用，应将其定义为 protected 或 private 权限，此时将无法通过 `this.actions` 调用，可以使用 `this.getPrivateActions(...)`\n *\n * @example\n * ```js\n * const privateAction = this.getPrivateActions({renameUser: this.renameUser});\n * this.dispatch(privateAction.renameUser('jimmy'))\n * ```\n *\n */\n",
+              "docComment": "/**\n * 获取本模块的私有actions\n *\n * @remarks\n *\n * 有些action只在本Model内部调用，应将其定义为非public权限，此时将无法通过`this.actions`调用，可以使用`this.getPrivateActions(...)`\n *\n * @example\n * ```js\n * const privateAction = this.getPrivateActions({renameUser: this.renameUser});\n * this.dispatch(privateAction.renameUser('jimmy'))\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1124,7 +1124,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#getRootState:member(1)",
-              "docComment": "/**\n * 获取 Store 的全部状态\n *\n * @param type - 不传表示当前状态，previous表示路由跳转之前的状态，uncommitted表示未提交的状态\n */\n",
+              "docComment": "/**\n * 获取Store的全局状态，参见{@link IStore}\n *\n * @param type - 不传表示当前状态，previous表示路由跳转之前的状态，uncommitted表示未提交的状态\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1169,7 +1169,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#getRouter:member(1)",
-              "docComment": "/**\n * 获取关联的 Router\n */\n",
+              "docComment": "/**\n * 等于this.store.router\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1230,7 +1230,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#onActive:member(1)",
-              "docComment": "/**\n * 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发\n */\n",
+              "docComment": "/**\n * 当前page被激活时触发\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1259,7 +1259,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#onInactive:member(1)",
-              "docComment": "/**\n * 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发\n */\n",
+              "docComment": "/**\n * 当前page被变为历史快照时触发\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1288,7 +1288,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@elux/vue-taro!BaseModel#onMount:member(1)",
-              "docComment": "/**\n * 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次\n */\n",
+              "docComment": "/**\n * 被挂载到store时触发\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1342,7 +1342,7 @@
             {
               "kind": "Property",
               "canonicalReference": "@elux/vue-taro!BaseModel#state:member",
-              "docComment": "/**\n * 当前模块的状态\n */\n",
+              "docComment": "/**\n * 获取模块的状态\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1369,7 +1369,7 @@
             {
               "kind": "Property",
               "canonicalReference": "@elux/vue-taro!BaseModel#store:member",
-              "docComment": "/**\n * 被关联的 store\n */\n",
+              "docComment": "/**\n * 所属store，model挂载在store下\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1409,7 +1409,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!CommonModel:interface",
-          "docComment": "/**\n * Model的一般形态\n *\n * @public\n */\n",
+          "docComment": "/**\n * Model的基础定义\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1448,7 +1448,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!CommonModel#onActive:member(1)",
-              "docComment": "/**\n * 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发\n */\n",
+              "docComment": "/**\n * 当前page被激活时触发\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1476,7 +1476,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!CommonModel#onInactive:member(1)",
-              "docComment": "/**\n * 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发\n */\n",
+              "docComment": "/**\n * 当前page被变为历史快照时触发\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1504,7 +1504,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!CommonModel#onMount:member(1)",
-              "docComment": "/**\n * 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次\n */\n",
+              "docComment": "/**\n * model被挂载到store时触发，在一个store中一个model只会被挂载一次\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -1683,7 +1683,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!CommonModule:interface",
-          "docComment": "/**\n * Module的一般形态\n *\n * @public\n */\n",
+          "docComment": "/**\n * Module的基础定义\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1896,7 +1896,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!ComputedStore:type",
-          "docComment": "/**\n * *\n *\n * @public\n */\n",
+          "docComment": "/**\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -1999,7 +1999,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!deepMerge:function(1)",
-          "docComment": "/**\n * 多个PlainObject的深度Merge\n *\n * @remarks\n *\n * 类似于 `Object.assin` 的深复制版本。\n *\n * - 除第一个参数 target 会被修改外，保证其它入参不会被修改。\n *\n * - 仅适应于 Merge PlainObject，且对于 array 是直接替换而不 merge\n *\n * @public\n */\n",
+          "docComment": "/**\n * 多个PlainObject的深度Merge\n *\n * @remarks\n *\n * 类似于 `Object.assin` 的深复制版本。\n *\n * - 除第一个参数target会被修改外，保证其它入参不会被修改。\n *\n * - 仅适应于Merge PlainObject\n *\n * - 对于array是直接替换而不merge\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2108,8 +2108,8 @@
             },
             {
               "kind": "Reference",
-              "text": "DefineComponent",
-              "canonicalReference": "@vue/runtime-core!DefineComponent:type"
+              "text": "FunctionalComponent",
+              "canonicalReference": "@vue/runtime-core!FunctionalComponent:interface"
             },
             {
               "kind": "Content",
@@ -2135,7 +2135,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!DocumentHeadProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）\n *\n * @example\n * ```html\n * <DocumentHead\n *   title='文章'\n *   html='<meta name=\"keywords\" content=\"域名,域名推广,域名注册\">'\n * />\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 用组件的方式动态修改`<head>内容`，主要是`title/description/keywords`等meta信息，SSR中非常有用\n *\n * @example\n * ```html\n * <DocumentHead\n *   title='文章'\n *   html='<meta name=\"keywords\" content=\"域名,域名推广,域名注册\">'\n * />\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2203,7 +2203,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!effect:function(1)",
-          "docComment": "/**\n * Model类的装饰器函数:申明effect\n *\n * @param loadingKey - 将该 effect 执行状态作为 {@link LoadingState | LoadingState} 注入指定的 ModuleState 中。\n *\n * @returns 返回ES6装饰器\n *\n * @example\n *\n * - `@effect('this.searchTableLoading')` 将该 effect 执行状态注入本模块的 `searchTableLoading` 状态中\n *\n * - `@effect()` 等于 `@effect('stage.globalLoading')`\n *\n * - `@effect(null)` 不跟踪其执行状态\n *\n * @public\n */\n",
+          "docComment": "/**\n * 申明effect\n *\n * @param loadingKey - 将该 effect 执行状态作为 {@link LoadingState | LoadingState} 注入指定的 ModuleState 中。\n *\n * @returns 返回ES6装饰器\n *\n * @example\n *\n * - `@effect('this.searchTableLoading')` 将该 effect 执行状态注入本模块的 `searchTableLoading` 状态中\n *\n * - `@effect()` 等于 `@effect('stage.globalLoading')`\n *\n * - `@effect(null)` 不跟踪其执行状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2247,7 +2247,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!effectLogger:function(1)",
-          "docComment": "/**\n * Model类的装饰器函数:跟踪effect执行钩子\n *\n * @remarks\n *\n * 用于在以下 effect 中注入 before 和 after 的钩子，常用来跟踪effect执行情况\n *\n * @param before - 该 effect 执行前自动调用\n *\n * @param after - 该 effect 执行后自动调用（无论成功与否）\n *\n * @returns 返回ES6装饰器\n *\n * @public\n */\n",
+          "docComment": "/**\n * 跟踪effect执行的钩子\n *\n * @remarks\n *\n * 用于在以下 effect 中注入 before 和 after 的钩子，常用来跟踪effect执行情况\n *\n * @param before - 该 effect 执行前自动调用\n *\n * @param after - 该 effect 执行后自动调用（无论成功与否）\n *\n * @returns 返回ES6装饰器\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2340,8 +2340,8 @@
             },
             {
               "kind": "Reference",
-              "text": "DefineComponent",
-              "canonicalReference": "@vue/runtime-core!DefineComponent:type"
+              "text": "FunctionalComponent",
+              "canonicalReference": "@vue/runtime-core!FunctionalComponent:interface"
             },
             {
               "kind": "Content",
@@ -2367,7 +2367,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!ElseProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`， 与 {@link Switch | `<Switch>`} 的区别在于：`<Switch>` 仅渲染非空子元素中的第1个\n *\n * @example\n * ```html\n * <Else elseView={<NotFound />}>\n *  {subView === 'detail' && <Detail />}\n *  {subView === 'list' && <List />}\n * </Else>\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`， 与 {@link Switch | `<Switch>`} 的区别在于：`<Switch>` 仅渲染非空子元素中的第1个\n *\n * @example\n * ```html\n * <Else elseView={<NotFound />}>\n *  {subView === 'detail' && <Detail />}\n *  {subView === 'list' && <List />}\n * </Else>\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2410,7 +2410,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!EluxComponent:interface",
-          "docComment": "/**\n * 表示该UI组件是一个导出的UI组件\n *\n * @remarks\n *\n * EluxUI组件通常通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载\n *\n * @public\n */\n",
+          "docComment": "/**\n * EluxComponent定义\n *\n * @remarks\n *\n * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2452,7 +2452,7 @@
         {
           "kind": "Variable",
           "canonicalReference": "@elux/vue-taro!EluxPage:var",
-          "docComment": "/**\n * 小程序Page入口\n *\n * @public\n */\n",
+          "docComment": "/**\n * 小程序Page页面\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2474,7 +2474,7 @@
         {
           "kind": "Class",
           "canonicalReference": "@elux/vue-taro!EmptyModel:class",
-          "docComment": "/**\n * 实现了CommonModel的空Model\n *\n * @remarks\n *\n * 常用于 mock 假数据\n *\n * @public\n */\n",
+          "docComment": "/**\n * 空Model常用于mock假数据\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2789,7 +2789,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!errorAction:function(1)",
-          "docComment": "/**\n * 创建一个内置的ErrorAction\n *\n * @remarks\n *\n * 该 action 可以被 dispatch，可以被 model 捕获并处理\n *\n * @param error - 错误体\n *\n * @public\n */\n",
+          "docComment": "/**\n * 创建一个特殊的ErrorAction\n *\n * @param error - 错误体\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2854,7 +2854,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!exportComponent:function(1)",
-          "docComment": "/**\n * 向外导出UI组件\n *\n * @remarks\n *\n * 不同于普通UI组件，EluxUI组件可通过 {@link ILoadComponent} 按需加载\n *\n * {@link exportComponent} VS {@link exportView} 参见：`Elux中组件与视图的区别`\n *\n * @param component - 普通UI组件（如React组件、Vue组件）\n *\n * @returns 返回实现 EluxComponent 接口的UI组件\n *\n * @public\n */\n",
+          "docComment": "/**\n * 向外导出UI组件\n *\n * @returns 返回实现 EluxComponent 接口的UI组件\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -2915,7 +2915,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!exportModule:function(1)",
-          "docComment": "/**\n * 向外封装并导出Module\n *\n * @param moduleName - 模块名称，不能重复\n *\n * @param ModelClass - Model构造类\n *\n * @param components - 导出的组件或视图，参见 {@link exportView}，当组件代码量大时可以使用`import(...)`异步组件\n *\n * @param data - 导出其它任何数据\n *\n * @returns 返回实现 {@link CommonModule} 接口的模块\n *\n * @example\n * ```js\n * import UserModel from './model';\n * import MainView from './views/Main';\n *\n * exportModule('user', UserModel, {main: MainView, list: ()=>import('./views/List')})\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 向外封装并导出Module\n *\n * @param moduleName - 模块名称，不能重复\n *\n * @param ModelClass - Model构造类\n *\n * @param components - 导出的组件或视图，参见 {@link exportView}\n *\n * @param data - 导出其它任何数据\n *\n * @returns 返回实现 {@link CommonModule} 接口的微模块\n *\n * @example\n * ```js\n * import UserModel from './model';\n * import MainView from './views/Main';\n *\n * exportModule('user', UserModel, {main: MainView, list: ()=>import('./views/List')})\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3124,7 +3124,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!exportView:function(1)",
-          "docComment": "/**\n * 向外导出UI组件\n *\n * @remarks\n *\n * 不同于普通UI组件，EluxUI组件可通过 {@link ILoadComponent} 按需加载\n *\n * {@link exportComponent} VS {@link exportView} 参见：`Elux中组件与视图的区别`\n *\n * @param component - 普通UI组件（如React组件、Vue组件）\n *\n * @returns 返回实现 EluxComponent 接口的UI组件\n *\n * @public\n */\n",
+          "docComment": "/**\n * 向外导出业务视图\n *\n * @returns 返回实现 EluxComponent 接口的业务视图\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3425,149 +3425,6 @@
           "name": "getApi"
         },
         {
-          "kind": "Function",
-          "canonicalReference": "@elux/vue-taro!getComponent:function(1)",
-          "docComment": "/**\n * 获取导出的UI组件\n *\n * @remarks\n *\n * 获取通过 {@link exportModule} 导出的 Component。与 {@link ILoadComponent} 不同的是本方法只获取 Component 构造器，并不会render\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare function getComponent(moduleName: "
-            },
-            {
-              "kind": "Content",
-              "text": "string"
-            },
-            {
-              "kind": "Content",
-              "text": ", componentName: "
-            },
-            {
-              "kind": "Content",
-              "text": "string"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Reference",
-              "text": "EluxComponent",
-              "canonicalReference": "@elux/vue-taro!EluxComponent:interface"
-            },
-            {
-              "kind": "Content",
-              "text": " | "
-            },
-            {
-              "kind": "Reference",
-              "text": "Promise",
-              "canonicalReference": "!Promise:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "EluxComponent",
-              "canonicalReference": "@elux/vue-taro!EluxComponent:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ">"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "returnTypeTokenRange": {
-            "startIndex": 5,
-            "endIndex": 11
-          },
-          "releaseTag": "Public",
-          "overloadIndex": 1,
-          "parameters": [
-            {
-              "parameterName": "moduleName",
-              "parameterTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "parameterName": "componentName",
-              "parameterTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              }
-            }
-          ],
-          "name": "getComponent"
-        },
-        {
-          "kind": "Function",
-          "canonicalReference": "@elux/vue-taro!getModule:function(1)",
-          "docComment": "/**\n * 获取Module\n *\n * @remarks\n *\n * 获取通过 {@link exportModule} 导出的 Module\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare function getModule(moduleName: "
-            },
-            {
-              "kind": "Content",
-              "text": "string"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Reference",
-              "text": "Promise",
-              "canonicalReference": "!Promise:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "CommonModule",
-              "canonicalReference": "@elux/vue-taro!CommonModule:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "> | "
-            },
-            {
-              "kind": "Reference",
-              "text": "CommonModule",
-              "canonicalReference": "@elux/vue-taro!CommonModule:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "returnTypeTokenRange": {
-            "startIndex": 3,
-            "endIndex": 8
-          },
-          "releaseTag": "Public",
-          "overloadIndex": 1,
-          "parameters": [
-            {
-              "parameterName": "moduleName",
-              "parameterTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "name": "getModule"
-        },
-        {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!GetPromiseComponent:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
@@ -3664,7 +3521,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!GetState:interface",
-          "docComment": "/**\n * 获取Store状态\n *\n * @param moduleName - 如果指明 moduleName 则返回该模块的 ModuleState，否则返回全部 StoreState\n *\n * @public\n */\n",
+          "docComment": "/**\n * 获取全局状态\n *\n * @param moduleName - 如果指明moduleName则返回该模块的ModuleState，否则返回全局StoreState\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3978,7 +3835,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!ILoadComponent:type",
-          "docComment": "/**\n * UI组件加载器\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于加载其它模块导出的{@link exportView | UI组件}，相比直接 `import`，使用此方法加载组件不仅可以`按需加载`， 还可以自动初始化其所属 Model（仅当加载组件为view时），例如：\n * ```js\n *   const Article = LoadComponent('article', 'main')\n * ```\n *\n * @param moduleName - 组件所属模块名\n *\n * @param componentName - 组件导出名，参见{@link exportModule}\n *\n * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 {@link UserConfig} 中的设置\n *\n * @public\n */\n",
+          "docComment": "/**\n * 加载指定模块的UI组件\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于加载其它模块导出的{@link exportView | UI组件}，相比直接 `import`，使用此方法加载组件不仅可以`按需加载`， 还可以自动初始化其所属 Model（仅当加载组件为view时），例如：\n * ```js\n *   const Article = LoadComponent('article', 'main')\n * ```\n *\n * @param moduleName - 组件所属模块名\n *\n * @param componentName - 组件导出名，参见{@link exportModule}\n *\n * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 {@link UserConfig} 中的设置\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4055,7 +3912,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!injectModule:function(1)",
-          "docComment": "/**\n * 动态注册module\n *\n * @remarks\n *\n * 常于小程序分包加载\n *\n * @public\n */\n",
+          "docComment": "/**\n * 动态注册Module\n *\n * @remarks\n *\n * 常于小程序分包加载\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4184,7 +4041,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!IRouter:interface",
-          "docComment": "/**\n * 路由实例\n *\n * @remarks\n *\n * - 在 CSR 中全局只有一个 Router\n *\n * - 在 SSR 中每个请求都会生成一个路由实例\n *\n * - 每个 IRouter 下面可以存在多个 {@link IStore}\n *\n * @public\n */\n",
+          "docComment": "/**\n * 路由器的定义\n *\n * @remarks\n *\n * - 在 CSR 中全局只有一个 Router\n *\n * - 在 SSR 中每个客户请求都会生成一个Router\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4232,7 +4089,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IRouter#action:member",
-              "docComment": "/**\n * 路由动作\n */\n",
+              "docComment": "/**\n * 当前路由动作\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4322,7 +4179,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#back:member(1)",
-              "docComment": "/**\n * 回退历史记录\n *\n * @param stepOrKey - 需要回退的步数或者历史记录的唯一id\n *\n * @param target - 指定要操作的路由栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}\n */\n",
+              "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKey - 需要回退的步数或者历史记录ID\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4421,7 +4278,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#findRecordByKey:member(1)",
-              "docComment": "/**\n * 用`唯一key`来查找某条路由记录，如果没找到则返回 `{overflow: true}`\n */\n",
+              "docComment": "/**\n * 用`唯一key`来查找历史记录，如果没找到则返回 `{overflow: true}`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4474,7 +4331,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#findRecordByStep:member(1)",
-              "docComment": "/**\n * 用`回退步数`来查找某条路由历史记录，如果步数溢出则返回 `{overflow: true}`\n */\n",
+              "docComment": "/**\n * 用`回退步数`来查找历史记录，如果步数溢出则返回 `{overflow: true}`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4579,7 +4436,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#getCurrentPages:member(1)",
-              "docComment": "/**\n * 获取所有window中的当前页面\n */\n",
+              "docComment": "/**\n * 获取当前所有CurrentPage(PageHistoryStack中的第一条)\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4616,7 +4473,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#getHistory:member(1)",
-              "docComment": "/**\n * 获取指定路由栈中的记录\n */\n",
+              "docComment": "/**\n * 获取指定历史栈中的记录\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4666,7 +4523,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#getHistoryLength:member(1)",
-              "docComment": "/**\n * 获取指定路由栈的长度\n */\n",
+              "docComment": "/**\n * 获取指定历史栈的长度\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4711,7 +4568,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IRouter#initOptions:member",
-              "docComment": "/**\n * 路由初始化时的参数，SSR时可用来引用用户请求\n */\n",
+              "docComment": "/**\n * 路由初始化时的参数，通常用于SSR时传递原生的Request和Response对象\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4738,7 +4595,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IRouter#location:member",
-              "docComment": "/**\n * 路由信息\n */\n",
+              "docComment": "/**\n * 当前路由信息\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4765,7 +4622,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#push:member(1)",
-              "docComment": "/**\n * 新增一条路由\n *\n * @param urlOrLocation - 路由描述\n *\n * @param target - 指定要操作的路由栈。默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 在指定栈中新增一条历史记录，并跳转路由\n *\n * @param urlOrLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4863,7 +4720,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#relaunch:member(1)",
-              "docComment": "/**\n * 跳转一条路由，并清空所有历史记录\n *\n * @param urlOrLocation - 路由描述\n *\n * @param target - 指定要操作的路由栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param urlOrLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4961,7 +4818,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#replace:member(1)",
-              "docComment": "/**\n * 替换当前路由\n *\n * @param urlOrLocation - 路由描述\n *\n * @param target - 指定要操作的路由栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 在指定栈中替换当前历史记录，并跳转路由\n *\n * @param urlOrLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5059,7 +4916,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IRouter#routeKey:member",
-              "docComment": "/**\n * 每次路由变化都会产生唯一ID\n */\n",
+              "docComment": "/**\n * 当前路由的唯一ID\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5085,7 +4942,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IRouter#runtime:member",
-              "docComment": "/**\n * 路由运行状态\n */\n",
+              "docComment": "/**\n * 当前路由的相关运行信息\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5132,7 +4989,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IRouteRecord#key:member",
-              "docComment": "/**\n * 每条路由记录都有一个唯一的key\n */\n",
+              "docComment": "/**\n * 唯一的key\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5215,7 +5072,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!IStore:interface",
-          "docComment": "/**\n * Store实例\n *\n * @remarks\n *\n * - 每个 Store 都挂载在 {@link IRouter} 下面，router 和 store 是一对多的关系\n *\n * - 每次路由发生变化都会生成一个新的 Store\n *\n * @public\n */\n",
+          "docComment": "/**\n * Store实例\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5263,7 +5120,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IStore#active:member",
-              "docComment": "",
+              "docComment": "/**\n * 当前是否是激活状态\n *\n * @remarks\n *\n * 同一时刻只会有一个store被激活\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5289,7 +5146,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IStore#destroy:member(1)",
-              "docComment": "/**\n * 销毁，框架会自动调用\n */\n",
+              "docComment": "/**\n * 销毁（框架会自动调用）\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5317,7 +5174,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IStore#dispatch:member",
-              "docComment": "/**\n * 派发Action\n */\n",
+              "docComment": "/**\n * 派发action\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5344,7 +5201,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IStore#getState:member",
-              "docComment": "/**\n * 获取已提交的状态\n */\n",
+              "docComment": "/**\n * 获取store的状态\n *\n * @remarks\n *\n * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5375,7 +5232,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IStore#getUncommittedState:member(1)",
-              "docComment": "/**\n * 获取未提交的状态\n *\n * @remarks\n *\n * store 状态由多个 module 状态组成，更新的时候必须等所有 module 状态全部完成更新后才一次性 commit 到 store 中\n */\n",
+              "docComment": "/**\n * 获取暂时未提交到store的状态\n *\n * @remarks\n *\n * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5403,7 +5260,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IStore#mount:member(1)",
-              "docComment": "/**\n * 在该 store 中挂载指定的 module\n *\n * @remarks\n *\n * 完成 moduleState 的初始化，并将 moduleState 注入 storeState 中\n */\n",
+              "docComment": "/**\n * 在该store中挂载指定的model\n *\n * @remarks\n *\n * 该方法会触发model.onMount(env)钩子\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5471,7 +5328,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IStore#router:member",
-              "docComment": "/**\n * 每个 store 实例都会挂载在 router 路由器下面\n *\n * @remarks\n *\n * router 和 store 是一对多的关系\n */\n",
+              "docComment": "/**\n * 所属router\n *\n * @remarks\n *\n * router和store是一对多的关系\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5502,7 +5359,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!IStore#sid:member",
-              "docComment": "/**\n * 每个 store 实例都有一个 ID 标识\n */\n",
+              "docComment": "/**\n * 实例ID\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5539,8 +5396,8 @@
             },
             {
               "kind": "Reference",
-              "text": "DefineComponent",
-              "canonicalReference": "@vue/runtime-core!DefineComponent:type"
+              "text": "FunctionalComponent",
+              "canonicalReference": "@vue/runtime-core!FunctionalComponent:interface"
             },
             {
               "kind": "Content",
@@ -5566,7 +5423,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!LinkProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 类似于Html标签 `<a>`，用组件的方式执行路由切换，参见 {@link IRouter}\n *\n * @example\n * ```html\n * <Link disabled={pagename==='/home'} to='/home' action='push' target='window'>home</Link>\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 类似于Html标签`<a>`，用组件的方式执行路由跳转，参见 {@link IRouter}\n *\n * @example\n * ```html\n * <Link disabled={pagename==='/home'} to='/home' action='push' target='window'>home</Link>\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5588,7 +5445,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!LinkProps#action:member",
-              "docComment": "/**\n * 指定路由的切换方式\n */\n",
+              "docComment": "/**\n * 路由跳转动作\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5628,7 +5485,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!LinkProps#disabled:member",
-              "docComment": "/**\n * 是否 disable\n */\n",
+              "docComment": "/**\n * 如果disabled将不执行路由及onClick事件\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5703,7 +5560,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!LinkProps#target:member",
-              "docComment": "/**\n * 指定要操作的路由栈\n */\n",
+              "docComment": "/**\n * 指定要操作的历史栈\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5764,7 +5621,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!LoadingState:type",
-          "docComment": "/**\n * 描述异步状态\n *\n * @public\n */\n",
+          "docComment": "/**\n * Loading状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -5789,7 +5646,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!Location:interface",
-          "docComment": "/**\n * 路由描述\n *\n * @remarks\n *\n * @public\n */\n",
+          "docComment": "/**\n * 路由信息\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6203,7 +6060,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!ModuleGetter:type",
-          "docComment": "/**\n * 配置模块的获取方式\n *\n * @remarks\n *\n * - 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`\n *\n * - 根模块`stage`通常定义为同步获取\n *\n * @example\n * ```js\n * import stage from '@/modules/stage';\n *\n * export const moduleGetter = {\n *   stage: () => stage,\n *   article: () => import('@/modules/article'),\n *   my: () => import('@/modules/my'),\n * };\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 配置模块的获取方式\n *\n * @remarks\n *\n * 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`\n *\n * @example\n * ```js\n * import stage from '@/modules/stage';\n *\n * export const moduleGetter = {\n *   stage: () => stage,\n *   article: () => import('@/modules/article'),\n *   my: () => import('@/modules/my'),\n * };\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6255,7 +6112,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!ModuleState:type",
-          "docComment": "/**\n * 模块状态\n *\n * @remarks\n *\n * 通常为简单的 `PlainObject` 对象\n *\n * @public\n */\n",
+          "docComment": "/**\n * 模块状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6552,7 +6409,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-taro!reducer:function(1)",
-          "docComment": "/**\n * Model类的装饰器函数:申明reducer\n *\n * @public\n */\n",
+          "docComment": "/**\n * 申明reducer\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6626,7 +6483,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!RenderOptions:interface",
-          "docComment": "/**\n * 应用Render参数\n *\n * @public\n */\n",
+          "docComment": "/**\n * 创建应用时Render参数\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6639,7 +6496,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!RenderOptions#id:member",
-              "docComment": "/**\n * 挂载应用 Dom 的 id\n *\n * @remarks\n *\n * 默认: `root`\n *\n * @defaultValue\n *\n * `root`\n */\n",
+              "docComment": "/**\n * 挂载应用Dom的id\n *\n * @remarks\n *\n * 默认: `root`\n *\n * @defaultValue\n *\n * `root`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -6746,7 +6603,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!RouteAction:type",
-          "docComment": "/**\n * 路由动作\n *\n * @public\n */\n",
+          "docComment": "/**\n * 路由动作类别\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6771,7 +6628,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!RouteEvent:interface",
-          "docComment": "/**\n * @public\n */\n",
+          "docComment": "/**\n * 路由事件\n *\n * @remarks\n *\n * 发生路由时，路由器本身会派发路由事件\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -6921,7 +6778,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!RouterInitOptions:interface",
-          "docComment": "/**\n * 路由初始化时参数\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.initOptions} 获得\n *\n * @public\n */\n",
+          "docComment": "/**\n * 路由初始化时参数\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.initOptions} 获得，通常用于SSR时传递原生的Request和Response对象\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -7005,7 +6862,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!RouteRuntime:interface",
-          "docComment": "/**\n * 路由的运行状态\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.runtime} 获得\n *\n * @public\n */\n",
+          "docComment": "/**\n * 本次路由前后的某些信息\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.runtime} 获得\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -7079,7 +6936,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!RouteRuntime#payload:member",
-              "docComment": "/**\n * 路由跳转时附加的数据\n *\n * @remarks\n *\n * 该数据可通过路由操作提交。如：`router.push({url}, 'window', {aaa:111})`\n */\n",
+              "docComment": "/**\n * 路由时的附加数据\n *\n * @remarks\n *\n * 该数据通过路由跳转方法第3个参数提供。如`router.push({url}, 'window', {aaa:111})`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -7131,7 +6988,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!RouteRuntime#timestamp:member",
-              "docComment": "/**\n * 路由跳转发生的时间戳\n */\n",
+              "docComment": "/**\n * 路由发生的时间戳\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -7160,7 +7017,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!RouteTarget:type",
-          "docComment": "/**\n * 路由历史栈\n *\n * @remarks\n *\n * 对于路由历史记录栈，不同于浏览器只有一维栈，框架中存在二维栈。操作路由跳转时，可以指明是操作哪个栈\n *\n * @public\n */\n",
+          "docComment": "/**\n * 路由历史栈类别\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -7345,7 +7202,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!StoreLogger:type",
-          "docComment": "/**\n * Store的日志记录器\n *\n * @remarks\n *\n * Store的所有变化都将调用该记录器\n *\n * @public\n */\n",
+          "docComment": "/**\n * Store的日志记录器\n *\n * @remarks\n *\n * Store派发Action都会调用该回调方法\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -7357,8 +7214,8 @@
             },
             {
               "kind": "Reference",
-              "text": "storeLoggerInfo",
-              "canonicalReference": "@elux/vue-taro!storeLoggerInfo:type"
+              "text": "StoreLoggerInfo",
+              "canonicalReference": "@elux/vue-taro!StoreLoggerInfo:type"
             },
             {
               "kind": "Content",
@@ -7378,12 +7235,12 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/vue-taro!storeLoggerInfo:type",
-          "docComment": "/**\n * @public\n */\n",
+          "canonicalReference": "@elux/vue-taro!StoreLoggerInfo:type",
+          "docComment": "/**\n * 派发Action的日志信息\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type storeLoggerInfo = "
+              "text": "export declare type StoreLoggerInfo = "
             },
             {
               "kind": "Content",
@@ -7395,7 +7252,7 @@
             }
           ],
           "releaseTag": "Public",
-          "name": "storeLoggerInfo",
+          "name": "StoreLoggerInfo",
           "typeTokenRange": {
             "startIndex": 1,
             "endIndex": 2
@@ -7474,7 +7331,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/vue-taro!StoreState:type",
-          "docComment": "/**\n * 全局状态\n *\n * @remarks\n *\n * 由多个 {@link ModuleState} 按 moduleName 组合起来的全部 Store 状态\n *\n * @public\n */\n",
+          "docComment": "/**\n * 全局状态\n *\n * @remarks\n *\n * 由多个 {@link ModuleState} 按moduleName组合起来的全局状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -7516,8 +7373,8 @@
             },
             {
               "kind": "Reference",
-              "text": "DefineComponent",
-              "canonicalReference": "@vue/runtime-core!DefineComponent:type"
+              "text": "FunctionalComponent",
+              "canonicalReference": "@vue/runtime-core!FunctionalComponent:interface"
             },
             {
               "kind": "Content",
@@ -7543,7 +7400,7 @@
         {
           "kind": "Interface",
           "canonicalReference": "@elux/vue-taro!SwitchProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染第一个非空子元素，否则将渲染`props.elseView`， 与 {@link Else | `<Else>`} 的区别在于：`<Else>` 渲染所有非空子元素\n *\n * @example\n * ```html\n * <Switch elseView={<NotFound />}>\n *  {subView === 'detail' && <Detail />}\n *  {subView === 'list' && <List />}\n * </Switch>\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 用来控制子元素的渲染方式：如果非空子元素大于0，则渲染第一个非空子元素，否则将渲染`props.elseView`， 与 {@link Else | `<Else>`} 的区别在于：`<Else>` 渲染所有非空子元素\n *\n * @example\n * ```html\n * <Switch elseView={<NotFound />}>\n *  {subView === 'detail' && <Detail />}\n *  {subView === 'list' && <List />}\n * </Switch>\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -7711,7 +7568,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!UserConfig#DepthTimeOnLoading:member",
-              "docComment": "/**\n * 定义Loading超过多少秒视为深度加载\n *\n * @remarks\n *\n * 默认: `1`\n *\n * 框架将Loading状态分为3种：{@link LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层\n *\n * @defaultValue\n *\n * `1`\n */\n",
+              "docComment": "/**\n * 定义Loading超过多少秒视为深度加载\n *\n * @remarks\n *\n * 默认: `1`\n *\n * 框架中存在3种不同程度的Loading状态:{@link LoadingState}，可定制不同的界面。如浅度loading时显示无感知的透明蒙层，深度时显示Icon和灰色\n *\n * @defaultValue\n *\n * `1`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -7737,7 +7594,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!UserConfig#DisableNativeRouter:member",
-              "docComment": "/**\n * 是否不通知原生路由\n *\n * @remarks\n *\n * 默认: `false`\n *\n * 框架有自己的路由体系，运行平台的原生路由体系作为外挂模式存在。默认情况下二者之间会建立关联，此设置为true可以彻底忽略原生路由体系。\n *\n * @defaultValue\n *\n * `false`\n */\n",
+              "docComment": "/**\n * 强制不与原生路由关联\n *\n * @remarks\n *\n * 默认: `false`\n *\n * 虚拟路由默认会关联到原生路由，可以断开关联\n *\n * @defaultValue\n *\n * `false`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -7763,7 +7620,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!UserConfig#HomeUrl:member",
-              "docComment": "/**\n * 定义应用的首页\n *\n * @remarks\n *\n * 默认: `/`\n *\n * @defaultValue\n *\n * `/`\n */\n",
+              "docComment": "/**\n * 定义应用的首页Url\n *\n * @remarks\n *\n * 默认: `/`\n *\n * @defaultValue\n *\n * `/`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -7789,7 +7646,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!UserConfig#LoadComponentOnError:member",
-              "docComment": "/**\n * 定义默认视图加载错误组件\n *\n * @remarks\n *\n * 默认: `<div className=\"g-component-error\">{message}</div>`\n *\n * 此设置为全局默认，LoadComponent方法中可以单独设置，参见 {@link ILoadComponent}\n *\n * @defaultValue\n *\n * `<div className=\"g-component-error\">{message}</div>`\n */\n",
+              "docComment": "/**\n * 定义默认的视图加载错误组件\n *\n * @remarks\n *\n * 默认: `<div className=\"g-component-error\">{message}</div>`\n *\n * 此设置为全局默认，LoadComponent方法中可以单独设置，参见 {@link ILoadComponent}\n *\n * @defaultValue\n *\n * `<div className=\"g-component-error\">{message}</div>`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -7878,7 +7735,7 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!UserConfig#NativePathnameMapping:member",
-              "docComment": "/**\n * 定义内部和宿主平台路由之间的转换与映射\n */\n",
+              "docComment": "/**\n * 定义虚拟路由和原生路由的Url映射\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",

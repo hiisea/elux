@@ -4,22 +4,19 @@ import {buildConfigSetter, deepMerge, UNListener} from './utils';
 /**
  * 定义Action
  *
- * @remarks
- * 类似于 `Redux` 或 `Vuex` 的 Action，增加了 `priority` 设置，用来指明同时有多个 handler 时的处理顺序
- *
  * @public
  */
 export interface Action {
   /**
-   * action名称不能重复，通常由：ModuleName.ActionName 组成
+   * type通常由ModuleName.ActionName组成
    */
   type: string;
   /**
-   * 通常无需设置，同时有多个 handler 时，可以特别指明处理顺序，其值为 moduleName 数组
+   * 同时有多个handler时，可以特别指明处理顺序，通常无需设置
    */
   priority?: string[];
   /**
-   * action数据
+   * action载体
    */
   payload?: any[];
 }
@@ -34,9 +31,6 @@ export type Dispatch = (action: Action) => void | Promise<void>;
 /**
  * 模块状态
  *
- * @remarks
- * 通常为简单的 `PlainObject` 对象
- *
  * @public
  */
 export type ModuleState = {[key: string]: any};
@@ -45,7 +39,7 @@ export type ModuleState = {[key: string]: any};
  * 全局状态
  *
  * @remarks
- * 由多个 {@link ModuleState} 按 moduleName 组合起来的全部 Store 状态
+ * 由多个 {@link ModuleState} 按moduleName组合起来的全局状态
  *
  * @public
  */
@@ -75,9 +69,9 @@ export type ActionHandlersMap = {[actionName: string]: {[moduleName: string]: Ac
 export type ModelAsCreators = {[actionName: string]: ActionCreator};
 
 /**
- * 获取Store状态
+ * 获取全局状态
  *
- * @param moduleName - 如果指明 moduleName 则返回该模块的 ModuleState，否则返回全部 StoreState
+ * @param moduleName - 如果指明moduleName则返回该模块的ModuleState，否则返回全局StoreState
  *
  * @public
  */
@@ -89,78 +83,74 @@ export interface GetState<TStoreState extends StoreState = StoreState> {
 /**
  * Store实例
  *
- * @remarks
- * - 每个 Store 都挂载在 {@link IRouter} 下面，router 和 store 是一对多的关系
- *
- * - 每次路由发生变化都会生成一个新的 Store
- *
  * @public
  */
 export interface IStore<TStoreState extends StoreState = StoreState> {
   /**
-   * 每个 store 实例都有一个 ID 标识
+   * 实例ID
    */
   sid: number;
   /**
-   * 当前是否是时激活状态
+   * 当前是否是激活状态
+   *
+   * @remarks
+   * 同一时刻只会有一个store被激活
    */
   active: boolean;
   /**
-   * 每个 store 实例都会挂载在 router 路由器下面
+   * 所属router
    *
    * @remarks
-   * router 和 store 是一对多的关系
+   * router和store是一对多的关系
    */
   router: IRouter<TStoreState>;
   /**
-   * 派发Action
+   * 派发action
    */
   dispatch: Dispatch;
   /**
-   * 获取已提交的状态
+   * 获取store的状态
+   *
+   * @remarks
+   * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
    */
   getState: GetState<TStoreState>;
   /**
-   * 获取未提交的状态
+   * 获取暂时未提交到store的状态
    *
    * @remarks
-   * store 状态由多个 module 状态组成，更新的时候必须等所有 module 状态全部完成更新后才一次性 commit 到 store 中
+   * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
    */
   getUncommittedState(): TStoreState;
   /**
-   * 在该 store 中挂载指定的 module
+   * 在该store中挂载指定的model
    *
    * @remarks
-   * 完成 moduleState 的初始化，并将 moduleState 注入 storeState 中
+   * 该方法会触发model.onMount(env)钩子
    */
   mount(moduleName: keyof TStoreState, env: 'init' | 'route' | 'update'): void | Promise<void>;
   /**
-   * 销毁，框架会自动调用
+   * 销毁（框架会自动调用）
    */
   destroy(): void;
 }
 
 /**
- * 路由动作
+ * 路由动作类别
  *
  * @public
  */
 export type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
 
 /**
- * 路由历史栈
- *
- * @remarks
- * 对于路由历史记录栈，不同于浏览器只有一维栈，框架中存在二维栈。操作路由跳转时，可以指明是操作哪个栈
+ * 路由历史栈类别
  *
  * @public
  */
 export type RouteTarget = 'window' | 'page';
 
 /**
- * 路由描述
- *
- * @remarks
+ * 路由信息
  *
  * @public
  */
@@ -174,9 +164,7 @@ export interface Location {
 }
 
 /**
- * 内置的错误描述格式
- *
- * @remarks
+ * 内置的错误描述接口
  *
  * @public
  */
@@ -196,7 +184,7 @@ export interface ActionError {
  */
 export interface IRouteRecord {
   /**
-   * 每条路由记录都有一个唯一的key
+   * 唯一的key
    */
   key: string;
   /**
@@ -206,7 +194,7 @@ export interface IRouteRecord {
 }
 
 /**
- * 路由的运行状态
+ * 本次路由前后的某些信息
  *
  * @remarks
  * 可以通过 {@link IRouter.runtime} 获得
@@ -215,14 +203,14 @@ export interface IRouteRecord {
  */
 export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
   /**
-   * 路由跳转发生的时间戳
+   * 路由发生的时间戳
    */
   timestamp: number;
   /**
-   * 路由跳转时附加的数据
+   * 路由时的附加数据
    *
    * @remarks
-   * 该数据可通过路由操作提交。如：`router.push({url}, 'window', {aaa:111})`
+   * 该数据通过路由跳转方法第3个参数提供。如`router.push({url}, 'window', {aaa:111})`
    */
   payload: unknown;
   /**
@@ -239,7 +227,7 @@ export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
  * 路由初始化时参数
  *
  * @remarks
- * 可以通过 {@link IRouter.initOptions} 获得
+ * 可以通过 {@link IRouter.initOptions} 获得，通常用于SSR时传递原生的Request和Response对象
  *
  * @public
  */
@@ -247,7 +235,13 @@ export interface RouterInitOptions {
   url: string;
   [key: string]: any;
 }
+
 /**
+ * 路由事件
+ *
+ * @remarks
+ * 发生路由时，路由器本身会派发路由事件
+ *
  * @public
  */
 export interface RouteEvent {
@@ -259,14 +253,12 @@ export interface RouteEvent {
 }
 
 /**
- * 路由实例
+ * 路由器的定义
  *
  * @remarks
  * - 在 CSR 中全局只有一个 Router
  *
- * - 在 SSR 中每个请求都会生成一个路由实例
- *
- * - 每个 IRouter 下面可以存在多个 {@link IStore}
+ * - 在 SSR 中每个客户请求都会生成一个Router
  *
  * @public
  */
@@ -276,23 +268,23 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
    */
   addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
   /**
-   * 路由初始化时的参数，SSR时可用来引用用户请求
+   * 路由初始化时的参数，通常用于SSR时传递原生的Request和Response对象
    */
   initOptions: RouterInitOptions;
   /**
-   * 路由动作
+   * 当前路由动作
    */
   action: RouteAction;
   /**
-   * 路由信息
+   * 当前路由信息
    */
   location: Location;
   /**
-   * 每次路由变化都会产生唯一ID
+   * 当前路由的唯一ID
    */
   routeKey: string;
   /**
-   * 路由运行状态
+   * 当前路由的相关运行信息
    */
   runtime: RouteRuntime<TStoreState>;
   /**
@@ -300,54 +292,54 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
    */
   getActivePage(): {url: string; store: IStore};
   /**
-   * 获取所有window中的当前页面
+   * 获取当前所有CurrentPage(PageHistoryStack中的第一条)
    */
   getCurrentPages(): {url: string; store: IStore}[];
   /**
-   * 获取指定路由栈的长度
+   * 获取指定历史栈的长度
    */
   getHistoryLength(target?: RouteTarget): number;
   /**
-   * 获取指定路由栈中的记录
+   * 获取指定历史栈中的记录
    */
   getHistory(target?: RouteTarget): IRouteRecord[];
   /**
-   * 用`唯一key`来查找某条路由记录，如果没找到则返回 `{overflow: true}`
+   * 用`唯一key`来查找历史记录，如果没找到则返回 `{overflow: true}`
    */
   findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
   /**
-   * 用`回退步数`来查找某条路由历史记录，如果步数溢出则返回 `{overflow: true}`
+   * 用`回退步数`来查找历史记录，如果步数溢出则返回 `{overflow: true}`
    */
   findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]};
   /**
-   * 跳转一条路由，并清空所有历史记录
+   * 清空指定栈中的历史记录，并跳转路由
    *
-   * @param urlOrLocation - 路由描述
-   * @param target - 指定要操作的路由栈，默认:`page`
+   * @param urlOrLocation - 路由信息
+   * @param target - 指定要操作的历史栈，默认:`page`
    * @param payload - 提交给 {@link RouteRuntime} 的数据
    */
   relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
   /**
-   * 新增一条路由
+   * 在指定栈中新增一条历史记录，并跳转路由
    *
-   * @param urlOrLocation - 路由描述
-   * @param target - 指定要操作的路由栈。默认:`page`
+   * @param urlOrLocation - 路由信息
+   * @param target - 指定要操作的历史栈，默认:`page`
    * @param payload - 提交给 {@link RouteRuntime} 的数据
    */
   push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
   /**
-   * 替换当前路由
+   * 在指定栈中替换当前历史记录，并跳转路由
    *
-   * @param urlOrLocation - 路由描述
-   * @param target - 指定要操作的路由栈，默认:`page`
+   * @param urlOrLocation - 路由信息
+   * @param target - 指定要操作的历史栈，默认:`page`
    * @param payload - 提交给 {@link RouteRuntime} 的数据
    */
   replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
   /**
-   * 回退历史记录
+   * 回退指定栈中的历史记录，并跳转路由
    *
-   * @param stepOrKey - 需要回退的步数或者历史记录的唯一id
-   * @param target - 指定要操作的路由栈，默认:`page`
+   * @param stepOrKey - 需要回退的步数或者历史记录ID
+   * @param target - 指定要操作的历史栈，默认:`page`
    * @param payload - 提交给 {@link RouteRuntime} 的数据
    * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}
    */
@@ -355,7 +347,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
 }
 
 /**
- * Model的一般形态
+ * Model的基础定义
  *
  * @public
  */
@@ -369,15 +361,15 @@ export interface CommonModel {
    */
   readonly state: ModuleState;
   /**
-   * 该 model 被挂载到 store 时触发，在一个 store 中 一个 model 只会被挂载一次
+   * model被挂载到store时触发，在一个store中一个model只会被挂载一次
    */
   onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
   /**
-   * 当某 store 被路由置于最顶层时，所有该 store 中被挂载的 model 会触发
+   * 当前page被激活时触发
    */
   onActive(): void;
   /**
-   * 当某 store 被路由置于非顶层时，所有该 store 中被挂载的 model 会触发
+   * 当前page被变为历史快照时触发
    */
   onInactive(): void;
 }
@@ -392,10 +384,10 @@ export interface CommonModelClass<H = CommonModel> {
 }
 
 /**
- * 表示该UI组件是一个导出的UI组件
+ * EluxComponent定义
  *
  * @remarks
- * EluxUI组件通常通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
+ * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
  *
  * @public
  */
@@ -404,10 +396,10 @@ export interface EluxComponent {
 }
 
 /**
- * 表示该UI组件是一个异步EluxUI
+ * 异步EluxComponent定义
  *
  * @remarks
- * EluxUI组件通常通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
+ * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
  *
  * @public
  */
@@ -420,7 +412,7 @@ export function isEluxComponent(data: any): data is EluxComponent {
 }
 
 /**
- * Module的一般形态
+ * Module的基础定义
  *
  * @public
  */
@@ -437,9 +429,7 @@ export interface CommonModule<TModuleName extends string = string> {
  * 配置模块的获取方式
  *
  * @remarks
- * - 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`
- *
- * - 根模块`stage`通常定义为同步获取
+ * 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`
  *
  * @example
  * ```js
@@ -485,9 +475,11 @@ export const MetaData: {
 export type StoreMiddleware = (api: {getStore: () => IStore; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
 
 /**
+ * 派发Action的日志信息
+ *
  * @public
  */
-export type storeLoggerInfo = {
+export type StoreLoggerInfo = {
   id: number;
   isActive: boolean;
   actionName: string;
@@ -502,11 +494,11 @@ export type storeLoggerInfo = {
  * Store的日志记录器
  *
  * @remarks
- * Store的所有变化都将调用该记录器
+ * Store派发Action都会调用该回调方法
  *
  * @public
  */
-export type StoreLogger = (info: storeLoggerInfo) => void;
+export type StoreLogger = (info: StoreLoggerInfo) => void;
 
 export interface EluxContext {
   documentHead: string;

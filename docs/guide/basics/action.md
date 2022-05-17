@@ -1,15 +1,11 @@
 # Action与Handler
 
-Elux中的Action概念与Redux基本相同。
-
-::: tip Elux中Action的特别之处
+Elux中的Action概念与Redux基本相同，其特别之处在于：
 
 - Action是Model中的事件，dispatch一个Action将触发各模块中监听该Action的多个ActionHandler执行
 - ActionHandler按职能可分为：
   - `Reducer`类似vuex中的`Mutation`是修改State的唯一途径
   - `Effect`类似vuex中的`Action`Effect不可以直接修改State，但它可以dispatch action来触发Reducer
-
-:::
 
 ![elux动态逻辑图](/images/dynamic-structure.svg)
 
@@ -59,6 +55,18 @@ export interface Action {
         }
     }
     ```
+
+## 内置特殊Action
+
+框架内置了几个特殊的Action(以_前缀)，它们在特定的时机会自动派发：
+
+- `rootModule._error` effect运行中出现任何错误，框架将自动派发该action，可以使用effect监听该action来统一处理错误。
+- `rootModule._testRouteChange` 路由`准备跳转`时会自动派发该action，可以使用effect监听该action，并决定是不是阻止路由跳转。
+- `rootModule._beforeRouteChange` 路由`准备前`时会自动派发该action，可以使用effect监听该action，在跳转前保存某些有用的数据，如未提交的表单等。
+- `rootModule._afterRouteChange` 路由`准备完成`时会自动派发该action，可以使用effect监听该action，获取最新的路由信息注入ModuleState中。
+- `module._initState` Model的onMount中必需派发该action，用来初始化ModuleState。
+- `module._updateState` Model基类BaseModel中内置了这个reducer，用来合并更新ModuleState。
+- `module._loadingState` effect的执行过程可以自动派发该action，用来将执行过程作为loading状态注入ModuleState。
 
 ## 泛监听
 
@@ -214,7 +222,7 @@ ActionHandler相当于一条执行链，执行过程中若出现任何错误，�
 
 ## 中间件与日志记录
 
-中间件可以在Action和Store中间建立一条管道，类似于Redux的Middlewar，它的类型定义如下：
+中间件可以在Action和Store中间建立一条管道，类似于Redux的Middleware，它的类型定义如下：
 
 ```ts
 export type StoreMiddleware = (api: {getStore: () => IStore; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;

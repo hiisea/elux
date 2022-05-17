@@ -1,4 +1,4 @@
-import {defineComponent, DefineComponent, inject} from 'vue';
+import {defineComponent, FunctionalComponent, inject} from 'vue';
 
 import {coreConfig, EluxContext, env} from '@elux/core';
 
@@ -8,7 +8,7 @@ import {EluxContextKey} from './base';
  * 内置UI组件
  *
  * @remarks
- * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
+ * 用组件的方式动态修改`<head>内容`，主要是`title/description/keywords`等meta信息，SSR中非常有用
  *
  * @example
  * ```html
@@ -48,7 +48,7 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
  *
  * @public
  */
-export const DocumentHead: DefineComponent<DocumentHeadProps> = defineComponent({
+export const DocumentHead: FunctionalComponent<DocumentHeadProps> = defineComponent({
   props: {
     title: {
       type: String,

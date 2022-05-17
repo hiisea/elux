@@ -5,7 +5,7 @@ export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@el
 export type { GetProps, InferableComponentEnhancerWithProps } from '@elux/react-redux';
 export * from '@elux/app';
 /**
- * 小程序Page入口
+ * 小程序Page页面
  *
  * @public
  */
