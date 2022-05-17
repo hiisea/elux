@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0](https://github.com/hiisea/elux/compare/v2.0.1...v2.1.0) (2022-05-17)
+
+
+### Bug Fixes
+
+* 修正RouterInitOptions类型定义错误 ([54b2406](https://github.com/hiisea/elux/commit/54b2406fa328f690cde45094c9e20f5d114b2694)), closes [#7](https://github.com/hiisea/elux/issues/7)
+
+
+### Features
+
+* 补充部分API ([4ae5479](https://github.com/hiisea/elux/commit/4ae5479380f13d88e8a6686c9eefbafbea1c81b4))
+
+
+
+
+
 ## [2.0.1](https://github.com/hiisea/elux/compare/v2.0.0...v2.0.1) (2022-05-04)
 
 
