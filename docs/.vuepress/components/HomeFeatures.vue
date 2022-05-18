@@ -54,7 +54,7 @@
         </ul>
       </div>
     </div>
-    <h2>使用既有技术栈，提供<span class="stress">CLI工具</span>开箱即用</h2>
+    <h2>使用即有技术栈，提供<span class="stress">CLI工具</span>开箱即用</h2>
     <div class="feats-easy">
       <div class="note">
         <em class="text">不重复造轮子...<br />对各框架无破坏性与侵入性！</em>

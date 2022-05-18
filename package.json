@@ -1,7 +1,7 @@
 {
   "name": "elux",
-  "version": "1.0.0",
-  "description": "Stateful and Modular for Front-End Engineering, Suitable for various javascript runtime",
+  "version": "2.0.0",
+  "description": "Cross platform and cross framework web solutions that based on micro-module and model-driven",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hiisea/elux.git"
