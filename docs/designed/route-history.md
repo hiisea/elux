@@ -1,3 +1,7 @@
+---
+next: /guide/summary.html
+---
+
 # 路由与历史
 
 我们最熟悉的路由与历史的管理方案是浏览器的HistoryAPI，几个简单的`push/replace/back/go`方法就已经能够完成所有路由功能，但有时候有没有感觉到它们不够用呢？

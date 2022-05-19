@@ -45,10 +45,11 @@ export default defineUserConfig({
             link: 'http://eluxjs.com/api/',
           },
           {
-            text: 'CLI工具',
-            link: '/cli/',
+            text: '生态建设',
+            link: '/ecological/',
           },
         ],
+        sidebarDepth: 0,
         sidebar: {
           '/': [
             {
@@ -56,15 +57,15 @@ export default defineUserConfig({
               children: [
                 {
                   text: '微模块',
-                  link: '/designed/micro-module',
+                  link: '/designed/micro-module.html',
                 },
                 {
                   text: '模型驱动',
-                  link: '/designed/model-driven',
+                  link: '/designed/model-driven.html',
                 },
                 {
                   text: '路由与历史',
-                  link: '/designed/route-history',
+                  link: '/designed/route-history.html',
                 },
               ],
             },
@@ -73,50 +74,50 @@ export default defineUserConfig({
               children: [
                 {
                   text: '介绍',
-                  link: '/guide/summary',
+                  link: '/guide/summary.html',
                 },
                 {
                   text: '安装',
-                  link: '/guide/install',
+                  link: '/guide/install.html',
                 },
                 {
                   text: '配置',
-                  link: '/guide/configure',
+                  link: '/guide/configure.html',
                 },
                 {
                   text: '基础',
                   children: [
                     {
                       text: '概述',
-                      link: '/guide/basics/summary.md',
+                      link: '/guide/basics/summary.html',
                     },
                     {
                       text: 'Module',
-                      link: '/guide/basics/module.md',
+                      link: '/guide/basics/module.html',
                     },
                     {
                       text: 'Model',
-                      link: '/guide/basics/model.md',
+                      link: '/guide/basics/model.html',
                     },
                     {
                       text: 'Store',
-                      link: '/guide/basics/store.md',
+                      link: '/guide/basics/store.html',
                     },
                     {
                       text: 'Action与Handler',
-                      link: '/guide/basics/action.md',
+                      link: '/guide/basics/action.html',
                     },
                     {
                       text: 'Component与View',
-                      link: '/guide/basics/view.md',
+                      link: '/guide/basics/view.html',
                     },
                     {
                       text: 'Router',
-                      link: '/guide/basics/router.md',
+                      link: '/guide/basics/router.html',
                     },
                     {
                       text: 'Mutable与Immutable',
-                      link: '/guide/basics/immutable.md',
+                      link: '/guide/basics/immutable.html',
                     },
                   ],
                 },
@@ -125,65 +126,42 @@ export default defineUserConfig({
                   children: [
                     {
                       text: 'React',
-                      link: '/guide/ui-framework/react.md',
+                      link: '/guide/ui-framework/react.html',
                     },
                     {
                       text: 'Vue',
-                      link: '/guide/ui-framework/vue.md',
+                      link: '/guide/ui-framework/vue.html',
                     },
                   ],
                 },
                 {
                   text: 'CSS框架',
-                  link: '/guide/css.md',
+                  link: '/guide/css.html',
                 },
                 {
                   text: '微前端与微模块',
-                  link: '/guide/mfd.md',
+                  link: '/guide/mfd.html',
                 },
                 {
                   text: '跨平台',
                   children: [
                     {
                       text: 'SSR服务器渲染',
-                      link: '/guide/platform/ssr.md',
+                      link: '/guide/platform/ssr.html',
                     },
                     {
                       text: 'Taro小程序',
-                      link: '/guide/platform/taro.md',
+                      link: '/guide/platform/taro.html',
                     },
                   ],
                 },
                 {
-                  text: '兼容IE浏览器',
-                  link: '/guide/demote.md',
+                  text: '兼容浏览器',
+                  link: '/guide/demote.html',
                 },
                 {
                   text: 'DevTools',
-                  link: '/guide/dev-tools.md',
-                },
-              ],
-            },
-          ],
-          '/api/': [
-            {
-              text: 'API手册',
-              children: [
-                {
-                  text: '@elux/react-web',
-                  link: '/api/react-web.md',
-                },
-                {
-                  text: '@elux/react-taro',
-                  link: '/api/react-taro.md',
-                },
-                {
-                  text: '@elux/vue-web',
-                  link: '/api/vue-web.md',
-                },
-                {
-                  text: '@elux/vue-taro',
-                  link: '/api/vue-taro.md',
+                  link: '/guide/dev-tools.html',
                 },
               ],
             },

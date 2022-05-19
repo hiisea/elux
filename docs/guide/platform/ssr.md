@@ -1,3 +1,7 @@
+---
+prev: /guide/mfd.html
+---
+
 # 服务器渲染SSR
 
 Elux不仅支持SSR(服务器渲染)，更强大：

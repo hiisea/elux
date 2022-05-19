@@ -1,3 +1,7 @@
+---
+prev: /guide/basics/immutable.html
+---
+
 # React
 
 Elux推荐大家使用[模型驱动](/designed/model-driven.html)作为开发理念，是为了简化对UI层的依赖。从整个架构图中可以看出，UI层只和Store有简单的联系，所以理论上**任何UI框架只要能够使用`Store中的State`，就能接入Elux项目中**。

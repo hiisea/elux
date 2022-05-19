@@ -5,6 +5,7 @@ storage/
 .DS_Store
 .temp/
 .cache/
+.private/
 docs/.vuepress/dist/
 api/.vuepress/dist/
 api/api/

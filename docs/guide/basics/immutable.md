@@ -1,3 +1,7 @@
+---
+next: /guide/ui-framework/react.html
+---
+
 # Mutable与Immutable
 
 数据管理本质上分为2大类：`Mutable(可变数据)`与`Immutable(不可变数据)`，**Elux框架同时支持这2种模式**。

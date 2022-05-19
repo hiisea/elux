@@ -1,3 +1,7 @@
+---
+prev: /guide/configure.html
+---
+
 # 概述
 
 ## 基本结构图

@@ -1,3 +1,7 @@
+---
+next: /guide/demote.html
+---
+
 # Taro与小程序
 
 Elux可以运行在任何JS环境中，所以也可以用来`模型驱动`小程序。

@@ -40,8 +40,8 @@ export default defineUserConfig({
             link: '/api/',
           },
           {
-            text: 'CLI工具',
-            link: '/cli/',
+            text: '生态建设',
+            link: '/ecological/',
           },
         ],
         sidebar: [
