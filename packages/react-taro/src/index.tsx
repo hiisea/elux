@@ -22,7 +22,7 @@ setCoreConfig({
 });
 
 /**
- * 小程序Page入口
+ * 小程序Page页面
  *
  * @public
  */

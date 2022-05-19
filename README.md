@@ -19,6 +19,7 @@
   <a href="https://www.npmjs.com/package/@elux/core">
     <img src="https://img.shields.io/npm/dt/@elux/core.svg?style=flat-square" />
   </a>
-  <p> </p>
-  <p> </p>
+  <p></p>
+  <p>QQ交流群 <em>701818275</em></p>
+  <p><img src="docs/.vuepress/public/images/qq.jpg" alt="elux" width="200" /></p>
 </div>

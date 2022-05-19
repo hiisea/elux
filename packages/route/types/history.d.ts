@@ -13,6 +13,7 @@ export declare class HistoryStack<T extends {
     getCurrentItem(): T;
     getEarliestItem(): T;
     getItemAt(n: number): T | undefined;
+    getItems(): T[];
     getLength(): number;
     push(item: T): void;
     replace(item: T): void;
@@ -44,11 +45,12 @@ export declare class PageStack extends HistoryStack<RouteRecord> {
 export declare class WindowStack extends HistoryStack<PageStack> {
     id: number;
     constructor(location: Location, store: Store);
+    getRecords(): RouteRecord[];
     getCurrentWindowPage(): {
         url: string;
         store: Store;
     };
-    getWindowPages(): {
+    getCurrentPages(): {
         url: string;
         store: Store;
     }[];

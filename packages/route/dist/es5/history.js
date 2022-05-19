@@ -36,6 +36,10 @@ export var HistoryStack = function () {
     return this.records[n];
   };
 
+  _proto.getItems = function getItems() {
+    return [].concat(this.records);
+  };
+
   _proto.getLength = function getLength() {
     return this.records.length;
   };
@@ -191,6 +195,12 @@ export var WindowStack = function (_HistoryStack2) {
 
   var _proto4 = WindowStack.prototype;
 
+  _proto4.getRecords = function getRecords() {
+    return this.records.map(function (item) {
+      return item.getCurrentItem();
+    });
+  };
+
   _proto4.getCurrentWindowPage = function getCurrentWindowPage() {
     var item = this.getCurrentItem();
     var store = item.store;
@@ -202,7 +212,7 @@ export var WindowStack = function (_HistoryStack2) {
     };
   };
 
-  _proto4.getWindowPages = function getWindowPages() {
+  _proto4.getCurrentPages = function getCurrentPages() {
     return this.records.map(function (item) {
       var store = item.store;
       var record = item.getCurrentItem();

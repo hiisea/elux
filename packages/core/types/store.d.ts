@@ -13,18 +13,20 @@ export declare abstract class CoreRouter implements IRouter {
     action: RouteAction;
     routeKey: string;
     constructor();
+    getHistoryUrls(target?: RouteTarget): string[];
     addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
     dispatch(data: RouteEvent): void | Promise<void>;
     abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
-    abstract getCurrentPage(): {
+    abstract getActivePage(): {
         url: string;
         store: IStore;
     };
-    abstract getWindowPages(): {
+    abstract getCurrentPages(): {
         url: string;
         store: IStore;
     }[];
     abstract getHistoryLength(target?: RouteTarget): number;
+    abstract getHistory(target?: RouteTarget): IRouteRecord[];
     abstract findRecordByKey(key: string): {
         record: IRouteRecord;
         overflow: boolean;
@@ -48,9 +50,9 @@ export declare class Store implements IStore {
     private mountedModules;
     private currentListeners;
     private nextListeners;
-    private active;
     private currentAction;
     private uncommittedState;
+    active: boolean;
     dispatch: Dispatch;
     loadingGroups: {
         [moduleNameAndGroupName: string]: TaskCounter;

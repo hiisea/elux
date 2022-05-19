@@ -1,0 +1,4 @@
+---
+home: true
+navbar: true
+---

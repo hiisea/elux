@@ -16,9 +16,11 @@ export declare function deepClone<T>(data: T): T;
  * @remarks
  * 类似于 `Object.assin` 的深复制版本。
  *
- * - 除第一个参数 target 会被修改外，保证其它入参不会被修改。
+ * - 除第一个参数target会被修改外，保证其它入参不会被修改。
  *
- * - 仅适应于 Merge PlainObject，且对于 array 是直接替换而不 merge
+ * - 仅适应于Merge PlainObject
+ *
+ * - 对于array是直接替换而不merge
  *
  * @public
  */
@@ -32,7 +34,7 @@ export declare class SingleDispatcher<T> {
     dispatch(data: T): void;
 }
 /**
- * 描述异步状态
+ * Loading状态
  *
  * @public
  */

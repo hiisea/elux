@@ -1,10 +1,9 @@
-import {Comment, DefineComponent, Fragment, h, VNode} from 'vue';
-
+import {Comment, FunctionalComponent, Fragment, h, VNode} from 'vue';
 /**
  * 内置UI组件
  *
  * @remarks
- * 该组件用来控制子元素的渲染方式：如果非空子元素大于0，则渲染第一个非空子元素，否则将渲染`props.elseView`，
+ * 用来控制子元素的渲染方式：如果非空子元素大于0，则渲染第一个非空子元素，否则将渲染`props.elseView`，
  * 与 {@link Else | `<Else>`} 的区别在于：`<Else>` 渲染所有非空子元素
  *
  * @example
@@ -30,7 +29,7 @@ export interface SwitchProps {
  * @public
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const Switch: DefineComponent<SwitchProps> = function (
+export const Switch: FunctionalComponent<SwitchProps> = function (
   props: SwitchProps,
   context: {slots: {default?: () => VNode[]; elseView?: () => VNode[]}}
 ) {

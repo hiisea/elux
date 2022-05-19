@@ -13,10 +13,10 @@ export const RouterComponent = defineComponent({
         url: string;
         store: IStore;
       }[];
-    }>({classname: 'elux-app', pages: router.getWindowPages().reverse()});
+    }>({classname: 'elux-app', pages: router.getCurrentPages().reverse()});
     const containerRef = ref<{className: string}>({className: ''});
     const removeListener = router.addListener(({action, windowChanged}) => {
-      const pages = router.getWindowPages().reverse();
+      const pages = router.getCurrentPages().reverse();
       return new Promise<void>((completeCallback) => {
         if (windowChanged) {
           if (action === 'push') {

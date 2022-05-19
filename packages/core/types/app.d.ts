@@ -1,12 +1,12 @@
 import { IRouter, RouterInitOptions } from './basic';
 /**
- * 应用Render参数
+ * 创建应用时Render参数
  *
  * @public
  */
 export interface RenderOptions {
     /**
-     * 挂载应用 Dom 的 id
+     * 挂载应用Dom的id
      *
      * @defaultValue `root`
      *

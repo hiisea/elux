@@ -3,7 +3,7 @@ import React from 'react';
  * 内置UI组件
  *
  * @remarks
- * 以组件的方式维护`<head></head>`标签中的`<title>、<meta>`等不可见元素，可用于服务器环境（SSR）
+ * 用组件的方式动态修改`<head>内容`，主要是`title/description/keywords`等meta信息，SSR中非常有用
  *
  * @example
  * ```html

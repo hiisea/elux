@@ -28,7 +28,7 @@ export type {
   RouteRuntime,
   RouteTarget,
   StoreLogger,
-  storeLoggerInfo,
+  StoreLoggerInfo,
   StoreMiddleware,
   StoreState,
 } from './basic';
@@ -43,6 +43,8 @@ export type {
   GetPromiseComponent,
   GetPromiseModule,
   HandlerToAction,
+  IGetComponent,
+  IGetData,
   ILoadComponent,
   ModuleFacade,
   PickModelActions,

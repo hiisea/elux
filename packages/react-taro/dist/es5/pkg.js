@@ -561,13 +561,17 @@ function injectActions(model, hmr) {
 
         if (handler.__isReducer__ || handler.__isEffect__) {
           actionNames.split(coreConfig.MSP).forEach(function (actionName) {
-            actionName = actionName.trim().replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
-            var arr = actionName.split(coreConfig.NSP);
+            actionName = actionName.trim();
 
-            if (arr[1]) {
-              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-            } else {
-              transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            if (actionName) {
+              actionName = actionName.replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
+              var arr = actionName.split(coreConfig.NSP);
+
+              if (arr[1]) {
+                transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+              } else {
+                transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+              }
             }
           });
         }
@@ -900,6 +904,10 @@ var CoreRouter = function () {
 
   var _proto = CoreRouter.prototype;
 
+  _proto.getHistoryUrls = function getHistoryUrls(target) {
+    throw new Error('Method not implemented.');
+  };
+
   _proto.addListener = function addListener(callback) {
     this.listenerId++;
     var id = "" + this.listenerId;
@@ -975,9 +983,9 @@ var Store = function () {
     this.mountedModules = {};
     this.currentListeners = [];
     this.nextListeners = [];
-    this.active = false;
     this.currentAction = void 0;
     this.uncommittedState = {};
+    this.active = false;
 
     this.dispatch = function (action) {
       throw 'Dispatching action while constructing your middleware is not allowed.';
@@ -1276,7 +1284,7 @@ function modelHotReplacement(moduleName, ModelClass) {
       module.ModelClass = ModelClass;
       var newModel = new ModelClass(moduleName, null);
       injectActions(newModel, true);
-      var page = MetaData.clientRouter.getCurrentPage();
+      var page = MetaData.clientRouter.getActivePage();
       page.store.hotReplaceModel(moduleName, ModelClass);
     });
   }
@@ -1290,6 +1298,29 @@ function exportModule(moduleName, ModelClass, components, data) {
 }
 function getApi(demoteForProductionOnly, injectActions) {
   var modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+
+  var GetComponent = function GetComponent(moduleName, componentName) {
+    var result = getComponent(moduleName, componentName);
+
+    if (isPromise(result)) {
+      return result;
+    } else {
+      return Promise.resolve(result);
+    }
+  };
+
+  var GetData = function GetData(moduleName) {
+    var result = getModule(moduleName);
+
+    if (isPromise(result)) {
+      return result.then(function (mod) {
+        return mod.data;
+      });
+    } else {
+      return Promise.resolve(result.data);
+    }
+  };
+
   return {
     GetActions: function GetActions() {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -1309,6 +1340,8 @@ function getApi(demoteForProductionOnly, injectActions) {
       return MetaData.clientRouter;
     },
     LoadComponent: coreConfig.LoadComponent,
+    GetComponent: GetComponent,
+    GetData: GetData,
     Modules: modules,
     useRouter: coreConfig.UseRouter,
     useStore: coreConfig.UseStore
@@ -1432,7 +1465,7 @@ var RouterComponent = function RouterComponent() {
 
   var _useState = useState({
     classname: 'elux-app',
-    pages: router.getWindowPages().reverse()
+    pages: router.getCurrentPages().reverse()
   }),
       data = _useState[0],
       setData = _useState[1];
@@ -1446,7 +1479,7 @@ var RouterComponent = function RouterComponent() {
     return router.addListener(function (_ref) {
       var action = _ref.action,
           windowChanged = _ref.windowChanged;
-      var pages = router.getWindowPages().reverse();
+      var pages = router.getCurrentPages().reverse();
       return new Promise(function (completeCallback) {
         if (windowChanged) {
           if (action === 'push') {
@@ -2678,6 +2711,10 @@ var HistoryStack = function () {
     return this.records[n];
   };
 
+  _proto.getItems = function getItems() {
+    return [].concat(this.records);
+  };
+
   _proto.getLength = function getLength() {
     return this.records.length;
   };
@@ -2833,6 +2870,12 @@ var WindowStack = function (_HistoryStack2) {
 
   var _proto4 = WindowStack.prototype;
 
+  _proto4.getRecords = function getRecords() {
+    return this.records.map(function (item) {
+      return item.getCurrentItem();
+    });
+  };
+
   _proto4.getCurrentWindowPage = function getCurrentWindowPage() {
     var item = this.getCurrentItem();
     var store = item.store;
@@ -2844,7 +2887,7 @@ var WindowStack = function (_HistoryStack2) {
     };
   };
 
-  _proto4.getWindowPages = function getWindowPages() {
+  _proto4.getCurrentPages = function getCurrentPages() {
     return this.records.map(function (item) {
       var store = item.store;
       var record = item.getCurrentItem();
@@ -3070,7 +3113,7 @@ var Router = function (_CoreRouter) {
 
     return new Promise(function (resolve, reject) {
       var task = [function () {
-        return setLoading(execute(), _this3.getCurrentPage().store);
+        return setLoading(execute(), _this3.getActivePage().store);
       }, resolve, reject];
 
       if (_this3.curTask) {
@@ -3092,6 +3135,14 @@ var Router = function (_CoreRouter) {
     }
 
     return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  };
+
+  _proto2.getHistory = function getHistory(target) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
   };
 
   _proto2.findRecordByKey = function findRecordByKey(recordKey) {
@@ -3130,12 +3181,12 @@ var Router = function (_CoreRouter) {
     };
   };
 
-  _proto2.getCurrentPage = function getCurrentPage() {
+  _proto2.getActivePage = function getActivePage() {
     return this.windowStack.getCurrentWindowPage();
   };
 
-  _proto2.getWindowPages = function getWindowPages() {
-    return this.windowStack.getWindowPages();
+  _proto2.getCurrentPages = function getCurrentPages() {
+    return this.windowStack.getCurrentPages();
   };
 
   _proto2.mountStore = function () {
@@ -3242,7 +3293,7 @@ var Router = function (_CoreRouter) {
               return this.nativeRouter.execute(action, location, routeKey);
 
             case 3:
-              store = this.getCurrentPage().store;
+              store = this.getActivePage().store;
               _context2.prev = 4;
               _context2.next = 7;
               return store.mount(coreConfig.StageModuleName, 'init');
@@ -3327,7 +3378,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context3.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -3423,7 +3474,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context4.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -3518,7 +3569,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context5.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -3675,7 +3726,7 @@ var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location, index);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context6.next = 17;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -7825,4 +7876,4 @@ function createApp(appConfig) {
 var createSelectorHook$1 = lib.createSelectorHook;
 var shallowEqual$1 = lib.shallowEqual;
 var useSelector$1 = lib.useSelector;
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };

@@ -19,7 +19,7 @@ import {
   RouterInitOptions,
   RouteRuntime,
   RouteTarget,
-  storeLoggerInfo,
+  StoreLoggerInfo,
   StoreMiddleware,
   StoreState,
 } from './basic';
@@ -70,6 +70,9 @@ export abstract class CoreRouter implements IRouter {
       MetaData.clientRouter = this;
     }
   }
+  getHistoryUrls(target?: RouteTarget): string[] {
+    throw new Error('Method not implemented.');
+  }
 
   addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener {
     this.listenerId++;
@@ -99,9 +102,10 @@ export abstract class CoreRouter implements IRouter {
   }
 
   abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
-  abstract getCurrentPage(): {url: string; store: IStore};
-  abstract getWindowPages(): {url: string; store: IStore}[];
+  abstract getActivePage(): {url: string; store: IStore};
+  abstract getCurrentPages(): {url: string; store: IStore}[];
   abstract getHistoryLength(target?: RouteTarget): number;
+  abstract getHistory(target?: RouteTarget): IRouteRecord[];
   abstract findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
   abstract findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]};
   abstract relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
@@ -155,9 +159,10 @@ export class Store implements IStore {
   private mountedModules: {[moduleName: string]: Promise<void> | true | undefined} = {};
   private currentListeners: Listener[] = [];
   private nextListeners: Listener[] = [];
-  private active: boolean = false;
   private currentAction: Action | undefined;
   private uncommittedState: StoreState = {};
+
+  public active: boolean = false;
   public dispatch: Dispatch = (action: Action) => {
     throw 'Dispatching action while constructing your middleware is not allowed.';
   };
@@ -340,7 +345,7 @@ export class Store implements IStore {
     const handlers = {...commonHandlers, ...universalHandlers};
     const handlerModuleNames = Object.keys(handlers);
     const prevState = this.getState();
-    const logs: storeLoggerInfo = {
+    const logs: StoreLoggerInfo = {
       id: this.sid,
       isActive: this.active,
       actionName,
@@ -435,7 +440,7 @@ export function modelHotReplacement(moduleName: string, ModelClass: CommonModelC
       module.ModelClass = ModelClass;
       const newModel = new ModelClass(moduleName, null as any);
       injectActions(newModel, true);
-      const page = MetaData.clientRouter!.getCurrentPage();
+      const page = MetaData.clientRouter!.getActivePage();
       (page.store as Store).hotReplaceModel(moduleName, ModelClass);
     });
   }

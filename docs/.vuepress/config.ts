@@ -4,6 +4,13 @@ import {defaultTheme} from '@vuepress/theme-default';
 import {path} from '@vuepress/utils';
 
 export default defineUserConfig({
+  // shouldPrefetch: false,
+  // shouldPrefetch: (file, type) => {
+  //   if (file.startsWith('assets/vue-web.') || file.startsWith('assets/vue-taro.')) {
+  //     return false;
+  //   }
+  //   return true;
+  // },
   locales: {
     '/': {
       lang: 'zh-CN',
@@ -27,70 +34,139 @@ export default defineUserConfig({
         navbar: [
           {
             text: '设计思想',
-            link: '/designed/micro-module',
+            link: '/designed/micro-module.html',
           },
           {
             text: '开发指南',
-            link: '/guide/summary',
+            link: '/guide/summary.html',
           },
           {
             text: 'API文档',
-            link: '/api',
+            link: 'http://eluxjs.com/api/',
           },
           {
-            text: 'CLI工具',
-            link: '/api',
+            text: '生态建设',
+            link: '/ecological/',
           },
         ],
-        sidebar: [
-          {
-            text: '设计思想',
-            children: [
-              {
-                text: '微模块',
-                link: '/designed/micro-module',
-              },
-              {
-                text: '模型驱动',
-                link: '/designed/model-driven',
-              },
-              {
-                text: '路由与历史',
-                link: '/designed/route-history',
-              },
-            ],
-          },
-          {
-            text: '开发指南',
-            children: [
-              {
-                text: '介绍',
-                link: '/guide/summary',
-              },
-              {
-                text: '安装',
-                link: '/guide/install',
-              },
-              {
-                text: '配置',
-                link: '/guide/configure',
-              },
-              {
-                text: '基础',
-                link: '/guide/basics.md',
-              },
-              {
-                text: '案例',
-                children: [
-                  {
-                    text: '划分模块',
-                    link: '/guide/case-module.md',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        sidebarDepth: 0,
+        sidebar: {
+          '/': [
+            {
+              text: '设计思想',
+              children: [
+                {
+                  text: '微模块',
+                  link: '/designed/micro-module.html',
+                },
+                {
+                  text: '模型驱动',
+                  link: '/designed/model-driven.html',
+                },
+                {
+                  text: '路由与历史',
+                  link: '/designed/route-history.html',
+                },
+              ],
+            },
+            {
+              text: '开发指南',
+              children: [
+                {
+                  text: '介绍',
+                  link: '/guide/summary.html',
+                },
+                {
+                  text: '安装',
+                  link: '/guide/install.html',
+                },
+                {
+                  text: '配置',
+                  link: '/guide/configure.html',
+                },
+                {
+                  text: '基础',
+                  children: [
+                    {
+                      text: '概述',
+                      link: '/guide/basics/summary.html',
+                    },
+                    {
+                      text: 'Module',
+                      link: '/guide/basics/module.html',
+                    },
+                    {
+                      text: 'Model',
+                      link: '/guide/basics/model.html',
+                    },
+                    {
+                      text: 'Store',
+                      link: '/guide/basics/store.html',
+                    },
+                    {
+                      text: 'Action与Handler',
+                      link: '/guide/basics/action.html',
+                    },
+                    {
+                      text: 'Component与View',
+                      link: '/guide/basics/view.html',
+                    },
+                    {
+                      text: 'Router',
+                      link: '/guide/basics/router.html',
+                    },
+                    {
+                      text: 'Mutable与Immutable',
+                      link: '/guide/basics/immutable.html',
+                    },
+                  ],
+                },
+                {
+                  text: 'UI框架',
+                  children: [
+                    {
+                      text: 'React',
+                      link: '/guide/ui-framework/react.html',
+                    },
+                    {
+                      text: 'Vue',
+                      link: '/guide/ui-framework/vue.html',
+                    },
+                  ],
+                },
+                {
+                  text: 'CSS框架',
+                  link: '/guide/css.html',
+                },
+                {
+                  text: '微前端与微模块',
+                  link: '/guide/mfd.html',
+                },
+                {
+                  text: '跨平台',
+                  children: [
+                    {
+                      text: 'SSR服务器渲染',
+                      link: '/guide/platform/ssr.html',
+                    },
+                    {
+                      text: 'Taro小程序',
+                      link: '/guide/platform/taro.html',
+                    },
+                  ],
+                },
+                {
+                  text: '兼容浏览器',
+                  link: '/guide/demote.html',
+                },
+                {
+                  text: 'DevTools',
+                  link: '/guide/dev-tools.html',
+                },
+              ],
+            },
+          ],
+        },
       },
       '/en/': {
         selectLanguageName: 'English',

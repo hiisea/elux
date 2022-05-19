@@ -3,13 +3,13 @@ import env from './env';
 import type {CoreRouter} from './store';
 
 /**
- * 应用Render参数
+ * 创建应用时Render参数
  *
  * @public
  */
 export interface RenderOptions {
   /**
-   * 挂载应用 Dom 的 id
+   * 挂载应用Dom的id
    *
    * @defaultValue `root`
    *
@@ -54,7 +54,7 @@ export function buildSSR<INS = {}>(
   return Object.assign(ins, {
     render({id = 'root'}: RenderOptions = {}) {
       return (router as CoreRouter).init(routerOptions, {}).then(() => {
-        const store = router.getCurrentPage().store;
+        const store = router.getActivePage().store;
         store.destroy();
         const eluxContext: EluxContext = {router, documentHead: ''};
         return AppRender.toString(id, eluxContext, ins).then((html) => {

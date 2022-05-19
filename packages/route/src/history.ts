@@ -27,9 +27,9 @@ export class HistoryStack<T extends {destroy: () => void; setActive: () => void;
   getItemAt(n: number): T | undefined {
     return this.records[n];
   }
-  // getItems(): T[] {
-  //   return [...(this.records as T[])];
-  // }
+  getItems(): T[] {
+    return [...this.records];
+  }
   getLength(): number {
     return this.records.length;
   }
@@ -151,6 +151,9 @@ export class WindowStack extends HistoryStack<PageStack> {
     super(10);
     this.init(new PageStack(this, location, store));
   }
+  getRecords(): RouteRecord[] {
+    return this.records.map((item) => item.getCurrentItem());
+  }
   getCurrentWindowPage(): {url: string; store: Store} {
     const item = this.getCurrentItem();
     const store = item.store;
@@ -158,7 +161,7 @@ export class WindowStack extends HistoryStack<PageStack> {
     const url = record.location.url;
     return {url, store};
   }
-  getWindowPages(): {url: string; store: Store}[] {
+  getCurrentPages(): {url: string; store: Store}[] {
     return this.records.map((item) => {
       const store = item.store;
       const record = item.getCurrentItem();

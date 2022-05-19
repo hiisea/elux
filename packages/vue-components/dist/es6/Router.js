@@ -7,7 +7,7 @@ export const RouterComponent = defineComponent({
     const router = coreConfig.UseRouter();
     const data = shallowRef({
       classname: 'elux-app',
-      pages: router.getWindowPages().reverse()
+      pages: router.getCurrentPages().reverse()
     });
     const containerRef = ref({
       className: ''
@@ -16,7 +16,7 @@ export const RouterComponent = defineComponent({
       action,
       windowChanged
     }) => {
-      const pages = router.getWindowPages().reverse();
+      const pages = router.getCurrentPages().reverse();
       return new Promise(completeCallback => {
         if (windowChanged) {
           if (action === 'push') {

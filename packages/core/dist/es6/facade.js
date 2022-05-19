@@ -4,13 +4,35 @@ var _class;
 
 import { coreConfig, mergeState, MetaData } from './basic';
 import env from './env';
-import { getModuleApiMap } from './inject';
+import { getComponent, getModule, getModuleApiMap } from './inject';
 import { exportModuleFacade, reducer } from './module';
+import { isPromise } from './utils';
 export function exportModule(moduleName, ModelClass, components, data) {
   return exportModuleFacade(moduleName, ModelClass, components, data);
 }
 export function getApi(demoteForProductionOnly, injectActions) {
   const modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
+
+  const GetComponent = (moduleName, componentName) => {
+    const result = getComponent(moduleName, componentName);
+
+    if (isPromise(result)) {
+      return result;
+    } else {
+      return Promise.resolve(result);
+    }
+  };
+
+  const GetData = moduleName => {
+    const result = getModule(moduleName);
+
+    if (isPromise(result)) {
+      return result.then(mod => mod.data);
+    } else {
+      return Promise.resolve(result.data);
+    }
+  };
+
   return {
     GetActions: (...args) => {
       return args.reduce((prev, moduleName) => {
@@ -26,6 +48,8 @@ export function getApi(demoteForProductionOnly, injectActions) {
       return MetaData.clientRouter;
     },
     LoadComponent: coreConfig.LoadComponent,
+    GetComponent: GetComponent,
+    GetData: GetData,
     Modules: modules,
     useRouter: coreConfig.UseRouter,
     useStore: coreConfig.UseStore

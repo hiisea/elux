@@ -1,8 +1,8 @@
 import { ModuleGetter, StoreLogger, StoreMiddleware } from '@elux/core';
-export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getModule, injectModule, isServer, modelHotReplacement, reducer, setLoading, } from '@elux/core';
-export type { Action, ActionCreator, ActionError, API, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, Dispatch, EluxComponent, Facade, GetPromiseComponent, GetPromiseModule, GetState, HandlerToAction, ILoadComponent, IRouter, IRouteRecord, IStore, LoadingState, Location, ModelAsCreators, ModuleFacade, ModuleGetter, ModuleState, PickModelActions, PickThisActions, RenderOptions, ReturnComponents, RouteAction, RouteEvent, RouterInitOptions, RouteRuntime, RouteTarget, StoreLogger, storeLoggerInfo, StoreMiddleware, StoreState, UNListener, } from '@elux/core';
+export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, modelHotReplacement, reducer, setLoading, } from '@elux/core';
+export type { Action, ActionCreator, ActionError, API, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, Dispatch, EluxComponent, Facade, GetPromiseComponent, GetPromiseModule, GetState, HandlerToAction, IGetComponent, IGetData, ILoadComponent, IRouter, IRouteRecord, IStore, LoadingState, Location, ModelAsCreators, ModuleFacade, ModuleGetter, ModuleState, PickModelActions, PickThisActions, RenderOptions, ReturnComponents, RouteAction, RouteEvent, RouterInitOptions, RouteRuntime, RouteTarget, StoreLogger, StoreLoggerInfo, StoreMiddleware, StoreState, UNListener, } from '@elux/core';
 export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, urlToLocation, urlToNativeUrl, } from '@elux/route';
-/*** @public */
+/** @public */
 export declare type ComputedStore<T> = {
     [K in keyof T]-?: () => T[K];
 };
@@ -31,7 +31,7 @@ export interface UserConfig {
         }): string;
     };
     /**
-     * 定义应用的首页
+     * 定义应用的首页Url
      *
      * @defaultValue `/`
      *
@@ -40,7 +40,7 @@ export interface UserConfig {
      */
     HomeUrl: string;
     /**
-     * 定义内部和宿主平台路由之间的转换与映射
+     * 定义虚拟路由和原生路由的Url映射
      */
     NativePathnameMapping?: {
         in(nativePathname: string): string;
@@ -54,7 +54,7 @@ export interface UserConfig {
      * @remarks
      * 默认: `1`
      *
-     * 框架将Loading状态分为3种：{@link LoadingState}，可根据不同的状态来个性化显示，如：浅度loading时显示透明蒙层，深度loading时显示icon+灰色蒙层
+     * 框架中存在3种不同程度的Loading状态:{@link LoadingState}，可定制不同的界面。如浅度loading时显示无感知的透明蒙层，深度时显示Icon和灰色
      */
     DepthTimeOnLoading?: number;
     /**
@@ -76,7 +76,7 @@ export interface UserConfig {
      */
     StageViewName?: string;
     /**
-     * 定义默认视图加载错误组件
+     * 定义默认的视图加载错误组件
      *
      * @defaultValue `<div className="g-component-error">{message}</div>`
      *
@@ -109,14 +109,14 @@ export interface UserConfig {
      */
     StoreLogger?: StoreLogger;
     /**
-     * 是否不通知原生路由
+     * 强制不与原生路由关联
      *
      * @defaultValue `false`
      *
      * @remarks
      * 默认: `false`
      *
-     * 框架有自己的路由体系，运行平台的原生路由体系作为外挂模式存在。默认情况下二者之间会建立关联，此设置为true可以彻底忽略原生路由体系。
+     * 虚拟路由默认会关联到原生路由，可以断开关联
      *
      */
     DisableNativeRouter?: boolean;

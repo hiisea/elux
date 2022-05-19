@@ -1,5 +1,9 @@
 {
   "search.exclude": {
+    "docs/.vuepress/.api": true,
+    "docs/.vuepress/.cache": true,
+    "docs/.vuepress/.temp": true,
+    "**/*.svg": true,
     "**/yarn.lock": true,
     "**/node_modules": true,
     "**/dist": true,

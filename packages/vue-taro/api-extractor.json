@@ -14,7 +14,7 @@
   },
   "docModel": {
     "enabled": true,
-    "apiJsonFilePath": "../../docs/.vuepress/.api/json/<unscopedPackageName>.api.json"
+    "apiJsonFilePath": "../../api/.vuepress/.api/<unscopedPackageName>.api.json"
   },
   "dtsRollup": {
     "enabled": false

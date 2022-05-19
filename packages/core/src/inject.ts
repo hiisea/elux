@@ -15,14 +15,6 @@ import {
 import env from './env';
 import {isPromise, promiseCaseCallback} from './utils';
 
-/**
- * 获取Module
- *
- * @remarks
- * 获取通过 {@link exportModule} 导出的 Module
- *
- * @public
- */
 export function getModule(moduleName: string): Promise<CommonModule> | CommonModule {
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName]!;
@@ -48,14 +40,6 @@ export function getModule(moduleName: string): Promise<CommonModule> | CommonMod
   return moduleOrPromise;
 }
 
-/**
- * 获取导出的UI组件
- *
- * @remarks
- * 获取通过 {@link exportModule} 导出的 Component。与 {@link ILoadComponent} 不同的是本方法只获取 Component 构造器，并不会render
- *
- * @public
- */
 export function getComponent(moduleName: string, componentName: string): EluxComponent | Promise<EluxComponent> {
   const key = [moduleName, componentName].join(coreConfig.NSP);
   if (MetaData.componentCaches[key]) {
@@ -150,7 +134,7 @@ export function getModuleApiMap(data?: Record<string, string[]>): ModuleApiMap {
 }
 
 /**
- * 动态注册module
+ * 动态注册Module
  *
  * @remarks
  * 常于小程序分包加载
@@ -193,21 +177,24 @@ export function injectActions(model: CommonModel, hmr?: boolean): void {
       const handler = handlers[actionNames];
       if (handler.__isReducer__ || handler.__isEffect__) {
         actionNames.split(coreConfig.MSP).forEach((actionName) => {
-          actionName = actionName.trim().replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
-          const arr = actionName.split(coreConfig.NSP);
-          if (arr[1]) {
-            // handler.__isHandler__ = true;
-            transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-          } else {
-            // handler.__isHandler__ = false;
-            transformAction(
-              moduleName + coreConfig.NSP + actionName,
-              handler,
-              moduleName,
-              handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap,
-              hmr
-            );
-            // addModuleActionCreatorList(moduleName, actionName);
+          actionName = actionName.trim();
+          if (actionName) {
+            actionName = actionName.replace(new RegExp(`^this[${coreConfig.NSP}]`), `${moduleName}${coreConfig.NSP}`);
+            const arr = actionName.split(coreConfig.NSP);
+            if (arr[1]) {
+              // handler.__isHandler__ = true;
+              transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
+            } else {
+              // handler.__isHandler__ = false;
+              transformAction(
+                moduleName + coreConfig.NSP + actionName,
+                handler,
+                moduleName,
+                handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap,
+                hmr
+              );
+              // addModuleActionCreatorList(moduleName, actionName);
+            }
           }
         });
       }

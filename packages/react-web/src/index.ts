@@ -20,6 +20,7 @@ setReactComponentsConfig({
   render,
   renderToString,
 });
+
 /**
  * @public
  */

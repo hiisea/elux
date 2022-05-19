@@ -23,10 +23,7 @@ export function moduleLoadingAction(moduleName: string, loadingState: {[group: s
 }
 
 /**
- * 创建一个内置的ErrorAction
- *
- * @remarks
- * 该 action 可以被 dispatch，可以被 model 捕获并处理
+ * 创建一个特殊的ErrorAction
  *
  * @param error - 错误体
  *

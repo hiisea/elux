@@ -3,8 +3,11 @@ storage/
 *.log
 .eslintcache
 .DS_Store
-.api/
 .temp/
 .cache/
+.private/
 docs/.vuepress/dist/
+api/.vuepress/dist/
+api/api/
 tsconfig.tsbuildinfo
+tsdoc-metadata.json

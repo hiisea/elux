@@ -12,7 +12,7 @@ export const RouterComponent: React.FC = () => {
       url: string;
       store: IStore;
     }[];
-  }>({classname: 'elux-app', pages: router.getWindowPages().reverse()});
+  }>({classname: 'elux-app', pages: router.getCurrentPages().reverse()});
   const {classname, pages} = data;
   const pagesRef = useRef(pages);
   pagesRef.current = pages;
@@ -20,7 +20,7 @@ export const RouterComponent: React.FC = () => {
 
   useEffect(() => {
     return router.addListener(({action, windowChanged}) => {
-      const pages = router.getWindowPages().reverse();
+      const pages = router.getCurrentPages().reverse();
       return new Promise<void>((completeCallback) => {
         if (windowChanged) {
           if (action === 'push') {

@@ -92,7 +92,7 @@ export var Router = function (_CoreRouter) {
 
     return new Promise(function (resolve, reject) {
       var task = [function () {
-        return setLoading(execute(), _this3.getCurrentPage().store);
+        return setLoading(execute(), _this3.getActivePage().store);
       }, resolve, reject];
 
       if (_this3.curTask) {
@@ -114,6 +114,14 @@ export var Router = function (_CoreRouter) {
     }
 
     return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+  };
+
+  _proto2.getHistory = function getHistory(target) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
+    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
   };
 
   _proto2.findRecordByKey = function findRecordByKey(recordKey) {
@@ -152,12 +160,12 @@ export var Router = function (_CoreRouter) {
     };
   };
 
-  _proto2.getCurrentPage = function getCurrentPage() {
+  _proto2.getActivePage = function getActivePage() {
     return this.windowStack.getCurrentWindowPage();
   };
 
-  _proto2.getWindowPages = function getWindowPages() {
-    return this.windowStack.getWindowPages();
+  _proto2.getCurrentPages = function getCurrentPages() {
+    return this.windowStack.getCurrentPages();
   };
 
   _proto2.mountStore = function () {
@@ -264,7 +272,7 @@ export var Router = function (_CoreRouter) {
               return this.nativeRouter.execute(action, location, routeKey);
 
             case 3:
-              store = this.getCurrentPage().store;
+              store = this.getActivePage().store;
               _context2.prev = 4;
               _context2.next = 7;
               return store.mount(coreConfig.StageModuleName, 'init');
@@ -349,7 +357,7 @@ export var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context3.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -445,7 +453,7 @@ export var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context4.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -540,7 +548,7 @@ export var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context5.next = 7;
               return prevStore.dispatch(testChangeAction(location, action));
 
@@ -697,7 +705,7 @@ export var Router = function (_CoreRouter) {
                 this.nativeRouter.testExecute(action, location, index);
               }
 
-              prevStore = this.getCurrentPage().store;
+              prevStore = this.getActivePage().store;
               _context6.next = 17;
               return prevStore.dispatch(testChangeAction(location, action));
 
