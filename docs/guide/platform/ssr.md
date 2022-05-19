@@ -4,7 +4,7 @@ prev: /guide/mfd.html
 
 # 服务器渲染SSR
 
-Elux不仅支持SSR(服务器渲染)，更强大：
+Elux不仅支持SSR(服务器渲染)，更友好的是：
 
 - Server端代码为简单函数调用，不捆绑任何Server框架(可选择`express/koa/nestjs`等)。
 - 和CSR(浏览器渲染)同构，使用同一套代码。

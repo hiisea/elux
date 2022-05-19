@@ -6,7 +6,7 @@ next: /guide/basics/summary.html
 
 ## web项目配置
 
-web项目使用的基于webpack5封装的脚手架，配置文件为`/elux.config.js`，目前支持以下选项：
+web项目使用的基于webpack5封装的脚手架，配置文件为`elux.config.js`，目前支持以下选项：
 
 ```ts
 //环境配置，可以为dev(开发环境)和prod(生产环境)分别给予不同配置

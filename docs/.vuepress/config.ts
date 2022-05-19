@@ -4,23 +4,39 @@ import {defaultTheme} from '@vuepress/theme-default';
 import {path} from '@vuepress/utils';
 
 export default defineUserConfig({
-  // shouldPrefetch: false,
-  // shouldPrefetch: (file, type) => {
-  //   if (file.startsWith('assets/vue-web.') || file.startsWith('assets/vue-taro.')) {
-  //     return false;
-  //   }
-  //   return true;
-  // },
+  shouldPrefetch: false,
+  head: [
+    [
+      'link',
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '16x16',
+        href: `/images/logo-16x.png`,
+      },
+    ],
+    [
+      'link',
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '32x32',
+        href: `/images/logo-32x.png`,
+      },
+    ],
+    ['meta', {name: 'application-name', content: 'EluxJS'}],
+    ['meta', {name: 'apple-mobile-web-app-title', content: 'EluxJS'}],
+  ],
   locales: {
     '/': {
       lang: 'zh-CN',
-      title: 'Hello-Elux',
+      title: 'EluxJS',
       description: 'Elux不只是一个JS框架，更是一种基于“微模块”和“模型驱动”的跨平台、跨框架同构方案',
     },
     '/en/': {
       lang: 'en-US',
-      title: 'Hello-Elux',
-      description: 'Elux不只是一个JS框架，更是一种基于“微模块”和“模型驱动”的跨平台、跨框架同构方案',
+      title: 'EluxJS',
+      description: 'Cross platform and cross framework web solutions that based on micro-module and model-driven',
     },
   },
   theme: defaultTheme({
@@ -41,12 +57,21 @@ export default defineUserConfig({
             link: '/guide/summary.html',
           },
           {
+            text: '生态建设',
+            link: '/ecological/',
+          },
+          {
             text: 'API文档',
             link: 'http://eluxjs.com/api/',
           },
           {
-            text: '生态建设',
-            link: '/ecological/',
+            text: `v2.0`,
+            children: [
+              {
+                text: '更新日志',
+                link: 'https://github.com/hiisea/elux/blob/main/CHANGELOG.md',
+              },
+            ],
           },
         ],
         sidebarDepth: 0,
@@ -162,6 +187,19 @@ export default defineUserConfig({
                 {
                   text: 'DevTools',
                   link: '/guide/dev-tools.html',
+                },
+              ],
+            },
+            {
+              text: '生态建设',
+              children: [
+                {
+                  text: '学习交流',
+                  link: '/ecological/index.html',
+                },
+                {
+                  text: '更新日志',
+                  link: 'https://github.com/hiisea/elux/blob/main/CHANGELOG.md',
                 },
               ],
             },
