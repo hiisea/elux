@@ -38,22 +38,22 @@ export declare class Router extends CoreRouter {
         index: [number, number];
     };
     getActivePage(): {
-        url: string;
+        location: Location;
         store: Store;
     };
     getCurrentPages(): {
-        url: string;
+        location: Location;
         store: Store;
     }[];
     private mountStore;
     private redirectOnServer;
     init(routerInitOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
     private _init;
-    relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    relaunch(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _relaunch;
-    replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    replace(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _replace;
-    push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    push(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _push;
     back(stepOrKey?: number | string, target?: RouteTarget, payload?: any, overflowRedirect?: string, _nativeCaller?: boolean): Promise<void>;
     private _back;

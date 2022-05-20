@@ -18,12 +18,12 @@ export declare abstract class CoreRouter implements IRouter {
     dispatch(data: RouteEvent): void | Promise<void>;
     abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
     abstract getActivePage(): {
-        url: string;
         store: IStore;
+        location: Location;
     };
     abstract getCurrentPages(): {
-        url: string;
         store: IStore;
+        location: Location;
     }[];
     abstract getHistoryLength(target?: RouteTarget): number;
     abstract getHistory(target?: RouteTarget): IRouteRecord[];

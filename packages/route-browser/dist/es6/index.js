@@ -58,22 +58,22 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   push(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   replace(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   relaunch(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   back(location, key, index) {
-    this.history.replace(location);
+    this.history.replace(location.url);
     return false;
   }
 

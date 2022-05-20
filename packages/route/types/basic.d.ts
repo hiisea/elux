@@ -47,7 +47,7 @@ export declare function urlToLocation(url: string): Location;
  *
  * @public
  */
-export declare function locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery }: Partial<Location>): string;
+export declare function locationToUrl({ url, pathname, search, hash, classname, searchQuery, hashQuery }: Partial<Location>): string;
 /**
  * 内部路由Location转换为原生路由Location
  *

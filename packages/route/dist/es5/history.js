@@ -205,10 +205,10 @@ export var WindowStack = function (_HistoryStack2) {
     var item = this.getCurrentItem();
     var store = item.store;
     var record = item.getCurrentItem();
-    var url = record.location.url;
+    var location = record.location;
     return {
-      url: url,
-      store: store
+      store: store,
+      location: location
     };
   };
 
@@ -216,10 +216,10 @@ export var WindowStack = function (_HistoryStack2) {
     return this.records.map(function (item) {
       var store = item.store;
       var record = item.getCurrentItem();
-      var url = record.location.url;
+      var location = record.location;
       return {
-        url: url,
-        store: store
+        store: store,
+        location: location
       };
     });
   };

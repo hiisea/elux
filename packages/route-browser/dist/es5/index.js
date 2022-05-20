@@ -73,22 +73,22 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.push = function push(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.replace = function replace(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.back = function back(location, key, index) {
-    this.history.replace(location);
+    this.history.replace(location.url);
     return false;
   };
 

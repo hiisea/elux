@@ -6,7 +6,7 @@ export const RouterComponent = defineComponent({
   setup() {
     const router = coreConfig.UseRouter();
     const data = shallowRef({
-      classname: 'elux-app',
+      className: 'elux-app',
       pages: router.getCurrentPages().reverse()
     });
     const containerRef = ref({
@@ -21,7 +21,7 @@ export const RouterComponent = defineComponent({
         if (windowChanged) {
           if (action === 'push') {
             data.value = {
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              className: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
               pages
             };
             env.setTimeout(() => {
@@ -33,7 +33,7 @@ export const RouterComponent = defineComponent({
             }, 400);
           } else if (action === 'back') {
             data.value = {
-              classname: 'elux-app ' + Date.now(),
+              className: 'elux-app ' + Date.now(),
               pages: [...pages, data.value.pages[data.value.pages.length - 1]]
             };
             env.setTimeout(() => {
@@ -41,21 +41,21 @@ export const RouterComponent = defineComponent({
             }, 100);
             env.setTimeout(() => {
               data.value = {
-                classname: 'elux-app ' + Date.now(),
+                className: 'elux-app ' + Date.now(),
                 pages
               };
               completeCallback();
             }, 400);
           } else if (action === 'relaunch') {
             data.value = {
-              classname: 'elux-app',
+              className: 'elux-app',
               pages
             };
             env.setTimeout(completeCallback, 50);
           }
         } else {
           data.value = {
-            classname: 'elux-app',
+            className: 'elux-app',
             pages
           };
           env.setTimeout(completeCallback, 50);
@@ -67,23 +67,32 @@ export const RouterComponent = defineComponent({
     });
     return () => {
       const {
-        classname,
+        className,
         pages
       } = data.value;
       return _createVNode("div", {
         "ref": containerRef,
-        "class": classname
-      }, [pages.map(item => {
+        "class": className
+      }, [pages.map((item, index) => {
         const {
           store,
-          url
+          location: {
+            url,
+            classname
+          }
         } = item;
-        return _createVNode("div", {
-          "key": store.sid,
-          "data-sid": store.sid,
-          "class": "elux-window",
-          "data-url": url
-        }, [_createVNode(EWindow, {
+        const props = {
+          class: `elux-window${classname ? ' ' + classname : ''}`,
+          key: store.sid,
+          sid: store.sid,
+          url,
+          style: {
+            zIndex: index + 1
+          }
+        };
+        return classname.startsWith('_') ? _createVNode("article", props, [_createVNode(EWindow, {
+          "store": store
+        }, null)]) : _createVNode("div", props, [_createVNode(EWindow, {
           "store": store
         }, null)]);
       })]);

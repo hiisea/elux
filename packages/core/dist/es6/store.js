@@ -200,9 +200,17 @@ export class Store {
       if (isPromise(result)) {
         mountedModules[moduleName] = result.then(() => {
           mountedModules[moduleName] = true;
+
+          if (this.active) {
+            injectedModels[moduleName].onActive();
+          }
         }, errorCallback);
       } else {
         mountedModules[moduleName] = true;
+
+        if (this.active) {
+          injectedModels[moduleName].onActive();
+        }
       }
     }
 

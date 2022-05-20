@@ -28,7 +28,7 @@ export class MPNativeRouter extends BaseNativeRouter {
           const url = nativeUrlToUrl(nativeUrl);
 
           if (action === 'POP') {
-            const arr = search.match(/__=(\w+)/);
+            const arr = `?${search}`.match(/[?&]__k=(\w+)/);
             key = arr ? arr[1] : '';
 
             if (!key) {
@@ -57,7 +57,7 @@ export class MPNativeRouter extends BaseNativeRouter {
   }
 
   addKey(url, key) {
-    return url.indexOf('?') > -1 ? `${url}&__=${key}` : `${url}?__=${key}`;
+    return url.indexOf('?') > -1 ? `${url.replace(/[?&]__k=(\w+)/, '')}&__k=${key}` : `${url}?__k=${key}`;
   }
 
   init(location, key) {

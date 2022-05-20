@@ -159,6 +159,7 @@ export interface Location {
   pathname: string;
   search: string;
   hash: string;
+  classname: string;
   searchQuery: {[key: string]: any};
   hashQuery: {[key: string]: any};
 }
@@ -290,11 +291,11 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
   /**
    * 获取当前被激活显示的页面
    */
-  getActivePage(): {url: string; store: IStore};
+  getActivePage(): {store: IStore; location: Location};
   /**
    * 获取当前所有CurrentPage(PageHistoryStack中的第一条)
    */
-  getCurrentPages(): {url: string; store: IStore}[];
+  getCurrentPages(): {store: IStore; location: Location}[];
   /**
    * 获取指定历史栈的长度
    */

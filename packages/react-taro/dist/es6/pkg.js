@@ -1,4 +1,4 @@
-import React, { useContext, memo, useState, useRef, useEffect, useCallback, useLayoutEffect, useMemo, useReducer, useDebugValue } from 'react';
+import React, { useContext, memo, useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect, useReducer, useDebugValue } from 'react';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 import { unstable_batchedUpdates } from 'react-dom';
@@ -922,9 +922,17 @@ class Store {
       if (isPromise(result)) {
         mountedModules[moduleName] = result.then(() => {
           mountedModules[moduleName] = true;
+
+          if (this.active) {
+            injectedModels[moduleName].onActive();
+          }
         }, errorCallback);
       } else {
         mountedModules[moduleName] = true;
+
+        if (this.active) {
+          injectedModels[moduleName].onActive();
+        }
       }
     }
 
@@ -1275,11 +1283,11 @@ const EWindow = memo(function ({
 const RouterComponent = () => {
   const router = coreConfig.UseRouter();
   const [data, setData] = useState({
-    classname: 'elux-app',
+    className: 'elux-app',
     pages: router.getCurrentPages().reverse()
   });
   const {
-    classname,
+    className,
     pages
   } = data;
   const pagesRef = useRef(pages);
@@ -1295,7 +1303,7 @@ const RouterComponent = () => {
         if (windowChanged) {
           if (action === 'push') {
             setData({
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              className: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
               pages
             });
             env.setTimeout(() => {
@@ -1307,7 +1315,7 @@ const RouterComponent = () => {
             }, 400);
           } else if (action === 'back') {
             setData({
-              classname: 'elux-app ' + Date.now(),
+              className: 'elux-app ' + Date.now(),
               pages: [...pages, pagesRef.current[pagesRef.current.length - 1]]
             });
             env.setTimeout(() => {
@@ -1315,21 +1323,21 @@ const RouterComponent = () => {
             }, 100);
             env.setTimeout(() => {
               setData({
-                classname: 'elux-app ' + Date.now(),
+                className: 'elux-app ' + Date.now(),
                 pages
               });
               completeCallback();
             }, 400);
           } else if (action === 'relaunch') {
             setData({
-              classname: 'elux-app ',
+              className: 'elux-app ',
               pages
             });
             env.setTimeout(completeCallback, 50);
           }
         } else {
           setData({
-            classname: 'elux-app',
+            className: 'elux-app',
             pages
           });
           env.setTimeout(completeCallback, 50);
@@ -1339,20 +1347,33 @@ const RouterComponent = () => {
   }, [router]);
   return jsx("div", {
     ref: containerRef,
-    className: classname,
-    children: pages.map(item => {
+    className: className,
+    children: pages.map((item, index) => {
       const {
         store,
-        url
+        location: {
+          url,
+          classname
+        }
       } = item;
-      return jsx("div", {
-        "data-sid": store.sid,
-        className: "elux-window",
-        "data-url": url,
+      const props = {
+        className: `elux-window${classname ? ' ' + classname : ''}`,
+        key: store.sid,
+        sid: store.sid,
+        url,
+        style: {
+          zIndex: index + 1
+        }
+      };
+      return classname.startsWith('_') ? jsx("article", { ...props,
         children: jsx(EWindow, {
           store: store
         })
-      }, store.sid);
+      }) : jsx("div", { ...props,
+        children: jsx(EWindow, {
+          store: store
+        })
+      });
     })
   });
 };
@@ -1568,7 +1589,16 @@ function urlToNativeUrl(eluxUrl) {
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 function urlToLocation(url) {
-  const [path = '', search = '', hash = ''] = url.split(/[?#]/);
+  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
+  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
+  let search = query;
+  let classname = '';
+
+  if (arr) {
+    classname = arr[2];
+    search = (arr[1] + arr[3]).substr(1);
+  }
+
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {
     parse
@@ -1576,10 +1606,11 @@ function urlToLocation(url) {
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
   return {
-    url: `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`,
+    url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`,
     pathname,
     search,
     hash,
+    classname,
     searchQuery,
     hashQuery
   };
@@ -1589,6 +1620,7 @@ function locationToUrl({
   pathname,
   search,
   hash,
+  classname,
   searchQuery,
   hashQuery
 }) {
@@ -1601,8 +1633,15 @@ function locationToUrl({
     stringify
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+
+  if (classname) {
+    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return url;
 }
 function locationToNativeLocation(location) {
   const pathname = routeConfig.NativePathnameMapping.out(location.pathname);
@@ -1650,7 +1689,7 @@ const routeConfig = {
   },
   NativePathnameMapping: {
     in: pathname => pathname === '/' ? routeConfig.HomeUrl : pathname,
-    out: pathname => pathname === routeConfig.HomeUrl ? '/' : pathname
+    out: pathname => pathname
   }
 };
 const setRouteConfig = buildConfigSetter(routeConfig);
@@ -1829,10 +1868,10 @@ class WindowStack extends HistoryStack {
     const item = this.getCurrentItem();
     const store = item.store;
     const record = item.getCurrentItem();
-    const url = record.location.url;
+    const location = record.location;
     return {
-      url,
-      store
+      store,
+      location
     };
   }
 
@@ -1840,10 +1879,10 @@ class WindowStack extends HistoryStack {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const url = record.location.url;
+      const location = record.location;
       return {
-        url,
-        store
+        store,
+        location
       };
     });
   }
@@ -2125,9 +2164,9 @@ class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
-  redirectOnServer(urlOrLocation) {
+  redirectOnServer(partialLocation) {
     if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const url = locationToUrl(partialLocation);
       const nativeUrl = urlToNativeUrl(url);
       const err = {
         code: ErrorCodes.ROUTE_REDIRECT,
@@ -2143,6 +2182,7 @@ class Router extends CoreRouter {
 
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
@@ -2187,14 +2227,14 @@ class Router extends CoreRouter {
     });
   }
 
-  relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _relaunch(urlOrLocation, target, payload, _nativeCaller) {
+  async _relaunch(partialLocation, target, payload, _nativeCaller) {
     const action = 'relaunch';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2235,14 +2275,14 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  replace(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _replace(urlOrLocation, target, payload, _nativeCaller) {
+  async _replace(partialLocation, target, payload, _nativeCaller) {
     const action = 'replace';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2282,14 +2322,14 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  push(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _push(urlOrLocation, target, payload, _nativeCaller) {
+  async _push(partialLocation, target, payload, _nativeCaller) {
     const action = 'push';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2430,35 +2470,56 @@ const Link = React.forwardRef(({
   onClick: _onClick,
   disabled,
   to = '',
-  target = 'page',
   action = 'push',
+  classname = '',
+  target = 'page',
+  payload,
   ...props
 }, ref) => {
+  const {
+    back,
+    url,
+    href
+  } = useMemo(() => {
+    let back;
+    let url;
+    let href;
+
+    if (action === 'back') {
+      back = to || 1;
+    } else {
+      url = classname ? locationToUrl({
+        url: to.toString(),
+        classname
+      }) : to.toString();
+      href = urlToNativeUrl(url);
+    }
+
+    return {
+      back,
+      url,
+      href
+    };
+  }, [action, classname, to]);
   const router = coreConfig.UseRouter();
   const onClick = useCallback(event => {
     event.preventDefault();
 
     if (!disabled) {
       _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {
-        url: to
-      }, target);
+      router[action](back || {
+        url
+      }, target, payload);
     }
-  }, [_onClick, disabled, to, router, action, target]);
+  }, [disabled, _onClick, router, action, back, url, target, payload]);
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  let href = action !== 'back' ? to : '';
-
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
-  }
-
+  props['to'] = (back || url) + '';
   props['href'] = href;
+  href && (props['href'] = href);
+  classname && (props['classname'] = classname);
+  disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {
     return jsx("span", { ...props,
@@ -2508,7 +2569,7 @@ class MPNativeRouter extends BaseNativeRouter {
           const url = nativeUrlToUrl(nativeUrl);
 
           if (action === 'POP') {
-            const arr = search.match(/__=(\w+)/);
+            const arr = `?${search}`.match(/[?&]__k=(\w+)/);
             key = arr ? arr[1] : '';
 
             if (!key) {
@@ -2537,7 +2598,7 @@ class MPNativeRouter extends BaseNativeRouter {
   }
 
   addKey(url, key) {
-    return url.indexOf('?') > -1 ? `${url}&__=${key}` : `${url}?__=${key}`;
+    return url.indexOf('?') > -1 ? `${url.replace(/[?&]__k=(\w+)/, '')}&__k=${key}` : `${url}?__k=${key}`;
   }
 
   init(location, key) {

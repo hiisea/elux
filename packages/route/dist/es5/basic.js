@@ -33,19 +33,29 @@ export function urlToLocation(url) {
       _url$split$ = _url$split[0],
       path = _url$split$ === void 0 ? '' : _url$split$,
       _url$split$2 = _url$split[1],
-      search = _url$split$2 === void 0 ? '' : _url$split$2,
+      query = _url$split$2 === void 0 ? '' : _url$split$2,
       _url$split$3 = _url$split[2],
       hash = _url$split$3 === void 0 ? '' : _url$split$3;
+
+  var arr = ("?" + query).match(/(.*)[?&]__c=([^&]+)(.*$)/);
+  var search = query;
+  var classname = '';
+
+  if (arr) {
+    classname = arr[2];
+    search = (arr[1] + arr[3]).substr(1);
+  }
 
   var pathname = '/' + path.replace(/^\/|\/$/g, '');
   var parse = routeConfig.QueryString.parse;
   var searchQuery = parse(search);
   var hashQuery = parse(hash);
   return {
-    url: "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : ''),
+    url: "" + pathname + (query ? '?' + query : '') + (hash ? '#' + hash : ''),
     pathname: pathname,
     search: search,
     hash: hash,
+    classname: classname,
     searchQuery: searchQuery,
     hashQuery: hashQuery
   };
@@ -55,6 +65,7 @@ export function locationToUrl(_ref) {
       pathname = _ref.pathname,
       search = _ref.search,
       hash = _ref.hash,
+      classname = _ref.classname,
       searchQuery = _ref.searchQuery,
       hashQuery = _ref.hashQuery;
 
@@ -69,8 +80,15 @@ export function locationToUrl(_ref) {
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
   var stringify = routeConfig.QueryString.stringify;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+
+  if (classname) {
+    search = ("?" + search).replace(/[?&]__c=[^&]+/, '').substr(1);
+    search = search ? search + "&__c=" + classname : "__c=" + classname;
+  }
+
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+  url = "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+  return url;
 }
 export function locationToNativeLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.out(location.pathname);
@@ -125,7 +143,7 @@ export var routeConfig = {
       return pathname === '/' ? routeConfig.HomeUrl : pathname;
     },
     out: function out(pathname) {
-      return pathname === routeConfig.HomeUrl ? '/' : pathname;
+      return pathname;
     }
   }
 };

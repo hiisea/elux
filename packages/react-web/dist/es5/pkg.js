@@ -1,5 +1,5 @@
 import _reactDom, { hydrate, render } from 'react-dom';
-import _react, { useContext, memo, useState, useRef, useEffect, useCallback } from 'react';
+import _react, { useContext, memo, useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import { renderToString } from '@elux/react-web/server';
 
@@ -1074,9 +1074,17 @@ var Store = function () {
       if (isPromise(_result)) {
         mountedModules[moduleName] = _result.then(function () {
           mountedModules[moduleName] = true;
+
+          if (_this2.active) {
+            injectedModels[moduleName].onActive();
+          }
         }, errorCallback);
       } else {
         mountedModules[moduleName] = true;
+
+        if (this.active) {
+          injectedModels[moduleName].onActive();
+        }
       }
     }
 
@@ -1504,13 +1512,13 @@ var RouterComponent = function RouterComponent() {
   var router = coreConfig.UseRouter();
 
   var _useState = useState({
-    classname: 'elux-app',
+    className: 'elux-app',
     pages: router.getCurrentPages().reverse()
   }),
       data = _useState[0],
       setData = _useState[1];
 
-  var classname = data.classname,
+  var className = data.className,
       pages = data.pages;
   var pagesRef = useRef(pages);
   pagesRef.current = pages;
@@ -1524,7 +1532,7 @@ var RouterComponent = function RouterComponent() {
         if (windowChanged) {
           if (action === 'push') {
             setData({
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              className: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
               pages: pages
             });
             env.setTimeout(function () {
@@ -1536,7 +1544,7 @@ var RouterComponent = function RouterComponent() {
             }, 400);
           } else if (action === 'back') {
             setData({
-              classname: 'elux-app ' + Date.now(),
+              className: 'elux-app ' + Date.now(),
               pages: [].concat(pages, [pagesRef.current[pagesRef.current.length - 1]])
             });
             env.setTimeout(function () {
@@ -1544,21 +1552,21 @@ var RouterComponent = function RouterComponent() {
             }, 100);
             env.setTimeout(function () {
               setData({
-                classname: 'elux-app ' + Date.now(),
+                className: 'elux-app ' + Date.now(),
                 pages: pages
               });
               completeCallback();
             }, 400);
           } else if (action === 'relaunch') {
             setData({
-              classname: 'elux-app ',
+              className: 'elux-app ',
               pages: pages
             });
             env.setTimeout(completeCallback, 50);
           }
         } else {
           setData({
-            classname: 'elux-app',
+            className: 'elux-app',
             pages: pages
           });
           env.setTimeout(completeCallback, 50);
@@ -1568,18 +1576,30 @@ var RouterComponent = function RouterComponent() {
   }, [router]);
   return jsx("div", {
     ref: containerRef,
-    className: classname,
-    children: pages.map(function (item) {
+    className: className,
+    children: pages.map(function (item, index) {
       var store = item.store,
-          url = item.url;
-      return jsx("div", {
-        "data-sid": store.sid,
-        className: "elux-window",
-        "data-url": url,
+          _item$location = item.location,
+          url = _item$location.url,
+          classname = _item$location.classname;
+      var props = {
+        className: "elux-window" + (classname ? ' ' + classname : ''),
+        key: store.sid,
+        sid: store.sid,
+        url: url,
+        style: {
+          zIndex: index + 1
+        }
+      };
+      return classname.startsWith('_') ? jsx("article", _extends$1({}, props, {
         children: jsx(EWindow, {
           store: store
         })
-      }, store.sid);
+      })) : jsx("div", _extends$1({}, props, {
+        children: jsx(EWindow, {
+          store: store
+        })
+      }));
     })
   });
 };
@@ -2610,19 +2630,29 @@ function urlToLocation(url) {
       _url$split$ = _url$split[0],
       path = _url$split$ === void 0 ? '' : _url$split$,
       _url$split$2 = _url$split[1],
-      search = _url$split$2 === void 0 ? '' : _url$split$2,
+      query = _url$split$2 === void 0 ? '' : _url$split$2,
       _url$split$3 = _url$split[2],
       hash = _url$split$3 === void 0 ? '' : _url$split$3;
+
+  var arr = ("?" + query).match(/(.*)[?&]__c=([^&]+)(.*$)/);
+  var search = query;
+  var classname = '';
+
+  if (arr) {
+    classname = arr[2];
+    search = (arr[1] + arr[3]).substr(1);
+  }
 
   var pathname = '/' + path.replace(/^\/|\/$/g, '');
   var parse = routeConfig.QueryString.parse;
   var searchQuery = parse(search);
   var hashQuery = parse(hash);
   return {
-    url: "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : ''),
+    url: "" + pathname + (query ? '?' + query : '') + (hash ? '#' + hash : ''),
     pathname: pathname,
     search: search,
     hash: hash,
+    classname: classname,
     searchQuery: searchQuery,
     hashQuery: hashQuery
   };
@@ -2632,6 +2662,7 @@ function locationToUrl(_ref) {
       pathname = _ref.pathname,
       search = _ref.search,
       hash = _ref.hash,
+      classname = _ref.classname,
       searchQuery = _ref.searchQuery,
       hashQuery = _ref.hashQuery;
 
@@ -2646,8 +2677,15 @@ function locationToUrl(_ref) {
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
   var stringify = routeConfig.QueryString.stringify;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+
+  if (classname) {
+    search = ("?" + search).replace(/[?&]__c=[^&]+/, '').substr(1);
+    search = search ? search + "&__c=" + classname : "__c=" + classname;
+  }
+
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+  url = "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+  return url;
 }
 function locationToNativeLocation(location) {
   var pathname = routeConfig.NativePathnameMapping.out(location.pathname);
@@ -2702,7 +2740,7 @@ var routeConfig = {
       return pathname === '/' ? routeConfig.HomeUrl : pathname;
     },
     out: function out(pathname) {
-      return pathname === routeConfig.HomeUrl ? '/' : pathname;
+      return pathname;
     }
   }
 };
@@ -2920,10 +2958,10 @@ var WindowStack = function (_HistoryStack2) {
     var item = this.getCurrentItem();
     var store = item.store;
     var record = item.getCurrentItem();
-    var url = record.location.url;
+    var location = record.location;
     return {
-      url: url,
-      store: store
+      store: store,
+      location: location
     };
   };
 
@@ -2931,10 +2969,10 @@ var WindowStack = function (_HistoryStack2) {
     return this.records.map(function (item) {
       var store = item.store;
       var record = item.getCurrentItem();
-      var url = record.location.url;
+      var location = record.location;
       return {
-        url: url,
-        store: store
+        store: store,
+        location: location
       };
     });
   };
@@ -3284,9 +3322,9 @@ var Router = function (_CoreRouter) {
     return mountStore;
   }();
 
-  _proto2.redirectOnServer = function redirectOnServer(urlOrLocation) {
+  _proto2.redirectOnServer = function redirectOnServer(partialLocation) {
     if (env.isServer) {
-      var url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      var url = locationToUrl(partialLocation);
       var nativeUrl = urlToNativeUrl(url);
       var err = {
         code: ErrorCodes.ROUTE_REDIRECT,
@@ -3304,6 +3342,7 @@ var Router = function (_CoreRouter) {
 
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
@@ -3386,7 +3425,7 @@ var Router = function (_CoreRouter) {
     return _init;
   }();
 
-  _proto2.relaunch = function relaunch(urlOrLocation, target, payload, _nativeCaller) {
+  _proto2.relaunch = function relaunch(partialLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -3399,19 +3438,19 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   };
 
   _proto2._relaunch = function () {
-    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee3(urlOrLocation, target, payload, _nativeCaller) {
+    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee3(partialLocation, target, payload, _nativeCaller) {
       var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
       return regenerator.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
               action = 'relaunch';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              location = urlToLocation(locationToUrl(partialLocation));
               NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
               if (!_nativeCaller && NotifyNativeRouter) {
@@ -3482,7 +3521,7 @@ var Router = function (_CoreRouter) {
     return _relaunch;
   }();
 
-  _proto2.replace = function replace(urlOrLocation, target, payload, _nativeCaller) {
+  _proto2.replace = function replace(partialLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -3495,19 +3534,19 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   };
 
   _proto2._replace = function () {
-    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee4(urlOrLocation, target, payload, _nativeCaller) {
+    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee4(partialLocation, target, payload, _nativeCaller) {
       var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
               action = 'replace';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              location = urlToLocation(locationToUrl(partialLocation));
               NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
               if (!_nativeCaller && NotifyNativeRouter) {
@@ -3577,7 +3616,7 @@ var Router = function (_CoreRouter) {
     return _replace;
   }();
 
-  _proto2.push = function push(urlOrLocation, target, payload, _nativeCaller) {
+  _proto2.push = function push(partialLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -3590,19 +3629,19 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   };
 
   _proto2._push = function () {
-    var _push2 = _asyncToGenerator(regenerator.mark(function _callee5(urlOrLocation, target, payload, _nativeCaller) {
+    var _push2 = _asyncToGenerator(regenerator.mark(function _callee5(partialLocation, target, payload, _nativeCaller) {
       var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord, newPageStack;
       return regenerator.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
               action = 'push';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              location = urlToLocation(locationToUrl(partialLocation));
               NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
               if (!_nativeCaller && NotifyNativeRouter) {
@@ -3839,17 +3878,45 @@ var Router = function (_CoreRouter) {
   return Router;
 }(CoreRouter);
 
-var _excluded = ["onClick", "disabled", "to", "target", "action"];
+var _excluded = ["onClick", "disabled", "to", "action", "classname", "target", "payload"];
 var Link = _react.forwardRef(function (_ref, ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       _ref$to = _ref.to,
       to = _ref$to === void 0 ? '' : _ref$to,
-      _ref$target = _ref.target,
-      target = _ref$target === void 0 ? 'page' : _ref$target,
       _ref$action = _ref.action,
       action = _ref$action === void 0 ? 'push' : _ref$action,
+      _ref$classname = _ref.classname,
+      classname = _ref$classname === void 0 ? '' : _ref$classname,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
+      payload = _ref.payload,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
+
+  var _useMemo = useMemo(function () {
+    var back;
+    var url;
+    var href;
+
+    if (action === 'back') {
+      back = to || 1;
+    } else {
+      url = classname ? locationToUrl({
+        url: to.toString(),
+        classname: classname
+      }) : to.toString();
+      href = urlToNativeUrl(url);
+    }
+
+    return {
+      back: back,
+      url: url,
+      href: href
+    };
+  }, [action, classname, to]),
+      back = _useMemo.back,
+      url = _useMemo.url,
+      href = _useMemo.href;
 
   var router = coreConfig.UseRouter();
   var onClick = useCallback(function (event) {
@@ -3857,25 +3924,19 @@ var Link = _react.forwardRef(function (_ref, ref) {
 
     if (!disabled) {
       _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {
-        url: to
-      }, target);
+      router[action](back || {
+        url: url
+      }, target, payload);
     }
-  }, [_onClick, disabled, to, router, action, target]);
+  }, [disabled, _onClick, router, action, back, url, target, payload]);
   props['onClick'] = onClick;
   props['action'] = action;
   props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  var href = action !== 'back' ? to : '';
-
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
-  }
-
+  props['to'] = (back || url) + '';
   props['href'] = href;
+  href && (props['href'] = href);
+  classname && (props['classname'] = classname);
+  disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {
     return jsx("span", _extends$1({}, props, {
@@ -5756,22 +5817,22 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.push = function push(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.replace = function replace(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.back = function back(location, key, index) {
-    this.history.replace(location);
+    this.history.replace(location.url);
     return false;
   };
 

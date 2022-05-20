@@ -223,9 +223,9 @@ export var Router = function (_CoreRouter) {
     return mountStore;
   }();
 
-  _proto2.redirectOnServer = function redirectOnServer(urlOrLocation) {
+  _proto2.redirectOnServer = function redirectOnServer(partialLocation) {
     if (env.isServer) {
-      var url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      var url = locationToUrl(partialLocation);
       var nativeUrl = urlToNativeUrl(url);
       var err = {
         code: ErrorCodes.ROUTE_REDIRECT,
@@ -243,6 +243,7 @@ export var Router = function (_CoreRouter) {
 
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
@@ -325,7 +326,7 @@ export var Router = function (_CoreRouter) {
     return _init;
   }();
 
-  _proto2.relaunch = function relaunch(urlOrLocation, target, payload, _nativeCaller) {
+  _proto2.relaunch = function relaunch(partialLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -338,19 +339,19 @@ export var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   };
 
   _proto2._relaunch = function () {
-    var _relaunch2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee3(urlOrLocation, target, payload, _nativeCaller) {
+    var _relaunch2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee3(partialLocation, target, payload, _nativeCaller) {
       var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
       return _regeneratorRuntime.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
               action = 'relaunch';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              location = urlToLocation(locationToUrl(partialLocation));
               NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
               if (!_nativeCaller && NotifyNativeRouter) {
@@ -421,7 +422,7 @@ export var Router = function (_CoreRouter) {
     return _relaunch;
   }();
 
-  _proto2.replace = function replace(urlOrLocation, target, payload, _nativeCaller) {
+  _proto2.replace = function replace(partialLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -434,19 +435,19 @@ export var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   };
 
   _proto2._replace = function () {
-    var _replace2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee4(urlOrLocation, target, payload, _nativeCaller) {
+    var _replace2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee4(partialLocation, target, payload, _nativeCaller) {
       var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
       return _regeneratorRuntime.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
               action = 'replace';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              location = urlToLocation(locationToUrl(partialLocation));
               NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
               if (!_nativeCaller && NotifyNativeRouter) {
@@ -516,7 +517,7 @@ export var Router = function (_CoreRouter) {
     return _replace;
   }();
 
-  _proto2.push = function push(urlOrLocation, target, payload, _nativeCaller) {
+  _proto2.push = function push(partialLocation, target, payload, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -529,19 +530,19 @@ export var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   };
 
   _proto2._push = function () {
-    var _push2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee5(urlOrLocation, target, payload, _nativeCaller) {
+    var _push2 = _asyncToGenerator(_regeneratorRuntime.mark(function _callee5(partialLocation, target, payload, _nativeCaller) {
       var action, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord, newPageStack;
       return _regeneratorRuntime.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
               action = 'push';
-              location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+              location = urlToLocation(locationToUrl(partialLocation));
               NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
               if (!_nativeCaller && NotifyNativeRouter) {

@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
+import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, Comment, Fragment, computed, reactive, createApp as createApp$1, createSSRApp } from 'vue';
 import { renderToString } from '@elux/vue-web/server';
 
 let root;
@@ -917,9 +917,17 @@ class Store {
       if (isPromise(result)) {
         mountedModules[moduleName] = result.then(() => {
           mountedModules[moduleName] = true;
+
+          if (this.active) {
+            injectedModels[moduleName].onActive();
+          }
         }, errorCallback);
       } else {
         mountedModules[moduleName] = true;
+
+        if (this.active) {
+          injectedModels[moduleName].onActive();
+        }
       }
     }
 
@@ -1896,7 +1904,16 @@ function urlToNativeUrl(eluxUrl) {
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 function urlToLocation(url) {
-  const [path = '', search = '', hash = ''] = url.split(/[?#]/);
+  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
+  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
+  let search = query;
+  let classname = '';
+
+  if (arr) {
+    classname = arr[2];
+    search = (arr[1] + arr[3]).substr(1);
+  }
+
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {
     parse
@@ -1904,10 +1921,11 @@ function urlToLocation(url) {
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
   return {
-    url: `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`,
+    url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`,
     pathname,
     search,
     hash,
+    classname,
     searchQuery,
     hashQuery
   };
@@ -1917,6 +1935,7 @@ function locationToUrl({
   pathname,
   search,
   hash,
+  classname,
   searchQuery,
   hashQuery
 }) {
@@ -1929,8 +1948,15 @@ function locationToUrl({
     stringify
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+
+  if (classname) {
+    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return url;
 }
 function locationToNativeLocation(location) {
   const pathname = routeConfig.NativePathnameMapping.out(location.pathname);
@@ -1978,7 +2004,7 @@ const routeConfig = {
   },
   NativePathnameMapping: {
     in: pathname => pathname === '/' ? routeConfig.HomeUrl : pathname,
-    out: pathname => pathname === routeConfig.HomeUrl ? '/' : pathname
+    out: pathname => pathname
   }
 };
 const setRouteConfig = buildConfigSetter(routeConfig);
@@ -2157,10 +2183,10 @@ class WindowStack extends HistoryStack {
     const item = this.getCurrentItem();
     const store = item.store;
     const record = item.getCurrentItem();
-    const url = record.location.url;
+    const location = record.location;
     return {
-      url,
-      store
+      store,
+      location
     };
   }
 
@@ -2168,10 +2194,10 @@ class WindowStack extends HistoryStack {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const url = record.location.url;
+      const location = record.location;
       return {
-        url,
-        store
+        store,
+        location
       };
     });
   }
@@ -2453,9 +2479,9 @@ class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
-  redirectOnServer(urlOrLocation) {
+  redirectOnServer(partialLocation) {
     if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const url = locationToUrl(partialLocation);
       const nativeUrl = urlToNativeUrl(url);
       const err = {
         code: ErrorCodes.ROUTE_REDIRECT,
@@ -2471,6 +2497,7 @@ class Router extends CoreRouter {
 
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
@@ -2515,14 +2542,14 @@ class Router extends CoreRouter {
     });
   }
 
-  relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _relaunch(urlOrLocation, target, payload, _nativeCaller) {
+  async _relaunch(partialLocation, target, payload, _nativeCaller) {
     const action = 'relaunch';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2563,14 +2590,14 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  replace(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _replace(urlOrLocation, target, payload, _nativeCaller) {
+  async _replace(partialLocation, target, payload, _nativeCaller) {
     const action = 'replace';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2610,14 +2637,14 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  push(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _push(urlOrLocation, target, payload, _nativeCaller) {
+  async _push(partialLocation, target, payload, _nativeCaller) {
     const action = 'push';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2811,22 +2838,22 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   push(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   replace(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   relaunch(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   back(location, key, index) {
-    this.history.replace(location);
+    this.history.replace(location.url);
     return false;
   }
 
@@ -2975,7 +3002,7 @@ const RouterComponent = defineComponent({
   setup() {
     const router = coreConfig.UseRouter();
     const data = shallowRef({
-      classname: 'elux-app',
+      className: 'elux-app',
       pages: router.getCurrentPages().reverse()
     });
     const containerRef = ref({
@@ -2990,7 +3017,7 @@ const RouterComponent = defineComponent({
         if (windowChanged) {
           if (action === 'push') {
             data.value = {
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              className: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
               pages
             };
             env.setTimeout(() => {
@@ -3002,7 +3029,7 @@ const RouterComponent = defineComponent({
             }, 400);
           } else if (action === 'back') {
             data.value = {
-              classname: 'elux-app ' + Date.now(),
+              className: 'elux-app ' + Date.now(),
               pages: [...pages, data.value.pages[data.value.pages.length - 1]]
             };
             env.setTimeout(() => {
@@ -3010,21 +3037,21 @@ const RouterComponent = defineComponent({
             }, 100);
             env.setTimeout(() => {
               data.value = {
-                classname: 'elux-app ' + Date.now(),
+                className: 'elux-app ' + Date.now(),
                 pages
               };
               completeCallback();
             }, 400);
           } else if (action === 'relaunch') {
             data.value = {
-              classname: 'elux-app',
+              className: 'elux-app',
               pages
             };
             env.setTimeout(completeCallback, 50);
           }
         } else {
           data.value = {
-            classname: 'elux-app',
+            className: 'elux-app',
             pages
           };
           env.setTimeout(completeCallback, 50);
@@ -3036,23 +3063,32 @@ const RouterComponent = defineComponent({
     });
     return () => {
       const {
-        classname,
+        className,
         pages
       } = data.value;
       return createVNode("div", {
         "ref": containerRef,
-        "class": classname
-      }, [pages.map(item => {
+        "class": className
+      }, [pages.map((item, index) => {
         const {
           store,
-          url
+          location: {
+            url,
+            classname
+          }
         } = item;
-        return createVNode("div", {
-          "key": store.sid,
-          "data-sid": store.sid,
-          "class": "elux-window",
-          "data-url": url
-        }, [createVNode(EWindow, {
+        const props = {
+          class: `elux-window${classname ? ' ' + classname : ''}`,
+          key: store.sid,
+          sid: store.sid,
+          url,
+          style: {
+            zIndex: index + 1
+          }
+        };
+        return classname.startsWith('_') ? createVNode("article", props, [createVNode(EWindow, {
+          "store": store
+        }, null)]) : createVNode("div", props, [createVNode(EWindow, {
           "store": store
         }, null)]);
       })]);
@@ -3165,48 +3201,91 @@ const Else = function (props, context) {
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
 
-const Link = function ({
-  onClick: _onClick,
-  disabled,
-  to = '',
-  target = 'page',
-  action = 'push',
-  ...props
-}, context) {
-  const router = coreConfig.UseRouter();
+const Link = defineComponent({
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
 
-  const onClick = event => {
-    event.preventDefault();
+  setup(props, context) {
+    const route = computed(() => {
+      const {
+        to = '',
+        action = 'push',
+        classname = ''
+      } = props;
+      let back;
+      let url;
+      let href;
 
-    if (!disabled) {
-      _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {
-        url: to
-      }, target);
-    }
-  };
+      if (action === 'back') {
+        back = to || 1;
+      } else {
+        url = classname ? locationToUrl({
+          url: to.toString(),
+          classname
+        }) : to.toString();
+        href = urlToNativeUrl(url);
+      }
 
-  props['onClick'] = onClick;
-  props['action'] = action;
-  props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  let href = action !== 'back' ? to : '';
+      return {
+        back,
+        url,
+        href
+      };
+    });
+    const router = coreConfig.UseRouter();
 
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
+    const onClick = event => {
+      event.preventDefault();
+      const {
+        back,
+        url
+      } = route.value;
+      const {
+        disabled,
+        onClick,
+        action = 'push',
+        target = 'page',
+        payload
+      } = props;
+
+      if (!disabled) {
+        onClick && onClick(event);
+        router[action](back || {
+          url
+        }, target, payload);
+      }
+    };
+
+    return () => {
+      const {
+        back,
+        url,
+        href
+      } = route.value;
+      const {
+        disabled,
+        action = 'push',
+        target = 'page',
+        classname = ''
+      } = props;
+      const linkProps = {};
+      linkProps['onClick'] = onClick;
+      linkProps['action'] = action;
+      linkProps['target'] = target;
+      linkProps['to'] = (back || url) + '';
+      linkProps['href'] = href;
+      href && (linkProps['href'] = href);
+      classname && (linkProps['classname'] = classname);
+      disabled && (linkProps['disabled'] = true);
+
+      if (coreConfig.Platform === 'taro') {
+        return h('span', linkProps, context.slots);
+      } else {
+        return h('a', linkProps, context.slots);
+      }
+    };
   }
 
-  props['href'] = href;
-
-  if (coreConfig.Platform === 'taro') {
-    return h('span', props, context.slots.default());
-  } else {
-    return h('a', props, context.slots.default());
-  }
-};
+});
 
 setCoreConfig({
   MutableData: true,

@@ -1,7 +1,7 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useMemo} from 'react';
 
 import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
-import {urlToNativeUrl} from '@elux/route';
+import {urlToNativeUrl, locationToUrl} from '@elux/route';
 
 /**
  * 内置UI组件
@@ -18,13 +18,13 @@ import {urlToNativeUrl} from '@elux/route';
  */
 export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
+   * 指定跳转的url或后退步数
+   */
+  to: number | string;
+  /**
    * 如果disabled将不执行路由及onClick事件
    */
   disabled?: boolean;
-  /**
-   * 指定跳转的url或后退步数
-   */
-  to?: string;
   /**
    * 点击事件
    */
@@ -37,6 +37,14 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
    * 指定要操作的历史栈
    */
   target?: RouteTarget;
+  /**
+   * 本次路由传值
+   */
+  payload?: any;
+  /**
+   * 指定路由窗口的class
+   */
+  classname?: string;
 }
 
 /**
@@ -48,30 +56,39 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
  * @public
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({onClick: _onClick, disabled, to = '', target = 'page', action = 'push', ...props}, ref) => {
+  ({onClick: _onClick, disabled, to = '', action = 'push', classname = '', target = 'page', payload, ...props}, ref) => {
+    const {back, url, href} = useMemo(() => {
+      let back: string | number | undefined;
+      let url: string | undefined;
+      let href: string | undefined;
+      if (action === 'back') {
+        back = to || 1;
+      } else {
+        url = classname ? locationToUrl({url: to.toString(), classname}) : to.toString();
+        href = urlToNativeUrl(url);
+      }
+      return {back, url, href};
+    }, [action, classname, to]);
     const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
     const onClick = useCallback(
       (event: React.MouseEvent) => {
         event.preventDefault();
         if (!disabled) {
           _onClick && _onClick(event);
-          to && router[action](action === 'back' ? parseInt(to) : {url: to}, target);
+          router[action](back || {url}, target, payload);
         }
       },
-      [_onClick, disabled, to, router, action, target]
+      [disabled, _onClick, router, action, back, url, target, payload]
     );
     props['onClick'] = onClick;
     props['action'] = action;
     props['target'] = target;
-    props['to'] = to;
-    disabled && (props['disabled'] = true);
-    let href = action !== 'back' ? to : '';
-    if (href) {
-      href = urlToNativeUrl(href);
-    } else {
-      href = '#';
-    }
+    props['to'] = (back || url) + '';
     props['href'] = href;
+    href && (props['href'] = href);
+    classname && (props['classname'] = classname);
+    disabled && (props['disabled'] = true);
+
     if (coreConfig.Platform === 'taro') {
       return <span {...props} ref={ref} />;
     } else {

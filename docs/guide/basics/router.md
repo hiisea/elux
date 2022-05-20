@@ -185,6 +185,17 @@ this.getRouter().back(2);
 
 转场效果可以使用CSS自己定义，通常有`左右滑动`和`淡入淡出`等，具体可以查看模版中的CSS代码。
 
+push:
+
+- elux-app elux-animation elux-change elux-push
+- elux-app elux-animation
+- elux-app
+
+back:
+
+elux-app elux-animation elux-change elux-back
+elux-app
+
 ### 跳转Runtime
 
 注意到路由器中有个属性`runtime`，它用来保存本次路由跳转前后的一些数据。也是为`路由后页面`获取`路由前页面`的某些数据提供途径。
@@ -272,11 +283,7 @@ export const appConfig: AppConfig = setConfig({
 
 ### 强制不通知原生路由
 
-Elux的虚拟路由是独立运行的，所以你也可以选择完全忽略原生路由，此时应用相当于一个单页。
-
-尽管这样可能无法使用原生路由带来的优化体验，但好处是可以更简单和自由（比如小程序中原生路由无法使用路由拦截和守卫、Tab页面无法传参等）
-
-如果你打算这么做，那么首先你应当自定义所有原生界面元素（比如小程序中使用自定义TabBar,自定义NavBar等）；然后全局设置不通知原生路由：
+Elux的虚拟路由是独立运行的，所以你也可以选择完全忽略原生路由：
 
 ```ts
 // src/Project.ts

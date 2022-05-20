@@ -154,36 +154,21 @@ export class WindowStack extends HistoryStack<PageStack> {
   getRecords(): RouteRecord[] {
     return this.records.map((item) => item.getCurrentItem());
   }
-  getCurrentWindowPage(): {url: string; store: Store} {
+  getCurrentWindowPage(): {store: Store; location: Location} {
     const item = this.getCurrentItem();
     const store = item.store;
     const record = item.getCurrentItem();
-    const url = record.location.url;
-    return {url, store};
+    const location = record.location;
+    return {store, location};
   }
-  getCurrentPages(): {url: string; store: Store}[] {
+  getCurrentPages(): {store: Store; location: Location}[] {
     return this.records.map((item) => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const url = record.location.url;
-      return {url, store};
+      const location = record.location;
+      return {store, location};
     });
   }
-  // push(location: Location): RouteRecord {
-  //   const curHistory = this.getCurrentItem();
-  //   const routeState: RouteState = {
-  //     pagename: location.getPagename(),
-  //     params: location.getParams() as RootState,
-  //     action: RouteHistoryAction.RELAUNCH,
-  //     key: '',
-  //   };
-  //   const store = forkStore(curHistory.store, routeState);
-  //   const newHistory = new PageStack(this, store);
-  //   const newRecord = new RouteRecord(location, newHistory);
-  //   newHistory.startup(newRecord);
-  //   this._push(newHistory);
-  //   return newRecord;
-  // }
   private countBack(delta: number): [number, number] {
     const historyStacks = this.records;
     const backSteps: [number, number] = [0, 0];

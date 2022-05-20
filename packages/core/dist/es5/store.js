@@ -230,9 +230,17 @@ export var Store = function () {
       if (isPromise(_result)) {
         mountedModules[moduleName] = _result.then(function () {
           mountedModules[moduleName] = true;
+
+          if (_this2.active) {
+            injectedModels[moduleName].onActive();
+          }
         }, errorCallback);
       } else {
         mountedModules[moduleName] = true;
+
+        if (this.active) {
+          injectedModels[moduleName].onActive();
+        }
       }
     }
 

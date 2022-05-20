@@ -164,9 +164,9 @@ export class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
-  redirectOnServer(urlOrLocation) {
+  redirectOnServer(partialLocation) {
     if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const url = locationToUrl(partialLocation);
       const nativeUrl = urlToNativeUrl(url);
       const err = {
         code: ErrorCodes.ROUTE_REDIRECT,
@@ -182,6 +182,7 @@ export class Router extends CoreRouter {
 
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
@@ -226,14 +227,14 @@ export class Router extends CoreRouter {
     });
   }
 
-  relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _relaunch(urlOrLocation, target, payload, _nativeCaller) {
+  async _relaunch(partialLocation, target, payload, _nativeCaller) {
     const action = 'relaunch';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -274,14 +275,14 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  replace(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _replace(urlOrLocation, target, payload, _nativeCaller) {
+  async _replace(partialLocation, target, payload, _nativeCaller) {
     const action = 'replace';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -321,14 +322,14 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  push(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _push(urlOrLocation, target, payload, _nativeCaller) {
+  async _push(partialLocation, target, payload, _nativeCaller) {
     const action = 'push';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {

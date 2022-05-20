@@ -161,11 +161,11 @@ export class Router extends CoreRouter {
     return {overflow, index, record: {key, location}};
   }
 
-  getActivePage(): {url: string; store: Store} {
+  getActivePage(): {location: Location; store: Store} {
     return this.windowStack.getCurrentWindowPage();
   }
 
-  getCurrentPages(): {url: string; store: Store}[] {
+  getCurrentPages(): {location: Location; store: Store}[] {
     return this.windowStack.getCurrentPages();
   }
 
@@ -189,9 +189,9 @@ export class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
-  private redirectOnServer(urlOrLocation: Partial<Location>) {
+  private redirectOnServer(partialLocation: Partial<Location>) {
     if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const url = locationToUrl(partialLocation);
       const nativeUrl = urlToNativeUrl(url);
       const err: ActionError = {code: ErrorCodes.ROUTE_REDIRECT, message: 'Route change in server is not allowed.', detail: nativeUrl};
       throw err;
@@ -202,6 +202,7 @@ export class Router extends CoreRouter {
     this.init = () => Promise.resolve();
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {timestamp: Date.now(), payload: null, prevState, completed: false};
@@ -228,14 +229,14 @@ export class Router extends CoreRouter {
     this.dispatch({location, action, prevStore: store, newStore: store, windowChanged: true});
   }
 
-  relaunch(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  private async _relaunch(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
+  private async _relaunch(partialLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'relaunch';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
@@ -264,14 +265,14 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  replace(partialLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  private async _replace(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
+  private async _replace(partialLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'replace';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
@@ -299,14 +300,14 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  push(partialLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  private async _push(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
+  private async _push(partialLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'push';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);

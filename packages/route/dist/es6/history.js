@@ -172,10 +172,10 @@ export class WindowStack extends HistoryStack {
     const item = this.getCurrentItem();
     const store = item.store;
     const record = item.getCurrentItem();
-    const url = record.location.url;
+    const location = record.location;
     return {
-      url,
-      store
+      store,
+      location
     };
   }
 
@@ -183,10 +183,10 @@ export class WindowStack extends HistoryStack {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const url = record.location.url;
+      const location = record.location;
       return {
-        url,
-        store
+        store,
+        location
       };
     });
   }

@@ -47,12 +47,12 @@ export declare class WindowStack extends HistoryStack<PageStack> {
     constructor(location: Location, store: Store);
     getRecords(): RouteRecord[];
     getCurrentWindowPage(): {
-        url: string;
         store: Store;
+        location: Location;
     };
     getCurrentPages(): {
-        url: string;
         store: Store;
+        location: Location;
     }[];
     private countBack;
     testBack(stepOrKey: number | string, rootOnly: boolean): {
