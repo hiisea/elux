@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
 import { coreConfig, env } from '@elux/core';
+import { memo, useEffect, useRef, useState } from 'react';
 import { EWindow } from './EWindow';
 import { jsx as _jsx } from "react/jsx-runtime";
-export const RouterComponent = () => {
+
+const Component = () => {
   const router = coreConfig.UseRouter();
   const [data, setData] = useState({
     className: 'elux-app',
@@ -99,3 +100,6 @@ export const RouterComponent = () => {
     })
   });
 };
+
+Component.displayName = 'EluxRouter';
+export const RouterComponent = memo(Component);

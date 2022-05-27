@@ -14,7 +14,6 @@ import {
   Store,
   StoreState,
 } from '@elux/core';
-
 import {
   afterChangeAction,
   beforeChangeAction,

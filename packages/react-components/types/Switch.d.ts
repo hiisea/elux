@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { FC, ReactNode } from 'react';
 /**
  * 内置UI组件
  *
@@ -28,5 +28,5 @@ export interface SwitchProps {
  *
  * @public
  */
-export declare const Switch: React.NamedExoticComponent<SwitchProps>;
+export declare const Switch: FC<SwitchProps>;
 //# sourceMappingURL=Switch.d.ts.map

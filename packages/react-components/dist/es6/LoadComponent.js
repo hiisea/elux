@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
+import { forwardRef, useEffect, useState } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export const LoadComponentOnError = ({
   message
@@ -14,7 +14,7 @@ export const LoadComponentOnLoading = () => _jsx("div", {
 export const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
-  return React.forwardRef((props, ref) => {
+  const Component = forwardRef((props, ref) => {
     const execute = curStore => {
       let View = OnLoading;
 
@@ -69,4 +69,6 @@ export const LoadComponent = (moduleName, componentName, options = {}) => {
       });
     }
   });
+  Component.displayName = 'EluxComponentLoader';
+  return Component;
 };

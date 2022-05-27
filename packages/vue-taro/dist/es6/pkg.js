@@ -2483,6 +2483,8 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
   const component = defineComponent({
+    name: 'EluxComponentLoader',
+
     setup(props, context) {
       const store = coreConfig.UseStore();
       const View = shallowRef(OnLoading);
@@ -2532,6 +2534,7 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
 };
 
 const EWindow = defineComponent({
+  name: 'EluxWindow',
   props: {
     store: {
       type: Object,
@@ -2551,6 +2554,8 @@ const EWindow = defineComponent({
 });
 
 defineComponent({
+  name: 'EluxRouter',
+
   setup() {
     const router = coreConfig.UseRouter();
     const data = shallowRef({
@@ -2667,6 +2672,7 @@ function setClientHead(eluxContext, documentHead) {
 }
 
 const DocumentHead = defineComponent({
+  name: 'EluxDocumentHead',
   props: {
     title: {
       type: String
@@ -2707,6 +2713,10 @@ const DocumentHead = defineComponent({
     setClientHead(this.eluxContext, this.headText);
   },
 
+  updated() {
+    setClientHead(this.eluxContext, this.headText);
+  },
+
   unmounted() {
     setClientHead(this.eluxContext, this.raw);
   },
@@ -2736,6 +2746,7 @@ const Switch = function (props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Switch.displayName = 'EluxSwitch';
 
 const Else = function (props, context) {
   const arr = [];
@@ -2752,8 +2763,10 @@ const Else = function (props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Else.displayName = 'EluxElse';
 
 const Link = defineComponent({
+  name: 'EluxLink',
   props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
 
   setup(props, context) {

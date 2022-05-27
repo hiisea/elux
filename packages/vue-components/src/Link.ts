@@ -1,7 +1,6 @@
-import {defineComponent, FunctionalComponent, Events, h, HTMLAttributes, computed} from 'vue';
-
 import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
-import {urlToNativeUrl, locationToUrl} from '@elux/route';
+import {locationToUrl, urlToNativeUrl} from '@elux/route';
+import {computed, defineComponent, Events, FunctionalComponent, h, HTMLAttributes} from 'vue';
 
 /**
  * 内置UI组件
@@ -57,6 +56,7 @@ export interface LinkProps extends HTMLAttributes {
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const Link: FunctionalComponent<LinkProps> = defineComponent({
+  name: 'EluxLink',
   // eslint-disable-next-line vue/require-prop-types
   props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
   setup(props: LinkProps, context) {

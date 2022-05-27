@@ -1,9 +1,10 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import React, { useEffect, useRef, useState } from 'react';
 import { coreConfig, env } from '@elux/core';
+import { memo, useEffect, useRef, useState } from 'react';
 import { EWindow } from './EWindow';
 import { jsx as _jsx } from "react/jsx-runtime";
-export var RouterComponent = function RouterComponent() {
+
+var Component = function Component() {
   var router = coreConfig.UseRouter();
 
   var _useState = useState({
@@ -98,3 +99,6 @@ export var RouterComponent = function RouterComponent() {
     })
   });
 };
+
+Component.displayName = 'EluxRouter';
+export var RouterComponent = memo(Component);

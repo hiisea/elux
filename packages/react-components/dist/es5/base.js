@@ -1,6 +1,6 @@
-import React, { useContext } from 'react';
 import { buildConfigSetter } from '@elux/core';
-export var EluxContextComponent = React.createContext({
+import { createContext, useContext } from 'react';
+export var EluxContextComponent = createContext({
   documentHead: '',
   router: null
 });

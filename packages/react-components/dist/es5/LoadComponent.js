@@ -1,6 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
-import React, { useEffect, useState } from 'react';
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
+import { forwardRef, useEffect, useState } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
@@ -22,7 +22,7 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
 
   var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   var OnError = options.onError || coreConfig.LoadComponentOnError;
-  return React.forwardRef(function (props, ref) {
+  var Component = forwardRef(function (props, ref) {
     var execute = function execute(curStore) {
       var View = OnLoading;
 
@@ -85,4 +85,6 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
       }, props));
     }
   });
+  Component.displayName = 'EluxComponentLoader';
+  return Component;
 };

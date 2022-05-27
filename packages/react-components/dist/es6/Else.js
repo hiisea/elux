@@ -1,13 +1,12 @@
-import React from 'react';
+import { Children } from 'react';
 import { Fragment as _Fragment } from "react/jsx-runtime";
 import { jsx as _jsx } from "react/jsx-runtime";
-
-const Component = ({
+export const Else = ({
   children,
   elseView
 }) => {
   const arr = [];
-  React.Children.forEach(children, item => {
+  Children.forEach(children, item => {
     item && arr.push(item);
   });
 
@@ -21,5 +20,4 @@ const Component = ({
     children: elseView
   });
 };
-
-export const Else = React.memo(Component);
+Else.displayName = 'EluxElse';

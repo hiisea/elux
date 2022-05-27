@@ -1,5 +1,5 @@
-import { defineComponent, inject } from 'vue';
 import { coreConfig, env } from '@elux/core';
+import { defineComponent, inject } from 'vue';
 import { EluxContextKey } from './base';
 var clientTimer = 0;
 
@@ -19,6 +19,7 @@ function setClientHead(eluxContext, documentHead) {
 }
 
 export var DocumentHead = defineComponent({
+  name: 'EluxDocumentHead',
   props: {
     title: {
       type: String
@@ -52,6 +53,9 @@ export var DocumentHead = defineComponent({
   },
   mounted: function mounted() {
     this.raw = this.eluxContext.documentHead;
+    setClientHead(this.eluxContext, this.headText);
+  },
+  updated: function updated() {
     setClientHead(this.eluxContext, this.headText);
   },
   unmounted: function unmounted() {

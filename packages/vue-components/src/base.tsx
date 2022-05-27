@@ -1,6 +1,5 @@
-import {inject} from 'vue';
-
 import {buildConfigSetter, EluxContext, EluxStoreContext, IRouter, IStore} from '@elux/core';
+import {inject} from 'vue';
 
 export const EluxContextKey = '__EluxContext__';
 export const EluxStoreContextKey = '__EluxStoreContext__';

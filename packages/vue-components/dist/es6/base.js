@@ -1,5 +1,5 @@
-import { inject } from 'vue';
 import { buildConfigSetter } from '@elux/core';
+import { inject } from 'vue';
 export const EluxContextKey = '__EluxContext__';
 export const EluxStoreContextKey = '__EluxStoreContext__';
 export function UseRouter() {

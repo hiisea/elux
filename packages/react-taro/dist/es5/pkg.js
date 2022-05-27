@@ -1,4 +1,4 @@
-import _react, { useContext, memo, useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import _react, { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, Children, useMemo, useCallback } from 'react';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 import _reactDom from 'react-dom';
@@ -1444,7 +1444,7 @@ function buildProvider(ins, router) {
   }, ins);
 }
 
-var EluxContextComponent = _react.createContext({
+var EluxContextComponent = createContext({
   documentHead: '',
   router: null
 });
@@ -1458,7 +1458,7 @@ var reactComponentsConfig = {
   renderToString: undefined
 };
 
-var EWindow = memo(function (_ref) {
+var Component$2 = function Component(_ref) {
   var store = _ref.store;
   var AppView = getEntryComponent();
   var StoreProvider = coreConfig.StoreProvider;
@@ -1466,9 +1466,12 @@ var EWindow = memo(function (_ref) {
     store: store,
     children: jsx(AppView, {})
   });
-});
+};
 
-var RouterComponent = function RouterComponent() {
+Component$2.displayName = 'EluxWindow';
+var EWindow = memo(Component$2);
+
+var Component$1 = function Component() {
   var router = coreConfig.UseRouter();
 
   var _useState = useState({
@@ -1564,6 +1567,9 @@ var RouterComponent = function RouterComponent() {
   });
 };
 
+Component$1.displayName = 'EluxRouter';
+var RouterComponent = memo(Component$1);
+
 var AppRender = {
   toDocument: function toDocument(id, eluxContext, fromSSR, app) {
     var renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
@@ -1610,7 +1616,7 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
 
   var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   var OnError = options.onError || coreConfig.LoadComponentOnError;
-  return _react.forwardRef(function (props, ref) {
+  var Component = forwardRef(function (props, ref) {
     var execute = function execute(curStore) {
       var View = OnLoading;
 
@@ -1673,6 +1679,8 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
       }, props));
     }
   });
+  Component.displayName = 'EluxComponentLoader';
+  return Component;
 };
 
 var clientTimer = 0;
@@ -1701,7 +1709,7 @@ function recoverClientHead(eluxContext, documentHead) {
   }
 }
 
-var Component$2 = function Component(_ref) {
+var Component = function Component(_ref) {
   var title = _ref.title,
       html = _ref.html;
   var eluxContext = useContext(EluxContextComponent);
@@ -1729,13 +1737,14 @@ var Component$2 = function Component(_ref) {
   return null;
 };
 
-var DocumentHead = _react.memo(Component$2);
+Component.displayName = 'EluxDocumentHead';
+var DocumentHead = memo(Component);
 
-var Component$1 = function Component(_ref) {
+var Else = function Else(_ref) {
   var children = _ref.children,
       elseView = _ref.elseView;
   var arr = [];
-  _react.Children.forEach(children, function (item) {
+  Children.forEach(children, function (item) {
     item && arr.push(item);
   });
 
@@ -1749,14 +1758,13 @@ var Component$1 = function Component(_ref) {
     children: elseView
   });
 };
+Else.displayName = 'EluxElse';
 
-var Else = _react.memo(Component$1);
-
-var Component = function Component(_ref) {
+var Switch = function Switch(_ref) {
   var children = _ref.children,
       elseView = _ref.elseView;
   var arr = [];
-  _react.Children.forEach(children, function (item) {
+  Children.forEach(children, function (item) {
     item && arr.push(item);
   });
 
@@ -1770,8 +1778,7 @@ var Component = function Component(_ref) {
     children: elseView
   });
 };
-
-var Switch = _react.memo(Component);
+Switch.displayName = 'EluxSwitch';
 
 function _objectWithoutPropertiesLoose(source, excluded) {
   if (source == null) return {};
@@ -3839,7 +3846,7 @@ var Router = function (_CoreRouter) {
 }(CoreRouter);
 
 var _excluded = ["onClick", "disabled", "to", "action", "classname", "target", "payload"];
-var Link = _react.forwardRef(function (_ref, ref) {
+var Link = function Link(_ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       _ref$to = _ref.to,
@@ -3899,15 +3906,12 @@ var Link = _react.forwardRef(function (_ref, ref) {
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {
-    return jsx("span", _extends({}, props, {
-      ref: ref
-    }));
+    return jsx("span", _extends({}, props));
   } else {
-    return jsx("a", _extends({}, props, {
-      ref: ref
-    }));
+    return jsx("a", _extends({}, props));
   }
-});
+};
+Link.displayName = 'EluxLink';
 
 setCoreConfig({
   UseRouter: UseRouter,

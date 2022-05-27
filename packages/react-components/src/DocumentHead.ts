@@ -1,7 +1,5 @@
-import React, {useContext, useEffect} from 'react';
-
 import {coreConfig, EluxContext, env} from '@elux/core';
-
+import {FC, memo, useContext, useEffect} from 'react';
 import {EluxContextComponent} from './base';
 
 /**
@@ -48,7 +46,7 @@ function recoverClientHead(eluxContext: EluxContext, documentHead: string) {
   }
 }
 
-const Component: React.FC<DocumentHeadProps> = ({title, html}) => {
+const Component: FC<DocumentHeadProps> = ({title, html}) => {
   const eluxContext = useContext(EluxContextComponent);
   if (!html) {
     html = eluxContext.documentHead || '<title>Elux</title>';
@@ -68,6 +66,8 @@ const Component: React.FC<DocumentHeadProps> = ({title, html}) => {
   return null;
 };
 
+Component.displayName = 'EluxDocumentHead';
+
 /**
  * 内置UI组件
  *
@@ -76,4 +76,4 @@ const Component: React.FC<DocumentHeadProps> = ({title, html}) => {
  *
  * @public
  */
-export const DocumentHead = React.memo(Component);
+export const DocumentHead = memo(Component);

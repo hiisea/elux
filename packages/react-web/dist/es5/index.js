@@ -1,8 +1,8 @@
-import { hydrate, render } from 'react-dom';
 import { buildApp, buildSSR } from '@elux/core';
 import { setReactComponentsConfig } from '@elux/react-components';
 import { renderToString } from '@elux/react-web/server';
 import { createClientRouter, createServerRouter } from '@elux/route-browser';
+import { hydrate, render } from 'react-dom';
 export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
 export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
 export * from '@elux/app';

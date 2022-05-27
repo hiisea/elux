@@ -14,3 +14,4 @@ export var Else = function Else(props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Else.displayName = 'EluxElse';

@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
 import { buildProvider, coreConfig, getClientRouter, setCoreConfig } from '@elux/core';
 import { EWindow } from '@elux/react-components';
 import { locationToUrl } from '@elux/route';
 import { createRouter } from '@elux/route-mp';
 import { onShow, taroHistory } from '@elux/taro';
 import { useDidHide, useDidShow } from '@tarojs/taro';
+import { useEffect, useRef, useState } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
 export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';

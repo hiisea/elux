@@ -1,10 +1,10 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
-import { createApp as createCSRApp, defineComponent, onBeforeUnmount, ref } from 'vue';
 import { buildProvider, coreConfig, setCoreConfig } from '@elux/core';
 import { createRouter } from '@elux/route-mp';
 import { onShow, taroHistory } from '@elux/taro';
 import { EWindow } from '@elux/vue-components';
 import { useDidHide, useDidShow } from '@tarojs/taro';
+import { createApp as createCSRApp, defineComponent, onBeforeUnmount, ref } from 'vue';
 export { DocumentHead, Else, Link, Switch } from '@elux/vue-components';
 export * from '@elux/app';
 setCoreConfig({

@@ -1,7 +1,6 @@
-import React, {useCallback, useMemo} from 'react';
-
 import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
-import {urlToNativeUrl, locationToUrl} from '@elux/route';
+import {locationToUrl, urlToNativeUrl} from '@elux/route';
+import {FC, HTMLAttributes, MouseEvent, useCallback, useMemo} from 'react';
 
 /**
  * 内置UI组件
@@ -16,7 +15,7 @@ import {urlToNativeUrl, locationToUrl} from '@elux/route';
  *
  * @public
  */
-export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * 指定跳转的url或后退步数
    */
@@ -28,7 +27,7 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * 点击事件
    */
-  onClick?(event: React.MouseEvent): void;
+  onClick?(event: MouseEvent): void;
   /**
    * 路由跳转动作
    */
@@ -55,44 +54,44 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
  *
  * @public
  */
-export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({onClick: _onClick, disabled, to = '', action = 'push', classname = '', target = 'page', payload, ...props}, ref) => {
-    const {back, url, href} = useMemo(() => {
-      let back: string | number | undefined;
-      let url: string | undefined;
-      let href: string | undefined;
-      if (action === 'back') {
-        back = to || 1;
-      } else {
-        url = classname ? locationToUrl({url: to.toString(), classname}) : to.toString();
-        href = urlToNativeUrl(url);
-      }
-      return {back, url, href};
-    }, [action, classname, to]);
-    const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
-    const onClick = useCallback(
-      (event: React.MouseEvent) => {
-        event.preventDefault();
-        if (!disabled) {
-          _onClick && _onClick(event);
-          router[action](back || {url}, target, payload);
-        }
-      },
-      [disabled, _onClick, router, action, back, url, target, payload]
-    );
-    props['onClick'] = onClick;
-    props['action'] = action;
-    props['target'] = target;
-    props['to'] = (back || url) + '';
-    props['href'] = href;
-    href && (props['href'] = href);
-    classname && (props['classname'] = classname);
-    disabled && (props['disabled'] = true);
-
-    if (coreConfig.Platform === 'taro') {
-      return <span {...props} ref={ref} />;
+export const Link: FC<LinkProps> = ({onClick: _onClick, disabled, to = '', action = 'push', classname = '', target = 'page', payload, ...props}) => {
+  const {back, url, href} = useMemo(() => {
+    let back: string | number | undefined;
+    let url: string | undefined;
+    let href: string | undefined;
+    if (action === 'back') {
+      back = to || 1;
     } else {
-      return <a {...props} ref={ref} />;
+      url = classname ? locationToUrl({url: to.toString(), classname}) : to.toString();
+      href = urlToNativeUrl(url);
     }
+    return {back, url, href};
+  }, [action, classname, to]);
+  const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
+  const onClick = useCallback(
+    (event: MouseEvent) => {
+      event.preventDefault();
+      if (!disabled) {
+        _onClick && _onClick(event);
+        router[action](back || {url}, target, payload);
+      }
+    },
+    [disabled, _onClick, router, action, back, url, target, payload]
+  );
+  props['onClick'] = onClick;
+  props['action'] = action;
+  props['target'] = target;
+  props['to'] = (back || url) + '';
+  props['href'] = href;
+  href && (props['href'] = href);
+  classname && (props['classname'] = classname);
+  disabled && (props['disabled'] = true);
+
+  if (coreConfig.Platform === 'taro') {
+    return <span {...props} />;
+  } else {
+    return <a {...props} />;
   }
-);
+};
+
+Link.displayName = 'EluxLink';

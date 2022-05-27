@@ -1,11 +1,10 @@
-import {hydrate, render} from 'react-dom';
-
 import {AppConfig} from '@elux/app';
 import {buildApp, buildSSR, RenderOptions, RouterInitOptions} from '@elux/core';
 import {setReactComponentsConfig} from '@elux/react-components';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {renderToString} from '@elux/react-web/server';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
+import {hydrate, render} from 'react-dom';
 
 export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';

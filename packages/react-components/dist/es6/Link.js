@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo } from 'react';
 import { coreConfig } from '@elux/core';
-import { urlToNativeUrl, locationToUrl } from '@elux/route';
+import { locationToUrl, urlToNativeUrl } from '@elux/route';
+import { useCallback, useMemo } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
-export const Link = React.forwardRef(({
+export const Link = ({
   onClick: _onClick,
   disabled,
   to = '',
@@ -11,7 +11,7 @@ export const Link = React.forwardRef(({
   target = 'page',
   payload,
   ...props
-}, ref) => {
+}) => {
   const {
     back,
     url,
@@ -58,12 +58,11 @@ export const Link = React.forwardRef(({
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {
-    return _jsx("span", { ...props,
-      ref: ref
+    return _jsx("span", { ...props
     });
   } else {
-    return _jsx("a", { ...props,
-      ref: ref
+    return _jsx("a", { ...props
     });
   }
-});
+};
+Link.displayName = 'EluxLink';

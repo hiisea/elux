@@ -3847,6 +3847,7 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
   var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   var OnError = options.onError || coreConfig.LoadComponentOnError;
   var component = defineComponent({
+    name: 'EluxComponentLoader',
     setup: function setup(props, context) {
       var store = coreConfig.UseStore();
       var View = shallowRef(OnLoading);
@@ -3895,6 +3896,7 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
 };
 
 var EWindow = defineComponent({
+  name: 'EluxWindow',
   props: {
     store: {
       type: Object,
@@ -3914,6 +3916,7 @@ var EWindow = defineComponent({
 });
 
 defineComponent({
+  name: 'EluxRouter',
   setup: function setup() {
     var router = coreConfig.UseRouter();
     var data = shallowRef({
@@ -4024,6 +4027,7 @@ function setClientHead(eluxContext, documentHead) {
 }
 
 var DocumentHead = defineComponent({
+  name: 'EluxDocumentHead',
   props: {
     title: {
       type: String
@@ -4059,6 +4063,9 @@ var DocumentHead = defineComponent({
     this.raw = this.eluxContext.documentHead;
     setClientHead(this.eluxContext, this.headText);
   },
+  updated: function updated() {
+    setClientHead(this.eluxContext, this.headText);
+  },
   unmounted: function unmounted() {
     setClientHead(this.eluxContext, this.raw);
   },
@@ -4086,6 +4093,7 @@ var Switch = function Switch(props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Switch.displayName = 'EluxSwitch';
 
 var Else = function Else(props, context) {
   var arr = [];
@@ -4102,8 +4110,10 @@ var Else = function Else(props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Else.displayName = 'EluxElse';
 
 var Link = defineComponent({
+  name: 'EluxLink',
   props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
   setup: function setup(props, context) {
     var route = computed(function () {

@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { FC, ReactNode } from 'react';
 /**
  * 内置UI组件
  *
@@ -28,5 +28,5 @@ export interface ElseProps {
  *
  * @public
  */
-export declare const Else: React.NamedExoticComponent<ElseProps>;
+export declare const Else: FC<ElseProps>;
 //# sourceMappingURL=Else.d.ts.map

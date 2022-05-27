@@ -1,7 +1,5 @@
-import {reactive} from 'vue';
-
 import {setCoreConfig} from '@elux/core';
-
+import {reactive} from 'vue';
 import AppRender from './App';
 import {UseRouter, UseStore} from './base';
 import {LoadComponent, LoadComponentOnError, LoadComponentOnLoading} from './LoadComponent';

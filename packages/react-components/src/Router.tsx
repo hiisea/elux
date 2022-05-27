@@ -1,10 +1,8 @@
-import React, {useEffect, useRef, useState} from 'react';
-
 import {coreConfig, env, IStore, Location} from '@elux/core';
-
+import {FC, memo, useEffect, useRef, useState} from 'react';
 import {EWindow} from './EWindow';
 
-export const RouterComponent: React.FC = () => {
+const Component: FC = () => {
   const router = coreConfig.UseRouter!();
   const [data, setData] = useState<{
     className: string;
@@ -79,3 +77,7 @@ export const RouterComponent: React.FC = () => {
     </div>
   );
 };
+
+Component.displayName = 'EluxRouter';
+
+export const RouterComponent = memo(Component);

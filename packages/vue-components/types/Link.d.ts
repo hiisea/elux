@@ -1,5 +1,5 @@
-import { FunctionalComponent, Events, HTMLAttributes } from 'vue';
 import { RouteAction, RouteTarget } from '@elux/core';
+import { Events, FunctionalComponent, HTMLAttributes } from 'vue';
 /**
  * 内置UI组件
  *

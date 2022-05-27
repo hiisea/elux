@@ -1,11 +1,11 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
 var _excluded = ["onClick", "disabled", "to", "action", "classname", "target", "payload"];
-import React, { useCallback, useMemo } from 'react';
 import { coreConfig } from '@elux/core';
-import { urlToNativeUrl, locationToUrl } from '@elux/route';
+import { locationToUrl, urlToNativeUrl } from '@elux/route';
+import { useCallback, useMemo } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
-export var Link = React.forwardRef(function (_ref, ref) {
+export var Link = function Link(_ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
       _ref$to = _ref.to,
@@ -65,12 +65,9 @@ export var Link = React.forwardRef(function (_ref, ref) {
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {
-    return _jsx("span", _extends({}, props, {
-      ref: ref
-    }));
+    return _jsx("span", _extends({}, props));
   } else {
-    return _jsx("a", _extends({}, props, {
-      ref: ref
-    }));
+    return _jsx("a", _extends({}, props));
   }
-});
+};
+Link.displayName = 'EluxLink';

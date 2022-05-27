@@ -1,5 +1,5 @@
-import React, { useContext, useEffect } from 'react';
 import { coreConfig, env } from '@elux/core';
+import { memo, useContext, useEffect } from 'react';
 import { EluxContextComponent } from './base';
 var clientTimer = 0;
 var recoverLock = false;
@@ -55,4 +55,5 @@ var Component = function Component(_ref) {
   return null;
 };
 
-export var DocumentHead = React.memo(Component);
+Component.displayName = 'EluxDocumentHead';
+export var DocumentHead = memo(Component);

@@ -1,7 +1,8 @@
-import { defineComponent, h, computed } from 'vue';
 import { coreConfig } from '@elux/core';
-import { urlToNativeUrl, locationToUrl } from '@elux/route';
+import { locationToUrl, urlToNativeUrl } from '@elux/route';
+import { computed, defineComponent, h } from 'vue';
 export var Link = defineComponent({
+  name: 'EluxLink',
   props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
   setup: function setup(props, context) {
     var route = computed(function () {

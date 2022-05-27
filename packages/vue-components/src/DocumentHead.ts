@@ -1,7 +1,5 @@
-import {defineComponent, FunctionalComponent, inject} from 'vue';
-
 import {coreConfig, EluxContext, env} from '@elux/core';
-
+import {defineComponent, FunctionalComponent, inject} from 'vue';
 import {EluxContextKey} from './base';
 
 /**
@@ -49,6 +47,7 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
  * @public
  */
 export const DocumentHead: FunctionalComponent<DocumentHeadProps> = defineComponent({
+  name: 'EluxDocumentHead',
   props: {
     title: {
       type: String,
@@ -79,6 +78,9 @@ export const DocumentHead: FunctionalComponent<DocumentHeadProps> = defineCompon
   },
   mounted() {
     this.raw = this.eluxContext.documentHead;
+    setClientHead(this.eluxContext, this.headText);
+  },
+  updated() {
     setClientHead(this.eluxContext, this.headText);
   },
   unmounted() {

@@ -1,6 +1,6 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
-import { h, defineComponent, onBeforeUnmount, shallowRef } from 'vue';
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
+import { defineComponent, h, onBeforeUnmount, shallowRef } from 'vue';
 export const LoadComponentOnError = ({
   message
 }) => _createVNode("div", {
@@ -13,6 +13,8 @@ export const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
   const component = defineComponent({
+    name: 'EluxComponentLoader',
+
     setup(props, context) {
       const store = coreConfig.UseStore();
       const View = shallowRef(OnLoading);

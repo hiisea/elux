@@ -1,8 +1,9 @@
 import { createVNode as _createVNode } from "vue";
-import { defineComponent, onBeforeUnmount, ref, shallowRef } from 'vue';
 import { coreConfig, env } from '@elux/core';
+import { defineComponent, onBeforeUnmount, ref, shallowRef } from 'vue';
 import { EWindow } from './EWindow';
 export var RouterComponent = defineComponent({
+  name: 'EluxRouter',
   setup: function setup() {
     var router = coreConfig.UseRouter();
     var data = shallowRef({

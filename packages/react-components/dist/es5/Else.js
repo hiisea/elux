@@ -1,12 +1,11 @@
-import React from 'react';
+import { Children } from 'react';
 import { Fragment as _Fragment } from "react/jsx-runtime";
 import { jsx as _jsx } from "react/jsx-runtime";
-
-var Component = function Component(_ref) {
+export var Else = function Else(_ref) {
   var children = _ref.children,
       elseView = _ref.elseView;
   var arr = [];
-  React.Children.forEach(children, function (item) {
+  Children.forEach(children, function (item) {
     item && arr.push(item);
   });
 
@@ -20,5 +19,4 @@ var Component = function Component(_ref) {
     children: elseView
   });
 };
-
-export var Else = React.memo(Component);
+Else.displayName = 'EluxElse';

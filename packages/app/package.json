@@ -19,7 +19,7 @@
     "dist/"
   ],
   "scripts": {
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache \"**/*.{js,ts}\"",
     "build:types": "rimraf ./types && tsc --build ./src",
     "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts\"",
     "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts\"",

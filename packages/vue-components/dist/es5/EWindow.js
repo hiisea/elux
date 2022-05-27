@@ -1,7 +1,8 @@
-import { defineComponent, h, provide } from 'vue';
 import { getEntryComponent } from '@elux/core';
+import { defineComponent, h, provide } from 'vue';
 import { EluxStoreContextKey } from './base';
 export var EWindow = defineComponent({
+  name: 'EluxWindow',
   props: {
     store: {
       type: Object,

@@ -1,7 +1,7 @@
-import { unstable_batchedUpdates, hydrate, render } from 'react-dom';
-import React, { useContext, memo, useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect, useReducer, useDebugValue } from 'react';
+import React, { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, Children, useMemo, useCallback, useLayoutEffect, useReducer, useDebugValue } from 'react';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import { renderToString } from '@elux/react-web/server';
+import { unstable_batchedUpdates, hydrate, render } from 'react-dom';
 
 let root;
 
@@ -1294,7 +1294,7 @@ function buildSSR(ins, router, routerOptions) {
   });
 }
 
-const EluxContextComponent = React.createContext({
+const EluxContextComponent = createContext({
   documentHead: '',
   router: null
 });
@@ -1309,7 +1309,7 @@ const reactComponentsConfig = {
 };
 const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
 
-const EWindow = memo(function ({
+const Component$2 = function ({
   store
 }) {
   const AppView = getEntryComponent();
@@ -1318,9 +1318,12 @@ const EWindow = memo(function ({
     store: store,
     children: jsx(AppView, {})
   });
-});
+};
 
-const RouterComponent = () => {
+Component$2.displayName = 'EluxWindow';
+const EWindow = memo(Component$2);
+
+const Component$1 = () => {
   const router = coreConfig.UseRouter();
   const [data, setData] = useState({
     className: 'elux-app',
@@ -1418,6 +1421,9 @@ const RouterComponent = () => {
   });
 };
 
+Component$1.displayName = 'EluxRouter';
+const RouterComponent = memo(Component$1);
+
 const AppRender = {
   toDocument(id, eluxContext, fromSSR, app) {
     const renderFun = fromSSR ? reactComponentsConfig.hydrate : reactComponentsConfig.render;
@@ -1458,7 +1464,7 @@ const LoadComponentOnLoading = () => jsx("div", {
 const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
-  return React.forwardRef((props, ref) => {
+  const Component = forwardRef((props, ref) => {
     const execute = curStore => {
       let View = OnLoading;
 
@@ -1513,6 +1519,8 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
       });
     }
   });
+  Component.displayName = 'EluxComponentLoader';
+  return Component;
 };
 
 let clientTimer = 0;
@@ -1541,7 +1549,7 @@ function recoverClientHead(eluxContext, documentHead) {
   }
 }
 
-const Component$2 = ({
+const Component = ({
   title,
   html
 }) => {
@@ -1568,14 +1576,15 @@ const Component$2 = ({
   return null;
 };
 
-const DocumentHead = React.memo(Component$2);
+Component.displayName = 'EluxDocumentHead';
+const DocumentHead = memo(Component);
 
-const Component$1 = ({
+const Else = ({
   children,
   elseView
 }) => {
   const arr = [];
-  React.Children.forEach(children, item => {
+  Children.forEach(children, item => {
     item && arr.push(item);
   });
 
@@ -1589,15 +1598,14 @@ const Component$1 = ({
     children: elseView
   });
 };
+Else.displayName = 'EluxElse';
 
-const Else = React.memo(Component$1);
-
-const Component = ({
+const Switch = ({
   children,
   elseView
 }) => {
   const arr = [];
-  React.Children.forEach(children, item => {
+  Children.forEach(children, item => {
     item && arr.push(item);
   });
 
@@ -1611,8 +1619,7 @@ const Component = ({
     children: elseView
   });
 };
-
-const Switch = React.memo(Component);
+Switch.displayName = 'EluxSwitch';
 
 const ErrorCodes = {
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
@@ -2506,7 +2513,7 @@ class Router extends CoreRouter {
 
 }
 
-const Link = React.forwardRef(({
+const Link = ({
   onClick: _onClick,
   disabled,
   to = '',
@@ -2515,7 +2522,7 @@ const Link = React.forwardRef(({
   target = 'page',
   payload,
   ...props
-}, ref) => {
+}) => {
   const {
     back,
     url,
@@ -2562,15 +2569,14 @@ const Link = React.forwardRef(({
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {
-    return jsx("span", { ...props,
-      ref: ref
+    return jsx("span", { ...props
     });
   } else {
-    return jsx("a", { ...props,
-      ref: ref
+    return jsx("a", { ...props
     });
   }
-});
+};
+Link.displayName = 'EluxLink';
 
 setCoreConfig({
   UseRouter,

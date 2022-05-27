@@ -1,10 +1,9 @@
-import {defineComponent, onBeforeUnmount, ref, shallowRef} from 'vue';
-
 import {coreConfig, env, IStore, Location} from '@elux/core';
-
+import {defineComponent, onBeforeUnmount, ref, shallowRef} from 'vue';
 import {EWindow} from './EWindow';
 
 export const RouterComponent = defineComponent({
+  name: 'EluxRouter',
   setup() {
     const router = coreConfig.UseRouter!();
     const data = shallowRef<{

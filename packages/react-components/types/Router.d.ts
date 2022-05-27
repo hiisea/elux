@@ -1,3 +1,2 @@
-import React from 'react';
-export declare const RouterComponent: React.FC;
+export declare const RouterComponent: import("react").NamedExoticComponent<{}>;
 //# sourceMappingURL=Router.d.ts.map
