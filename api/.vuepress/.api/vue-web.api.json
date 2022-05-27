@@ -4579,6 +4579,34 @@
             },
             {
               "kind": "MethodSignature",
+              "canonicalReference": "@elux/vue-web!IRouter#getDocumentHead:member(1)",
+              "docComment": "/**\n * 获取当前页面的DocumentHead\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getDocumentHead(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getDocumentHead"
+            },
+            {
+              "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-web!IRouter#getHistory:member(1)",
               "docComment": "/**\n * 获取指定历史栈中的记录\n */\n",
               "excerptTokens": [
@@ -5076,6 +5104,50 @@
                 "startIndex": 1,
                 "endIndex": 3
               }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/vue-web!IRouter#setDocumentHead:member(1)",
+              "docComment": "/**\n * 设置当前页面的DocumentHead\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setDocumentHead(html: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "html",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "setDocumentHead"
             }
           ],
           "extendsTokenRanges": []
@@ -5141,6 +5213,32 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "location",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/vue-web!IRouteRecord#title:member",
+              "docComment": "/**\n * 页面标题\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "title: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "title",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2

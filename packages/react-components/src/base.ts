@@ -1,7 +1,7 @@
 import {buildConfigSetter, EluxContext, IRouter} from '@elux/core';
 import {createContext, useContext} from 'react';
 
-export const EluxContextComponent = createContext<EluxContext>({documentHead: '', router: null as any});
+export const EluxContextComponent = createContext<EluxContext>({router: null as any});
 
 export function UseRouter(): IRouter {
   const eluxContext = useContext(EluxContextComponent);

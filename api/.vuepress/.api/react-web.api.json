@@ -2301,8 +2301,12 @@
               "text": "DocumentHead: "
             },
             {
+              "kind": "Content",
+              "text": "import(\"react\")."
+            },
+            {
               "kind": "Reference",
-              "text": "React.NamedExoticComponent",
+              "text": "NamedExoticComponent",
               "canonicalReference": "@types/react!~React.NamedExoticComponent:interface"
             },
             {
@@ -2323,7 +2327,7 @@
           "name": "DocumentHead",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 5
+            "endIndex": 6
           }
         },
         {
@@ -2534,8 +2538,8 @@
             },
             {
               "kind": "Reference",
-              "text": "React.NamedExoticComponent",
-              "canonicalReference": "@types/react!~React.NamedExoticComponent:interface"
+              "text": "FC",
+              "canonicalReference": "@types/react!~React.FC:type"
             },
             {
               "kind": "Content",
@@ -4862,6 +4866,34 @@
             },
             {
               "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#getDocumentHead:member(1)",
+              "docComment": "/**\n * 获取当前页面的DocumentHead\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getDocumentHead(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getDocumentHead"
+            },
+            {
+              "kind": "MethodSignature",
               "canonicalReference": "@elux/react-web!IRouter#getHistory:member(1)",
               "docComment": "/**\n * 获取指定历史栈中的记录\n */\n",
               "excerptTokens": [
@@ -5359,6 +5391,50 @@
                 "startIndex": 1,
                 "endIndex": 3
               }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#setDocumentHead:member(1)",
+              "docComment": "/**\n * 设置当前页面的DocumentHead\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setDocumentHead(html: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "html",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "setDocumentHead"
             }
           ],
           "extendsTokenRanges": []
@@ -5424,6 +5500,32 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "location",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!IRouteRecord#title:member",
+              "docComment": "/**\n * 页面标题\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "title: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "title",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -5786,8 +5888,8 @@
             },
             {
               "kind": "Reference",
-              "text": "React.ForwardRefExoticComponent",
-              "canonicalReference": "@types/react!~React.ForwardRefExoticComponent:interface"
+              "text": "FC",
+              "canonicalReference": "@types/react!~React.FC:type"
             },
             {
               "kind": "Content",
@@ -5800,32 +5902,14 @@
             },
             {
               "kind": "Content",
-              "text": " & "
-            },
-            {
-              "kind": "Reference",
-              "text": "React.RefAttributes",
-              "canonicalReference": "@types/react!~React.RefAttributes:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "HTMLAnchorElement",
-              "canonicalReference": "!HTMLAnchorElement:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ">>"
+              "text": ">"
             }
           ],
           "releaseTag": "Public",
           "name": "Link",
           "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 9
+            "endIndex": 5
           }
         },
         {
@@ -5839,7 +5923,7 @@
             },
             {
               "kind": "Reference",
-              "text": "React.HTMLAttributes",
+              "text": "HTMLAttributes",
               "canonicalReference": "@types/react!~React.HTMLAttributes:interface"
             },
             {
@@ -5962,7 +6046,7 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "React.MouseEvent",
+                  "text": "MouseEvent",
                   "canonicalReference": "@types/react!~React.MouseEvent:interface"
                 },
                 {
@@ -7864,8 +7948,8 @@
             },
             {
               "kind": "Reference",
-              "text": "React.NamedExoticComponent",
-              "canonicalReference": "@types/react!~React.NamedExoticComponent:interface"
+              "text": "FC",
+              "canonicalReference": "@types/react!~React.FC:type"
             },
             {
               "kind": "Content",

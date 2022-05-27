@@ -9,8 +9,7 @@ export function buildApp(ins, router, routerOptions) {
     } = {}) {
       return router.init(routerOptions, ssrData || {}).then(() => {
         AppRender.toDocument(id, {
-          router,
-          documentHead: ''
+          router
         }, !!ssrData, ins);
       });
     }
@@ -20,8 +19,7 @@ export function buildApp(ins, router, routerOptions) {
 export function buildProvider(ins, router) {
   const AppRender = coreConfig.AppRender;
   return AppRender.toProvider({
-    router,
-    documentHead: ''
+    router
   }, ins);
 }
 export function buildSSR(ins, router, routerOptions) {
@@ -34,8 +32,7 @@ export function buildSSR(ins, router, routerOptions) {
         const store = router.getActivePage().store;
         store.destroy();
         const eluxContext = {
-          router,
-          documentHead: ''
+          router
         };
         return AppRender.toString(id, eluxContext, ins).then(html => {
           const {
@@ -46,7 +43,7 @@ export function buildSSR(ins, router, routerOptions) {
 
           if (match) {
             const state = store.getState();
-            return SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`).replace(match[0], match[0] + html);
+            return SSRTPL.replace('</head>', `\r\n${router.getDocumentHead()}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`).replace(match[0], match[0] + html);
           }
 
           return html;

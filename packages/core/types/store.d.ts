@@ -17,6 +17,8 @@ export declare abstract class CoreRouter implements IRouter {
     addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
     dispatch(data: RouteEvent): void | Promise<void>;
     abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
+    abstract getDocumentHead(): string;
+    abstract setDocumentHead(html: string): void;
     abstract getActivePage(): {
         store: IStore;
         location: Location;

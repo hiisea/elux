@@ -1,4 +1,4 @@
-import _react, { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, Children, useMemo, useCallback } from 'react';
+import _react, { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, useMemo, Children, useCallback } from 'react';
 import { jsx, Fragment as Fragment$2 } from 'react/jsx-runtime';
 import { renderToString } from '@elux/react-web/server';
 import _reactDom, { hydrate, render } from 'react-dom';
@@ -1444,8 +1444,7 @@ function buildApp(ins, router, routerOptions) {
 
       return router.init(routerOptions, ssrData || {}).then(function () {
         AppRender.toDocument(id, {
-          router: router,
-          documentHead: ''
+          router: router
         }, !!ssrData, ins);
       });
     }
@@ -1463,8 +1462,7 @@ function buildSSR(ins, router, routerOptions) {
         var store = router.getActivePage().store;
         store.destroy();
         var eluxContext = {
-          router: router,
-          documentHead: ''
+          router: router
         };
         return AppRender.toString(id, eluxContext, ins).then(function (html) {
           var SSRTPL = coreConfig.SSRTPL,
@@ -1473,7 +1471,7 @@ function buildSSR(ins, router, routerOptions) {
 
           if (match) {
             var state = store.getState();
-            return SSRTPL.replace('</head>', "\r\n" + eluxContext.documentHead + "\r\n<script>window." + SSRDataKey + " = " + JSON.stringify(state) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
+            return SSRTPL.replace('</head>', "\r\n" + router.getDocumentHead() + "\r\n<script>window." + SSRDataKey + " = " + JSON.stringify(state) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
           }
 
           return html;
@@ -1484,7 +1482,6 @@ function buildSSR(ins, router, routerOptions) {
 }
 
 var EluxContextComponent = createContext({
-  documentHead: '',
   router: null
 });
 function UseRouter() {
@@ -1723,57 +1720,24 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
   return Component;
 };
 
-var clientTimer = 0;
-var recoverLock = false;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(function () {
-      clientTimer = 0;
-      recoverLock = false;
-      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
-function recoverClientHead(eluxContext, documentHead) {
-  if (!recoverLock) {
-    recoverLock = true;
-    setClientHead(eluxContext, documentHead);
-  }
-}
-
 var Component = function Component(_ref) {
   var title = _ref.title,
       html = _ref.html;
-  var eluxContext = useContext(EluxContextComponent);
+  var router = coreConfig.UseRouter();
+  var documentHead = useMemo(function () {
+    var documentHead = html || '';
 
-  if (!html) {
-    html = eluxContext.documentHead || '<title>Elux</title>';
-  }
+    if (title) {
+      if (/<title>.*?<\/title>/.test(documentHead)) {
+        documentHead = documentHead.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
+      } else {
+        documentHead = "<title>" + title + "</title>" + documentHead;
+      }
+    }
 
-  if (title) {
-    html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
-  }
-
-  if (env.isServer) {
-    eluxContext.documentHead = html;
-  }
-
-  useEffect(function () {
-    var raw = eluxContext.documentHead;
-    setClientHead(eluxContext, html);
-    recoverLock = false;
-    return function () {
-      return recoverClientHead(eluxContext, raw);
-    };
-  }, [eluxContext, html]);
+    return documentHead;
+  }, [html, title]);
+  router.setDocumentHead(documentHead);
   return null;
 };
 
@@ -2855,9 +2819,11 @@ var HistoryStack = function () {
 var RouteRecord = function () {
   function RouteRecord(location, pageStack) {
     this.key = void 0;
+    this.title = void 0;
     this.location = location;
     this.pageStack = pageStack;
     this.key = [pageStack.key, pageStack.id++].join('_');
+    this.title = '';
   }
 
   var _proto2 = RouteRecord.prototype;
@@ -3162,6 +3128,7 @@ var BaseNativeRouter = function () {
 
   return BaseNativeRouter;
 }();
+var clientDocumentHeadTimer = 0;
 var Router = function (_CoreRouter) {
   _inheritsLoose(Router, _CoreRouter);
 
@@ -3172,6 +3139,7 @@ var Router = function (_CoreRouter) {
     _this2.curTask = void 0;
     _this2.taskList = [];
     _this2.windowStack = void 0;
+    _this2.documentHead = '';
 
     _this2.onTaskComplete = function () {
       var task = _this2.taskList.shift();
@@ -3210,6 +3178,33 @@ var Router = function (_CoreRouter) {
     });
   };
 
+  _proto2.getDocumentHead = function getDocumentHead() {
+    return this.documentHead;
+  };
+
+  _proto2.setDocumentHead = function setDocumentHead(html) {
+    var _this4 = this;
+
+    this.documentHead = html;
+
+    if (!env.isServer && !clientDocumentHeadTimer) {
+      clientDocumentHeadTimer = env.setTimeout(function () {
+        clientDocumentHeadTimer = 0;
+        var arr = _this4.documentHead.match(/<title>(.*?)<\/title>/) || [];
+
+        if (arr[1]) {
+          coreConfig.SetPageTitle(arr[1]);
+        }
+      }, 0);
+    }
+  };
+
+  _proto2.savePageTitle = function savePageTitle() {
+    var arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+    var title = arr[1] || '';
+    this.windowStack.getCurrentItem().getCurrentItem().title = title;
+  };
+
   _proto2.nativeInitiated = function nativeInitiated() {
     return !this.nativeRouter.routeKey;
   };
@@ -3235,6 +3230,7 @@ var Router = function (_CoreRouter) {
         _this$windowStack$fin2 = _this$windowStack$fin.record,
         key = _this$windowStack$fin2.key,
         location = _this$windowStack$fin2.location,
+        title = _this$windowStack$fin2.title,
         overflow = _this$windowStack$fin.overflow,
         index = _this$windowStack$fin.index;
 
@@ -3243,7 +3239,8 @@ var Router = function (_CoreRouter) {
       index: index,
       record: {
         key: key,
-        location: location
+        location: location,
+        title: title
       }
     };
   };
@@ -3253,6 +3250,7 @@ var Router = function (_CoreRouter) {
         _this$windowStack$tes2 = _this$windowStack$tes.record,
         key = _this$windowStack$tes2.key,
         location = _this$windowStack$tes2.location,
+        title = _this$windowStack$tes2.title,
         overflow = _this$windowStack$tes.overflow,
         index = _this$windowStack$tes.index;
 
@@ -3261,7 +3259,8 @@ var Router = function (_CoreRouter) {
       index: index,
       record: {
         key: key,
-        location: location
+        location: location,
+        title: title
       }
     };
   };
@@ -3473,6 +3472,7 @@ var Router = function (_CoreRouter) {
               return prevStore.dispatch(beforeChangeAction(location, action));
 
             case 9:
+              this.savePageTitle();
               this.location = location;
               this.action = action;
               newStore = prevStore.clone();
@@ -3488,20 +3488,20 @@ var Router = function (_CoreRouter) {
               }
 
               pageStack.replaceStore(newStore);
-              _context3.next = 19;
+              _context3.next = 20;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 19:
+            case 20:
               if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context3.next = 22;
+                _context3.next = 23;
                 break;
               }
 
-              _context3.next = 22;
+              _context3.next = 23;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 22:
-              _context3.next = 24;
+            case 23:
+              _context3.next = 25;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -3510,10 +3510,10 @@ var Router = function (_CoreRouter) {
                 windowChanged: target === 'window'
               });
 
-            case 24:
+            case 25:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 25:
+            case 26:
             case "end":
               return _context3.stop();
           }
@@ -3569,6 +3569,7 @@ var Router = function (_CoreRouter) {
               return prevStore.dispatch(beforeChangeAction(location, action));
 
             case 9:
+              this.savePageTitle();
               this.location = location;
               this.action = action;
               newStore = prevStore.clone();
@@ -3583,20 +3584,20 @@ var Router = function (_CoreRouter) {
               }
 
               pageStack.replaceStore(newStore);
-              _context4.next = 19;
+              _context4.next = 20;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 19:
+            case 20:
               if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context4.next = 22;
+                _context4.next = 23;
                 break;
               }
 
-              _context4.next = 22;
+              _context4.next = 23;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 22:
-              _context4.next = 24;
+            case 23:
+              _context4.next = 25;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -3605,10 +3606,10 @@ var Router = function (_CoreRouter) {
                 windowChanged: target === 'window'
               });
 
-            case 24:
+            case 25:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 25:
+            case 26:
             case "end":
               return _context4.stop();
           }
@@ -3664,13 +3665,14 @@ var Router = function (_CoreRouter) {
               return prevStore.dispatch(beforeChangeAction(location, action));
 
             case 9:
+              this.savePageTitle();
               this.location = location;
               this.action = action;
               newStore = prevStore.clone();
               pageStack = this.windowStack.getCurrentItem();
 
               if (!(target === 'window')) {
-                _context5.next = 22;
+                _context5.next = 23;
                 break;
               }
 
@@ -3678,32 +3680,32 @@ var Router = function (_CoreRouter) {
               newRecord = newPageStack.getCurrentItem();
               this.routeKey = newRecord.key;
               this.windowStack.push(newPageStack);
-              _context5.next = 20;
+              _context5.next = 21;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 20:
-              _context5.next = 28;
+            case 21:
+              _context5.next = 29;
               break;
 
-            case 22:
+            case 23:
               newRecord = new RouteRecord(location, pageStack);
               this.routeKey = newRecord.key;
               pageStack.push(newRecord);
               pageStack.replaceStore(newStore);
-              _context5.next = 28;
+              _context5.next = 29;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 28:
+            case 29:
               if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context5.next = 31;
+                _context5.next = 32;
                 break;
               }
 
-              _context5.next = 31;
+              _context5.next = 32;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 31:
-              _context5.next = 33;
+            case 32:
+              _context5.next = 34;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -3712,10 +3714,10 @@ var Router = function (_CoreRouter) {
                 windowChanged: target === 'window'
               });
 
-            case 33:
+            case 34:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 34:
+            case 35:
             case "end":
               return _context5.stop();
           }
@@ -3763,7 +3765,7 @@ var Router = function (_CoreRouter) {
 
   _proto2._back = function () {
     var _back2 = _asyncToGenerator(regenerator.mark(function _callee6(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
-      var action, _this$windowStack$tes3, record, overflow, index, url, err, location, NotifyNativeRouter, prevStore, pageStack, historyStore, newStore;
+      var action, _this$windowStack$tes3, record, overflow, index, url, err, location, title, NotifyNativeRouter, prevStore, pageStack, historyStore, newStore;
 
       return regenerator.wrap(function _callee6$(_context6) {
         while (1) {
@@ -3798,6 +3800,7 @@ var Router = function (_CoreRouter) {
 
             case 9:
               location = record.location;
+              title = record.title;
               NotifyNativeRouter = [];
 
               if (index[0]) {
@@ -3813,14 +3816,15 @@ var Router = function (_CoreRouter) {
               }
 
               prevStore = this.getActivePage().store;
-              _context6.next = 17;
+              _context6.next = 18;
               return prevStore.dispatch(testChangeAction(location, action));
 
-            case 17:
-              _context6.next = 19;
+            case 18:
+              _context6.next = 20;
               return prevStore.dispatch(beforeChangeAction(location, action));
 
-            case 19:
+            case 20:
+              this.savePageTitle();
               this.location = location;
               this.action = action;
               this.routeKey = record.key;
@@ -3842,20 +3846,21 @@ var Router = function (_CoreRouter) {
                 pageStack.replaceStore(newStore);
               }
 
-              _context6.next = 30;
+              _context6.next = 32;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 30:
+            case 32:
               if (!(!_nativeCaller && NotifyNativeRouter.length)) {
-                _context6.next = 33;
+                _context6.next = 35;
                 break;
               }
 
-              _context6.next = 33;
+              _context6.next = 35;
               return this.nativeRouter.execute(action, location, record.key, index);
 
-            case 33:
-              _context6.next = 35;
+            case 35:
+              this.setDocumentHead("<title>" + title + "</title>");
+              _context6.next = 38;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -3864,10 +3869,10 @@ var Router = function (_CoreRouter) {
                 windowChanged: !!index[0]
               });
 
-            case 35:
+            case 38:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 36:
+            case 39:
             case "end":
               return _context6.stop();
           }

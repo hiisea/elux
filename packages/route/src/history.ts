@@ -91,8 +91,10 @@ export class HistoryStack<T extends {destroy: () => void; setActive: () => void;
 
 export class RouteRecord implements IRouteRecord {
   public readonly key: string;
+  public title: string;
   constructor(public readonly location: Location, public readonly pageStack: PageStack) {
     this.key = [pageStack.key, pageStack.id++].join('_');
+    this.title = '';
   }
   setActive(): void {
     return;

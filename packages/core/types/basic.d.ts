@@ -188,6 +188,10 @@ export interface IRouteRecord {
      * 路由描述
      */
     location: Location;
+    /**
+     * 页面标题
+     */
+    title: string;
 }
 /**
  * 本次路由前后的某些信息
@@ -280,6 +284,14 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      * 当前路由的相关运行信息
      */
     runtime: RouteRuntime<TStoreState>;
+    /**
+     * 获取当前页面的DocumentHead
+     */
+    getDocumentHead(): string;
+    /**
+     * 设置当前页面的DocumentHead
+     */
+    setDocumentHead(html: string): void;
     /**
      * 获取当前被激活显示的页面
      */
@@ -503,7 +515,6 @@ export declare type StoreLoggerInfo = {
  */
 export declare type StoreLogger = (info: StoreLoggerInfo) => void;
 export interface EluxContext {
-    documentHead: string;
     router: IRouter;
 }
 export interface EluxStoreContext {

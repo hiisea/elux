@@ -102,6 +102,8 @@ export abstract class CoreRouter implements IRouter {
   }
 
   abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
+  abstract getDocumentHead(): string;
+  abstract setDocumentHead(html: string): void;
   abstract getActivePage(): {store: IStore; location: Location};
   abstract getCurrentPages(): {store: IStore; location: Location}[];
   abstract getHistoryLength(target?: RouteTarget): number;

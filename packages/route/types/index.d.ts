@@ -21,9 +21,13 @@ export declare class Router extends CoreRouter {
     private curTask?;
     private taskList;
     private windowStack;
+    private documentHead;
     private onTaskComplete;
     constructor(nativeRouter: BaseNativeRouter);
     private addTask;
+    getDocumentHead(): string;
+    setDocumentHead(html: string): void;
+    private savePageTitle;
     nativeInitiated(): boolean;
     getHistoryLength(target?: RouteTarget): number;
     getHistory(target?: RouteTarget): IRouteRecord[];

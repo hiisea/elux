@@ -1,57 +1,24 @@
-import { coreConfig, env } from '@elux/core';
-import { memo, useContext, useEffect } from 'react';
-import { EluxContextComponent } from './base';
-var clientTimer = 0;
-var recoverLock = false;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(function () {
-      clientTimer = 0;
-      recoverLock = false;
-      var arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
-function recoverClientHead(eluxContext, documentHead) {
-  if (!recoverLock) {
-    recoverLock = true;
-    setClientHead(eluxContext, documentHead);
-  }
-}
+import { coreConfig } from '@elux/core';
+import { memo, useMemo } from 'react';
 
 var Component = function Component(_ref) {
   var title = _ref.title,
       html = _ref.html;
-  var eluxContext = useContext(EluxContextComponent);
+  var router = coreConfig.UseRouter();
+  var documentHead = useMemo(function () {
+    var documentHead = html || '';
 
-  if (!html) {
-    html = eluxContext.documentHead || '<title>Elux</title>';
-  }
+    if (title) {
+      if (/<title>.*?<\/title>/.test(documentHead)) {
+        documentHead = documentHead.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
+      } else {
+        documentHead = "<title>" + title + "</title>" + documentHead;
+      }
+    }
 
-  if (title) {
-    html = html.replace(/<title>.*?<\/title>/, "<title>" + title + "</title>");
-  }
-
-  if (env.isServer) {
-    eluxContext.documentHead = html;
-  }
-
-  useEffect(function () {
-    var raw = eluxContext.documentHead;
-    setClientHead(eluxContext, html);
-    recoverLock = false;
-    return function () {
-      return recoverClientHead(eluxContext, raw);
-    };
-  }, [eluxContext, html]);
+    return documentHead;
+  }, [html, title]);
+  router.setDocumentHead(documentHead);
   return null;
 };
 

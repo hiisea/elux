@@ -24,6 +24,7 @@ export declare class RouteRecord implements IRouteRecord {
     readonly location: Location;
     readonly pageStack: PageStack;
     readonly key: string;
+    title: string;
     constructor(location: Location, pageStack: PageStack);
     setActive(): void;
     setInactive(): void;

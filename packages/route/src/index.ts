@@ -86,10 +86,13 @@ export abstract class BaseNativeRouter {
 
 type RouteTask = [() => Promise<void>, (value: void) => void, (reason?: any) => void];
 
+let clientDocumentHeadTimer = 0;
+
 export class Router extends CoreRouter {
   private curTask?: RouteTask;
   private taskList: RouteTask[] = [];
   private windowStack!: WindowStack;
+  private documentHead: string = '';
 
   private onTaskComplete = () => {
     const task = this.taskList.shift();
@@ -130,6 +133,27 @@ export class Router extends CoreRouter {
     });
   }
 
+  getDocumentHead(): string {
+    return this.documentHead;
+  }
+  setDocumentHead(html: string): void {
+    this.documentHead = html;
+    if (!env.isServer && !clientDocumentHeadTimer) {
+      clientDocumentHeadTimer = env.setTimeout(() => {
+        clientDocumentHeadTimer = 0;
+        const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+        if (arr[1]) {
+          coreConfig.SetPageTitle(arr[1]);
+        }
+      }, 0);
+    }
+  }
+  private savePageTitle(): void {
+    const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+    const title = arr[1] || '';
+    this.windowStack.getCurrentItem().getCurrentItem().title = title;
+  }
+
   nativeInitiated(): boolean {
     return !this.nativeRouter.routeKey;
   }
@@ -144,20 +168,20 @@ export class Router extends CoreRouter {
 
   findRecordByKey(recordKey: string): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
     const {
-      record: {key, location},
+      record: {key, location, title},
       overflow,
       index,
     } = this.windowStack.findRecordByKey(recordKey);
-    return {overflow, index, record: {key, location}};
+    return {overflow, index, record: {key, location, title}};
   }
 
   findRecordByStep(delta: number, rootOnly?: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
     const {
-      record: {key, location},
+      record: {key, location, title},
       overflow,
       index,
     } = this.windowStack.testBack(delta, !!rootOnly);
-    return {overflow, index, record: {key, location}};
+    return {overflow, index, record: {key, location, title}};
   }
 
   getActivePage(): {location: Location; store: Store} {
@@ -243,6 +267,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -279,6 +304,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -314,6 +340,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -366,6 +393,7 @@ export class Router extends CoreRouter {
       throw 'Route backward invalid.';
     }
     const location = record.location;
+    const title = record.title;
     const NotifyNativeRouter: boolean[] = [];
     if (index[0]) {
       NotifyNativeRouter[0] = routeConfig.NotifyNativeRouter.window;
@@ -379,6 +407,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     this.routeKey = record.key;
@@ -400,6 +429,7 @@ export class Router extends CoreRouter {
     if (!_nativeCaller && NotifyNativeRouter.length) {
       await this.nativeRouter.execute(action, location, record.key, index);
     }
+    this.setDocumentHead(`<title>${title}</title>`);
     await this.dispatch({location, action, prevStore, newStore, windowChanged: !!index[0]});
     newStore.dispatch(afterChangeAction(location, action));
   }

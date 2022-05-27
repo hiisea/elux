@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, Comment, Fragment, computed, reactive, createApp as createApp$1, createSSRApp } from 'vue';
+import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
 import { renderToString } from '@elux/vue-web/server';
 
 let root;
@@ -1251,8 +1251,7 @@ function buildApp(ins, router, routerOptions) {
     } = {}) {
       return router.init(routerOptions, ssrData || {}).then(() => {
         AppRender.toDocument(id, {
-          router,
-          documentHead: ''
+          router
         }, !!ssrData, ins);
       });
     }
@@ -1269,8 +1268,7 @@ function buildSSR(ins, router, routerOptions) {
         const store = router.getActivePage().store;
         store.destroy();
         const eluxContext = {
-          router,
-          documentHead: ''
+          router
         };
         return AppRender.toString(id, eluxContext, ins).then(html => {
           const {
@@ -1281,7 +1279,7 @@ function buildSSR(ins, router, routerOptions) {
 
           if (match) {
             const state = store.getState();
-            return SSRTPL.replace('</head>', `\r\n${eluxContext.documentHead}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`).replace(match[0], match[0] + html);
+            return SSRTPL.replace('</head>', `\r\n${router.getDocumentHead()}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`).replace(match[0], match[0] + html);
           }
 
           return html;
@@ -1503,9 +1501,11 @@ class HistoryStack {
 class RouteRecord {
   constructor(location, pageStack) {
     this.key = void 0;
+    this.title = void 0;
     this.location = location;
     this.pageStack = pageStack;
     this.key = [pageStack.key, pageStack.id++].join('_');
+    this.title = '';
   }
 
   setActive() {
@@ -1766,12 +1766,14 @@ class BaseNativeRouter {
   }
 
 }
+let clientDocumentHeadTimer = 0;
 class Router extends CoreRouter {
   constructor(nativeRouter) {
     super();
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
+    this.documentHead = '';
 
     this.onTaskComplete = () => {
       const task = this.taskList.shift();
@@ -1801,6 +1803,31 @@ class Router extends CoreRouter {
     });
   }
 
+  getDocumentHead() {
+    return this.documentHead;
+  }
+
+  setDocumentHead(html) {
+    this.documentHead = html;
+
+    if (!env.isServer && !clientDocumentHeadTimer) {
+      clientDocumentHeadTimer = env.setTimeout(() => {
+        clientDocumentHeadTimer = 0;
+        const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+
+        if (arr[1]) {
+          coreConfig.SetPageTitle(arr[1]);
+        }
+      }, 0);
+    }
+  }
+
+  savePageTitle() {
+    const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+    const title = arr[1] || '';
+    this.windowStack.getCurrentItem().getCurrentItem().title = title;
+  }
+
   nativeInitiated() {
     return !this.nativeRouter.routeKey;
   }
@@ -1817,7 +1844,8 @@ class Router extends CoreRouter {
     const {
       record: {
         key,
-        location
+        location,
+        title
       },
       overflow,
       index
@@ -1827,7 +1855,8 @@ class Router extends CoreRouter {
       index,
       record: {
         key,
-        location
+        location,
+        title
       }
     };
   }
@@ -1836,7 +1865,8 @@ class Router extends CoreRouter {
     const {
       record: {
         key,
-        location
+        location,
+        title
       },
       overflow,
       index
@@ -1846,7 +1876,8 @@ class Router extends CoreRouter {
       index,
       record: {
         key,
-        location
+        location,
+        title
       }
     };
   }
@@ -1962,6 +1993,7 @@ class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -2010,6 +2042,7 @@ class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -2057,6 +2090,7 @@ class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -2128,6 +2162,7 @@ class Router extends CoreRouter {
     }
 
     const location = record.location;
+    const title = record.title;
     const NotifyNativeRouter = [];
 
     if (index[0]) {
@@ -2145,6 +2180,7 @@ class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     this.routeKey = record.key;
@@ -2172,6 +2208,7 @@ class Router extends CoreRouter {
       await this.nativeRouter.execute(action, location, record.key, index);
     }
 
+    this.setDocumentHead(`<title>${title}</title>`);
     await this.dispatch({
       location,
       action,
@@ -3102,79 +3139,29 @@ const RouterComponent = defineComponent({
 
 });
 
-let clientTimer = 0;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(() => {
-      clientTimer = 0;
-      const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
 const DocumentHead = defineComponent({
   name: 'EluxDocumentHead',
-  props: {
-    title: {
-      type: String
-    },
-    html: {
-      type: String
-    }
-  },
+  props: ['title', 'html'],
 
-  data() {
-    return {
-      eluxContext: inject(EluxContextKey, {}),
-      raw: ''
+  setup(props) {
+    const documentHead = computed(() => {
+      let documentHead = props.html || '';
+
+      if (props.title) {
+        if (/<title>.*?<\/title>/.test(documentHead)) {
+          documentHead = documentHead.replace(/<title>.*?<\/title>/, `<title>${props.title}</title>`);
+        } else {
+          documentHead = `<title>${props.title}</title>` + documentHead;
+        }
+      }
+
+      return documentHead;
+    });
+    const router = coreConfig.UseRouter();
+    return () => {
+      router.setDocumentHead(documentHead.value);
+      return null;
     };
-  },
-
-  computed: {
-    headText() {
-      const title = this.title || '';
-      let html = this.html || '';
-      const eluxContext = this.eluxContext;
-
-      if (!html) {
-        html = eluxContext.documentHead || '<title>Elux</title>';
-      }
-
-      if (title) {
-        return html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-      }
-
-      return html;
-    }
-
-  },
-
-  mounted() {
-    this.raw = this.eluxContext.documentHead;
-    setClientHead(this.eluxContext, this.headText);
-  },
-
-  updated() {
-    setClientHead(this.eluxContext, this.headText);
-  },
-
-  unmounted() {
-    setClientHead(this.eluxContext, this.raw);
-  },
-
-  render() {
-    if (env.isServer) {
-      this.eluxContext.documentHead = this.headText;
-    }
-
-    return null;
   }
 
 });

@@ -1,7 +1,6 @@
 import { buildConfigSetter } from '@elux/core';
 import { createContext, useContext } from 'react';
 export var EluxContextComponent = createContext({
-  documentHead: '',
   router: null
 });
 export function UseRouter() {

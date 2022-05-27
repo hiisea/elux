@@ -48,12 +48,14 @@ export class BaseNativeRouter {
   }
 
 }
+let clientDocumentHeadTimer = 0;
 export class Router extends CoreRouter {
   constructor(nativeRouter) {
     super();
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
+    this.documentHead = '';
 
     this.onTaskComplete = () => {
       const task = this.taskList.shift();
@@ -83,6 +85,31 @@ export class Router extends CoreRouter {
     });
   }
 
+  getDocumentHead() {
+    return this.documentHead;
+  }
+
+  setDocumentHead(html) {
+    this.documentHead = html;
+
+    if (!env.isServer && !clientDocumentHeadTimer) {
+      clientDocumentHeadTimer = env.setTimeout(() => {
+        clientDocumentHeadTimer = 0;
+        const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+
+        if (arr[1]) {
+          coreConfig.SetPageTitle(arr[1]);
+        }
+      }, 0);
+    }
+  }
+
+  savePageTitle() {
+    const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+    const title = arr[1] || '';
+    this.windowStack.getCurrentItem().getCurrentItem().title = title;
+  }
+
   nativeInitiated() {
     return !this.nativeRouter.routeKey;
   }
@@ -99,7 +126,8 @@ export class Router extends CoreRouter {
     const {
       record: {
         key,
-        location
+        location,
+        title
       },
       overflow,
       index
@@ -109,7 +137,8 @@ export class Router extends CoreRouter {
       index,
       record: {
         key,
-        location
+        location,
+        title
       }
     };
   }
@@ -118,7 +147,8 @@ export class Router extends CoreRouter {
     const {
       record: {
         key,
-        location
+        location,
+        title
       },
       overflow,
       index
@@ -128,7 +158,8 @@ export class Router extends CoreRouter {
       index,
       record: {
         key,
-        location
+        location,
+        title
       }
     };
   }
@@ -244,6 +275,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -292,6 +324,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -339,6 +372,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -410,6 +444,7 @@ export class Router extends CoreRouter {
     }
 
     const location = record.location;
+    const title = record.title;
     const NotifyNativeRouter = [];
 
     if (index[0]) {
@@ -427,6 +462,7 @@ export class Router extends CoreRouter {
     const prevStore = this.getActivePage().store;
     await prevStore.dispatch(testChangeAction(location, action));
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     this.routeKey = record.key;
@@ -454,6 +490,7 @@ export class Router extends CoreRouter {
       await this.nativeRouter.execute(action, location, record.key, index);
     }
 
+    this.setDocumentHead(`<title>${title}</title>`);
     await this.dispatch({
       location,
       action,

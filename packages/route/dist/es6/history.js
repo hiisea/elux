@@ -89,9 +89,11 @@ export class HistoryStack {
 export class RouteRecord {
   constructor(location, pageStack) {
     this.key = void 0;
+    this.title = void 0;
     this.location = location;
     this.pageStack = pageStack;
     this.key = [pageStack.key, pageStack.id++].join('_');
+    this.title = '';
   }
 
   setActive() {
