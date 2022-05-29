@@ -10,6 +10,7 @@ import {
   IStore,
   mergeState,
   MetaData,
+  ModelAsCreators,
   ModuleState,
   StoreState,
 } from './basic';
@@ -391,7 +392,14 @@ export abstract class BaseModel<TModuleState extends ModuleState = {}, TStoreSta
     _updateState(subject: string, state: Partial<TModuleState>): Action;
     _loadingState(loadingState: {[group: string]: LoadingState}): Action;
   } {
-    return MetaData.moduleApiMap[this.moduleName].actions as any;
+    //为了适应demote命令，不能简单引用MetaData.moduleApiMap
+    const moduleName = this.moduleName;
+    const privateActions = Object.keys(actionsMap);
+    privateActions.push('_initState', '_updateState', '_loadingState');
+    return privateActions.reduce((map, actionName) => {
+      map[actionName] = (...payload: any[]) => ({type: moduleName + coreConfig.NSP + actionName, payload});
+      return map;
+    }, {} as ModelAsCreators) as any;
   }
 
   /**

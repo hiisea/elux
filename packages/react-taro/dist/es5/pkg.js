@@ -1397,7 +1397,23 @@ var BaseModel = (_class = function () {
   };
 
   _proto.getPrivateActions = function getPrivateActions(actionsMap) {
-    return MetaData.moduleApiMap[this.moduleName].actions;
+    var moduleName = this.moduleName;
+    var privateActions = Object.keys(actionsMap);
+    privateActions.push('_initState', '_updateState', '_loadingState');
+    return privateActions.reduce(function (map, actionName) {
+      map[actionName] = function () {
+        for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          payload[_key2] = arguments[_key2];
+        }
+
+        return {
+          type: moduleName + coreConfig.NSP + actionName,
+          payload: payload
+        };
+      };
+
+      return map;
+    }, {});
   };
 
   _proto.getCurrentAction = function getCurrentAction() {

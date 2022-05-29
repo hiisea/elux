@@ -1216,7 +1216,17 @@ let BaseModel = (_class = class BaseModel {
   }
 
   getPrivateActions(actionsMap) {
-    return MetaData.moduleApiMap[this.moduleName].actions;
+    const moduleName = this.moduleName;
+    const privateActions = Object.keys(actionsMap);
+    privateActions.push('_initState', '_updateState', '_loadingState');
+    return privateActions.reduce((map, actionName) => {
+      map[actionName] = (...payload) => ({
+        type: moduleName + coreConfig.NSP + actionName,
+        payload
+      });
+
+      return map;
+    }, {});
   }
 
   getCurrentAction() {
