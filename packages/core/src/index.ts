@@ -34,7 +34,7 @@ export type {
 } from './basic';
 export {coreConfig, getClientRouter, setCoreConfig} from './basic';
 export {errorAction, setProcessedError} from './actions';
-export {getComponent, getEntryComponent, getModule, getModuleApiMap, injectComponent, injectModule} from './inject';
+export {getComponent, getEntryComponent, getModule, getModuleApiMap, injectComponent, injectModule, moduleExists} from './inject';
 export {effect, effectLogger, EmptyModel, exportComponent, exportView, reducer, setLoading} from './module';
 export {CoreRouter, modelHotReplacement, Store} from './store';
 export type {

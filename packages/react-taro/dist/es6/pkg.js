@@ -321,6 +321,9 @@ function getInitActionType(moduleName) {
   return moduleName + coreConfig.NSP + '_initState';
 }
 
+function moduleExists(moduleName) {
+  return !!coreConfig.ModuleGetter[moduleName];
+}
 function getModule(moduleName) {
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName];
@@ -6048,4 +6051,4 @@ function createApp(appConfig) {
   return cientSingleton;
 }
 
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };

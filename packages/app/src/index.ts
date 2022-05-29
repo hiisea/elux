@@ -16,6 +16,7 @@ export {
   injectModule,
   isServer,
   modelHotReplacement,
+  moduleExists,
   reducer,
   setLoading,
 } from '@elux/core';
