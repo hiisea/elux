@@ -142,7 +142,7 @@ export var Router = function (_CoreRouter) {
       target = 'page';
     }
 
-    return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+    return target === 'window' ? this.windowStack.getLength() - 1 : this.windowStack.getCurrentItem().getLength() - 1;
   };
 
   _proto2.getHistory = function getHistory(target) {
@@ -150,7 +150,7 @@ export var Router = function (_CoreRouter) {
       target = 'page';
     }
 
-    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
+    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
   };
 
   _proto2.findRecordByKey = function findRecordByKey(recordKey) {
@@ -323,7 +323,7 @@ export var Router = function (_CoreRouter) {
               _context2.prev = 11;
               _context2.t0 = _context2["catch"](4);
 
-              if (!(_context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
+              if (!(_context2.t0.code === ErrorCodes.ROUTE_RETURN || _context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
                 _context2.next = 16;
                 break;
               }
@@ -392,14 +392,30 @@ export var Router = function (_CoreRouter) {
               }
 
               prevStore = this.getActivePage().store;
-              _context3.next = 7;
+              _context3.prev = 5;
+              _context3.next = 8;
               return prevStore.dispatch(testChangeAction(location, action));
 
-            case 7:
-              _context3.next = 9;
+            case 8:
+              _context3.next = 14;
+              break;
+
+            case 10:
+              _context3.prev = 10;
+              _context3.t0 = _context3["catch"](5);
+
+              if (_nativeCaller) {
+                _context3.next = 14;
+                break;
+              }
+
+              throw _context3.t0;
+
+            case 14:
+              _context3.next = 16;
               return prevStore.dispatch(beforeChangeAction(location, action));
 
-            case 9:
+            case 16:
               this.savePageTitle();
               this.location = location;
               this.action = action;
@@ -416,20 +432,20 @@ export var Router = function (_CoreRouter) {
               }
 
               pageStack.replaceStore(newStore);
-              _context3.next = 20;
+              _context3.next = 27;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 20:
+            case 27:
               if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context3.next = 23;
+                _context3.next = 30;
                 break;
               }
 
-              _context3.next = 23;
+              _context3.next = 30;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 23:
-              _context3.next = 25;
+            case 30:
+              _context3.next = 32;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -438,15 +454,15 @@ export var Router = function (_CoreRouter) {
                 windowChanged: target === 'window'
               });
 
-            case 25:
+            case 32:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 26:
+            case 33:
             case "end":
               return _context3.stop();
           }
         }
-      }, _callee3, this);
+      }, _callee3, this, [[5, 10]]);
     }));
 
     function _relaunch(_x5, _x6, _x7, _x8) {
@@ -489,14 +505,30 @@ export var Router = function (_CoreRouter) {
               }
 
               prevStore = this.getActivePage().store;
-              _context4.next = 7;
+              _context4.prev = 5;
+              _context4.next = 8;
               return prevStore.dispatch(testChangeAction(location, action));
 
-            case 7:
-              _context4.next = 9;
+            case 8:
+              _context4.next = 14;
+              break;
+
+            case 10:
+              _context4.prev = 10;
+              _context4.t0 = _context4["catch"](5);
+
+              if (_nativeCaller) {
+                _context4.next = 14;
+                break;
+              }
+
+              throw _context4.t0;
+
+            case 14:
+              _context4.next = 16;
               return prevStore.dispatch(beforeChangeAction(location, action));
 
-            case 9:
+            case 16:
               this.savePageTitle();
               this.location = location;
               this.action = action;
@@ -512,20 +544,20 @@ export var Router = function (_CoreRouter) {
               }
 
               pageStack.replaceStore(newStore);
-              _context4.next = 20;
+              _context4.next = 27;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 20:
+            case 27:
               if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context4.next = 23;
+                _context4.next = 30;
                 break;
               }
 
-              _context4.next = 23;
+              _context4.next = 30;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 23:
-              _context4.next = 25;
+            case 30:
+              _context4.next = 32;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -534,15 +566,15 @@ export var Router = function (_CoreRouter) {
                 windowChanged: target === 'window'
               });
 
-            case 25:
+            case 32:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 26:
+            case 33:
             case "end":
               return _context4.stop();
           }
         }
-      }, _callee4, this);
+      }, _callee4, this, [[5, 10]]);
     }));
 
     function _replace(_x9, _x10, _x11, _x12) {
@@ -585,14 +617,30 @@ export var Router = function (_CoreRouter) {
               }
 
               prevStore = this.getActivePage().store;
-              _context5.next = 7;
+              _context5.prev = 5;
+              _context5.next = 8;
               return prevStore.dispatch(testChangeAction(location, action));
 
-            case 7:
-              _context5.next = 9;
+            case 8:
+              _context5.next = 14;
+              break;
+
+            case 10:
+              _context5.prev = 10;
+              _context5.t0 = _context5["catch"](5);
+
+              if (_nativeCaller) {
+                _context5.next = 14;
+                break;
+              }
+
+              throw _context5.t0;
+
+            case 14:
+              _context5.next = 16;
               return prevStore.dispatch(beforeChangeAction(location, action));
 
-            case 9:
+            case 16:
               this.savePageTitle();
               this.location = location;
               this.action = action;
@@ -600,7 +648,7 @@ export var Router = function (_CoreRouter) {
               pageStack = this.windowStack.getCurrentItem();
 
               if (!(target === 'window')) {
-                _context5.next = 23;
+                _context5.next = 30;
                 break;
               }
 
@@ -608,32 +656,32 @@ export var Router = function (_CoreRouter) {
               newRecord = newPageStack.getCurrentItem();
               this.routeKey = newRecord.key;
               this.windowStack.push(newPageStack);
-              _context5.next = 21;
+              _context5.next = 28;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 21:
-              _context5.next = 29;
+            case 28:
+              _context5.next = 36;
               break;
 
-            case 23:
+            case 30:
               newRecord = new RouteRecord(location, pageStack);
               this.routeKey = newRecord.key;
               pageStack.push(newRecord);
               pageStack.replaceStore(newStore);
-              _context5.next = 29;
+              _context5.next = 36;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 29:
+            case 36:
               if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context5.next = 32;
+                _context5.next = 39;
                 break;
               }
 
-              _context5.next = 32;
+              _context5.next = 39;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 32:
-              _context5.next = 34;
+            case 39:
+              _context5.next = 41;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -642,15 +690,15 @@ export var Router = function (_CoreRouter) {
                 windowChanged: target === 'window'
               });
 
-            case 34:
+            case 41:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 35:
+            case 42:
             case "end":
               return _context5.stop();
           }
         }
-      }, _callee5, this);
+      }, _callee5, this, [[5, 10]]);
     }));
 
     function _push(_x13, _x14, _x15, _x16) {
@@ -660,9 +708,9 @@ export var Router = function (_CoreRouter) {
     return _push;
   }();
 
-  _proto2.back = function back(stepOrKey, target, payload, overflowRedirect, _nativeCaller) {
-    if (stepOrKey === void 0) {
-      stepOrKey = 1;
+  _proto2.back = function back(stepOrKeyOrCallback, target, payload, overflowRedirect, _nativeCaller) {
+    if (stepOrKeyOrCallback === void 0) {
+      stepOrKeyOrCallback = 1;
     }
 
     if (target === void 0) {
@@ -681,13 +729,26 @@ export var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
-    if (!stepOrKey) {
+    if (!stepOrKeyOrCallback) {
       return Promise.resolve();
     }
 
-    this.redirectOnServer({
-      url: overflowRedirect || routeConfig.HomeUrl
-    });
+    if (overflowRedirect !== null) {
+      this.redirectOnServer({
+        url: overflowRedirect || routeConfig.HomeUrl
+      });
+    }
+
+    var stepOrKey;
+
+    if (typeof stepOrKeyOrCallback === 'function') {
+      var items = this.getHistory(target);
+      var i = items.findIndex(stepOrKeyOrCallback);
+      stepOrKey = i > -1 ? items[i].key : '';
+    } else {
+      stepOrKey = stepOrKeyOrCallback;
+    }
+
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   };
 
@@ -702,15 +763,18 @@ export var Router = function (_CoreRouter) {
               action = 'back';
               _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, target === 'window'), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
 
-              if (!overflow) {
-                _context6.next = 7;
+              if (!(overflow || !index[0] && !index[1])) {
+                _context6.next = 6;
                 break;
               }
 
-              url = overflowRedirect || routeConfig.HomeUrl;
-              this.relaunch({
-                url: url
-              }, 'window');
+              if (overflowRedirect !== null) {
+                url = overflowRedirect || routeConfig.HomeUrl;
+                this.relaunch({
+                  url: url
+                }, 'window');
+              }
+
               err = {
                 code: ErrorCodes.ROUTE_BACK_OVERFLOW,
                 message: 'Overflowed on route backward.',
@@ -718,15 +782,7 @@ export var Router = function (_CoreRouter) {
               };
               throw setProcessedError(err, true);
 
-            case 7:
-              if (!(!index[0] && !index[1])) {
-                _context6.next = 9;
-                break;
-              }
-
-              throw 'Route backward invalid.';
-
-            case 9:
+            case 6:
               location = record.location;
               title = record.title;
               NotifyNativeRouter = [];
@@ -744,14 +800,30 @@ export var Router = function (_CoreRouter) {
               }
 
               prevStore = this.getActivePage().store;
-              _context6.next = 18;
+              _context6.prev = 13;
+              _context6.next = 16;
               return prevStore.dispatch(testChangeAction(location, action));
 
+            case 16:
+              _context6.next = 22;
+              break;
+
             case 18:
-              _context6.next = 20;
+              _context6.prev = 18;
+              _context6.t0 = _context6["catch"](13);
+
+              if (_nativeCaller) {
+                _context6.next = 22;
+                break;
+              }
+
+              throw _context6.t0;
+
+            case 22:
+              _context6.next = 24;
               return prevStore.dispatch(beforeChangeAction(location, action));
 
-            case 20:
+            case 24:
               this.savePageTitle();
               this.location = location;
               this.action = action;
@@ -774,21 +846,21 @@ export var Router = function (_CoreRouter) {
                 pageStack.replaceStore(newStore);
               }
 
-              _context6.next = 32;
+              _context6.next = 36;
               return this.mountStore(payload, prevStore, newStore);
 
-            case 32:
+            case 36:
               if (!(!_nativeCaller && NotifyNativeRouter.length)) {
-                _context6.next = 35;
+                _context6.next = 39;
                 break;
               }
 
-              _context6.next = 35;
+              _context6.next = 39;
               return this.nativeRouter.execute(action, location, record.key, index);
 
-            case 35:
+            case 39:
               this.setDocumentHead("<title>" + title + "</title>");
-              _context6.next = 38;
+              _context6.next = 42;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -797,15 +869,15 @@ export var Router = function (_CoreRouter) {
                 windowChanged: !!index[0]
               });
 
-            case 38:
+            case 42:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 39:
+            case 43:
             case "end":
               return _context6.stop();
           }
         }
-      }, _callee6, this);
+      }, _callee6, this, [[13, 18]]);
     }));
 
     function _back(_x17, _x18, _x19, _x20, _x21) {

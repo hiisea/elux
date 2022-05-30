@@ -283,18 +283,20 @@ export class WindowStack extends HistoryStack {
   findRecordByKey(key) {
     const arr = key.split('_');
 
-    for (let i = 0, k = this.records.length; i < k; i++) {
-      const pageStack = this.records[i];
+    if (arr[0] && arr[1]) {
+      for (let i = 0, k = this.records.length; i < k; i++) {
+        const pageStack = this.records[i];
 
-      if (pageStack.key === arr[0]) {
-        const item = pageStack.findRecordByKey(key);
+        if (pageStack.key === arr[0]) {
+          const item = pageStack.findRecordByKey(key);
 
-        if (item) {
-          return {
-            record: item[0],
-            index: [i, item[1]],
-            overflow: false
-          };
+          if (item) {
+            return {
+              record: item[0],
+              index: [i, item[1]],
+              overflow: false
+            };
+          }
         }
       }
     }

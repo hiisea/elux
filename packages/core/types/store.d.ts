@@ -42,7 +42,7 @@ export declare abstract class CoreRouter implements IRouter {
     abstract relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
     abstract push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
     abstract replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
-    abstract back(stepOrKey?: string | number, target?: RouteTarget, payload?: any, overflowRedirect?: string): void | Promise<void>;
+    abstract back(stepOrKeyOrCallback?: string | number | ((record: IRouteRecord) => boolean), target?: RouteTarget, payload?: any, overflowRedirect?: string | null): void | Promise<void>;
 }
 export declare class Store implements IStore {
     readonly sid: number;

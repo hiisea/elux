@@ -357,12 +357,12 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
     /**
      * 回退指定栈中的历史记录，并跳转路由
      *
-     * @param stepOrKey - 需要回退的步数或者历史记录ID
+     * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数
      * @param target - 指定要操作的历史栈，默认:`page`
      * @param payload - 提交给 {@link RouteRuntime} 的数据
      * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}
      */
-    back(stepOrKey?: number | string, target?: RouteTarget, payload?: any, overflowRedirect?: string): void | Promise<void>;
+    back(stepOrKeyOrCallback?: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, payload?: any, overflowRedirect?: string | null): void | Promise<void>;
 }
 /**
  * Model的基础定义

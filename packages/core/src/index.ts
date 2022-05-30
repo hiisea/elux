@@ -53,4 +53,4 @@ export type {
 } from './facade';
 export {BaseModel, exportModule, getApi} from './facade';
 export type {RenderOptions} from './app';
-export {buildApp, buildProvider, buildSSR} from './app';
+export {buildApp, buildProvider, buildSSR, getTplInSSR} from './app';

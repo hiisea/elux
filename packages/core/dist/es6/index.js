@@ -6,4 +6,4 @@ export { getComponent, getEntryComponent, getModule, getModuleApiMap, injectComp
 export { effect, effectLogger, EmptyModel, exportComponent, exportView, reducer, setLoading } from './module';
 export { CoreRouter, modelHotReplacement, Store } from './store';
 export { BaseModel, exportModule, getApi } from './facade';
-export { buildApp, buildProvider, buildSSR } from './app';
+export { buildApp, buildProvider, buildSSR, getTplInSSR } from './app';

@@ -24,4 +24,10 @@ export declare function buildProvider<INS = {}>(ins: INS, router: IRouter): Elux
 export declare function buildSSR<INS = {}>(ins: INS, router: IRouter, routerOptions: RouterInitOptions): INS & {
     render(options?: RenderOptions): Promise<string>;
 };
+/**
+ * 获取SSR页面模版
+ *
+ * @public
+ */
+export declare function getTplInSSR(): string;
 //# sourceMappingURL=app.d.ts.map

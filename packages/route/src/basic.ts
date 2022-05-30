@@ -7,6 +7,10 @@ import {Action, buildConfigSetter, coreConfig, Location, RouteAction} from '@elu
  */
 export const ErrorCodes = {
   /**
+   * 在路由被强制中断并返回时抛出该错误
+   */
+  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
+  /**
    * 在SSR服务器渲染时，操作路由跳转会抛出该错误
    */
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',

@@ -159,11 +159,11 @@ export class Router extends CoreRouter {
   }
 
   getHistoryLength(target: RouteTarget = 'page'): number {
-    return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+    return target === 'window' ? this.windowStack.getLength() - 1 : this.windowStack.getCurrentItem().getLength() - 1;
   }
 
   getHistory(target: RouteTarget = 'page'): IRouteRecord[] {
-    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
+    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
   }
 
   findRecordByKey(recordKey: string): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
@@ -242,7 +242,7 @@ export class Router extends CoreRouter {
       await store.mount(coreConfig.StageModuleName, 'init');
       await store.dispatch(testChangeAction(this.location, this.action));
     } catch (err) {
-      if (err.code === ErrorCodes.ROUTE_REDIRECT) {
+      if (err.code === ErrorCodes.ROUTE_RETURN || err.code === ErrorCodes.ROUTE_REDIRECT) {
         this.taskList = [];
         throw err;
       }
@@ -265,7 +265,13 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;
@@ -302,7 +308,13 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;
@@ -338,7 +350,13 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;
@@ -367,30 +385,39 @@ export class Router extends CoreRouter {
   }
 
   back(
-    stepOrKey: number | string = 1,
+    stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean) = 1,
     target: RouteTarget = 'page',
     payload: any = null,
-    overflowRedirect: string = '',
+    overflowRedirect: string | null = '',
     _nativeCaller = false
   ): Promise<void> {
-    if (!stepOrKey) {
+    if (!stepOrKeyOrCallback) {
       return Promise.resolve();
     }
-    this.redirectOnServer({url: overflowRedirect || routeConfig.HomeUrl});
+    if (overflowRedirect !== null) {
+      this.redirectOnServer({url: overflowRedirect || routeConfig.HomeUrl});
+    }
+    let stepOrKey: number | string;
+    if (typeof stepOrKeyOrCallback === 'function') {
+      const items = this.getHistory(target);
+      const i = items.findIndex(stepOrKeyOrCallback);
+      stepOrKey = i > -1 ? items[i].key : '';
+    } else {
+      stepOrKey = stepOrKeyOrCallback;
+    }
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   }
 
-  private async _back(stepOrKey: number | string, target: RouteTarget, payload: any, overflowRedirect: string, _nativeCaller: boolean) {
+  private async _back(stepOrKey: number | string, target: RouteTarget, payload: any, overflowRedirect: string | null, _nativeCaller: boolean) {
     const action = 'back';
     const {record, overflow, index} = this.windowStack.testBack(stepOrKey, target === 'window');
-    if (overflow) {
-      const url = overflowRedirect || routeConfig.HomeUrl;
-      this.relaunch({url}, 'window');
+    if (overflow || (!index[0] && !index[1])) {
+      if (overflowRedirect !== null) {
+        const url = overflowRedirect || routeConfig.HomeUrl;
+        this.relaunch({url}, 'window');
+      }
       const err: ActionError = {code: ErrorCodes.ROUTE_BACK_OVERFLOW, message: 'Overflowed on route backward.', detail: stepOrKey};
       throw setProcessedError(err, true);
-    }
-    if (!index[0] && !index[1]) {
-      throw 'Route backward invalid.';
     }
     const location = record.location;
     const title = record.title;
@@ -405,7 +432,13 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location, index);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;

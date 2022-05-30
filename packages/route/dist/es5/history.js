@@ -327,18 +327,20 @@ export var WindowStack = function (_HistoryStack2) {
   _proto4.findRecordByKey = function findRecordByKey(key) {
     var arr = key.split('_');
 
-    for (var i = 0, k = this.records.length; i < k; i++) {
-      var _pageStack4 = this.records[i];
+    if (arr[0] && arr[1]) {
+      for (var i = 0, k = this.records.length; i < k; i++) {
+        var _pageStack4 = this.records[i];
 
-      if (_pageStack4.key === arr[0]) {
-        var item = _pageStack4.findRecordByKey(key);
+        if (_pageStack4.key === arr[0]) {
+          var item = _pageStack4.findRecordByKey(key);
 
-        if (item) {
-          return {
-            record: item[0],
-            index: [i, item[1]],
-            overflow: false
-          };
+          if (item) {
+            return {
+              record: item[0],
+              index: [i, item[1]],
+              overflow: false
+            };
+          }
         }
       }
     }

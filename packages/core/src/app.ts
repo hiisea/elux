@@ -73,3 +73,12 @@ export function buildSSR<INS = {}>(
     },
   });
 }
+
+/**
+ * 获取SSR页面模版
+ *
+ * @public
+ */
+export function getTplInSSR(): string {
+  return coreConfig.SSRTPL;
+}

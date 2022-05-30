@@ -1302,8 +1302,12 @@ function buildSSR(ins, router, routerOptions) {
 
   });
 }
+function getTplInSSR() {
+  return coreConfig.SSRTPL;
+}
 
 const ErrorCodes = {
+  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
   ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
 };
@@ -1708,18 +1712,20 @@ class WindowStack extends HistoryStack {
   findRecordByKey(key) {
     const arr = key.split('_');
 
-    for (let i = 0, k = this.records.length; i < k; i++) {
-      const pageStack = this.records[i];
+    if (arr[0] && arr[1]) {
+      for (let i = 0, k = this.records.length; i < k; i++) {
+        const pageStack = this.records[i];
 
-      if (pageStack.key === arr[0]) {
-        const item = pageStack.findRecordByKey(key);
+        if (pageStack.key === arr[0]) {
+          const item = pageStack.findRecordByKey(key);
 
-        if (item) {
-          return {
-            record: item[0],
-            index: [i, item[1]],
-            overflow: false
-          };
+          if (item) {
+            return {
+              record: item[0],
+              index: [i, item[1]],
+              overflow: false
+            };
+          }
         }
       }
     }
@@ -1846,11 +1852,11 @@ class Router extends CoreRouter {
   }
 
   getHistoryLength(target = 'page') {
-    return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+    return target === 'window' ? this.windowStack.getLength() - 1 : this.windowStack.getCurrentItem().getLength() - 1;
   }
 
   getHistory(target = 'page') {
-    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
+    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
   }
 
   findRecordByKey(recordKey) {
@@ -1971,7 +1977,7 @@ class Router extends CoreRouter {
       await store.mount(coreConfig.StageModuleName, 'init');
       await store.dispatch(testChangeAction(this.location, this.action));
     } catch (err) {
-      if (err.code === ErrorCodes.ROUTE_REDIRECT) {
+      if (err.code === ErrorCodes.ROUTE_RETURN || err.code === ErrorCodes.ROUTE_REDIRECT) {
         this.taskList = [];
         throw err;
       }
@@ -2004,7 +2010,15 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;
@@ -2053,7 +2067,15 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;
@@ -2101,7 +2123,15 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;
@@ -2138,14 +2168,27 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  back(stepOrKey = 1, target = 'page', payload = null, overflowRedirect = '', _nativeCaller = false) {
-    if (!stepOrKey) {
+  back(stepOrKeyOrCallback = 1, target = 'page', payload = null, overflowRedirect = '', _nativeCaller = false) {
+    if (!stepOrKeyOrCallback) {
       return Promise.resolve();
     }
 
-    this.redirectOnServer({
-      url: overflowRedirect || routeConfig.HomeUrl
-    });
+    if (overflowRedirect !== null) {
+      this.redirectOnServer({
+        url: overflowRedirect || routeConfig.HomeUrl
+      });
+    }
+
+    let stepOrKey;
+
+    if (typeof stepOrKeyOrCallback === 'function') {
+      const items = this.getHistory(target);
+      const i = items.findIndex(stepOrKeyOrCallback);
+      stepOrKey = i > -1 ? items[i].key : '';
+    } else {
+      stepOrKey = stepOrKeyOrCallback;
+    }
+
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   }
 
@@ -2157,21 +2200,20 @@ class Router extends CoreRouter {
       index
     } = this.windowStack.testBack(stepOrKey, target === 'window');
 
-    if (overflow) {
-      const url = overflowRedirect || routeConfig.HomeUrl;
-      this.relaunch({
-        url
-      }, 'window');
+    if (overflow || !index[0] && !index[1]) {
+      if (overflowRedirect !== null) {
+        const url = overflowRedirect || routeConfig.HomeUrl;
+        this.relaunch({
+          url
+        }, 'window');
+      }
+
       const err = {
         code: ErrorCodes.ROUTE_BACK_OVERFLOW,
         message: 'Overflowed on route backward.',
         detail: stepOrKey
       };
       throw setProcessedError(err, true);
-    }
-
-    if (!index[0] && !index[1]) {
-      throw 'Route backward invalid.';
     }
 
     const location = record.location;
@@ -2191,7 +2233,15 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
     this.savePageTitle();
     this.location = location;
@@ -3363,4 +3413,4 @@ function createSSR(appConfig, routerOptions) {
   return buildSSR(app, router, routerOptions);
 }
 
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

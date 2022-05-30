@@ -53,3 +53,6 @@ export function buildSSR(ins, router, routerOptions) {
     }
   });
 }
+export function getTplInSSR() {
+  return coreConfig.SSRTPL;
+}

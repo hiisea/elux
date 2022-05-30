@@ -59,7 +59,7 @@ export declare class Router extends CoreRouter {
     private _replace;
     push(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _push;
-    back(stepOrKey?: number | string, target?: RouteTarget, payload?: any, overflowRedirect?: string, _nativeCaller?: boolean): Promise<void>;
+    back(stepOrKeyOrCallback?: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, payload?: any, overflowRedirect?: string | null, _nativeCaller?: boolean): Promise<void>;
     private _back;
 }
 //# sourceMappingURL=index.d.ts.map

@@ -13,6 +13,7 @@ export {
   exportModule,
   exportView,
   getApi,
+  getTplInSSR,
   injectModule,
   isServer,
   modelHotReplacement,
