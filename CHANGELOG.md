@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.2.1](https://github.com/hiisea/elux/compare/v2.2.0...v2.2.1) (2022-06-06)
+
+
+### Bug Fixes
+
+* vue开发小程序时路由初始化不触发 ([85810c0](https://github.com/hiisea/elux/commit/85810c0cd7c16d323dbb055f2eadc2b01109c4cb))
+
+
+
+
+
 # [2.2.0](https://github.com/hiisea/elux/compare/v2.1.0...v2.2.0) (2022-06-03)
 
 
