@@ -1,5 +1,6 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
 import { buildProvider, coreConfig, setCoreConfig } from '@elux/core';
+import { locationToUrl } from '@elux/route';
 import { createRouter } from '@elux/route-mp';
 import { onShow, taroHistory } from '@elux/taro';
 import { EWindow } from '@elux/vue-components';
@@ -53,12 +54,16 @@ export function createApp(appConfig, appOptions = {}) {
     const onLaunch = appOptions.onLaunch;
 
     appOptions.onLaunch = function (options) {
-      const router = createRouter(taroHistory);
-      buildProvider(cientSingleton, router);
+      const location = taroHistory.getLocation();
+      router.init({
+        url: locationToUrl(location)
+      }, {});
       onLaunch && onLaunch(options);
     };
 
     cientSingleton = createCSRApp(appOptions);
+    const router = createRouter(taroHistory);
+    buildProvider(cientSingleton, router);
   }
 
   return cientSingleton;

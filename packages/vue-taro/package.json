@@ -40,6 +40,7 @@
   "dependencies": {
     "@elux/app": "^2.2.0",
     "@elux/core": "^2.2.0",
+    "@elux/route": "^2.2.0",
     "@elux/route-mp": "^2.2.0",
     "@elux/taro": "^2.2.0",
     "@elux/vue-components": "^2.2.0"

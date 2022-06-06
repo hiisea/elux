@@ -1,23 +1,23 @@
 # 安装与配置
 
-Elux 项目基于 node，推荐使用较新的 node 环境（>=16.0.0）
+Elux 项目基于 node，推荐使用较新的 node 环境（>=14.0.0）
 
 ## 采用Cli命令安装
 
-### 安装 @elux/cli
+### 安装 @elux/cli-init
 
-首先，你需要使用 npm 或者 yarn 全局安装 @elux/cli
+首先，你需要使用 npm 或者 yarn 全局安装 @elux/cli-init
 
 ```bash
-npm install -g @elux/cli
+npm install -g @elux/cli-init
 ```
 
 ### 初始化新工程
 
-在终端中执行 `elux init` 即可开始新建工程向导
+在终端中执行 `elux-init` 即可开始新建工程向导
 
 ```bash
-elux init
+elux-init
 ? Enter the new project name ../new-project
 ```
 

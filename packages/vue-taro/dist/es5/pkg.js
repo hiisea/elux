@@ -4375,12 +4375,16 @@ function createApp(appConfig, appOptions) {
     var onLaunch = appOptions.onLaunch;
 
     appOptions.onLaunch = function (options) {
-      var router = createRouter(taroHistory);
-      buildProvider(cientSingleton, router);
+      var location = taroHistory.getLocation();
+      router.init({
+        url: locationToUrl(location)
+      }, {});
       onLaunch && onLaunch(options);
     };
 
     cientSingleton = createApp$1(appOptions);
+    var router = createRouter(taroHistory);
+    buildProvider(cientSingleton, router);
   }
 
   return cientSingleton;
