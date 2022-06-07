@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import {defineUserConfig} from 'vuepress';
 import {defaultTheme} from '@vuepress/theme-default';
 import {path} from '@vuepress/utils';
+import {defineUserConfig} from 'vuepress';
 
 export default defineUserConfig({
   shouldPrefetch: false,
@@ -71,6 +71,19 @@ export default defineUserConfig({
               {
                 text: '更新日志',
                 link: 'https://github.com/hiisea/elux/blob/main/CHANGELOG.md',
+              },
+            ],
+          },
+          {
+            text: `Git仓库`,
+            children: [
+              {
+                text: 'Github',
+                link: 'https://github.com/hiisea/elux',
+              },
+              {
+                text: 'Gitee',
+                link: 'https://gitee.com/hiisea/elux-fork',
               },
             ],
           },

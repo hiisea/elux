@@ -2,12 +2,12 @@
 import NavbarDropdown from '@theme/NavbarDropdown.vue';
 import {useRouteLocale, useSiteLocaleData} from '@vuepress/client';
 import {isLinkHttp, isString} from '@vuepress/shared';
+import {useNavLink, useThemeLocaleData} from '@vuepress/theme-default/lib/client/composables';
+import {resolveRepoType} from '@vuepress/theme-default/lib/client/utils';
+import type {NavbarGroup, NavbarItem, ResolvedNavbarItem} from '@vuepress/theme-default/lib/shared';
 import {computed} from 'vue';
 import type {ComputedRef} from 'vue';
 import {useRouter} from 'vue-router';
-import type {NavbarGroup, NavbarItem, ResolvedNavbarItem} from '@vuepress/theme-default/lib/shared';
-import {useNavLink, useThemeLocaleData} from '@vuepress/theme-default/lib/client/composables';
-import {resolveRepoType} from '@vuepress/theme-default/lib/client/utils';
 
 /**
  * Get navbar config of select language dropdown
@@ -125,7 +125,7 @@ const useNavbarConfig = (): ComputedRef<ResolvedNavbarItem[]> => {
 const navbarConfig = useNavbarConfig();
 const navbarSelectLanguage = useNavbarSelectLanguage();
 const navbarRepo = useNavbarRepo();
-const navbarLinks = computed(() => [...navbarConfig.value, ...navbarSelectLanguage.value, ...navbarRepo.value]);
+const navbarLinks = computed(() => [...navbarConfig.value, ...navbarSelectLanguage.value]);
 </script>
 
 <template>

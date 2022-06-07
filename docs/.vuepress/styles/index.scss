@@ -51,6 +51,9 @@
   .external-link span {
     display: none;
   }
+  .navbar-items > :last-child{
+    display: none;
+  }
 }
 
 .home {

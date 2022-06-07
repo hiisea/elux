@@ -1,5 +1,5 @@
 ---
-next: /guide/basics/summary.html
+next: /guide/basics/module.html
 ---
 
 # 项目配置

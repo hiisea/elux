@@ -1,7 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import {defineUserConfig} from 'vuepress';
+
 import {defaultTheme} from '@vuepress/theme-default';
 import {path} from '@vuepress/utils';
+import {defineUserConfig} from 'vuepress';
 
 export default defineUserConfig({
   shouldPrefetch: false,
@@ -73,6 +74,19 @@ export default defineUserConfig({
               },
             ],
           },
+          {
+            text: `Git仓库`,
+            children: [
+              {
+                text: 'Github',
+                link: 'https://github.com/hiisea/elux',
+              },
+              {
+                text: 'Gitee',
+                link: 'https://gitee.com/hiisea/elux-fork',
+              },
+            ],
+          },
         ],
         sidebarDepth: 0,
         sidebar: {
@@ -112,10 +126,6 @@ export default defineUserConfig({
                 {
                   text: '基础',
                   children: [
-                    {
-                      text: '概述',
-                      link: '/guide/basics/summary.html',
-                    },
                     {
                       text: 'Module',
                       link: '/guide/basics/module.html',
