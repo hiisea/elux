@@ -3,6 +3,7 @@
 import {defaultTheme} from '@vuepress/theme-default';
 import {path} from '@vuepress/utils';
 import {defineUserConfig} from 'vuepress';
+import {docsearchPlugin} from '@vuepress/plugin-docsearch';
 
 export default defineUserConfig({
   shouldPrefetch: false,
@@ -191,7 +192,7 @@ export default defineUserConfig({
                   ],
                 },
                 {
-                  text: '兼容浏览器',
+                  text: '兼容IE',
                   link: '/guide/demote.html',
                 },
                 {
@@ -226,4 +227,11 @@ export default defineUserConfig({
     '@theme/HomeFeatures.vue': path.resolve(__dirname, './components/HomeFeatures.vue'),
     '@theme/HomeFooter.vue': path.resolve(__dirname, './components/HomeFooter.vue'),
   },
+  plugins: [
+    docsearchPlugin({
+      appId: 'A09ELNUQMU',
+      apiKey: '29a5c02a23f21980ea4c07c22cfee0de',
+      indexName: 'elux',
+    }),
+  ],
 });

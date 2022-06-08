@@ -4,7 +4,7 @@ next: /guide/platform/ssr.html
 
 # 微前端与微模块
 
-微前端是一种泛称，Elux项目中使用颗粒度更小的`微模块`来实现微前端，设计思想参见：[微模块](/designed/micro-module.html)
+微前端是一种泛称，Elux项目中使用颗粒度更小的`微模块`来实现微前端，设计思想参见[微模块](/designed/micro-module.html)
 
 假设应用有A(`根模块`),B,C,D,E,F,G模块，由4个Team独立开发：
 
