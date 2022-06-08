@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import {Children, FC, ReactNode} from 'react';
 
 /**
  * 内置UI组件
@@ -22,17 +22,6 @@ export interface ElseProps {
   children: ReactNode;
 }
 
-const Component: React.FC<ElseProps> = ({children, elseView}) => {
-  const arr: ReactNode[] = [];
-  React.Children.forEach(children, (item) => {
-    item && arr.push(item);
-  });
-  if (arr.length > 0) {
-    return <>{arr}</>;
-  }
-  return <>{elseView}</>;
-};
-
 /**
  * 内置UI组件
  *
@@ -41,4 +30,15 @@ const Component: React.FC<ElseProps> = ({children, elseView}) => {
  *
  * @public
  */
-export const Else = React.memo(Component);
+export const Else: FC<ElseProps> = ({children, elseView}) => {
+  const arr: ReactNode[] = [];
+  Children.forEach(children, (item) => {
+    item && arr.push(item);
+  });
+  if (arr.length > 0) {
+    return <>{arr}</>;
+  }
+  return <>{elseView}</>;
+};
+
+Else.displayName = 'EluxElse';

@@ -89,9 +89,11 @@ export class HistoryStack {
 export class RouteRecord {
   constructor(location, pageStack) {
     this.key = void 0;
+    this.title = void 0;
     this.location = location;
     this.pageStack = pageStack;
     this.key = [pageStack.key, pageStack.id++].join('_');
+    this.title = '';
   }
 
   setActive() {
@@ -172,10 +174,10 @@ export class WindowStack extends HistoryStack {
     const item = this.getCurrentItem();
     const store = item.store;
     const record = item.getCurrentItem();
-    const url = record.location.url;
+    const location = record.location;
     return {
-      url,
-      store
+      store,
+      location
     };
   }
 
@@ -183,10 +185,10 @@ export class WindowStack extends HistoryStack {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const url = record.location.url;
+      const location = record.location;
       return {
-        url,
-        store
+        store,
+        location
       };
     });
   }
@@ -281,18 +283,20 @@ export class WindowStack extends HistoryStack {
   findRecordByKey(key) {
     const arr = key.split('_');
 
-    for (let i = 0, k = this.records.length; i < k; i++) {
-      const pageStack = this.records[i];
+    if (arr[0] && arr[1]) {
+      for (let i = 0, k = this.records.length; i < k; i++) {
+        const pageStack = this.records[i];
 
-      if (pageStack.key === arr[0]) {
-        const item = pageStack.findRecordByKey(key);
+        if (pageStack.key === arr[0]) {
+          const item = pageStack.findRecordByKey(key);
 
-        if (item) {
-          return {
-            record: item[0],
-            index: [i, item[1]],
-            overflow: false
-          };
+          if (item) {
+            return {
+              record: item[0],
+              index: [i, item[1]],
+              overflow: false
+            };
+          }
         }
       }
     }

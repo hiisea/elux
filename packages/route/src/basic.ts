@@ -7,6 +7,10 @@ import {Action, buildConfigSetter, coreConfig, Location, RouteAction} from '@elu
  */
 export const ErrorCodes = {
   /**
+   * 在路由被强制中断并返回时抛出该错误
+   */
+  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
+  /**
    * 在SSR服务器渲染时，操作路由跳转会抛出该错误
    */
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
@@ -54,13 +58,19 @@ export function urlToNativeUrl(eluxUrl: string): string {
  * @public
  */
 export function urlToLocation(url: string): Location {
-  const [path = '', search = '', hash = ''] = url.split(/[?#]/);
-  //const pathname = ('/' + path.split('//').pop()).replace(/\/(\/|$)/, '');
+  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
+  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
+  let search = query;
+  let classname = '';
+  if (arr) {
+    classname = arr[2];
+    search = (arr[1] + arr[3]).substr(1);
+  }
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {parse} = routeConfig.QueryString;
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
-  return {url: `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`, pathname, search, hash, searchQuery, hashQuery};
+  return {url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`, pathname, search, hash, classname, searchQuery, hashQuery};
 }
 
 /**
@@ -68,16 +78,20 @@ export function urlToLocation(url: string): Location {
  *
  * @public
  */
-export function locationToUrl({url, pathname, search, hash, searchQuery, hashQuery}: Partial<Location>): string {
+export function locationToUrl({url, pathname, search, hash, classname, searchQuery, hashQuery}: Partial<Location>): string {
   if (url) {
     [pathname, search, hash] = url.split(/[?#]/);
   }
-  //pathname = ('/' + (pathname || '').split('//').pop()).replace(/\/(\/|$)/, '');
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
   const {stringify} = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+  if (classname) {
+    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return url;
 }
 
 /**
@@ -161,7 +175,7 @@ export const routeConfig: RouteConfig = {
   },
   NativePathnameMapping: {
     in: (pathname: string) => (pathname === '/' ? routeConfig.HomeUrl : pathname),
-    out: (pathname: string) => (pathname === routeConfig.HomeUrl ? '/' : pathname),
+    out: (pathname: string) => pathname,
   },
 };
 

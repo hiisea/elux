@@ -1,4 +1,4 @@
-import {Comment, FunctionalComponent, Fragment, h, VNode} from 'vue';
+import {Comment, Fragment, FunctionalComponent, h, VNode} from 'vue';
 
 /**
  * 内置UI组件
@@ -47,3 +47,5 @@ export const Else: FunctionalComponent<ElseProps> = function (
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 } as any;
+
+Else.displayName = 'EluxElse';

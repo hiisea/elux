@@ -1,5 +1,3 @@
-import {useEffect, useRef, useState} from 'react';
-
 import {AppConfig} from '@elux/app';
 import {buildProvider, coreConfig, getClientRouter, IStore, setCoreConfig, UNListener} from '@elux/core';
 import {EWindow} from '@elux/react-components';
@@ -8,6 +6,7 @@ import {locationToUrl} from '@elux/route';
 import {createRouter} from '@elux/route-mp';
 import {onShow, taroHistory} from '@elux/taro';
 import {useDidHide, useDidShow} from '@tarojs/taro';
+import {useEffect, useRef, useState} from 'react';
 
 export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';

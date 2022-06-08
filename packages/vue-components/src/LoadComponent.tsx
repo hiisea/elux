@@ -1,6 +1,5 @@
-import {h, defineComponent, onBeforeUnmount, shallowRef} from 'vue';
-
 import {coreConfig, env, ILoadComponent, injectComponent, isPromise, IStore} from '@elux/core';
+import {defineComponent, h, onBeforeUnmount, shallowRef} from 'vue';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
   <div class="g-component-error">{message}</div>
@@ -12,6 +11,7 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
   const OnError = options.onError || coreConfig.LoadComponentOnError!;
 
   const component: Elux.Component<any> = defineComponent({
+    name: 'EluxComponentLoader',
     setup(props: any, context: any) {
       const store = coreConfig.UseStore!();
       const View = shallowRef<Elux.Component<any> | string>(OnLoading);

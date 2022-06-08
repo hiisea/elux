@@ -95,9 +95,11 @@ export var HistoryStack = function () {
 export var RouteRecord = function () {
   function RouteRecord(location, pageStack) {
     this.key = void 0;
+    this.title = void 0;
     this.location = location;
     this.pageStack = pageStack;
     this.key = [pageStack.key, pageStack.id++].join('_');
+    this.title = '';
   }
 
   var _proto2 = RouteRecord.prototype;
@@ -205,10 +207,10 @@ export var WindowStack = function (_HistoryStack2) {
     var item = this.getCurrentItem();
     var store = item.store;
     var record = item.getCurrentItem();
-    var url = record.location.url;
+    var location = record.location;
     return {
-      url: url,
-      store: store
+      store: store,
+      location: location
     };
   };
 
@@ -216,10 +218,10 @@ export var WindowStack = function (_HistoryStack2) {
     return this.records.map(function (item) {
       var store = item.store;
       var record = item.getCurrentItem();
-      var url = record.location.url;
+      var location = record.location;
       return {
-        url: url,
-        store: store
+        store: store,
+        location: location
       };
     });
   };
@@ -325,18 +327,20 @@ export var WindowStack = function (_HistoryStack2) {
   _proto4.findRecordByKey = function findRecordByKey(key) {
     var arr = key.split('_');
 
-    for (var i = 0, k = this.records.length; i < k; i++) {
-      var _pageStack4 = this.records[i];
+    if (arr[0] && arr[1]) {
+      for (var i = 0, k = this.records.length; i < k; i++) {
+        var _pageStack4 = this.records[i];
 
-      if (_pageStack4.key === arr[0]) {
-        var item = _pageStack4.findRecordByKey(key);
+        if (_pageStack4.key === arr[0]) {
+          var item = _pageStack4.findRecordByKey(key);
 
-        if (item) {
-          return {
-            record: item[0],
-            index: [i, item[1]],
-            overflow: false
-          };
+          if (item) {
+            return {
+              record: item[0],
+              index: [i, item[1]],
+              overflow: false
+            };
+          }
         }
       }
     }

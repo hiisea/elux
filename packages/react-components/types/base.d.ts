@@ -1,6 +1,5 @@
-import React from 'react';
 import { EluxContext, IRouter } from '@elux/core';
-export declare const EluxContextComponent: React.Context<EluxContext>;
+export declare const EluxContextComponent: import("react").Context<EluxContext>;
 export declare function UseRouter(): IRouter;
 export declare const reactComponentsConfig: {
     hydrate?: (component: any, container: any) => void;

@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
+import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 
 let root;
@@ -316,6 +316,9 @@ function getInitActionType(moduleName) {
   return moduleName + coreConfig.NSP + '_initState';
 }
 
+function moduleExists(moduleName) {
+  return !!coreConfig.ModuleGetter[moduleName];
+}
 function getModule(moduleName) {
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName];
@@ -917,9 +920,17 @@ class Store {
       if (isPromise(result)) {
         mountedModules[moduleName] = result.then(() => {
           mountedModules[moduleName] = true;
+
+          if (this.active) {
+            injectedModels[moduleName].onActive();
+          }
         }, errorCallback);
       } else {
         mountedModules[moduleName] = true;
+
+        if (this.active) {
+          injectedModels[moduleName].onActive();
+        }
       }
     }
 
@@ -1208,7 +1219,17 @@ let BaseModel = (_class = class BaseModel {
   }
 
   getPrivateActions(actionsMap) {
-    return MetaData.moduleApiMap[this.moduleName].actions;
+    const moduleName = this.moduleName;
+    const privateActions = Object.keys(actionsMap);
+    privateActions.push('_initState', '_updateState', '_loadingState');
+    return privateActions.reduce((map, actionName) => {
+      map[actionName] = (...payload) => ({
+        type: moduleName + coreConfig.NSP + actionName,
+        payload
+      });
+
+      return map;
+    }, {});
   }
 
   getCurrentAction() {
@@ -1237,12 +1258,15 @@ let BaseModel = (_class = class BaseModel {
 function buildProvider(ins, router) {
   const AppRender = coreConfig.AppRender;
   return AppRender.toProvider({
-    router,
-    documentHead: ''
+    router
   }, ins);
+}
+function getTplInSSR() {
+  return coreConfig.SSRTPL;
 }
 
 const ErrorCodes = {
+  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
   ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
 };
@@ -1257,7 +1281,16 @@ function urlToNativeUrl(eluxUrl) {
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 function urlToLocation(url) {
-  const [path = '', search = '', hash = ''] = url.split(/[?#]/);
+  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
+  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
+  let search = query;
+  let classname = '';
+
+  if (arr) {
+    classname = arr[2];
+    search = (arr[1] + arr[3]).substr(1);
+  }
+
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {
     parse
@@ -1265,10 +1298,11 @@ function urlToLocation(url) {
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
   return {
-    url: `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`,
+    url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`,
     pathname,
     search,
     hash,
+    classname,
     searchQuery,
     hashQuery
   };
@@ -1278,6 +1312,7 @@ function locationToUrl({
   pathname,
   search,
   hash,
+  classname,
   searchQuery,
   hashQuery
 }) {
@@ -1290,8 +1325,15 @@ function locationToUrl({
     stringify
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+
+  if (classname) {
+    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return url;
 }
 function locationToNativeLocation(location) {
   const pathname = routeConfig.NativePathnameMapping.out(location.pathname);
@@ -1339,7 +1381,7 @@ const routeConfig = {
   },
   NativePathnameMapping: {
     in: pathname => pathname === '/' ? routeConfig.HomeUrl : pathname,
-    out: pathname => pathname === routeConfig.HomeUrl ? '/' : pathname
+    out: pathname => pathname
   }
 };
 const setRouteConfig = buildConfigSetter(routeConfig);
@@ -1435,9 +1477,11 @@ class HistoryStack {
 class RouteRecord {
   constructor(location, pageStack) {
     this.key = void 0;
+    this.title = void 0;
     this.location = location;
     this.pageStack = pageStack;
     this.key = [pageStack.key, pageStack.id++].join('_');
+    this.title = '';
   }
 
   setActive() {
@@ -1518,10 +1562,10 @@ class WindowStack extends HistoryStack {
     const item = this.getCurrentItem();
     const store = item.store;
     const record = item.getCurrentItem();
-    const url = record.location.url;
+    const location = record.location;
     return {
-      url,
-      store
+      store,
+      location
     };
   }
 
@@ -1529,10 +1573,10 @@ class WindowStack extends HistoryStack {
     return this.records.map(item => {
       const store = item.store;
       const record = item.getCurrentItem();
-      const url = record.location.url;
+      const location = record.location;
       return {
-        url,
-        store
+        store,
+        location
       };
     });
   }
@@ -1627,18 +1671,20 @@ class WindowStack extends HistoryStack {
   findRecordByKey(key) {
     const arr = key.split('_');
 
-    for (let i = 0, k = this.records.length; i < k; i++) {
-      const pageStack = this.records[i];
+    if (arr[0] && arr[1]) {
+      for (let i = 0, k = this.records.length; i < k; i++) {
+        const pageStack = this.records[i];
 
-      if (pageStack.key === arr[0]) {
-        const item = pageStack.findRecordByKey(key);
+        if (pageStack.key === arr[0]) {
+          const item = pageStack.findRecordByKey(key);
 
-        if (item) {
-          return {
-            record: item[0],
-            index: [i, item[1]],
-            overflow: false
-          };
+          if (item) {
+            return {
+              record: item[0],
+              index: [i, item[1]],
+              overflow: false
+            };
+          }
         }
       }
     }
@@ -1698,12 +1744,14 @@ class BaseNativeRouter {
   }
 
 }
+let clientDocumentHeadTimer = 0;
 class Router extends CoreRouter {
   constructor(nativeRouter) {
     super();
     this.curTask = void 0;
     this.taskList = [];
     this.windowStack = void 0;
+    this.documentHead = '';
 
     this.onTaskComplete = () => {
       const task = this.taskList.shift();
@@ -1733,23 +1781,49 @@ class Router extends CoreRouter {
     });
   }
 
+  getDocumentHead() {
+    return this.documentHead;
+  }
+
+  setDocumentHead(html) {
+    this.documentHead = html;
+
+    if (!env.isServer && !clientDocumentHeadTimer) {
+      clientDocumentHeadTimer = env.setTimeout(() => {
+        clientDocumentHeadTimer = 0;
+        const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+
+        if (arr[1]) {
+          coreConfig.SetPageTitle(arr[1]);
+        }
+      }, 0);
+    }
+  }
+
+  savePageTitle() {
+    const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+    const title = arr[1] || '';
+    this.windowStack.getCurrentItem().getCurrentItem().title = title;
+  }
+
   nativeInitiated() {
     return !this.nativeRouter.routeKey;
   }
 
   getHistoryLength(target = 'page') {
-    return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+    return target === 'window' ? this.windowStack.getLength() - 1 : this.windowStack.getCurrentItem().getLength() - 1;
   }
 
   getHistory(target = 'page') {
-    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
+    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
   }
 
   findRecordByKey(recordKey) {
     const {
       record: {
         key,
-        location
+        location,
+        title
       },
       overflow,
       index
@@ -1759,7 +1833,8 @@ class Router extends CoreRouter {
       index,
       record: {
         key,
-        location
+        location,
+        title
       }
     };
   }
@@ -1768,7 +1843,8 @@ class Router extends CoreRouter {
     const {
       record: {
         key,
-        location
+        location,
+        title
       },
       overflow,
       index
@@ -1778,7 +1854,8 @@ class Router extends CoreRouter {
       index,
       record: {
         key,
-        location
+        location,
+        title
       }
     };
   }
@@ -1814,9 +1891,9 @@ class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
-  redirectOnServer(urlOrLocation) {
+  redirectOnServer(partialLocation) {
     if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const url = locationToUrl(partialLocation);
       const nativeUrl = urlToNativeUrl(url);
       const err = {
         code: ErrorCodes.ROUTE_REDIRECT,
@@ -1832,6 +1909,7 @@ class Router extends CoreRouter {
 
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
@@ -1858,7 +1936,7 @@ class Router extends CoreRouter {
       await store.mount(coreConfig.StageModuleName, 'init');
       await store.dispatch(testChangeAction(this.location, this.action));
     } catch (err) {
-      if (err.code === ErrorCodes.ROUTE_REDIRECT) {
+      if (err.code === ErrorCodes.ROUTE_RETURN || err.code === ErrorCodes.ROUTE_REDIRECT) {
         this.taskList = [];
         throw err;
       }
@@ -1876,14 +1954,14 @@ class Router extends CoreRouter {
     });
   }
 
-  relaunch(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _relaunch(urlOrLocation, target, payload, _nativeCaller) {
+  async _relaunch(partialLocation, target, payload, _nativeCaller) {
     const action = 'relaunch';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -1891,8 +1969,17 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -1924,14 +2011,14 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  replace(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _replace(urlOrLocation, target, payload, _nativeCaller) {
+  async _replace(partialLocation, target, payload, _nativeCaller) {
     const action = 'replace';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -1939,8 +2026,17 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -1971,14 +2067,14 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(urlOrLocation, target = 'page', payload = null, _nativeCaller = false) {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  push(partialLocation, target = 'page', payload = null, _nativeCaller = false) {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  async _push(urlOrLocation, target, payload, _nativeCaller) {
+  async _push(partialLocation, target, payload, _nativeCaller) {
     const action = 'push';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -1986,8 +2082,17 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -2022,14 +2127,27 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  back(stepOrKey = 1, target = 'page', payload = null, overflowRedirect = '', _nativeCaller = false) {
-    if (!stepOrKey) {
+  back(stepOrKeyOrCallback = 1, target = 'page', payload = null, overflowRedirect = '', _nativeCaller = false) {
+    if (!stepOrKeyOrCallback) {
       return Promise.resolve();
     }
 
-    this.redirectOnServer({
-      url: overflowRedirect || routeConfig.HomeUrl
-    });
+    if (overflowRedirect !== null) {
+      this.redirectOnServer({
+        url: overflowRedirect || routeConfig.HomeUrl
+      });
+    }
+
+    let stepOrKey;
+
+    if (typeof stepOrKeyOrCallback === 'function') {
+      const items = this.getHistory(target);
+      const i = items.findIndex(stepOrKeyOrCallback);
+      stepOrKey = i > -1 ? items[i].key : '';
+    } else {
+      stepOrKey = stepOrKeyOrCallback;
+    }
+
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   }
 
@@ -2041,11 +2159,14 @@ class Router extends CoreRouter {
       index
     } = this.windowStack.testBack(stepOrKey, target === 'window');
 
-    if (overflow) {
-      const url = overflowRedirect || routeConfig.HomeUrl;
-      this.relaunch({
-        url
-      }, 'window');
+    if (overflow || !index[0] && !index[1]) {
+      if (overflowRedirect !== null) {
+        const url = overflowRedirect || routeConfig.HomeUrl;
+        this.relaunch({
+          url
+        }, 'window');
+      }
+
       const err = {
         code: ErrorCodes.ROUTE_BACK_OVERFLOW,
         message: 'Overflowed on route backward.',
@@ -2054,11 +2175,8 @@ class Router extends CoreRouter {
       throw setProcessedError(err, true);
     }
 
-    if (!index[0] && !index[1]) {
-      throw 'Route backward invalid.';
-    }
-
     const location = record.location;
+    const title = record.title;
     const NotifyNativeRouter = [];
 
     if (index[0]) {
@@ -2074,8 +2192,17 @@ class Router extends CoreRouter {
     }
 
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
+
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     this.routeKey = record.key;
@@ -2103,6 +2230,7 @@ class Router extends CoreRouter {
       await this.nativeRouter.execute(action, location, record.key, index);
     }
 
+    this.setDocumentHead(`<title>${title}</title>`);
     await this.dispatch({
       location,
       action,
@@ -2144,7 +2272,7 @@ class MPNativeRouter extends BaseNativeRouter {
           const url = nativeUrlToUrl(nativeUrl);
 
           if (action === 'POP') {
-            const arr = search.match(/__=(\w+)/);
+            const arr = `?${search}`.match(/[?&]__k=(\w+)/);
             key = arr ? arr[1] : '';
 
             if (!key) {
@@ -2173,7 +2301,7 @@ class MPNativeRouter extends BaseNativeRouter {
   }
 
   addKey(url, key) {
-    return url.indexOf('?') > -1 ? `${url}&__=${key}` : `${url}?__=${key}`;
+    return url.indexOf('?') > -1 ? `${url.replace(/[?&]__k=(\w+)/, '')}&__k=${key}` : `${url}?__k=${key}`;
   }
 
   init(location, key) {
@@ -2456,6 +2584,8 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
   const component = defineComponent({
+    name: 'EluxComponentLoader',
+
     setup(props, context) {
       const store = coreConfig.UseStore();
       const View = shallowRef(OnLoading);
@@ -2505,6 +2635,7 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
 };
 
 const EWindow = defineComponent({
+  name: 'EluxWindow',
   props: {
     store: {
       type: Object,
@@ -2524,10 +2655,12 @@ const EWindow = defineComponent({
 });
 
 defineComponent({
+  name: 'EluxRouter',
+
   setup() {
     const router = coreConfig.UseRouter();
     const data = shallowRef({
-      classname: 'elux-app',
+      className: 'elux-app',
       pages: router.getCurrentPages().reverse()
     });
     const containerRef = ref({
@@ -2542,7 +2675,7 @@ defineComponent({
         if (windowChanged) {
           if (action === 'push') {
             data.value = {
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              className: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
               pages
             };
             env.setTimeout(() => {
@@ -2554,7 +2687,7 @@ defineComponent({
             }, 400);
           } else if (action === 'back') {
             data.value = {
-              classname: 'elux-app ' + Date.now(),
+              className: 'elux-app ' + Date.now(),
               pages: [...pages, data.value.pages[data.value.pages.length - 1]]
             };
             env.setTimeout(() => {
@@ -2562,21 +2695,21 @@ defineComponent({
             }, 100);
             env.setTimeout(() => {
               data.value = {
-                classname: 'elux-app ' + Date.now(),
+                className: 'elux-app ' + Date.now(),
                 pages
               };
               completeCallback();
             }, 400);
           } else if (action === 'relaunch') {
             data.value = {
-              classname: 'elux-app',
+              className: 'elux-app',
               pages
             };
             env.setTimeout(completeCallback, 50);
           }
         } else {
           data.value = {
-            classname: 'elux-app',
+            className: 'elux-app',
             pages
           };
           env.setTimeout(completeCallback, 50);
@@ -2588,23 +2721,32 @@ defineComponent({
     });
     return () => {
       const {
-        classname,
+        className,
         pages
       } = data.value;
       return createVNode("div", {
         "ref": containerRef,
-        "class": classname
-      }, [pages.map(item => {
+        "class": className
+      }, [pages.map((item, index) => {
         const {
           store,
-          url
+          location: {
+            url,
+            classname
+          }
         } = item;
-        return createVNode("div", {
-          "key": store.sid,
-          "data-sid": store.sid,
-          "class": "elux-window",
-          "data-url": url
-        }, [createVNode(EWindow, {
+        const props = {
+          class: `elux-window${classname ? ' ' + classname : ''}`,
+          key: store.sid,
+          sid: store.sid,
+          url,
+          style: {
+            zIndex: index + 1
+          }
+        };
+        return classname.startsWith('_') ? createVNode("article", props, [createVNode(EWindow, {
+          "store": store
+        }, null)]) : createVNode("div", props, [createVNode(EWindow, {
           "store": store
         }, null)]);
       })]);
@@ -2613,74 +2755,29 @@ defineComponent({
 
 });
 
-let clientTimer = 0;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(() => {
-      clientTimer = 0;
-      const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
 const DocumentHead = defineComponent({
-  props: {
-    title: {
-      type: String
-    },
-    html: {
-      type: String
-    }
-  },
+  name: 'EluxDocumentHead',
+  props: ['title', 'html'],
 
-  data() {
-    return {
-      eluxContext: inject(EluxContextKey, {}),
-      raw: ''
+  setup(props) {
+    const documentHead = computed(() => {
+      let documentHead = props.html || '';
+
+      if (props.title) {
+        if (/<title>.*?<\/title>/.test(documentHead)) {
+          documentHead = documentHead.replace(/<title>.*?<\/title>/, `<title>${props.title}</title>`);
+        } else {
+          documentHead = `<title>${props.title}</title>` + documentHead;
+        }
+      }
+
+      return documentHead;
+    });
+    const router = coreConfig.UseRouter();
+    return () => {
+      router.setDocumentHead(documentHead.value);
+      return null;
     };
-  },
-
-  computed: {
-    headText() {
-      const title = this.title || '';
-      let html = this.html || '';
-      const eluxContext = this.eluxContext;
-
-      if (!html) {
-        html = eluxContext.documentHead || '<title>Elux</title>';
-      }
-
-      if (title) {
-        return html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-      }
-
-      return html;
-    }
-
-  },
-
-  mounted() {
-    this.raw = this.eluxContext.documentHead;
-    setClientHead(this.eluxContext, this.headText);
-  },
-
-  unmounted() {
-    setClientHead(this.eluxContext, this.raw);
-  },
-
-  render() {
-    if (env.isServer) {
-      this.eluxContext.documentHead = this.headText;
-    }
-
-    return null;
   }
 
 });
@@ -2700,6 +2797,7 @@ const Switch = function (props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Switch.displayName = 'EluxSwitch';
 
 const Else = function (props, context) {
   const arr = [];
@@ -2716,49 +2814,94 @@ const Else = function (props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Else.displayName = 'EluxElse';
 
-const Link = function ({
-  onClick: _onClick,
-  disabled,
-  to = '',
-  target = 'page',
-  action = 'push',
-  ...props
-}, context) {
-  const router = coreConfig.UseRouter();
+const Link = defineComponent({
+  name: 'EluxLink',
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
 
-  const onClick = event => {
-    event.preventDefault();
+  setup(props, context) {
+    const route = computed(() => {
+      const {
+        to = '',
+        action = 'push',
+        classname = ''
+      } = props;
+      let back;
+      let url;
+      let href;
 
-    if (!disabled) {
-      _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {
-        url: to
-      }, target);
-    }
-  };
+      if (action === 'back') {
+        back = to || 1;
+      } else {
+        url = classname ? locationToUrl({
+          url: to.toString(),
+          classname
+        }) : to.toString();
+        href = urlToNativeUrl(url);
+      }
 
-  props['onClick'] = onClick;
-  props['action'] = action;
-  props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  let href = action !== 'back' ? to : '';
+      return {
+        back,
+        url,
+        href
+      };
+    });
+    const router = coreConfig.UseRouter();
 
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
+    const onClick = event => {
+      event.preventDefault();
+      const {
+        back,
+        url
+      } = route.value;
+      const {
+        disabled,
+        onClick,
+        action = 'push',
+        target = 'page',
+        payload
+      } = props;
+
+      if (!disabled) {
+        onClick && onClick(event);
+        router[action](back || {
+          url
+        }, target, payload);
+      }
+    };
+
+    return () => {
+      const {
+        back,
+        url,
+        href
+      } = route.value;
+      const {
+        disabled,
+        action = 'push',
+        target = 'page',
+        classname = ''
+      } = props;
+      const linkProps = {};
+      linkProps['onClick'] = onClick;
+      linkProps['action'] = action;
+      linkProps['target'] = target;
+      linkProps['to'] = (back || url) + '';
+      linkProps['href'] = href;
+      href && (linkProps['href'] = href);
+      classname && (linkProps['classname'] = classname);
+      disabled && (linkProps['disabled'] = true);
+
+      if (coreConfig.Platform === 'taro') {
+        return h('span', linkProps, context.slots);
+      } else {
+        return h('a', linkProps, context.slots);
+      }
+    };
   }
 
-  props['href'] = href;
-
-  if (coreConfig.Platform === 'taro') {
-    return h('span', props, context.slots.default());
-  } else {
-    return h('a', props, context.slots.default());
-  }
-};
+});
 
 setCoreConfig({
   MutableData: true,
@@ -2839,15 +2982,19 @@ function createApp(appConfig, appOptions = {}) {
     const onLaunch = appOptions.onLaunch;
 
     appOptions.onLaunch = function (options) {
-      const router = createRouter(taroHistory);
-      buildProvider(cientSingleton, router);
+      const location = taroHistory.getLocation();
+      router.init({
+        url: locationToUrl(location)
+      }, {});
       onLaunch && onLaunch(options);
     };
 
     cientSingleton = createApp$1(appOptions);
+    const router = createRouter(taroHistory);
+    buildProvider(cientSingleton, router);
   }
 
   return cientSingleton;
 }
 
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, createApp, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, createApp, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

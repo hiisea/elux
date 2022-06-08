@@ -1,5 +1,5 @@
-import React from 'react';
 import { RouteAction, RouteTarget } from '@elux/core';
+import { FC, HTMLAttributes, MouseEvent } from 'react';
 /**
  * 内置UI组件
  *
@@ -13,19 +13,19 @@ import { RouteAction, RouteTarget } from '@elux/core';
  *
  * @public
  */
-export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
+    /**
+     * 指定跳转的url或后退步数
+     */
+    to: number | string;
     /**
      * 如果disabled将不执行路由及onClick事件
      */
     disabled?: boolean;
     /**
-     * 指定跳转的url或后退步数
-     */
-    to?: string;
-    /**
      * 点击事件
      */
-    onClick?(event: React.MouseEvent): void;
+    onClick?(event: MouseEvent): void;
     /**
      * 路由跳转动作
      */
@@ -34,6 +34,14 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
      * 指定要操作的历史栈
      */
     target?: RouteTarget;
+    /**
+     * 本次路由传值
+     */
+    payload?: any;
+    /**
+     * 指定路由窗口的class
+     */
+    classname?: string;
 }
 /**
  * 内置UI组件
@@ -43,5 +51,5 @@ export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
  *
  * @public
  */
-export declare const Link: React.ForwardRefExoticComponent<LinkProps & React.RefAttributes<HTMLAnchorElement>>;
+export declare const Link: FC<LinkProps>;
 //# sourceMappingURL=Link.d.ts.map

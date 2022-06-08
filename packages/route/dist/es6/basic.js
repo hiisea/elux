@@ -1,5 +1,6 @@
 import { buildConfigSetter, coreConfig } from '@elux/core';
 export const ErrorCodes = {
+  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
   ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
   ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
 };
@@ -14,7 +15,16 @@ export function urlToNativeUrl(eluxUrl) {
   return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
 }
 export function urlToLocation(url) {
-  const [path = '', search = '', hash = ''] = url.split(/[?#]/);
+  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
+  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
+  let search = query;
+  let classname = '';
+
+  if (arr) {
+    classname = arr[2];
+    search = (arr[1] + arr[3]).substr(1);
+  }
+
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {
     parse
@@ -22,10 +32,11 @@ export function urlToLocation(url) {
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
   return {
-    url: `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`,
+    url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`,
     pathname,
     search,
     hash,
+    classname,
     searchQuery,
     hashQuery
   };
@@ -35,6 +46,7 @@ export function locationToUrl({
   pathname,
   search,
   hash,
+  classname,
   searchQuery,
   hashQuery
 }) {
@@ -47,8 +59,15 @@ export function locationToUrl({
     stringify
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+
+  if (classname) {
+    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return url;
 }
 export function locationToNativeLocation(location) {
   const pathname = routeConfig.NativePathnameMapping.out(location.pathname);
@@ -96,7 +115,7 @@ export const routeConfig = {
   },
   NativePathnameMapping: {
     in: pathname => pathname === '/' ? routeConfig.HomeUrl : pathname,
-    out: pathname => pathname === routeConfig.HomeUrl ? '/' : pathname
+    out: pathname => pathname
   }
 };
 export const setRouteConfig = buildConfigSetter(routeConfig);

@@ -1,45 +1,89 @@
-import { h } from 'vue';
 import { coreConfig } from '@elux/core';
-import { urlToNativeUrl } from '@elux/route';
-export const Link = function ({
-  onClick: _onClick,
-  disabled,
-  to = '',
-  target = 'page',
-  action = 'push',
-  ...props
-}, context) {
-  const router = coreConfig.UseRouter();
+import { locationToUrl, urlToNativeUrl } from '@elux/route';
+import { computed, defineComponent, h } from 'vue';
+export const Link = defineComponent({
+  name: 'EluxLink',
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
 
-  const onClick = event => {
-    event.preventDefault();
+  setup(props, context) {
+    const route = computed(() => {
+      const {
+        to = '',
+        action = 'push',
+        classname = ''
+      } = props;
+      let back;
+      let url;
+      let href;
 
-    if (!disabled) {
-      _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {
-        url: to
-      }, target);
-    }
-  };
+      if (action === 'back') {
+        back = to || 1;
+      } else {
+        url = classname ? locationToUrl({
+          url: to.toString(),
+          classname
+        }) : to.toString();
+        href = urlToNativeUrl(url);
+      }
 
-  props['onClick'] = onClick;
-  props['action'] = action;
-  props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  let href = action !== 'back' ? to : '';
+      return {
+        back,
+        url,
+        href
+      };
+    });
+    const router = coreConfig.UseRouter();
 
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
+    const onClick = event => {
+      event.preventDefault();
+      const {
+        back,
+        url
+      } = route.value;
+      const {
+        disabled,
+        onClick,
+        action = 'push',
+        target = 'page',
+        payload
+      } = props;
+
+      if (!disabled) {
+        onClick && onClick(event);
+        router[action](back || {
+          url
+        }, target, payload);
+      }
+    };
+
+    return () => {
+      const {
+        back,
+        url,
+        href
+      } = route.value;
+      const {
+        disabled,
+        action = 'push',
+        target = 'page',
+        classname = ''
+      } = props;
+      const linkProps = {};
+      linkProps['onClick'] = onClick;
+      linkProps['action'] = action;
+      linkProps['target'] = target;
+      linkProps['to'] = (back || url) + '';
+      linkProps['href'] = href;
+      href && (linkProps['href'] = href);
+      classname && (linkProps['classname'] = classname);
+      disabled && (linkProps['disabled'] = true);
+
+      if (coreConfig.Platform === 'taro') {
+        return h('span', linkProps, context.slots);
+      } else {
+        return h('a', linkProps, context.slots);
+      }
+    };
   }
 
-  props['href'] = href;
-
-  if (coreConfig.Platform === 'taro') {
-    return h('span', props, context.slots.default());
-  } else {
-    return h('a', props, context.slots.default());
-  }
-};
+});

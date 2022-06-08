@@ -2930,7 +2930,7 @@
             },
             {
               "kind": "Content",
-              "text": "{\n    ROUTE_REDIRECT: string;\n    ROUTE_BACK_OVERFLOW: string;\n}"
+              "text": "{\n    ROUTE_RETURN: string;\n    ROUTE_REDIRECT: string;\n    ROUTE_BACK_OVERFLOW: string;\n}"
             }
           ],
           "releaseTag": "Public",
@@ -3400,7 +3400,7 @@
         {
           "kind": "Function",
           "canonicalReference": "@elux/vue-web!getApi:function(1)",
-          "docComment": "/**\n * 获取应用全局方法\n *\n * @remarks\n *\n * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参\n *\n * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @param injectActions - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`\n *\n * @returns 返回包含多个全局方法的结构体：\n *\n * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。\n *\n * - `GetComponent`：用于获取其它模块导出的{@link exportView | UI组件}，参见 {@link IGetComponent}。\n *\n * - `GetData`：用于获取其它模块导出的{@link exportModule | Data}，参见 {@link IGetData}。\n *\n * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：\n * ```js\n *   dispatch(Modules.article.actions.refresh())\n * ```\n *\n * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：\n * ```js\n *   dispatch(Modules.a.actions.a1())\n *   dispatch(Modules.b.actions.b1())\n * ```\n *\n * 这种写法可以简化为：\n * ```js\n *   const {a, b} = GetActions('a', 'b')\n *   dispatch(a.a1())\n *   dispatch(b.b1())\n * ```\n *\n * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。\n *\n * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：\n * ```js\n *   const globalRouter = GetClientRouter()\n *   const currentRouter = useRouter()\n *   console.log(blobalRouter===currentRouter)\n * ```\n *\n * - `useStore`：用于在 UI Render 中获取当前 Store，例如：\n * ```js\n *   const store = useStore()\n *   store.dispatch(Modules.article.actions.refresh())\n * ```\n *\n * @example\n * ```js\n * const {Modules, LoadComponent, GetComponent, GetData, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();\n * ```\n *\n * @public\n */\n",
+          "docComment": "/**\n * 获取应用全局方法\n *\n * @remarks\n *\n * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参\n *\n * @param demoteForProductionOnly - 用于不支持Proxy的运行环境\n *\n * @param injectActions - 用于不支持Proxy的运行环境\n *\n * @returns 返回包含多个全局方法的结构体：\n *\n * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。\n *\n * - `GetComponent`：用于获取其它模块导出的{@link exportView | UI组件}，参见 {@link IGetComponent}。\n *\n * - `GetData`：用于获取其它模块导出的{@link exportModule | Data}，参见 {@link IGetData}。\n *\n * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：\n * ```js\n *   dispatch(Modules.article.actions.refresh())\n * ```\n *\n * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：\n * ```js\n *   dispatch(Modules.a.actions.a1())\n *   dispatch(Modules.b.actions.b1())\n * ```\n *\n * 这种写法可以简化为：\n * ```js\n *   const {a, b} = GetActions('a', 'b')\n *   dispatch(a.a1())\n *   dispatch(b.b1())\n * ```\n *\n * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。\n *\n * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：\n * ```js\n *   const globalRouter = GetClientRouter()\n *   const currentRouter = useRouter()\n *   console.log(blobalRouter===currentRouter)\n * ```\n *\n * - `useStore`：用于在 UI Render 中获取当前 Store，例如：\n * ```js\n *   const store = useStore()\n *   store.dispatch(Modules.article.actions.refresh())\n * ```\n *\n * @example\n * ```js\n * const {Modules, LoadComponent, GetComponent, GetData, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -3746,6 +3746,33 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@elux/vue-web!getTplInSSR:function(1)",
+          "docComment": "/**\n * 获取SSR页面模版\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function getTplInSSR(): "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [],
+          "name": "getTplInSSR"
         },
         {
           "kind": "TypeAlias",
@@ -4268,15 +4295,24 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-web!IRouter#back:member(1)",
-              "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKey - 需要回退的步数或者历史记录ID\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}\n */\n",
+              "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "back(stepOrKey?: "
+                  "text": "back(stepOrKeyOrCallback?: "
                 },
                 {
                   "kind": "Content",
-                  "text": "number | string"
+                  "text": "number | string | ((record: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IRouteRecord",
+                  "canonicalReference": "@elux/vue-web!IRouteRecord:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => boolean)"
                 },
                 {
                   "kind": "Content",
@@ -4301,7 +4337,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "string"
+                  "text": "string | null"
                 },
                 {
                   "kind": "Content",
@@ -4327,38 +4363,38 @@
               ],
               "isOptional": false,
               "returnTypeTokenRange": {
-                "startIndex": 9,
-                "endIndex": 12
+                "startIndex": 11,
+                "endIndex": 14
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "stepOrKey",
+                  "parameterName": "stepOrKeyOrCallback",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 2
-                  }
-                },
-                {
-                  "parameterName": "target",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 3,
                     "endIndex": 4
                   }
                 },
                 {
-                  "parameterName": "payload",
+                  "parameterName": "target",
                   "parameterTypeTokenRange": {
                     "startIndex": 5,
                     "endIndex": 6
                   }
                 },
                 {
-                  "parameterName": "overflowRedirect",
+                  "parameterName": "payload",
                   "parameterTypeTokenRange": {
                     "startIndex": 7,
                     "endIndex": 8
+                  }
+                },
+                {
+                  "parameterName": "overflowRedirect",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 9,
+                    "endIndex": 10
                   }
                 }
               ],
@@ -4496,12 +4532,21 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "{\n        url: string;\n        store: "
+                  "text": "{\n        store: "
                 },
                 {
                   "kind": "Reference",
                   "text": "IStore",
                   "canonicalReference": "@elux/vue-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        location: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Location",
+                  "canonicalReference": "@elux/vue-web!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -4515,7 +4560,7 @@
               "isOptional": false,
               "returnTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 4
+                "endIndex": 6
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -4533,12 +4578,21 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "{\n        url: string;\n        store: "
+                  "text": "{\n        store: "
                 },
                 {
                   "kind": "Reference",
                   "text": "IStore",
                   "canonicalReference": "@elux/vue-web!IStore:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        location: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Location",
+                  "canonicalReference": "@elux/vue-web!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -4552,12 +4606,40 @@
               "isOptional": false,
               "returnTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 4
+                "endIndex": 6
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [],
               "name": "getCurrentPages"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/vue-web!IRouter#getDocumentHead:member(1)",
+              "docComment": "/**\n * 获取当前页面的DocumentHead\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getDocumentHead(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getDocumentHead"
             },
             {
               "kind": "MethodSignature",
@@ -5058,6 +5140,50 @@
                 "startIndex": 1,
                 "endIndex": 3
               }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/vue-web!IRouter#setDocumentHead:member(1)",
+              "docComment": "/**\n * 设置当前页面的DocumentHead\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "setDocumentHead(html: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "html",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "setDocumentHead"
             }
           ],
           "extendsTokenRanges": []
@@ -5123,6 +5249,32 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "location",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/vue-web!IRouteRecord#title:member",
+              "docComment": "/**\n * 页面标题\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "title: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "title",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -5573,6 +5725,32 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@elux/vue-web!LinkProps#classname:member",
+              "docComment": "/**\n * 指定路由窗口的class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "classname?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "classname",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-web!LinkProps#disabled:member",
               "docComment": "/**\n * 如果disabled将不执行路由及onClick事件\n */\n",
               "excerptTokens": [
@@ -5648,6 +5826,32 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@elux/vue-web!LinkProps#payload:member",
+              "docComment": "/**\n * 本次路由传值\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "payload?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "any"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "payload",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-web!LinkProps#target:member",
               "docComment": "/**\n * 指定要操作的历史栈\n */\n",
               "excerptTokens": [
@@ -5680,18 +5884,18 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "to?: "
+                  "text": "to: "
                 },
                 {
                   "kind": "Content",
-                  "text": "string"
+                  "text": "number | string"
                 },
                 {
                   "kind": "Content",
                   "text": ";"
                 }
               ],
-              "isOptional": true,
+              "isOptional": false,
               "releaseTag": "Public",
               "name": "to",
               "propertyTypeTokenRange": {
@@ -5745,6 +5949,32 @@
           "releaseTag": "Public",
           "name": "Location",
           "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/vue-web!Location#classname:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "classname: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "classname",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-web!Location#hash:member",
@@ -5956,7 +6186,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare function locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery }: "
+              "text": "export declare function locationToUrl({ url, pathname, search, hash, classname, searchQuery, hashQuery }: "
             },
             {
               "kind": "Reference",
@@ -5997,7 +6227,7 @@
           "overloadIndex": 1,
           "parameters": [
             {
-              "parameterName": "{ url, pathname, search, hash, searchQuery, hashQuery }",
+              "parameterName": "{ url, pathname, search, hash, classname, searchQuery, hashQuery }",
               "parameterTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 5
@@ -6098,6 +6328,49 @@
             }
           ],
           "name": "modelHotReplacement"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@elux/vue-web!moduleExists:function(1)",
+          "docComment": "/**\n * 模块是否存在\n *\n * @remarks\n *\n * 即ModuleGetter中是否有配置该模块的获取方式\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function moduleExists(moduleName: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "boolean"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 3,
+            "endIndex": 4
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "moduleName",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "name": "moduleExists"
         },
         {
           "kind": "TypeAlias",

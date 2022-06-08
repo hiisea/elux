@@ -1,7 +1,8 @@
-import React, { memo } from 'react';
 import { coreConfig, getEntryComponent } from '@elux/core';
+import { memo } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
-export const EWindow = memo(function ({
+
+const Component = function ({
   store
 }) {
   const AppView = getEntryComponent();
@@ -10,4 +11,7 @@ export const EWindow = memo(function ({
     store: store,
     children: _jsx(AppView, {})
   });
-});
+};
+
+Component.displayName = 'EluxWindow';
+export const EWindow = memo(Component);

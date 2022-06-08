@@ -1,6 +1,6 @@
+import { Dispatch, EluxComponent } from '@elux/core';
 import { ComponentClass, ComponentType, FunctionComponent } from 'react';
 import { Options } from 'react-redux';
-import { Dispatch, EluxComponent } from '@elux/core';
 /**
  * 用于{@link connectRedux }
  *

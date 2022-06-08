@@ -1,8 +1,6 @@
-import {ComponentClass, ComponentType, FunctionComponent} from 'react';
-
-import {connect, Options, Provider, useStore} from 'react-redux';
-
 import {Dispatch, EluxComponent, exportView, setCoreConfig} from '@elux/core';
+import {ComponentClass, ComponentType, FunctionComponent} from 'react';
+import {connect, Options, Provider, useStore} from 'react-redux';
 
 /**
  * 用于{@link connectRedux }

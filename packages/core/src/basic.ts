@@ -159,6 +159,7 @@ export interface Location {
   pathname: string;
   search: string;
   hash: string;
+  classname: string;
   searchQuery: {[key: string]: any};
   hashQuery: {[key: string]: any};
 }
@@ -191,6 +192,10 @@ export interface IRouteRecord {
    * 路由描述
    */
   location: Location;
+  /**
+   * 页面标题
+   */
+  title: string;
 }
 
 /**
@@ -288,13 +293,21 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
    */
   runtime: RouteRuntime<TStoreState>;
   /**
+   * 获取当前页面的DocumentHead
+   */
+  getDocumentHead(): string;
+  /**
+   * 设置当前页面的DocumentHead
+   */
+  setDocumentHead(html: string): void;
+  /**
    * 获取当前被激活显示的页面
    */
-  getActivePage(): {url: string; store: IStore};
+  getActivePage(): {store: IStore; location: Location};
   /**
    * 获取当前所有CurrentPage(PageHistoryStack中的第一条)
    */
-  getCurrentPages(): {url: string; store: IStore}[];
+  getCurrentPages(): {store: IStore; location: Location}[];
   /**
    * 获取指定历史栈的长度
    */
@@ -338,12 +351,17 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
   /**
    * 回退指定栈中的历史记录，并跳转路由
    *
-   * @param stepOrKey - 需要回退的步数或者历史记录ID
+   * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数
    * @param target - 指定要操作的历史栈，默认:`page`
    * @param payload - 提交给 {@link RouteRuntime} 的数据
    * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}
    */
-  back(stepOrKey?: number | string, target?: RouteTarget, payload?: any, overflowRedirect?: string): void | Promise<void>;
+  back(
+    stepOrKeyOrCallback?: number | string | ((record: IRouteRecord) => boolean),
+    target?: RouteTarget,
+    payload?: any,
+    overflowRedirect?: string | null
+  ): void | Promise<void>;
 }
 
 /**
@@ -501,7 +519,6 @@ export type StoreLoggerInfo = {
 export type StoreLogger = (info: StoreLoggerInfo) => void;
 
 export interface EluxContext {
-  documentHead: string;
   router: IRouter;
 }
 

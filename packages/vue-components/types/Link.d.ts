@@ -1,5 +1,5 @@
-import { FunctionalComponent, Events, HTMLAttributes } from 'vue';
 import { RouteAction, RouteTarget } from '@elux/core';
+import { Events, FunctionalComponent, HTMLAttributes } from 'vue';
 /**
  * 内置UI组件
  *
@@ -15,13 +15,13 @@ import { RouteAction, RouteTarget } from '@elux/core';
  */
 export interface LinkProps extends HTMLAttributes {
     /**
+     * 指定跳转的url或后退步数
+     */
+    to: number | string;
+    /**
      * 如果disabled将不执行路由及onClick事件
      */
     disabled?: boolean;
-    /**
-     * 指定跳转的url或后退步数
-     */
-    to?: string;
     /**
      * 点击事件
      */
@@ -34,6 +34,14 @@ export interface LinkProps extends HTMLAttributes {
      * 指定要操作的历史栈
      */
     target?: RouteTarget;
+    /**
+     * 本次路由传值
+     */
+    payload?: any;
+    /**
+     * 指定路由窗口的class
+     */
+    classname?: string;
 }
 /**
  * 内置UI组件

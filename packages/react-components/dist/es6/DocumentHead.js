@@ -1,57 +1,27 @@
-import React, { useContext, useEffect } from 'react';
-import { coreConfig, env } from '@elux/core';
-import { EluxContextComponent } from './base';
-let clientTimer = 0;
-let recoverLock = false;
-
-function setClientHead(eluxContext, documentHead) {
-  eluxContext.documentHead = documentHead;
-
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(() => {
-      clientTimer = 0;
-      recoverLock = false;
-      const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
-function recoverClientHead(eluxContext, documentHead) {
-  if (!recoverLock) {
-    recoverLock = true;
-    setClientHead(eluxContext, documentHead);
-  }
-}
+import { coreConfig } from '@elux/core';
+import { memo, useMemo } from 'react';
 
 const Component = ({
   title,
   html
 }) => {
-  const eluxContext = useContext(EluxContextComponent);
+  const router = coreConfig.UseRouter();
+  const documentHead = useMemo(() => {
+    let documentHead = html || '';
 
-  if (!html) {
-    html = eluxContext.documentHead || '<title>Elux</title>';
-  }
+    if (title) {
+      if (/<title>.*?<\/title>/.test(documentHead)) {
+        documentHead = documentHead.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+      } else {
+        documentHead = `<title>${title}</title>` + documentHead;
+      }
+    }
 
-  if (title) {
-    html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-  }
-
-  if (env.isServer) {
-    eluxContext.documentHead = html;
-  }
-
-  useEffect(() => {
-    const raw = eluxContext.documentHead;
-    setClientHead(eluxContext, html);
-    recoverLock = false;
-    return () => recoverClientHead(eluxContext, raw);
-  }, [eluxContext, html]);
+    return documentHead;
+  }, [html, title]);
+  router.setDocumentHead(documentHead);
   return null;
 };
 
-export const DocumentHead = React.memo(Component);
+Component.displayName = 'EluxDocumentHead';
+export const DocumentHead = memo(Component);

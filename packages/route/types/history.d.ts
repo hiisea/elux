@@ -24,6 +24,7 @@ export declare class RouteRecord implements IRouteRecord {
     readonly location: Location;
     readonly pageStack: PageStack;
     readonly key: string;
+    title: string;
     constructor(location: Location, pageStack: PageStack);
     setActive(): void;
     setInactive(): void;
@@ -47,12 +48,12 @@ export declare class WindowStack extends HistoryStack<PageStack> {
     constructor(location: Location, store: Store);
     getRecords(): RouteRecord[];
     getCurrentWindowPage(): {
-        url: string;
         store: Store;
+        location: Location;
     };
     getCurrentPages(): {
-        url: string;
         store: Store;
+        location: Location;
     }[];
     private countBack;
     testBack(stepOrKey: number | string, rootOnly: boolean): {

@@ -31,7 +31,7 @@ export function buildApp<INS = {}>(
   return Object.assign(ins, {
     render({id = 'root'}: RenderOptions = {}) {
       return (router as CoreRouter).init(routerOptions, ssrData || {}).then(() => {
-        AppRender.toDocument(id, {router, documentHead: ''}, !!ssrData, ins);
+        AppRender.toDocument(id, {router}, !!ssrData, ins);
       });
     },
   });
@@ -40,7 +40,7 @@ export function buildApp<INS = {}>(
 export function buildProvider<INS = {}>(ins: INS, router: IRouter): Elux.Component<{children: any}> {
   const AppRender = coreConfig.AppRender!;
   //(router as CoreRouter).init({});
-  return AppRender.toProvider({router, documentHead: ''}, ins);
+  return AppRender.toProvider({router}, ins);
 }
 
 export function buildSSR<INS = {}>(
@@ -56,7 +56,7 @@ export function buildSSR<INS = {}>(
       return (router as CoreRouter).init(routerOptions, {}).then(() => {
         const store = router.getActivePage().store;
         store.destroy();
-        const eluxContext: EluxContext = {router, documentHead: ''};
+        const eluxContext: EluxContext = {router};
         return AppRender.toString(id, eluxContext, ins).then((html) => {
           const {SSRTPL, SSRDataKey} = coreConfig;
           const match = SSRTPL.match(new RegExp(`<[^<>]+id=['"]${id}['"][^<>]*>`, 'm'));
@@ -64,7 +64,7 @@ export function buildSSR<INS = {}>(
             const state = store.getState();
             return SSRTPL.replace(
               '</head>',
-              `\r\n${eluxContext.documentHead}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`
+              `\r\n${router.getDocumentHead()}\r\n<script>window.${SSRDataKey} = ${JSON.stringify(state)};</script>\r\n</head>`
             ).replace(match[0], match[0] + html);
           }
           return html;
@@ -72,4 +72,13 @@ export function buildSSR<INS = {}>(
       });
     },
   });
+}
+
+/**
+ * 获取SSR页面模版
+ *
+ * @public
+ */
+export function getTplInSSR(): string {
+  return coreConfig.SSRTPL;
 }

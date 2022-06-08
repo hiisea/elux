@@ -14,7 +14,6 @@ import {
   Store,
   StoreState,
 } from '@elux/core';
-
 import {
   afterChangeAction,
   beforeChangeAction,
@@ -87,10 +86,13 @@ export abstract class BaseNativeRouter {
 
 type RouteTask = [() => Promise<void>, (value: void) => void, (reason?: any) => void];
 
+let clientDocumentHeadTimer = 0;
+
 export class Router extends CoreRouter {
   private curTask?: RouteTask;
   private taskList: RouteTask[] = [];
   private windowStack!: WindowStack;
+  private documentHead: string = '';
 
   private onTaskComplete = () => {
     const task = this.taskList.shift();
@@ -131,41 +133,62 @@ export class Router extends CoreRouter {
     });
   }
 
+  getDocumentHead(): string {
+    return this.documentHead;
+  }
+  setDocumentHead(html: string): void {
+    this.documentHead = html;
+    if (!env.isServer && !clientDocumentHeadTimer) {
+      clientDocumentHeadTimer = env.setTimeout(() => {
+        clientDocumentHeadTimer = 0;
+        const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+        if (arr[1]) {
+          coreConfig.SetPageTitle(arr[1]);
+        }
+      }, 0);
+    }
+  }
+  private savePageTitle(): void {
+    const arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+    const title = arr[1] || '';
+    this.windowStack.getCurrentItem().getCurrentItem().title = title;
+  }
+
   nativeInitiated(): boolean {
     return !this.nativeRouter.routeKey;
   }
 
   getHistoryLength(target: RouteTarget = 'page'): number {
-    return target === 'window' ? this.windowStack.getLength() : this.windowStack.getCurrentItem().getLength();
+    return target === 'window' ? this.windowStack.getLength() - 1 : this.windowStack.getCurrentItem().getLength() - 1;
   }
 
   getHistory(target: RouteTarget = 'page'): IRouteRecord[] {
-    return target === 'window' ? this.windowStack.getRecords() : this.windowStack.getCurrentItem().getItems();
+    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
   }
 
   findRecordByKey(recordKey: string): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
     const {
-      record: {key, location},
+      record: {key, location, title},
       overflow,
       index,
     } = this.windowStack.findRecordByKey(recordKey);
-    return {overflow, index, record: {key, location}};
+    return {overflow, index, record: {key, location, title}};
   }
 
   findRecordByStep(delta: number, rootOnly?: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]} {
     const {
-      record: {key, location},
+      record: {key, location, title},
       overflow,
       index,
     } = this.windowStack.testBack(delta, !!rootOnly);
-    return {overflow, index, record: {key, location}};
+    return {overflow, index, record: {key, location, title}};
   }
 
-  getActivePage(): {url: string; store: Store} {
+  getActivePage(): {location: Location; store: Store} {
     return this.windowStack.getCurrentWindowPage();
   }
 
-  getCurrentPages(): {url: string; store: Store}[] {
+  getCurrentPages(): {location: Location; store: Store}[] {
     return this.windowStack.getCurrentPages();
   }
 
@@ -189,9 +212,9 @@ export class Router extends CoreRouter {
     this.runtime.completed = true;
   }
 
-  private redirectOnServer(urlOrLocation: Partial<Location>) {
+  private redirectOnServer(partialLocation: Partial<Location>) {
     if (env.isServer) {
-      const url = urlOrLocation.url || locationToUrl(urlOrLocation);
+      const url = locationToUrl(partialLocation);
       const nativeUrl = urlToNativeUrl(url);
       const err: ActionError = {code: ErrorCodes.ROUTE_REDIRECT, message: 'Route change in server is not allowed.', detail: nativeUrl};
       throw err;
@@ -202,6 +225,7 @@ export class Router extends CoreRouter {
     this.init = () => Promise.resolve();
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {timestamp: Date.now(), payload: null, prevState, completed: false};
@@ -218,7 +242,7 @@ export class Router extends CoreRouter {
       await store.mount(coreConfig.StageModuleName, 'init');
       await store.dispatch(testChangeAction(this.location, this.action));
     } catch (err) {
-      if (err.code === ErrorCodes.ROUTE_REDIRECT) {
+      if (err.code === ErrorCodes.ROUTE_RETURN || err.code === ErrorCodes.ROUTE_REDIRECT) {
         this.taskList = [];
         throw err;
       }
@@ -228,21 +252,28 @@ export class Router extends CoreRouter {
     this.dispatch({location, action, prevStore: store, newStore: store, windowChanged: true});
   }
 
-  relaunch(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._relaunch.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  private async _relaunch(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
+  private async _relaunch(partialLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'relaunch';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -264,21 +295,28 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._replace.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  replace(partialLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  private async _replace(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
+  private async _replace(partialLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'replace';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -299,21 +337,28 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(urlOrLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
-    this.redirectOnServer(urlOrLocation);
-    return this.addTask(this._push.bind(this, urlOrLocation, target, payload, _nativeCaller));
+  push(partialLocation: Partial<Location>, target: RouteTarget = 'page', payload: any = null, _nativeCaller = false): Promise<void> {
+    this.redirectOnServer(partialLocation);
+    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
   }
 
-  private async _push(urlOrLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
+  private async _push(partialLocation: Partial<Location>, target: RouteTarget, payload: any, _nativeCaller: boolean) {
     const action = 'push';
-    const location = urlToLocation(urlOrLocation.url || locationToUrl(urlOrLocation));
+    const location = urlToLocation(locationToUrl(partialLocation));
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
     if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     const newStore = prevStore.clone();
@@ -340,32 +385,42 @@ export class Router extends CoreRouter {
   }
 
   back(
-    stepOrKey: number | string = 1,
+    stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean) = 1,
     target: RouteTarget = 'page',
     payload: any = null,
-    overflowRedirect: string = '',
+    overflowRedirect: string | null = '',
     _nativeCaller = false
   ): Promise<void> {
-    if (!stepOrKey) {
+    if (!stepOrKeyOrCallback) {
       return Promise.resolve();
     }
-    this.redirectOnServer({url: overflowRedirect || routeConfig.HomeUrl});
+    if (overflowRedirect !== null) {
+      this.redirectOnServer({url: overflowRedirect || routeConfig.HomeUrl});
+    }
+    let stepOrKey: number | string;
+    if (typeof stepOrKeyOrCallback === 'function') {
+      const items = this.getHistory(target);
+      const i = items.findIndex(stepOrKeyOrCallback);
+      stepOrKey = i > -1 ? items[i].key : '';
+    } else {
+      stepOrKey = stepOrKeyOrCallback;
+    }
     return this.addTask(this._back.bind(this, stepOrKey, target, payload, overflowRedirect, _nativeCaller));
   }
 
-  private async _back(stepOrKey: number | string, target: RouteTarget, payload: any, overflowRedirect: string, _nativeCaller: boolean) {
+  private async _back(stepOrKey: number | string, target: RouteTarget, payload: any, overflowRedirect: string | null, _nativeCaller: boolean) {
     const action = 'back';
     const {record, overflow, index} = this.windowStack.testBack(stepOrKey, target === 'window');
-    if (overflow) {
-      const url = overflowRedirect || routeConfig.HomeUrl;
-      this.relaunch({url}, 'window');
+    if (overflow || (!index[0] && !index[1])) {
+      if (overflowRedirect !== null) {
+        const url = overflowRedirect || routeConfig.HomeUrl;
+        this.relaunch({url}, 'window');
+      }
       const err: ActionError = {code: ErrorCodes.ROUTE_BACK_OVERFLOW, message: 'Overflowed on route backward.', detail: stepOrKey};
       throw setProcessedError(err, true);
     }
-    if (!index[0] && !index[1]) {
-      throw 'Route backward invalid.';
-    }
     const location = record.location;
+    const title = record.title;
     const NotifyNativeRouter: boolean[] = [];
     if (index[0]) {
       NotifyNativeRouter[0] = routeConfig.NotifyNativeRouter.window;
@@ -377,8 +432,15 @@ export class Router extends CoreRouter {
       this.nativeRouter.testExecute(action, location, index);
     }
     const prevStore = this.getActivePage().store;
-    await prevStore.dispatch(testChangeAction(location, action));
+    try {
+      await prevStore.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!_nativeCaller) {
+        throw err;
+      }
+    }
     await prevStore.dispatch(beforeChangeAction(location, action));
+    this.savePageTitle();
     this.location = location;
     this.action = action;
     this.routeKey = record.key;
@@ -400,6 +462,7 @@ export class Router extends CoreRouter {
     if (!_nativeCaller && NotifyNativeRouter.length) {
       await this.nativeRouter.execute(action, location, record.key, index);
     }
+    this.setDocumentHead(`<title>${title}</title>`);
     await this.dispatch({location, action, prevStore, newStore, windowChanged: !!index[0]});
     newStore.dispatch(afterChangeAction(location, action));
   }

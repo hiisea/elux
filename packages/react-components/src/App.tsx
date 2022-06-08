@@ -1,5 +1,4 @@
 import {env, IAppRender} from '@elux/core';
-
 import {EluxContextComponent, reactComponentsConfig} from './base';
 import {RouterComponent} from './Router';
 

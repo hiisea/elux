@@ -1,8 +1,5 @@
-import {defineComponent, FunctionalComponent, inject} from 'vue';
-
-import {coreConfig, EluxContext, env} from '@elux/core';
-
-import {EluxContextKey} from './base';
+import {coreConfig} from '@elux/core';
+import {computed, defineComponent, FunctionalComponent} from 'vue';
 
 /**
  * 内置UI组件
@@ -25,21 +22,6 @@ export interface DocumentHeadProps {
   html?: string;
 }
 
-let clientTimer = 0;
-
-function setClientHead(eluxContext: EluxContext, documentHead: string) {
-  eluxContext.documentHead = documentHead;
-  if (!clientTimer) {
-    clientTimer = env.setTimeout(() => {
-      clientTimer = 0;
-      const arr = eluxContext.documentHead.match(/<title>(.*)<\/title>/) || [];
-      if (arr[1]) {
-        coreConfig.SetPageTitle(arr[1]);
-      }
-    }, 0);
-  }
-}
-
 /**
  * 内置UI组件
  *
@@ -49,45 +31,25 @@ function setClientHead(eluxContext: EluxContext, documentHead: string) {
  * @public
  */
 export const DocumentHead: FunctionalComponent<DocumentHeadProps> = defineComponent({
-  props: {
-    title: {
-      type: String,
-    },
-    html: {
-      type: String,
-    },
-  },
-  data() {
-    return {
-      eluxContext: inject<EluxContext>(EluxContextKey, {} as any),
-      raw: '',
+  name: 'EluxDocumentHead',
+  // eslint-disable-next-line vue/require-prop-types
+  props: ['title', 'html'],
+  setup(props: DocumentHeadProps) {
+    const documentHead = computed(() => {
+      let documentHead = props.html || '';
+      if (props.title) {
+        if (/<title>.*?<\/title>/.test(documentHead)) {
+          documentHead = documentHead.replace(/<title>.*?<\/title>/, `<title>${props.title}</title>`);
+        } else {
+          documentHead = `<title>${props.title}</title>` + documentHead;
+        }
+      }
+      return documentHead;
+    });
+    const router = coreConfig.UseRouter!();
+    return () => {
+      router.setDocumentHead(documentHead.value);
+      return null;
     };
-  },
-  computed: {
-    headText(): string {
-      const title = this.title || '';
-      let html = this.html || '';
-      const eluxContext = this.eluxContext;
-      if (!html) {
-        html = eluxContext.documentHead || '<title>Elux</title>';
-      }
-      if (title) {
-        return html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-      }
-      return html;
-    },
-  },
-  mounted() {
-    this.raw = this.eluxContext.documentHead;
-    setClientHead(this.eluxContext, this.headText);
-  },
-  unmounted() {
-    setClientHead(this.eluxContext, this.raw);
-  },
-  render() {
-    if (env.isServer) {
-      this.eluxContext.documentHead = this.headText;
-    }
-    return null;
   },
 }) as any;

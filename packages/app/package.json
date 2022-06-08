@@ -1,6 +1,6 @@
 {
   "name": "@elux/app",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/app",
   "author": "hiisea <hiisea@qq.com>",
@@ -19,15 +19,15 @@
     "dist/"
   ],
   "scripts": {
-    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache \"**/*.{js,ts}\"",
     "build:types": "rimraf ./types && tsc --build ./src",
     "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts\"",
     "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts\"",
     "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
   },
   "dependencies": {
-    "@elux/core": "^2.1.0",
-    "@elux/route": "^2.1.0"
+    "@elux/core": "^2.2.0",
+    "@elux/route": "^2.2.0"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

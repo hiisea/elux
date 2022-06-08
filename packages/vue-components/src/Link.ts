@@ -1,7 +1,6 @@
-import {FunctionalComponent, Events, h, HTMLAttributes, VNode} from 'vue';
-
 import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
-import {urlToNativeUrl} from '@elux/route';
+import {locationToUrl, urlToNativeUrl} from '@elux/route';
+import {computed, defineComponent, Events, FunctionalComponent, h, HTMLAttributes} from 'vue';
 
 /**
  * 内置UI组件
@@ -18,13 +17,13 @@ import {urlToNativeUrl} from '@elux/route';
  */
 export interface LinkProps extends HTMLAttributes {
   /**
+   * 指定跳转的url或后退步数
+   */
+  to: number | string;
+  /**
    * 如果disabled将不执行路由及onClick事件
    */
   disabled?: boolean;
-  /**
-   * 指定跳转的url或后退步数
-   */
-  to?: string;
   /**
    * 点击事件
    */
@@ -37,6 +36,14 @@ export interface LinkProps extends HTMLAttributes {
    * 指定要操作的历史栈
    */
   target?: RouteTarget;
+  /**
+   * 本次路由传值
+   */
+  payload?: any;
+  /**
+   * 指定路由窗口的class
+   */
+  classname?: string;
 }
 
 /**
@@ -48,33 +55,51 @@ export interface LinkProps extends HTMLAttributes {
  * @public
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const Link: FunctionalComponent<LinkProps> = function (
-  {onClick: _onClick, disabled, to = '', target = 'page', action = 'push', ...props}: LinkProps,
-  context: {slots: {default?: () => VNode[]}}
-) {
-  const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
-  const onClick = (event: Events['onClick']) => {
-    event.preventDefault();
-    if (!disabled) {
-      _onClick && _onClick(event);
-      to && router[action](action === 'back' ? parseInt(to) : {url: to}, target);
-    }
-  };
-  props['onClick'] = onClick;
-  props['action'] = action;
-  props['target'] = target;
-  props['to'] = to;
-  disabled && (props['disabled'] = true);
-  let href = action !== 'back' ? to : '';
-  if (href) {
-    href = urlToNativeUrl(href);
-  } else {
-    href = '#';
-  }
-  props['href'] = href;
-  if (coreConfig.Platform === 'taro') {
-    return h('span', props, context.slots.default!());
-  } else {
-    return h('a', props, context.slots.default!());
-  }
-} as any;
+export const Link: FunctionalComponent<LinkProps> = defineComponent({
+  name: 'EluxLink',
+  // eslint-disable-next-line vue/require-prop-types
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
+  setup(props: LinkProps, context) {
+    const route = computed(() => {
+      const {to = '', action = 'push', classname = ''} = props;
+      let back: string | number | undefined;
+      let url: string | undefined;
+      let href: string | undefined;
+      if (action === 'back') {
+        back = to || 1;
+      } else {
+        url = classname ? locationToUrl({url: to.toString(), classname}) : to.toString();
+        href = urlToNativeUrl(url);
+      }
+      return {back, url, href};
+    });
+    const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
+    const onClick = (event: Events['onClick']) => {
+      event.preventDefault();
+      const {back, url} = route.value;
+      const {disabled, onClick, action = 'push', target = 'page', payload} = props;
+      if (!disabled) {
+        onClick && onClick(event);
+        router[action](back || {url}, target, payload);
+      }
+    };
+    return () => {
+      const {back, url, href} = route.value;
+      const {disabled, action = 'push', target = 'page', classname = ''} = props;
+      const linkProps = {};
+      linkProps['onClick'] = onClick;
+      linkProps['action'] = action;
+      linkProps['target'] = target;
+      linkProps['to'] = (back || url) + '';
+      linkProps['href'] = href;
+      href && (linkProps['href'] = href);
+      classname && (linkProps['classname'] = classname);
+      disabled && (linkProps['disabled'] = true);
+      if (coreConfig.Platform === 'taro') {
+        return h('span', linkProps, context.slots);
+      } else {
+        return h('a', linkProps, context.slots);
+      }
+    };
+  },
+}) as any;

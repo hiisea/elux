@@ -1,7 +1,5 @@
-import type {App} from 'vue';
-
 import {EluxContext, env, IAppRender} from '@elux/core';
-
+import type {App} from 'vue';
 import {EluxContextKey, vueComponentsConfig} from './base';
 
 const AppRender: IAppRender = {

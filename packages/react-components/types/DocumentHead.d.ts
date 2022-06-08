@@ -1,4 +1,3 @@
-import React from 'react';
 /**
  * 内置UI组件
  *
@@ -27,5 +26,5 @@ export interface DocumentHeadProps {
  *
  * @public
  */
-export declare const DocumentHead: React.NamedExoticComponent<DocumentHeadProps>;
+export declare const DocumentHead: import("react").NamedExoticComponent<DocumentHeadProps>;
 //# sourceMappingURL=DocumentHead.d.ts.map

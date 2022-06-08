@@ -1,7 +1,7 @@
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
-import { createBrowserHistory } from 'history';
 import { env } from '@elux/core';
 import { BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig } from '@elux/route';
+import { createBrowserHistory } from 'history';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -73,22 +73,22 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.push = function push(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.replace = function replace(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.relaunch = function relaunch(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   };
 
   _proto.back = function back(location, key, index) {
-    this.history.replace(location);
+    this.history.replace(location.url);
     return false;
   };
 

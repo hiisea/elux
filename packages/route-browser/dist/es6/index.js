@@ -1,6 +1,6 @@
-import { createBrowserHistory } from 'history';
 import { env } from '@elux/core';
 import { BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig } from '@elux/route';
+import { createBrowserHistory } from 'history';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -58,22 +58,22 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   push(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   replace(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   relaunch(location, key) {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   back(location, key, index) {
-    this.history.replace(location);
+    this.history.replace(location.url);
     return false;
   }
 

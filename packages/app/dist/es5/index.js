@@ -1,6 +1,6 @@
 import { getModuleApiMap, setCoreConfig } from '@elux/core';
 import { setRouteConfig } from '@elux/route';
-export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, injectModule, isServer, modelHotReplacement, reducer, setLoading } from '@elux/core';
+export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, modelHotReplacement, moduleExists, reducer, setLoading } from '@elux/core';
 export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, urlToLocation, urlToNativeUrl } from '@elux/route';
 var appConfig = Symbol();
 export function setConfig(conf) {

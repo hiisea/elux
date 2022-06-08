@@ -21,9 +21,13 @@ export declare class Router extends CoreRouter {
     private curTask?;
     private taskList;
     private windowStack;
+    private documentHead;
     private onTaskComplete;
     constructor(nativeRouter: BaseNativeRouter);
     private addTask;
+    getDocumentHead(): string;
+    setDocumentHead(html: string): void;
+    private savePageTitle;
     nativeInitiated(): boolean;
     getHistoryLength(target?: RouteTarget): number;
     getHistory(target?: RouteTarget): IRouteRecord[];
@@ -38,24 +42,24 @@ export declare class Router extends CoreRouter {
         index: [number, number];
     };
     getActivePage(): {
-        url: string;
+        location: Location;
         store: Store;
     };
     getCurrentPages(): {
-        url: string;
+        location: Location;
         store: Store;
     }[];
     private mountStore;
     private redirectOnServer;
     init(routerInitOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
     private _init;
-    relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    relaunch(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _relaunch;
-    replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    replace(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _replace;
-    push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    push(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
     private _push;
-    back(stepOrKey?: number | string, target?: RouteTarget, payload?: any, overflowRedirect?: string, _nativeCaller?: boolean): Promise<void>;
+    back(stepOrKeyOrCallback?: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, payload?: any, overflowRedirect?: string | null, _nativeCaller?: boolean): Promise<void>;
     private _back;
 }
 //# sourceMappingURL=index.d.ts.map

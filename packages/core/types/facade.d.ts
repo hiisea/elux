@@ -156,8 +156,8 @@ export declare type API<TFacade extends Facade> = {
  * @remarks
  * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参
  *
- * @param demoteForProductionOnly - 用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
- * @param injectActions -  用于不支持Proxy的运行环境，参见：`兼容IE浏览器`
+ * @param demoteForProductionOnly - 用于不支持Proxy的运行环境
+ * @param injectActions -  用于不支持Proxy的运行环境
  *
  * @returns
  * 返回包含多个全局方法的结构体：

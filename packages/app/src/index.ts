@@ -13,9 +13,11 @@ export {
   exportModule,
   exportView,
   getApi,
+  getTplInSSR,
   injectModule,
   isServer,
   modelHotReplacement,
+  moduleExists,
   reducer,
   setLoading,
 } from '@elux/core';

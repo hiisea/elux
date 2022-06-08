@@ -1,12 +1,12 @@
-import {App, createApp as createCSRApp, defineComponent, onBeforeUnmount, ref} from 'vue';
-
 import {AppConfig, UNListener} from '@elux/app';
 import {buildProvider, coreConfig, IStore, setCoreConfig} from '@elux/core';
 import type {Router} from '@elux/route';
+import {locationToUrl} from '@elux/route';
 import {createRouter} from '@elux/route-mp';
 import {onShow, taroHistory} from '@elux/taro';
 import {EWindow} from '@elux/vue-components';
 import {useDidHide, useDidShow} from '@tarojs/taro';
+import {App, createApp as createCSRApp, defineComponent, onBeforeUnmount, ref} from 'vue';
 
 export {DocumentHead, Else, Link, Switch} from '@elux/vue-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/vue-components';
@@ -79,11 +79,13 @@ export function createApp(appConfig: AppConfig, appOptions: Record<string, any> 
   if (!cientSingleton) {
     const onLaunch = appOptions.onLaunch;
     appOptions.onLaunch = function (options: any) {
-      const router = createRouter(taroHistory);
-      buildProvider(cientSingleton, router);
+      const location = taroHistory.getLocation();
+      router.init({url: locationToUrl(location)}, {});
       onLaunch && onLaunch(options);
     };
     cientSingleton = createCSRApp(appOptions);
+    const router = createRouter(taroHistory) as Router;
+    buildProvider(cientSingleton, router);
   }
   return cientSingleton;
 }

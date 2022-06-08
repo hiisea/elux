@@ -1,6 +1,5 @@
-import React, {useEffect, useState} from 'react';
-
 import {coreConfig, env, ILoadComponent, injectComponent, isPromise, IStore} from '@elux/core';
+import {forwardRef, useEffect, useState} from 'react';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
   <div className="g-component-error">{message}</div>
@@ -11,7 +10,7 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading!;
   const OnError = options.onError || coreConfig.LoadComponentOnError!;
 
-  return React.forwardRef((props, ref) => {
+  const Component = forwardRef((props, ref) => {
     const execute = (curStore?: IStore) => {
       let View: Elux.Component<any> | string = OnLoading;
       try {
@@ -56,5 +55,9 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
     } else {
       return <View ref={ref} {...props} />;
     }
-  }) as any;
+  });
+
+  Component.displayName = 'EluxComponentLoader';
+
+  return Component;
 };

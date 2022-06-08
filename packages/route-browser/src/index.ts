@@ -1,13 +1,12 @@
-import {createBrowserHistory} from 'history';
-
 import {env, IRouter, Location, UNListener} from '@elux/core';
 import {BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig} from '@elux/route';
+import {createBrowserHistory} from 'history';
 
 setRouteConfig({NotifyNativeRouter: {window: true, page: true}});
 
 interface IHistory {
-  push(location: Location): void;
-  replace(location: Location): void;
+  push(url: string): void;
+  replace(url: string): void;
   block(callback: (locationData: unknown, action: 'PUSH' | 'POP' | 'REPLACE') => string | false | void): UNListener;
   location: {pathname: string; search: string; hash: string};
 }
@@ -50,22 +49,22 @@ class BrowserNativeRouter extends BaseNativeRouter {
     return false;
   }
   protected push(location: Location, key: string): boolean {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   protected replace(location: Location, key: string): boolean {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   protected relaunch(location: Location, key: string): boolean {
-    this.history.push(location);
+    this.history.push(location.url);
     return false;
   }
 
   protected back(location: Location, key: string, index: [number, number]): boolean {
-    this.history.replace(location);
+    this.history.replace(location.url);
     return false;
   }
 

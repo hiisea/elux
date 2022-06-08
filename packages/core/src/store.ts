@@ -102,8 +102,10 @@ export abstract class CoreRouter implements IRouter {
   }
 
   abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
-  abstract getActivePage(): {url: string; store: IStore};
-  abstract getCurrentPages(): {url: string; store: IStore}[];
+  abstract getDocumentHead(): string;
+  abstract setDocumentHead(html: string): void;
+  abstract getActivePage(): {store: IStore; location: Location};
+  abstract getCurrentPages(): {store: IStore; location: Location}[];
   abstract getHistoryLength(target?: RouteTarget): number;
   abstract getHistory(target?: RouteTarget): IRouteRecord[];
   abstract findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
@@ -111,7 +113,12 @@ export abstract class CoreRouter implements IRouter {
   abstract relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
   abstract push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
   abstract replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
-  abstract back(stepOrKey?: string | number, target?: RouteTarget, payload?: any, overflowRedirect?: string): void | Promise<void>;
+  abstract back(
+    stepOrKeyOrCallback?: string | number | ((record: IRouteRecord) => boolean),
+    target?: RouteTarget,
+    payload?: any,
+    overflowRedirect?: string | null
+  ): void | Promise<void>;
 }
 
 function applyEffect(
@@ -253,9 +260,15 @@ export class Store implements IStore {
       if (isPromise(result)) {
         mountedModules[moduleName] = result.then(() => {
           mountedModules[moduleName] = true;
+          if (this.active) {
+            injectedModels[moduleName].onActive();
+          }
         }, errorCallback);
       } else {
         mountedModules[moduleName] = true;
+        if (this.active) {
+          injectedModels[moduleName].onActive();
+        }
       }
     }
     const result = mountedModules[moduleName];

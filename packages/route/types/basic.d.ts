@@ -6,6 +6,10 @@ import { Action, Location, RouteAction } from '@elux/core';
  */
 export declare const ErrorCodes: {
     /**
+     * 在路由被强制中断并返回时抛出该错误
+     */
+    ROUTE_RETURN: string;
+    /**
      * 在SSR服务器渲染时，操作路由跳转会抛出该错误
      */
     ROUTE_REDIRECT: string;
@@ -47,7 +51,7 @@ export declare function urlToLocation(url: string): Location;
  *
  * @public
  */
-export declare function locationToUrl({ url, pathname, search, hash, searchQuery, hashQuery }: Partial<Location>): string;
+export declare function locationToUrl({ url, pathname, search, hash, classname, searchQuery, hashQuery }: Partial<Location>): string;
 /**
  * 内部路由Location转换为原生路由Location
  *

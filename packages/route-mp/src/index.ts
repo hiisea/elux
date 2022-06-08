@@ -36,7 +36,7 @@ export class MPNativeRouter extends BaseNativeRouter {
           const nativeUrl = [pathname, search].filter(Boolean).join('?');
           const url = nativeUrlToUrl(nativeUrl);
           if (action === 'POP') {
-            const arr = search.match(/__=(\w+)/);
+            const arr = `?${search}`.match(/[?&]__k=(\w+)/);
             key = arr ? arr[1] : '';
             if (!key) {
               //表示Tabpage
@@ -59,7 +59,7 @@ export class MPNativeRouter extends BaseNativeRouter {
   }
 
   protected addKey(url: string, key: string): string {
-    return url.indexOf('?') > -1 ? `${url}&__=${key}` : `${url}?__=${key}`;
+    return url.indexOf('?') > -1 ? `${url.replace(/[?&]__k=(\w+)/, '')}&__k=${key}` : `${url}?__k=${key}`;
   }
 
   protected init(location: Location, key: string): boolean {

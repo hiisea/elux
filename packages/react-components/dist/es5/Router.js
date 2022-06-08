@@ -1,18 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
+import _extends from "@babel/runtime/helpers/esm/extends";
 import { coreConfig, env } from '@elux/core';
+import { memo, useEffect, useRef, useState } from 'react';
 import { EWindow } from './EWindow';
 import { jsx as _jsx } from "react/jsx-runtime";
-export var RouterComponent = function RouterComponent() {
+
+var Component = function Component() {
   var router = coreConfig.UseRouter();
 
   var _useState = useState({
-    classname: 'elux-app',
+    className: 'elux-app',
     pages: router.getCurrentPages().reverse()
   }),
       data = _useState[0],
       setData = _useState[1];
 
-  var classname = data.classname,
+  var className = data.className,
       pages = data.pages;
   var pagesRef = useRef(pages);
   pagesRef.current = pages;
@@ -26,7 +28,7 @@ export var RouterComponent = function RouterComponent() {
         if (windowChanged) {
           if (action === 'push') {
             setData({
-              classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
+              className: 'elux-app elux-animation elux-change elux-push ' + Date.now(),
               pages: pages
             });
             env.setTimeout(function () {
@@ -38,7 +40,7 @@ export var RouterComponent = function RouterComponent() {
             }, 400);
           } else if (action === 'back') {
             setData({
-              classname: 'elux-app ' + Date.now(),
+              className: 'elux-app ' + Date.now(),
               pages: [].concat(pages, [pagesRef.current[pagesRef.current.length - 1]])
             });
             env.setTimeout(function () {
@@ -46,21 +48,21 @@ export var RouterComponent = function RouterComponent() {
             }, 100);
             env.setTimeout(function () {
               setData({
-                classname: 'elux-app ' + Date.now(),
+                className: 'elux-app ' + Date.now(),
                 pages: pages
               });
               completeCallback();
             }, 400);
           } else if (action === 'relaunch') {
             setData({
-              classname: 'elux-app ',
+              className: 'elux-app ',
               pages: pages
             });
             env.setTimeout(completeCallback, 50);
           }
         } else {
           setData({
-            classname: 'elux-app',
+            className: 'elux-app',
             pages: pages
           });
           env.setTimeout(completeCallback, 50);
@@ -70,18 +72,33 @@ export var RouterComponent = function RouterComponent() {
   }, [router]);
   return _jsx("div", {
     ref: containerRef,
-    className: classname,
-    children: pages.map(function (item) {
+    className: className,
+    children: pages.map(function (item, index) {
       var store = item.store,
-          url = item.url;
-      return _jsx("div", {
-        "data-sid": store.sid,
-        className: "elux-window",
-        "data-url": url,
+          _item$location = item.location,
+          url = _item$location.url,
+          classname = _item$location.classname;
+      var props = {
+        className: "elux-window" + (classname ? ' ' + classname : ''),
+        key: store.sid,
+        sid: store.sid,
+        url: url,
+        style: {
+          zIndex: index + 1
+        }
+      };
+      return classname.startsWith('_') ? _jsx("article", _extends({}, props, {
         children: _jsx(EWindow, {
           store: store
         })
-      }, store.sid);
+      })) : _jsx("div", _extends({}, props, {
+        children: _jsx(EWindow, {
+          store: store
+        })
+      }));
     })
   });
 };
+
+Component.displayName = 'EluxRouter';
+export var RouterComponent = memo(Component);

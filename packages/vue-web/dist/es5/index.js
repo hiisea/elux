@@ -1,8 +1,8 @@
-import { createApp as createCSRApp, createSSRApp } from 'vue';
 import { buildApp, buildSSR } from '@elux/core';
 import { createClientRouter, createServerRouter } from '@elux/route-browser';
 import { RouterComponent, setVueComponentsConfig } from '@elux/vue-components';
 import { renderToString } from '@elux/vue-web/server';
+import { createApp as createCSRApp, createSSRApp } from 'vue';
 export { DocumentHead, Else, Link, Switch } from '@elux/vue-components';
 export * from '@elux/app';
 setVueComponentsConfig({

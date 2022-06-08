@@ -1,6 +1,6 @@
 {
   "name": "@elux/route",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route",
   "author": "hiisea <hiisea@qq.com>",
@@ -27,7 +27,7 @@
     "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
   },
   "dependencies": {
-    "@elux/core": "^2.1.0"
+    "@elux/core": "^2.2.0"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

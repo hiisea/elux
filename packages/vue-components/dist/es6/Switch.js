@@ -14,3 +14,4 @@ export const Switch = function (props, context) {
 
   return h(Fragment, null, props.elseView ? [props.elseView] : context.slots.elseView ? context.slots.elseView() : []);
 };
+Switch.displayName = 'EluxSwitch';

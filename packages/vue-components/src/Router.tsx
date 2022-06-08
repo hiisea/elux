@@ -1,26 +1,25 @@
+import {coreConfig, env, IStore, Location} from '@elux/core';
 import {defineComponent, onBeforeUnmount, ref, shallowRef} from 'vue';
-
-import {coreConfig, env, IStore} from '@elux/core';
-
 import {EWindow} from './EWindow';
 
 export const RouterComponent = defineComponent({
+  name: 'EluxRouter',
   setup() {
     const router = coreConfig.UseRouter!();
     const data = shallowRef<{
-      classname: string;
+      className: string;
       pages: {
-        url: string;
+        location: Location;
         store: IStore;
       }[];
-    }>({classname: 'elux-app', pages: router.getCurrentPages().reverse()});
+    }>({className: 'elux-app', pages: router.getCurrentPages().reverse()});
     const containerRef = ref<{className: string}>({className: ''});
     const removeListener = router.addListener(({action, windowChanged}) => {
       const pages = router.getCurrentPages().reverse();
       return new Promise<void>((completeCallback) => {
         if (windowChanged) {
           if (action === 'push') {
-            data.value = {classname: 'elux-app elux-animation elux-change elux-push ' + Date.now(), pages};
+            data.value = {className: 'elux-app elux-animation elux-change elux-push ' + Date.now(), pages};
             env.setTimeout(() => {
               containerRef.value.className = 'elux-app elux-animation';
             }, 100);
@@ -29,20 +28,20 @@ export const RouterComponent = defineComponent({
               completeCallback();
             }, 400);
           } else if (action === 'back') {
-            data.value = {classname: 'elux-app ' + Date.now(), pages: [...pages, data.value.pages[data.value.pages.length - 1]]};
+            data.value = {className: 'elux-app ' + Date.now(), pages: [...pages, data.value.pages[data.value.pages.length - 1]]};
             env.setTimeout(() => {
               containerRef.value.className = 'elux-app elux-animation elux-change elux-back';
             }, 100);
             env.setTimeout(() => {
-              data.value = {classname: 'elux-app ' + Date.now(), pages};
+              data.value = {className: 'elux-app ' + Date.now(), pages};
               completeCallback();
             }, 400);
           } else if (action === 'relaunch') {
-            data.value = {classname: 'elux-app', pages};
+            data.value = {className: 'elux-app', pages};
             env.setTimeout(completeCallback, 50);
           }
         } else {
-          data.value = {classname: 'elux-app', pages};
+          data.value = {className: 'elux-app', pages};
           env.setTimeout(completeCallback, 50);
         }
       });
@@ -52,14 +51,28 @@ export const RouterComponent = defineComponent({
     });
 
     return () => {
-      const {classname, pages} = data.value;
+      const {className, pages} = data.value;
       return (
-        <div ref={containerRef} class={classname}>
-          {pages.map((item) => {
-            const {store, url} = item;
-            return (
-              <div key={store.sid} data-sid={store.sid} class="elux-window" data-url={url}>
-                <EWindow store={store} />
+        <div ref={containerRef} class={className}>
+          {pages.map((item, index) => {
+            const {
+              store,
+              location: {url, classname},
+            } = item;
+            const props = {
+              class: `elux-window${classname ? ' ' + classname : ''}`,
+              key: store.sid,
+              sid: store.sid,
+              url,
+              style: {zIndex: index + 1},
+            };
+            return classname.startsWith('_') ? (
+              <article {...props}>
+                <EWindow store={store}></EWindow>
+              </article>
+            ) : (
+              <div {...props}>
+                <EWindow store={store}></EWindow>
               </div>
             );
           })}

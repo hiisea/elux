@@ -1,5 +1,5 @@
-import { connect, Provider, useStore } from 'react-redux';
 import { exportView, setCoreConfig } from '@elux/core';
+import { connect, Provider, useStore } from 'react-redux';
 export function connectRedux(mapStateToProps, options) {
   return function (component) {
     return exportView(connect(mapStateToProps, options)(component));

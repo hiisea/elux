@@ -15,6 +15,18 @@ import {
 import env from './env';
 import {isPromise, promiseCaseCallback} from './utils';
 
+/**
+ * 模块是否存在
+ *
+ * @remarks
+ * 即ModuleGetter中是否有配置该模块的获取方式
+ *
+ * @public
+ */
+export function moduleExists(moduleName: string): boolean {
+  return !!coreConfig.ModuleGetter[moduleName];
+}
+
 export function getModule(moduleName: string): Promise<CommonModule> | CommonModule {
   if (MetaData.moduleCaches[moduleName]) {
     return MetaData.moduleCaches[moduleName]!;

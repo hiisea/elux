@@ -31,7 +31,7 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
           var url = nativeUrlToUrl(nativeUrl);
 
           if (action === 'POP') {
-            var arr = search.match(/__=(\w+)/);
+            var arr = ("?" + search).match(/[?&]__k=(\w+)/);
             key = arr ? arr[1] : '';
 
             if (!key) {
@@ -64,7 +64,7 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
   var _proto = MPNativeRouter.prototype;
 
   _proto.addKey = function addKey(url, key) {
-    return url.indexOf('?') > -1 ? url + "&__=" + key : url + "?__=" + key;
+    return url.indexOf('?') > -1 ? url.replace(/[?&]__k=(\w+)/, '') + "&__k=" + key : url + "?__k=" + key;
   };
 
   _proto.init = function init(location, key) {

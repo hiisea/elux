@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.2.0](https://github.com/hiisea/elux/compare/v2.1.0...v2.2.0) (2022-06-03)
+
+
+### Features
+
+* 新增方法moduleExists用于探测模块是否存在 ([910940a](https://github.com/hiisea/elux/commit/910940aedc5729328cb34e2f06dc2f481a650790))
+* 支持路由中断 ([c0de305](https://github.com/hiisea/elux/commit/c0de305b8db416ff701637848aee5f1750c803b8))
+
+
+
+
+
 # [2.1.0](https://github.com/hiisea/elux/compare/v2.0.1...v2.1.0) (2022-05-17)
 
 
