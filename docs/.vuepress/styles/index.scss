@@ -51,7 +51,7 @@
   .external-link span {
     display: none;
   }
-  .navbar-items > :last-child{
+  .navbar-items > :last-child {
     display: none;
   }
 }
@@ -357,8 +357,36 @@
     }
   }
 
+  .try-now{
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 50px 0;
+    font-size: 18px;
+  }
   .footer {
     font-size: 13px;
     color: #666;
+
+    .stars {
+      font-size: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+
+      em{
+        border-bottom: 1px solid #eee;
+      }
+    }
+
+    .git {
+      font-size: 15px;
+      padding-bottom: 10px;
+
+      a {
+        color: #5e9ee6;
+      }
+    }
   }
 }

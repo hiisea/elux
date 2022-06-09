@@ -61,5 +61,7 @@
       </div>
       <div class="cli"></div>
     </div>
+    <h2>只需一行命令，立即试试吧！👇</h2>
+    <div class="try-now">npx @elux/cli-init elux-init</div>
   </div>
 </template>

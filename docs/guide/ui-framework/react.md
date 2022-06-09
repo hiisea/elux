@@ -17,7 +17,7 @@ Elux内置了数据管理框架，它也同时支持`Mutable`与`Immutable`数�
 
 > 严格意义上说Mobx属于`数据模式框架`+`数据管理框架`，参见[Mutable与Immutable](/guide/basics/immutable.html)
 
-## 和Reudx的联系
+## 和Redux的联系
 
 它与Redux同属于`Flux框架`的变种。不少概念沿用Redux中的定义，如`store/dispatch/action/reducer/middleware`等，可以参照Redux的文档来理解和使用它们（effect概念可参照`redux-saga`）
 
