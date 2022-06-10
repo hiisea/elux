@@ -48,7 +48,7 @@ next: /guide/platform/ssr.html
 └── package.json
 ```
 
-1. 首先，使用微模块必需`彻底的模块化`，不能再有公共资源`src/assets`、`src/components`等文件夹了。我们可以将`根模块A`当成公共模块(基座)，将原来的公共资源都当成A的资源，将相关文件夹由`src/`移动到`src/modules/A/`
+1. 首先，使用微前端必需`彻底的微模块化`，不能再有公共资源`src/assets`、`src/components`等文件夹了。我们可以将`根模块A`当成公共模块(基座)，将原来的公共资源都当成A的资源，将相关文件夹由`src/`移动到`src/modules/A/`
 2. 然后，因为TeamA要开发多个微模块，所以我们需要Monorepo工程模式，如使用`lerna+workspace`
 
     ```json
@@ -76,7 +76,7 @@ next: /guide/platform/ssr.html
     }
      ```
 
-3. 虽然TeamA只开发A,B,C模块，但它们有可能依赖到别的模块(`假设依赖了E,G模块`)，为了开发和调试方便，我们可以使用2种方式实现依赖：
+3. 虽然TeamA只开发A,B,C模块，但它们有可能依赖到别的模块(`假设依赖了E,G模块`)，为了开发和调试方便，我们可以使用2种方式安装依赖：
 
    - 安装真实的依赖模块。直接在package.json中添加依赖：
 
@@ -118,7 +118,7 @@ next: /guide/platform/ssr.html
 
      ```
 
-4. 将A,B,C微模块当作独立的NPM包模块，在其文件夹中添加package.json文件，并整理好依赖：
+4. 将A,B,C微模块当作独立的NPM包，在其文件夹中添加package.json文件，并整理好依赖：
 
    ```json
     // src/modules/B/package.json
@@ -134,7 +134,7 @@ next: /guide/platform/ssr.html
     }
    ```
 
-5. 因为`src/modules/`下面的微模块都将发布到npm，所以注意跨模块的import不要使用`相对路径`或者`alias`，请使用npm包名；微模块内部的相互引用可以使用`相对路径`。
+5. 因为`src/modules/`下面的微模块都将发布到npm，所以注意跨模块的import不要使用`相对路径`或者`alias`，请使用真实的`npm包名`；微模块内部的相互引用可以使用`相对路径`。
 
    ```ts
    // src/modules/B/model.ts
@@ -143,7 +143,7 @@ next: /guide/platform/ssr.html
    import {mergeDefaultParams} from '@newProject/A/utils/tools';
    ```
 
-   注意：本工程微模块之间的调用也属于跨模块，所以也要使用npm包名。但是typescript无法理解package.json中的`workspaces`设置，所以必须手动设置tsconfig中的别名：
+   注意：本工程微模块之间的调用也属于跨模块，所以import时也要使用`npm包名`。但是typescript无法理解package.json中的`workspaces`设置，所以必须手动设置tsconfig中的别名：
 
    ```ts
    // src/tsconfig.json
@@ -183,13 +183,13 @@ next: /guide/platform/ssr.html
     }
    ```
 
-7. 各微模块开发好之后，就可以使用Lerna来统一发布。值得注意的是，可以直接将各模块的`源码`发布，无需编译打包（使用私有npm源）。
+7. 各微模块开发好之后，就可以使用Lerna来统一发布。注意，可以直接将各模块的`源码`发布，无需编译打包。
 
 ## TeamB/TeamC工程
 
-TeamB/TeamC工程都是作为内容的提供者，与TeamA类似。
+TeamB/TeamC工程都是内容的提供者，与TeamA类似。
 
-> A模块作为根模块，每个工程都必需安装
+> A模块作为根模块，每个工程都必需作为依赖安装。
 
 ## TeamD集成
 
@@ -241,10 +241,11 @@ TeamB/TeamC工程都是作为内容的提供者，与TeamA类似。
      静态编译最简单，就是一个普通webpack工程。注意的是，如果我们的微模块是以`源码`直接发布的，那么要注意防止webpack的相关loader默认忽略node_modules中的转换。
 
    - **动态注入**  
-     微模块`D,E`是TeamB负责开发和维护，假设TeamB频繁的发布小版本(也许是bug多)。客户为了使用最新的D，不得不跟随TeamB重新编译、部署、重新上线...  
-     为了解决这种尴尬的场景，可以使用微模块的`动态注入`，其原理就是使用Webpack5的`ModuleFederation`。  
+     场景：微模块`D,E`是TeamB负责开发和维护，假设TeamB频繁的发布小版本(也许是bug多)，客户为了使用最新的D，不得不跟随TeamB重新编译、部署、重新上线...
+
+     为了解决这种尴尬的场景，可以使用微模块的`动态注入`，其原理就是使用Webpack5的`ModuleFederation`：
      - TeamB自己上线一个`team-b.com`，提供了微模块`D,E`的在线引用，每次发布小版本的时候，他会重新发布这个网站。
-     - 客户工程中不再`硬编译`微模块D，而是每次动态拉取`team-b.com`中提供的最新`D`，`D`更新的时候客户工程不再需要重新编译（用户刷新浏览器就会重新拉取）。
+     - 客户工程中不再`硬编译`微模块D，而是每次动态拉取`team-b.com`中提供的最新`D`，`D`更新的时候客户工程不再需要重新编译（用户刷新浏览器就会从team-b.com重新拉取）。
 
      使用动态注入方案，需要将原`src/index.ts`改名为`bootstrap.ts`，并重新建立`src/index.ts`
 

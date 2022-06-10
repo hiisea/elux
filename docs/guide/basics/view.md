@@ -1,25 +1,24 @@
 # Component与View
 
-这里的Component指UI组件，与UI框架中的组件是同一个概念。
-
 这里的View本质上就是一个Component，只不过逻辑上做了归类。
 
 ::: tip View是一类特殊的Component
 
-- View 用来承载特定的业务逻辑，Component 用来承载可复用的交互逻辑
-- View 可以从 Store 中获取数据，Component 不要这样做
+- View 用来承载特定的业务逻辑，Component 用来承载通用的交互逻辑。
+- Store是业务模型的载体，所以View可以从 Store 中获取数据，而Component不要这样做。
 
 :::
 
 ## 创建Component
 
-创建Component根据UI框架的不同而不同，Elux中没什么限制，也没什么特别之处。只是为了更好的归类，在Component中不要去直接使用Store中的数据。
+创建Component根据UI框架的不同而不同，Elux中没什么限制，也没什么特别之处。
+只是人为约定Component中不要去直接使用Store中的state。
 
 ## 创建View
 
-View就是一个Component，所以创建方法也是一样，并且View中可以直接使用Store中的数据。
+View就是一个Component，所以创建方法也是一样，并且View中可以直接使用Store中的State。
 
-- React - Elux内置了`redux-redux`库，你可以使用`connectRedux`方法来建立与Store之间的映射和转换。
+- React - Elux内置了`redux-redux`库，你可以使用`connectRedux`来连接Store。
 
     ```ts
     // src/modules/article/views/Main.tsx
@@ -81,9 +80,11 @@ View就是一个Component，所以创建方法也是一样，并且View中可以
 
 ## 导出Component、View
 
-首先：如果Component或view需要被模块导出（可以使用LoadComponent()方法加载），必需实现`EluxComponent`接口。方法就是使用`exportComponent()`或者`exportView()`包装一下，另外`connectRedux()`方法内部已经调用了exportView()，所以无需再次调用，例如以上代码示例。
+如果Component或view需要被模块导出（`只有被导出才可以使用LoadComponent()方法加载`），必需实现`EluxComponent`接口。
 
-然后：在模块index文件中，作为exportModule()的参数传入即可。
+使用`exportComponent()`或者`exportView()`包装一下，另外`connectRedux()`方法内部已经调用了`exportView()`。
+
+在模块`./index.ts`文件中作为`exportModule()`方法的第3个参数导出：
 
 ```ts
 // src/modules/stage/index.ts
@@ -96,11 +97,7 @@ export default exportModule('stage', Model, {main});
 
 ### 分包导出
 
-有时候组件很大，可以使用组件的分包导出和按需加载。
-
-> 注意Module的分包导出和Component的分包导出是不同的...
-
-前面说过，Elux中的Module本身是可以分包和按需加载的：
+有时候组件很大，可以使用组件的分包导出和按需加载。前面说过，Elux中的Module本身是可以分包和按需加载的：
 
 ```ts
 // src/Project.ts
@@ -115,9 +112,9 @@ export const ModuleGetter = {
 };
 ```
 
-虽然可以将整个应用分为多个ModuleBundle，但每个Module的所有内容(包括所有view和model)都会打包在一起。
+但每个Module的所有内容(包括所有view和model)都会打包在一起。
 
-而组件的分包导出，则是进一步拆分ModuleBundle，将同一个Module分解为多个子包。组件的分包导出很简单，用`import()`方法即可：
+而组件的分包导出，则是进一步拆分ModuleBundle，将同一个Module分解为多个子包：
 
 ```ts
 // src/modules/stage/index.ts
@@ -130,9 +127,7 @@ export default exportModule('stage', Model, {main: ()=>import('./views/Main')});
 
 ## 使用Component、View
 
-> Elux中Component和View的加载与渲染是懒执行的。
-
-前面说过，Component和View的主要区别在于使不使用Store中的数据。所以相比于使用Component，我们在使用View的时候，要提前执行相关Model的初始化，其过程大致如下：
+前面说过，Component和View的主要区别在于使不使用Store中的数据。所以相比于使用Component，在使用View的时候，要提前执行相关Model的初始化，其过程大致如下：
 
 1. 加载对应的ModuleBundle
 2. 加载对应的ComponentBundle
@@ -199,13 +194,15 @@ const article = GetComponent('article', 'main');
     ```jsx
     export interface LinkProps extends React.HTMLAttributes<HTMLDivElement> {
         disabled?: boolean; //如果disabled将不执行路由及onClick事件
-        to?: string; //指定跳转的url或后退步数
+        to?: number | string; //指定跳转的url或后退步数
         onClick?(event: React.MouseEvent): void; //点击事件
         action?:'relaunch' | 'push' | 'replace' | 'back'; //路由跳转动作
         target?: RouteTarget; //指定要操作的历史栈
+        classname?: string; //window的className
+        payload?: any;
     }
 
-    <Link disabled={pagename==='/home'} to='/home' action='push' target='window'>
+    <Link disabled={pagename==='/home'} to='/home' action='push' target='window' classname="_dialog">
         Home
     </Link>
     ```

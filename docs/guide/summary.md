@@ -31,7 +31,7 @@ Elux应用范围很广，但并不妨碍它使用简单:
 
 ## 武装到牙齿的Typescript
 
-如果某些框架号称`支持Typescript`、`拥抱Typescript`，那么Elux可以说是`武装到牙齿的Typescript`。无论用来开发**微模块**还是**微应用**，人类已经无法阻止Typescript的提示与校验...
+如果某些框架号称`支持Typescript`、`拥抱Typescript`，那么Elux可以说是`武装到牙齿的Typescript`。无论是DispatchAction，还是隔离微模块、微应用，人类已经无法阻止Typescript的提示与校验...
 
 ## 不被抛弃的IE
 
