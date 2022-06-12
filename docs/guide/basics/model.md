@@ -1,17 +1,17 @@
 # Model
 
-这里的Model指的是业务模型，通常一个Module都会包含一个Model，用来处理业务逻辑。
-
-::: tip Model是抽象的业务模型，它包含：
+这里的Model指的是抽象的业务模型，通常一个微模块都会包含一个Model，用来处理业务逻辑，它包含：
 
 - ModuleState: `模块状态`
 - ActionHandler: `维护ModuleState` 可分为reducer/effect（类似vuex的mutation/action）
 
+::: tip
+
+Model形式上就是一个JS类，因此可以通过“**继承**”来复用一些公共逻辑。
+
 :::
 
-Model是一个普通的JS类，可以通过继承来复用一些公共逻辑。
-
-## Modle的基础定义
+## Modle的类型定义
 
 ```ts
 export interface CommonModel {
@@ -28,7 +28,7 @@ export interface CommonModel {
 
 ## 创建一个Model
 
-下面我们用一个比较复杂的根模块stage.model作为示例：
+下面我们用一个比较复杂的根模块`stage.model`作为示例：
 
 1. 在模块目录下创建`model.ts`
 
@@ -41,32 +41,33 @@ export interface CommonModel {
     //定义本模块的状态结构
     export interface ModuleState {
         curUser: CurUser; //该字段用来记录当前用户信息
-        currentModule?: CurrentModule;//该字段用来记录当前路由下展示哪个子Module
-        currentView?: CurrentView; //该字段用来记录当前路由下展示哪个View
+        subModule?: SubModule;//该字段用来记录当前路由下展示哪个子Module
+        currentView?: CurrentView; //该字段用来记录当前路由下展示哪个自己的View
         globalLoading?: LoadingState; //该字段用来记录一个全局的loading状态
         error?: string; //该字段用来记录启动错误，如果该字段有值，则不渲染其它UI
     }
 
     //定义路由中的本模块感兴趣的信息
     export interface RouteParams {
-        currentModule?: CurrentModule;
+        subModule?: SubModule;
         currentView?: CurrentView;
     }
 
-    //定义本模块的业务模型，必需继承BaseModel
+    //定义本模块的Model，必需继承BaseModel
     export class Model extends BaseModel<ModuleState, APPState> {
         protected routeParams: RouteParams; //保存从当前路由中提取的信息结果
 
         //提取当前路由中的本模块感兴趣的信息
         protected getRouteParams(): RouteParams {
             const {pathname} = this.getRouter().location;
-            const [, currentModule, currentView] = pathToRegexp('/:currentModule/:currentView').exec(pathname) || [];
-            return {currentModule, currentView} as RouteParams;
+            //自己定义好路由规则
+            const [, subModule, currentView] = pathToRegexp('/:subModule/:currentView').exec(pathname) || [];
+            return {subModule, currentView} as RouteParams;
         }
     
         //初始化或路由变化时都需要重新挂载Model
-        //在此钩子中必需完成ModuleState的初始赋值(可以异步)
-        //在此钩子执行完成之前，UI将不会Render
+        //在此钩子中必需完成本模块ModuleState的初始赋值(可以异步)
+        //在此钩子执行完成之前，本模块的UI将不会Render
         //在此钩子中并可以await子模块挂载，等待所有子模块都mount完成后，一次性Render UI
         //也可以不await子模块挂载，这样子模块可能需要自己设计并展示Loading界面，这样就形成了2种不同的路由风格
         //一种是数据前置，路由后置(所有数据全部都准备好了再跳转、展示界面)
@@ -74,7 +75,7 @@ export interface CommonModel {
         //SSR时只能使用"数据前置"风格
         public async onMount(env: 'init' | 'route' | 'update'): Promise<void> {
             this.routeParams = this.getRouteParams();
-            const {currentModule, currentView} = this.routeParams;
+            const {subModule, currentView} = this.routeParams;
             //getPrevState()可以获取路由跳转前的状态
             //以下意思是:如果curUser已经存在(之前获取过了)，就直接使用而不再调用API获取
             //你也可以利用这个方法来复用路由之前的任何有效状态，从而减少数据请求
@@ -82,7 +83,7 @@ export interface CommonModel {
             try {
                 //如果用户信息不存在(第一次)，等待获取当前用户信息
                 const curUser = _curUser || (await api.getCurUser());
-                const initState: ModuleState = {curUser, currentModule, currentView};
+                const initState: ModuleState = {curUser, subModule, currentView};
                 //_initState是基类BaseModel中内置的一个reducer
                 //this.dispatch是this.store.dispatch的快捷方式
                 //以下语句等于this.store.dispatch({type: 'stage._initState', payload: initState})
@@ -90,13 +91,13 @@ export interface CommonModel {
             } catch (err: any) {
                 //如果根模块初始化中出现错误，将错误放入ModuleState.error字段中
                 //渲染其它UI将变得没有实际意义
-                const initState: ModuleState = {curUser: {...guest}, currentModule, currentView, error: err.message || err.toString()};
+                const initState: ModuleState = {curUser: {...guest}, subModule, currentView, error: err.message || err.toString()};
                 this.dispatch(this.privateActions._initState(initState));
             }
         }
 
         //定义一个reducer，用来更新当前用户状态
-        //注意该render不希望对外输出，所以定义为protected
+        //注意该render不希望对外开放，所以定义为protected
         @reducer
         protected putCurUser(curUser: CurUser): ModuleState {
             //如果是VUE，可以直接修改ModuleState: Object.assign(this.state, {curUser});
@@ -143,7 +144,7 @@ export interface CommonModel {
     }
     ```
 
-    注意：模块应当对外隐藏细节，尽可能少的暴露公开方法。比如以上Model中，公开(public)对外界输出的只有effect`login(args: LoginParams)`
+    注意：模块应当对外隐藏细节，尽可能少的暴露public公开方法。比如以上Model中，公开对外界输出的只有effect`login(args: LoginParams)`
 
 2. 导出该Model
 
@@ -169,7 +170,7 @@ Model所维护的ModuleState放在`Store`中保存，每个ModuleState对应Stor
         protected test() {
             //获取本模块的ModuleState
             const moduleState = this.state;
-            //获取当前StoreState(包含本模块和其它模块的ModuleState)
+            //获取所有模块的ModuleState
             const currentRootState = this.getRootState();
             //获取路由跳转前的StoreState，可以充分利用之前的数据结果
             const previousRootState = this.getRootState('previous');
@@ -220,9 +221,7 @@ Model所维护的ModuleState放在`Store`中保存，每个ModuleState对应Stor
 
 ## 注意事项
 
-::: tip Model中不要修改其它模块的状态：
+Model中不要修改其它模块的状态：
 
 - 虽然可以读取其它模块的ModuleState，但不要直接修改它们，仅维护自己的ModuleState
 - 如果想修改其它模块的ModuleState，应当dispatch一个其它模块的公开action
-
-:::

@@ -96,7 +96,7 @@ module.exports = {
   </div>
   ```
 
-::: tip 有意义的唯一命名
+::: tip 通过className推测组件位置
 
 这样一来，我们通过className不仅能读到class的语义，还可以简单推测出该组件的文件位置，这对于上线后Debug很有用。
 

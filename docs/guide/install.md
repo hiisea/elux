@@ -56,4 +56,4 @@ elux-init
 ## 关于Taro项目
 
 模版中的Taro项目基于`Taro特定版本`制作，开箱即用，但可能版本滞后。如果想使用官方**最新版本**，也可以自己在Taro项目中安装Elux，参见[Taro小程序
-](/guide/platform/taro.html#手动安装Elux)
+](/guide/platform/taro.html#手动安装elux)

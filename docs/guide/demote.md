@@ -8,7 +8,7 @@ Elux 最低可以兼容到 IE10，但需要特别处理：
 
 ## 需要UI框架本身支持
 
-例如 Vue3 本身不支持IE
+例如 Vue3/React18 本身不支持IE
 
 ## 需要Polyfill
 

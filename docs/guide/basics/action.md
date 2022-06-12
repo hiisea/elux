@@ -4,8 +4,8 @@ Elux中的Action概念与Redux基本相同，其特别之处在于：
 
 - Action是Model中的事件，dispatch一个Action将触发各模块中监听该Action的多个ActionHandler执行
 - ActionHandler按职能可分为：
-  - `Reducer`类似vuex中的`Mutation`是修改State的唯一途径
-  - `Effect`类似vuex中的`Action`Effect不可以直接修改State，但它可以dispatch action来触发Reducer
+  - `Reducer`类似vuex中的`Mutation`，是修改State的唯一途径。
+  - `Effect`类似vuex中的`Action`，Effect不可以直接修改State，但它可以dispatch action来触发Reducer来修改。
 
 ![elux动态逻辑图](/images/dynamic-structure.svg)
 
@@ -22,9 +22,11 @@ export interface Action {
 
 ## 创建并派发Action
 
-- 自动创建（更可以享受到TS的类型提示）
+- 自动创建（更可以享受到**TS的类型提示**）
 
-    ```ts
+    在Model中自动创建并派发Action:
+
+    ```ts{6,10}
     import {Modules} from '@/Global';
 
     export class Model extends BaseModel<ModuleState, APPState> {
@@ -32,17 +34,39 @@ export interface Action {
             //本Model中可以用this.actions
             const logoutAction = this.actions.logout();
             console.log(logoutAction); //{type:'stage.logout'}
-            //可以await该Action的所有Handler执行完成
-            await this.dispatch(logoutAction);
+            await this.dispatch(logoutAction); //可以await该Action的执行
             //非本Model中可以用Modules.article.actions
             const searchAction = Modules.article.actions.search({keyword:'aaa'});
-            console.log(searchAction); //{type:'article.search', payload:{keyword:'aaa'}}
             this.dispatch(searchAction);
         }
     }
     ```
 
-- 手动创建
+    在View中自动创建并派发Action:
+
+    ```ts
+    const Component = ({curUser, notices, dispatch}) => {
+       const onLogout = () => dispatch(Modules.stage.actions.logout());
+
+       return <button onClick={onLogout}>退出</button>
+    }
+    ```
+
+    使用GetActions()写法：
+
+    ```ts
+    //当需要 dispatch 多个 module 的 action 时，例如：
+    dispatch(Modules.a.actions.a1())
+    dispatch(Modules.b.actions.b1())
+
+    //这种写法可以简化为：
+    const {a, b} = GetActions('a', 'b')
+    dispatch(a.a1())
+    dispatch(b.b1())
+    
+    ```
+
+- 手动创建（type和payload都没有TS类型提示）
 
     ```ts
 
@@ -60,13 +84,13 @@ export interface Action {
 
 框架内置了几个特殊的Action(以_前缀)，它们在特定的时机会自动派发：
 
-- `rootModule._error` effect运行中出现任何错误，框架将自动派发该action，可以使用effect监听该action来统一处理错误。
-- `rootModule._testRouteChange` 路由`准备跳转`时会自动派发该action，可以使用effect监听该action，并决定是不是阻止路由跳转。
-- `rootModule._beforeRouteChange` 路由`准备前`时会自动派发该action，可以使用effect监听该action，在跳转前保存某些有用的数据，如未提交的表单等。
-- `rootModule._afterRouteChange` 路由`准备完成`时会自动派发该action，可以使用effect监听该action，获取最新的路由信息注入ModuleState中。
-- `module._initState` Model的onMount中必需派发该action，用来初始化ModuleState。
-- `module._updateState` Model基类BaseModel中内置了这个reducer，用来合并更新ModuleState。
-- `module._loadingState` effect的执行过程可以自动派发该action，用来将执行过程作为loading状态注入ModuleState。
+- `stage._error` effect运行中出现任何错误，框架将自动派发该action，可以使用effect监听该action来统一处理错误。
+- `stage._testRouteChange` 路由`准备跳转`时会自动派发该action，可以使用effect监听该action，并阻止路由跳转。
+- `stage._beforeRouteChange` 路由`准备前`时会自动派发该action，可以使用effect监听该action，在跳转前保存某些有用的数据，如未提交的表单等。
+- `stage._afterRouteChange` 路由`准备完成`时会自动派发该action，可以使用effect监听该action，如获取最新的路由信息注入ModuleState中。
+- `module._initState` 用来注入初始的ModuleState，Model的onMount中必需派发该action。
+- `module._updateState` 用来简单的合并更新ModuleState。
+- `module._loadingState` 用来将执行过程作为loading状态注入ModuleState，effect的执行过程可以自动派发该action。
 
 ## 泛监听
 
@@ -100,8 +124,10 @@ class Model extends BaseModel
 
 假设有3个模块都监听了Stage.logout事件：
 
-```ts
+```ts{7,13}
 // src/modules/stage/model.ts
+
+//监听本模块自己的Action
 class Model extends BaseModel {
   @reducer
   logout(){
@@ -116,8 +142,10 @@ class Model extends BaseModel {
 }
 ```
 
-```ts
+```ts{7,14}
 // src/modules/moduleA/model.ts
+
+//监听其它模块的Action
 class Model extends BaseModel {
   @reducer
   ['stage.logout'](){
@@ -133,8 +161,10 @@ class Model extends BaseModel {
 }
 ```
 
-```ts
+```ts{7,14}
 // src/modules/moduleB/model.ts
+
+//监听其它模块的Action
 class Model extends BaseModel {
   @reducer
   ['stage.logout'](){
@@ -161,8 +191,14 @@ moduleA.effect
 moduleB.effect
 ```
 
-- 所有`reducer`被先同步执行，而此`action宿主模块`的reducer被最先执行。stage模块是此action的宿主模块，其它都是`被动监听模块`。
-- 所有`effect`都在reducer执行完成之后才执行，同样`action宿主模块`的effect被最先执行。
+- 所有`reducer`被最先同步执行，而此`action宿主模块`的reducer第一个执行（stage模块是此action的宿主模块，其它都是被动监听模块）。
+- 所有`effect`都在reducer执行完成之后才执行，同样`action宿主模块`的effect第一个执行。
+
+::: tip 同一个Model对同一个Action保持一份监听(reducer和effect各一个)
+
+为什么？因为没必要多份，你完全可以在 reducer 和 effect 中调用其它方法。
+
+:::
 
 ### 改变执行顺序
 
@@ -170,10 +206,12 @@ moduleB.effect
 
 > `dispatch({type: 'stage.logout', priority: ['moduleB']})`
 
-这样会把moduleB的reducer和effect优先执行，但是最好不要这样做，而保持模块之间的松散性。
-如果模块handler依赖于其它模块作为先决条件，可以让其它模块在完成之后dispatch一个新的action。
+这样会把 moduleB 的 reducer 和 effect 优先执行，**但是不推荐这么做，保持模块之间的松散性**，可以改为：
 
-### await所有Hander的执行
+- ModuleB 执行完后，dispatch一个新的action
+- MouldeA 监听这个新的action
+
+### await Action执行结果
 
 可以等待一个action的所有handler执行完成，比如：
 
@@ -208,17 +246,11 @@ moduleB.effect
 
   ```
 
-::: tip 同一个Model对同一个Action保持一份监听(reducer和effect各一个)
-
-为什么？因为没必要多份，你完全可以在reducer和effect中调用其它方法。
-
-:::
-
 ## 错误与处理
 
 ActionHandler相当于一条执行链，执行过程中若出现任何错误，框架将自动dispatch一个type为`stage._error`的Action（通常actionName为_表示是框架内置的Action）
 
-任何模块都可以通过effect来监听这个ErrorAction，然后决定是消化错误还是继续抛出。**如果继续抛出，则该ActionHandler的执行链将就此中断**。参见 [/guide/basics/model](/guide/basics/model.html)
+可以通过effect来监听这个ErrorAction，然后决定是消化错误还是继续抛出。**如果继续抛出，则该ActionHandler的执行链将就此中断**。
 
 ## 中间件与日志记录
 
