@@ -69,7 +69,9 @@
     }
   }
 
-  .hero-description {
+  .hero .hero-description {
+    font-weight: normal;
+    line-height: 1.7;
     margin-top: 2rem;
     font-size: 1.2rem;
     color: #666;
@@ -386,6 +388,21 @@
 
       a {
         color: #5e9ee6;
+      }
+    }
+
+    .copyright{
+      margin-top: 5px;
+      font-size: 12px;
+
+      img{
+        vertical-align: middle;
+      }
+
+      a{
+        font-weight: normal;
+        color: #5e9ee6;
+        margin-left: 10px;
       }
     }
   }

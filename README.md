@@ -5,7 +5,8 @@
   </h1>
   <h3>基于“微模块”和“模型驱动”的跨平台、跨框架『同构方案』</h3>
   <p>
-    <em>一行命令，立即试试：npx @elux/cli-init elux-init</em>
+  <small style="background:#eee">支持React/Vue/Web(浏览器)/Micro(微前端)/SSR(服务器渲染)/MP(小程序)/APP(手机应用)</small>
+    <div>一行命令，立即试试：npx @elux/cli-init elux-init</div>
   </p>
   <a href="https://www.npmjs.com/package/@elux/cli">
     <img src="https://img.shields.io/node/v/@elux/cli.svg?style=flat-square" />

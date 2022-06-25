@@ -32,12 +32,12 @@ export default defineUserConfig({
   locales: {
     '/': {
       lang: 'zh-CN',
-      title: 'EluxJS',
+      title: 'Elux-基于“微模块”和“模型驱动”的跨平台、跨框架『同构方案』',
       description: 'Elux不只是一个JS框架，更是一种基于“微模块”和“模型驱动”的跨平台、跨框架同构方案',
     },
     '/en/': {
       lang: 'en-US',
-      title: 'EluxJS',
+      title: 'Elux-基于“微模块”和“模型驱动”的跨平台、跨框架『同构方案』',
       description: 'Cross platform and cross framework web solutions that based on micro-module and model-driven',
     },
   },
@@ -102,6 +102,14 @@ export default defineUserConfig({
                 {
                   text: '模型驱动',
                   link: '/designed/model-driven.html',
+                },
+                {
+                  text: '分层而治',
+                  link: '/designed/three-layered.html',
+                },
+                {
+                  text: '跨端新思维',
+                  link: '/designed/cross-platform.html',
                 },
                 {
                   text: '路由与历史',
@@ -229,9 +237,9 @@ export default defineUserConfig({
   },
   plugins: [
     docsearchPlugin({
-      appId: 'A09ELNUQMU',
-      apiKey: '29a5c02a23f21980ea4c07c22cfee0de',
-      indexName: 'elux',
+      appId: 'B56RK7N8AQ',
+      apiKey: '0d488f0e9deb7cd12ca454f5c5731511',
+      indexName: 'eluxjs',
     }),
   ],
 });
