@@ -1,6 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
-var _excluded = ["onClick", "disabled", "to", "action", "classname", "target", "payload"];
+var _excluded = ["onClick", "disabled", "to", "action", "classname", "cname", "target", "payload"];
 import { coreConfig } from '@elux/core';
 import { locationToUrl, urlToNativeUrl } from '@elux/route';
 import { useCallback, useMemo } from 'react';
@@ -14,10 +14,14 @@ export var Link = function Link(_ref) {
       action = _ref$action === void 0 ? 'push' : _ref$action,
       _ref$classname = _ref.classname,
       classname = _ref$classname === void 0 ? '' : _ref$classname,
+      _ref$cname = _ref.cname,
+      cname = _ref$cname === void 0 ? '' : _ref$cname,
       _ref$target = _ref.target,
       target = _ref$target === void 0 ? 'page' : _ref$target,
       payload = _ref.payload,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
+
+  cname = cname || classname;
 
   var _useMemo = useMemo(function () {
     var back;
@@ -27,9 +31,9 @@ export var Link = function Link(_ref) {
     if (action === 'back') {
       back = to || 1;
     } else {
-      url = classname ? locationToUrl({
+      url = cname ? locationToUrl({
         url: to.toString(),
-        classname: classname
+        classname: cname
       }) : to.toString();
       href = urlToNativeUrl(url);
     }
@@ -39,7 +43,7 @@ export var Link = function Link(_ref) {
       url: url,
       href: href
     };
-  }, [action, classname, to]),
+  }, [action, cname, to]),
       back = _useMemo.back,
       url = _useMemo.url,
       href = _useMemo.href;
@@ -61,7 +65,7 @@ export var Link = function Link(_ref) {
   props['to'] = (back || url) + '';
   props['href'] = href;
   href && (props['href'] = href);
-  classname && (props['classname'] = classname);
+  cname && (props['cname'] = cname);
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {

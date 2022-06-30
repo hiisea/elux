@@ -214,7 +214,7 @@ export class Router extends CoreRouter {
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
     this.action = 'init';
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.windowStack = new WindowStack(this.location, new Store(0, 0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
@@ -399,7 +399,7 @@ export class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone();
+    const newStore = prevStore.clone(target === 'window');
     const pageStack = this.windowStack.getCurrentItem();
     let newRecord;
 

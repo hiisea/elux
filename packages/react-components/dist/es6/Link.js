@@ -8,10 +8,12 @@ export const Link = ({
   to = '',
   action = 'push',
   classname = '',
+  cname = '',
   target = 'page',
   payload,
   ...props
 }) => {
+  cname = cname || classname;
   const {
     back,
     url,
@@ -24,9 +26,9 @@ export const Link = ({
     if (action === 'back') {
       back = to || 1;
     } else {
-      url = classname ? locationToUrl({
+      url = cname ? locationToUrl({
         url: to.toString(),
-        classname
+        classname: cname
       }) : to.toString();
       href = urlToNativeUrl(url);
     }
@@ -36,7 +38,7 @@ export const Link = ({
       url,
       href
     };
-  }, [action, classname, to]);
+  }, [action, cname, to]);
   const router = coreConfig.UseRouter();
   const onClick = useCallback(event => {
     event.preventDefault();
@@ -54,7 +56,7 @@ export const Link = ({
   props['to'] = (back || url) + '';
   props['href'] = href;
   href && (props['href'] = href);
-  classname && (props['classname'] = classname);
+  cname && (props['cname'] = cname);
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {

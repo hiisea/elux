@@ -46,6 +46,7 @@ export declare abstract class CoreRouter implements IRouter {
 }
 export declare class Store implements IStore {
     readonly sid: number;
+    readonly uid: number;
     readonly router: IRouter;
     private state;
     private injectedModels;
@@ -59,8 +60,8 @@ export declare class Store implements IStore {
     loadingGroups: {
         [moduleNameAndGroupName: string]: TaskCounter;
     };
-    constructor(sid: number, router: IRouter);
-    clone(): Store;
+    constructor(sid: number, uid: number, router: IRouter);
+    clone(brand?: boolean): Store;
     hotReplaceModel(moduleName: string, ModelClass: CommonModelClass): void;
     getCurrentAction(): Action;
     mount(moduleName: string, env: 'init' | 'route' | 'update'): void | Promise<void>;

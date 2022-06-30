@@ -175,7 +175,7 @@ export class Store implements IStore {
   };
   public loadingGroups: {[moduleNameAndGroupName: string]: TaskCounter} = {};
 
-  constructor(public readonly sid: number, public readonly router: IRouter) {
+  constructor(public readonly sid: number, public readonly uid: number, public readonly router: IRouter) {
     const middlewareAPI = {
       getStore: () => this,
       dispatch: (action: Action) => this.dispatch(action),
@@ -188,8 +188,8 @@ export class Store implements IStore {
     this.dispatch = compose(...chain)(_dispatch);
   }
 
-  clone(): Store {
-    return new Store(this.sid + 1, this.router);
+  clone(brand?: boolean): Store {
+    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
   }
   hotReplaceModel(moduleName: string, ModelClass: CommonModelClass): void {
     const orignModel = this.injectedModels[moduleName];

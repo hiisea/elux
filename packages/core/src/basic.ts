@@ -86,6 +86,7 @@ export interface GetState<TStoreState extends StoreState = StoreState> {
  * @public
  */
 export interface IStore<TStoreState extends StoreState = StoreState> {
+  uid: number;
   /**
    * 实例ID
    */

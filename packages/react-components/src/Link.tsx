@@ -41,9 +41,13 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
    */
   payload?: any;
   /**
-   * 指定路由窗口的class
+   * @deprecated 指定路由窗口的class，即将废弃，请使用`cname`
    */
   classname?: string;
+  /**
+   * 指定路由窗口的class
+   */
+  cname?: string;
 }
 
 /**
@@ -54,7 +58,18 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
  *
  * @public
  */
-export const Link: FC<LinkProps> = ({onClick: _onClick, disabled, to = '', action = 'push', classname = '', target = 'page', payload, ...props}) => {
+export const Link: FC<LinkProps> = ({
+  onClick: _onClick,
+  disabled,
+  to = '',
+  action = 'push',
+  classname = '',
+  cname = '',
+  target = 'page',
+  payload,
+  ...props
+}) => {
+  cname = cname || classname;
   const {back, url, href} = useMemo(() => {
     let back: string | number | undefined;
     let url: string | undefined;
@@ -62,11 +77,11 @@ export const Link: FC<LinkProps> = ({onClick: _onClick, disabled, to = '', actio
     if (action === 'back') {
       back = to || 1;
     } else {
-      url = classname ? locationToUrl({url: to.toString(), classname}) : to.toString();
+      url = cname ? locationToUrl({url: to.toString(), classname: cname}) : to.toString();
       href = urlToNativeUrl(url);
     }
     return {back, url, href};
-  }, [action, classname, to]);
+  }, [action, cname, to]);
   const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
   const onClick = useCallback(
     (event: MouseEvent) => {
@@ -84,7 +99,7 @@ export const Link: FC<LinkProps> = ({onClick: _onClick, disabled, to = '', actio
   props['to'] = (back || url) + '';
   props['href'] = href;
   href && (props['href'] = href);
-  classname && (props['classname'] = classname);
+  cname && (props['cname'] = cname);
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {

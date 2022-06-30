@@ -1,5 +1,5 @@
 import {coreConfig, env, ILoadComponent, injectComponent, isPromise, IStore} from '@elux/core';
-import {forwardRef, useEffect, useState} from 'react';
+import {forwardRef, useEffect, useRef, useState} from 'react';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
   <div className="g-component-error">{message}</div>
@@ -21,11 +21,11 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
           }
           result.then(
             (view: any) => {
-              active && setView(view || 'not found!');
+              activeRef.current && setView(view || 'not found!');
             },
             (e) => {
               env.console.error(e);
-              active && setView(e.message || `${e}` || 'error');
+              activeRef.current && setView(e.message || `${e}` || 'error');
             }
           );
         } else {
@@ -37,10 +37,10 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
       }
       return View;
     };
-    const [active, setActive] = useState(true);
+    const activeRef = useRef(true);
     useEffect(() => {
       return () => {
-        setActive(false);
+        activeRef.current = false;
       };
     }, []);
     const newStore = coreConfig.UseStore!();
@@ -52,6 +52,8 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
     }
     if (typeof View === 'string') {
       return <OnError message={View} />;
+    } else if (View === OnLoading) {
+      return <OnLoading />;
     } else {
       return <View ref={ref} {...props} />;
     }

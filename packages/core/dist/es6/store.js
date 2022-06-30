@@ -111,7 +111,7 @@ function applyEffect(effectResult, store, model, action, dispatch, decorators = 
 }
 
 export class Store {
-  constructor(sid, router) {
+  constructor(sid, uid, router) {
     this.state = coreConfig.StoreInitState();
     this.injectedModels = {};
     this.mountedModules = {};
@@ -127,6 +127,7 @@ export class Store {
 
     this.loadingGroups = {};
     this.sid = sid;
+    this.uid = uid;
     this.router = router;
     const middlewareAPI = {
       getStore: () => this,
@@ -142,8 +143,8 @@ export class Store {
     this.dispatch = compose(...chain)(_dispatch);
   }
 
-  clone() {
-    return new Store(this.sid + 1, this.router);
+  clone(brand) {
+    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
   }
 
   hotReplaceModel(moduleName, ModelClass) {

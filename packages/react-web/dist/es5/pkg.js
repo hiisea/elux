@@ -975,7 +975,7 @@ function applyEffect(effectResult, store, model, action, dispatch, decorators) {
 }
 
 var Store = function () {
-  function Store(sid, router) {
+  function Store(sid, uid, router) {
     var _this = this;
 
     this.state = coreConfig.StoreInitState();
@@ -993,6 +993,7 @@ var Store = function () {
 
     this.loadingGroups = {};
     this.sid = sid;
+    this.uid = uid;
     this.router = router;
     var middlewareAPI = {
       getStore: function getStore() {
@@ -1017,8 +1018,8 @@ var Store = function () {
 
   var _proto2 = Store.prototype;
 
-  _proto2.clone = function clone() {
-    return new Store(this.sid + 1, this.router);
+  _proto2.clone = function clone(brand) {
+    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
   };
 
   _proto2.hotReplaceModel = function hotReplaceModel(moduleName, ModelClass) {
@@ -1606,7 +1607,8 @@ var Component$1 = function Component() {
           classname = _item$location.classname;
       var props = {
         className: "elux-window" + (classname ? ' ' + classname : ''),
-        key: store.sid,
+        key: store.uid,
+        uid: store.uid,
         sid: store.sid,
         url: url,
         style: {
@@ -1688,10 +1690,10 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
           }
 
           result.then(function (view) {
-            active && setView(view || 'not found!');
+            activeRef.current && setView(view || 'not found!');
           }, function (e) {
             env.console.error(e);
-            active && setView(e.message || "" + e || 'error');
+            activeRef.current && setView(e.message || "" + e || 'error');
           });
         } else {
           View = result;
@@ -1704,24 +1706,21 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
       return View;
     };
 
-    var _useState = useState(true),
-        active = _useState[0],
-        setActive = _useState[1];
-
+    var activeRef = useRef(true);
     useEffect(function () {
       return function () {
-        setActive(false);
+        activeRef.current = false;
       };
     }, []);
     var newStore = coreConfig.UseStore();
 
-    var _useState2 = useState(newStore),
-        store = _useState2[0],
-        setStore = _useState2[1];
+    var _useState = useState(newStore),
+        store = _useState[0],
+        setStore = _useState[1];
 
-    var _useState3 = useState(execute),
-        View = _useState3[0],
-        setView = _useState3[1];
+    var _useState2 = useState(execute),
+        View = _useState2[0],
+        setView = _useState2[1];
 
     if (store !== newStore) {
       setStore(newStore);
@@ -1732,6 +1731,8 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
       return jsx(OnError, {
         message: View
       });
+    } else if (View === OnLoading) {
+      return jsx(OnLoading, {});
     } else {
       return jsx(View, _extends$1({
         ref: ref
@@ -3374,7 +3375,7 @@ var Router = function (_CoreRouter) {
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
     this.action = 'init';
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.windowStack = new WindowStack(this.location, new Store(0, 0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
@@ -3741,7 +3742,7 @@ var Router = function (_CoreRouter) {
               this.savePageTitle();
               this.location = location;
               this.action = action;
-              newStore = prevStore.clone();
+              newStore = prevStore.clone(target === 'window');
               pageStack = this.windowStack.getCurrentItem();
 
               if (!(target === 'window')) {
@@ -3987,7 +3988,7 @@ var Router = function (_CoreRouter) {
   return Router;
 }(CoreRouter);
 
-var _excluded = ["onClick", "disabled", "to", "action", "classname", "target", "payload"];
+var _excluded = ["onClick", "disabled", "to", "action", "classname", "cname", "target", "payload"];
 var Link = function Link(_ref) {
   var _onClick = _ref.onClick,
       disabled = _ref.disabled,
@@ -3997,10 +3998,14 @@ var Link = function Link(_ref) {
       action = _ref$action === void 0 ? 'push' : _ref$action,
       _ref$classname = _ref.classname,
       classname = _ref$classname === void 0 ? '' : _ref$classname,
+      _ref$cname = _ref.cname,
+      cname = _ref$cname === void 0 ? '' : _ref$cname,
       _ref$target = _ref.target,
       target = _ref$target === void 0 ? 'page' : _ref$target,
       payload = _ref.payload,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
+
+  cname = cname || classname;
 
   var _useMemo = useMemo(function () {
     var back;
@@ -4010,9 +4015,9 @@ var Link = function Link(_ref) {
     if (action === 'back') {
       back = to || 1;
     } else {
-      url = classname ? locationToUrl({
+      url = cname ? locationToUrl({
         url: to.toString(),
-        classname: classname
+        classname: cname
       }) : to.toString();
       href = urlToNativeUrl(url);
     }
@@ -4022,7 +4027,7 @@ var Link = function Link(_ref) {
       url: url,
       href: href
     };
-  }, [action, classname, to]),
+  }, [action, cname, to]),
       back = _useMemo.back,
       url = _useMemo.url,
       href = _useMemo.href;
@@ -4044,7 +4049,7 @@ var Link = function Link(_ref) {
   props['to'] = (back || url) + '';
   props['href'] = href;
   href && (props['href'] = href);
-  classname && (props['classname'] = classname);
+  cname && (props['cname'] = cname);
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {

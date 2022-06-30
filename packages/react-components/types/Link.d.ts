@@ -39,9 +39,13 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
      */
     payload?: any;
     /**
-     * 指定路由窗口的class
+     * @deprecated 指定路由窗口的class，即将废弃，请使用`cname`
      */
     classname?: string;
+    /**
+     * 指定路由窗口的class
+     */
+    cname?: string;
 }
 /**
  * 内置UI组件

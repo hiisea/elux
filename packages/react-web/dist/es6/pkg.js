@@ -833,7 +833,7 @@ function applyEffect(effectResult, store, model, action, dispatch, decorators = 
 }
 
 class Store {
-  constructor(sid, router) {
+  constructor(sid, uid, router) {
     this.state = coreConfig.StoreInitState();
     this.injectedModels = {};
     this.mountedModules = {};
@@ -849,6 +849,7 @@ class Store {
 
     this.loadingGroups = {};
     this.sid = sid;
+    this.uid = uid;
     this.router = router;
     const middlewareAPI = {
       getStore: () => this,
@@ -864,8 +865,8 @@ class Store {
     this.dispatch = compose(...chain)(_dispatch);
   }
 
-  clone() {
-    return new Store(this.sid + 1, this.router);
+  clone(brand) {
+    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
   }
 
   hotReplaceModel(moduleName, ModelClass) {
@@ -1414,7 +1415,8 @@ const Component$1 = () => {
       } = item;
       const props = {
         className: `elux-window${classname ? ' ' + classname : ''}`,
-        key: store.sid,
+        key: store.uid,
+        uid: store.uid,
         sid: store.sid,
         url,
         style: {
@@ -1490,10 +1492,10 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
           }
 
           result.then(view => {
-            active && setView(view || 'not found!');
+            activeRef.current && setView(view || 'not found!');
           }, e => {
             env.console.error(e);
-            active && setView(e.message || `${e}` || 'error');
+            activeRef.current && setView(e.message || `${e}` || 'error');
           });
         } else {
           View = result;
@@ -1506,10 +1508,10 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
       return View;
     };
 
-    const [active, setActive] = useState(true);
+    const activeRef = useRef(true);
     useEffect(() => {
       return () => {
-        setActive(false);
+        activeRef.current = false;
       };
     }, []);
     const newStore = coreConfig.UseStore();
@@ -1525,6 +1527,8 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
       return jsx(OnError, {
         message: View
       });
+    } else if (View === OnLoading) {
+      return jsx(OnLoading, {});
     } else {
       return jsx(View, {
         ref: ref,
@@ -2248,7 +2252,7 @@ class Router extends CoreRouter {
     this.initOptions = routerInitOptions;
     this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
     this.action = 'init';
-    this.windowStack = new WindowStack(this.location, new Store(0, this));
+    this.windowStack = new WindowStack(this.location, new Store(0, 0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
@@ -2433,7 +2437,7 @@ class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone();
+    const newStore = prevStore.clone(target === 'window');
     const pageStack = this.windowStack.getCurrentItem();
     let newRecord;
 
@@ -2587,10 +2591,12 @@ const Link = ({
   to = '',
   action = 'push',
   classname = '',
+  cname = '',
   target = 'page',
   payload,
   ...props
 }) => {
+  cname = cname || classname;
   const {
     back,
     url,
@@ -2603,9 +2609,9 @@ const Link = ({
     if (action === 'back') {
       back = to || 1;
     } else {
-      url = classname ? locationToUrl({
+      url = cname ? locationToUrl({
         url: to.toString(),
-        classname
+        classname: cname
       }) : to.toString();
       href = urlToNativeUrl(url);
     }
@@ -2615,7 +2621,7 @@ const Link = ({
       url,
       href
     };
-  }, [action, classname, to]);
+  }, [action, cname, to]);
   const router = coreConfig.UseRouter();
   const onClick = useCallback(event => {
     event.preventDefault();
@@ -2633,7 +2639,7 @@ const Link = ({
   props['to'] = (back || url) + '';
   props['href'] = href;
   href && (props['href'] = href);
-  classname && (props['classname'] = classname);
+  cname && (props['cname'] = cname);
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {
