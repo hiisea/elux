@@ -73,6 +73,18 @@ export function urlToLocation(url: string): Location {
   return {url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`, pathname, search, hash, classname, searchQuery, hashQuery};
 }
 
+export function mergeDefaultClassname(url: string, defClassname: string): string {
+  if (!defClassname) {
+    return url;
+  }
+  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
+  if (/[?&]__c=/.test(`?${query}`)) {
+    return url;
+  }
+  const _query = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
+  return `${path}${_query ? '?' + _query : ''}${hash ? '#' + hash : ''}`;
+}
+
 /**
  * Location转换为Url
  *
@@ -85,11 +97,11 @@ export function locationToUrl({url, pathname, search, hash, classname, searchQue
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
   const {stringify} = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
-  if (classname) {
+  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
+  if (typeof classname === 'string') {
     search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
     search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
   }
-  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
   url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
   return url;
 }
@@ -153,7 +165,6 @@ export interface RouteConfig {
     parse(str: string): {[key: string]: any};
     stringify(query: {[key: string]: any}): string;
   };
-  HomeUrl: string;
   NativePathnameMapping: {
     in(nativePathname: string): string;
     out(internalPathname: string): string;
@@ -168,13 +179,12 @@ export const routeConfig: RouteConfig = {
     window: true,
     page: false,
   },
-  HomeUrl: '/',
   QueryString: {
     parse: (str: string) => ({}),
     stringify: () => '',
   },
   NativePathnameMapping: {
-    in: (pathname: string) => (pathname === '/' ? routeConfig.HomeUrl : pathname),
+    in: (pathname: string) => pathname,
     out: (pathname: string) => pathname,
   },
 };

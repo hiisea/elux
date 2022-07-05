@@ -47,10 +47,6 @@ export class CoreRouter {
     }
   }
 
-  getHistoryUrls(target) {
-    throw new Error('Method not implemented.');
-  }
-
   addListener(callback) {
     this.listenerId++;
     const id = `${this.listenerId}`;

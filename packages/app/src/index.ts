@@ -99,15 +99,6 @@ export interface UserConfig {
     stringify(query: {[key: string]: any}): string;
   };
   /**
-   * 定义应用的首页Url
-   *
-   * @defaultValue `/`
-   *
-   * @remarks
-   * 默认: `/`
-   */
-  HomeUrl: string;
-  /**
    * 定义虚拟路由和原生路由的Url映射
    */
   NativePathnameMapping?: {

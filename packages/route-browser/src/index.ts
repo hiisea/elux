@@ -37,7 +37,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
       this.unlistenHistory = history.block((locationData, action) => {
         // browser与elux简化为松散关系，操作elux一定不会触发POP，触发POP一定是操作browser
         if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1), 0);
+          env.setTimeout(() => this.router.back(1, 'page'), 300);
           return false;
         }
         return undefined;

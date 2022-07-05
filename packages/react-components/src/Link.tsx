@@ -1,6 +1,6 @@
-import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
-import {locationToUrl, urlToNativeUrl} from '@elux/route';
-import {FC, HTMLAttributes, MouseEvent, useCallback, useMemo} from 'react';
+import {coreConfig, IRouteRecord, Location, RouteAction, RouteTarget} from '@elux/core';
+import {urlToNativeUrl} from '@elux/route';
+import {FC, HTMLAttributes, MouseEvent, useCallback, useMemo, useRef} from 'react';
 
 /**
  * 内置UI组件
@@ -19,7 +19,19 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * 指定跳转的url或后退步数
    */
-  to: number | string;
+  to: number | string | ((record: IRouteRecord) => boolean) | Partial<Location>;
+  /**
+   * 路由跳转动作
+   */
+  action: Exclude<RouteAction, 'init'>;
+  /**
+   * 指定要操作的历史栈
+   */
+  target: RouteTarget | 'singleWindow';
+  /**
+   * 指定路由窗口的class
+   */
+  cname?: string;
   /**
    * 如果disabled将不执行路由及onClick事件
    */
@@ -27,27 +39,15 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * 点击事件
    */
-  onClick?(event: MouseEvent): void;
+  actiononClick?(event: MouseEvent): void;
   /**
-   * 路由跳转动作
+   * 路由后退时如果溢出，将重定向到此Url
    */
-  action?: Exclude<RouteAction, 'init'>;
-  /**
-   * 指定要操作的历史栈
-   */
-  target?: RouteTarget;
+  overflowRedirect?: string;
   /**
    * 本次路由传值
    */
   payload?: any;
-  /**
-   * @deprecated 指定路由窗口的class，即将废弃，请使用`cname`
-   */
-  classname?: string;
-  /**
-   * 指定路由窗口的class
-   */
-  cname?: string;
 }
 
 /**
@@ -58,48 +58,43 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
  *
  * @public
  */
-export const Link: FC<LinkProps> = ({
-  onClick: _onClick,
-  disabled,
-  to = '',
-  action = 'push',
-  classname = '',
-  cname = '',
-  target = 'page',
-  payload,
-  ...props
-}) => {
-  cname = cname || classname;
-  const {back, url, href} = useMemo(() => {
-    let back: string | number | undefined;
-    let url: string | undefined;
-    let href: string | undefined;
+export const Link: FC<LinkProps> = ({to, cname, action, onClick, disabled, overflowRedirect, target, payload, ...props}) => {
+  const router = coreConfig.UseRouter!();
+  const {firstArg, url, href} = useMemo(() => {
+    let firstArg: any, url: string, href: string;
     if (action === 'back') {
-      back = to || 1;
+      firstArg = to;
+      url = `#${to.toString()}`;
+      href = `#`;
     } else {
-      url = cname ? locationToUrl({url: to.toString(), classname: cname}) : to.toString();
+      const location = (typeof to === 'string' ? {url: to} : to) as Partial<Location>;
+      cname !== undefined && (location.classname = cname);
+      url = router.computeUrl(location, action, target);
+      firstArg = {url};
       href = urlToNativeUrl(url);
     }
-    return {back, url, href};
-  }, [action, cname, to]);
-  const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
-  const onClick = useCallback(
-    (event: MouseEvent) => {
-      event.preventDefault();
-      if (!disabled) {
-        _onClick && _onClick(event);
-        router[action](back || {url}, target, payload);
-      }
-    },
-    [disabled, _onClick, router, action, back, url, target, payload]
-  );
-  props['onClick'] = onClick;
+    return {firstArg, url, href};
+  }, [target, action, cname, router, to]);
+
+  const data = {router, onClick, disabled, firstArg, action, target, payload, overflowRedirect};
+  const refData = useRef(data);
+  Object.assign(refData.current, data);
+
+  const clickHandler = useCallback((event: MouseEvent) => {
+    event.preventDefault();
+    const {router, disabled, onClick, firstArg, action, target, payload, overflowRedirect} = refData.current;
+    if (!disabled) {
+      onClick && onClick(event);
+      (router as any)[action](firstArg, target, payload, overflowRedirect);
+    }
+  }, []);
+
+  props['onClick'] = clickHandler;
   props['action'] = action;
   props['target'] = target;
-  props['to'] = (back || url) + '';
+  props['url'] = url;
   props['href'] = href;
-  href && (props['href'] = href);
-  cname && (props['cname'] = cname);
+  overflowRedirect && (props['overflow'] = overflowRedirect);
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {

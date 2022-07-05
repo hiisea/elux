@@ -46,6 +46,7 @@ export declare function urlToNativeUrl(eluxUrl: string): string;
  * @public
  */
 export declare function urlToLocation(url: string): Location;
+export declare function mergeDefaultClassname(url: string, defClassname: string): string;
 /**
  * Location转换为Url
  *
@@ -90,7 +91,6 @@ export interface RouteConfig {
             [key: string]: any;
         }): string;
     };
-    HomeUrl: string;
     NativePathnameMapping: {
         in(nativePathname: string): string;
         out(internalPathname: string): string;

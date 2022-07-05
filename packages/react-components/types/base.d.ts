@@ -11,4 +11,5 @@ export declare const setReactComponentsConfig: (config: Partial<{
     render?: ((component: any, container: any) => void) | undefined;
     renderToString?: ((component: any) => string) | undefined;
 }>) => void;
+export declare function useEventCallback<A extends any[]>(fn: (...args: A) => void, dependencies: any[]): (...args: A) => void;
 //# sourceMappingURL=base.d.ts.map

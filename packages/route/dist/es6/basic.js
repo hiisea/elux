@@ -41,6 +41,21 @@ export function urlToLocation(url) {
     hashQuery
   };
 }
+export function mergeDefaultClassname(url, defClassname) {
+  if (!defClassname) {
+    return url;
+  }
+
+  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
+
+  if (/[?&]__c=/.test(`?${query}`)) {
+    return url;
+  }
+
+  const _query = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
+
+  return `${path}${_query ? '?' + _query : ''}${hash ? '#' + hash : ''}`;
+}
 export function locationToUrl({
   url,
   pathname,
@@ -59,13 +74,13 @@ export function locationToUrl({
     stringify
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
 
-  if (classname) {
+  if (typeof classname === 'string') {
     search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
     search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
   }
 
-  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
   url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
   return url;
 }
@@ -108,13 +123,12 @@ export const routeConfig = {
     window: true,
     page: false
   },
-  HomeUrl: '/',
   QueryString: {
     parse: str => ({}),
     stringify: () => ''
   },
   NativePathnameMapping: {
-    in: pathname => pathname === '/' ? routeConfig.HomeUrl : pathname,
+    in: pathname => pathname,
     out: pathname => pathname
   }
 };

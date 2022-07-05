@@ -57,10 +57,6 @@ export var CoreRouter = function () {
 
   var _proto = CoreRouter.prototype;
 
-  _proto.getHistoryUrls = function getHistoryUrls(target) {
-    throw new Error('Method not implemented.');
-  };
-
   _proto.addListener = function addListener(callback) {
     this.listenerId++;
     var id = "" + this.listenerId;

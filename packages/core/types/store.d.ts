@@ -13,7 +13,6 @@ export declare abstract class CoreRouter implements IRouter {
     action: RouteAction;
     routeKey: string;
     constructor();
-    getHistoryUrls(target?: RouteTarget): string[];
     addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
     dispatch(data: RouteEvent): void | Promise<void>;
     abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
@@ -27,8 +26,8 @@ export declare abstract class CoreRouter implements IRouter {
         store: IStore;
         location: Location;
     }[];
-    abstract getHistoryLength(target?: RouteTarget): number;
-    abstract getHistory(target?: RouteTarget): IRouteRecord[];
+    abstract getHistoryLength(target: RouteTarget): number;
+    abstract getHistory(target: RouteTarget): IRouteRecord[];
     abstract findRecordByKey(key: string): {
         record: IRouteRecord;
         overflow: boolean;
@@ -39,10 +38,11 @@ export declare abstract class CoreRouter implements IRouter {
         overflow: boolean;
         index: [number, number];
     };
-    abstract relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
-    abstract push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
-    abstract replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
-    abstract back(stepOrKeyOrCallback?: string | number | ((record: IRouteRecord) => boolean), target?: RouteTarget, payload?: any, overflowRedirect?: string | null): void | Promise<void>;
+    abstract computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget | 'singleWindow'): string;
+    abstract relaunch(partialLocation: Partial<Location>, target: RouteTarget, payload?: any): Promise<void>;
+    abstract push(partialLocation: Partial<Location>, target: RouteTarget | 'singleWindow', payload?: any): Promise<void>;
+    abstract replace(partialLocation: Partial<Location>, target: RouteTarget, payload?: any): Promise<void>;
+    abstract back(stepOrKeyOrCallback: string | number | ((record: IRouteRecord) => boolean), target: RouteTarget, payload?: any, overflowRedirect?: string | null): Promise<void>;
 }
 export declare class Store implements IStore {
     readonly sid: number;

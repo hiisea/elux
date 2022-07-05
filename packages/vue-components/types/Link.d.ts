@@ -1,4 +1,4 @@
-import { RouteAction, RouteTarget } from '@elux/core';
+import { IRouteRecord, Location, RouteAction, RouteTarget } from '@elux/core';
 import { Events, FunctionalComponent, HTMLAttributes } from 'vue';
 /**
  * 内置UI组件
@@ -17,7 +17,19 @@ export interface LinkProps extends HTMLAttributes {
     /**
      * 指定跳转的url或后退步数
      */
-    to: number | string;
+    to: number | string | ((record: IRouteRecord) => boolean) | Partial<Location>;
+    /**
+     * 路由跳转动作
+     */
+    action: Exclude<RouteAction, 'init'>;
+    /**
+     * 指定要操作的历史栈
+     */
+    target: RouteTarget | 'singleWindow';
+    /**
+     * 指定路由窗口的class
+     */
+    cname?: string;
     /**
      * 如果disabled将不执行路由及onClick事件
      */
@@ -27,21 +39,13 @@ export interface LinkProps extends HTMLAttributes {
      */
     onClick?(event: Events['onClick']): void;
     /**
-     * 路由跳转动作
+     * 路由后退时如果溢出，将重定向到此Url
      */
-    action?: Exclude<RouteAction, 'init'>;
-    /**
-     * 指定要操作的历史栈
-     */
-    target?: RouteTarget;
+    overflowRedirect?: string;
     /**
      * 本次路由传值
      */
     payload?: any;
-    /**
-     * 指定路由窗口的class
-     */
-    classname?: string;
 }
 /**
  * 内置UI组件

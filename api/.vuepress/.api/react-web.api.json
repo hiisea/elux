@@ -4582,11 +4582,11 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/react-web!IRouter#back:member(1)",
-              "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由。默认:{@link UserConfig.HomeUrl}\n */\n",
+              "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "back(stepOrKeyOrCallback?: "
+                  "text": "back(stepOrKeyOrCallback: "
                 },
                 {
                   "kind": "Content",
@@ -4603,7 +4603,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target?: "
+                  "text": ", target: "
                 },
                 {
                   "kind": "Reference",
@@ -4686,6 +4686,100 @@
                 }
               ],
               "name": "back"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-web!IRouter#computeUrl:member(1)",
+              "docComment": "/**\n * 根据部分信息计算完整Url\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "computeUrl(partialLocation: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Location",
+                  "canonicalReference": "@elux/react-web!Location:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", action: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteAction",
+                  "canonicalReference": "@elux/react-web!RouteAction:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", target: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteTarget",
+                  "canonicalReference": "@elux/react-web!RouteTarget:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | 'singleWindow'"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 11,
+                "endIndex": 12
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "partialLocation",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  }
+                },
+                {
+                  "parameterName": "action",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 6,
+                    "endIndex": 7
+                  }
+                },
+                {
+                  "parameterName": "target",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 8,
+                    "endIndex": 10
+                  }
+                }
+              ],
+              "name": "computeUrl"
             },
             {
               "kind": "MethodSignature",
@@ -4935,7 +5029,7 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "getHistory(target?: "
+                  "text": "getHistory(target: "
                 },
                 {
                   "kind": "Reference",
@@ -4985,7 +5079,7 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "getHistoryLength(target?: "
+                  "text": "getHistoryLength(target: "
                 },
                 {
                   "kind": "Reference",
@@ -5080,11 +5174,11 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/react-web!IRouter#push:member(1)",
-              "docComment": "/**\n * 在指定栈中新增一条历史记录，并跳转路由\n *\n * @param urlOrLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 在指定栈中新增一条历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "push(urlOrLocation: "
+                  "text": "push(partialLocation: "
                 },
                 {
                   "kind": "Reference",
@@ -5106,12 +5200,16 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target?: "
+                  "text": ", target: "
                 },
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
                   "canonicalReference": "@elux/react-web!RouteTarget:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | 'singleWindow'"
                 },
                 {
                   "kind": "Content",
@@ -5145,14 +5243,14 @@
               ],
               "isOptional": false,
               "returnTypeTokenRange": {
-                "startIndex": 10,
-                "endIndex": 13
+                "startIndex": 11,
+                "endIndex": 14
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "urlOrLocation",
+                  "parameterName": "partialLocation",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 5
@@ -5162,14 +5260,14 @@
                   "parameterName": "target",
                   "parameterTypeTokenRange": {
                     "startIndex": 6,
-                    "endIndex": 7
+                    "endIndex": 8
                   }
                 },
                 {
                   "parameterName": "payload",
                   "parameterTypeTokenRange": {
-                    "startIndex": 8,
-                    "endIndex": 9
+                    "startIndex": 9,
+                    "endIndex": 10
                   }
                 }
               ],
@@ -5178,11 +5276,11 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/react-web!IRouter#relaunch:member(1)",
-              "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param urlOrLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "relaunch(urlOrLocation: "
+                  "text": "relaunch(partialLocation: "
                 },
                 {
                   "kind": "Reference",
@@ -5204,7 +5302,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target?: "
+                  "text": ", target: "
                 },
                 {
                   "kind": "Reference",
@@ -5250,7 +5348,7 @@
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "urlOrLocation",
+                  "parameterName": "partialLocation",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 5
@@ -5276,11 +5374,11 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/react-web!IRouter#replace:member(1)",
-              "docComment": "/**\n * 在指定栈中替换当前历史记录，并跳转路由\n *\n * @param urlOrLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 在指定栈中替换当前历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "replace(urlOrLocation: "
+                  "text": "replace(partialLocation: "
                 },
                 {
                   "kind": "Reference",
@@ -5302,7 +5400,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target?: "
+                  "text": ", target: "
                 },
                 {
                   "kind": "Reference",
@@ -5348,7 +5446,7 @@
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "urlOrLocation",
+                  "parameterName": "partialLocation",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 5
@@ -5909,6 +6007,32 @@
                 "startIndex": 1,
                 "endIndex": 2
               }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!IStore#uid:member",
+              "docComment": "/**\n * ForkID\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "uid: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "uid",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
             }
           ],
           "extendsTokenRanges": []
@@ -5986,7 +6110,7 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "action?: "
+                  "text": "action: "
                 },
                 {
                   "kind": "Reference",
@@ -6011,7 +6135,7 @@
                   "text": ";"
                 }
               ],
-              "isOptional": true,
+              "isOptional": false,
               "releaseTag": "Public",
               "name": "action",
               "propertyTypeTokenRange": {
@@ -6020,65 +6144,13 @@
               }
             },
             {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-web!LinkProps#classname:member",
-              "docComment": "/**\n * 指定路由窗口的class\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "classname?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "classname",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-web!LinkProps#disabled:member",
-              "docComment": "/**\n * 如果disabled将不执行路由及onClick事件\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "disabled?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "disabled",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-web!LinkProps#onClick:member(1)",
+              "canonicalReference": "@elux/react-web!LinkProps#actiononClick:member(1)",
               "docComment": "/**\n * 点击事件\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "onClick?(event: "
+                  "text": "actiononClick?(event: "
                 },
                 {
                   "kind": "Reference",
@@ -6114,7 +6186,85 @@
                   }
                 }
               ],
-              "name": "onClick"
+              "name": "actiononClick"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!LinkProps#cname:member",
+              "docComment": "/**\n * 指定路由窗口的class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "cname?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "cname",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!LinkProps#disabled:member",
+              "docComment": "/**\n * 如果disabled将不执行路由及onClick事件\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "disabled?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "disabled",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/react-web!LinkProps#overflowRedirect:member",
+              "docComment": "/**\n * 路由后退时如果溢出，将重定向到此Url\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "overflowRedirect?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "overflowRedirect",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
             },
             {
               "kind": "PropertySignature",
@@ -6149,7 +6299,7 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "target?: "
+                  "text": "target: "
                 },
                 {
                   "kind": "Reference",
@@ -6158,15 +6308,19 @@
                 },
                 {
                   "kind": "Content",
+                  "text": " | 'singleWindow'"
+                },
+                {
+                  "kind": "Content",
                   "text": ";"
                 }
               ],
-              "isOptional": true,
+              "isOptional": false,
               "releaseTag": "Public",
               "name": "target",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
+                "endIndex": 3
               }
             },
             {
@@ -6180,7 +6334,34 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "number | string"
+                  "text": "number | string | ((record: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IRouteRecord",
+                  "canonicalReference": "@elux/react-web!IRouteRecord:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => boolean) | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Location",
+                  "canonicalReference": "@elux/react-web!Location:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
                 },
                 {
                   "kind": "Content",
@@ -6192,7 +6373,7 @@
               "name": "to",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
+                "endIndex": 8
               }
             }
           ],
@@ -8293,32 +8474,6 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "DisableNativeRouter",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-web!UserConfig#HomeUrl:member",
-              "docComment": "/**\n * 定义应用的首页Url\n *\n * @remarks\n *\n * 默认: `/`\n *\n * @defaultValue\n *\n * `/`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "HomeUrl: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "HomeUrl",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
