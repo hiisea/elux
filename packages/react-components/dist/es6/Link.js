@@ -10,7 +10,7 @@ export const Link = ({
   disabled,
   overflowRedirect,
   target,
-  payload,
+  refresh,
   ...props
 }) => {
   const router = coreConfig.UseRouter();
@@ -50,7 +50,7 @@ export const Link = ({
     firstArg,
     action,
     target,
-    payload,
+    refresh,
     overflowRedirect
   };
   const refData = useRef(data);
@@ -64,13 +64,13 @@ export const Link = ({
       firstArg,
       action,
       target,
-      payload,
+      refresh,
       overflowRedirect
     } = refData.current;
 
     if (!disabled) {
       onClick && onClick(event);
-      router[action](firstArg, target, payload, overflowRedirect);
+      router[action](firstArg, target, refresh, overflowRedirect);
     }
   }, []);
   props['onClick'] = clickHandler;

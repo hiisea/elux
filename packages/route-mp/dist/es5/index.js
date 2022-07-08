@@ -35,22 +35,22 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
             key = arr ? arr[1] : '';
 
             if (!key) {
-              _this.router.back(-1, 'page', null, '', true);
+              _this.router.back(-1, 'page', undefined, undefined, true);
             } else {
-              _this.router.back(key, 'page', null, '', true);
+              _this.router.back(key, 'page', undefined, undefined, true);
             }
           } else if (action === 'REPLACE') {
             _this.router.replace({
               url: url
-            }, 'window', null, true);
+            }, 'window', undefined, true);
           } else if (action === 'PUSH') {
             _this.router.push({
               url: url
-            }, 'window', null, true);
+            }, 'window', undefined, true);
           } else {
             _this.router.relaunch({
               url: url
-            }, 'window', null, true);
+            }, 'window', undefined, true);
           }
         } else {
           _this.onSuccess();

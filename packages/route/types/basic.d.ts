@@ -45,7 +45,7 @@ export declare function urlToNativeUrl(eluxUrl: string): string;
  *
  * @public
  */
-export declare function urlToLocation(url: string): Location;
+export declare function urlToLocation(url: string, state: any): Location;
 export declare function mergeDefaultClassname(url: string, defClassname: string): string;
 /**
  * Location转换为Url

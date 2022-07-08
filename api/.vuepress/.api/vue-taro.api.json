@@ -4236,11 +4236,11 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", payload?: "
+                  "text": ", refresh?: "
                 },
                 {
                   "kind": "Content",
-                  "text": "any"
+                  "text": "boolean"
                 },
                 {
                   "kind": "Content",
@@ -4295,7 +4295,7 @@
                   }
                 },
                 {
-                  "parameterName": "payload",
+                  "parameterName": "refresh",
                   "parameterTypeTokenRange": {
                     "startIndex": 7,
                     "endIndex": 8
@@ -4358,10 +4358,6 @@
                 },
                 {
                   "kind": "Content",
-                  "text": " | 'singleWindow'"
-                },
-                {
-                  "kind": "Content",
                   "text": "): "
                 },
                 {
@@ -4375,8 +4371,8 @@
               ],
               "isOptional": false,
               "returnTypeTokenRange": {
-                "startIndex": 11,
-                "endIndex": 12
+                "startIndex": 10,
+                "endIndex": 11
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -4399,7 +4395,7 @@
                   "parameterName": "target",
                   "parameterTypeTokenRange": {
                     "startIndex": 8,
-                    "endIndex": 10
+                    "endIndex": 9
                   }
                 }
               ],
@@ -4833,113 +4829,11 @@
                 },
                 {
                   "kind": "Content",
-                  "text": " | 'singleWindow'"
+                  "text": ", refresh?: "
                 },
                 {
                   "kind": "Content",
-                  "text": ", payload?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void | "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<void>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "returnTypeTokenRange": {
-                "startIndex": 11,
-                "endIndex": 14
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "partialLocation",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 5
-                  }
-                },
-                {
-                  "parameterName": "target",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 6,
-                    "endIndex": 8
-                  }
-                },
-                {
-                  "parameterName": "payload",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 9,
-                    "endIndex": 10
-                  }
-                }
-              ],
-              "name": "push"
-            },
-            {
-              "kind": "MethodSignature",
-              "canonicalReference": "@elux/vue-taro!IRouter#relaunch:member(1)",
-              "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "relaunch(partialLocation: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Partial",
-                  "canonicalReference": "!Partial:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Location",
-                  "canonicalReference": "@elux/vue-taro!Location:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", target: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "RouteTarget",
-                  "canonicalReference": "@elux/vue-taro!RouteTarget:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", payload?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "any"
+                  "text": "boolean"
                 },
                 {
                   "kind": "Content",
@@ -4986,7 +4880,105 @@
                   }
                 },
                 {
-                  "parameterName": "payload",
+                  "parameterName": "refresh",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 8,
+                    "endIndex": 9
+                  }
+                }
+              ],
+              "name": "push"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/vue-taro!IRouter#relaunch:member(1)",
+              "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "relaunch(partialLocation: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Partial",
+                  "canonicalReference": "!Partial:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Location",
+                  "canonicalReference": "@elux/vue-taro!Location:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", target: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouteTarget",
+                  "canonicalReference": "@elux/vue-taro!RouteTarget:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", refresh?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 10,
+                "endIndex": 13
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "partialLocation",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  }
+                },
+                {
+                  "parameterName": "target",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 6,
+                    "endIndex": 7
+                  }
+                },
+                {
+                  "parameterName": "refresh",
                   "parameterTypeTokenRange": {
                     "startIndex": 8,
                     "endIndex": 9
@@ -5033,11 +5025,11 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", payload?: "
+                  "text": ", refresh?: "
                 },
                 {
                   "kind": "Content",
-                  "text": "any"
+                  "text": "boolean"
                 },
                 {
                   "kind": "Content",
@@ -5084,7 +5076,7 @@
                   }
                 },
                 {
-                  "parameterName": "payload",
+                  "parameterName": "refresh",
                   "parameterTypeTokenRange": {
                     "startIndex": 8,
                     "endIndex": 9
@@ -5887,16 +5879,16 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/vue-taro!LinkProps#payload:member",
-              "docComment": "/**\n * 本次路由传值\n */\n",
+              "canonicalReference": "@elux/vue-taro!LinkProps#refresh:member",
+              "docComment": "/**\n * 是否强制刷新dom，默认false\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "payload?: "
+                  "text": "refresh?: "
                 },
                 {
                   "kind": "Content",
-                  "text": "any"
+                  "text": "boolean"
                 },
                 {
                   "kind": "Content",
@@ -5905,7 +5897,7 @@
               ],
               "isOptional": true,
               "releaseTag": "Public",
-              "name": "payload",
+              "name": "refresh",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -5927,10 +5919,6 @@
                 },
                 {
                   "kind": "Content",
-                  "text": " | 'singleWindow'"
-                },
-                {
-                  "kind": "Content",
                   "text": ";"
                 }
               ],
@@ -5939,7 +5927,7 @@
               "name": "target",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 3
+                "endIndex": 2
               }
             },
             {
@@ -6192,6 +6180,32 @@
               "isOptional": false,
               "releaseTag": "Public",
               "name": "searchQuery",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@elux/vue-taro!Location#state:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "state: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "any"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "state",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
@@ -7389,32 +7403,6 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/vue-taro!RouteRuntime#payload:member",
-              "docComment": "/**\n * 路由时的附加数据\n *\n * @remarks\n *\n * 该数据通过路由跳转方法第3个参数提供。如`router.push({url}, 'window', {aaa:111})`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "payload: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "unknown"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "payload",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!RouteRuntime#prevState:member",
               "docComment": "/**\n * 路由跳转前的store状态\n */\n",
               "excerptTokens": [
@@ -7934,6 +7922,14 @@
             },
             {
               "kind": "Content",
+              "text": ", state: "
+            },
+            {
+              "kind": "Content",
+              "text": "any"
+            },
+            {
+              "kind": "Content",
               "text": "): "
             },
             {
@@ -7947,8 +7943,8 @@
             }
           ],
           "returnTypeTokenRange": {
-            "startIndex": 3,
-            "endIndex": 4
+            "startIndex": 5,
+            "endIndex": 6
           },
           "releaseTag": "Public",
           "overloadIndex": 1,
@@ -7958,6 +7954,13 @@
               "parameterTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
+              }
+            },
+            {
+              "parameterName": "state",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
               }
             }
           ],

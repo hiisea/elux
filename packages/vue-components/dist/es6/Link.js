@@ -3,7 +3,7 @@ import { urlToNativeUrl } from '@elux/route';
 import { computed, defineComponent, h } from 'vue';
 export const Link = defineComponent({
   name: 'EluxLink',
-  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'cname', 'overflowRedirect'],
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'refresh', 'cname', 'overflowRedirect'],
 
   setup(props, context) {
     const router = coreConfig.UseRouter();
@@ -49,13 +49,13 @@ export const Link = defineComponent({
         onClick,
         action,
         target,
-        payload,
+        refresh,
         overflowRedirect
       } = props;
 
       if (!disabled) {
         onClick && onClick(event);
-        router[action](firstArg, target, payload, overflowRedirect);
+        router[action](firstArg, target, refresh, overflowRedirect);
       }
     };
 

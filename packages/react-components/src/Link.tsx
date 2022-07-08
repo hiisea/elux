@@ -27,7 +27,7 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * 指定要操作的历史栈
    */
-  target: RouteTarget | 'singleWindow';
+  target: RouteTarget;
   /**
    * 指定路由窗口的class
    */
@@ -37,17 +37,17 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
    */
   disabled?: boolean;
   /**
+   * 是否强制刷新dom，默认false
+   */
+  refresh?: boolean;
+  /**
    * 点击事件
    */
-  actiononClick?(event: MouseEvent): void;
+  onClick?(event: MouseEvent): void;
   /**
    * 路由后退时如果溢出，将重定向到此Url
    */
   overflowRedirect?: string;
-  /**
-   * 本次路由传值
-   */
-  payload?: any;
 }
 
 /**
@@ -58,7 +58,7 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
  *
  * @public
  */
-export const Link: FC<LinkProps> = ({to, cname, action, onClick, disabled, overflowRedirect, target, payload, ...props}) => {
+export const Link: FC<LinkProps> = ({to, cname, action, onClick, disabled, overflowRedirect, target, refresh, ...props}) => {
   const router = coreConfig.UseRouter!();
   const {firstArg, url, href} = useMemo(() => {
     let firstArg: any, url: string, href: string;
@@ -76,16 +76,16 @@ export const Link: FC<LinkProps> = ({to, cname, action, onClick, disabled, overf
     return {firstArg, url, href};
   }, [target, action, cname, router, to]);
 
-  const data = {router, onClick, disabled, firstArg, action, target, payload, overflowRedirect};
+  const data = {router, onClick, disabled, firstArg, action, target, refresh, overflowRedirect};
   const refData = useRef(data);
   Object.assign(refData.current, data);
 
   const clickHandler = useCallback((event: MouseEvent) => {
     event.preventDefault();
-    const {router, disabled, onClick, firstArg, action, target, payload, overflowRedirect} = refData.current;
+    const {router, disabled, onClick, firstArg, action, target, refresh, overflowRedirect} = refData.current;
     if (!disabled) {
       onClick && onClick(event);
-      (router as any)[action](firstArg, target, payload, overflowRedirect);
+      (router as any)[action](firstArg, target, refresh, overflowRedirect);
     }
   }, []);
 

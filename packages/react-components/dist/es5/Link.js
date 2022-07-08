@@ -1,6 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
-var _excluded = ["to", "cname", "action", "onClick", "disabled", "overflowRedirect", "target", "payload"];
+var _excluded = ["to", "cname", "action", "onClick", "disabled", "overflowRedirect", "target", "refresh"];
 import { coreConfig } from '@elux/core';
 import { urlToNativeUrl } from '@elux/route';
 import { useCallback, useMemo, useRef } from 'react';
@@ -13,7 +13,7 @@ export var Link = function Link(_ref) {
       disabled = _ref.disabled,
       overflowRedirect = _ref.overflowRedirect,
       target = _ref.target,
-      payload = _ref.payload,
+      refresh = _ref.refresh,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
   var router = coreConfig.UseRouter();
@@ -54,7 +54,7 @@ export var Link = function Link(_ref) {
     firstArg: firstArg,
     action: action,
     target: target,
-    payload: payload,
+    refresh: refresh,
     overflowRedirect: overflowRedirect
   };
   var refData = useRef(data);
@@ -68,12 +68,12 @@ export var Link = function Link(_ref) {
         firstArg = _refData$current.firstArg,
         action = _refData$current.action,
         target = _refData$current.target,
-        payload = _refData$current.payload,
+        refresh = _refData$current.refresh,
         overflowRedirect = _refData$current.overflowRedirect;
 
     if (!disabled) {
       onClick && onClick(event);
-      router[action](firstArg, target, payload, overflowRedirect);
+      router[action](firstArg, target, refresh, overflowRedirect);
     }
   }, []);
   props['onClick'] = clickHandler;

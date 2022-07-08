@@ -106,14 +106,14 @@ export abstract class CoreRouter implements IRouter {
   abstract getHistory(target: RouteTarget): IRouteRecord[];
   abstract findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
   abstract findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]};
-  abstract computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget | 'singleWindow'): string;
-  abstract relaunch(partialLocation: Partial<Location>, target: RouteTarget, payload?: any): Promise<void>;
-  abstract push(partialLocation: Partial<Location>, target: RouteTarget | 'singleWindow', payload?: any): Promise<void>;
-  abstract replace(partialLocation: Partial<Location>, target: RouteTarget, payload?: any): Promise<void>;
+  abstract computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
+  abstract relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
+  abstract push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
+  abstract replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
   abstract back(
     stepOrKeyOrCallback: string | number | ((record: IRouteRecord) => boolean),
     target: RouteTarget,
-    payload?: any,
+    refresh?: boolean,
     overflowRedirect?: string | null
   ): Promise<void>;
 }

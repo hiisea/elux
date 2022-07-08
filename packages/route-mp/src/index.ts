@@ -40,16 +40,16 @@ export class MPNativeRouter extends BaseNativeRouter {
             key = arr ? arr[1] : '';
             if (!key) {
               //表示Tabpage
-              this.router.back(-1, 'page', null, '', true);
+              this.router.back(-1, 'page', undefined, undefined, true);
             } else {
-              this.router.back(key, 'page', null, '', true);
+              this.router.back(key, 'page', undefined, undefined, true);
             }
           } else if (action === 'REPLACE') {
-            this.router.replace({url}, 'window', null, true);
+            this.router.replace({url}, 'window', undefined, true);
           } else if (action === 'PUSH') {
-            this.router.push({url}, 'window', null, true);
+            this.router.push({url}, 'window', undefined, true);
           } else {
-            this.router.relaunch({url}, 'window', null, true);
+            this.router.relaunch({url}, 'window', undefined, true);
           }
         } else {
           this.onSuccess();

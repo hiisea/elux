@@ -172,11 +172,10 @@ export class Router extends CoreRouter {
     return this.windowStack.getCurrentPages();
   }
 
-  async mountStore(payload, prevStore, newStore, historyStore) {
+  async mountStore(prevStore, newStore, historyStore) {
     const prevState = prevStore.getState();
     this.runtime = {
       timestamp: Date.now(),
-      payload,
       prevState: coreConfig.MutableData ? deepClone(prevState) : prevState,
       completed: false
     };
@@ -211,13 +210,12 @@ export class Router extends CoreRouter {
     this.init = () => Promise.resolve();
 
     this.initOptions = routerInitOptions;
-    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url), undefined);
     this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, 0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
-      payload: null,
       prevState,
       completed: false
     };
@@ -257,9 +255,8 @@ export class Router extends CoreRouter {
     });
   }
 
-  computeUrl(partialLocation, action, _target) {
+  computeUrl(partialLocation, action, target) {
     const curClassname = this.location.classname;
-    const target = _target !== 'singleWindow' ? _target : curClassname.startsWith('_') ? 'page' : 'window';
     let defClassname = curClassname;
 
     if (action === 'relaunch') {
@@ -270,15 +267,15 @@ export class Router extends CoreRouter {
     return mergeDefaultClassname(url, defClassname);
   }
 
-  relaunch(partialLocation, target, payload, _nativeCaller = false) {
-    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation, target, refresh = false, _nativeCaller = false) {
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
-  async _relaunch(partialLocation, target, payload, _nativeCaller) {
+  async _relaunch(partialLocation, target, refresh, _nativeCaller) {
     const action = 'relaunch';
     const url = this.computeUrl(partialLocation, action, target);
     this.redirectOnServer(url);
-    const location = urlToLocation(url);
+    const location = urlToLocation(url, partialLocation.state);
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -299,7 +296,7 @@ export class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone();
+    const newStore = prevStore.clone(refresh);
     const pageStack = this.windowStack.getCurrentItem();
     const newRecord = new RouteRecord(location, pageStack);
     this.routeKey = newRecord.key;
@@ -312,7 +309,7 @@ export class Router extends CoreRouter {
     }
 
     pageStack.replaceStore(newStore);
-    await this.mountStore(payload, prevStore, newStore);
+    await this.mountStore(prevStore, newStore);
 
     if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, newRecord.key);
@@ -328,15 +325,15 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(partialLocation, target, payload, _nativeCaller = false) {
-    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
+  replace(partialLocation, target, refresh = false, _nativeCaller = false) {
+    return this.addTask(this._replace.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
-  async _replace(partialLocation, target, payload, _nativeCaller) {
+  async _replace(partialLocation, target, refresh, _nativeCaller) {
     const action = 'replace';
     const url = this.computeUrl(partialLocation, action, target);
     this.redirectOnServer(url);
-    const location = urlToLocation(url);
+    const location = urlToLocation(url, partialLocation.state);
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -357,7 +354,7 @@ export class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone();
+    const newStore = prevStore.clone(refresh);
     const pageStack = this.windowStack.getCurrentItem();
     const newRecord = new RouteRecord(location, pageStack);
     this.routeKey = newRecord.key;
@@ -369,7 +366,7 @@ export class Router extends CoreRouter {
     }
 
     pageStack.replaceStore(newStore);
-    await this.mountStore(payload, prevStore, newStore);
+    await this.mountStore(prevStore, newStore);
 
     if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, newRecord.key);
@@ -385,16 +382,15 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(partialLocation, target, payload, _nativeCaller = false) {
-    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
+  push(partialLocation, target, refresh = false, _nativeCaller = false) {
+    return this.addTask(this._push.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
-  async _push(partialLocation, _target, payload, _nativeCaller) {
+  async _push(partialLocation, target, refresh, _nativeCaller) {
     const action = 'push';
-    const target = _target !== 'singleWindow' ? _target : this.location.classname.startsWith('_') ? 'page' : 'window';
     const url = this.computeUrl(partialLocation, action, target);
     this.redirectOnServer(url);
-    const location = urlToLocation(url);
+    const location = urlToLocation(url, partialLocation.state);
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -415,7 +411,7 @@ export class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone(target === 'window');
+    const newStore = prevStore.clone(target === 'window' || refresh);
     const pageStack = this.windowStack.getCurrentItem();
     let newRecord;
 
@@ -424,13 +420,13 @@ export class Router extends CoreRouter {
       newRecord = newPageStack.getCurrentItem();
       this.routeKey = newRecord.key;
       this.windowStack.push(newPageStack);
-      await this.mountStore(payload, prevStore, newStore);
+      await this.mountStore(prevStore, newStore);
     } else {
       newRecord = new RouteRecord(location, pageStack);
       this.routeKey = newRecord.key;
       pageStack.push(newRecord);
       pageStack.replaceStore(newStore);
-      await this.mountStore(payload, prevStore, newStore);
+      await this.mountStore(prevStore, newStore);
     }
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -447,15 +443,15 @@ export class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  back(stepOrKeyOrCallback, target, payload, overflowRedirect = '', _nativeCaller = false) {
+  back(stepOrKeyOrCallback, target, refresh = false, overflowRedirect = '', _nativeCaller = false) {
     if (!stepOrKeyOrCallback) {
-      return this.replace(this.location, 'page', this.runtime.payload);
+      return this.replace(this.location, 'page', refresh);
     }
 
-    return this.addTask(this._back.bind(this, stepOrKeyOrCallback, target, payload, overflowRedirect, _nativeCaller));
+    return this.addTask(this._back.bind(this, stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller));
   }
 
-  async _back(stepOrKeyOrCallback, target, payload, overflowRedirect, _nativeCaller) {
+  async _back(stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller) {
     const action = 'back';
     this.redirectOnServer(overflowRedirect || '/');
     let stepOrKey = '';
@@ -533,11 +529,11 @@ export class Router extends CoreRouter {
     let newStore = historyStore;
 
     if (index[1] !== 0) {
-      newStore = prevStore.clone();
+      newStore = prevStore.clone(refresh);
       pageStack.replaceStore(newStore);
     }
 
-    await this.mountStore(payload, prevStore, newStore);
+    await this.mountStore(prevStore, newStore);
 
     if (!_nativeCaller && NotifyNativeRouter.length) {
       await this.nativeRouter.execute(action, location, record.key, index);

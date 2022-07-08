@@ -1572,38 +1572,38 @@ const ErrorCodes = {
 function nativeUrlToUrl(nativeUrl) {
   const [path = '', search = '', hash = ''] = nativeUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 function urlToNativeUrl(eluxUrl) {
   const [path = '', search = '', hash = ''] = eluxUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
-function urlToLocation(url) {
+function urlToLocation(url, state) {
   const [path = '', query = '', hash = ''] = url.split(/[?#]/);
-  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
-  let search = query;
-  let classname = '';
-
-  if (arr) {
-    classname = arr[2];
-    search = (arr[1] + arr[3]).substr(1);
-  }
-
+  const arr = `?${query}`.match(/[?&]__c=([^&]*)/) || ['', ''];
+  const classname = arr[1];
+  let search = `?${query}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {
     parse
   } = routeConfig.QueryString;
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
+
+  if (classname) {
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+
   return {
-    url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`,
+    url: `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`,
     pathname,
     search,
     hash,
     classname,
     searchQuery,
-    hashQuery
+    hashQuery,
+    state
   };
 }
 function mergeDefaultClassname(url, defClassname) {
@@ -1617,9 +1617,8 @@ function mergeDefaultClassname(url, defClassname) {
     return url;
   }
 
-  const _query = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
-
-  return `${path}${_query ? '?' + _query : ''}${hash ? '#' + hash : ''}`;
+  const search = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
+  return `${path}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 function locationToUrl({
   url,
@@ -1642,11 +1641,14 @@ function locationToUrl({
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
 
   if (typeof classname === 'string') {
-    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
-    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+    search = `?${search}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
+
+    if (classname) {
+      search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+    }
   }
 
-  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  url = `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
   return url;
 }
 function locationToNativeLocation(location) {
@@ -2181,11 +2183,10 @@ class Router extends CoreRouter {
     return this.windowStack.getCurrentPages();
   }
 
-  async mountStore(payload, prevStore, newStore, historyStore) {
+  async mountStore(prevStore, newStore, historyStore) {
     const prevState = prevStore.getState();
     this.runtime = {
       timestamp: Date.now(),
-      payload,
       prevState: coreConfig.MutableData ? deepClone(prevState) : prevState,
       completed: false
     };
@@ -2220,13 +2221,12 @@ class Router extends CoreRouter {
     this.init = () => Promise.resolve();
 
     this.initOptions = routerInitOptions;
-    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url));
+    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url), undefined);
     this.action = 'init';
     this.windowStack = new WindowStack(this.location, new Store(0, 0, this));
     this.routeKey = this.findRecordByStep(0).record.key;
     this.runtime = {
       timestamp: Date.now(),
-      payload: null,
       prevState,
       completed: false
     };
@@ -2266,9 +2266,8 @@ class Router extends CoreRouter {
     });
   }
 
-  computeUrl(partialLocation, action, _target) {
+  computeUrl(partialLocation, action, target) {
     const curClassname = this.location.classname;
-    const target = _target !== 'singleWindow' ? _target : curClassname.startsWith('_') ? 'page' : 'window';
     let defClassname = curClassname;
 
     if (action === 'relaunch') {
@@ -2279,15 +2278,15 @@ class Router extends CoreRouter {
     return mergeDefaultClassname(url, defClassname);
   }
 
-  relaunch(partialLocation, target, payload, _nativeCaller = false) {
-    return this.addTask(this._relaunch.bind(this, partialLocation, target, payload, _nativeCaller));
+  relaunch(partialLocation, target, refresh = false, _nativeCaller = false) {
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
-  async _relaunch(partialLocation, target, payload, _nativeCaller) {
+  async _relaunch(partialLocation, target, refresh, _nativeCaller) {
     const action = 'relaunch';
     const url = this.computeUrl(partialLocation, action, target);
     this.redirectOnServer(url);
-    const location = urlToLocation(url);
+    const location = urlToLocation(url, partialLocation.state);
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2308,7 +2307,7 @@ class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone();
+    const newStore = prevStore.clone(refresh);
     const pageStack = this.windowStack.getCurrentItem();
     const newRecord = new RouteRecord(location, pageStack);
     this.routeKey = newRecord.key;
@@ -2321,7 +2320,7 @@ class Router extends CoreRouter {
     }
 
     pageStack.replaceStore(newStore);
-    await this.mountStore(payload, prevStore, newStore);
+    await this.mountStore(prevStore, newStore);
 
     if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, newRecord.key);
@@ -2337,15 +2336,15 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(partialLocation, target, payload, _nativeCaller = false) {
-    return this.addTask(this._replace.bind(this, partialLocation, target, payload, _nativeCaller));
+  replace(partialLocation, target, refresh = false, _nativeCaller = false) {
+    return this.addTask(this._replace.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
-  async _replace(partialLocation, target, payload, _nativeCaller) {
+  async _replace(partialLocation, target, refresh, _nativeCaller) {
     const action = 'replace';
     const url = this.computeUrl(partialLocation, action, target);
     this.redirectOnServer(url);
-    const location = urlToLocation(url);
+    const location = urlToLocation(url, partialLocation.state);
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2366,7 +2365,7 @@ class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone();
+    const newStore = prevStore.clone(refresh);
     const pageStack = this.windowStack.getCurrentItem();
     const newRecord = new RouteRecord(location, pageStack);
     this.routeKey = newRecord.key;
@@ -2378,7 +2377,7 @@ class Router extends CoreRouter {
     }
 
     pageStack.replaceStore(newStore);
-    await this.mountStore(payload, prevStore, newStore);
+    await this.mountStore(prevStore, newStore);
 
     if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, newRecord.key);
@@ -2394,16 +2393,15 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(partialLocation, target, payload, _nativeCaller = false) {
-    return this.addTask(this._push.bind(this, partialLocation, target, payload, _nativeCaller));
+  push(partialLocation, target, refresh = false, _nativeCaller = false) {
+    return this.addTask(this._push.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
-  async _push(partialLocation, _target, payload, _nativeCaller) {
+  async _push(partialLocation, target, refresh, _nativeCaller) {
     const action = 'push';
-    const target = _target !== 'singleWindow' ? _target : this.location.classname.startsWith('_') ? 'page' : 'window';
     const url = this.computeUrl(partialLocation, action, target);
     this.redirectOnServer(url);
-    const location = urlToLocation(url);
+    const location = urlToLocation(url, partialLocation.state);
     const NotifyNativeRouter = routeConfig.NotifyNativeRouter[target];
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2424,7 +2422,7 @@ class Router extends CoreRouter {
     this.savePageTitle();
     this.location = location;
     this.action = action;
-    const newStore = prevStore.clone(target === 'window');
+    const newStore = prevStore.clone(target === 'window' || refresh);
     const pageStack = this.windowStack.getCurrentItem();
     let newRecord;
 
@@ -2433,13 +2431,13 @@ class Router extends CoreRouter {
       newRecord = newPageStack.getCurrentItem();
       this.routeKey = newRecord.key;
       this.windowStack.push(newPageStack);
-      await this.mountStore(payload, prevStore, newStore);
+      await this.mountStore(prevStore, newStore);
     } else {
       newRecord = new RouteRecord(location, pageStack);
       this.routeKey = newRecord.key;
       pageStack.push(newRecord);
       pageStack.replaceStore(newStore);
-      await this.mountStore(payload, prevStore, newStore);
+      await this.mountStore(prevStore, newStore);
     }
 
     if (!_nativeCaller && NotifyNativeRouter) {
@@ -2456,15 +2454,15 @@ class Router extends CoreRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  back(stepOrKeyOrCallback, target, payload, overflowRedirect = '', _nativeCaller = false) {
+  back(stepOrKeyOrCallback, target, refresh = false, overflowRedirect = '', _nativeCaller = false) {
     if (!stepOrKeyOrCallback) {
-      return this.replace(this.location, 'page', this.runtime.payload);
+      return this.replace(this.location, 'page', refresh);
     }
 
-    return this.addTask(this._back.bind(this, stepOrKeyOrCallback, target, payload, overflowRedirect, _nativeCaller));
+    return this.addTask(this._back.bind(this, stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller));
   }
 
-  async _back(stepOrKeyOrCallback, target, payload, overflowRedirect, _nativeCaller) {
+  async _back(stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller) {
     const action = 'back';
     this.redirectOnServer(overflowRedirect || '/');
     let stepOrKey = '';
@@ -2542,11 +2540,11 @@ class Router extends CoreRouter {
     let newStore = historyStore;
 
     if (index[1] !== 0) {
-      newStore = prevStore.clone();
+      newStore = prevStore.clone(refresh);
       pageStack.replaceStore(newStore);
     }
 
-    await this.mountStore(payload, prevStore, newStore);
+    await this.mountStore(prevStore, newStore);
 
     if (!_nativeCaller && NotifyNativeRouter.length) {
       await this.nativeRouter.execute(action, location, record.key, index);
@@ -2586,7 +2584,7 @@ const Link = ({
   disabled,
   overflowRedirect,
   target,
-  payload,
+  refresh,
   ...props
 }) => {
   const router = coreConfig.UseRouter();
@@ -2626,7 +2624,7 @@ const Link = ({
     firstArg,
     action,
     target,
-    payload,
+    refresh,
     overflowRedirect
   };
   const refData = useRef(data);
@@ -2640,13 +2638,13 @@ const Link = ({
       firstArg,
       action,
       target,
-      payload,
+      refresh,
       overflowRedirect
     } = refData.current;
 
     if (!disabled) {
       onClick && onClick(event);
-      router[action](firstArg, target, payload, overflowRedirect);
+      router[action](firstArg, target, refresh, overflowRedirect);
     }
   }, []);
   props['onClick'] = clickHandler;
@@ -2708,22 +2706,22 @@ class MPNativeRouter extends BaseNativeRouter {
             key = arr ? arr[1] : '';
 
             if (!key) {
-              this.router.back(-1, 'page', null, '', true);
+              this.router.back(-1, 'page', undefined, undefined, true);
             } else {
-              this.router.back(key, 'page', null, '', true);
+              this.router.back(key, 'page', undefined, undefined, true);
             }
           } else if (action === 'REPLACE') {
             this.router.replace({
               url
-            }, 'window', null, true);
+            }, 'window', undefined, true);
           } else if (action === 'PUSH') {
             this.router.push({
               url
-            }, 'window', null, true);
+            }, 'window', undefined, true);
           } else {
             this.router.relaunch({
               url
-            }, 'window', null, true);
+            }, 'window', undefined, true);
           }
         } else {
           this.onSuccess();

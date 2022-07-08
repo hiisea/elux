@@ -27,7 +27,7 @@ export interface LinkProps extends HTMLAttributes {
   /**
    * 指定要操作的历史栈
    */
-  target: RouteTarget | 'singleWindow';
+  target: RouteTarget;
   /**
    * 指定路由窗口的class
    */
@@ -37,6 +37,10 @@ export interface LinkProps extends HTMLAttributes {
    */
   disabled?: boolean;
   /**
+   * 是否强制刷新dom，默认false
+   */
+  refresh?: boolean;
+  /**
    * 点击事件
    */
   onClick?(event: Events['onClick']): void;
@@ -44,10 +48,6 @@ export interface LinkProps extends HTMLAttributes {
    * 路由后退时如果溢出，将重定向到此Url
    */
   overflowRedirect?: string;
-  /**
-   * 本次路由传值
-   */
-  payload?: any;
 }
 
 /**
@@ -62,7 +62,7 @@ export interface LinkProps extends HTMLAttributes {
 export const Link: FunctionalComponent<LinkProps> = defineComponent({
   name: 'EluxLink',
   // eslint-disable-next-line vue/require-prop-types
-  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'cname', 'overflowRedirect'],
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'refresh', 'cname', 'overflowRedirect'],
   setup(props: LinkProps, context) {
     const router = coreConfig.UseRouter!();
     const route = computed(() => {
@@ -85,10 +85,10 @@ export const Link: FunctionalComponent<LinkProps> = defineComponent({
     const clickHandler = (event: Events['onClick']) => {
       event.preventDefault();
       const {firstArg} = route.value;
-      const {disabled, onClick, action, target, payload, overflowRedirect} = props;
+      const {disabled, onClick, action, target, refresh, overflowRedirect} = props;
       if (!disabled) {
         onClick && onClick(event);
-        (router as any)[action](firstArg, target, payload, overflowRedirect);
+        (router as any)[action](firstArg, target, refresh, overflowRedirect);
       }
     };
     return () => {

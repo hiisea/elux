@@ -25,7 +25,7 @@ export interface LinkProps extends HTMLAttributes {
     /**
      * 指定要操作的历史栈
      */
-    target: RouteTarget | 'singleWindow';
+    target: RouteTarget;
     /**
      * 指定路由窗口的class
      */
@@ -35,6 +35,10 @@ export interface LinkProps extends HTMLAttributes {
      */
     disabled?: boolean;
     /**
+     * 是否强制刷新dom，默认false
+     */
+    refresh?: boolean;
+    /**
      * 点击事件
      */
     onClick?(event: Events['onClick']): void;
@@ -42,10 +46,6 @@ export interface LinkProps extends HTMLAttributes {
      * 路由后退时如果溢出，将重定向到此Url
      */
     overflowRedirect?: string;
-    /**
-     * 本次路由传值
-     */
-    payload?: any;
 }
 /**
  * 内置UI组件

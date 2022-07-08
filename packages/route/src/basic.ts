@@ -33,7 +33,7 @@ export const ErrorCodes = {
 export function nativeUrlToUrl(nativeUrl: string): string {
   const [path = '', search = '', hash = ''] = nativeUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 
 /**
@@ -49,7 +49,7 @@ export function nativeUrlToUrl(nativeUrl: string): string {
 export function urlToNativeUrl(eluxUrl: string): string {
   const [path = '', search = '', hash = ''] = eluxUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 
 /**
@@ -57,20 +57,19 @@ export function urlToNativeUrl(eluxUrl: string): string {
  *
  * @public
  */
-export function urlToLocation(url: string): Location {
+export function urlToLocation(url: string, state: any): Location {
   const [path = '', query = '', hash = ''] = url.split(/[?#]/);
-  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
-  let search = query;
-  let classname = '';
-  if (arr) {
-    classname = arr[2];
-    search = (arr[1] + arr[3]).substr(1);
-  }
+  const arr = `?${query}`.match(/[?&]__c=([^&]*)/) || ['', ''];
+  const classname = arr[1];
+  let search = `?${query}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {parse} = routeConfig.QueryString;
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
-  return {url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`, pathname, search, hash, classname, searchQuery, hashQuery};
+  if (classname) {
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+  return {url: `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`, pathname, search, hash, classname, searchQuery, hashQuery, state};
 }
 
 export function mergeDefaultClassname(url: string, defClassname: string): string {
@@ -81,8 +80,8 @@ export function mergeDefaultClassname(url: string, defClassname: string): string
   if (/[?&]__c=/.test(`?${query}`)) {
     return url;
   }
-  const _query = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
-  return `${path}${_query ? '?' + _query : ''}${hash ? '#' + hash : ''}`;
+  const search = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
+  return `${path}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 
 /**
@@ -99,10 +98,12 @@ export function locationToUrl({url, pathname, search, hash, classname, searchQue
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
   if (typeof classname === 'string') {
-    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
-    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+    search = `?${search}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
+    if (classname) {
+      search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+    }
   }
-  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  url = `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
   return url;
 }
 

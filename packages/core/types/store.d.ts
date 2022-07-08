@@ -38,11 +38,11 @@ export declare abstract class CoreRouter implements IRouter {
         overflow: boolean;
         index: [number, number];
     };
-    abstract computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget | 'singleWindow'): string;
-    abstract relaunch(partialLocation: Partial<Location>, target: RouteTarget, payload?: any): Promise<void>;
-    abstract push(partialLocation: Partial<Location>, target: RouteTarget | 'singleWindow', payload?: any): Promise<void>;
-    abstract replace(partialLocation: Partial<Location>, target: RouteTarget, payload?: any): Promise<void>;
-    abstract back(stepOrKeyOrCallback: string | number | ((record: IRouteRecord) => boolean), target: RouteTarget, payload?: any, overflowRedirect?: string | null): Promise<void>;
+    abstract computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
+    abstract relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
+    abstract push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
+    abstract replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
+    abstract back(stepOrKeyOrCallback: string | number | ((record: IRouteRecord) => boolean), target: RouteTarget, refresh?: boolean, overflowRedirect?: string | null): Promise<void>;
 }
 export declare class Store implements IStore {
     readonly sid: number;
