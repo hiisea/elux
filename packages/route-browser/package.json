@@ -1,6 +1,6 @@
 {
   "name": "@elux/route-browser",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Using @elux/route in browser",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route-browser",
   "author": "hiisea <hiisea@qq.com>",
@@ -26,8 +26,8 @@
     "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
   },
   "dependencies": {
-    "@elux/core": "^2.2.0",
-    "@elux/route": "^2.2.0",
+    "@elux/core": "^2.3.0",
+    "@elux/route": "^2.3.0",
     "@types/history": "~4.7.7",
     "history": "~4.10.1"
   },

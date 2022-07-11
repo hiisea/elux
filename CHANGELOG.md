@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.3.0](https://github.com/hiisea/elux/compare/v2.2.1...v2.3.0) (2022-07-11)
+
+
+### Bug Fixes
+
+* react中不能复用Fiber ([6da83b9](https://github.com/hiisea/elux/commit/6da83b96d132d07e96d0eb3cdf882dd94a459bb1))
+
+
+### Features
+
+* 1.框架不自动处理路由back时的溢出|2.路由跳转如果不指定classname，将沿用当前window的classname ([307ea2a](https://github.com/hiisea/elux/commit/307ea2afac2ef7b7c3c41524417408b3c520c660))
+* 路由location中增加state存放任何数据，以替代原来路由跳转方法中的payload参数 ([6a0e423](https://github.com/hiisea/elux/commit/6a0e42383cf9f86740e75521d9dde9e9a3c9bcba))
+
+
+### BREAKING CHANGES
+
+* 原来router.push({url:'/login'},'page',{data:111}) =>
+现在router.push({url:'/login',state:{data:111}},'page')
+
+
+
+
+
 ## [2.2.1](https://github.com/hiisea/elux/compare/v2.2.0...v2.2.1) (2022-06-06)
 
 
