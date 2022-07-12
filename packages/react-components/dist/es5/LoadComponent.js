@@ -1,6 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
@@ -35,10 +35,10 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
           }
 
           result.then(function (view) {
-            active && setView(view || 'not found!');
+            activeRef.current && setView(view || 'not found!');
           }, function (e) {
             env.console.error(e);
-            active && setView(e.message || "" + e || 'error');
+            activeRef.current && setView(e.message || "" + e || 'error');
           });
         } else {
           View = result;
@@ -51,24 +51,21 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
       return View;
     };
 
-    var _useState = useState(true),
-        active = _useState[0],
-        setActive = _useState[1];
-
+    var activeRef = useRef(true);
     useEffect(function () {
       return function () {
-        setActive(false);
+        activeRef.current = false;
       };
     }, []);
     var newStore = coreConfig.UseStore();
 
-    var _useState2 = useState(newStore),
-        store = _useState2[0],
-        setStore = _useState2[1];
+    var _useState = useState(newStore),
+        store = _useState[0],
+        setStore = _useState[1];
 
-    var _useState3 = useState(execute),
-        View = _useState3[0],
-        setView = _useState3[1];
+    var _useState2 = useState(execute),
+        View = _useState2[0],
+        setView = _useState2[1];
 
     if (store !== newStore) {
       setStore(newStore);
@@ -79,6 +76,8 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
       return _jsx(OnError, {
         message: View
       });
+    } else if (View === OnLoading) {
+      return _jsx(OnLoading, {});
     } else {
       return _jsx(View, _extends({
         ref: ref

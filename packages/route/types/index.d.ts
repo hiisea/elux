@@ -29,8 +29,8 @@ export declare class Router extends CoreRouter {
     setDocumentHead(html: string): void;
     private savePageTitle;
     nativeInitiated(): boolean;
-    getHistoryLength(target?: RouteTarget): number;
-    getHistory(target?: RouteTarget): IRouteRecord[];
+    getHistoryLength(target: RouteTarget): number;
+    getHistory(target: RouteTarget): IRouteRecord[];
     findRecordByKey(recordKey: string): {
         record: IRouteRecord;
         overflow: boolean;
@@ -53,13 +53,15 @@ export declare class Router extends CoreRouter {
     private redirectOnServer;
     init(routerInitOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
     private _init;
-    relaunch(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
+    relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
     private _relaunch;
-    replace(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
     private _replace;
-    push(partialLocation: Partial<Location>, target?: RouteTarget, payload?: any, _nativeCaller?: boolean): Promise<void>;
+    push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
     private _push;
-    back(stepOrKeyOrCallback?: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, payload?: any, overflowRedirect?: string | null, _nativeCaller?: boolean): Promise<void>;
+    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target: RouteTarget, refresh?: boolean, overflowRedirect?: string, _nativeCaller?: boolean): Promise<void>;
     private _back;
+    private backError;
 }
 //# sourceMappingURL=index.d.ts.map

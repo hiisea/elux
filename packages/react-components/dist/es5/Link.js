@@ -1,67 +1,85 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
-var _excluded = ["onClick", "disabled", "to", "action", "classname", "target", "payload"];
+var _excluded = ["to", "cname", "action", "onClick", "disabled", "overflowRedirect", "target", "refresh"];
 import { coreConfig } from '@elux/core';
-import { locationToUrl, urlToNativeUrl } from '@elux/route';
-import { useCallback, useMemo } from 'react';
+import { urlToNativeUrl } from '@elux/route';
+import { useCallback, useMemo, useRef } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var Link = function Link(_ref) {
-  var _onClick = _ref.onClick,
+  var to = _ref.to,
+      cname = _ref.cname,
+      action = _ref.action,
+      onClick = _ref.onClick,
       disabled = _ref.disabled,
-      _ref$to = _ref.to,
-      to = _ref$to === void 0 ? '' : _ref$to,
-      _ref$action = _ref.action,
-      action = _ref$action === void 0 ? 'push' : _ref$action,
-      _ref$classname = _ref.classname,
-      classname = _ref$classname === void 0 ? '' : _ref$classname,
-      _ref$target = _ref.target,
-      target = _ref$target === void 0 ? 'page' : _ref$target,
-      payload = _ref.payload,
+      overflowRedirect = _ref.overflowRedirect,
+      target = _ref.target,
+      refresh = _ref.refresh,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
+  var router = coreConfig.UseRouter();
+
   var _useMemo = useMemo(function () {
-    var back;
-    var url;
-    var href;
+    var firstArg, url, href;
 
     if (action === 'back') {
-      back = to || 1;
+      firstArg = to;
+      url = "#" + to.toString();
+      href = "#";
     } else {
-      url = classname ? locationToUrl({
-        url: to.toString(),
-        classname: classname
-      }) : to.toString();
+      var location = typeof to === 'string' ? {
+        url: to
+      } : to;
+      cname !== undefined && (location.classname = cname);
+      url = router.computeUrl(location, action, target);
+      firstArg = location;
       href = urlToNativeUrl(url);
     }
 
     return {
-      back: back,
+      firstArg: firstArg,
       url: url,
       href: href
     };
-  }, [action, classname, to]),
-      back = _useMemo.back,
+  }, [target, action, cname, router, to]),
+      firstArg = _useMemo.firstArg,
       url = _useMemo.url,
       href = _useMemo.href;
 
-  var router = coreConfig.UseRouter();
-  var onClick = useCallback(function (event) {
+  var data = {
+    router: router,
+    onClick: onClick,
+    disabled: disabled,
+    firstArg: firstArg,
+    action: action,
+    target: target,
+    refresh: refresh,
+    overflowRedirect: overflowRedirect
+  };
+  var refData = useRef(data);
+  Object.assign(refData.current, data);
+  var clickHandler = useCallback(function (event) {
     event.preventDefault();
+    var _refData$current = refData.current,
+        router = _refData$current.router,
+        disabled = _refData$current.disabled,
+        onClick = _refData$current.onClick,
+        firstArg = _refData$current.firstArg,
+        action = _refData$current.action,
+        target = _refData$current.target,
+        refresh = _refData$current.refresh,
+        overflowRedirect = _refData$current.overflowRedirect;
 
     if (!disabled) {
-      _onClick && _onClick(event);
-      router[action](back || {
-        url: url
-      }, target, payload);
+      onClick && onClick(event);
+      router[action](firstArg, target, refresh, overflowRedirect);
     }
-  }, [disabled, _onClick, router, action, back, url, target, payload]);
-  props['onClick'] = onClick;
+  }, []);
+  props['onClick'] = clickHandler;
   props['action'] = action;
   props['target'] = target;
-  props['to'] = (back || url) + '';
+  props['url'] = url;
   props['href'] = href;
-  href && (props['href'] = href);
-  classname && (props['classname'] = classname);
+  overflowRedirect && (props['overflow'] = overflowRedirect);
   disabled && (props['disabled'] = true);
 
   if (coreConfig.Platform === 'taro') {

@@ -57,10 +57,6 @@ export var CoreRouter = function () {
 
   var _proto = CoreRouter.prototype;
 
-  _proto.getHistoryUrls = function getHistoryUrls(target) {
-    throw new Error('Method not implemented.');
-  };
-
   _proto.addListener = function addListener(callback) {
     this.listenerId++;
     var id = "" + this.listenerId;
@@ -128,7 +124,7 @@ function applyEffect(effectResult, store, model, action, dispatch, decorators) {
 }
 
 export var Store = function () {
-  function Store(sid, router) {
+  function Store(sid, uid, router) {
     var _this = this;
 
     this.state = coreConfig.StoreInitState();
@@ -146,6 +142,7 @@ export var Store = function () {
 
     this.loadingGroups = {};
     this.sid = sid;
+    this.uid = uid;
     this.router = router;
     var middlewareAPI = {
       getStore: function getStore() {
@@ -170,8 +167,8 @@ export var Store = function () {
 
   var _proto2 = Store.prototype;
 
-  _proto2.clone = function clone() {
-    return new Store(this.sid + 1, this.router);
+  _proto2.clone = function clone(brand) {
+    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
   };
 
   _proto2.hotReplaceModel = function hotReplaceModel(moduleName, ModelClass) {

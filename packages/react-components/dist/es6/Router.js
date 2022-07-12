@@ -81,7 +81,8 @@ const Component = () => {
       } = item;
       const props = {
         className: `elux-window${classname ? ' ' + classname : ''}`,
-        key: store.sid,
+        key: store.uid,
+        uid: store.uid,
         sid: store.sid,
         url,
         style: {

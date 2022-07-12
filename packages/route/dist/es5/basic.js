@@ -15,7 +15,7 @@ export function nativeUrlToUrl(nativeUrl) {
       hash = _nativeUrl$split$3 === void 0 ? '' : _nativeUrl$split$3;
 
   var pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
-  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+  return "" + pathname + (search ? "?" + search : '') + (hash ? "#" + hash : '');
 }
 export function urlToNativeUrl(eluxUrl) {
   var _eluxUrl$split = eluxUrl.split(/[?#]/),
@@ -27,9 +27,9 @@ export function urlToNativeUrl(eluxUrl) {
       hash = _eluxUrl$split$3 === void 0 ? '' : _eluxUrl$split$3;
 
   var pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
-  return "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+  return "" + pathname + (search ? "?" + search : '') + (hash ? "#" + hash : '');
 }
-export function urlToLocation(url) {
+export function urlToLocation(url, state) {
   var _url$split = url.split(/[?#]/),
       _url$split$ = _url$split[0],
       path = _url$split$ === void 0 ? '' : _url$split$,
@@ -38,30 +38,30 @@ export function urlToLocation(url) {
       _url$split$3 = _url$split[2],
       hash = _url$split$3 === void 0 ? '' : _url$split$3;
 
-  var arr = ("?" + query).match(/(.*)[?&]__c=([^&]+)(.*$)/);
-  var search = query;
-  var classname = '';
-
-  if (arr) {
-    classname = arr[2];
-    search = (arr[1] + arr[3]).substr(1);
-  }
-
+  var arr = ("?" + query).match(/[?&]__c=([^&]*)/) || ['', ''];
+  var classname = arr[1];
+  var search = ("?" + query).replace(/[?&]__c=[^&]*/g, '').substr(1);
   var pathname = '/' + path.replace(/^\/|\/$/g, '');
   var parse = routeConfig.QueryString.parse;
   var searchQuery = parse(search);
   var hashQuery = parse(hash);
+
+  if (classname) {
+    search = search ? search + "&__c=" + classname : "__c=" + classname;
+  }
+
   return {
-    url: "" + pathname + (query ? '?' + query : '') + (hash ? '#' + hash : ''),
+    url: "" + pathname + (search ? "?" + search : '') + (hash ? "#" + hash : ''),
     pathname: pathname,
     search: search,
     hash: hash,
     classname: classname,
     searchQuery: searchQuery,
-    hashQuery: hashQuery
+    hashQuery: hashQuery,
+    state: state
   };
 }
-export function locationToUrl(_ref) {
+export function locationToUrl(_ref, defClassname) {
   var url = _ref.url,
       pathname = _ref.pathname,
       search = _ref.search,
@@ -81,14 +81,21 @@ export function locationToUrl(_ref) {
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
   var stringify = routeConfig.QueryString.stringify;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
 
-  if (classname) {
-    search = ("?" + search).replace(/[?&]__c=[^&]+/, '').substr(1);
-    search = search ? search + "&__c=" + classname : "__c=" + classname;
+  if (!/[?&]__c=/.test("?" + search) && defClassname && classname === undefined) {
+    classname = defClassname;
   }
 
-  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  url = "" + pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
+  if (typeof classname === 'string') {
+    search = ("?" + search).replace(/[?&]__c=[^&]*/g, '').substr(1);
+
+    if (classname) {
+      search = search ? search + "&__c=" + classname : "__c=" + classname;
+    }
+  }
+
+  url = "" + pathname + (search ? "?" + search : '') + (hash ? "#" + hash : '');
   return url;
 }
 export function locationToNativeLocation(location) {
@@ -130,7 +137,6 @@ export var routeConfig = {
     window: true,
     page: false
   },
-  HomeUrl: '/',
   QueryString: {
     parse: function parse(str) {
       return {};
@@ -141,7 +147,7 @@ export var routeConfig = {
   },
   NativePathnameMapping: {
     in: function _in(pathname) {
-      return pathname === '/' ? routeConfig.HomeUrl : pathname;
+      return pathname;
     },
     out: function out(pathname) {
       return pathname;

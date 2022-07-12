@@ -54,8 +54,8 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
       _this.unlistenHistory = history.block(function (locationData, action) {
         if (action === 'POP') {
           env.setTimeout(function () {
-            return _this.router.back(1);
-          }, 0);
+            return _this.router.back(1, 'page');
+          }, 300);
           return false;
         }
 

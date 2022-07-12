@@ -45,13 +45,13 @@ export declare function urlToNativeUrl(eluxUrl: string): string;
  *
  * @public
  */
-export declare function urlToLocation(url: string): Location;
+export declare function urlToLocation(url: string, state: any): Location;
 /**
  * Location转换为Url
  *
  * @public
  */
-export declare function locationToUrl({ url, pathname, search, hash, classname, searchQuery, hashQuery }: Partial<Location>): string;
+export declare function locationToUrl({ url, pathname, search, hash, classname, searchQuery, hashQuery }: Partial<Location>, defClassname?: string): string;
 /**
  * 内部路由Location转换为原生路由Location
  *
@@ -90,7 +90,6 @@ export interface RouteConfig {
             [key: string]: any;
         }): string;
     };
-    HomeUrl: string;
     NativePathnameMapping: {
         in(nativePathname: string): string;
         out(internalPathname: string): string;

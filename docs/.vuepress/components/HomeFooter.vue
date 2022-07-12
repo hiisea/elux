@@ -16,6 +16,12 @@
       <span> | </span>
       <label>QQ交流群 701818275</label>
     </div>
-    <div>Copyright © 2022-present yong.zhao <a href="https://beian.miit.gov.cn/" target="_blank">湘ICP备2022008353号-1</a></div>
+    <div class="copyright">
+      <span>Copyright © 2022-present yong.zhao</span>
+      <a href="https://beian.miit.gov.cn/" target="_blank">湘ICP备2022008353号-1</a>
+      <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44030602006901"
+        ><img src="/images/gaba.png" height="15" />粤公网安备 44030602006901号</a
+      >
+    </div>
   </footer>
 </template>

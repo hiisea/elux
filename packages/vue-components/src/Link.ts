@@ -1,5 +1,5 @@
-import {coreConfig, RouteAction, RouteTarget} from '@elux/core';
-import {locationToUrl, urlToNativeUrl} from '@elux/route';
+import {coreConfig, IRouteRecord, Location, RouteAction, RouteTarget} from '@elux/core';
+import {urlToNativeUrl} from '@elux/route';
 import {computed, defineComponent, Events, FunctionalComponent, h, HTMLAttributes} from 'vue';
 
 /**
@@ -19,31 +19,35 @@ export interface LinkProps extends HTMLAttributes {
   /**
    * 指定跳转的url或后退步数
    */
-  to: number | string;
+  to: number | string | ((record: IRouteRecord) => boolean) | Partial<Location>;
+  /**
+   * 路由跳转动作
+   */
+  action: Exclude<RouteAction, 'init'>;
+  /**
+   * 指定要操作的历史栈
+   */
+  target: RouteTarget;
+  /**
+   * 指定路由窗口的class
+   */
+  cname?: string;
   /**
    * 如果disabled将不执行路由及onClick事件
    */
   disabled?: boolean;
   /**
+   * 是否强制刷新dom，默认false
+   */
+  refresh?: boolean;
+  /**
    * 点击事件
    */
   onClick?(event: Events['onClick']): void;
   /**
-   * 路由跳转动作
+   * 路由后退时如果溢出，将重定向到此Url
    */
-  action?: Exclude<RouteAction, 'init'>;
-  /**
-   * 指定要操作的历史栈
-   */
-  target?: RouteTarget;
-  /**
-   * 本次路由传值
-   */
-  payload?: any;
-  /**
-   * 指定路由窗口的class
-   */
-  classname?: string;
+  overflowRedirect?: string;
 }
 
 /**
@@ -58,43 +62,47 @@ export interface LinkProps extends HTMLAttributes {
 export const Link: FunctionalComponent<LinkProps> = defineComponent({
   name: 'EluxLink',
   // eslint-disable-next-line vue/require-prop-types
-  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'refresh', 'cname', 'overflowRedirect'],
   setup(props: LinkProps, context) {
+    const router = coreConfig.UseRouter!();
     const route = computed(() => {
-      const {to = '', action = 'push', classname = ''} = props;
-      let back: string | number | undefined;
-      let url: string | undefined;
-      let href: string | undefined;
+      let firstArg: any, url: string, href: string;
+      const {to, action, cname, target} = props;
       if (action === 'back') {
-        back = to || 1;
+        firstArg = to;
+        url = `#${to.toString()}`;
+        href = `#`;
       } else {
-        url = classname ? locationToUrl({url: to.toString(), classname}) : to.toString();
+        const location = (typeof to === 'string' ? {url: to} : to) as Partial<Location>;
+        cname !== undefined && (location.classname = cname);
+        url = router.computeUrl(location, action, target);
+        firstArg = location;
         href = urlToNativeUrl(url);
       }
-      return {back, url, href};
+      return {firstArg, url, href};
     });
-    const router: {[m: string]: Function} = coreConfig.UseRouter!() as any;
-    const onClick = (event: Events['onClick']) => {
+
+    const clickHandler = (event: Events['onClick']) => {
       event.preventDefault();
-      const {back, url} = route.value;
-      const {disabled, onClick, action = 'push', target = 'page', payload} = props;
+      const {firstArg} = route.value;
+      const {disabled, onClick, action, target, refresh, overflowRedirect} = props;
       if (!disabled) {
         onClick && onClick(event);
-        router[action](back || {url}, target, payload);
+        (router as any)[action](firstArg, target, refresh, overflowRedirect);
       }
     };
     return () => {
-      const {back, url, href} = route.value;
-      const {disabled, action = 'push', target = 'page', classname = ''} = props;
+      const {url, href} = route.value;
+      const {disabled, action, target, overflowRedirect} = props;
       const linkProps = {};
-      linkProps['onClick'] = onClick;
+      linkProps['onClick'] = clickHandler;
       linkProps['action'] = action;
       linkProps['target'] = target;
-      linkProps['to'] = (back || url) + '';
+      linkProps['url'] = url;
       linkProps['href'] = href;
-      href && (linkProps['href'] = href);
-      classname && (linkProps['classname'] = classname);
+      overflowRedirect && (linkProps['overflow'] = overflowRedirect);
       disabled && (linkProps['disabled'] = true);
+
       if (coreConfig.Platform === 'taro') {
         return h('span', linkProps, context.slots);
       } else {

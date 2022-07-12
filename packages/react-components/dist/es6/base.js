@@ -1,5 +1,5 @@
-import { buildConfigSetter } from '@elux/core';
-import { createContext, useContext } from 'react';
+import { buildConfigSetter, env } from '@elux/core';
+import { createContext, useCallback, useContext, useEffect, useRef } from 'react';
 export const EluxContextComponent = createContext({
   router: null
 });
@@ -13,3 +13,15 @@ export const reactComponentsConfig = {
   renderToString: undefined
 };
 export const setReactComponentsConfig = buildConfigSetter(reactComponentsConfig);
+export function useEventCallback(fn, dependencies) {
+  const ref = useRef((...args) => {
+    env.console.log(new Error('Cannot call an event handler while rendering.'));
+  });
+  useEffect(() => {
+    ref.current = fn;
+  }, [fn, ...dependencies]);
+  return useCallback((...args) => {
+    const fun = ref.current;
+    return fun(...args);
+  }, [ref]);
+}

@@ -1,81 +1,80 @@
 import { coreConfig } from '@elux/core';
-import { locationToUrl, urlToNativeUrl } from '@elux/route';
+import { urlToNativeUrl } from '@elux/route';
 import { computed, defineComponent, h } from 'vue';
 export const Link = defineComponent({
   name: 'EluxLink',
-  props: ['disabled', 'to', 'onClick', 'action', 'target', 'payload', 'classname'],
+  props: ['disabled', 'to', 'onClick', 'action', 'target', 'refresh', 'cname', 'overflowRedirect'],
 
   setup(props, context) {
+    const router = coreConfig.UseRouter();
     const route = computed(() => {
+      let firstArg, url, href;
       const {
-        to = '',
-        action = 'push',
-        classname = ''
+        to,
+        action,
+        cname,
+        target
       } = props;
-      let back;
-      let url;
-      let href;
 
       if (action === 'back') {
-        back = to || 1;
+        firstArg = to;
+        url = `#${to.toString()}`;
+        href = `#`;
       } else {
-        url = classname ? locationToUrl({
-          url: to.toString(),
-          classname
-        }) : to.toString();
+        const location = typeof to === 'string' ? {
+          url: to
+        } : to;
+        cname !== undefined && (location.classname = cname);
+        url = router.computeUrl(location, action, target);
+        firstArg = location;
         href = urlToNativeUrl(url);
       }
 
       return {
-        back,
+        firstArg,
         url,
         href
       };
     });
-    const router = coreConfig.UseRouter();
 
-    const onClick = event => {
+    const clickHandler = event => {
       event.preventDefault();
       const {
-        back,
-        url
+        firstArg
       } = route.value;
       const {
         disabled,
         onClick,
-        action = 'push',
-        target = 'page',
-        payload
+        action,
+        target,
+        refresh,
+        overflowRedirect
       } = props;
 
       if (!disabled) {
         onClick && onClick(event);
-        router[action](back || {
-          url
-        }, target, payload);
+        router[action](firstArg, target, refresh, overflowRedirect);
       }
     };
 
     return () => {
       const {
-        back,
         url,
         href
       } = route.value;
       const {
         disabled,
-        action = 'push',
-        target = 'page',
-        classname = ''
+        action,
+        target,
+        overflowRedirect
       } = props;
       const linkProps = {};
-      linkProps['onClick'] = onClick;
+      linkProps['onClick'] = clickHandler;
       linkProps['action'] = action;
       linkProps['target'] = target;
-      linkProps['to'] = (back || url) + '';
+      linkProps['url'] = url;
       linkProps['href'] = href;
-      href && (linkProps['href'] = href);
-      classname && (linkProps['classname'] = classname);
+      overflowRedirect && (linkProps['overflow'] = overflowRedirect);
       disabled && (linkProps['disabled'] = true);
 
       if (coreConfig.Platform === 'taro') {

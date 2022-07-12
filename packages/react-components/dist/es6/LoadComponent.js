@@ -1,5 +1,5 @@
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export const LoadComponentOnError = ({
   message
@@ -27,10 +27,10 @@ export const LoadComponent = (moduleName, componentName, options = {}) => {
           }
 
           result.then(view => {
-            active && setView(view || 'not found!');
+            activeRef.current && setView(view || 'not found!');
           }, e => {
             env.console.error(e);
-            active && setView(e.message || `${e}` || 'error');
+            activeRef.current && setView(e.message || `${e}` || 'error');
           });
         } else {
           View = result;
@@ -43,10 +43,10 @@ export const LoadComponent = (moduleName, componentName, options = {}) => {
       return View;
     };
 
-    const [active, setActive] = useState(true);
+    const activeRef = useRef(true);
     useEffect(() => {
       return () => {
-        setActive(false);
+        activeRef.current = false;
       };
     }, []);
     const newStore = coreConfig.UseStore();
@@ -62,6 +62,8 @@ export const LoadComponent = (moduleName, componentName, options = {}) => {
       return _jsx(OnError, {
         message: View
       });
+    } else if (View === OnLoading) {
+      return _jsx(OnLoading, {});
     } else {
       return _jsx(View, {
         ref: ref,

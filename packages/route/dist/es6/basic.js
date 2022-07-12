@@ -7,38 +7,38 @@ export const ErrorCodes = {
 export function nativeUrlToUrl(nativeUrl) {
   const [path = '', search = '', hash = ''] = nativeUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 export function urlToNativeUrl(eluxUrl) {
   const [path = '', search = '', hash = ''] = eluxUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
-export function urlToLocation(url) {
+export function urlToLocation(url, state) {
   const [path = '', query = '', hash = ''] = url.split(/[?#]/);
-  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
-  let search = query;
-  let classname = '';
-
-  if (arr) {
-    classname = arr[2];
-    search = (arr[1] + arr[3]).substr(1);
-  }
-
+  const arr = `?${query}`.match(/[?&]__c=([^&]*)/) || ['', ''];
+  const classname = arr[1];
+  let search = `?${query}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {
     parse
   } = routeConfig.QueryString;
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
+
+  if (classname) {
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+
   return {
-    url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`,
+    url: `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`,
     pathname,
     search,
     hash,
     classname,
     searchQuery,
-    hashQuery
+    hashQuery,
+    state
   };
 }
 export function locationToUrl({
@@ -49,7 +49,7 @@ export function locationToUrl({
   classname,
   searchQuery,
   hashQuery
-}) {
+}, defClassname) {
   if (url) {
     [pathname, search, hash] = url.split(/[?#]/);
   }
@@ -59,14 +59,21 @@ export function locationToUrl({
     stringify
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
+  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
 
-  if (classname) {
-    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
-    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  if (!/[?&]__c=/.test(`?${search}`) && defClassname && classname === undefined) {
+    classname = defClassname;
   }
 
-  hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  if (typeof classname === 'string') {
+    search = `?${search}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
+
+    if (classname) {
+      search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+    }
+  }
+
+  url = `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
   return url;
 }
 export function locationToNativeLocation(location) {
@@ -108,13 +115,12 @@ export const routeConfig = {
     window: true,
     page: false
   },
-  HomeUrl: '/',
   QueryString: {
     parse: str => ({}),
     stringify: () => ''
   },
   NativePathnameMapping: {
-    in: pathname => pathname === '/' ? routeConfig.HomeUrl : pathname,
+    in: pathname => pathname,
     out: pathname => pathname
   }
 };

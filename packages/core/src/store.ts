@@ -70,10 +70,6 @@ export abstract class CoreRouter implements IRouter {
       MetaData.clientRouter = this;
     }
   }
-  getHistoryUrls(target?: RouteTarget): string[] {
-    throw new Error('Method not implemented.');
-  }
-
   addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener {
     this.listenerId++;
     const id = `${this.listenerId}`;
@@ -106,19 +102,20 @@ export abstract class CoreRouter implements IRouter {
   abstract setDocumentHead(html: string): void;
   abstract getActivePage(): {store: IStore; location: Location};
   abstract getCurrentPages(): {store: IStore; location: Location}[];
-  abstract getHistoryLength(target?: RouteTarget): number;
-  abstract getHistory(target?: RouteTarget): IRouteRecord[];
+  abstract getHistoryLength(target: RouteTarget): number;
+  abstract getHistory(target: RouteTarget): IRouteRecord[];
   abstract findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
   abstract findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]};
-  abstract relaunch(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
-  abstract push(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
-  abstract replace(urlOrLocation: Partial<Location>, target?: RouteTarget, payload?: any): void | Promise<void>;
+  abstract computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
+  abstract relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
+  abstract push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
+  abstract replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
   abstract back(
-    stepOrKeyOrCallback?: string | number | ((record: IRouteRecord) => boolean),
-    target?: RouteTarget,
-    payload?: any,
+    stepOrKeyOrCallback: string | number | ((record: IRouteRecord) => boolean),
+    target: RouteTarget,
+    refresh?: boolean,
     overflowRedirect?: string | null
-  ): void | Promise<void>;
+  ): Promise<void>;
 }
 
 function applyEffect(
@@ -175,7 +172,7 @@ export class Store implements IStore {
   };
   public loadingGroups: {[moduleNameAndGroupName: string]: TaskCounter} = {};
 
-  constructor(public readonly sid: number, public readonly router: IRouter) {
+  constructor(public readonly sid: number, public readonly uid: number, public readonly router: IRouter) {
     const middlewareAPI = {
       getStore: () => this,
       dispatch: (action: Action) => this.dispatch(action),
@@ -188,8 +185,8 @@ export class Store implements IStore {
     this.dispatch = compose(...chain)(_dispatch);
   }
 
-  clone(): Store {
-    return new Store(this.sid + 1, this.router);
+  clone(brand?: boolean): Store {
+    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
   }
   hotReplaceModel(moduleName: string, ModelClass: CommonModelClass): void {
     const orignModel = this.injectedModels[moduleName];

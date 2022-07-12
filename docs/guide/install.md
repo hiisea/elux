@@ -2,29 +2,16 @@
 
 Elux 项目基于 node，推荐使用较新的 node 环境（>=14.0.0）
 
-## 采用Cli命令安装
-
-### 安装 @elux/cli-init
-
-使用 npm 或者 yarn 全局安装 @elux/cli-init
+## 采用Cli命令初始化新工程
 
 ```bash
-npm install -g @elux/cli-init
+npm create elux@latest
 ```
 
-::: tip 如果你不想全局安装，只是想看看案例，也可以一条命令搞定：
-
-npx @elux/cli-init elux-init
-
-:::
-
-### 初始化新工程
-
-在终端中执行 `elux-init` 即可开始新建工程向导...  
-跟着向导一步步选择所需的工程模版即可...
+或者
 
 ```bash
-elux-init
+yarn create elux
 ```
 
 ### 关于工程模版
@@ -52,6 +39,18 @@ elux-init
 - 由于模版中使用了`npm-workspace`，推荐使用yarn安装依赖，如果使用npm，请保证版本>=7
 - 模版默认会拉取`lock文件`，这样会锁定各依赖版本，如果你比较激进，可以不使用它们。
 - @types/react 类型文件最好只安装一个版本，多版本可能冲突。
+
+## 家庭成员
+
+针对不同框架与运行平台，Elux推出5个组合包，**它们保持统一的对外API**：
+
+- [@elux/react-web](/api/react-web.html)
+- [@elux/react-taro](/api/react-taro.html)
+- @elux/react-rn //开发中...
+- [@elux/vue-web](/api/vue-web.html)
+- [@elux/vue-taro](/api/vue-taro.html)
+
+其它辅助包均为脚手架或者Cli命令工具，非必需使用。你可以使用官方配置好的脚手架（基于Webpack5），可以建立自己的脚手架，选择以上5个组合包之一进安装。
 
 ## 关于Taro项目
 

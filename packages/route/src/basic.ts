@@ -33,7 +33,7 @@ export const ErrorCodes = {
 export function nativeUrlToUrl(nativeUrl: string): string {
   const [path = '', search = '', hash = ''] = nativeUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 
 /**
@@ -49,7 +49,7 @@ export function nativeUrlToUrl(nativeUrl: string): string {
 export function urlToNativeUrl(eluxUrl: string): string {
   const [path = '', search = '', hash = ''] = eluxUrl.split(/[?#]/);
   const pathname = routeConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
-  return `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  return `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
 }
 
 /**
@@ -57,20 +57,19 @@ export function urlToNativeUrl(eluxUrl: string): string {
  *
  * @public
  */
-export function urlToLocation(url: string): Location {
+export function urlToLocation(url: string, state: any): Location {
   const [path = '', query = '', hash = ''] = url.split(/[?#]/);
-  const arr = `?${query}`.match(/(.*)[?&]__c=([^&]+)(.*$)/);
-  let search = query;
-  let classname = '';
-  if (arr) {
-    classname = arr[2];
-    search = (arr[1] + arr[3]).substr(1);
-  }
+  const arr = `?${query}`.match(/[?&]__c=([^&]*)/) || ['', ''];
+  const classname = arr[1];
+  let search = `?${query}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
   const pathname = '/' + path.replace(/^\/|\/$/g, '');
   const {parse} = routeConfig.QueryString;
   const searchQuery = parse(search);
   const hashQuery = parse(hash);
-  return {url: `${pathname}${query ? '?' + query : ''}${hash ? '#' + hash : ''}`, pathname, search, hash, classname, searchQuery, hashQuery};
+  if (classname) {
+    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+  }
+  return {url: `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`, pathname, search, hash, classname, searchQuery, hashQuery, state};
 }
 
 /**
@@ -78,19 +77,24 @@ export function urlToLocation(url: string): Location {
  *
  * @public
  */
-export function locationToUrl({url, pathname, search, hash, classname, searchQuery, hashQuery}: Partial<Location>): string {
+export function locationToUrl({url, pathname, search, hash, classname, searchQuery, hashQuery}: Partial<Location>, defClassname?: string): string {
   if (url) {
     [pathname, search, hash] = url.split(/[?#]/);
   }
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
   const {stringify} = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
-  if (classname) {
-    search = `?${search}`.replace(/[?&]__c=[^&]+/, '').substr(1);
-    search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
-  }
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
-  url = `${pathname}${search ? '?' + search : ''}${hash ? '#' + hash : ''}`;
+  if (!/[?&]__c=/.test(`?${search}`) && defClassname && classname === undefined) {
+    classname = defClassname;
+  }
+  if (typeof classname === 'string') {
+    search = `?${search}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
+    if (classname) {
+      search = search ? `${search}&__c=${classname}` : `__c=${classname}`;
+    }
+  }
+  url = `${pathname}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
   return url;
 }
 
@@ -153,7 +157,6 @@ export interface RouteConfig {
     parse(str: string): {[key: string]: any};
     stringify(query: {[key: string]: any}): string;
   };
-  HomeUrl: string;
   NativePathnameMapping: {
     in(nativePathname: string): string;
     out(internalPathname: string): string;
@@ -168,13 +171,12 @@ export const routeConfig: RouteConfig = {
     window: true,
     page: false,
   },
-  HomeUrl: '/',
   QueryString: {
     parse: (str: string) => ({}),
     stringify: () => '',
   },
   NativePathnameMapping: {
-    in: (pathname: string) => (pathname === '/' ? routeConfig.HomeUrl : pathname),
+    in: (pathname: string) => pathname,
     out: (pathname: string) => pathname,
   },
 };

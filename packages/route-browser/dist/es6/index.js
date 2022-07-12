@@ -44,7 +44,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
     if (window || page) {
       this.unlistenHistory = history.block((locationData, action) => {
         if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1), 0);
+          env.setTimeout(() => this.router.back(1, 'page'), 300);
           return false;
         }
 

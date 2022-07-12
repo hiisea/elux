@@ -54,7 +54,7 @@
         </ul>
       </div>
     </div>
-    <h2>使用即有技术栈，提供<span class="stress">CLI工具</span>开箱即用</h2>
+    <h2>使用既有技术栈，提供<span class="stress">CLI工具</span>开箱即用</h2>
     <div class="feats-easy">
       <div class="note">
         <em class="text">不重复造轮子...<br />对各框架无破坏性与侵入性！</em>
@@ -62,6 +62,6 @@
       <div class="cli"></div>
     </div>
     <h2>只需一行命令，立即试试吧！👇</h2>
-    <div class="try-now">npx @elux/cli-init elux-init</div>
+    <div class="try-now">npm create elux@latest 或 yarn create elux</div>
   </div>
 </template>
