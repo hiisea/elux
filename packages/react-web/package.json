@@ -1,6 +1,6 @@
 {
   "name": "@elux/react-web",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "The practice of elux on react-web",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/react-web",
   "author": "hiisea <hiisea@qq.com>",
@@ -43,12 +43,12 @@
     "react-dom": "^16.8.0 || ^17 || ^18"
   },
   "dependencies": {
-    "@elux/app": "^2.3.0",
+    "@elux/app": "^2.3.1",
     "@elux/core": "^2.3.0",
-    "@elux/react-components": "^2.3.0",
+    "@elux/react-components": "^2.3.1",
     "@elux/react-redux": "^2.3.0",
-    "@elux/route": "^2.3.0",
-    "@elux/route-browser": "^2.3.0"
+    "@elux/route": "^2.3.1",
+    "@elux/route-browser": "^2.3.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.1](https://github.com/hiisea/elux/compare/v2.3.0...v2.3.1) (2022-07-12)
+
+
+### Bug Fixes
+
+* 路由跳转继承当前classname ([fcec6fc](https://github.com/hiisea/elux/commit/fcec6fce15d2d69b5f57715db535d46c3dfd0a6d))
+
+
+
+
+
 # [2.3.0](https://github.com/hiisea/elux/compare/v2.2.1...v2.3.0) (2022-07-11)
 
 
