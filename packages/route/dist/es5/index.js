@@ -2,7 +2,7 @@ import _asyncToGenerator from "@babel/runtime/helpers/esm/asyncToGenerator";
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
 import _regeneratorRuntime from "@babel/runtime/regenerator";
 import { coreConfig, CoreRouter, deepClone, env, errorAction, setLoading, Store } from '@elux/core';
-import { afterChangeAction, beforeChangeAction, ErrorCodes, locationToNativeLocation, locationToUrl, mergeDefaultClassname, nativeUrlToUrl, routeConfig, testChangeAction, urlToLocation, urlToNativeUrl } from './basic';
+import { afterChangeAction, beforeChangeAction, ErrorCodes, locationToNativeLocation, locationToUrl, nativeUrlToUrl, routeConfig, testChangeAction, urlToLocation, urlToNativeUrl } from './basic';
 import { PageStack, RouteRecord, WindowStack } from './history';
 export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, routeConfig, setRouteConfig, urlToLocation, urlToNativeUrl } from './basic';
 export var BaseNativeRouter = function () {
@@ -356,8 +356,7 @@ export var Router = function (_CoreRouter) {
       defClassname = target === 'window' ? '' : curClassname;
     }
 
-    var url = locationToUrl(partialLocation);
-    return mergeDefaultClassname(url, defClassname);
+    return locationToUrl(partialLocation, defClassname);
   };
 
   _proto2.relaunch = function relaunch(partialLocation, target, refresh, _nativeCaller) {

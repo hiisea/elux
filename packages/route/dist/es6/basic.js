@@ -41,20 +41,6 @@ export function urlToLocation(url, state) {
     state
   };
 }
-export function mergeDefaultClassname(url, defClassname) {
-  if (!defClassname) {
-    return url;
-  }
-
-  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
-
-  if (/[?&]__c=/.test(`?${query}`)) {
-    return url;
-  }
-
-  const search = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
-  return `${path}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
-}
 export function locationToUrl({
   url,
   pathname,
@@ -63,7 +49,7 @@ export function locationToUrl({
   classname,
   searchQuery,
   hashQuery
-}) {
+}, defClassname) {
   if (url) {
     [pathname, search, hash] = url.split(/[?#]/);
   }
@@ -74,6 +60,10 @@ export function locationToUrl({
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
+
+  if (!/[?&]__c=/.test(`?${search}`) && defClassname && classname === undefined) {
+    classname = defClassname;
+  }
 
   if (typeof classname === 'string') {
     search = `?${search}`.replace(/[?&]__c=[^&]*/g, '').substr(1);

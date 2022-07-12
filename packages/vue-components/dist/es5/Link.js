@@ -23,9 +23,7 @@ export var Link = defineComponent({
         } : to;
         cname !== undefined && (location.classname = cname);
         url = router.computeUrl(location, action, target);
-        firstArg = {
-          url: url
-        };
+        firstArg = location;
         href = urlToNativeUrl(url);
       }
 

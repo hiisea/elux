@@ -46,13 +46,12 @@ export declare function urlToNativeUrl(eluxUrl: string): string;
  * @public
  */
 export declare function urlToLocation(url: string, state: any): Location;
-export declare function mergeDefaultClassname(url: string, defClassname: string): string;
 /**
  * Location转换为Url
  *
  * @public
  */
-export declare function locationToUrl({ url, pathname, search, hash, classname, searchQuery, hashQuery }: Partial<Location>): string;
+export declare function locationToUrl({ url, pathname, search, hash, classname, searchQuery, hashQuery }: Partial<Location>, defClassname?: string): string;
 /**
  * 内部路由Location转换为原生路由Location
  *

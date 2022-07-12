@@ -20,7 +20,6 @@ import {
   ErrorCodes,
   locationToNativeLocation,
   locationToUrl,
-  mergeDefaultClassname,
   nativeUrlToUrl,
   routeConfig,
   testChangeAction,
@@ -257,8 +256,7 @@ export class Router extends CoreRouter {
     if (action === 'relaunch') {
       defClassname = target === 'window' ? '' : curClassname;
     }
-    const url = locationToUrl(partialLocation);
-    return mergeDefaultClassname(url, defClassname);
+    return locationToUrl(partialLocation, defClassname);
   }
 
   relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean = false, _nativeCaller = false): Promise<void> {

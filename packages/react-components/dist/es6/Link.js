@@ -31,9 +31,7 @@ export const Link = ({
       } : to;
       cname !== undefined && (location.classname = cname);
       url = router.computeUrl(location, action, target);
-      firstArg = {
-        url
-      };
+      firstArg = location;
       href = urlToNativeUrl(url);
     }
 

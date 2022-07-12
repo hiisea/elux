@@ -31,9 +31,7 @@ export var Link = function Link(_ref) {
       } : to;
       cname !== undefined && (location.classname = cname);
       url = router.computeUrl(location, action, target);
-      firstArg = {
-        url: url
-      };
+      firstArg = location;
       href = urlToNativeUrl(url);
     }
 

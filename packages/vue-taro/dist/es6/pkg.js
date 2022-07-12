@@ -1304,20 +1304,6 @@ function urlToLocation(url, state) {
     state
   };
 }
-function mergeDefaultClassname(url, defClassname) {
-  if (!defClassname) {
-    return url;
-  }
-
-  const [path = '', query = '', hash = ''] = url.split(/[?#]/);
-
-  if (/[?&]__c=/.test(`?${query}`)) {
-    return url;
-  }
-
-  const search = query ? `${query}&__c=${defClassname}` : `__c=${defClassname}`;
-  return `${path}${search ? `?${search}` : ''}${hash ? `#${hash}` : ''}`;
-}
 function locationToUrl({
   url,
   pathname,
@@ -1326,7 +1312,7 @@ function locationToUrl({
   classname,
   searchQuery,
   hashQuery
-}) {
+}, defClassname) {
   if (url) {
     [pathname, search, hash] = url.split(/[?#]/);
   }
@@ -1337,6 +1323,10 @@ function locationToUrl({
   } = routeConfig.QueryString;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
+
+  if (!/[?&]__c=/.test(`?${search}`) && defClassname && classname === undefined) {
+    classname = defClassname;
+  }
 
   if (typeof classname === 'string') {
     search = `?${search}`.replace(/[?&]__c=[^&]*/g, '').substr(1);
@@ -1972,8 +1962,7 @@ class Router extends CoreRouter {
       defClassname = target === 'window' ? '' : curClassname;
     }
 
-    const url = locationToUrl(partialLocation);
-    return mergeDefaultClassname(url, defClassname);
+    return locationToUrl(partialLocation, defClassname);
   }
 
   relaunch(partialLocation, target, refresh = false, _nativeCaller = false) {
@@ -2872,9 +2861,7 @@ const Link = defineComponent({
         } : to;
         cname !== undefined && (location.classname = cname);
         url = router.computeUrl(location, action, target);
-        firstArg = {
-          url
-        };
+        firstArg = location;
         href = urlToNativeUrl(url);
       }
 

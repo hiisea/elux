@@ -70,7 +70,7 @@ export const Link: FC<LinkProps> = ({to, cname, action, onClick, disabled, overf
       const location = (typeof to === 'string' ? {url: to} : to) as Partial<Location>;
       cname !== undefined && (location.classname = cname);
       url = router.computeUrl(location, action, target);
-      firstArg = {url};
+      firstArg = location;
       href = urlToNativeUrl(url);
     }
     return {firstArg, url, href};

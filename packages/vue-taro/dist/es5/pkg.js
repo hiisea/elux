@@ -2287,27 +2287,7 @@ function urlToLocation(url, state) {
     state: state
   };
 }
-function mergeDefaultClassname(url, defClassname) {
-  if (!defClassname) {
-    return url;
-  }
-
-  var _url$split2 = url.split(/[?#]/),
-      _url$split2$ = _url$split2[0],
-      path = _url$split2$ === void 0 ? '' : _url$split2$,
-      _url$split2$2 = _url$split2[1],
-      query = _url$split2$2 === void 0 ? '' : _url$split2$2,
-      _url$split2$3 = _url$split2[2],
-      hash = _url$split2$3 === void 0 ? '' : _url$split2$3;
-
-  if (/[?&]__c=/.test("?" + query)) {
-    return url;
-  }
-
-  var search = query ? query + "&__c=" + defClassname : "__c=" + defClassname;
-  return "" + path + (search ? "?" + search : '') + (hash ? "#" + hash : '');
-}
-function locationToUrl(_ref) {
+function locationToUrl(_ref, defClassname) {
   var url = _ref.url,
       pathname = _ref.pathname,
       search = _ref.search,
@@ -2317,17 +2297,21 @@ function locationToUrl(_ref) {
       hashQuery = _ref.hashQuery;
 
   if (url) {
-    var _url$split3 = url.split(/[?#]/);
+    var _url$split2 = url.split(/[?#]/);
 
-    pathname = _url$split3[0];
-    search = _url$split3[1];
-    hash = _url$split3[2];
+    pathname = _url$split2[0];
+    search = _url$split2[1];
+    hash = _url$split2[2];
   }
 
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
   var stringify = routeConfig.QueryString.stringify;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
+
+  if (!/[?&]__c=/.test("?" + search) && defClassname && classname === undefined) {
+    classname = defClassname;
+  }
 
   if (typeof classname === 'string') {
     search = ("?" + search).replace(/[?&]__c=[^&]*/g, '').substr(1);
@@ -3111,8 +3095,7 @@ var Router = function (_CoreRouter) {
       defClassname = target === 'window' ? '' : curClassname;
     }
 
-    var url = locationToUrl(partialLocation);
-    return mergeDefaultClassname(url, defClassname);
+    return locationToUrl(partialLocation, defClassname);
   };
 
   _proto2.relaunch = function relaunch(partialLocation, target, refresh, _nativeCaller) {
@@ -4245,9 +4228,7 @@ var Link = defineComponent({
         } : to;
         cname !== undefined && (location.classname = cname);
         url = router.computeUrl(location, action, target);
-        firstArg = {
-          url: url
-        };
+        firstArg = location;
         href = urlToNativeUrl(url);
       }
 
