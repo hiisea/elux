@@ -14,7 +14,7 @@
       <span> | </span>
       <a href="https://juejin.cn/column/7106899933537501221" target="_blank">掘金专栏</a>
       <span> | </span>
-      <label>QQ交流群 701818275</label>
+      <a href="/ecological/">微信/QQ群</a>
     </div>
     <div class="copyright">
       <span>Copyright © 2022-present yong.zhao</span>
