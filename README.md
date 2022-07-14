@@ -22,9 +22,10 @@
   </a>
   <p></p>
   <p>
-    <a href="https://www.zhihu.com/column/c_1518022622268448768" target="_blank">知乎专栏</a><span> | </span><a href="https://juejin.cn/column/7106899933537501221" target="_blank">掘金专栏</a><span> | </span><label>QQ交流群 701818275</label>
+    <a href="https://juejin.cn/column/7106899933537501221" target="_blank">掘金专栏</a> | </span><a href="https://www.zhihu.com/column/c_1518022622268448768" target="_blank">知乎专栏</a><span> | </span><label>QQ/微信交流群</label>
   </p>
-  <p><img src="docs/.vuepress/public/images/qq.jpg" alt="elux" width="200" /></p>
+  <p><img src="docs/.vuepress/public/images/qq.jpg" alt="elux" width="200" />
+  <img src="docs/.vuepress/public/images/wechat.jpg" alt="elux" width="200" /></p>
   <p>
     <span>开源不易，欢迎点赞支持</span>
     <a href="https://github.com/hiisea/elux">

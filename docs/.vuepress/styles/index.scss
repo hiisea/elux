@@ -63,7 +63,28 @@
     color: #ff7464;
   }
 
+  .hero-notice {
+    z-index: 10000;
+    top: var(--navbar-height);
+    left: 0;
+    right: 0;
+    position: fixed;
+    background-color: #f8f8f8;
+    font-size: 12px;
+    padding: 9px;
+    margin: 0;
+    list-style-position: inside;
+    display: flex;
+    justify-content: center;
+    color: #999;
+
+    a{
+      color: #999;
+    }
+  }
+
   .hero-logo {
+    padding-top: 20px;
     .logo-text {
       margin-top: 2rem;
     }
@@ -359,7 +380,7 @@
     }
   }
 
-  .try-now{
+  .try-now {
     background-color: #333;
     color: #fff;
     text-align: center;
@@ -377,7 +398,7 @@
       align-items: center;
       padding: 10px;
 
-      em{
+      em {
         border-bottom: 1px solid #eee;
       }
     }
@@ -391,15 +412,15 @@
       }
     }
 
-    .copyright{
+    .copyright {
       margin-top: 5px;
       font-size: 12px;
 
-      img{
+      img {
         vertical-align: middle;
       }
 
-      a{
+      a {
         font-weight: normal;
         color: #5e9ee6;
         margin-left: 10px;

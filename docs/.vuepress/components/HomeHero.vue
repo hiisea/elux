@@ -24,6 +24,9 @@ const actions = computed(() => {
 
 <template>
   <header class="hero">
+    <ul class="hero-notice">
+      <li><a href="https://juejin.cn/post/7119728761355894814" target="_blank">新出一套基于Antd-React的后台管理系统模版(07/23)</a></li>
+    </ul>
     <div class="hero-logo">
       <img class="logo-icon" src="/images/logo-icon-rotate.svg" alt="elux" width="250" />
       <img class="logo-text" src="/images/logo-text.svg" alt="elux" width="230" />
