@@ -1,6 +1,6 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
-import { defineComponent, h, onBeforeUnmount, shallowRef } from 'vue';
+import { defineComponent, h, onBeforeUnmount, shallowRef, watch } from 'vue';
 export const LoadComponentOnError = ({
   message
 }) => _createVNode("div", {
@@ -16,12 +16,11 @@ export const LoadComponent = (moduleName, componentName, options = {}) => {
     name: 'EluxComponentLoader',
 
     setup(props, context) {
-      const store = coreConfig.UseStore();
-      const View = shallowRef(OnLoading);
+      const execute = () => {
+        let SyncView = OnLoading;
 
-      const execute = curStore => {
         try {
-          const result = injectComponent(moduleName, componentName, curStore || store);
+          const result = injectComponent(moduleName, componentName, store);
 
           if (isPromise(result)) {
             if (env.isServer) {
@@ -35,26 +34,34 @@ export const LoadComponent = (moduleName, componentName, options = {}) => {
               active && (View.value = e.message || `${e}` || 'error');
             });
           } else {
-            View.value = result;
+            SyncView = result;
           }
         } catch (e) {
           env.console.error(e);
-          View.value = e.message || `${e}` || 'error';
+          SyncView = e.message || `${e}` || 'error';
         }
+
+        return SyncView;
       };
 
+      const store = coreConfig.UseStore();
+      const View = shallowRef(execute());
       let active = true;
       onBeforeUnmount(() => {
         active = false;
       });
-      execute();
+      watch(() => store.sid, execute);
       return () => {
-        if (typeof View.value === 'string') {
+        const view = View.value;
+
+        if (typeof view === 'string') {
           return h(OnError, {
-            message: View.value
+            message: view
           });
+        } else if (view === OnLoading) {
+          return h(view);
         } else {
-          return h(View.value, props, context.slots);
+          return h(view, props, context.slots);
         }
       };
     }

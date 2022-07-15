@@ -1,4 +1,4 @@
-import { Action, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, EluxComponent, IRouter, IStore, ModuleState, StoreState } from './basic';
+import { Action, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, EluxComponent, IRouter, IStore, ModuleState, StoreState, VStore } from './basic';
 import { LoadingState } from './utils';
 /*** @public */
 export declare type GetPromiseModule<T> = T extends Promise<{
@@ -217,7 +217,7 @@ export declare function getApi<TAPI extends {
 }>(demoteForProductionOnly?: boolean, injectActions?: Record<string, string[]>): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'GetComponent' | 'GetData' | 'Modules'> & {
     GetClientRouter: () => IRouter;
     useRouter: () => IRouter;
-    useStore: () => IStore<TAPI['State']>;
+    useStore: () => VStore<TAPI['State']>;
 };
 /**
  * Model基类

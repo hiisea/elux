@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
+import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, watch, h, shallowReactive, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 
 var root;
@@ -3987,12 +3987,11 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
   var component = defineComponent({
     name: 'EluxComponentLoader',
     setup: function setup(props, context) {
-      var store = coreConfig.UseStore();
-      var View = shallowRef(OnLoading);
+      var execute = function execute() {
+        var SyncView = OnLoading;
 
-      var execute = function execute(curStore) {
         try {
-          var result = injectComponent(moduleName, componentName, curStore || store);
+          var result = injectComponent(moduleName, componentName, store);
 
           if (isPromise(result)) {
             if (env.isServer) {
@@ -4006,26 +4005,36 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
               active && (View.value = e.message || "" + e || 'error');
             });
           } else {
-            View.value = result;
+            SyncView = result;
           }
         } catch (e) {
           env.console.error(e);
-          View.value = e.message || "" + e || 'error';
+          SyncView = e.message || "" + e || 'error';
         }
+
+        return SyncView;
       };
 
+      var store = coreConfig.UseStore();
+      var View = shallowRef(execute());
       var active = true;
       onBeforeUnmount(function () {
         active = false;
       });
-      execute();
+      watch(function () {
+        return store.sid;
+      }, execute);
       return function () {
-        if (typeof View.value === 'string') {
+        var view = View.value;
+
+        if (typeof view === 'string') {
           return h(OnError, {
-            message: View.value
+            message: view
           });
+        } else if (view === OnLoading) {
+          return h(view);
         } else {
-          return h(View.value, props, context.slots);
+          return h(view, props, context.slots);
         }
       };
     }
@@ -4035,18 +4044,41 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
 
 var EWindow = defineComponent({
   name: 'EluxWindow',
-  props: {
-    store: {
-      type: Object,
-      required: true
-    }
-  },
+  props: ['store'],
   setup: function setup(props) {
     var AppView = getEntryComponent();
+    var store = props.store;
+    var uid = store.uid,
+        sid = store.sid,
+        state = store.state,
+        dispatch = store.dispatch,
+        mount = store.mount;
+    var storeRef = shallowReactive({
+      uid: uid,
+      sid: sid,
+      state: state,
+      dispatch: dispatch.bind(store),
+      mount: mount.bind(store)
+    });
     var storeContext = {
-      store: props.store
+      store: storeRef
     };
     provide(EluxStoreContextKey, storeContext);
+    watch(function () {
+      return props.store;
+    }, function (store) {
+      var uid = store.uid,
+          sid = store.sid,
+          state = store.state,
+          dispatch = store.dispatch;
+      Object.assign(storeRef, {
+        uid: uid,
+        sid: sid,
+        state: state,
+        dispatch: dispatch.bind(store),
+        mount: mount.bind(store)
+      });
+    });
     return function () {
       return h(AppView, null);
     };
@@ -4130,7 +4162,8 @@ defineComponent({
             classname = _item$location.classname;
         var props = {
           class: "elux-window" + (classname ? ' ' + classname : ''),
-          key: store.sid,
+          key: store.uid,
+          uid: store.uid,
           sid: store.sid,
           url: url,
           style: {

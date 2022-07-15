@@ -18,6 +18,7 @@ export type {
   IRouter,
   IRouteRecord,
   IStore,
+  VStore,
   Location,
   ModelAsCreators,
   ModuleGetter,

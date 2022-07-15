@@ -1,6 +1,6 @@
 import { createTextVNode as _createTextVNode, createVNode as _createVNode } from "vue";
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
-import { defineComponent, h, onBeforeUnmount, shallowRef } from 'vue';
+import { defineComponent, h, onBeforeUnmount, shallowRef, watch } from 'vue';
 export var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
   return _createVNode("div", {
@@ -22,12 +22,11 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
   var component = defineComponent({
     name: 'EluxComponentLoader',
     setup: function setup(props, context) {
-      var store = coreConfig.UseStore();
-      var View = shallowRef(OnLoading);
+      var execute = function execute() {
+        var SyncView = OnLoading;
 
-      var execute = function execute(curStore) {
         try {
-          var result = injectComponent(moduleName, componentName, curStore || store);
+          var result = injectComponent(moduleName, componentName, store);
 
           if (isPromise(result)) {
             if (env.isServer) {
@@ -41,26 +40,36 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
               active && (View.value = e.message || "" + e || 'error');
             });
           } else {
-            View.value = result;
+            SyncView = result;
           }
         } catch (e) {
           env.console.error(e);
-          View.value = e.message || "" + e || 'error';
+          SyncView = e.message || "" + e || 'error';
         }
+
+        return SyncView;
       };
 
+      var store = coreConfig.UseStore();
+      var View = shallowRef(execute());
       var active = true;
       onBeforeUnmount(function () {
         active = false;
       });
-      execute();
+      watch(function () {
+        return store.sid;
+      }, execute);
       return function () {
-        if (typeof View.value === 'string') {
+        var view = View.value;
+
+        if (typeof view === 'string') {
           return h(OnError, {
-            message: View.value
+            message: view
           });
+        } else if (view === OnLoading) {
+          return h(view);
         } else {
-          return h(View.value, props, context.slots);
+          return h(view, props, context.slots);
         }
       };
     }

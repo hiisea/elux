@@ -48,7 +48,7 @@ export declare class Store implements IStore {
     readonly sid: number;
     readonly uid: number;
     readonly router: IRouter;
-    private state;
+    state: StoreState;
     private injectedModels;
     private mountedModules;
     private currentListeners;

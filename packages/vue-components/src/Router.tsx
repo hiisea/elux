@@ -61,7 +61,8 @@ export const RouterComponent = defineComponent({
             } = item;
             const props = {
               class: `elux-window${classname ? ' ' + classname : ''}`,
-              key: store.sid,
+              key: store.uid,
+              uid: store.uid,
               sid: store.sid,
               url,
               style: {zIndex: index + 1},
