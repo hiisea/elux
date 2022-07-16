@@ -158,7 +158,7 @@ function applyEffect(
 }
 
 export class Store implements IStore {
-  private state: StoreState = coreConfig.StoreInitState();
+  public state: StoreState = coreConfig.StoreInitState();
   private injectedModels: {[moduleName: string]: CommonModel} = {};
   private mountedModules: {[moduleName: string]: Promise<void> | true | undefined} = {};
   private currentListeners: Listener[] = [];

@@ -1,4 +1,4 @@
-import { CommonModel, CommonModule, EluxComponent, IStore, ModuleApiMap } from './basic';
+import { CommonModel, CommonModule, EluxComponent, ModuleApiMap, VStore } from './basic';
 /**
  * 模块是否存在
  *
@@ -32,6 +32,6 @@ export declare function injectModule(module: CommonModule): void;
 export declare function injectModule(moduleName: string, moduleGetter: () => CommonModule | Promise<{
     default: CommonModule;
 }>): void;
-export declare function injectComponent(moduleName: string, componentName: string, store: IStore): EluxComponent | Promise<EluxComponent>;
+export declare function injectComponent(moduleName: string, componentName: string, store: VStore): EluxComponent | Promise<EluxComponent>;
 export declare function injectActions(model: CommonModel, hmr?: boolean): void;
 //# sourceMappingURL=inject.d.ts.map

@@ -43,6 +43,7 @@ export type {
   IRouter,
   IRouteRecord,
   IStore,
+  VStore,
   LoadingState,
   Location,
   ModelAsCreators,

@@ -13,6 +13,7 @@ import {
   ModelAsCreators,
   ModuleState,
   StoreState,
+  VStore,
 } from './basic';
 import env from './env';
 import {getComponent, getModule, getModuleApiMap} from './inject';
@@ -247,7 +248,7 @@ export function getApi<TAPI extends {State: any; GetActions: any; LoadComponent:
 ): Pick<TAPI, 'GetActions' | 'LoadComponent' | 'GetComponent' | 'GetData' | 'Modules'> & {
   GetClientRouter: () => IRouter;
   useRouter: () => IRouter;
-  useStore: () => IStore<TAPI['State']>;
+  useStore: () => VStore<TAPI['State']>;
 } {
   const modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
   const GetComponent = (moduleName: string, componentName: string) => {

@@ -7,10 +7,10 @@ import {
   coreConfig,
   EluxComponent,
   isEluxComponent,
-  IStore,
   MetaData,
   ModelAsHandlers,
   ModuleApiMap,
+  VStore,
 } from './basic';
 import env from './env';
 import {isPromise, promiseCaseCallback} from './utils';
@@ -171,7 +171,7 @@ export function injectModule(moduleOrName: string | CommonModule, moduleGetter?:
   }
 }
 
-export function injectComponent(moduleName: string, componentName: string, store: IStore): EluxComponent | Promise<EluxComponent> {
+export function injectComponent(moduleName: string, componentName: string, store: VStore): EluxComponent | Promise<EluxComponent> {
   return promiseCaseCallback(getComponent(moduleName, componentName), (component) => {
     if (component.__elux_component__ === 'view' && !env.isServer) {
       return promiseCaseCallback(store.mount(moduleName, 'update'), () => component);

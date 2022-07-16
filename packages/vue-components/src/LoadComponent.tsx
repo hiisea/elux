@@ -1,5 +1,5 @@
-import {coreConfig, env, ILoadComponent, injectComponent, isPromise, IStore} from '@elux/core';
-import {defineComponent, h, onBeforeUnmount, shallowRef} from 'vue';
+import {coreConfig, env, ILoadComponent, injectComponent, isPromise} from '@elux/core';
+import {defineComponent, h, onBeforeUnmount, shallowRef, watch} from 'vue';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
   <div class="g-component-error">{message}</div>
@@ -13,11 +13,10 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
   const component: Elux.Component<any> = defineComponent({
     name: 'EluxComponentLoader',
     setup(props: any, context: any) {
-      const store = coreConfig.UseStore!();
-      const View = shallowRef<Elux.Component<any> | string>(OnLoading);
-      const execute = (curStore?: IStore) => {
+      const execute = () => {
+        let SyncView: Elux.Component<any> | string = OnLoading;
         try {
-          const result = injectComponent(moduleName as string, componentName as string, curStore || store);
+          const result = injectComponent(moduleName as string, componentName as string, store);
           if (isPromise(result)) {
             if (env.isServer) {
               throw 'can not use async component in SSR';
@@ -32,59 +31,34 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
               }
             );
           } else {
-            View.value = result as any;
+            SyncView = result as any;
           }
         } catch (e: any) {
           env.console.error(e);
-          View.value = e.message || `${e}` || 'error';
+          SyncView = e.message || `${e}` || 'error';
         }
+        return SyncView;
       };
+      const store = coreConfig.UseStore!();
+      const View = shallowRef<Elux.Component<any> | string>(execute());
       let active = true;
       onBeforeUnmount(() => {
         active = false;
       });
-      execute();
+      watch(() => store.sid, execute);
+
       return () => {
-        if (typeof View.value === 'string') {
-          return h(OnError, {message: View.value});
+        const view = View.value;
+        if (typeof view === 'string') {
+          return h(OnError, {message: view});
+        } else if (view === OnLoading) {
+          return h(view);
         } else {
-          return h(View.value, props, context.slots);
+          return h(view, props, context.slots);
         }
       };
     },
   }) as any;
 
-  //   const component: any = (props: any, context: any) => {
-  //     const store = coreConfig.UseStore!();
-  //     let result: EluxComponent | Promise<EluxComponent> | undefined;
-  //     let errorMessage = '';
-  //     try {
-  //       result = injectComponent(moduleName as string, componentName as string, store);
-  //       if (env.isServer && isPromise(result)) {
-  //         result = undefined;
-  //         throw 'can not use async component in SSR';
-  //       }
-  //     } catch (e: any) {
-  //       env.console.error(e);
-  //       errorMessage = e.message || `${e}`;
-  //     }
-  //     if (result) {
-  //       if (isPromise(result)) {
-  //         return h(
-  //           defineAsyncComponent({
-  //             loader: () => result as any,
-  //             errorComponent,
-  //             loadingComponent,
-  //           }),
-  //           props,
-  //           context.slots
-  //         );
-  //       } else {
-  //         return h(result, props, context.slots);
-  //       }
-  //     } else {
-  //       return h(errorComponent, null, errorMessage);
-  //     }
-  //   };
   return component;
 };

@@ -120,6 +120,10 @@ export interface IStore<TStoreState extends StoreState = StoreState> {
    */
   getState: GetState<TStoreState>;
   /**
+   * 当前的Store状态
+   */
+  state: TStoreState;
+  /**
    * 获取暂时未提交到store的状态
    *
    * @remarks
@@ -139,6 +143,36 @@ export interface IStore<TStoreState extends StoreState = StoreState> {
   destroy(): void;
 }
 
+/**
+ * Store实例(用于View中)
+ *
+ * @public
+ */
+export interface VStore<TStoreState extends StoreState = StoreState> {
+  /**
+   * ForkID
+   */
+  uid: number;
+  /**
+   * 实例ID
+   */
+  sid: number;
+  /**
+   * 派发action
+   */
+  dispatch: Dispatch;
+  /**
+   * 当前的Store状态
+   */
+  state: TStoreState;
+  /**
+   * 在该store中挂载指定的model
+   *
+   * @remarks
+   * 该方法会触发model.onMount(env)钩子
+   */
+  mount(moduleName: keyof TStoreState, env: 'init' | 'route' | 'update'): void | Promise<void>;
+}
 /**
  * 路由动作类别
  *
@@ -525,7 +559,7 @@ export interface EluxContext {
 }
 
 export interface EluxStoreContext {
-  store: IStore;
+  store: VStore;
 }
 
 export interface IAppRender {
@@ -558,7 +592,7 @@ export const coreConfig: {
   LoadComponentOnError?: Elux.Component<{message: string}>;
   LoadComponentOnLoading?: Elux.Component<{}>;
   UseRouter?: () => IRouter;
-  UseStore?: () => IStore;
+  UseStore?: () => VStore;
   AppRender?: IAppRender;
 } = {
   NSP: '.',

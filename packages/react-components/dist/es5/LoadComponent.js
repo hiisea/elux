@@ -24,7 +24,7 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
   var OnError = options.onError || coreConfig.LoadComponentOnError;
   var Component = forwardRef(function (props, ref) {
     var execute = function execute(curStore) {
-      var View = OnLoading;
+      var SyncView = OnLoading;
 
       try {
         var result = injectComponent(moduleName, componentName, curStore || store);
@@ -41,14 +41,14 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
             activeRef.current && setView(e.message || "" + e || 'error');
           });
         } else {
-          View = result;
+          SyncView = result;
         }
       } catch (e) {
         env.console.error(e);
-        View = e.message || "" + e || 'error';
+        SyncView = e.message || "" + e || 'error';
       }
 
-      return View;
+      return SyncView;
     };
 
     var activeRef = useRef(true);

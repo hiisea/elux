@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
+import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, watch, h, shallowReactive, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
 import { renderToString } from '@elux/vue-web/server';
 
 let root;
@@ -3054,12 +3054,11 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
     name: 'EluxComponentLoader',
 
     setup(props, context) {
-      const store = coreConfig.UseStore();
-      const View = shallowRef(OnLoading);
+      const execute = () => {
+        let SyncView = OnLoading;
 
-      const execute = curStore => {
         try {
-          const result = injectComponent(moduleName, componentName, curStore || store);
+          const result = injectComponent(moduleName, componentName, store);
 
           if (isPromise(result)) {
             if (env.isServer) {
@@ -3073,26 +3072,34 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
               active && (View.value = e.message || `${e}` || 'error');
             });
           } else {
-            View.value = result;
+            SyncView = result;
           }
         } catch (e) {
           env.console.error(e);
-          View.value = e.message || `${e}` || 'error';
+          SyncView = e.message || `${e}` || 'error';
         }
+
+        return SyncView;
       };
 
+      const store = coreConfig.UseStore();
+      const View = shallowRef(execute());
       let active = true;
       onBeforeUnmount(() => {
         active = false;
       });
-      execute();
+      watch(() => store.sid, execute);
       return () => {
-        if (typeof View.value === 'string') {
+        const view = View.value;
+
+        if (typeof view === 'string') {
           return h(OnError, {
-            message: View.value
+            message: view
           });
+        } else if (view === OnLoading) {
+          return h(view);
         } else {
-          return h(View.value, props, context.slots);
+          return h(view, props, context.slots);
         }
       };
     }
@@ -3103,19 +3110,44 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
 
 const EWindow = defineComponent({
   name: 'EluxWindow',
-  props: {
-    store: {
-      type: Object,
-      required: true
-    }
-  },
+  props: ['store'],
 
   setup(props) {
     const AppView = getEntryComponent();
+    const store = props.store;
+    const {
+      uid,
+      sid,
+      state,
+      dispatch,
+      mount
+    } = store;
+    const storeRef = shallowReactive({
+      uid,
+      sid,
+      state,
+      dispatch: dispatch.bind(store),
+      mount: mount.bind(store)
+    });
     const storeContext = {
-      store: props.store
+      store: storeRef
     };
     provide(EluxStoreContextKey, storeContext);
+    watch(() => props.store, store => {
+      const {
+        uid,
+        sid,
+        state,
+        dispatch
+      } = store;
+      Object.assign(storeRef, {
+        uid,
+        sid,
+        state,
+        dispatch: dispatch.bind(store),
+        mount: mount.bind(store)
+      });
+    });
     return () => h(AppView, null);
   }
 
@@ -3204,7 +3236,8 @@ const RouterComponent = defineComponent({
         } = item;
         const props = {
           class: `elux-window${classname ? ' ' + classname : ''}`,
-          key: store.sid,
+          key: store.uid,
+          uid: store.uid,
           sid: store.sid,
           url,
           style: {

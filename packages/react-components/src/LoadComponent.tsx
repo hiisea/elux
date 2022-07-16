@@ -1,4 +1,4 @@
-import {coreConfig, env, ILoadComponent, injectComponent, isPromise, IStore} from '@elux/core';
+import {coreConfig, env, ILoadComponent, injectComponent, isPromise, VStore} from '@elux/core';
 import {forwardRef, useEffect, useRef, useState} from 'react';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
@@ -11,8 +11,8 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
   const OnError = options.onError || coreConfig.LoadComponentOnError!;
 
   const Component = forwardRef((props, ref) => {
-    const execute = (curStore?: IStore) => {
-      let View: Elux.Component<any> | string = OnLoading;
+    const execute = (curStore?: VStore) => {
+      let SyncView: Elux.Component<any> | string = OnLoading;
       try {
         const result = injectComponent(moduleName as string, componentName as string, curStore || store);
         if (isPromise(result)) {
@@ -29,13 +29,13 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
             }
           );
         } else {
-          View = result as any;
+          SyncView = result as any;
         }
       } catch (e: any) {
         env.console.error(e);
-        View = e.message || `${e}` || 'error';
+        SyncView = e.message || `${e}` || 'error';
       }
-      return View;
+      return SyncView;
     };
     const activeRef = useRef(true);
     useEffect(() => {

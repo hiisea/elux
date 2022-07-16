@@ -1438,7 +1438,7 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnError = options.onError || coreConfig.LoadComponentOnError;
   const Component = forwardRef((props, ref) => {
     const execute = curStore => {
-      let View = OnLoading;
+      let SyncView = OnLoading;
 
       try {
         const result = injectComponent(moduleName, componentName, curStore || store);
@@ -1455,14 +1455,14 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
             activeRef.current && setView(e.message || `${e}` || 'error');
           });
         } else {
-          View = result;
+          SyncView = result;
         }
       } catch (e) {
         env.console.error(e);
-        View = e.message || `${e}` || 'error';
+        SyncView = e.message || `${e}` || 'error';
       }
 
-      return View;
+      return SyncView;
     };
 
     const activeRef = useRef(true);
