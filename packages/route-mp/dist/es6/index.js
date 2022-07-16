@@ -111,6 +111,12 @@ export class MPNativeRouter extends BaseNativeRouter {
     return true;
   }
 
+  exit() {
+    this.history.navigateBack({
+      delta: 99
+    });
+  }
+
   destroy() {
     this.unlistenHistory && this.unlistenHistory();
   }

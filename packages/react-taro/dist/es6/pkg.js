@@ -2444,6 +2444,15 @@ class Router extends CoreRouter {
   }
 
   back(stepOrKeyOrCallback, target, refresh = false, overflowRedirect = '', _nativeCaller = false) {
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }
@@ -2770,6 +2779,12 @@ class MPNativeRouter extends BaseNativeRouter {
       delta: index[0]
     });
     return true;
+  }
+
+  exit() {
+    this.history.navigateBack({
+      delta: 99
+    });
   }
 
   destroy() {

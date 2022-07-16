@@ -712,6 +712,15 @@ export var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }

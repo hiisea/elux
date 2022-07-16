@@ -88,6 +88,10 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     return false;
   };
 
+  _proto.exit = function exit() {
+    env.history.go(-2);
+  };
+
   _proto.destroy = function destroy() {
     this.unlistenHistory && this.unlistenHistory();
   };

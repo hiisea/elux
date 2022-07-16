@@ -3812,6 +3812,15 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }
@@ -4167,6 +4176,10 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   _proto.back = function back(location, key, index) {
     this.history.replace(location.url);
     return false;
+  };
+
+  _proto.exit = function exit() {
+    env.history.go(-2);
   };
 
   _proto.destroy = function destroy() {

@@ -2483,6 +2483,15 @@ class Router extends CoreRouter {
   }
 
   back(stepOrKeyOrCallback, target, refresh = false, overflowRedirect = '', _nativeCaller = false) {
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }
@@ -2781,6 +2790,10 @@ class BrowserNativeRouter extends BaseNativeRouter {
   back(location, key, index) {
     this.history.replace(location.url);
     return false;
+  }
+
+  exit() {
+    env.history.go(-2);
   }
 
   destroy() {

@@ -118,6 +118,12 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
     return true;
   };
 
+  _proto.exit = function exit() {
+    this.history.navigateBack({
+      delta: 99
+    });
+  };
+
   _proto.destroy = function destroy() {
     this.unlistenHistory && this.unlistenHistory();
   };

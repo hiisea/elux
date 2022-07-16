@@ -14,6 +14,7 @@ export declare abstract class BaseNativeRouter {
     protected abstract back(nativeLocation: Location, key: string, index: [number, number]): boolean;
     protected onSuccess(): void;
     testExecute(method: RouteAction, location: Location, backIndex?: number[]): void;
+    abstract exit(): void;
     execute(method: RouteAction, location: Location, key: string, backIndex?: number[]): void | Promise<void>;
 }
 export declare class Router extends CoreRouter {

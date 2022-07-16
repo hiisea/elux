@@ -18,6 +18,7 @@ declare namespace Elux {
       hash: string;
     };
     history?: {
+      go(n: number): void;
       pushState(data: any, title: string, url: string): void;
       replaceState(data: any, title: string, url: string): void;
     };

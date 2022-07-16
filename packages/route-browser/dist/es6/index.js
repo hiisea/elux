@@ -84,6 +84,10 @@ class BrowserNativeRouter extends BaseNativeRouter {
     return false;
   }
 
+  exit() {
+    env.history.go(-2);
+  }
+
   destroy() {
     this.unlistenHistory && this.unlistenHistory();
   }

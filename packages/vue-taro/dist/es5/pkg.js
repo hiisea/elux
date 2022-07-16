@@ -3451,6 +3451,15 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }
@@ -3743,6 +3752,12 @@ var MPNativeRouter = function (_BaseNativeRouter) {
       delta: index[0]
     });
     return true;
+  };
+
+  _proto.exit = function exit() {
+    this.history.navigateBack({
+      delta: 99
+    });
   };
 
   _proto.destroy = function destroy() {
