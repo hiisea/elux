@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.3.4](https://github.com/hiisea/elux/compare/v2.3.3...v2.3.4) (2022-07-16)
+
+
+### Bug Fixes
+
+* 去除history依赖引起的bug ([3ccc192](https://github.com/hiisea/elux/commit/3ccc192dc04f33194d8b374f768dc1e61e86e469))
+
+
+
+
+
 ## [2.3.3](https://github.com/hiisea/elux/compare/v2.3.2...v2.3.3) (2022-07-16)
 
 

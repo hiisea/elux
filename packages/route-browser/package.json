@@ -1,6 +1,6 @@
 {
   "name": "@elux/route-browser",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "Using @elux/route in browser",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route-browser",
   "author": "hiisea <hiisea@qq.com>",
