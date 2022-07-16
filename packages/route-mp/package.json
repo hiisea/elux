@@ -1,6 +1,6 @@
 {
   "name": "@elux/route-mp",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "Using @elux/route in mini-program",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route-mp",
   "author": "hiisea <hiisea@qq.com>",
@@ -26,8 +26,8 @@
     "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
   },
   "dependencies": {
-    "@elux/core": "^2.3.3",
-    "@elux/route": "^2.3.3"
+    "@elux/core": "^2.4.0",
+    "@elux/route": "^2.4.0"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }
