@@ -1,5 +1,5 @@
 import {AppConfig} from '@elux/app';
-import {buildApp, buildSSR, RenderOptions, RouterInitOptions} from '@elux/core';
+import {buildApp, buildSSR, env, RenderOptions, RouterInitOptions} from '@elux/core';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
 import {RouterComponent, setVueComponentsConfig} from '@elux/vue-components';
 // eslint-disable-next-line
@@ -50,14 +50,15 @@ export function createApp(appConfig: AppConfig): EluxApp {
   if (cientSingleton) {
     return cientSingleton;
   }
-  const {router, url} = createClientRouter();
+  const router = createClientRouter();
   const app = createCSRApp(RouterComponent);
   cientSingleton = Object.assign(app, {
     render() {
       return Promise.resolve();
     },
   });
-  return buildApp(app, router, {url});
+  const {pathname, search, hash} = env.location!;
+  return buildApp(app, router, {url: [pathname, search, hash].join('')});
 }
 
 /**
@@ -86,7 +87,7 @@ export function createSSR(
 ): App & {
   render(options?: RenderOptions | undefined): Promise<string>;
 } {
-  const router = createServerRouter(routerOptions.url);
+  const router = createServerRouter();
   const app = createSSRApp(RouterComponent);
   return buildSSR(app, router, routerOptions);
 }

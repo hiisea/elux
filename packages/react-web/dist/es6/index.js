@@ -1,4 +1,4 @@
-import { buildApp, buildSSR } from '@elux/core';
+import { buildApp, buildSSR, env } from '@elux/core';
 import { setReactComponentsConfig } from '@elux/react-components';
 import { renderToString } from '@elux/react-web/server';
 import { createClientRouter, createServerRouter } from '@elux/route-browser';
@@ -17,21 +17,23 @@ export function createApp(appConfig) {
     return cientSingleton;
   }
 
-  const {
-    router,
-    url
-  } = createClientRouter();
+  const router = createClientRouter();
   cientSingleton = {
     render() {
       return Promise.resolve();
     }
 
   };
+  const {
+    pathname,
+    search,
+    hash
+  } = env.location;
   return buildApp({}, router, {
-    url
+    url: [pathname, search, hash].join('')
   });
 }
 export function createSSR(appConfig, routerOptions) {
-  const router = createServerRouter(routerOptions.url);
+  const router = createServerRouter();
   return buildSSR({}, router, routerOptions);
 }

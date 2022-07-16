@@ -27,9 +27,7 @@
   },
   "dependencies": {
     "@elux/core": "^2.3.2",
-    "@elux/route": "^2.3.2",
-    "@types/history": "~4.7.7",
-    "history": "~4.10.1"
+    "@elux/route": "^2.3.2"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

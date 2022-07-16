@@ -1,4 +1,4 @@
-import { buildApp, buildSSR } from '@elux/core';
+import { buildApp, buildSSR, env } from '@elux/core';
 import { createClientRouter, createServerRouter } from '@elux/route-browser';
 import { RouterComponent, setVueComponentsConfig } from '@elux/vue-components';
 import { renderToString } from '@elux/vue-web/server';
@@ -14,10 +14,7 @@ export function createApp(appConfig) {
     return cientSingleton;
   }
 
-  const {
-    router,
-    url
-  } = createClientRouter();
+  const router = createClientRouter();
   const app = createCSRApp(RouterComponent);
   cientSingleton = Object.assign(app, {
     render() {
@@ -25,12 +22,17 @@ export function createApp(appConfig) {
     }
 
   });
+  const {
+    pathname,
+    search,
+    hash
+  } = env.location;
   return buildApp(app, router, {
-    url
+    url: [pathname, search, hash].join('')
   });
 }
 export function createSSR(appConfig, routerOptions) {
-  const router = createServerRouter(routerOptions.url);
+  const router = createServerRouter();
   const app = createSSRApp(RouterComponent);
   return buildSSR(app, router, routerOptions);
 }

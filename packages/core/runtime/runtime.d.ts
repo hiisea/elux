@@ -6,14 +6,20 @@ declare namespace Elux {
     isServer: boolean;
     encodeBas64(str: string): string;
     decodeBas64(str: string): string;
+    addEventListener(type: 'popstate', callback: (e: any) => void, options: boolean);
+    removeEventListener(type: 'popstate', callback: (e: any) => void, options: boolean);
     document?: {
       title: string;
       getElementById(id: string): any;
     };
     location?: {
-      href: string;
       pathname: string;
       search: string;
+      hash: string;
+    };
+    history?: {
+      pushState(data: any, title: string, url: string): void;
+      replaceState(data: any, title: string, url: string): void;
     };
     __REDUX_DEVTOOLS_EXTENSION__?: {
       connect: (options?: any) => {
