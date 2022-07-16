@@ -46,7 +46,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
         'popstate',
         () => {
           if (history.url) {
-            env.history!.replaceState(null, '', history.url);
+            env.history!.pushState(null, '', history.url);
             env.setTimeout(() => this.router.back(1, 'page'), 0);
           }
         },

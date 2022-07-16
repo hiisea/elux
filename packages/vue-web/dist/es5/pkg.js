@@ -3717,7 +3717,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
     if (window || page) {
       env.addEventListener('popstate', function () {
         if (history.url) {
-          env.history.replaceState(null, '', history.url);
+          env.history.pushState(null, '', history.url);
           env.setTimeout(function () {
             return _this.router.back(1, 'page');
           }, 0);
