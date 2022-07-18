@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, watch, h, shallowReactive, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
+import { shallowReactive, watch, inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
 import { renderToString } from '@elux/vue-web/server';
 
 let root;
@@ -2436,6 +2436,16 @@ const vueComponentsConfig = {
   renderToString: undefined
 };
 const setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
+function connectStore(mapStateToProps = () => ({})) {
+  const store = UseStore();
+  const storeProps = shallowReactive({});
+  watch(() => mapStateToProps(store.state), val => Object.assign(storeProps, val, {
+    dispatch: store.dispatch
+  }), {
+    immediate: true
+  });
+  return storeProps;
+}
 
 const AppRender = {
   toDocument(id, eluxContext, fromSSR, app) {
@@ -2888,4 +2898,4 @@ function createSSR(appConfig, routerOptions) {
   return buildSSR(app, router, routerOptions);
 }
 
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectStore, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

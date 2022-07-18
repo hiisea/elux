@@ -9,7 +9,7 @@ import {hydrate, render} from 'react-dom';
 export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';
 
-export {connectRedux, createSelectorHook, shallowEqual, useSelector} from '@elux/react-redux';
+export {connectRedux, connectStore, createSelectorHook, shallowEqual, useSelector} from '@elux/react-redux';
 export type {GetProps, InferableComponentEnhancerWithProps} from '@elux/react-redux';
 
 export * from '@elux/app';

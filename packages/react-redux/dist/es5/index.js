@@ -1,10 +1,11 @@
 import { exportView, setCoreConfig } from '@elux/core';
 import { connect, Provider, useStore } from 'react-redux';
-export function connectRedux(mapStateToProps, options) {
+export function connectStore(mapStateToProps, options) {
   return function (component) {
     return exportView(connect(mapStateToProps, options)(component));
   };
 }
+export var connectRedux = connectStore;
 setCoreConfig({
   UseStore: useStore,
   StoreProvider: Provider

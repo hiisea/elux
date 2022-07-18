@@ -7,7 +7,7 @@ import { useDidHide, useDidShow } from '@tarojs/taro';
 import { useEffect, useRef, useState } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export { DocumentHead, Else, Link, Switch } from '@elux/react-components';
-export { connectRedux, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
+export { connectRedux, connectStore, createSelectorHook, shallowEqual, useSelector } from '@elux/react-redux';
 export * from '@elux/app';
 setCoreConfig({
   Platform: 'taro'

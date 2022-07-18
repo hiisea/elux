@@ -5921,11 +5921,12 @@ var useSelector = /*#__PURE__*/createSelectorHook();
 
 setBatch(unstable_batchedUpdates);
 
-function connectRedux(mapStateToProps, options) {
+function connectStore(mapStateToProps, options) {
   return function (component) {
     return exportView(connect(mapStateToProps, options)(component));
   };
 }
+const connectRedux = connectStore;
 setCoreConfig({
   UseStore: useStore,
   StoreProvider: Provider
@@ -5985,4 +5986,4 @@ function createSSR(appConfig, routerOptions) {
   return buildSSR({}, router, routerOptions);
 }
 
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectRedux, connectStore, createApp, createSSR, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };

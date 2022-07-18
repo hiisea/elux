@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, watch, h, shallowReactive, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
+import { shallowReactive, watch, inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 
 var root;
@@ -3958,6 +3958,26 @@ function UseStore() {
 var vueComponentsConfig = {
   renderToString: undefined
 };
+function connectStore(mapStateToProps) {
+  if (mapStateToProps === void 0) {
+    mapStateToProps = function mapStateToProps() {
+      return {};
+    };
+  }
+
+  var store = UseStore();
+  var storeProps = shallowReactive({});
+  watch(function () {
+    return mapStateToProps(store.state);
+  }, function (val) {
+    return Object.assign(storeProps, val, {
+      dispatch: store.dispatch
+    });
+  }, {
+    immediate: true
+  });
+  return storeProps;
+}
 
 var AppRender = {
   toDocument: function toDocument(id, eluxContext, fromSSR, app) {
@@ -4429,4 +4449,4 @@ function createApp(appConfig, appOptions) {
   return cientSingleton;
 }
 
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, createApp, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectStore, createApp, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

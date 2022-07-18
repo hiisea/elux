@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, watch, h, shallowReactive, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
+import { shallowReactive, watch, inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1, createSSRApp } from 'vue';
 import { renderToString } from '@elux/vue-web/server';
 
 var root;
@@ -3804,6 +3804,26 @@ var vueComponentsConfig = {
   renderToString: undefined
 };
 var setVueComponentsConfig = buildConfigSetter(vueComponentsConfig);
+function connectStore(mapStateToProps) {
+  if (mapStateToProps === void 0) {
+    mapStateToProps = function mapStateToProps() {
+      return {};
+    };
+  }
+
+  var store = UseStore();
+  var storeProps = shallowReactive({});
+  watch(function () {
+    return mapStateToProps(store.state);
+  }, function (val) {
+    return Object.assign(storeProps, val, {
+      dispatch: store.dispatch
+    });
+  }, {
+    immediate: true
+  });
+  return storeProps;
+}
 
 var AppRender = {
   toDocument: function toDocument(id, eluxContext, fromSSR, app) {
@@ -4240,4 +4260,4 @@ function createSSR(appConfig, routerOptions) {
   return buildSSR(app, router, routerOptions);
 }
 
-export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EmptyModel, ErrorCodes, Link, Switch, connectStore, createApp, createSSR, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };

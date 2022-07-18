@@ -1,4 +1,4 @@
-export { setVueComponentsConfig } from './base';
+export { setVueComponentsConfig, connectStore } from './base';
 export { EWindow } from './EWindow';
 export { RouterComponent } from './Router';
 export { DocumentHead } from './DocumentHead';

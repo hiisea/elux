@@ -3,7 +3,7 @@ import { createClientRouter, createServerRouter } from '@elux/route-browser';
 import { RouterComponent, setVueComponentsConfig } from '@elux/vue-components';
 import { renderToString } from '@elux/vue-web/server';
 import { createApp as createCSRApp, createSSRApp } from 'vue';
-export { DocumentHead, Else, Link, Switch } from '@elux/vue-components';
+export { DocumentHead, Else, Link, Switch, connectStore } from '@elux/vue-components';
 export * from '@elux/app';
 setVueComponentsConfig({
   renderToString
