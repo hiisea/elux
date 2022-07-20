@@ -1,6 +1,6 @@
 import { AppConfig } from '@elux/app';
 import { App } from 'vue';
-export { DocumentHead, Else, Link, Switch } from '@elux/vue-components';
+export { DocumentHead, Else, Link, Switch, connectStore } from '@elux/vue-components';
 export type { DocumentHeadProps, ElseProps, LinkProps, SwitchProps } from '@elux/vue-components';
 export * from '@elux/app';
 /**

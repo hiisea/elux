@@ -2444,6 +2444,15 @@ class Router extends CoreRouter {
   }
 
   back(stepOrKeyOrCallback, target, refresh = false, overflowRedirect = '', _nativeCaller = false) {
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }
@@ -2770,6 +2779,12 @@ class MPNativeRouter extends BaseNativeRouter {
       delta: index[0]
     });
     return true;
+  }
+
+  exit() {
+    this.history.navigateBack({
+      delta: 99
+    });
   }
 
   destroy() {
@@ -6056,11 +6071,12 @@ var useSelector = /*#__PURE__*/createSelectorHook();
 
 setBatch(unstable_batchedUpdates);
 
-function connectRedux(mapStateToProps, options) {
+function connectStore(mapStateToProps, options) {
   return function (component) {
     return exportView(connect(mapStateToProps, options)(component));
   };
 }
+const connectRedux = connectStore;
 setCoreConfig({
   UseStore: useStore,
   StoreProvider: Provider
@@ -6146,4 +6162,4 @@ function createApp(appConfig) {
   return cientSingleton;
 }
 
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, connectStore, createApp, createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual, urlToLocation, urlToNativeUrl, useSelector };

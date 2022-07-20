@@ -1,7 +1,4 @@
 import { IRouter } from '@elux/core';
-export declare function createClientRouter(): {
-    router: IRouter;
-    url: string;
-};
-export declare function createServerRouter(url: string): IRouter;
+export declare function createClientRouter(): IRouter;
+export declare function createServerRouter(): IRouter;
 //# sourceMappingURL=index.d.ts.map

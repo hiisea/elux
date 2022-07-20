@@ -1,6 +1,5 @@
 import { env } from '@elux/core';
-import { BaseNativeRouter, locationToUrl, routeConfig, setRouteConfig } from '@elux/route';
-import { createBrowserHistory } from 'history';
+import { BaseNativeRouter, routeConfig, setRouteConfig } from '@elux/route';
 setRouteConfig({
   NotifyNativeRouter: {
     window: true,
@@ -8,26 +7,35 @@ setRouteConfig({
   }
 });
 
-function createServerHistory(url) {
-  const [pathname, search = '', hash = ''] = url.split(/[?#]/);
+function createServerHistory() {
   return {
+    url: '',
+
     push() {
       return;
     },
 
     replace() {
       return;
-    },
-
-    block() {
-      return () => undefined;
-    },
-
-    location: {
-      pathname,
-      search,
-      hash
     }
+
+  };
+}
+
+function createBrowserHistory() {
+  return {
+    url: '',
+
+    push(url) {
+      this.url = url;
+      env.history.pushState(null, '', url);
+    },
+
+    replace(url) {
+      this.url = url;
+      env.history.replaceState(null, '', url);
+    }
+
   };
 }
 
@@ -42,39 +50,42 @@ class BrowserNativeRouter extends BaseNativeRouter {
     } = routeConfig.NotifyNativeRouter;
 
     if (window || page) {
-      this.unlistenHistory = history.block((locationData, action) => {
-        if (action === 'POP') {
-          env.setTimeout(() => this.router.back(1, 'page'), 300);
-          return false;
+      env.addEventListener('popstate', () => {
+        if (history.url) {
+          env.history.pushState(null, '', history.url);
+          env.setTimeout(() => this.router.back(1, 'page'), 0);
         }
-
-        return undefined;
-      });
+      }, true);
     }
   }
 
   init(location, key) {
+    this.history.push(location.url);
     return false;
   }
 
   push(location, key) {
-    this.history.push(location.url);
+    this.history.replace(location.url);
     return false;
   }
 
   replace(location, key) {
-    this.history.push(location.url);
+    this.history.replace(location.url);
     return false;
   }
 
   relaunch(location, key) {
-    this.history.push(location.url);
+    this.history.replace(location.url);
     return false;
   }
 
   back(location, key, index) {
     this.history.replace(location.url);
     return false;
+  }
+
+  exit() {
+    env.history.go(-2);
   }
 
   destroy() {
@@ -86,13 +97,10 @@ class BrowserNativeRouter extends BaseNativeRouter {
 export function createClientRouter() {
   const history = createBrowserHistory();
   const browserNativeRouter = new BrowserNativeRouter(history);
-  return {
-    router: browserNativeRouter.router,
-    url: locationToUrl(history.location)
-  };
+  return browserNativeRouter.router;
 }
-export function createServerRouter(url) {
-  const history = createServerHistory(url);
+export function createServerRouter() {
+  const history = createServerHistory();
   const browserNativeRouter = new BrowserNativeRouter(history);
   return browserNativeRouter.router;
 }

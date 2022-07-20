@@ -76,9 +76,6 @@ export {
   urlToNativeUrl,
 } from '@elux/route';
 
-/** @public */
-export type ComputedStore<T> = {[K in keyof T]-?: () => T[K]};
-
 /**
  * 全局参数设置
  *

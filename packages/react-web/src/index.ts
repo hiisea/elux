@@ -1,5 +1,5 @@
 import {AppConfig} from '@elux/app';
-import {buildApp, buildSSR, RenderOptions, RouterInitOptions} from '@elux/core';
+import {buildApp, buildSSR, env, RenderOptions, RouterInitOptions} from '@elux/core';
 import {setReactComponentsConfig} from '@elux/react-components';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {renderToString} from '@elux/react-web/server';
@@ -9,7 +9,7 @@ import {hydrate, render} from 'react-dom';
 export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';
 
-export {connectRedux, createSelectorHook, shallowEqual, useSelector} from '@elux/react-redux';
+export {connectRedux, connectStore, createSelectorHook, shallowEqual, useSelector} from '@elux/react-redux';
 export type {GetProps, InferableComponentEnhancerWithProps} from '@elux/react-redux';
 
 export * from '@elux/app';
@@ -58,13 +58,14 @@ export function createApp(appConfig: AppConfig): EluxApp {
   if (cientSingleton) {
     return cientSingleton;
   }
-  const {router, url} = createClientRouter();
+  const router = createClientRouter();
   cientSingleton = {
     render() {
       return Promise.resolve();
     },
   };
-  return buildApp({}, router, {url});
+  const {pathname, search, hash} = env.location!;
+  return buildApp({}, router, {url: [pathname, search, hash].join('')});
 }
 
 /**
@@ -93,6 +94,6 @@ export function createSSR(
 ): {
   render(options?: RenderOptions | undefined): Promise<string>;
 } {
-  const router = createServerRouter(routerOptions.url);
+  const router = createServerRouter();
   return buildSSR({}, router, routerOptions);
 }

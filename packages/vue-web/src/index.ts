@@ -1,12 +1,12 @@
 import {AppConfig} from '@elux/app';
-import {buildApp, buildSSR, RenderOptions, RouterInitOptions} from '@elux/core';
+import {buildApp, buildSSR, env, RenderOptions, RouterInitOptions} from '@elux/core';
 import {createClientRouter, createServerRouter} from '@elux/route-browser';
 import {RouterComponent, setVueComponentsConfig} from '@elux/vue-components';
 // eslint-disable-next-line
 import {renderToString} from '@elux/vue-web/server';
 import {App, createApp as createCSRApp, createSSRApp} from 'vue';
 
-export {DocumentHead, Else, Link, Switch} from '@elux/vue-components';
+export {DocumentHead, Else, Link, Switch, connectStore} from '@elux/vue-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/vue-components';
 
 export * from '@elux/app';
@@ -50,14 +50,15 @@ export function createApp(appConfig: AppConfig): EluxApp {
   if (cientSingleton) {
     return cientSingleton;
   }
-  const {router, url} = createClientRouter();
+  const router = createClientRouter();
   const app = createCSRApp(RouterComponent);
   cientSingleton = Object.assign(app, {
     render() {
       return Promise.resolve();
     },
   });
-  return buildApp(app, router, {url});
+  const {pathname, search, hash} = env.location!;
+  return buildApp(app, router, {url: [pathname, search, hash].join('')});
 }
 
 /**
@@ -86,7 +87,7 @@ export function createSSR(
 ): App & {
   render(options?: RenderOptions | undefined): Promise<string>;
 } {
-  const router = createServerRouter(routerOptions.url);
+  const router = createServerRouter();
   const app = createSSRApp(RouterComponent);
   return buildSSR(app, router, routerOptions);
 }

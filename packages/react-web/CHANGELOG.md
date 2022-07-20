@@ -3,6 +3,50 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0](https://github.com/hiisea/elux/compare/v2.4.0...v2.5.0) (2022-07-20)
+
+
+### Features
+
+* 为vue增加connectStore方法 ([f0cc1d7](https://github.com/hiisea/elux/commit/f0cc1d7237d124b11a321b5cab2d33af356f79fa))
+
+
+
+
+
+# [2.4.0](https://github.com/hiisea/elux/compare/v2.3.4...v2.4.0) (2022-07-16)
+
+
+### Features
+
+* 支持router.back('')传空值表示退出本站 ([987cbc3](https://github.com/hiisea/elux/commit/987cbc3800eb0c0296ad4488427bfa3abce7f3db))
+
+
+
+
+
+## [2.3.4](https://github.com/hiisea/elux/compare/v2.3.3...v2.3.4) (2022-07-16)
+
+
+### Bug Fixes
+
+* 去除history依赖引起的bug ([3ccc192](https://github.com/hiisea/elux/commit/3ccc192dc04f33194d8b374f768dc1e61e86e469))
+
+
+
+
+
+## [2.3.3](https://github.com/hiisea/elux/compare/v2.3.2...v2.3.3) (2022-07-16)
+
+
+### Bug Fixes
+
+* 无法强制退出应用 ([acad73c](https://github.com/hiisea/elux/commit/acad73cd9c9b618ae7bd03a52e45a8e6851aca69))
+
+
+
+
+
 ## [2.3.2](https://github.com/hiisea/elux/compare/v2.3.1...v2.3.2) (2022-07-16)
 
 

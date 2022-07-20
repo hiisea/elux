@@ -68,6 +68,7 @@ export abstract class BaseNativeRouter {
     const testMethod = '_' + method;
     this[testMethod] && this[testMethod](locationToNativeLocation(location), backIndex);
   }
+  public abstract exit(): void;
   public execute(method: RouteAction, location: Location, key: string, backIndex?: number[]): void | Promise<void> {
     const nativeLocation = locationToNativeLocation(location);
     const result: boolean = this[method as string](nativeLocation, key, backIndex);
@@ -401,6 +402,13 @@ export class Router extends CoreRouter {
     overflowRedirect: string = '',
     _nativeCaller = false
   ): Promise<void> {
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }

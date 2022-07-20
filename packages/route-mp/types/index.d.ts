@@ -33,6 +33,7 @@ export declare class MPNativeRouter extends BaseNativeRouter {
     protected replace(location: Location, key: string): boolean;
     protected relaunch(location: Location, key: string): boolean;
     protected back(location: Location, key: string, index: [number, number]): boolean;
+    exit(): void;
     destroy(): void;
 }
 export declare function createRouter(history: IHistory): IRouter;

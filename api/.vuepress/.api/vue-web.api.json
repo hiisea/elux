@@ -1894,31 +1894,103 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "TypeAlias",
-          "canonicalReference": "@elux/vue-web!ComputedStore:type",
-          "docComment": "/**\n * @public\n */\n",
+          "kind": "Function",
+          "canonicalReference": "@elux/vue-web!connectStore:function(1)",
+          "docComment": "/**\n * 提供类似于react-redux的connect方法\n *\n * @param mapStateToProps - state与props之间的映射与转换\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type ComputedStore<T> = "
+              "text": "export declare function connectStore<S extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "StoreState",
+              "canonicalReference": "@elux/vue-web!StoreState:type"
             },
             {
               "kind": "Content",
-              "text": "{\n    [K in keyof T]-?: () => T[K];\n}"
+              "text": ", P extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, any>"
+            },
+            {
+              "kind": "Content",
+              "text": ">(mapStateToProps?: "
+            },
+            {
+              "kind": "Content",
+              "text": "(state: S) => P"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "import(\"vue\")."
+            },
+            {
+              "kind": "Reference",
+              "text": "ShallowReactive",
+              "canonicalReference": "@vue/reactivity!ShallowReactive:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<P & {\n    dispatch: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Dispatch",
+              "canonicalReference": "@elux/vue-web!Dispatch:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}>"
             },
             {
               "kind": "Content",
               "text": ";"
             }
           ],
+          "returnTypeTokenRange": {
+            "startIndex": 8,
+            "endIndex": 13
+          },
           "releaseTag": "Public",
-          "name": "ComputedStore",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "mapStateToProps",
+              "parameterTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 7
+              }
+            }
+          ],
           "typeParameters": [
             {
-              "typeParameterName": "T",
+              "typeParameterName": "S",
               "constraintTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "defaultTypeTokenRange": {
                 "startIndex": 0,
                 "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "P",
+              "constraintTokenRange": {
+                "startIndex": 3,
+                "endIndex": 5
               },
               "defaultTypeTokenRange": {
                 "startIndex": 0,
@@ -1926,10 +1998,7 @@
               }
             }
           ],
-          "typeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 2
-          }
+          "name": "connectStore"
         },
         {
           "kind": "Function",

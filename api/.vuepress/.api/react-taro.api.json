@@ -1894,51 +1894,39 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ComputedStore:type",
-          "docComment": "/**\n * @public\n */\n",
+          "kind": "Variable",
+          "canonicalReference": "@elux/react-taro!connectRedux:var",
+          "docComment": "/**\n * 为{@link connectStore}别名\n *\n * @deprecated\n *\n * 请使用 connectStore\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare type ComputedStore<T> = "
+              "text": "connectRedux: "
             },
             {
               "kind": "Content",
-              "text": "{\n    [K in keyof T]-?: () => T[K];\n}"
+              "text": "typeof "
             },
             {
-              "kind": "Content",
-              "text": ";"
+              "kind": "Reference",
+              "text": "connectStore",
+              "canonicalReference": "@elux/react-taro!connectStore:function"
             }
           ],
           "releaseTag": "Public",
-          "name": "ComputedStore",
-          "typeParameters": [
-            {
-              "typeParameterName": "T",
-              "constraintTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              },
-              "defaultTypeTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              }
-            }
-          ],
-          "typeTokenRange": {
+          "name": "connectRedux",
+          "variableTypeTokenRange": {
             "startIndex": 1,
-            "endIndex": 2
+            "endIndex": 3
           }
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!connectRedux:function(1)",
+          "canonicalReference": "@elux/react-taro!connectStore:function(1)",
           "docComment": "/**\n * 连接store与react组件\n *\n * @remarks\n *\n * 参见{@link https://react-redux.js.org/api/connect | react-redux/connect}\n *\n * @param mapStateToProps - state与props之间的映射与转换\n *\n * @param options - 连接参数设置\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "export declare function connectRedux<S = "
+              "text": "export declare function connectStore<S = "
             },
             {
               "kind": "Content",
@@ -2065,7 +2053,7 @@
               }
             }
           ],
-          "name": "connectRedux"
+          "name": "connectStore"
         },
         {
           "kind": "Function",
@@ -3672,7 +3660,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/react-taro!GetProps:type",
-          "docComment": "/**\n * 用于{@link connectRedux}\n *\n * @remarks\n *\n * 参见 {@link connectRedux}\n *\n * @public\n */\n",
+          "docComment": "/**\n * 用于{@link connectStore}\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
@@ -4146,7 +4134,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/react-taro!InferableComponentEnhancerWithProps:type",
-          "docComment": "/**\n * 用于{@link connectRedux}\n *\n * @remarks\n *\n * 参见 {@link connectRedux}\n *\n * @public\n */\n",
+          "docComment": "/**\n * 用于{@link connectStore}\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",

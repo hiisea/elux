@@ -3773,6 +3773,15 @@ var Router = function (_CoreRouter) {
       _nativeCaller = false;
     }
 
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }
@@ -4159,6 +4168,12 @@ var MPNativeRouter = function (_BaseNativeRouter) {
       delta: index[0]
     });
     return true;
+  };
+
+  _proto.exit = function exit() {
+    this.history.navigateBack({
+      delta: 99
+    });
   };
 
   _proto.destroy = function destroy() {
@@ -7966,11 +7981,12 @@ exports$1.batch = reactBatchedUpdates.unstable_batchedUpdates;
 (0, batch_1.setBatch)(reactBatchedUpdates.unstable_batchedUpdates);
 });
 
-function connectRedux(mapStateToProps, options) {
+function connectStore(mapStateToProps, options) {
   return function (component) {
     return exportView(lib.connect(mapStateToProps, options)(component));
   };
 }
+var connectRedux = connectStore;
 setCoreConfig({
   UseStore: lib.useStore,
   StoreProvider: lib.Provider
@@ -8063,4 +8079,4 @@ function createApp(appConfig) {
 var createSelectorHook$1 = lib.createSelectorHook;
 var shallowEqual$1 = lib.shallowEqual;
 var useSelector$1 = lib.useSelector;
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectRedux, connectStore, createApp, createSelectorHook$1 as createSelectorHook, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, shallowEqual$1 as shallowEqual, urlToLocation, urlToNativeUrl, useSelector$1 as useSelector };

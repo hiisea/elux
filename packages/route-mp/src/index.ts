@@ -103,6 +103,10 @@ export class MPNativeRouter extends BaseNativeRouter {
     return true;
   }
 
+  public exit(): void {
+    this.history.navigateBack({delta: 99});
+  }
+
   public destroy(): void {
     this.unlistenHistory && this.unlistenHistory();
   }

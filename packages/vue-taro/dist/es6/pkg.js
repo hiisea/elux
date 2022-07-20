@@ -1,4 +1,4 @@
-import { inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, watch, h, shallowReactive, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
+import { shallowReactive, watch, inject, createVNode, createTextVNode, defineComponent, shallowRef, onBeforeUnmount, h, provide, ref, computed, Comment, Fragment, reactive, createApp as createApp$1 } from 'vue';
 import Taro, { useDidShow, useDidHide } from '@tarojs/taro';
 
 let root;
@@ -2142,6 +2142,15 @@ class Router extends CoreRouter {
   }
 
   back(stepOrKeyOrCallback, target, refresh = false, overflowRedirect = '', _nativeCaller = false) {
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+
     if (!stepOrKeyOrCallback) {
       return this.replace(this.location, 'page', refresh);
     }
@@ -2375,6 +2384,12 @@ class MPNativeRouter extends BaseNativeRouter {
     return true;
   }
 
+  exit() {
+    this.history.navigateBack({
+      delta: 99
+    });
+  }
+
   destroy() {
     this.unlistenHistory && this.unlistenHistory();
   }
@@ -2568,6 +2583,16 @@ function UseStore() {
 const vueComponentsConfig = {
   renderToString: undefined
 };
+function connectStore(mapStateToProps = () => ({})) {
+  const store = UseStore();
+  const storeProps = shallowReactive({});
+  watch(() => mapStateToProps(store.state), val => Object.assign(storeProps, val, {
+    dispatch: store.dispatch
+  }), {
+    immediate: true
+  });
+  return storeProps;
+}
 
 const AppRender = {
   toDocument(id, eluxContext, fromSSR, app) {
@@ -3049,4 +3074,4 @@ function createApp(appConfig, appOptions = {}) {
   return cientSingleton;
 }
 
-export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, createApp, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
+export { BaseModel, DocumentHead, Else, EluxPage, EmptyModel, ErrorCodes, Link, Switch, connectStore, createApp, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, patchActions, reducer, setConfig, setLoading, urlToLocation, urlToNativeUrl };
