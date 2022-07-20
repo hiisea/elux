@@ -41,7 +41,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
   constructor(private history: IHistory) {
     super();
     const {window, page} = routeConfig.NotifyNativeRouter;
-    if (window || page) {
+    if ((window || page) && !env.isServer) {
       env.addEventListener(
         'popstate',
         () => {
@@ -80,7 +80,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   public exit(): void {
-    env.history!.go(-2);
+    if (!env.isServer) {
+      env.history!.go(-2);
+    }
   }
 
   public destroy(): void {

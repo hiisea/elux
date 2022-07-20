@@ -49,7 +49,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
       page
     } = routeConfig.NotifyNativeRouter;
 
-    if (window || page) {
+    if ((window || page) && !env.isServer) {
       env.addEventListener('popstate', () => {
         if (history.url) {
           env.history.pushState(null, '', history.url);
@@ -85,7 +85,9 @@ class BrowserNativeRouter extends BaseNativeRouter {
   }
 
   exit() {
-    env.history.go(-2);
+    if (!env.isServer) {
+      env.history.go(-2);
+    }
   }
 
   destroy() {
