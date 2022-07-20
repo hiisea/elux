@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.5.1](https://github.com/hiisea/elux/compare/v2.5.0...v2.5.1) (2022-07-20)
+
+
+### Bug Fixes
+
+* 在SSR时调用了env.addEventListener ([7c163b4](https://github.com/hiisea/elux/commit/7c163b475d9b0f642f092f4a50ae08f818b42c04))
+
+
+
+
+
 # [2.5.0](https://github.com/hiisea/elux/compare/v2.4.0...v2.5.0) (2022-07-20)
 
 

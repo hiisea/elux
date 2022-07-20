@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-web",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "The practice of elux on vue-web",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-web",
   "author": "hiisea <hiisea@qq.com>",
@@ -44,7 +44,7 @@
     "@elux/app": "^2.5.0",
     "@elux/core": "^2.4.0",
     "@elux/route": "^2.4.0",
-    "@elux/route-browser": "^2.4.0",
+    "@elux/route-browser": "^2.5.1",
     "@elux/vue-components": "^2.5.0",
     "@vue/server-renderer": "^3.0.0"
   },
