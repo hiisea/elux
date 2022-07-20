@@ -64,11 +64,10 @@
   }
 
   .hero-notice {
-    z-index: 10000;
     top: var(--navbar-height);
     left: 0;
     right: 0;
-    position: fixed;
+    position: absolute;
     background-color: #f8f8f8;
     font-size: 12px;
     padding: 9px;

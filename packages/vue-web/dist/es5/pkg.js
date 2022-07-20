@@ -3723,7 +3723,7 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
         window = _routeConfig$NotifyNa.window,
         page = _routeConfig$NotifyNa.page;
 
-    if (window || page) {
+    if ((window || page) && !env.isServer) {
       env.addEventListener('popstate', function () {
         if (history.url) {
           env.history.pushState(null, '', history.url);
@@ -3765,7 +3765,9 @@ var BrowserNativeRouter = function (_BaseNativeRouter) {
   };
 
   _proto.exit = function exit() {
-    env.history.go(-2);
+    if (!env.isServer) {
+      env.history.go(-2);
+    }
   };
 
   _proto.destroy = function destroy() {
