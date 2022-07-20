@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.5.0](https://github.com/hiisea/elux/compare/v2.4.0...v2.5.0) (2022-07-20)
+
+
+### Features
+
+* 为vue增加connectStore方法 ([f0cc1d7](https://github.com/hiisea/elux/commit/f0cc1d7237d124b11a321b5cab2d33af356f79fa))
+
+
+
+
+
 # [2.4.0](https://github.com/hiisea/elux/compare/v2.3.4...v2.4.0) (2022-07-16)
 
 **Note:** Version bump only for package @elux/react-redux
