@@ -1,5 +1,4 @@
-import { IRouter, Location } from '@elux/core';
-import { BaseNativeRouter } from '@elux/route';
+import { BaseNativeRouter, IRouter, Location } from '@elux/core';
 interface RouteOption {
     url: string;
 }

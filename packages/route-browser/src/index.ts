@@ -1,7 +1,6 @@
-import {env, IRouter, Location, UNListener} from '@elux/core';
-import {BaseNativeRouter, routeConfig, setRouteConfig} from '@elux/route';
+import {BaseNativeRouter, coreConfig, env, IRouter, Location, setCoreConfig, UNListener} from '@elux/core';
 
-setRouteConfig({NotifyNativeRouter: {window: true, page: true}});
+setCoreConfig({NotifyNativeRouter: {window: true, page: true}});
 
 interface IHistory {
   url: string;
@@ -40,7 +39,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
 
   constructor(private history: IHistory) {
     super();
-    const {window, page} = routeConfig.NotifyNativeRouter;
+    const {window, page} = coreConfig.NotifyNativeRouter;
     if ((window || page) && !env.isServer) {
       env.addEventListener(
         'popstate',

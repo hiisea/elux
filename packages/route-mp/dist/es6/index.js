@@ -1,5 +1,5 @@
-import { BaseNativeRouter, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
-setRouteConfig({
+import { BaseNativeRouter, coreConfig, nativeUrlToUrl, setCoreConfig } from '@elux/core';
+setCoreConfig({
   NotifyNativeRouter: {
     window: true,
     page: false
@@ -13,7 +13,7 @@ export class MPNativeRouter extends BaseNativeRouter {
     const {
       window,
       page
-    } = routeConfig.NotifyNativeRouter;
+    } = coreConfig.NotifyNativeRouter;
 
     if (window || page) {
       this.unlistenHistory = history.onRouteChange(({

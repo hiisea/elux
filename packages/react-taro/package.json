@@ -11,8 +11,8 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "main": "dist/es5/pkg.js",
-  "module": "dist/es6/pkg.js",
+  "main": "dist/es5/index.js",
+  "module": "dist/es6/index.js",
   "types": "types/",
   "files": [
     "types/",
@@ -29,6 +29,7 @@
     "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5 && yarn package:es6 && yarn package:es5"
   },
   "externals": {
+    "@elux/core": true,
     "@tarojs/taro": true,
     "react": true,
     "react-dom": true
@@ -43,7 +44,6 @@
     "@elux/core": "^2.4.0",
     "@elux/react-components": "^2.4.0",
     "@elux/react-redux": "^2.5.0",
-    "@elux/route": "^2.4.0",
     "@elux/route-mp": "^2.4.0",
     "@elux/taro": "^2.4.0"
   },

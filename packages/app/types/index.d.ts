@@ -1,7 +1,6 @@
 import { ModuleGetter, StoreLogger, StoreMiddleware } from '@elux/core';
-export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, modelHotReplacement, moduleExists, reducer, setLoading, } from '@elux/core';
+export { BaseModel, deepMerge, effect, effectLogger, EmptyModel, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isServer, modelHotReplacement, moduleExists, reducer, setLoading, ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, urlToLocation, urlToNativeUrl, } from '@elux/core';
 export type { Action, ActionCreator, ActionError, API, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, Dispatch, EluxComponent, Facade, GetPromiseComponent, GetPromiseModule, GetState, HandlerToAction, IGetComponent, IGetData, ILoadComponent, IRouter, IRouteRecord, IStore, VStore, LoadingState, Location, ModelAsCreators, ModuleFacade, ModuleGetter, ModuleState, PickModelActions, PickThisActions, RenderOptions, ReturnComponents, RouteAction, RouteEvent, RouterInitOptions, RouteRuntime, RouteTarget, StoreLogger, StoreLoggerInfo, StoreMiddleware, StoreState, UNListener, } from '@elux/core';
-export { ErrorCodes, locationToNativeLocation, locationToUrl, nativeLocationToLocation, nativeUrlToUrl, urlToLocation, urlToNativeUrl, } from '@elux/route';
 /**
  * 全局参数设置
  *

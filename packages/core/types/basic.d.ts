@@ -292,6 +292,7 @@ export interface RouteEvent {
  * @public
  */
 export interface IRouter<TStoreState extends StoreState = StoreState> {
+    init(initOptions: RouterInitOptions, prevState: TStoreState): Promise<void>;
     /**
      * 监听路由事件
      */
@@ -563,6 +564,25 @@ export interface IAppRender {
         children: any;
     }>;
 }
+/**
+ * 内置ErrorCode
+ *
+ * @public
+ */
+export declare const ErrorCodes: {
+    /**
+     * 在路由被强制中断并返回时抛出该错误
+     */
+    ROUTE_RETURN: string;
+    /**
+     * 在SSR服务器渲染时，操作路由跳转会抛出该错误
+     */
+    ROUTE_REDIRECT: string;
+    /**
+     * 在路由后退时，如果步数溢出则抛出该错误
+     */
+    ROUTE_BACK_OVERFLOW: string;
+};
 export declare const coreConfig: {
     NSP: string;
     MSP: string;
@@ -595,6 +615,22 @@ export declare const coreConfig: {
     UseRouter?: () => IRouter;
     UseStore?: () => VStore;
     AppRender?: IAppRender;
+    NotifyNativeRouter: {
+        window: boolean;
+        page: boolean;
+    };
+    QueryString: {
+        parse(str: string): {
+            [key: string]: any;
+        };
+        stringify(query: {
+            [key: string]: any;
+        }): string;
+    };
+    NativePathnameMapping: {
+        in(nativePathname: string): string;
+        out(internalPathname: string): string;
+    };
 };
 export declare const setCoreConfig: (config: Partial<{
     NSP: string;
@@ -628,6 +664,22 @@ export declare const setCoreConfig: (config: Partial<{
     UseRouter?: (() => IRouter) | undefined;
     UseStore?: (() => VStore) | undefined;
     AppRender?: IAppRender | undefined;
+    NotifyNativeRouter: {
+        window: boolean;
+        page: boolean;
+    };
+    QueryString: {
+        parse(str: string): {
+            [key: string]: any;
+        };
+        stringify(query: {
+            [key: string]: any;
+        }): string;
+    };
+    NativePathnameMapping: {
+        in(nativePathname: string): string;
+        out(internalPathname: string): string;
+    };
 }>) => void;
 export declare function deepMergeState(target?: any, ...args: any[]): any;
 export declare function mergeState(target?: any, ...args: any[]): any;

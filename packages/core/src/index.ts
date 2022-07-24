@@ -18,7 +18,6 @@ export type {
   IRouter,
   IRouteRecord,
   IStore,
-  VStore,
   Location,
   ModelAsCreators,
   ModuleGetter,
@@ -32,12 +31,13 @@ export type {
   StoreLoggerInfo,
   StoreMiddleware,
   StoreState,
+  VStore,
 } from './basic';
-export {coreConfig, getClientRouter, setCoreConfig} from './basic';
+export {coreConfig, ErrorCodes, getClientRouter, setCoreConfig} from './basic';
 export {errorAction, setProcessedError} from './actions';
 export {getComponent, getEntryComponent, getModule, getModuleApiMap, injectComponent, injectModule, moduleExists} from './inject';
 export {effect, effectLogger, EmptyModel, exportComponent, exportView, reducer, setLoading} from './module';
-export {CoreRouter, modelHotReplacement, Store} from './store';
+export {modelHotReplacement, Store} from './store';
 export type {
   API,
   Facade,
@@ -55,3 +55,13 @@ export type {
 export {BaseModel, exportModule, getApi} from './facade';
 export type {RenderOptions} from './app';
 export {buildApp, buildProvider, buildSSR, getTplInSSR} from './app';
+export {
+  BaseNativeRouter,
+  locationToNativeLocation,
+  locationToUrl,
+  nativeLocationToLocation,
+  nativeUrlToUrl,
+  Router,
+  urlToLocation,
+  urlToNativeUrl,
+} from './route';

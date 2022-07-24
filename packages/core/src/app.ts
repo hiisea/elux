@@ -1,7 +1,5 @@
 import {coreConfig, EluxContext, IRouter, RouterInitOptions} from './basic';
 import env from './env';
-import type {CoreRouter} from './store';
-
 /**
  * 创建应用时Render参数
  *
@@ -30,7 +28,7 @@ export function buildApp<INS = {}>(
   const AppRender = coreConfig.AppRender!;
   return Object.assign(ins, {
     render({id = 'root'}: RenderOptions = {}) {
-      return (router as CoreRouter).init(routerOptions, ssrData || {}).then(() => {
+      return router.init(routerOptions, ssrData || {}).then(() => {
         AppRender.toDocument(id, {router}, !!ssrData, ins);
       });
     },
@@ -39,7 +37,7 @@ export function buildApp<INS = {}>(
 
 export function buildProvider<INS = {}>(ins: INS, router: IRouter): Elux.Component<{children: any}> {
   const AppRender = coreConfig.AppRender!;
-  //(router as CoreRouter).init({});
+  //router.init({});
   return AppRender.toProvider({router}, ins);
 }
 
@@ -53,7 +51,7 @@ export function buildSSR<INS = {}>(
   const AppRender = coreConfig.AppRender!;
   return Object.assign(ins, {
     render({id = 'root'}: RenderOptions = {}) {
-      return (router as CoreRouter).init(routerOptions, {}).then(() => {
+      return router.init(routerOptions, {}).then(() => {
         const store = router.getActivePage().store;
         store.destroy();
         const eluxContext: EluxContext = {router};

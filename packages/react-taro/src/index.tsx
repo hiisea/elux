@@ -1,12 +1,11 @@
+import {useEffect, useRef, useState} from 'react';
+
 import {AppConfig} from '@elux/app';
-import {buildProvider, coreConfig, getClientRouter, IStore, setCoreConfig, UNListener} from '@elux/core';
+import {buildProvider, coreConfig, getClientRouter, IStore, locationToUrl, setCoreConfig, UNListener} from '@elux/core';
 import {EWindow} from '@elux/react-components';
-import type {Router} from '@elux/route';
-import {locationToUrl} from '@elux/route';
 import {createRouter} from '@elux/route-mp';
 import {onShow, taroHistory} from '@elux/taro';
 import {useDidHide, useDidShow} from '@tarojs/taro';
-import {useEffect, useRef, useState} from 'react';
 
 export {DocumentHead, Else, Link, Switch} from '@elux/react-components';
 export type {DocumentHeadProps, ElseProps, LinkProps, SwitchProps} from '@elux/react-components';
@@ -26,7 +25,7 @@ setCoreConfig({
  * @public
  */
 export const EluxPage: Elux.Component = () => {
-  const router = coreConfig.UseRouter!() as Router;
+  const router = coreConfig.UseRouter!();
   const [store, setStore] = useState<IStore>();
   const unlink = useRef<UNListener>();
   useDidShow(() => {
@@ -82,7 +81,7 @@ export function createApp(appConfig: AppConfig): Elux.Component<{children: any}>
   }
   const location = taroHistory.getLocation();
   if (location.pathname) {
-    const router = getClientRouter() as Router;
+    const router = getClientRouter();
     router.init({url: locationToUrl(location)}, {});
   }
   return cientSingleton;

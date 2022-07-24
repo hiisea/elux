@@ -300,6 +300,7 @@ export interface RouteEvent {
  * @public
  */
 export interface IRouter<TStoreState extends StoreState = StoreState> {
+  init(initOptions: RouterInitOptions, prevState: TStoreState): Promise<void>;
   /**
    * 监听路由事件
    */
@@ -568,6 +569,26 @@ export interface IAppRender {
   toProvider(eluxContext: EluxContext, app: any): Elux.Component<{children: any}>;
 }
 
+/**
+ * 内置ErrorCode
+ *
+ * @public
+ */
+export const ErrorCodes = {
+  /**
+   * 在路由被强制中断并返回时抛出该错误
+   */
+  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
+  /**
+   * 在SSR服务器渲染时，操作路由跳转会抛出该错误
+   */
+  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
+  /**
+   * 在路由后退时，如果步数溢出则抛出该错误
+   */
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW',
+};
+
 export const coreConfig: {
   NSP: string;
   MSP: string;
@@ -594,6 +615,18 @@ export const coreConfig: {
   UseRouter?: () => IRouter;
   UseStore?: () => VStore;
   AppRender?: IAppRender;
+  NotifyNativeRouter: {
+    window: boolean;
+    page: boolean;
+  };
+  QueryString: {
+    parse(str: string): {[key: string]: any};
+    stringify(query: {[key: string]: any}): string;
+  };
+  NativePathnameMapping: {
+    in(nativePathname: string): string;
+    out(internalPathname: string): string;
+  };
 } = {
   NSP: '.',
   MSP: ',',
@@ -620,6 +653,22 @@ export const coreConfig: {
   UseRouter: undefined,
   UseStore: undefined,
   AppRender: undefined,
+  /**
+   * 实际上只支持三种组合：[false,false],[true,true],[true,false]
+   * 否则back时可以出错
+   */
+  NotifyNativeRouter: {
+    window: true,
+    page: false,
+  },
+  QueryString: {
+    parse: (str: string) => ({}),
+    stringify: () => '',
+  },
+  NativePathnameMapping: {
+    in: (pathname: string) => pathname,
+    out: (pathname: string) => pathname,
+  },
 };
 
 export const setCoreConfig = buildConfigSetter(coreConfig);

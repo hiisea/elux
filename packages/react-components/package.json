@@ -29,8 +29,7 @@
     "react": "^16.8.0 || ^17 || ^18"
   },
   "dependencies": {
-    "@elux/core": "^2.4.0",
-    "@elux/route": "^2.4.0"
+    "@elux/core": "^2.4.0"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

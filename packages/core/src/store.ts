@@ -8,17 +8,10 @@ import {
   coreConfig,
   Dispatch,
   IRouter,
-  IRouteRecord,
   IStore,
-  Location,
   mergeState,
   MetaData,
   ModuleState,
-  RouteAction,
-  RouteEvent,
-  RouterInitOptions,
-  RouteRuntime,
-  RouteTarget,
   StoreLoggerInfo,
   StoreMiddleware,
   StoreState,
@@ -55,68 +48,6 @@ export const preMiddleware: StoreMiddleware =
     }
     return next(action);
   };
-
-export abstract class CoreRouter implements IRouter {
-  declare runtime: RouteRuntime;
-  declare location: Location;
-  declare initOptions: RouterInitOptions;
-  protected listenerId = 0;
-  protected readonly listenerMap: {[id: string]: (data: RouteEvent) => void | Promise<void>} = {};
-  public action: RouteAction = 'init';
-  public routeKey: string = '';
-
-  constructor() {
-    if (!MetaData.clientRouter) {
-      MetaData.clientRouter = this;
-    }
-  }
-  addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener {
-    this.listenerId++;
-    const id = `${this.listenerId}`;
-    const listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return () => {
-      delete listenerMap[id];
-    };
-  }
-  dispatch(data: RouteEvent): void | Promise<void> {
-    const listenerMap = this.listenerMap;
-    const promiseResults: Promise<void>[] = [];
-    Object.keys(listenerMap).forEach((id) => {
-      const result = listenerMap[id](data);
-      if (isPromise(result)) {
-        promiseResults.push(result);
-      }
-    });
-    if (promiseResults.length === 0) {
-      return undefined;
-    } else if (promiseResults.length === 1) {
-      return promiseResults[0];
-    } else {
-      return Promise.all(promiseResults).then(() => undefined);
-    }
-  }
-
-  abstract init(initOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
-  abstract getDocumentHead(): string;
-  abstract setDocumentHead(html: string): void;
-  abstract getActivePage(): {store: IStore; location: Location};
-  abstract getCurrentPages(): {store: IStore; location: Location}[];
-  abstract getHistoryLength(target: RouteTarget): number;
-  abstract getHistory(target: RouteTarget): IRouteRecord[];
-  abstract findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
-  abstract findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]};
-  abstract computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
-  abstract relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
-  abstract push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
-  abstract replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): Promise<void>;
-  abstract back(
-    stepOrKeyOrCallback: string | number | ((record: IRouteRecord) => boolean),
-    target: RouteTarget,
-    refresh?: boolean,
-    overflowRedirect?: string | null
-  ): Promise<void>;
-}
 
 function applyEffect(
   effectResult: Promise<unknown>,

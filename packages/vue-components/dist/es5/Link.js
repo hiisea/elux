@@ -1,5 +1,4 @@
-import { coreConfig } from '@elux/core';
-import { urlToNativeUrl } from '@elux/route';
+import { coreConfig, urlToNativeUrl } from '@elux/core';
 import { computed, defineComponent, h } from 'vue';
 export var Link = defineComponent({
   name: 'EluxLink',
