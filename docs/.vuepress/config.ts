@@ -108,10 +108,6 @@ export default defineUserConfig({
                   link: '/designed/three-layered.html',
                 },
                 {
-                  text: '跨端新思维',
-                  link: '/designed/cross-platform.html',
-                },
-                {
                   text: '路由与历史',
                   link: '/designed/route-history.html',
                 },
