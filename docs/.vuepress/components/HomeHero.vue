@@ -25,7 +25,16 @@ const actions = computed(() => {
 <template>
   <header class="hero">
     <ul class="hero-notice">
-      <li><a href="https://juejin.cn/post/7119728761355894814" target="_blank">新出一套基于Antd-React的后台管理系统模版(07/23)</a></li>
+      <li>
+        新增基于React+Antd的管理系统模版（
+        <a href="https://github.com/hiisea/elux-react-antd-admin" target="_blank">Github</a><span>｜</span
+        ><a href="https://gitee.com/hiisea/elux-react-antd-admin-fork" target="_blank">Gitee</a>）
+      </li>
+      <li>
+        新增基于Vue+Antd的管理系统模版（
+        <a href="https://github.com/hiisea/elux-vue-antd-admin" target="_blank">Github</a><span>｜</span
+        ><a href="https://gitee.com/hiisea/elux-vue-antd-admin-fork" target="_blank">Gitee</a>）
+      </li>
     </ul>
     <div class="hero-logo">
       <img class="logo-icon" src="/images/logo-icon-rotate.svg" alt="elux" width="250" />
