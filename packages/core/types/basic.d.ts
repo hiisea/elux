@@ -684,4 +684,10 @@ export declare const setCoreConfig: (config: Partial<{
 export declare function deepMergeState(target?: any, ...args: any[]): any;
 export declare function mergeState(target?: any, ...args: any[]): any;
 export declare function getClientRouter(): IRouter;
+/**
+ * 当前State模式是否为Mutable
+ *
+ * @public
+ */
+export declare function isMutable(): boolean;
 //# sourceMappingURL=basic.d.ts.map

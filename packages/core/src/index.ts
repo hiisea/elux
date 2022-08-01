@@ -33,7 +33,7 @@ export type {
   StoreState,
   VStore,
 } from './basic';
-export {coreConfig, ErrorCodes, getClientRouter, setCoreConfig} from './basic';
+export {coreConfig, ErrorCodes, getClientRouter, setCoreConfig, isMutable} from './basic';
 export {errorAction, setProcessedError} from './actions';
 export {getComponent, getEntryComponent, getModule, getModuleApiMap, injectComponent, injectModule, moduleExists} from './inject';
 export {effect, effectLogger, EmptyModel, exportComponent, exportView, reducer, setLoading} from './module';

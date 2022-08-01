@@ -160,18 +160,18 @@
     }
   },
   "kind": "Package",
-  "canonicalReference": "@elux/react-taro!",
+  "canonicalReference": "@elux/model!",
   "docComment": "",
-  "name": "@elux/react-taro",
+  "name": "@elux/model",
   "members": [
     {
       "kind": "EntryPoint",
-      "canonicalReference": "@elux/react-taro!",
+      "canonicalReference": "@elux/model!",
       "name": "",
       "members": [
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!Action:interface",
+          "canonicalReference": "@elux/model!Action:interface",
           "docComment": "/**\n * 定义Action\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -184,7 +184,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Action#payload:member",
+              "canonicalReference": "@elux/model!Action#payload:member",
               "docComment": "/**\n * action载体\n */\n",
               "excerptTokens": [
                 {
@@ -210,7 +210,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Action#priority:member",
+              "canonicalReference": "@elux/model!Action#priority:member",
               "docComment": "/**\n * 同时有多个handler时，可以特别指明处理顺序，通常无需设置\n */\n",
               "excerptTokens": [
                 {
@@ -236,7 +236,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Action#type:member",
+              "canonicalReference": "@elux/model!Action#type:member",
               "docComment": "/**\n * type通常由ModuleName.ActionName组成\n */\n",
               "excerptTokens": [
                 {
@@ -265,7 +265,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ActionCreator:type",
+          "canonicalReference": "@elux/model!ActionCreator:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -279,7 +279,7 @@
             {
               "kind": "Reference",
               "text": "Action",
-              "canonicalReference": "@elux/react-taro!Action:interface"
+              "canonicalReference": "@elux/model!Action:interface"
             },
             {
               "kind": "Content",
@@ -295,7 +295,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!ActionError:interface",
+          "canonicalReference": "@elux/model!ActionError:interface",
           "docComment": "/**\n * 内置的错误描述接口\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -308,7 +308,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!ActionError#code:member",
+              "canonicalReference": "@elux/model!ActionError#code:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -334,7 +334,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!ActionError#detail:member",
+              "canonicalReference": "@elux/model!ActionError#detail:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -360,7 +360,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!ActionError#message:member",
+              "canonicalReference": "@elux/model!ActionError#message:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -389,7 +389,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!API:type",
+          "canonicalReference": "@elux/model!API:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -399,7 +399,7 @@
             {
               "kind": "Reference",
               "text": "Facade",
-              "canonicalReference": "@elux/react-taro!Facade:type"
+              "canonicalReference": "@elux/model!Facade:type"
             },
             {
               "kind": "Content",
@@ -412,7 +412,7 @@
             {
               "kind": "Reference",
               "text": "ILoadComponent",
-              "canonicalReference": "@elux/react-taro!ILoadComponent:type"
+              "canonicalReference": "@elux/model!ILoadComponent:type"
             },
             {
               "kind": "Content",
@@ -421,7 +421,7 @@
             {
               "kind": "Reference",
               "text": "IGetComponent",
-              "canonicalReference": "@elux/react-taro!IGetComponent:type"
+              "canonicalReference": "@elux/model!IGetComponent:type"
             },
             {
               "kind": "Content",
@@ -430,7 +430,7 @@
             {
               "kind": "Reference",
               "text": "IGetData",
-              "canonicalReference": "@elux/react-taro!IGetData:type"
+              "canonicalReference": "@elux/model!IGetData:type"
             },
             {
               "kind": "Content",
@@ -472,37 +472,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!AppConfig:type",
-          "docComment": "/**\n * *\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare type AppConfig = "
-            },
-            {
-              "kind": "Content",
-              "text": "typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "appConfig",
-              "canonicalReference": "@elux/react-taro!~appConfig:var"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "AppConfig",
-          "typeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 3
-          }
-        },
-        {
-          "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!AsyncEluxComponent:type",
+          "canonicalReference": "@elux/model!AsyncEluxComponent:type",
           "docComment": "/**\n * 异步EluxComponent定义\n *\n * @remarks\n *\n * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -525,7 +495,7 @@
             {
               "kind": "Reference",
               "text": "EluxComponent",
-              "canonicalReference": "@elux/react-taro!EluxComponent:interface"
+              "canonicalReference": "@elux/model!EluxComponent:interface"
             },
             {
               "kind": "Content",
@@ -545,7 +515,7 @@
         },
         {
           "kind": "Class",
-          "canonicalReference": "@elux/react-taro!BaseModel:class",
+          "canonicalReference": "@elux/model!BaseModel:class",
           "docComment": "/**\n * Model基类\n *\n * @remarks\n *\n * Model基类实现了{@link CommonModel}，并提供了一些常用的方法\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -555,7 +525,7 @@
             {
               "kind": "Reference",
               "text": "ModuleState",
-              "canonicalReference": "@elux/react-taro!ModuleState:type"
+              "canonicalReference": "@elux/model!ModuleState:type"
             },
             {
               "kind": "Content",
@@ -576,7 +546,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -597,7 +567,7 @@
             {
               "kind": "Reference",
               "text": "CommonModel",
-              "canonicalReference": "@elux/react-taro!CommonModel:interface"
+              "canonicalReference": "@elux/model!CommonModel:interface"
             },
             {
               "kind": "Content",
@@ -633,7 +603,7 @@
           "members": [
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#_initState:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#_initState:member(1)",
               "docComment": "/**\n * 定义reducer监听`moduleName._initState`，用来注入初始状态\n */\n",
               "excerptTokens": [
                 {
@@ -678,7 +648,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#_loadingState:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#_loadingState:member(1)",
               "docComment": "/**\n * 定义reducer监听`moduleName._loadingState`，用来注入Loading状态\n */\n",
               "excerptTokens": [
                 {
@@ -692,7 +662,7 @@
                 {
                   "kind": "Reference",
                   "text": "LoadingState",
-                  "canonicalReference": "@elux/react-taro!LoadingState:type"
+                  "canonicalReference": "@elux/model!LoadingState:type"
                 },
                 {
                   "kind": "Content",
@@ -732,7 +702,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#_updateState:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#_updateState:member(1)",
               "docComment": "/**\n * 定义reducer监听`moduleName._updateState`，用来合并当前状态\n */\n",
               "excerptTokens": [
                 {
@@ -797,7 +767,7 @@
             },
             {
               "kind": "Constructor",
-              "canonicalReference": "@elux/react-taro!BaseModel:constructor(1)",
+              "canonicalReference": "@elux/model!BaseModel:constructor(1)",
               "docComment": "/**\n * Constructs a new instance of the `BaseModel` class\n */\n",
               "excerptTokens": [
                 {
@@ -815,7 +785,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -843,7 +813,7 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@elux/react-taro!BaseModel#actions:member",
+              "canonicalReference": "@elux/model!BaseModel#actions:member",
               "docComment": "/**\n * 获取本模块的公开actions\n */\n",
               "excerptTokens": [
                 {
@@ -853,7 +823,7 @@
                 {
                   "kind": "Reference",
                   "text": "PickThisActions",
-                  "canonicalReference": "@elux/react-taro!PickThisActions:type"
+                  "canonicalReference": "@elux/model!PickThisActions:type"
                 },
                 {
                   "kind": "Content",
@@ -875,7 +845,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#dispatch:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#dispatch:member(1)",
               "docComment": "/**\n * 等同于this.store.dispatch(action)\n */\n",
               "excerptTokens": [
                 {
@@ -885,7 +855,7 @@
                 {
                   "kind": "Reference",
                   "text": "Action",
-                  "canonicalReference": "@elux/react-taro!Action:interface"
+                  "canonicalReference": "@elux/model!Action:interface"
                 },
                 {
                   "kind": "Content",
@@ -930,7 +900,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#getCurrentAction:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#getCurrentAction:member(1)",
               "docComment": "/**\n * 获取当前触发的action.type\n *\n * @remarks\n *\n * 当一个ActionHandler监听了多个Action，可以使用此方法区别当前Action\n */\n",
               "excerptTokens": [
                 {
@@ -940,7 +910,7 @@
                 {
                   "kind": "Reference",
                   "text": "Action",
-                  "canonicalReference": "@elux/react-taro!Action:interface"
+                  "canonicalReference": "@elux/model!Action:interface"
                 },
                 {
                   "kind": "Content",
@@ -960,7 +930,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#getPrevState:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#getPrevState:member(1)",
               "docComment": "/**\n * 获取本模块路由跳转之前的状态\n */\n",
               "excerptTokens": [
                 {
@@ -989,7 +959,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#getPrivateActions:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#getPrivateActions:member(1)",
               "docComment": "/**\n * 获取本模块的私有actions\n *\n * @remarks\n *\n * 有些action只在本Model内部调用，应将其定义为非public权限，此时将无法通过`this.actions`调用，可以使用`this.getPrivateActions(...)`\n *\n * @example\n * ```js\n * const privateAction = this.getPrivateActions({renameUser: this.renameUser});\n * this.dispatch(privateAction.renameUser('jimmy'))\n * ```\n *\n */\n",
               "excerptTokens": [
                 {
@@ -1033,7 +1003,7 @@
                 {
                   "kind": "Reference",
                   "text": "HandlerToAction",
-                  "canonicalReference": "@elux/react-taro!HandlerToAction:type"
+                  "canonicalReference": "@elux/model!HandlerToAction:type"
                 },
                 {
                   "kind": "Content",
@@ -1042,7 +1012,7 @@
                 {
                   "kind": "Reference",
                   "text": "Action",
-                  "canonicalReference": "@elux/react-taro!Action:interface"
+                  "canonicalReference": "@elux/model!Action:interface"
                 },
                 {
                   "kind": "Content",
@@ -1060,7 +1030,7 @@
                 {
                   "kind": "Reference",
                   "text": "Action",
-                  "canonicalReference": "@elux/react-taro!Action:interface"
+                  "canonicalReference": "@elux/model!Action:interface"
                 },
                 {
                   "kind": "Content",
@@ -1069,7 +1039,7 @@
                 {
                   "kind": "Reference",
                   "text": "LoadingState",
-                  "canonicalReference": "@elux/react-taro!LoadingState:type"
+                  "canonicalReference": "@elux/model!LoadingState:type"
                 },
                 {
                   "kind": "Content",
@@ -1078,7 +1048,7 @@
                 {
                   "kind": "Reference",
                   "text": "Action",
-                  "canonicalReference": "@elux/react-taro!Action:interface"
+                  "canonicalReference": "@elux/model!Action:interface"
                 },
                 {
                   "kind": "Content",
@@ -1123,7 +1093,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#getRootState:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#getRootState:member(1)",
               "docComment": "/**\n * 获取Store的全局状态，参见{@link IStore}\n *\n * @param type - 不传表示当前状态，previous表示路由跳转之前的状态，uncommitted表示未提交的状态\n */\n",
               "excerptTokens": [
                 {
@@ -1168,7 +1138,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#getRouter:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#getRouter:member(1)",
               "docComment": "/**\n * 等于this.store.router\n */\n",
               "excerptTokens": [
                 {
@@ -1178,7 +1148,7 @@
                 {
                   "kind": "Reference",
                   "text": "IRouter",
-                  "canonicalReference": "@elux/react-taro!IRouter:interface"
+                  "canonicalReference": "@elux/model!IRouter:interface"
                 },
                 {
                   "kind": "Content",
@@ -1202,7 +1172,7 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@elux/react-taro!BaseModel#moduleName:member",
+              "canonicalReference": "@elux/model!BaseModel#moduleName:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1229,7 +1199,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#onActive:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#onActive:member(1)",
               "docComment": "/**\n * 当前page被激活时触发\n */\n",
               "excerptTokens": [
                 {
@@ -1258,7 +1228,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#onInactive:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#onInactive:member(1)",
               "docComment": "/**\n * 当前page被变为历史快照时触发\n */\n",
               "excerptTokens": [
                 {
@@ -1287,7 +1257,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!BaseModel#onMount:member(1)",
+              "canonicalReference": "@elux/model!BaseModel#onMount:member(1)",
               "docComment": "/**\n * 被挂载到store时触发\n */\n",
               "excerptTokens": [
                 {
@@ -1341,7 +1311,7 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@elux/react-taro!BaseModel#state:member",
+              "canonicalReference": "@elux/model!BaseModel#state:member",
               "docComment": "/**\n * 获取模块的状态\n */\n",
               "excerptTokens": [
                 {
@@ -1368,7 +1338,7 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@elux/react-taro!BaseModel#store:member",
+              "canonicalReference": "@elux/model!BaseModel#store:member",
               "docComment": "/**\n * 所属store，model挂载在store下\n */\n",
               "excerptTokens": [
                 {
@@ -1378,7 +1348,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -1408,7 +1378,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!CommonModel:interface",
+          "canonicalReference": "@elux/model!CommonModel:interface",
           "docComment": "/**\n * Model的基础定义\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -1421,7 +1391,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModel#moduleName:member",
+              "canonicalReference": "@elux/model!CommonModel#moduleName:member",
               "docComment": "/**\n * 模块名称\n */\n",
               "excerptTokens": [
                 {
@@ -1447,7 +1417,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!CommonModel#onActive:member(1)",
+              "canonicalReference": "@elux/model!CommonModel#onActive:member(1)",
               "docComment": "/**\n * 当前page被激活时触发\n */\n",
               "excerptTokens": [
                 {
@@ -1475,7 +1445,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!CommonModel#onInactive:member(1)",
+              "canonicalReference": "@elux/model!CommonModel#onInactive:member(1)",
               "docComment": "/**\n * 当前page被变为历史快照时触发\n */\n",
               "excerptTokens": [
                 {
@@ -1503,7 +1473,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!CommonModel#onMount:member(1)",
+              "canonicalReference": "@elux/model!CommonModel#onMount:member(1)",
               "docComment": "/**\n * model被挂载到store时触发，在一个store中一个model只会被挂载一次\n */\n",
               "excerptTokens": [
                 {
@@ -1556,7 +1526,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModel#state:member",
+              "canonicalReference": "@elux/model!CommonModel#state:member",
               "docComment": "/**\n * 模块状态\n */\n",
               "excerptTokens": [
                 {
@@ -1566,7 +1536,7 @@
                 {
                   "kind": "Reference",
                   "text": "ModuleState",
-                  "canonicalReference": "@elux/react-taro!ModuleState:type"
+                  "canonicalReference": "@elux/model!ModuleState:type"
                 },
                 {
                   "kind": "Content",
@@ -1586,7 +1556,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!CommonModelClass:interface",
+          "canonicalReference": "@elux/model!CommonModelClass:interface",
           "docComment": "/**\n * Model的构造类\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -1596,7 +1566,7 @@
             {
               "kind": "Reference",
               "text": "CommonModel",
-              "canonicalReference": "@elux/react-taro!CommonModel:interface"
+              "canonicalReference": "@elux/model!CommonModel:interface"
             },
             {
               "kind": "Content",
@@ -1621,7 +1591,7 @@
           "members": [
             {
               "kind": "ConstructSignature",
-              "canonicalReference": "@elux/react-taro!CommonModelClass:new(1)",
+              "canonicalReference": "@elux/model!CommonModelClass:new(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1639,7 +1609,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -1682,7 +1652,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!CommonModule:interface",
+          "canonicalReference": "@elux/model!CommonModule:interface",
           "docComment": "/**\n * Module的基础定义\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -1724,7 +1694,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModule#actions:member",
+              "canonicalReference": "@elux/model!CommonModule#actions:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1734,7 +1704,7 @@
                 {
                   "kind": "Reference",
                   "text": "ModelAsCreators",
-                  "canonicalReference": "@elux/react-taro!ModelAsCreators:type"
+                  "canonicalReference": "@elux/model!ModelAsCreators:type"
                 },
                 {
                   "kind": "Content",
@@ -1751,7 +1721,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModule#components:member",
+              "canonicalReference": "@elux/model!CommonModule#components:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1765,7 +1735,7 @@
                 {
                   "kind": "Reference",
                   "text": "EluxComponent",
-                  "canonicalReference": "@elux/react-taro!EluxComponent:interface"
+                  "canonicalReference": "@elux/model!EluxComponent:interface"
                 },
                 {
                   "kind": "Content",
@@ -1786,7 +1756,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModule#data:member",
+              "canonicalReference": "@elux/model!CommonModule#data:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1812,7 +1782,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModule#ModelClass:member",
+              "canonicalReference": "@elux/model!CommonModule#ModelClass:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1822,7 +1792,7 @@
                 {
                   "kind": "Reference",
                   "text": "CommonModelClass",
-                  "canonicalReference": "@elux/react-taro!CommonModelClass:interface"
+                  "canonicalReference": "@elux/model!CommonModelClass:interface"
                 },
                 {
                   "kind": "Content",
@@ -1839,7 +1809,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModule#moduleName:member",
+              "canonicalReference": "@elux/model!CommonModule#moduleName:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1865,7 +1835,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!CommonModule#state:member",
+              "canonicalReference": "@elux/model!CommonModule#state:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -1875,7 +1845,7 @@
                 {
                   "kind": "Reference",
                   "text": "ModuleState",
-                  "canonicalReference": "@elux/react-taro!ModuleState:type"
+                  "canonicalReference": "@elux/model!ModuleState:type"
                 },
                 {
                   "kind": "Content",
@@ -1894,219 +1864,8 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!connectRedux:var",
-          "docComment": "/**\n * 为{@link connectStore}别名\n *\n * @deprecated\n *\n * 请使用 connectStore\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "connectRedux: "
-            },
-            {
-              "kind": "Content",
-              "text": "typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "connectStore",
-              "canonicalReference": "@elux/react-taro!connectStore:function"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "connectRedux",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 3
-          }
-        },
-        {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!connectStore:function(1)",
-          "docComment": "/**\n * 连接store与react组件\n *\n * @remarks\n *\n * 参见{@link https://react-redux.js.org/api/connect | react-redux/connect}\n *\n * @param mapStateToProps - state与props之间的映射与转换\n *\n * @param options - 连接参数设置\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare function connectStore<S = "
-            },
-            {
-              "kind": "Content",
-              "text": "{}"
-            },
-            {
-              "kind": "Content",
-              "text": ", D = "
-            },
-            {
-              "kind": "Content",
-              "text": "{}"
-            },
-            {
-              "kind": "Content",
-              "text": ", W = "
-            },
-            {
-              "kind": "Content",
-              "text": "{}"
-            },
-            {
-              "kind": "Content",
-              "text": ">(mapStateToProps?: "
-            },
-            {
-              "kind": "Content",
-              "text": "(state: any, owner: W) => S"
-            },
-            {
-              "kind": "Content",
-              "text": ", options?: "
-            },
-            {
-              "kind": "Reference",
-              "text": "Options",
-              "canonicalReference": "@types/react-redux!Options:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<any, S, W>"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Reference",
-              "text": "InferableComponentEnhancerWithProps",
-              "canonicalReference": "@elux/react-taro!InferableComponentEnhancerWithProps:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<S & D & {\n    dispatch: "
-            },
-            {
-              "kind": "Reference",
-              "text": "Dispatch",
-              "canonicalReference": "@elux/react-taro!Dispatch:type"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n}>"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "returnTypeTokenRange": {
-            "startIndex": 12,
-            "endIndex": 16
-          },
-          "releaseTag": "Public",
-          "overloadIndex": 1,
-          "parameters": [
-            {
-              "parameterName": "mapStateToProps",
-              "parameterTypeTokenRange": {
-                "startIndex": 7,
-                "endIndex": 8
-              }
-            },
-            {
-              "parameterName": "options",
-              "parameterTypeTokenRange": {
-                "startIndex": 9,
-                "endIndex": 11
-              }
-            }
-          ],
-          "typeParameters": [
-            {
-              "typeParameterName": "S",
-              "constraintTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              },
-              "defaultTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "typeParameterName": "D",
-              "constraintTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              },
-              "defaultTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              }
-            },
-            {
-              "typeParameterName": "W",
-              "constraintTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              },
-              "defaultTypeTokenRange": {
-                "startIndex": 5,
-                "endIndex": 6
-              }
-            }
-          ],
-          "name": "connectStore"
-        },
-        {
-          "kind": "Function",
-          "canonicalReference": "@elux/react-taro!createApp:function(1)",
-          "docComment": "/**\n * 创建应用\n *\n * @param appConfig - 应用配置\n *\n * @returns 返回包含Provider组件\n *\n * @example\n * ```js\n * render () {\n *   const Provider = createApp(appConfig);\n *   return <Provider>{this.props.children}</Provider>\n * }\n * ```\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare function createApp(appConfig: "
-            },
-            {
-              "kind": "Reference",
-              "text": "AppConfig",
-              "canonicalReference": "@elux/react-taro!AppConfig:type"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Reference",
-              "text": "Elux.Component",
-              "canonicalReference": "!Elux.Component:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<{\n    children: any;\n}>"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "returnTypeTokenRange": {
-            "startIndex": 3,
-            "endIndex": 5
-          },
-          "releaseTag": "Public",
-          "overloadIndex": 1,
-          "parameters": [
-            {
-              "parameterName": "appConfig",
-              "parameterTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "name": "createApp"
-        },
-        {
-          "kind": "Function",
-          "canonicalReference": "@elux/react-taro!deepMerge:function(1)",
+          "canonicalReference": "@elux/model!deepMerge:function(1)",
           "docComment": "/**\n * 多个PlainObject的深度Merge\n *\n * @remarks\n *\n * 类似于 `Object.assin` 的深复制版本。\n *\n * - 除第一个参数target会被修改外，保证其它入参不会被修改。\n *\n * - 仅适应于Merge PlainObject\n *\n * - 对于array是直接替换而不merge\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2164,7 +1923,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!Dispatch:type",
+          "canonicalReference": "@elux/model!Dispatch:type",
           "docComment": "/**\n * 派发Action\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2178,7 +1937,7 @@
             {
               "kind": "Reference",
               "text": "Action",
-              "canonicalReference": "@elux/react-taro!Action:interface"
+              "canonicalReference": "@elux/model!Action:interface"
             },
             {
               "kind": "Content",
@@ -2206,115 +1965,8 @@
           }
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!DocumentHead:var",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 参见：{@link DocumentHeadProps}\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "DocumentHead: "
-            },
-            {
-              "kind": "Content",
-              "text": "import(\"react\")."
-            },
-            {
-              "kind": "Reference",
-              "text": "NamedExoticComponent",
-              "canonicalReference": "@types/react!~React.NamedExoticComponent:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "DocumentHeadProps",
-              "canonicalReference": "@elux/react-taro!DocumentHeadProps:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ">"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "DocumentHead",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 6
-          }
-        },
-        {
-          "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!DocumentHeadProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 用组件的方式动态修改`<head>内容`，主要是`title/description/keywords`等meta信息，SSR中非常有用\n *\n * @example\n * ```html\n * <DocumentHead\n *   title='文章'\n *   html='<meta name=\"keywords\" content=\"域名,域名推广,域名注册\">'\n * />\n * ```\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export interface DocumentHeadProps "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "DocumentHeadProps",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!DocumentHeadProps#html:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "html?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "html",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!DocumentHeadProps#title:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "title?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "title",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "extendsTokenRanges": []
-        },
-        {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!effect:function(1)",
+          "canonicalReference": "@elux/model!effect:function(1)",
           "docComment": "/**\n * 申明effect\n *\n * @param loadingKey - 将该 effect 执行状态作为 {@link LoadingState | LoadingState} 注入指定的 ModuleState 中。\n *\n * @returns 返回ES6装饰器\n *\n * @example\n *\n * - `@effect('this.searchTableLoading')` 将该 effect 执行状态注入本模块的 `searchTableLoading` 状态中\n *\n * - `@effect()` 等于 `@effect('stage.globalLoading')`\n *\n * - `@effect(null)` 不跟踪其执行状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2358,7 +2010,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!effectLogger:function(1)",
+          "canonicalReference": "@elux/model!effectLogger:function(1)",
           "docComment": "/**\n * 跟踪effect执行的钩子\n *\n * @remarks\n *\n * 用于在以下 effect 中注入 before 和 after 的钩子，常用来跟踪effect执行情况\n *\n * @param before - 该 effect 执行前自动调用\n *\n * @param after - 该 effect 执行后自动调用（无论成功与否）\n *\n * @returns 返回ES6装饰器\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2372,7 +2024,7 @@
             {
               "kind": "Reference",
               "text": "IStore",
-              "canonicalReference": "@elux/react-taro!IStore:interface"
+              "canonicalReference": "@elux/model!IStore:interface"
             },
             {
               "kind": "Content",
@@ -2381,7 +2033,7 @@
             {
               "kind": "Reference",
               "text": "Action",
-              "canonicalReference": "@elux/react-taro!Action:interface"
+              "canonicalReference": "@elux/model!Action:interface"
             },
             {
               "kind": "Content",
@@ -2442,113 +2094,8 @@
           "name": "effectLogger"
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!Else:var",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 参见：{@link ElseProps}\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "Else: "
-            },
-            {
-              "kind": "Reference",
-              "text": "FC",
-              "canonicalReference": "@types/react!~React.FC:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "ElseProps",
-              "canonicalReference": "@elux/react-taro!ElseProps:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ">"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "Else",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 5
-          }
-        },
-        {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!ElseProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 用来控制子元素的渲染方式：如果非空子元素大于0，则渲染所有非空子元素，否则将渲染`props.elseView`， 与 {@link Switch | `<Switch>`} 的区别在于：`<Switch>` 仅渲染非空子元素中的第1个\n *\n * @example\n * ```html\n * <Else elseView={<NotFound />}>\n *  {subView === 'detail' && <Detail />}\n *  {subView === 'list' && <List />}\n * </Else>\n * ```\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export interface ElseProps "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "ElseProps",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!ElseProps#children:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "children: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ReactNode",
-                  "canonicalReference": "@types/react!~React.ReactNode:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "children",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!ElseProps#elseView:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "elseView?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ReactNode",
-                  "canonicalReference": "@types/react!~React.ReactNode:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "elseView",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "extendsTokenRanges": []
-        },
-        {
-          "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!EluxComponent:interface",
+          "canonicalReference": "@elux/model!EluxComponent:interface",
           "docComment": "/**\n * EluxComponent定义\n *\n * @remarks\n *\n * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2561,7 +2108,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!EluxComponent#__elux_component__:member",
+              "canonicalReference": "@elux/model!EluxComponent#__elux_component__:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2589,30 +2136,8 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!EluxPage:var",
-          "docComment": "/**\n * 小程序Page页面\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "EluxPage: "
-            },
-            {
-              "kind": "Reference",
-              "text": "Elux.Component",
-              "canonicalReference": "!Elux.Component:interface"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "EluxPage",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 2
-          }
-        },
-        {
           "kind": "Class",
-          "canonicalReference": "@elux/react-taro!EmptyModel:class",
+          "canonicalReference": "@elux/model!EmptyModel:class",
           "docComment": "/**\n * 空Model常用于mock假数据\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2622,7 +2147,7 @@
             {
               "kind": "Reference",
               "text": "CommonModel",
-              "canonicalReference": "@elux/react-taro!CommonModel:interface"
+              "canonicalReference": "@elux/model!CommonModel:interface"
             },
             {
               "kind": "Content",
@@ -2634,7 +2159,7 @@
           "members": [
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!EmptyModel#_initState:member(1)",
+              "canonicalReference": "@elux/model!EmptyModel#_initState:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2644,7 +2169,7 @@
                 {
                   "kind": "Reference",
                   "text": "ModuleState",
-                  "canonicalReference": "@elux/react-taro!ModuleState:type"
+                  "canonicalReference": "@elux/model!ModuleState:type"
                 },
                 {
                   "kind": "Content",
@@ -2653,7 +2178,7 @@
                 {
                   "kind": "Reference",
                   "text": "ModuleState",
-                  "canonicalReference": "@elux/react-taro!ModuleState:type"
+                  "canonicalReference": "@elux/model!ModuleState:type"
                 },
                 {
                   "kind": "Content",
@@ -2681,7 +2206,7 @@
             },
             {
               "kind": "Constructor",
-              "canonicalReference": "@elux/react-taro!EmptyModel:constructor(1)",
+              "canonicalReference": "@elux/model!EmptyModel:constructor(1)",
               "docComment": "/**\n * Constructs a new instance of the `EmptyModel` class\n */\n",
               "excerptTokens": [
                 {
@@ -2699,7 +2224,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -2727,7 +2252,7 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@elux/react-taro!EmptyModel#moduleName:member",
+              "canonicalReference": "@elux/model!EmptyModel#moduleName:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2754,7 +2279,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!EmptyModel#onActive:member(1)",
+              "canonicalReference": "@elux/model!EmptyModel#onActive:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2783,7 +2308,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!EmptyModel#onInactive:member(1)",
+              "canonicalReference": "@elux/model!EmptyModel#onInactive:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2812,7 +2337,7 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@elux/react-taro!EmptyModel#onMount:member(1)",
+              "canonicalReference": "@elux/model!EmptyModel#onMount:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2841,7 +2366,7 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@elux/react-taro!EmptyModel#state:member",
+              "canonicalReference": "@elux/model!EmptyModel#state:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2851,7 +2376,7 @@
                 {
                   "kind": "Reference",
                   "text": "ModuleState",
-                  "canonicalReference": "@elux/react-taro!ModuleState:type"
+                  "canonicalReference": "@elux/model!ModuleState:type"
                 },
                 {
                   "kind": "Content",
@@ -2869,7 +2394,7 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@elux/react-taro!EmptyModel#store:member",
+              "canonicalReference": "@elux/model!EmptyModel#store:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -2879,7 +2404,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -2905,7 +2430,7 @@
         },
         {
           "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!env:var",
+          "canonicalReference": "@elux/model!env:var",
           "docComment": "/**\n * 运行环境的引用\n *\n * @remarks\n *\n * - 浏览器环境下，该变量指向 window\n *\n * - 服务器环境下，该变量指向 global\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2927,7 +2452,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!errorAction:function(1)",
+          "canonicalReference": "@elux/model!errorAction:function(1)",
           "docComment": "/**\n * 创建一个特殊的ErrorAction\n *\n * @param error - 错误体\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2945,7 +2470,7 @@
             {
               "kind": "Reference",
               "text": "Action",
-              "canonicalReference": "@elux/react-taro!Action:interface"
+              "canonicalReference": "@elux/model!Action:interface"
             },
             {
               "kind": "Content",
@@ -2971,7 +2496,7 @@
         },
         {
           "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!ErrorCodes:var",
+          "canonicalReference": "@elux/model!ErrorCodes:var",
           "docComment": "/**\n * 内置ErrorCode\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -2992,7 +2517,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!exportComponent:function(1)",
+          "canonicalReference": "@elux/model!exportComponent:function(1)",
           "docComment": "/**\n * 向外导出UI组件\n *\n * @returns 返回实现 EluxComponent 接口的UI组件\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3014,7 +2539,7 @@
             {
               "kind": "Reference",
               "text": "EluxComponent",
-              "canonicalReference": "@elux/react-taro!EluxComponent:interface"
+              "canonicalReference": "@elux/model!EluxComponent:interface"
             },
             {
               "kind": "Content",
@@ -3053,7 +2578,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!exportModule:function(1)",
+          "canonicalReference": "@elux/model!exportModule:function(1)",
           "docComment": "/**\n * 向外封装并导出Module\n *\n * @param moduleName - 模块名称，不能重复\n *\n * @param ModelClass - Model构造类\n *\n * @param components - 导出的组件或视图，参见 {@link exportView}\n *\n * @param data - 导出其它任何数据\n *\n * @returns 返回实现 {@link CommonModule} 接口的微模块\n *\n * @example\n * ```js\n * import UserModel from './model';\n * import MainView from './views/Main';\n *\n * exportModule('user', UserModel, {main: MainView, list: ()=>import('./views/List')})\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3071,7 +2596,7 @@
             {
               "kind": "Reference",
               "text": "CommonModel",
-              "canonicalReference": "@elux/react-taro!CommonModel:interface"
+              "canonicalReference": "@elux/model!CommonModel:interface"
             },
             {
               "kind": "Content",
@@ -3084,7 +2609,7 @@
             {
               "kind": "Reference",
               "text": "EluxComponent",
-              "canonicalReference": "@elux/react-taro!EluxComponent:interface"
+              "canonicalReference": "@elux/model!EluxComponent:interface"
             },
             {
               "kind": "Content",
@@ -3093,7 +2618,7 @@
             {
               "kind": "Reference",
               "text": "AsyncEluxComponent",
-              "canonicalReference": "@elux/react-taro!AsyncEluxComponent:type"
+              "canonicalReference": "@elux/model!AsyncEluxComponent:type"
             },
             {
               "kind": "Content",
@@ -3114,7 +2639,7 @@
             {
               "kind": "Reference",
               "text": "CommonModelClass",
-              "canonicalReference": "@elux/react-taro!CommonModelClass:interface"
+              "canonicalReference": "@elux/model!CommonModelClass:interface"
             },
             {
               "kind": "Content",
@@ -3147,7 +2672,7 @@
             {
               "kind": "Reference",
               "text": "CommonModelClass",
-              "canonicalReference": "@elux/react-taro!CommonModelClass:interface"
+              "canonicalReference": "@elux/model!CommonModelClass:interface"
             },
             {
               "kind": "Content",
@@ -3156,7 +2681,7 @@
             {
               "kind": "Reference",
               "text": "PickModelActions",
-              "canonicalReference": "@elux/react-taro!PickModelActions:type"
+              "canonicalReference": "@elux/model!PickModelActions:type"
             },
             {
               "kind": "Content",
@@ -3165,7 +2690,7 @@
             {
               "kind": "Reference",
               "text": "ReturnComponents",
-              "canonicalReference": "@elux/react-taro!ReturnComponents:type"
+              "canonicalReference": "@elux/model!ReturnComponents:type"
             },
             {
               "kind": "Content",
@@ -3262,7 +2787,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!exportView:function(1)",
+          "canonicalReference": "@elux/model!exportView:function(1)",
           "docComment": "/**\n * 向外导出业务视图\n *\n * @returns 返回实现 EluxComponent 接口的业务视图\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3284,7 +2809,7 @@
             {
               "kind": "Reference",
               "text": "EluxComponent",
-              "canonicalReference": "@elux/react-taro!EluxComponent:interface"
+              "canonicalReference": "@elux/model!EluxComponent:interface"
             },
             {
               "kind": "Content",
@@ -3323,7 +2848,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!Facade:type",
+          "canonicalReference": "@elux/model!Facade:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3346,7 +2871,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -3364,7 +2889,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -3398,7 +2923,7 @@
             {
               "kind": "Reference",
               "text": "ModuleFacade",
-              "canonicalReference": "@elux/react-taro!ModuleFacade:type"
+              "canonicalReference": "@elux/model!ModuleFacade:type"
             },
             {
               "kind": "Content",
@@ -3407,7 +2932,7 @@
             {
               "kind": "Reference",
               "text": "GetPromiseModule",
-              "canonicalReference": "@elux/react-taro!GetPromiseModule:type"
+              "canonicalReference": "@elux/model!GetPromiseModule:type"
             },
             {
               "kind": "Content",
@@ -3449,7 +2974,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!getApi:function(1)",
+          "canonicalReference": "@elux/model!getApi:function(1)",
           "docComment": "/**\n * 获取应用全局方法\n *\n * @remarks\n *\n * 通常不需要参数，仅在兼容不支持Proxy的环境中需要传参\n *\n * @param demoteForProductionOnly - 用于不支持Proxy的运行环境\n *\n * @param injectActions - 用于不支持Proxy的运行环境\n *\n * @returns 返回包含多个全局方法的结构体：\n *\n * - `LoadComponent`：用于加载其它模块导出的{@link exportView | UI组件}，参见 {@link ILoadComponent}。\n *\n * - `GetComponent`：用于获取其它模块导出的{@link exportView | UI组件}，参见 {@link IGetComponent}。\n *\n * - `GetData`：用于获取其它模块导出的{@link exportModule | Data}，参见 {@link IGetData}。\n *\n * - `Modules`：用于获取所有模块的对外接口，参见 {@link ModuleFacade}，例如：\n * ```js\n *   dispatch(Modules.article.actions.refresh())\n * ```\n *\n * - `GetActions`：当需要 dispatch 多个 module 的 action 时，例如：\n * ```js\n *   dispatch(Modules.a.actions.a1())\n *   dispatch(Modules.b.actions.b1())\n * ```\n *\n * 这种写法可以简化为：\n * ```js\n *   const {a, b} = GetActions('a', 'b')\n *   dispatch(a.a1())\n *   dispatch(b.b1())\n * ```\n *\n * - `GetClientRouter`：在CSR（`客户端渲染`）环境中用于获取全局Router。\n *\n * - `useRouter`：用于在 UI Render 中获取当前 Router，在CSR（`客户端渲染`）中其值等于`GetClientRouter()`，例如：\n * ```js\n *   const globalRouter = GetClientRouter()\n *   const currentRouter = useRouter()\n *   console.log(blobalRouter===currentRouter)\n * ```\n *\n * - `useStore`：用于在 UI Render 中获取当前 Store，例如：\n * ```js\n *   const store = useStore()\n *   store.dispatch(Modules.article.actions.refresh())\n * ```\n *\n * @example\n * ```js\n * const {Modules, LoadComponent, GetComponent, GetData, GetActions, GetClientRouter, useStore, useRouter} = getApi<API>();\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3497,7 +3022,7 @@
             {
               "kind": "Reference",
               "text": "IRouter",
-              "canonicalReference": "@elux/react-taro!IRouter:interface"
+              "canonicalReference": "@elux/model!IRouter:interface"
             },
             {
               "kind": "Content",
@@ -3506,7 +3031,7 @@
             {
               "kind": "Reference",
               "text": "IRouter",
-              "canonicalReference": "@elux/react-taro!IRouter:interface"
+              "canonicalReference": "@elux/model!IRouter:interface"
             },
             {
               "kind": "Content",
@@ -3515,7 +3040,7 @@
             {
               "kind": "Reference",
               "text": "VStore",
-              "canonicalReference": "@elux/react-taro!VStore:interface"
+              "canonicalReference": "@elux/model!VStore:interface"
             },
             {
               "kind": "Content",
@@ -3565,7 +3090,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!GetPromiseComponent:type",
+          "canonicalReference": "@elux/model!GetPromiseComponent:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3612,7 +3137,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!GetPromiseModule:type",
+          "canonicalReference": "@elux/model!GetPromiseModule:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3658,64 +3183,8 @@
           }
         },
         {
-          "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!GetProps:type",
-          "docComment": "/**\n * 用于{@link connectStore}\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare type GetProps<C> = "
-            },
-            {
-              "kind": "Content",
-              "text": "C extends "
-            },
-            {
-              "kind": "Reference",
-              "text": "FunctionComponent",
-              "canonicalReference": "@types/react!~React.FunctionComponent:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<infer P> ? P : C extends "
-            },
-            {
-              "kind": "Reference",
-              "text": "ComponentClass",
-              "canonicalReference": "@types/react!~React.ComponentClass:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<infer P> ? P : never"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "GetProps",
-          "typeParameters": [
-            {
-              "typeParameterName": "C",
-              "constraintTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              },
-              "defaultTypeTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              }
-            }
-          ],
-          "typeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 6
-          }
-        },
-        {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!GetState:interface",
+          "canonicalReference": "@elux/model!GetState:interface",
           "docComment": "/**\n * 获取全局状态\n *\n * @param moduleName - 如果指明moduleName则返回该模块的ModuleState，否则返回全局StoreState\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3725,7 +3194,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -3738,7 +3207,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -3763,7 +3232,7 @@
           "members": [
             {
               "kind": "CallSignature",
-              "canonicalReference": "@elux/react-taro!GetState:call(1)",
+              "canonicalReference": "@elux/model!GetState:call(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -3789,7 +3258,7 @@
             },
             {
               "kind": "CallSignature",
-              "canonicalReference": "@elux/react-taro!GetState:call(2)",
+              "canonicalReference": "@elux/model!GetState:call(2)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -3855,7 +3324,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!getTplInSSR:function(1)",
+          "canonicalReference": "@elux/model!getTplInSSR:function(1)",
           "docComment": "/**\n * 获取SSR页面模版\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3882,7 +3351,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!HandlerToAction:type",
+          "canonicalReference": "@elux/model!HandlerToAction:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3920,7 +3389,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!IGetComponent:type",
+          "canonicalReference": "@elux/model!IGetComponent:type",
           "docComment": "/**\n * 获取指定模块的UI组件\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于获取其它模块导出的{@link exportView | UI组件}，例如：\n * ```js\n *   const Article = GetComponent('article', 'main')\n * ```\n *\n * 不同于{@link ILoadComponent}，该方法仅获取组建，并不Render它\n *\n * @param moduleName - 组件所属模块名\n *\n * @param componentName - 组件导出名，参见{@link exportModule}\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3930,7 +3399,7 @@
             {
               "kind": "Reference",
               "text": "Facade",
-              "canonicalReference": "@elux/react-taro!Facade:type"
+              "canonicalReference": "@elux/model!Facade:type"
             },
             {
               "kind": "Content",
@@ -3988,7 +3457,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!IGetData:type",
+          "canonicalReference": "@elux/model!IGetData:type",
           "docComment": "/**\n * 获取指定模块导出的Data\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于获取其它模块导出的{@link exportModule | Data}，例如：\n * ```js\n *   const ArticleData = GetData('article')\n * ```\n *\n * @param moduleName - 组件所属模块名\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -3998,7 +3467,7 @@
             {
               "kind": "Reference",
               "text": "Facade",
-              "canonicalReference": "@elux/react-taro!Facade:type"
+              "canonicalReference": "@elux/model!Facade:type"
             },
             {
               "kind": "Content",
@@ -4056,7 +3525,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ILoadComponent:type",
+          "canonicalReference": "@elux/model!ILoadComponent:type",
           "docComment": "/**\n * 加载指定模块的UI组件\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于加载其它模块导出的{@link exportView | UI组件}，相比直接 `import`，使用此方法加载组件不仅可以`按需加载`， 还可以自动初始化其所属 Model（仅当加载组件为view时），例如：\n * ```js\n *   const Article = LoadComponent('article', 'main')\n * ```\n *\n * @param moduleName - 组件所属模块名\n *\n * @param componentName - 组件导出名，参见{@link exportModule}\n *\n * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 UserConfig 中的设置\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -4066,7 +3535,7 @@
             {
               "kind": "Reference",
               "text": "Facade",
-              "canonicalReference": "@elux/react-taro!Facade:type"
+              "canonicalReference": "@elux/model!Facade:type"
             },
             {
               "kind": "Content",
@@ -4132,82 +3601,8 @@
           }
         },
         {
-          "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!InferableComponentEnhancerWithProps:type",
-          "docComment": "/**\n * 用于{@link connectStore}\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare type InferableComponentEnhancerWithProps<TInjectedProps> = "
-            },
-            {
-              "kind": "Content",
-              "text": "<C>(component: C) => "
-            },
-            {
-              "kind": "Reference",
-              "text": "EluxComponent",
-              "canonicalReference": "@elux/react-taro!EluxComponent:interface"
-            },
-            {
-              "kind": "Content",
-              "text": " & "
-            },
-            {
-              "kind": "Reference",
-              "text": "ComponentType",
-              "canonicalReference": "@types/react!~React.ComponentType:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "Omit",
-              "canonicalReference": "!Omit:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "GetProps",
-              "canonicalReference": "@elux/react-taro!GetProps:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<C>, keyof TInjectedProps>>"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "InferableComponentEnhancerWithProps",
-          "typeParameters": [
-            {
-              "typeParameterName": "TInjectedProps",
-              "constraintTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              },
-              "defaultTypeTokenRange": {
-                "startIndex": 0,
-                "endIndex": 0
-              }
-            }
-          ],
-          "typeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 10
-          }
-        },
-        {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!injectModule:function(1)",
+          "canonicalReference": "@elux/model!injectModule:function(1)",
           "docComment": "/**\n * 动态注册Module\n *\n * @remarks\n *\n * 常于小程序分包加载\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -4217,7 +3612,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -4251,7 +3646,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!injectModule:function(2)",
+          "canonicalReference": "@elux/model!injectModule:function(2)",
           "docComment": "/**\n * 动态注册module\n *\n * @remarks\n *\n * 常于小程序分包加载\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -4273,7 +3668,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -4291,7 +3686,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -4336,7 +3731,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!IRouter:interface",
+          "canonicalReference": "@elux/model!IRouter:interface",
           "docComment": "/**\n * 路由器的定义\n *\n * @remarks\n *\n * - 在 CSR 中全局只有一个 Router\n *\n * - 在 SSR 中每个客户请求都会生成一个Router\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -4346,7 +3741,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -4359,7 +3754,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -4384,7 +3779,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouter#action:member",
+              "canonicalReference": "@elux/model!IRouter#action:member",
               "docComment": "/**\n * 当前路由动作\n */\n",
               "excerptTokens": [
                 {
@@ -4394,7 +3789,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteAction",
-                  "canonicalReference": "@elux/react-taro!RouteAction:type"
+                  "canonicalReference": "@elux/model!RouteAction:type"
                 },
                 {
                   "kind": "Content",
@@ -4411,7 +3806,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#addListener:member(1)",
+              "canonicalReference": "@elux/model!IRouter#addListener:member(1)",
               "docComment": "/**\n * 监听路由事件\n */\n",
               "excerptTokens": [
                 {
@@ -4425,7 +3820,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteEvent",
-                  "canonicalReference": "@elux/react-taro!RouteEvent:interface"
+                  "canonicalReference": "@elux/model!RouteEvent:interface"
                 },
                 {
                   "kind": "Content",
@@ -4447,7 +3842,7 @@
                 {
                   "kind": "Reference",
                   "text": "UNListener",
-                  "canonicalReference": "@elux/react-taro!UNListener:type"
+                  "canonicalReference": "@elux/model!UNListener:type"
                 },
                 {
                   "kind": "Content",
@@ -4474,7 +3869,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#back:member(1)",
+              "canonicalReference": "@elux/model!IRouter#back:member(1)",
               "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由\n */\n",
               "excerptTokens": [
                 {
@@ -4488,7 +3883,7 @@
                 {
                   "kind": "Reference",
                   "text": "IRouteRecord",
-                  "canonicalReference": "@elux/react-taro!IRouteRecord:interface"
+                  "canonicalReference": "@elux/model!IRouteRecord:interface"
                 },
                 {
                   "kind": "Content",
@@ -4501,7 +3896,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
+                  "canonicalReference": "@elux/model!RouteTarget:type"
                 },
                 {
                   "kind": "Content",
@@ -4582,7 +3977,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#computeUrl:member(1)",
+              "canonicalReference": "@elux/model!IRouter#computeUrl:member(1)",
               "docComment": "/**\n * 根据部分信息计算完整Url\n */\n",
               "excerptTokens": [
                 {
@@ -4601,7 +3996,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -4614,7 +4009,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteAction",
-                  "canonicalReference": "@elux/react-taro!RouteAction:type"
+                  "canonicalReference": "@elux/model!RouteAction:type"
                 },
                 {
                   "kind": "Content",
@@ -4623,7 +4018,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
+                  "canonicalReference": "@elux/model!RouteTarget:type"
                 },
                 {
                   "kind": "Content",
@@ -4672,7 +4067,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#findRecordByKey:member(1)",
+              "canonicalReference": "@elux/model!IRouter#findRecordByKey:member(1)",
               "docComment": "/**\n * 用`唯一key`来查找历史记录，如果没找到则返回 `{overflow: true}`\n */\n",
               "excerptTokens": [
                 {
@@ -4694,7 +4089,7 @@
                 {
                   "kind": "Reference",
                   "text": "IRouteRecord",
-                  "canonicalReference": "@elux/react-taro!IRouteRecord:interface"
+                  "canonicalReference": "@elux/model!IRouteRecord:interface"
                 },
                 {
                   "kind": "Content",
@@ -4725,7 +4120,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#findRecordByStep:member(1)",
+              "canonicalReference": "@elux/model!IRouter#findRecordByStep:member(1)",
               "docComment": "/**\n * 用`回退步数`来查找历史记录，如果步数溢出则返回 `{overflow: true}`\n */\n",
               "excerptTokens": [
                 {
@@ -4755,7 +4150,7 @@
                 {
                   "kind": "Reference",
                   "text": "IRouteRecord",
-                  "canonicalReference": "@elux/react-taro!IRouteRecord:interface"
+                  "canonicalReference": "@elux/model!IRouteRecord:interface"
                 },
                 {
                   "kind": "Content",
@@ -4793,7 +4188,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#getActivePage:member(1)",
+              "canonicalReference": "@elux/model!IRouter#getActivePage:member(1)",
               "docComment": "/**\n * 获取当前被激活显示的页面\n */\n",
               "excerptTokens": [
                 {
@@ -4807,7 +4202,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -4816,7 +4211,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -4839,7 +4234,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#getCurrentPages:member(1)",
+              "canonicalReference": "@elux/model!IRouter#getCurrentPages:member(1)",
               "docComment": "/**\n * 获取当前所有CurrentPage(PageHistoryStack中的第一条)\n */\n",
               "excerptTokens": [
                 {
@@ -4853,7 +4248,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -4862,7 +4257,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -4885,7 +4280,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#getDocumentHead:member(1)",
+              "canonicalReference": "@elux/model!IRouter#getDocumentHead:member(1)",
               "docComment": "/**\n * 获取当前页面的DocumentHead\n */\n",
               "excerptTokens": [
                 {
@@ -4913,7 +4308,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#getHistory:member(1)",
+              "canonicalReference": "@elux/model!IRouter#getHistory:member(1)",
               "docComment": "/**\n * 获取指定历史栈中的记录\n */\n",
               "excerptTokens": [
                 {
@@ -4923,7 +4318,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
+                  "canonicalReference": "@elux/model!RouteTarget:type"
                 },
                 {
                   "kind": "Content",
@@ -4932,7 +4327,7 @@
                 {
                   "kind": "Reference",
                   "text": "IRouteRecord",
-                  "canonicalReference": "@elux/react-taro!IRouteRecord:interface"
+                  "canonicalReference": "@elux/model!IRouteRecord:interface"
                 },
                 {
                   "kind": "Content",
@@ -4963,7 +4358,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#getHistoryLength:member(1)",
+              "canonicalReference": "@elux/model!IRouter#getHistoryLength:member(1)",
               "docComment": "/**\n * 获取指定历史栈的长度\n */\n",
               "excerptTokens": [
                 {
@@ -4973,7 +4368,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
+                  "canonicalReference": "@elux/model!RouteTarget:type"
                 },
                 {
                   "kind": "Content",
@@ -5008,7 +4403,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#init:member(1)",
+              "canonicalReference": "@elux/model!IRouter#init:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -5018,7 +4413,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouterInitOptions",
-                  "canonicalReference": "@elux/react-taro!RouterInitOptions:interface"
+                  "canonicalReference": "@elux/model!RouterInitOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -5073,7 +4468,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouter#initOptions:member",
+              "canonicalReference": "@elux/model!IRouter#initOptions:member",
               "docComment": "/**\n * 路由初始化时的参数，通常用于SSR时传递原生的Request和Response对象\n */\n",
               "excerptTokens": [
                 {
@@ -5083,7 +4478,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouterInitOptions",
-                  "canonicalReference": "@elux/react-taro!RouterInitOptions:interface"
+                  "canonicalReference": "@elux/model!RouterInitOptions:interface"
                 },
                 {
                   "kind": "Content",
@@ -5100,7 +4495,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouter#location:member",
+              "canonicalReference": "@elux/model!IRouter#location:member",
               "docComment": "/**\n * 当前路由信息\n */\n",
               "excerptTokens": [
                 {
@@ -5110,7 +4505,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -5127,7 +4522,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#push:member(1)",
+              "canonicalReference": "@elux/model!IRouter#push:member(1)",
               "docComment": "/**\n * 在指定栈中新增一条历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
@@ -5146,7 +4541,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -5159,7 +4554,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
+                  "canonicalReference": "@elux/model!RouteTarget:type"
                 },
                 {
                   "kind": "Content",
@@ -5225,7 +4620,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#relaunch:member(1)",
+              "canonicalReference": "@elux/model!IRouter#relaunch:member(1)",
               "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
@@ -5244,7 +4639,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -5257,7 +4652,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
+                  "canonicalReference": "@elux/model!RouteTarget:type"
                 },
                 {
                   "kind": "Content",
@@ -5323,7 +4718,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#replace:member(1)",
+              "canonicalReference": "@elux/model!IRouter#replace:member(1)",
               "docComment": "/**\n * 在指定栈中替换当前历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
               "excerptTokens": [
                 {
@@ -5342,7 +4737,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -5355,7 +4750,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
+                  "canonicalReference": "@elux/model!RouteTarget:type"
                 },
                 {
                   "kind": "Content",
@@ -5421,7 +4816,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouter#routeKey:member",
+              "canonicalReference": "@elux/model!IRouter#routeKey:member",
               "docComment": "/**\n * 当前路由的唯一ID\n */\n",
               "excerptTokens": [
                 {
@@ -5447,7 +4842,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouter#runtime:member",
+              "canonicalReference": "@elux/model!IRouter#runtime:member",
               "docComment": "/**\n * 当前路由的相关运行信息\n */\n",
               "excerptTokens": [
                 {
@@ -5457,7 +4852,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteRuntime",
-                  "canonicalReference": "@elux/react-taro!RouteRuntime:interface"
+                  "canonicalReference": "@elux/model!RouteRuntime:interface"
                 },
                 {
                   "kind": "Content",
@@ -5478,7 +4873,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IRouter#setDocumentHead:member(1)",
+              "canonicalReference": "@elux/model!IRouter#setDocumentHead:member(1)",
               "docComment": "/**\n * 设置当前页面的DocumentHead\n */\n",
               "excerptTokens": [
                 {
@@ -5525,7 +4920,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!IRouteRecord:interface",
+          "canonicalReference": "@elux/model!IRouteRecord:interface",
           "docComment": "/**\n * 路由历史记录\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.findRecordByKey}、{@link IRouter.findRecordByStep} 获得\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -5538,7 +4933,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouteRecord#key:member",
+              "canonicalReference": "@elux/model!IRouteRecord#key:member",
               "docComment": "/**\n * 唯一的key\n */\n",
               "excerptTokens": [
                 {
@@ -5564,7 +4959,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouteRecord#location:member",
+              "canonicalReference": "@elux/model!IRouteRecord#location:member",
               "docComment": "/**\n * 路由描述\n */\n",
               "excerptTokens": [
                 {
@@ -5574,7 +4969,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -5591,7 +4986,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IRouteRecord#title:member",
+              "canonicalReference": "@elux/model!IRouteRecord#title:member",
               "docComment": "/**\n * 页面标题\n */\n",
               "excerptTokens": [
                 {
@@ -5620,7 +5015,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!isMutable:function(1)",
+          "canonicalReference": "@elux/model!isMutable:function(1)",
           "docComment": "/**\n * 当前State模式是否为Mutable\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -5647,7 +5042,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!isServer:function(1)",
+          "canonicalReference": "@elux/model!isServer:function(1)",
           "docComment": "/**\n * 当前是否是Server运行环境\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -5674,7 +5069,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!IStore:interface",
+          "canonicalReference": "@elux/model!IStore:interface",
           "docComment": "/**\n * Store实例\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -5684,7 +5079,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -5697,7 +5092,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -5722,7 +5117,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IStore#active:member",
+              "canonicalReference": "@elux/model!IStore#active:member",
               "docComment": "/**\n * 当前是否是激活状态\n *\n * @remarks\n *\n * 同一时刻只会有一个store被激活\n */\n",
               "excerptTokens": [
                 {
@@ -5748,7 +5143,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IStore#destroy:member(1)",
+              "canonicalReference": "@elux/model!IStore#destroy:member(1)",
               "docComment": "/**\n * 销毁（框架会自动调用）\n */\n",
               "excerptTokens": [
                 {
@@ -5776,7 +5171,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IStore#dispatch:member",
+              "canonicalReference": "@elux/model!IStore#dispatch:member",
               "docComment": "/**\n * 派发action\n */\n",
               "excerptTokens": [
                 {
@@ -5786,7 +5181,7 @@
                 {
                   "kind": "Reference",
                   "text": "Dispatch",
-                  "canonicalReference": "@elux/react-taro!Dispatch:type"
+                  "canonicalReference": "@elux/model!Dispatch:type"
                 },
                 {
                   "kind": "Content",
@@ -5803,7 +5198,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IStore#getState:member",
+              "canonicalReference": "@elux/model!IStore#getState:member",
               "docComment": "/**\n * 获取store的状态\n *\n * @remarks\n *\n * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中\n */\n",
               "excerptTokens": [
                 {
@@ -5813,7 +5208,7 @@
                 {
                   "kind": "Reference",
                   "text": "GetState",
-                  "canonicalReference": "@elux/react-taro!GetState:interface"
+                  "canonicalReference": "@elux/model!GetState:interface"
                 },
                 {
                   "kind": "Content",
@@ -5834,7 +5229,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IStore#getUncommittedState:member(1)",
+              "canonicalReference": "@elux/model!IStore#getUncommittedState:member(1)",
               "docComment": "/**\n * 获取暂时未提交到store的状态\n *\n * @remarks\n *\n * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中\n */\n",
               "excerptTokens": [
                 {
@@ -5862,7 +5257,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!IStore#mount:member(1)",
+              "canonicalReference": "@elux/model!IStore#mount:member(1)",
               "docComment": "/**\n * 在该store中挂载指定的model\n *\n * @remarks\n *\n * 该方法会触发model.onMount(env)钩子\n */\n",
               "excerptTokens": [
                 {
@@ -5930,7 +5325,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IStore#router:member",
+              "canonicalReference": "@elux/model!IStore#router:member",
               "docComment": "/**\n * 所属router\n *\n * @remarks\n *\n * router和store是一对多的关系\n */\n",
               "excerptTokens": [
                 {
@@ -5940,7 +5335,7 @@
                 {
                   "kind": "Reference",
                   "text": "IRouter",
-                  "canonicalReference": "@elux/react-taro!IRouter:interface"
+                  "canonicalReference": "@elux/model!IRouter:interface"
                 },
                 {
                   "kind": "Content",
@@ -5961,7 +5356,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IStore#sid:member",
+              "canonicalReference": "@elux/model!IStore#sid:member",
               "docComment": "/**\n * 实例ID\n */\n",
               "excerptTokens": [
                 {
@@ -5987,7 +5382,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IStore#state:member",
+              "canonicalReference": "@elux/model!IStore#state:member",
               "docComment": "/**\n * 当前的Store状态\n */\n",
               "excerptTokens": [
                 {
@@ -6013,7 +5408,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!IStore#uid:member",
+              "canonicalReference": "@elux/model!IStore#uid:member",
               "docComment": "/**\n * ForkID\n */\n",
               "excerptTokens": [
                 {
@@ -6041,351 +5436,8 @@
           "extendsTokenRanges": []
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!Link:var",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 参见：{@link LinkProps}\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "Link: "
-            },
-            {
-              "kind": "Reference",
-              "text": "FC",
-              "canonicalReference": "@types/react!~React.FC:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "LinkProps",
-              "canonicalReference": "@elux/react-taro!LinkProps:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ">"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "Link",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 5
-          }
-        },
-        {
-          "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!LinkProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 类似于Html标签`<a>`，用组件的方式执行路由跳转，参见 {@link IRouter}\n *\n * @example\n * ```html\n * <Link disabled={pagename==='/home'} to='/home' action='push' target='window'>home</Link>\n * ```\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export interface LinkProps extends "
-            },
-            {
-              "kind": "Reference",
-              "text": "HTMLAttributes",
-              "canonicalReference": "@types/react!~React.HTMLAttributes:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "HTMLDivElement",
-              "canonicalReference": "!HTMLDivElement:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "> "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "LinkProps",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#action:member",
-              "docComment": "/**\n * 路由跳转动作\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "action: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Exclude",
-                  "canonicalReference": "!Exclude:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "RouteAction",
-                  "canonicalReference": "@elux/react-taro!RouteAction:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ", 'init'>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "action",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 5
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#cname:member",
-              "docComment": "/**\n * 指定路由窗口的class\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "cname?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "cname",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#disabled:member",
-              "docComment": "/**\n * 如果disabled将不执行路由及onClick事件\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "disabled?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "disabled",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#onClick:member(1)",
-              "docComment": "/**\n * 点击事件\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "onClick?(event: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "MouseEvent",
-                  "canonicalReference": "@types/react!~React.MouseEvent:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [
-                {
-                  "parameterName": "event",
-                  "parameterTypeTokenRange": {
-                    "startIndex": 1,
-                    "endIndex": 2
-                  }
-                }
-              ],
-              "name": "onClick"
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#overflowRedirect:member",
-              "docComment": "/**\n * 路由后退时如果溢出，将重定向到此Url\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "overflowRedirect?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "overflowRedirect",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#refresh:member",
-              "docComment": "/**\n * 是否强制刷新dom，默认false\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "refresh?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "refresh",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#target:member",
-              "docComment": "/**\n * 指定要操作的历史栈\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "target: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "RouteTarget",
-                  "canonicalReference": "@elux/react-taro!RouteTarget:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "target",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!LinkProps#to:member",
-              "docComment": "/**\n * 指定跳转的url或后退步数\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "to: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "number | string | ((record: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "IRouteRecord",
-                  "canonicalReference": "@elux/react-taro!IRouteRecord:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ") => boolean) | "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Partial",
-                  "canonicalReference": "!Partial:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "to",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 8
-              }
-            }
-          ],
-          "extendsTokenRanges": [
-            {
-              "startIndex": 1,
-              "endIndex": 5
-            }
-          ]
-        },
-        {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!LoadingState:type",
+          "canonicalReference": "@elux/model!LoadingState:type",
           "docComment": "/**\n * Loading状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6410,7 +5462,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!Location:interface",
+          "canonicalReference": "@elux/model!Location:interface",
           "docComment": "/**\n * 路由信息\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6423,7 +5475,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#classname:member",
+              "canonicalReference": "@elux/model!Location#classname:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6449,7 +5501,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#hash:member",
+              "canonicalReference": "@elux/model!Location#hash:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6475,7 +5527,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#hashQuery:member",
+              "canonicalReference": "@elux/model!Location#hashQuery:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6501,7 +5553,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#pathname:member",
+              "canonicalReference": "@elux/model!Location#pathname:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6527,7 +5579,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#search:member",
+              "canonicalReference": "@elux/model!Location#search:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6553,7 +5605,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#searchQuery:member",
+              "canonicalReference": "@elux/model!Location#searchQuery:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6579,7 +5631,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#state:member",
+              "canonicalReference": "@elux/model!Location#state:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6605,7 +5657,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!Location#url:member",
+              "canonicalReference": "@elux/model!Location#url:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -6634,7 +5686,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!locationToNativeLocation:function(1)",
+          "canonicalReference": "@elux/model!locationToNativeLocation:function(1)",
           "docComment": "/**\n * 内部路由Location转换为原生路由Location\n *\n * @remarks\n *\n * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。\n *\n * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6644,7 +5696,7 @@
             {
               "kind": "Reference",
               "text": "Location",
-              "canonicalReference": "@elux/react-taro!Location:interface"
+              "canonicalReference": "@elux/model!Location:interface"
             },
             {
               "kind": "Content",
@@ -6653,7 +5705,7 @@
             {
               "kind": "Reference",
               "text": "Location",
-              "canonicalReference": "@elux/react-taro!Location:interface"
+              "canonicalReference": "@elux/model!Location:interface"
             },
             {
               "kind": "Content",
@@ -6679,7 +5731,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!locationToUrl:function(1)",
+          "canonicalReference": "@elux/model!locationToUrl:function(1)",
           "docComment": "/**\n * Location转换为Url\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6698,7 +5750,7 @@
             {
               "kind": "Reference",
               "text": "Location",
-              "canonicalReference": "@elux/react-taro!Location:interface"
+              "canonicalReference": "@elux/model!Location:interface"
             },
             {
               "kind": "Content",
@@ -6751,7 +5803,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ModelAsCreators:type",
+          "canonicalReference": "@elux/model!ModelAsCreators:type",
           "docComment": "/**\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6765,7 +5817,7 @@
             {
               "kind": "Reference",
               "text": "ActionCreator",
-              "canonicalReference": "@elux/react-taro!ActionCreator:type"
+              "canonicalReference": "@elux/model!ActionCreator:type"
             },
             {
               "kind": "Content",
@@ -6785,7 +5837,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!modelHotReplacement:function(1)",
+          "canonicalReference": "@elux/model!modelHotReplacement:function(1)",
           "docComment": "/**\n * model热更新\n *\n * @remarks\n *\n * 修改了Model时热更新，通常由脚手架自动调用\n *\n * @param moduleName - Model所属模块名称\n *\n * @param ModelClass - 新的Model\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6803,7 +5855,7 @@
             {
               "kind": "Reference",
               "text": "CommonModelClass",
-              "canonicalReference": "@elux/react-taro!CommonModelClass:interface"
+              "canonicalReference": "@elux/model!CommonModelClass:interface"
             },
             {
               "kind": "Content",
@@ -6844,7 +5896,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!moduleExists:function(1)",
+          "canonicalReference": "@elux/model!moduleExists:function(1)",
           "docComment": "/**\n * 模块是否存在\n *\n * @remarks\n *\n * 即ModuleGetter中是否有配置该模块的获取方式\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6887,7 +5939,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ModuleFacade:type",
+          "canonicalReference": "@elux/model!ModuleFacade:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6897,7 +5949,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -6934,7 +5986,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ModuleGetter:type",
+          "canonicalReference": "@elux/model!ModuleGetter:type",
           "docComment": "/**\n * 配置模块的获取方式\n *\n * @remarks\n *\n * 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`\n *\n * @example\n * ```js\n * import stage from '@/modules/stage';\n *\n * export const moduleGetter = {\n *   stage: () => stage,\n *   article: () => import('@/modules/article'),\n *   my: () => import('@/modules/my'),\n * };\n * ```\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -6948,7 +6000,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -6966,7 +6018,7 @@
             {
               "kind": "Reference",
               "text": "CommonModule",
-              "canonicalReference": "@elux/react-taro!CommonModule:interface"
+              "canonicalReference": "@elux/model!CommonModule:interface"
             },
             {
               "kind": "Content",
@@ -6986,7 +6038,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ModuleState:type",
+          "canonicalReference": "@elux/model!ModuleState:type",
           "docComment": "/**\n * 模块状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7011,7 +6063,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!nativeLocationToLocation:function(1)",
+          "canonicalReference": "@elux/model!nativeLocationToLocation:function(1)",
           "docComment": "/**\n * 原生路由Location转换为内部路由Location\n *\n * @remarks\n *\n * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。\n *\n * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7021,7 +6073,7 @@
             {
               "kind": "Reference",
               "text": "Location",
-              "canonicalReference": "@elux/react-taro!Location:interface"
+              "canonicalReference": "@elux/model!Location:interface"
             },
             {
               "kind": "Content",
@@ -7030,7 +6082,7 @@
             {
               "kind": "Reference",
               "text": "Location",
-              "canonicalReference": "@elux/react-taro!Location:interface"
+              "canonicalReference": "@elux/model!Location:interface"
             },
             {
               "kind": "Content",
@@ -7056,7 +6108,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!nativeUrlToUrl:function(1)",
+          "canonicalReference": "@elux/model!nativeUrlToUrl:function(1)",
           "docComment": "/**\n * 原生路由Url转换为内部路由Url\n *\n * @remarks\n *\n * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。\n *\n * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7098,66 +6150,8 @@
           "name": "nativeUrlToUrl"
         },
         {
-          "kind": "Function",
-          "canonicalReference": "@elux/react-taro!patchActions:function(1)",
-          "docComment": "/**\n * 用于兼容不支持Proxy的低版本浏览器\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare function patchActions(typeName: "
-            },
-            {
-              "kind": "Content",
-              "text": "string"
-            },
-            {
-              "kind": "Content",
-              "text": ", json?: "
-            },
-            {
-              "kind": "Content",
-              "text": "string"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Content",
-              "text": "void"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "returnTypeTokenRange": {
-            "startIndex": 5,
-            "endIndex": 6
-          },
-          "releaseTag": "Public",
-          "overloadIndex": 1,
-          "parameters": [
-            {
-              "parameterName": "typeName",
-              "parameterTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "parameterName": "json",
-              "parameterTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 4
-              }
-            }
-          ],
-          "name": "patchActions"
-        },
-        {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!PickModelActions:type",
+          "canonicalReference": "@elux/model!PickModelActions:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7176,7 +6170,7 @@
             {
               "kind": "Reference",
               "text": "HandlerToAction",
-              "canonicalReference": "@elux/react-taro!HandlerToAction:type"
+              "canonicalReference": "@elux/model!HandlerToAction:type"
             },
             {
               "kind": "Content",
@@ -7227,7 +6221,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!PickThisActions:type",
+          "canonicalReference": "@elux/model!PickThisActions:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7250,7 +6244,7 @@
             {
               "kind": "Reference",
               "text": "HandlerToAction",
-              "canonicalReference": "@elux/react-taro!HandlerToAction:type"
+              "canonicalReference": "@elux/model!HandlerToAction:type"
             },
             {
               "kind": "Content",
@@ -7283,7 +6277,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!reducer:function(1)",
+          "canonicalReference": "@elux/model!reducer:function(1)",
           "docComment": "/**\n * 申明reducer\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7357,7 +6351,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!RenderOptions:interface",
+          "canonicalReference": "@elux/model!RenderOptions:interface",
           "docComment": "/**\n * 创建应用时Render参数\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7370,7 +6364,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RenderOptions#id:member",
+              "canonicalReference": "@elux/model!RenderOptions#id:member",
               "docComment": "/**\n * 挂载应用Dom的id\n *\n * @remarks\n *\n * 默认: `root`\n *\n * @defaultValue\n *\n * `root`\n */\n",
               "excerptTokens": [
                 {
@@ -7399,7 +6393,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!ReturnComponents:type",
+          "canonicalReference": "@elux/model!ReturnComponents:type",
           "docComment": "/**\n * *\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7418,7 +6412,7 @@
             {
               "kind": "Reference",
               "text": "EluxComponent",
-              "canonicalReference": "@elux/react-taro!EluxComponent:interface"
+              "canonicalReference": "@elux/model!EluxComponent:interface"
             },
             {
               "kind": "Content",
@@ -7427,7 +6421,7 @@
             {
               "kind": "Reference",
               "text": "AsyncEluxComponent",
-              "canonicalReference": "@elux/react-taro!AsyncEluxComponent:type"
+              "canonicalReference": "@elux/model!AsyncEluxComponent:type"
             },
             {
               "kind": "Content",
@@ -7444,7 +6438,7 @@
             {
               "kind": "Reference",
               "text": "GetPromiseComponent",
-              "canonicalReference": "@elux/react-taro!GetPromiseComponent:type"
+              "canonicalReference": "@elux/model!GetPromiseComponent:type"
             },
             {
               "kind": "Content",
@@ -7477,7 +6471,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!RouteAction:type",
+          "canonicalReference": "@elux/model!RouteAction:type",
           "docComment": "/**\n * 路由动作类别\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7502,7 +6496,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!RouteEvent:interface",
+          "canonicalReference": "@elux/model!RouteEvent:interface",
           "docComment": "/**\n * 路由事件\n *\n * @remarks\n *\n * 发生路由时，路由器本身会派发路由事件\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7515,7 +6509,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteEvent#action:member",
+              "canonicalReference": "@elux/model!RouteEvent#action:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -7525,7 +6519,7 @@
                 {
                   "kind": "Reference",
                   "text": "RouteAction",
-                  "canonicalReference": "@elux/react-taro!RouteAction:type"
+                  "canonicalReference": "@elux/model!RouteAction:type"
                 },
                 {
                   "kind": "Content",
@@ -7542,7 +6536,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteEvent#location:member",
+              "canonicalReference": "@elux/model!RouteEvent#location:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -7552,7 +6546,7 @@
                 {
                   "kind": "Reference",
                   "text": "Location",
-                  "canonicalReference": "@elux/react-taro!Location:interface"
+                  "canonicalReference": "@elux/model!Location:interface"
                 },
                 {
                   "kind": "Content",
@@ -7569,7 +6563,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteEvent#newStore:member",
+              "canonicalReference": "@elux/model!RouteEvent#newStore:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -7579,7 +6573,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -7596,7 +6590,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteEvent#prevStore:member",
+              "canonicalReference": "@elux/model!RouteEvent#prevStore:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -7606,7 +6600,7 @@
                 {
                   "kind": "Reference",
                   "text": "IStore",
-                  "canonicalReference": "@elux/react-taro!IStore:interface"
+                  "canonicalReference": "@elux/model!IStore:interface"
                 },
                 {
                   "kind": "Content",
@@ -7623,7 +6617,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteEvent#windowChanged:member",
+              "canonicalReference": "@elux/model!RouteEvent#windowChanged:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -7652,7 +6646,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!RouterInitOptions:interface",
+          "canonicalReference": "@elux/model!RouterInitOptions:interface",
           "docComment": "/**\n * 路由初始化时参数\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.initOptions} 获得，通常用于SSR时传递原生的Request和Response对象\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7665,7 +6659,7 @@
           "members": [
             {
               "kind": "IndexSignature",
-              "canonicalReference": "@elux/react-taro!RouterInitOptions:index(1)",
+              "canonicalReference": "@elux/model!RouterInitOptions:index(1)",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -7707,7 +6701,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouterInitOptions#url:member",
+              "canonicalReference": "@elux/model!RouterInitOptions#url:member",
               "docComment": "",
               "excerptTokens": [
                 {
@@ -7736,7 +6730,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!RouteRuntime:interface",
+          "canonicalReference": "@elux/model!RouteRuntime:interface",
           "docComment": "/**\n * 本次路由前后的某些信息\n *\n * @remarks\n *\n * 可以通过 {@link IRouter.runtime} 获得\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7746,7 +6740,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -7759,7 +6753,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -7784,7 +6778,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteRuntime#completed:member",
+              "canonicalReference": "@elux/model!RouteRuntime#completed:member",
               "docComment": "/**\n * 路由跳转是否已经完成\n */\n",
               "excerptTokens": [
                 {
@@ -7810,7 +6804,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteRuntime#prevState:member",
+              "canonicalReference": "@elux/model!RouteRuntime#prevState:member",
               "docComment": "/**\n * 路由跳转前的store状态\n */\n",
               "excerptTokens": [
                 {
@@ -7836,7 +6830,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!RouteRuntime#timestamp:member",
+              "canonicalReference": "@elux/model!RouteRuntime#timestamp:member",
               "docComment": "/**\n * 路由发生的时间戳\n */\n",
               "excerptTokens": [
                 {
@@ -7865,7 +6859,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!RouteTarget:type",
+          "canonicalReference": "@elux/model!RouteTarget:type",
           "docComment": "/**\n * 路由历史栈类别\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7890,52 +6884,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!setConfig:function(1)",
-          "docComment": "/**\n * 全局参数设置\n *\n * @remarks\n *\n * - UserConfig：{@link UserConfig | UserConfig}\n *\n * @param conf - 全局参数\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export declare function setConfig(conf: "
-            },
-            {
-              "kind": "Reference",
-              "text": "UserConfig",
-              "canonicalReference": "@elux/react-taro!UserConfig:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Reference",
-              "text": "AppConfig",
-              "canonicalReference": "@elux/react-taro!AppConfig:type"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "returnTypeTokenRange": {
-            "startIndex": 3,
-            "endIndex": 4
-          },
-          "releaseTag": "Public",
-          "overloadIndex": 1,
-          "parameters": [
-            {
-              "parameterName": "conf",
-              "parameterTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "name": "setConfig"
-        },
-        {
-          "kind": "Function",
-          "canonicalReference": "@elux/react-taro!setLoading:function(1)",
+          "canonicalReference": "@elux/model!setLoading:function(1)",
           "docComment": "/**\n * 将{@link LoadingState | LoadingState}注入指定ModuleState\n *\n * @param item - 要跟踪的异步任务，必须是一个Promise\n *\n * @param store - 指明注入哪一个Store中\n *\n * @returns 返回跟踪的异步任务\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -7966,7 +6915,7 @@
             {
               "kind": "Reference",
               "text": "IStore",
-              "canonicalReference": "@elux/react-taro!IStore:interface"
+              "canonicalReference": "@elux/model!IStore:interface"
             },
             {
               "kind": "Content",
@@ -8050,7 +6999,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!StoreLogger:type",
+          "canonicalReference": "@elux/model!StoreLogger:type",
           "docComment": "/**\n * Store的日志记录器\n *\n * @remarks\n *\n * Store派发Action都会调用该回调方法\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8064,7 +7013,7 @@
             {
               "kind": "Reference",
               "text": "StoreLoggerInfo",
-              "canonicalReference": "@elux/react-taro!StoreLoggerInfo:type"
+              "canonicalReference": "@elux/model!StoreLoggerInfo:type"
             },
             {
               "kind": "Content",
@@ -8084,7 +7033,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!StoreLoggerInfo:type",
+          "canonicalReference": "@elux/model!StoreLoggerInfo:type",
           "docComment": "/**\n * 派发Action的日志信息\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8109,7 +7058,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!StoreMiddleware:type",
+          "canonicalReference": "@elux/model!StoreMiddleware:type",
           "docComment": "/**\n * Store的中间件\n *\n * @remarks\n *\n * 类似于 Redux 的 Middleware\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8123,7 +7072,7 @@
             {
               "kind": "Reference",
               "text": "IStore",
-              "canonicalReference": "@elux/react-taro!IStore:interface"
+              "canonicalReference": "@elux/model!IStore:interface"
             },
             {
               "kind": "Content",
@@ -8132,7 +7081,7 @@
             {
               "kind": "Reference",
               "text": "Dispatch",
-              "canonicalReference": "@elux/react-taro!Dispatch:type"
+              "canonicalReference": "@elux/model!Dispatch:type"
             },
             {
               "kind": "Content",
@@ -8141,7 +7090,7 @@
             {
               "kind": "Reference",
               "text": "Dispatch",
-              "canonicalReference": "@elux/react-taro!Dispatch:type"
+              "canonicalReference": "@elux/model!Dispatch:type"
             },
             {
               "kind": "Content",
@@ -8150,7 +7099,7 @@
             {
               "kind": "Reference",
               "text": "Action",
-              "canonicalReference": "@elux/react-taro!Action:interface"
+              "canonicalReference": "@elux/model!Action:interface"
             },
             {
               "kind": "Content",
@@ -8179,7 +7128,7 @@
         },
         {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!StoreState:type",
+          "canonicalReference": "@elux/model!StoreState:type",
           "docComment": "/**\n * 全局状态\n *\n * @remarks\n *\n * 由多个 {@link ModuleState} 按moduleName组合起来的全局状态\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8193,7 +7142,7 @@
             {
               "kind": "Reference",
               "text": "ModuleState",
-              "canonicalReference": "@elux/react-taro!ModuleState:type"
+              "canonicalReference": "@elux/model!ModuleState:type"
             },
             {
               "kind": "Content",
@@ -8212,113 +7161,8 @@
           }
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@elux/react-taro!Switch:var",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 参见：{@link SwitchProps}\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "Switch: "
-            },
-            {
-              "kind": "Reference",
-              "text": "FC",
-              "canonicalReference": "@types/react!~React.FC:type"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "SwitchProps",
-              "canonicalReference": "@elux/react-taro!SwitchProps:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ">"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "Switch",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 5
-          }
-        },
-        {
-          "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!SwitchProps:interface",
-          "docComment": "/**\n * 内置UI组件\n *\n * @remarks\n *\n * 用来控制子元素的渲染方式：如果非空子元素大于0，则渲染第一个非空子元素，否则将渲染`props.elseView`， 与 {@link Else | `<Else>`} 的区别在于：`<Else>` 渲染所有非空子元素\n *\n * @example\n * ```html\n * <Switch elseView={<NotFound />}>\n *  {subView === 'detail' && <Detail />}\n *  {subView === 'list' && <List />}\n * </Switch>\n * ```\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export interface SwitchProps "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "SwitchProps",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!SwitchProps#children:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "children: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ReactNode",
-                  "canonicalReference": "@types/react!~React.ReactNode:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "children",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!SwitchProps#elseView:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "elseView?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ReactNode",
-                  "canonicalReference": "@types/react!~React.ReactNode:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "elseView",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "extendsTokenRanges": []
-        },
-        {
           "kind": "TypeAlias",
-          "canonicalReference": "@elux/react-taro!UNListener:type",
+          "canonicalReference": "@elux/model!UNListener:type",
           "docComment": "/**\n * 常用于取消监听\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8343,7 +7187,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!urlToLocation:function(1)",
+          "canonicalReference": "@elux/model!urlToLocation:function(1)",
           "docComment": "/**\n * Url转换为Location\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8369,7 +7213,7 @@
             {
               "kind": "Reference",
               "text": "Location",
-              "canonicalReference": "@elux/react-taro!Location:interface"
+              "canonicalReference": "@elux/model!Location:interface"
             },
             {
               "kind": "Content",
@@ -8402,7 +7246,7 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@elux/react-taro!urlToNativeUrl:function(1)",
+          "canonicalReference": "@elux/model!urlToNativeUrl:function(1)",
           "docComment": "/**\n * 内部路由Url转换为原生路由Url\n *\n * @remarks\n *\n * - 内部路由：框架内置路由系统，不依赖于运行平台的路由，实际使用的都是内部路由。\n *\n * - 原生路由：运行平台（如浏览器）的路由，内部路由可以关联为原生路由。\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8445,326 +7289,7 @@
         },
         {
           "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!UserConfig:interface",
-          "docComment": "/**\n * 全局参数设置\n *\n * @remarks\n *\n * 可通过 {@link setConfig} 个性化设置\n *\n * @public\n */\n",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "export interface UserConfig "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "UserConfig",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#DepthTimeOnLoading:member",
-              "docComment": "/**\n * 定义Loading超过多少秒视为深度加载\n *\n * @remarks\n *\n * 默认: `1`\n *\n * 框架中存在3种不同程度的Loading状态:{@link LoadingState}，可定制不同的界面。如浅度loading时显示无感知的透明蒙层，深度时显示Icon和灰色\n *\n * @defaultValue\n *\n * `1`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "DepthTimeOnLoading?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "number"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "DepthTimeOnLoading",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#DisableNativeRouter:member",
-              "docComment": "/**\n * 强制不与原生路由关联\n *\n * @remarks\n *\n * 默认: `false`\n *\n * 虚拟路由默认会关联到原生路由，可以断开关联\n *\n * @defaultValue\n *\n * `false`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "DisableNativeRouter?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "boolean"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "DisableNativeRouter",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#LoadComponentOnError:member",
-              "docComment": "/**\n * 定义默认的视图加载错误组件\n *\n * @remarks\n *\n * 默认: `<div className=\"g-component-error\">{message}</div>`\n *\n * 此设置为全局默认，LoadComponent方法中可以单独设置，参见 {@link ILoadComponent}\n *\n * @defaultValue\n *\n * `<div className=\"g-component-error\">{message}</div>`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "LoadComponentOnError?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Elux.Component",
-                  "canonicalReference": "!Elux.Component:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<{\n        message: string;\n    }>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "LoadComponentOnError",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#LoadComponentOnLoading:member",
-              "docComment": "/**\n * 定义默认视图加载中组件\n *\n * @remarks\n *\n * 默认: `<div className=\"g-component-loading\">loading...</div>`\n *\n * 此设置为全局默认，LoadComponent方法中可以单独设置，参见 {@link ILoadComponent}\n *\n * @defaultValue\n *\n * `<div className=\"g-component-loading\">loading...</div>`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "LoadComponentOnLoading?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Elux.Component",
-                  "canonicalReference": "!Elux.Component:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<{}>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "LoadComponentOnLoading",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#ModuleGetter:member",
-              "docComment": "/**\n * 定义模块获取方法\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "ModuleGetter: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ModuleGetter",
-                  "canonicalReference": "@elux/react-taro!ModuleGetter:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "ModuleGetter",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#NativePathnameMapping:member",
-              "docComment": "/**\n * 定义虚拟路由和原生路由的Url映射\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "NativePathnameMapping?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        in(nativePathname: string): string;\n        out(internalPathname: string): string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "NativePathnameMapping",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#QueryString:member",
-              "docComment": "/**\n * 定义路由参数序列化方法\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "QueryString: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        parse(str: string): {\n            [key: string]: any;\n        };\n        stringify(query: {\n            [key: string]: any;\n        }): string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": false,
-              "releaseTag": "Public",
-              "name": "QueryString",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#StageModuleName:member",
-              "docComment": "/**\n * 定义APP根模块名称\n *\n * @remarks\n *\n * 默认: `stage`\n *\n * @defaultValue\n *\n * `stage`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "StageModuleName?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "StageModuleName",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#StageViewName:member",
-              "docComment": "/**\n * 定义APP根视图名称\n *\n * @remarks\n *\n * 默认: `main`\n *\n * @defaultValue\n *\n * `main`\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "StageViewName?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "StageViewName",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#StoreLogger:member",
-              "docComment": "/**\n * 定义Store日志记录器\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "StoreLogger?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "StoreLogger",
-                  "canonicalReference": "@elux/react-taro!StoreLogger:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "StoreLogger",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!UserConfig#StoreMiddlewares:member",
-              "docComment": "/**\n * 定义Store中间件\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "StoreMiddlewares?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "StoreMiddleware",
-                  "canonicalReference": "@elux/react-taro!StoreMiddleware:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": "[]"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isOptional": true,
-              "releaseTag": "Public",
-              "name": "StoreMiddlewares",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              }
-            }
-          ],
-          "extendsTokenRanges": []
-        },
-        {
-          "kind": "Interface",
-          "canonicalReference": "@elux/react-taro!VStore:interface",
+          "canonicalReference": "@elux/model!VStore:interface",
           "docComment": "/**\n * Store实例(用于View中)\n *\n * @public\n */\n",
           "excerptTokens": [
             {
@@ -8774,7 +7299,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -8787,7 +7312,7 @@
             {
               "kind": "Reference",
               "text": "StoreState",
-              "canonicalReference": "@elux/react-taro!StoreState:type"
+              "canonicalReference": "@elux/model!StoreState:type"
             },
             {
               "kind": "Content",
@@ -8812,7 +7337,7 @@
           "members": [
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!VStore#dispatch:member",
+              "canonicalReference": "@elux/model!VStore#dispatch:member",
               "docComment": "/**\n * 派发action\n */\n",
               "excerptTokens": [
                 {
@@ -8822,7 +7347,7 @@
                 {
                   "kind": "Reference",
                   "text": "Dispatch",
-                  "canonicalReference": "@elux/react-taro!Dispatch:type"
+                  "canonicalReference": "@elux/model!Dispatch:type"
                 },
                 {
                   "kind": "Content",
@@ -8839,7 +7364,7 @@
             },
             {
               "kind": "MethodSignature",
-              "canonicalReference": "@elux/react-taro!VStore#mount:member(1)",
+              "canonicalReference": "@elux/model!VStore#mount:member(1)",
               "docComment": "/**\n * 在该store中挂载指定的model\n *\n * @remarks\n *\n * 该方法会触发model.onMount(env)钩子\n */\n",
               "excerptTokens": [
                 {
@@ -8907,7 +7432,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!VStore#sid:member",
+              "canonicalReference": "@elux/model!VStore#sid:member",
               "docComment": "/**\n * 实例ID\n */\n",
               "excerptTokens": [
                 {
@@ -8933,7 +7458,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!VStore#state:member",
+              "canonicalReference": "@elux/model!VStore#state:member",
               "docComment": "/**\n * 当前的Store状态\n */\n",
               "excerptTokens": [
                 {
@@ -8959,7 +7484,7 @@
             },
             {
               "kind": "PropertySignature",
-              "canonicalReference": "@elux/react-taro!VStore#uid:member",
+              "canonicalReference": "@elux/model!VStore#uid:member",
               "docComment": "/**\n * ForkID\n */\n",
               "excerptTokens": [
                 {

@@ -273,6 +273,9 @@ function mergeState(target = {}, ...args) {
 function getClientRouter() {
   return MetaData.clientRouter;
 }
+function isMutable() {
+  return coreConfig.MutableData;
+}
 
 const errorProcessed = '__eluxProcessed__';
 function isProcessedError(error) {
@@ -2309,4 +2312,4 @@ class Router {
 
 }
 
-export { BaseModel, BaseNativeRouter, EmptyModel, ErrorCodes, Router, SingleDispatcher, Store, buildApp, buildConfigSetter, buildProvider, buildSSR, coreConfig, deepClone, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getClientRouter, getComponent, getEntryComponent, getModule, getModuleApiMap, getTplInSSR, injectComponent, injectModule, isPromise, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, reducer, setCoreConfig, setLoading, setProcessedError, toPromise, urlToLocation, urlToNativeUrl };
+export { BaseModel, BaseNativeRouter, EmptyModel, ErrorCodes, Router, SingleDispatcher, Store, buildApp, buildConfigSetter, buildProvider, buildSSR, coreConfig, deepClone, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getClientRouter, getComponent, getEntryComponent, getModule, getModuleApiMap, getTplInSSR, injectComponent, injectModule, isMutable, isPromise, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, reducer, setCoreConfig, setLoading, setProcessedError, toPromise, urlToLocation, urlToNativeUrl };

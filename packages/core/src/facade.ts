@@ -126,7 +126,7 @@ export function exportModule<
  *
  * @param moduleName - 组件所属模块名
  * @param componentName - 组件导出名，参见{@link exportModule}
- * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 {@link UserConfig} 中的设置
+ * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 UserConfig 中的设置
  *
  * @public
  */

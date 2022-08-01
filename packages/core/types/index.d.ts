@@ -2,7 +2,7 @@ export { default as env } from './env';
 export type { LoadingState, UNListener } from './utils';
 export { buildConfigSetter, deepClone, deepMerge, isPromise, isServer, SingleDispatcher, toPromise } from './utils';
 export type { Action, ActionCreator, ActionError, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, Dispatch, EluxComponent, EluxContext, EluxStoreContext, GetState, IAppRender, IRouter, IRouteRecord, IStore, Location, ModelAsCreators, ModuleGetter, ModuleState, RouteAction, RouteEvent, RouterInitOptions, RouteRuntime, RouteTarget, StoreLogger, StoreLoggerInfo, StoreMiddleware, StoreState, VStore, } from './basic';
-export { coreConfig, ErrorCodes, getClientRouter, setCoreConfig } from './basic';
+export { coreConfig, ErrorCodes, getClientRouter, setCoreConfig, isMutable } from './basic';
 export { errorAction, setProcessedError } from './actions';
 export { getComponent, getEntryComponent, getModule, getModuleApiMap, injectComponent, injectModule, moduleExists } from './inject';
 export { effect, effectLogger, EmptyModel, exportComponent, exportView, reducer, setLoading } from './module';

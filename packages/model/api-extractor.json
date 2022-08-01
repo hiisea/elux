@@ -3,23 +3,32 @@
  */
 {
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+
   "projectFolder": "./",
+
   "mainEntryPointFilePath": "<projectFolder>/types/index.d.ts",
-  "bundledPackages": ["@elux/core", "@elux/route-mp", "@elux/app", "@elux/vue-components", "@elux/taro"],
+
+  "bundledPackages": ["@elux/core"],
+
   "compiler": {
     "tsconfigFilePath": "src/tsconfig.json"
   },
+
   "apiReport": {
     "enabled": false
   },
+
   "docModel": {
     "enabled": true,
     "apiJsonFilePath": "../../api/.vuepress/.api/<unscopedPackageName>.api.json"
   },
+
   "dtsRollup": {
     "enabled": false
   },
+
   "tsdocMetadata": {},
+
   "messages": {
     "compilerMessageReporting": {
       "default": {
@@ -40,6 +49,7 @@
       //   "logLevel": "none"
       // }
     },
+
     "tsdocMessageReporting": {
       "default": {
         "logLevel": "warning"

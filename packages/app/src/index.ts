@@ -16,6 +16,7 @@ export {
   getTplInSSR,
   injectModule,
   isServer,
+  isMutable,
   locationToNativeLocation,
   locationToUrl,
   modelHotReplacement,

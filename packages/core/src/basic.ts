@@ -690,3 +690,12 @@ export function mergeState(target: any = {}, ...args: any[]): any {
 export function getClientRouter(): IRouter {
   return MetaData.clientRouter!;
 }
+
+/**
+ * 当前State模式是否为Mutable
+ *
+ * @public
+ */
+export function isMutable(): boolean {
+  return coreConfig.MutableData;
+}
