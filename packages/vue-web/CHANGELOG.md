@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.6.0-alpha.1](https://github.com/hiisea/elux/compare/v2.6.0-alpha.0...v2.6.0-alpha.1) (2022-08-01)
+
+
+### Features
+
+* 拆分与UI框架无关的model专用包 ([b2a2809](https://github.com/hiisea/elux/commit/b2a2809ea10f29af24fb70d4a3a83d82564ddbef))
+
+
+
+
+
 # [2.6.0-alpha.0](https://github.com/hiisea/elux/compare/v2.5.1...v2.6.0-alpha.0) (2022-07-27)
 
 

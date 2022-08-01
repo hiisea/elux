@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.6.0-alpha.1](https://github.com/hiisea/elux/compare/v2.6.0-alpha.0...v2.6.0-alpha.1) (2022-08-01)
+
+**Note:** Version bump only for package @elux/route-mp
+
+
+
+
+
 # [2.6.0-alpha.0](https://github.com/hiisea/elux/compare/v2.5.1...v2.6.0-alpha.0) (2022-07-27)
 
 
