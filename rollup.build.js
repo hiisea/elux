@@ -1,16 +1,16 @@
 /* eslint-disable no-console */
+import path from 'path';
+import * as fs from 'fs';
 import babel from '@rollup/plugin-babel';
 import chalk from 'chalk';
 import commonjs from '@rollup/plugin-commonjs';
-import path from 'path';
 import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
 import alias from '@rollup/plugin-alias';
-import * as fs from 'fs';
 
 const tag = process.env.NODE_TAG || process.env.NODE_ENV;
 
-function createConfig(fileName = 'pkg', inputFile, externals, aliasEntries) {
+function createConfig(fileName = 'index', inputFile, externals, aliasEntries) {
   const outputFile = inputFile.replace('src/', '');
   const cfg = {
     es6: {output: [{file: `dist/es6/${outputFile}${fileName}.js`, format: 'esm'}], mainFields: ['module', 'main']},

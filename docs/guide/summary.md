@@ -129,6 +129,7 @@ Elux应用范围很广，但并不妨碍它使用简单:
   - 提供窗口工具条：后退、刷新、关闭，如：[文章列表](http://admin-react-antd.eluxjs.com/admin/article/list/index?author=48&__c=_dialog) => 点击标题 => 点击作者 => 点击文章数。然后你可以依次回退每一步操作，也可一次性全部关闭。
   - 提供窗口最大化、最小化按钮，如：[文章详情，窗口左上角按钮](http://admin-react-antd.eluxjs.com/admin/article/item/detail/50?__c=_dialog)；并支持默认最大化，如：[创建文章](http://admin-react-antd.eluxjs.com/admin/article/item/edit?__c=_dialog) ![elux虚拟窗口](/images/case/window.jpg)
   - 窗口可以通过Url发送，如将`http://admin-react-antd.eluxjs.com/admin/member/item/edit/50?__c=_dialog`发送给好友后，其可以通过Url还原窗口。
+  - 轻松实现keep-alive，keep-alive优点是用户体验好，缺点是太占资源。现在使用虚拟Windw，你想keep-alive就在新窗口打开，不想keep-alive就在原窗口中打开，关闭窗口就自动销毁keep-alive。
   
 - 🚀 基于抽象的增删改查逻辑：
   - 业务逻辑通过类的继承复用，如果是标准的增删改查基本上不用写代码，否则可以自己覆盖父类中的某些方法：
@@ -417,4 +418,8 @@ Elux应用范围很广，但并不妨碍它使用简单:
   }
   ```
 
-- 🚀 未完待续...
+## 更多相关文章
+
+- [从"微前端"到“微模块”](https://juejin.cn/post/7106791733509226533)
+- [不想当Window的Dialog不是一个好Modal，弹窗翻身记...](https://juejin.cn/post/7124177821953425422)
+- [手撸Router，还要啥Router框架？让react-router/vue-router躺一边凉快去](https://juejin.cn/post/7124959667326812196)

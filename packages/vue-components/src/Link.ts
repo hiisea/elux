@@ -1,5 +1,4 @@
-import {coreConfig, IRouteRecord, Location, RouteAction, RouteTarget} from '@elux/core';
-import {urlToNativeUrl} from '@elux/route';
+import {coreConfig, IRouteRecord, Location, RouteAction, RouteTarget, urlToNativeUrl} from '@elux/core';
 import {computed, defineComponent, Events, FunctionalComponent, h, HTMLAttributes} from 'vue';
 
 /**

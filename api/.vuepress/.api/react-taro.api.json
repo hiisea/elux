@@ -5007,6 +5007,71 @@
               "name": "getHistoryLength"
             },
             {
+              "kind": "MethodSignature",
+              "canonicalReference": "@elux/react-taro!IRouter#init:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "init(initOptions: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "RouterInitOptions",
+                  "canonicalReference": "@elux/react-taro!RouterInitOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", prevState: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "TStoreState"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<void>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 7
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "initOptions",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "prevState",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "init"
+            },
+            {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/react-taro!IRouter#initOptions:member",
               "docComment": "/**\n * 路由初始化时的参数，通常用于SSR时传递原生的Request和Response对象\n */\n",
@@ -5552,6 +5617,33 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@elux/react-taro!isMutable:function(1)",
+          "docComment": "/**\n * 当前State模式是否为Mutable\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function isMutable(): "
+            },
+            {
+              "kind": "Content",
+              "text": "boolean"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [],
+          "name": "isMutable"
         },
         {
           "kind": "Function",

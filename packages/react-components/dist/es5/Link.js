@@ -1,8 +1,7 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
 var _excluded = ["to", "cname", "action", "onClick", "disabled", "overflowRedirect", "target", "refresh"];
-import { coreConfig } from '@elux/core';
-import { urlToNativeUrl } from '@elux/route';
+import { coreConfig, urlToNativeUrl } from '@elux/core';
 import { useCallback, useMemo, useRef } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var Link = function Link(_ref) {

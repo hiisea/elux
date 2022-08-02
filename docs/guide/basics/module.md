@@ -1,5 +1,5 @@
 ---
-prev: /guide/configure.html
+prev: /guide/quick-start.html
 ---
 
 # Module

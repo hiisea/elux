@@ -1,6 +1,5 @@
-import { env } from '@elux/core';
-import { BaseNativeRouter, routeConfig, setRouteConfig } from '@elux/route';
-setRouteConfig({
+import { BaseNativeRouter, coreConfig, env, setCoreConfig } from '@elux/core';
+setCoreConfig({
   NotifyNativeRouter: {
     window: true,
     page: true
@@ -47,7 +46,7 @@ class BrowserNativeRouter extends BaseNativeRouter {
     const {
       window,
       page
-    } = routeConfig.NotifyNativeRouter;
+    } = coreConfig.NotifyNativeRouter;
 
     if ((window || page) && !env.isServer) {
       env.addEventListener('popstate', () => {

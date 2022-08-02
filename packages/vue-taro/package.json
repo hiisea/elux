@@ -1,6 +1,6 @@
 {
   "name": "@elux/vue-taro",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "The practice of vue + taro",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/vue-taro",
   "author": "hiisea <hiisea@qq.com>",
@@ -11,8 +11,8 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "main": "dist/es5/pkg.js",
-  "module": "dist/es6/pkg.js",
+  "main": "dist/es5/index.js",
+  "module": "dist/es6/index.js",
   "types": "types/",
   "files": [
     "runtime/",
@@ -27,9 +27,10 @@
     "package:es6": "cross-env NODE_TAG=es6 rollup -c",
     "package:es5": "cross-env NODE_TAG=es5 rollup -c",
     "api:json": "yarn build:types && api-extractor run",
-    "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5 && yarn package:es6 && yarn package:es5"
+    "build": "yarn build:types && rimraf ./dist && yarn package:es6 && yarn package:es5"
   },
   "externals": {
+    "@elux/core": true,
     "@tarojs/taro": true,
     "vue": true
   },
@@ -38,12 +39,11 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@elux/app": "^2.5.0",
-    "@elux/core": "^2.4.0",
-    "@elux/route": "^2.4.0",
-    "@elux/route-mp": "^2.4.0",
-    "@elux/taro": "^2.4.0",
-    "@elux/vue-components": "^2.5.0"
+    "@elux/app": "^2.6.0",
+    "@elux/core": "^2.6.0",
+    "@elux/route-mp": "^2.6.0",
+    "@elux/taro": "^2.6.0",
+    "@elux/vue-components": "^2.6.0"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

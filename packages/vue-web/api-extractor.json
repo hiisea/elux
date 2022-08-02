@@ -8,7 +8,7 @@
 
   "mainEntryPointFilePath": "<projectFolder>/types/index.d.ts",
 
-  "bundledPackages": ["@elux/core", "@elux/route", "@elux/route-browser", "@elux/app", "@elux/vue-components"],
+  "bundledPackages": ["@elux/core", "@elux/route-browser", "@elux/app", "@elux/vue-components"],
 
   "compiler": {
     "tsconfigFilePath": "src/tsconfig.json"

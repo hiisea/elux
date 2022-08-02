@@ -387,6 +387,16 @@
     text-align: center;
     padding: 50px 0;
     font-size: 18px;
+    position: relative;
+
+    &::before{
+      content: 'node >= 14.0.0';
+      position: absolute;
+      opacity: 0.5;
+      left: 10px;
+      top: 5px;
+      font-size: 12px;
+    }
   }
   .footer {
     font-size: 13px;

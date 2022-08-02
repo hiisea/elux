@@ -1,5 +1,4 @@
-import { coreConfig } from '@elux/core';
-import { urlToNativeUrl } from '@elux/route';
+import { coreConfig, urlToNativeUrl } from '@elux/core';
 import { useCallback, useMemo, useRef } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export const Link = ({

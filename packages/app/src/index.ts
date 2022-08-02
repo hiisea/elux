@@ -1,5 +1,4 @@
 import {getModuleApiMap, ModuleGetter, setCoreConfig, StoreLogger, StoreMiddleware} from '@elux/core';
-import {setRouteConfig} from '@elux/route';
 
 export {
   BaseModel,
@@ -9,6 +8,7 @@ export {
   EmptyModel,
   env,
   errorAction,
+  ErrorCodes,
   exportComponent,
   exportModule,
   exportView,
@@ -16,11 +16,19 @@ export {
   getTplInSSR,
   injectModule,
   isServer,
+  isMutable,
+  locationToNativeLocation,
+  locationToUrl,
   modelHotReplacement,
   moduleExists,
+  nativeLocationToLocation,
+  nativeUrlToUrl,
   reducer,
   setLoading,
+  urlToLocation,
+  urlToNativeUrl,
 } from '@elux/core';
+
 export type {
   Action,
   ActionCreator,
@@ -43,7 +51,6 @@ export type {
   IRouter,
   IRouteRecord,
   IStore,
-  VStore,
   LoadingState,
   Location,
   ModelAsCreators,
@@ -64,17 +71,8 @@ export type {
   StoreMiddleware,
   StoreState,
   UNListener,
+  VStore,
 } from '@elux/core';
-
-export {
-  ErrorCodes,
-  locationToNativeLocation,
-  locationToUrl,
-  nativeLocationToLocation,
-  nativeUrlToUrl,
-  urlToLocation,
-  urlToNativeUrl,
-} from '@elux/route';
 
 /**
  * 全局参数设置
@@ -195,9 +193,8 @@ export type AppConfig = typeof appConfig;
  */
 export function setConfig(conf: UserConfig): AppConfig {
   setCoreConfig(conf);
-  setRouteConfig(conf);
   if (conf.DisableNativeRouter) {
-    setRouteConfig({NotifyNativeRouter: {window: false, page: false}});
+    setCoreConfig({NotifyNativeRouter: {window: false, page: false}});
   }
   return appConfig;
 }

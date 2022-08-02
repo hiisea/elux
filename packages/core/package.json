@@ -1,7 +1,7 @@
 {
   "name": "@elux/core",
-  "version": "2.4.0",
-  "description": "Cross platform and cross framework web solutions that based on micro-module and model-driven",
+  "version": "2.6.0",
+  "description": "Cross platform and cross framework web solutions that based on micro-module and model-driven.",
   "homepage": "https://github.com/hiisea/elux/tree/master/packages/core",
   "author": "hiisea <hiisea@qq.com>",
   "license": "MIT",
@@ -34,7 +34,9 @@
     "build:types": "rimraf ./types && tsc --build ./src",
     "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts\"",
     "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts\"",
-    "build": "yarn build:types && rimraf ./dist && yarn build:es6 && yarn build:es5"
+    "package:es6": "cross-env NODE_TAG=es6 rollup -c",
+    "package:es5": "cross-env NODE_TAG=es5 rollup -c",
+    "build": "yarn build:types && rimraf ./dist && yarn package:es6 && yarn package:es5"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

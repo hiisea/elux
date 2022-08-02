@@ -1,0 +1,39 @@
+{
+  "name": "@elux/model",
+  "version": "2.6.0",
+  "description": "The practice of elux on model",
+  "repository": "https://github.com/hiisea/elux/tree/master/packages/model",
+  "author": "hiisea <hiisea@qq.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "main": "dist/es5/index.js",
+  "module": "dist/es6/index.js",
+  "types": "types/",
+  "files": [
+    "types/",
+    "dist/"
+  ],
+  "scripts": {
+    "eslint": "cross-env NODE_ENV=production eslint --fix --cache **/*.{js,ts}",
+    "build:types": "rimraf ./types && tsc --build ./src",
+    "build:es6": "cross-env NODE_TAG=es6 babel ./src --out-dir ./dist/es6  --extensions \".ts\"",
+    "build:es5": "cross-env NODE_TAG=es5 babel ./src --out-dir ./dist/es5  --extensions \".ts\"",
+    "package:es6": "cross-env NODE_TAG=es6 rollup -c",
+    "package:es5": "cross-env NODE_TAG=es5 rollup -c",
+    "api:json": "yarn build:types && api-extractor run",
+    "build": "yarn build:types && rimraf ./dist && yarn package:es6 && yarn package:es5"
+  },
+  "externals": {
+    "@elux/core": true
+  },
+  "dependencies": {
+    "@elux/app": "^2.6.0",
+    "@elux/core": "^2.6.0"
+  },
+  "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
+}

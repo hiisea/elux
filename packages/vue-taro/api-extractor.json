@@ -5,7 +5,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
   "projectFolder": "./",
   "mainEntryPointFilePath": "<projectFolder>/types/index.d.ts",
-  "bundledPackages": ["@elux/core", "@elux/route", "@elux/route-mp", "@elux/app", "@elux/vue-components", "@elux/taro"],
+  "bundledPackages": ["@elux/core", "@elux/route-mp", "@elux/app", "@elux/vue-components", "@elux/taro"],
   "compiler": {
     "tsconfigFilePath": "src/tsconfig.json"
   },

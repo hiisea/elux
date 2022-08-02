@@ -1,7 +1,6 @@
-import {IRouter, Location, UNListener} from '@elux/core';
-import {BaseNativeRouter, nativeUrlToUrl, routeConfig, setRouteConfig} from '@elux/route';
+import {BaseNativeRouter, coreConfig, IRouter, Location, nativeUrlToUrl, setCoreConfig, UNListener} from '@elux/core';
 
-setRouteConfig({NotifyNativeRouter: {window: true, page: false}});
+setCoreConfig({NotifyNativeRouter: {window: true, page: false}});
 
 interface RouteOption {
   url: string;
@@ -27,7 +26,7 @@ export class MPNativeRouter extends BaseNativeRouter {
   constructor(private history: IHistory) {
     super();
 
-    const {window, page} = routeConfig.NotifyNativeRouter;
+    const {window, page} = coreConfig.NotifyNativeRouter;
     if (window || page) {
       this.unlistenHistory = history.onRouteChange(({pathname, search, action}) => {
         let key = this.routeKey;

@@ -1,6 +1,6 @@
 import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
-import { BaseNativeRouter, nativeUrlToUrl, routeConfig, setRouteConfig } from '@elux/route';
-setRouteConfig({
+import { BaseNativeRouter, coreConfig, nativeUrlToUrl, setCoreConfig } from '@elux/core';
+setCoreConfig({
   NotifyNativeRouter: {
     window: true,
     page: false
@@ -15,9 +15,9 @@ export var MPNativeRouter = function (_BaseNativeRouter) {
     _this = _BaseNativeRouter.call(this) || this;
     _this.unlistenHistory = void 0;
     _this.history = history;
-    var _routeConfig$NotifyNa = routeConfig.NotifyNativeRouter,
-        window = _routeConfig$NotifyNa.window,
-        page = _routeConfig$NotifyNa.page;
+    var _coreConfig$NotifyNat = coreConfig.NotifyNativeRouter,
+        window = _coreConfig$NotifyNat.window,
+        page = _coreConfig$NotifyNat.page;
 
     if (window || page) {
       _this.unlistenHistory = history.onRouteChange(function (_ref) {

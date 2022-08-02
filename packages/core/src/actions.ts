@@ -1,4 +1,4 @@
-import {Action, ActionError, coreConfig} from './basic';
+import {Action, ActionError, coreConfig, Location, RouteAction} from './basic';
 import {LoadingState} from './utils';
 
 export const errorProcessed = '__eluxProcessed__';
@@ -50,4 +50,22 @@ export function getErrorActionType(): string {
 
 export function getInitActionType(moduleName: string): string {
   return moduleName + coreConfig.NSP + '_initState';
+}
+export function testChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_testRouteChange`,
+    payload: [location, routeAction],
+  };
+}
+export function beforeChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_beforeRouteChange`,
+    payload: [location, routeAction],
+  };
+}
+export function afterChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_afterRouteChange`,
+    payload: [location, routeAction],
+  };
 }

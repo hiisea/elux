@@ -1,4 +1,4 @@
-import { Action } from './basic';
+import { Action, Location, RouteAction } from './basic';
 import { LoadingState } from './utils';
 export declare const errorProcessed = "__eluxProcessed__";
 export declare function isProcessedError(error: any): boolean;
@@ -19,4 +19,7 @@ export declare function moduleLoadingAction(moduleName: string, loadingState: {
 export declare function errorAction(error: any): Action;
 export declare function getErrorActionType(): string;
 export declare function getInitActionType(moduleName: string): string;
+export declare function testChangeAction(location: Location, routeAction: RouteAction): Action;
+export declare function beforeChangeAction(location: Location, routeAction: RouteAction): Action;
+export declare function afterChangeAction(location: Location, routeAction: RouteAction): Action;
 //# sourceMappingURL=actions.d.ts.map

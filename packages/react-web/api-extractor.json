@@ -8,7 +8,7 @@
 
   "mainEntryPointFilePath": "<projectFolder>/types/index.d.ts",
 
-  "bundledPackages": ["@elux/core", "@elux/route", "@elux/route-browser", "@elux/app", "@elux/react-components", "@elux/react-redux"],
+  "bundledPackages": ["@elux/core", "@elux/route-browser", "@elux/app", "@elux/react-components", "@elux/react-redux"],
 
   "compiler": {
     "tsconfigFilePath": "src/tsconfig.json"

@@ -9,6 +9,7 @@ const indexPage = `# API手册V2.0
 - [@elux/react-taro](./react-taro.md)
 - [@elux/vue-web](./vue-web.md)
 - [@elux/vue-taro](./vue-taro.md)
+- [@elux/model](./model.md)
 `;
 replace.sync({
   files: './api/api/index.md',
@@ -18,7 +19,7 @@ replace.sync({
 });
 
 replace.sync({
-  files: ['./api/api/react-web.md', './api/api/react-taro.md', './api/api/vue-web.md', './api/api/vue-taro.md'],
+  files: ['./api/api/react-web.md', './api/api/react-taro.md', './api/api/vue-web.md', './api/api/vue-taro.md', './api/api/model.md'],
   from: [/## Interfaces[\d\D]*?## Variables/, /\n## Type Aliases[\d\D]*?$/],
   to: ['## Variables', ''],
   countMatches: true,
