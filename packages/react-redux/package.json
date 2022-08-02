@@ -1,6 +1,6 @@
 {
   "name": "@elux/react-redux",
-  "version": "2.6.0-alpha.2",
+  "version": "2.6.0-alpha.4",
   "description": "The practice of elux on react + redux",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/react-redux",
   "author": "hiisea <hiisea@qq.com>",
