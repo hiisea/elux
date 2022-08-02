@@ -1,7 +1,7 @@
 {
   "name": "@elux/core",
   "version": "2.6.0-alpha.2",
-  "description": "Cross platform and cross framework web solutions that based on micro-module and model-driven",
+  "description": "Cross platform and cross framework web solutions that based on micro-module and model-driven.",
   "homepage": "https://github.com/hiisea/elux/tree/master/packages/core",
   "author": "hiisea <hiisea@qq.com>",
   "license": "MIT",
