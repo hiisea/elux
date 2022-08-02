@@ -5,115 +5,53 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [2.6.0](https://github.com/hiisea/elux/compare/v2.6.0-alpha.4...v2.6.0) (2022-08-02)
 
-**Note:** Version bump only for package @elux/taro
+### Features
 
-
-
-
-
-# [2.6.0-alpha.2](https://github.com/hiisea/elux/compare/v2.6.0-alpha.1...v2.6.0-alpha.2) (2022-08-02)
-
-**Note:** Version bump only for package @elux/taro
-
-
-
-
-
-# [2.6.0-alpha.1](https://github.com/hiisea/elux/compare/v2.6.0-alpha.0...v2.6.0-alpha.1) (2022-08-01)
-
-**Note:** Version bump only for package @elux/taro
-
-
-
-
-
-# [2.6.0-alpha.0](https://github.com/hiisea/elux/compare/v2.5.1...v2.6.0-alpha.0) (2022-07-27)
-
-**Note:** Version bump only for package @elux/taro
-
-
-
-
+- 拆分与UI框架无关的model专用包 ([b2a2809](https://github.com/hiisea/elux/commit/b2a2809ea10f29af24fb70d4a3a83d82564ddbef))
+- 支持无UI、纯Model ([3c6c083](https://github.com/hiisea/elux/commit/3c6c0832626e92277d214b4e6633e79d9b13d03c))
+- 不再打包react-redux，项目请自行安装
 
 # [2.4.0](https://github.com/hiisea/elux/compare/v2.3.4...v2.4.0) (2022-07-16)
 
 **Note:** Version bump only for package @elux/taro
 
-
-
-
-
 ## [2.3.3](https://github.com/hiisea/elux/compare/v2.3.2...v2.3.3) (2022-07-16)
 
 **Note:** Version bump only for package @elux/taro
-
-
-
-
 
 ## [2.3.2](https://github.com/hiisea/elux/compare/v2.3.1...v2.3.2) (2022-07-16)
 
 **Note:** Version bump only for package @elux/taro
 
-
-
-
-
 ## [2.3.1](https://github.com/hiisea/elux/compare/v2.3.0...v2.3.1) (2022-07-12)
 
 **Note:** Version bump only for package @elux/taro
-
-
-
-
 
 # [2.3.0](https://github.com/hiisea/elux/compare/v2.2.1...v2.3.0) (2022-07-11)
 
 **Note:** Version bump only for package @elux/taro
 
-
-
-
-
 # [2.2.0](https://github.com/hiisea/elux/compare/v2.1.0...v2.2.0) (2022-06-03)
 
 **Note:** Version bump only for package @elux/taro
-
-
-
-
 
 # [2.1.0](https://github.com/hiisea/elux/compare/v2.0.1...v2.1.0) (2022-05-17)
 
 **Note:** Version bump only for package @elux/taro
 
-
-
-
-
 ## [2.0.1](https://github.com/hiisea/elux/compare/v2.0.0...v2.0.1) (2022-05-04)
-
 
 ### Bug Fixes
 
-* 某些小程序启动时不能同步获取launchOptions ([63a023b](https://github.com/hiisea/elux/commit/63a023b5ac9afc6b8c936042d4c7773de80c3d45)), closes [#4](https://github.com/hiisea/elux/issues/4)
-
-
-
-
+- 某些小程序启动时不能同步获取launchOptions ([63a023b](https://github.com/hiisea/elux/commit/63a023b5ac9afc6b8c936042d4c7773de80c3d45)), closes [#4](https://github.com/hiisea/elux/issues/4)
 
 # [2.0.0](https://github.com/hiisea/elux/compare/v1.2.1...v2.0.0) (2022-04-25)
 
-
 ### Features
 
-* 支持taro ([01f0890](https://github.com/hiisea/elux/commit/01f0890a9ae365b615d5c07b82515b86ac349555))
-* vue支持taro ([d6acd86](https://github.com/hiisea/elux/commit/d6acd864a42b9e3a6964786d6778251efce13ed2))
-* vue支持taro ([7cb2cbc](https://github.com/hiisea/elux/commit/7cb2cbc7153c4ac6d1ec15f15265439094a5a259))
-
-
-
-
+- 支持taro ([01f0890](https://github.com/hiisea/elux/commit/01f0890a9ae365b615d5c07b82515b86ac349555))
+- vue支持taro ([d6acd86](https://github.com/hiisea/elux/commit/d6acd864a42b9e3a6964786d6778251efce13ed2))
+- vue支持taro ([7cb2cbc](https://github.com/hiisea/elux/commit/7cb2cbc7153c4ac6d1ec15f15265439094a5a259))
 
 ## [1.0.1](https://github.com/hiisea/elux/compare/v1.0.0...v1.0.1) (2021-12-12)
 
