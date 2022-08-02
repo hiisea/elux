@@ -1,7 +1,3 @@
----
-next: /guide/basics/module.html
----
-
 # 项目配置
 
 ## web项目配置

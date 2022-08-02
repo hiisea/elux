@@ -10,8 +10,6 @@
     </div>
     <div class="git">&lt;<a href="https://github.com/hiisea/elux">Github</a>&gt; &lt;<a href="https://gitee.com/hiisea/elux-fork">Gitee</a>&gt;</div>
     <div class="interact">
-      <a href="https://www.zhihu.com/column/c_1518022622268448768" target="_blank">知乎专栏</a>
-      <span> | </span>
       <a href="https://juejin.cn/column/7106899933537501221" target="_blank">掘金专栏</a>
       <span> | </span>
       <a href="/ecological/">微信/QQ群</a>
