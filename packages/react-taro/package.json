@@ -31,6 +31,7 @@
   "externals": {
     "@elux/core": true,
     "@tarojs/taro": true,
+    "react-redux": true,
     "react": true,
     "react-dom": true
   },

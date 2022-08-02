@@ -37,6 +37,7 @@
     "@elux/core": true,
     "react": true,
     "react-dom": true,
+    "react-redux": true,
     "@elux/react-web/server": true
   },
   "peerDependencies": {
