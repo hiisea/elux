@@ -4057,7 +4057,7 @@
         {
           "kind": "TypeAlias",
           "canonicalReference": "@elux/react-taro!ILoadComponent:type",
-          "docComment": "/**\n * 加载指定模块的UI组件\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于加载其它模块导出的{@link exportView | UI组件}，相比直接 `import`，使用此方法加载组件不仅可以`按需加载`， 还可以自动初始化其所属 Model（仅当加载组件为view时），例如：\n * ```js\n *   const Article = LoadComponent('article', 'main')\n * ```\n *\n * @param moduleName - 组件所属模块名\n *\n * @param componentName - 组件导出名，参见{@link exportModule}\n *\n * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 UserConfig 中的设置\n *\n * @public\n */\n",
+          "docComment": "/**\n * 加载指定模块的UI组件\n *\n * @remarks\n *\n * 该方法可通过{@link getApi}获得，用于加载其它模块导出的{@link exportView | UI组件}，相比直接 `import`，使用此方法加载组件不仅可以`按需加载`， 还可以自动初始化其所属 Model（仅当加载组件为view时），例如：\n * ```js\n *   const Article = LoadComponent('article', 'main')\n * ```\n *\n * @param moduleName - 组件所属模块名\n *\n * @param componentName - 组件导出名，参见{@link exportModule}\n *\n * @param options - 加载中和加载错误时显示的组件，默认使用全局的设置，参见 {@link UserConfig} 中的设置\n *\n * @public\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
