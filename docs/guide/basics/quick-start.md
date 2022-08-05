@@ -1,18 +1,28 @@
----
-next: /guide/basics/module.html
----
-
 # Elux项目快速上手
 
 假设您已经是一名React/Vue熟手，使用过Redux/Vuex/Dva，那么上手Elux项目很快...
 
-## 了解几个概念
+## 派发Action
 
-- **View**：可以理解为就是UI组件Component
-- **Model**：可以理解为维护Store的一个JS类
-- **Module**：View和Model加起来就是Module
-- **reducer**：对应Vuex中的`mutation`
-- **effect**：对应Vuex中的`action`
+先回忆一下，不管是redux还是vuex，派发`action/mutation`都类似，派发体都是形如`{type:"xxx", args:xxx}`的格式，例如：
+
+> dispatch({type:"user.login", payload:{username:"jimmy", password:"123456"}})
+
+> commit({type:"user.updateUser", payload:{username:"jimmy", password:"123456"}})
+
+这种方法有个很大的弊端，就是`派发体`需要手写，TS又不能很好的验证与提示，很容易写错。比如type写成了user.updat**a**User，也验证不到，更容易出错的是参数部分，如果参数是一个复杂的结构体，盲写很容易写错。
+
+Elux中改进了这种原始写法，自动生成派发体，并且配合TS类型提示，再也不用担心写错type和参数：
+
+```ts
+//自动生成{type:"xxx",args:xxx}
+const action = userActions.login('jimmy','123456');
+dispatch(action);
+```
+
+![elux-ts](/images/case/type.jpg)
+
+并且Elux中也没有`commit`这个方法，统一使用`dispatch`来派发，减小了心智负担。
 
 ## 创建一个新Module
 
@@ -37,7 +47,7 @@ next: /guide/basics/module.html
     export class Model extends BaseModel<ModuleState, APPState> {
 
       //尽量避免使用public方法，所以构建this.privateActions来引用私有actions
-      protected privateActions = this.getPrivateActions();
+      protected privateActions = this.getPrivateActions({putList: this.putList});
 
       //实现路由中提取信息
       protected getRouteParams(): RouteParams {
@@ -50,20 +60,20 @@ next: /guide/basics/module.html
       public onMount(): void {
         const {listSearch} = this.getRouteParams();
         //完成ModuleState初始化
-        //_initState是内置的注入初始ModuleState的reducer
+        //_initState是内置的注入初始State的reducer/mutation
         this.dispatch(this.privateActions._initState({listSearch}));
         //发起列表查询
         this.dispatch(this.actions.fetchList(listSearch));
       }
 
-      //定义一个effect，用来执行列表查询
+      //定义一个effect/action，用来执行列表查询
       @effect()
       public async fetchList(listSearch: ListSearch) {
         const {list} = await api.getList(listSearch);
-        this.dispatch(this.putList(listSearch, list));
+        this.dispatch(this.privateActions.putList(listSearch, list));
       }
 
-      //定义一个reducer，用来更新列表
+      //定义一个reducer/mutation，用来更新列表
       @reducer
       protected putList(listSearch: ListSearch, list: ListItem[]) {
         //如果是vue，可以直接修改state

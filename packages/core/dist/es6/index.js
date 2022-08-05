@@ -2005,7 +2005,7 @@ class Router {
     return locationToUrl(partialLocation, defClassname);
   }
 
-  relaunch(partialLocation, target, refresh = false, _nativeCaller = false) {
+  relaunch(partialLocation, target = 'page', refresh = false, _nativeCaller = false) {
     return this.addTask(this._relaunch.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -2063,7 +2063,7 @@ class Router {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(partialLocation, target, refresh = false, _nativeCaller = false) {
+  replace(partialLocation, target = 'page', refresh = false, _nativeCaller = false) {
     return this.addTask(this._replace.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -2120,7 +2120,7 @@ class Router {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(partialLocation, target, refresh = false, _nativeCaller = false) {
+  push(partialLocation, target = 'page', refresh = false, _nativeCaller = false) {
     return this.addTask(this._push.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -2181,7 +2181,7 @@ class Router {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  back(stepOrKeyOrCallback, target, refresh = false, overflowRedirect = '', _nativeCaller = false) {
+  back(stepOrKeyOrCallback, target = 'page', refresh = false, overflowRedirect = '', _nativeCaller = false) {
     if (typeof stepOrKeyOrCallback === 'string') {
       stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
     }

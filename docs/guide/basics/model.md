@@ -1,17 +1,17 @@
 # Model
 
-这里的Model指的是抽象的业务模型，通常一个微模块都会包含一个Model，用来处理业务逻辑，它包含：
+这里的Model指的是业务逻辑的数据模型，通常一个微模块都会包含一个Model，用来处理业务逻辑并维护ModuleState，它包含二大元素：
 
-- ModuleState: `模块状态`
-- ActionHandler: `维护ModuleState` 可分为reducer/effect（类似vuex的mutation/action）
+- ModuleState: 本模块的状态
+- ActionHandler: 维护本模块`ModuleState`的方法，可分为`reducer/effect`（类似vuex的mutation/action）
 
-::: tip
+::: tip 复用公共逻辑
 
 Model形式上就是一个JS类，因此可以通过“**继承**”来复用一些公共逻辑。
 
 :::
 
-## Modle的类型定义
+## Modle的类型
 
 ```ts
 export interface CommonModel {

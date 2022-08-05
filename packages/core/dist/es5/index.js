@@ -3133,6 +3133,10 @@ var Router = function () {
   };
 
   _proto2.relaunch = function relaunch(partialLocation, target, refresh, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }
@@ -3243,6 +3247,10 @@ var Router = function () {
   }();
 
   _proto2.replace = function replace(partialLocation, target, refresh, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }
@@ -3352,6 +3360,10 @@ var Router = function () {
   }();
 
   _proto2.push = function push(partialLocation, target, refresh, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }
@@ -3473,6 +3485,10 @@ var Router = function () {
   }();
 
   _proto2.back = function back(stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }

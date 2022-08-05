@@ -141,13 +141,13 @@ export declare class Router implements IRouter {
     init(routerInitOptions: RouterInitOptions, prevState: StoreState): Promise<void>;
     private _init;
     computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
-    relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
+    relaunch(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
     private _relaunch;
-    replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
+    replace(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
     private _replace;
-    push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
+    push(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean, _nativeCaller?: boolean): Promise<void>;
     private _push;
-    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target: RouteTarget, refresh?: boolean, overflowRedirect?: string, _nativeCaller?: boolean): Promise<void>;
+    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, refresh?: boolean, overflowRedirect?: string, _nativeCaller?: boolean): Promise<void>;
     private _back;
     private backError;
 }

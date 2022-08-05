@@ -400,7 +400,7 @@ export class Router implements IRouter {
     return locationToUrl(partialLocation, defClassname);
   }
 
-  relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean = false, _nativeCaller = false): Promise<void> {
+  relaunch(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
     return this.addTask(this._relaunch.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -444,7 +444,7 @@ export class Router implements IRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean = false, _nativeCaller = false): Promise<void> {
+  replace(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
     return this.addTask(this._replace.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -487,7 +487,7 @@ export class Router implements IRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean = false, _nativeCaller = false): Promise<void> {
+  push(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
     return this.addTask(this._push.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -537,7 +537,7 @@ export class Router implements IRouter {
 
   back(
     stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean),
-    target: RouteTarget,
+    target: RouteTarget = 'page',
     refresh: boolean = false,
     overflowRedirect: string = '',
     _nativeCaller = false

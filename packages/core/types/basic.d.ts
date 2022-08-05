@@ -374,7 +374,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      * @param target - 指定要操作的历史栈，默认:`page`
      * @param payload - 提交给 {@link RouteRuntime} 的数据
      */
-    relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): void | Promise<void>;
+    relaunch(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
     /**
      * 在指定栈中新增一条历史记录，并跳转路由
      *
@@ -382,7 +382,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      * @param target - 指定要操作的历史栈，默认:`page`
      * @param payload - 提交给 {@link RouteRuntime} 的数据
      */
-    push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): void | Promise<void>;
+    push(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
     /**
      * 在指定栈中替换当前历史记录，并跳转路由
      *
@@ -390,7 +390,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      * @param target - 指定要操作的历史栈，默认:`page`
      * @param payload - 提交给 {@link RouteRuntime} 的数据
      */
-    replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): void | Promise<void>;
+    replace(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
     /**
      * 回退指定栈中的历史记录，并跳转路由
      *
@@ -399,7 +399,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      * @param payload - 提交给 {@link RouteRuntime} 的数据
      * @param overflowRedirect - 如果回退溢出，跳往哪个路由
      */
-    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target: RouteTarget, refresh?: boolean, overflowRedirect?: string | null): void | Promise<void>;
+    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, refresh?: boolean, overflowRedirect?: string | null): void | Promise<void>;
 }
 /**
  * Model的基础定义

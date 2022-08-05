@@ -129,12 +129,16 @@ export default defineUserConfig({
                   link: '/guide/configure.html',
                 },
                 {
-                  text: '快速上手',
-                  link: '/guide/quick-start.html',
-                },
-                {
                   text: '基础',
                   children: [
+                    {
+                      text: '基本概念',
+                      link: '/guide/basics/concepts.html',
+                    },
+                    {
+                      text: '快速上手',
+                      link: '/guide/basics/quick-start.html',
+                    },
                     {
                       text: 'Module',
                       link: '/guide/basics/module.html',

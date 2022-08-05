@@ -1,3 +1,7 @@
+---
+next: /guide/basics/concepts.html
+---
+
 # 项目配置
 
 ## web项目配置
