@@ -50,6 +50,8 @@ Elux与Redux、Dva、Vuex、Pinia等类似，都属于Flux状态管理框架，�
 - `dispatch(action)`类似事件，reducer和effect都是它的actionHandler，这意味着派发一个action可以同时触发多个reducer与effect。
 - `dispatch(action)`如果触发了异步的actionHandler，它将返回一个Promise，这意味着派发动作可以被await。
 
+![elux模型驱动示意图3](/images/model3.svg)
+
 ## Component与View
 
 View就是一个Component，只不过我们逻辑上认为：**包含具体业务逻辑的Component称为View**。

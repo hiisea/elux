@@ -1,13 +1,6 @@
 # Action与Handler
 
-Elux中的Action概念与Redux基本相同，其特别之处在于：
-
-- Action是Model中的事件，dispatch一个Action将触发各模块中监听该Action的多个ActionHandler执行
-- ActionHandler按职能可分为：
-  - `Reducer`类似vuex中的`Mutation`，是修改State的唯一途径。
-  - `Effect`类似vuex中的`Action`，Effect不可以直接修改State，但它可以dispatch action来触发Reducer来修改。
-
-![elux动态逻辑图](/images/dynamic-structure.svg)
+Action是Model中的事件，Reducer与Effect是其Handler...
 
 ## Aciton的定义
 
@@ -22,63 +15,112 @@ export interface Action {
 
 ## 创建并派发Action
 
-- 自动创建（更可以享受到**TS的类型提示**）
+先回忆一下，不管是redux还是vuex，派发`action/mutation`都类似：
 
-    在Model中自动创建并派发Action:
+> dispatch({type:"user.login", payload:{username:"jimmy", password:"123456"}})
 
-    ```ts{6,10}
-    import {Modules} from '@/Global';
+这种方法有个很大的弊端，就是派发体`Action`需要手写，TS又不能很好的验证与提示，很容易写错。比如type写成了user.updat`a`User，也验证不到，更容易出错的是参数部分，如果参数是一个复杂的结构体，盲写很容易写错。
 
-    export class Model extends BaseModel<ModuleState, APPState> {
-        protected async test() {
-            //本Model中可以用this.actions
-            const logoutAction = this.actions.logout();
-            console.log(logoutAction); //{type:'stage.logout'}
-            await this.dispatch(logoutAction); //可以await该Action的执行
-            //非本Model中可以用Modules.article.actions
-            const searchAction = Modules.article.actions.search({keyword:'aaa'});
-            this.dispatch(searchAction);
-        }
+Elux中改进了这种原始写法，自动生成派发体`Action`，并且配合TS类型提示，再也不用担心写错type和参数：
+
+```ts
+//自动生成{type:"xxx",args:xxx}
+const action = userActions.login('jimmy','123456');
+dispatch(action);
+```
+
+在Model中自动创建并派发Action:
+
+```ts{6,10}
+import {Modules} from '@/Global';
+
+export class Model extends BaseModel<ModuleState, APPState> {
+    protected async test() {
+        //本Model中可以用this.actions
+        const logoutAction = this.actions.logout();
+        console.log(logoutAction); //{type:'stage.logout'}
+        await this.dispatch(logoutAction); //可以await该Action的执行
+        //非本Model中可以用Modules.article.actions
+        const searchAction = Modules.article.actions.search({keyword:'aaa'});
+        this.dispatch(searchAction);
     }
-    ```
+}
+```
 
-    在View中自动创建并派发Action:
+在View中自动创建并派发Action:
 
-    ```ts
-    const Component = ({curUser, notices, dispatch}) => {
-       const onLogout = () => dispatch(Modules.stage.actions.logout());
+```ts
+const Component = ({curUser, notices, dispatch}) => {
+    const onLogout = () => dispatch(Modules.stage.actions.logout());
 
-       return <button onClick={onLogout}>退出</button>
+    return <button onClick={onLogout}>退出</button>
+}
+```
+
+使用GetActions()写法：
+
+```ts
+//当需要 dispatch 多个 module 的 action 时，例如：
+dispatch(Modules.a.actions.a1())
+dispatch(Modules.b.actions.b1())
+
+//这种写法可以简化为：
+const {a, b} = GetActions('a', 'b')
+dispatch(a.a1())
+dispatch(b.b1())
+
+```
+
+## 跟踪Action执行结果
+
+可以将`effect`的执行情况注入`moduleState`中，比如：
+
+```ts{5}
+export class Model extends BaseModel<ModuleState, APPState> {
+
+  //定义一个effect/action，用来执行列表查询
+  //将该effect的执行情况，注入this.state.listLoading中
+   @effect(`this.listLoading`)
+   public async fetchList(listSearch: ListSearch) {
+     const {list} = await api.getList(listSearch);
+     this.dispatch(this.privateActions.putList(listSearch, list));
+   }
+}
+
+```
+
+可以`awiat`一个action的所有handler执行完成，比如：
+
+- 在View中：
+
+  ```ts
+  // src/modules/stage/views/LoginForm.tsx
+
+  const onSubmit = () => {
+    const result = dispatch(Modules.stage.actions.login({username, password}));
+    // 结果是一个Promise
+    result.catch(({message}) => {
+      setErrorMessage(message);
+    });
+  }
+
+  ```
+
+- 在Model中：
+
+  ```ts
+  // src/modules/article/model.ts
+
+  public async onMount(): Promise<void> {
+    this.dispatch(this.privateActions._initState({currentView}));
+    if (currentView === 'list') {
+      await this.dispatch(this.actions.fetchList(listSearch));
+    } else if (currentView && itemId) {
+      await this.dispatch(this.actions.fetchItem(itemId));
     }
-    ```
+  }
 
-    使用GetActions()写法：
-
-    ```ts
-    //当需要 dispatch 多个 module 的 action 时，例如：
-    dispatch(Modules.a.actions.a1())
-    dispatch(Modules.b.actions.b1())
-
-    //这种写法可以简化为：
-    const {a, b} = GetActions('a', 'b')
-    dispatch(a.a1())
-    dispatch(b.b1())
-    
-    ```
-
-- 手动创建（type和payload都没有TS类型提示）
-
-    ```ts
-
-    export class Model extends BaseModel<ModuleState, APPState> {
-        protected async test() {
-            const logoutAction = {type:'stage.logout'};
-            await this.dispatch(logoutAction);
-            const searchAction = {type:'article.search', payload:{keyword:'aaa'}};
-            this.dispatch(searchAction);
-        }
-    }
-    ```
+  ```
 
 ## 内置特殊Action
 
@@ -210,41 +252,6 @@ moduleB.effect
 
 - ModuleB 执行完后，dispatch一个新的action
 - MouldeA 监听这个新的action
-
-### await Action执行结果
-
-可以等待一个action的所有handler执行完成，比如：
-
-- 在View中：
-
-  ```ts
-  // src/modules/stage/views/LoginForm.tsx
-
-  const onSubmit = () => {
-    const result = dispatch(Modules.stage.actions.login({username, password}));
-    // 结果是一个Promise
-    result.catch(({message}) => {
-      setErrorMessage(message);
-    });
-  }
-
-  ```
-
-- 在Model中：
-
-  ```ts
-  // src/modules/article/model.ts
-
-  public async onMount(): Promise<void> {
-    this.dispatch(this.privateActions._initState({currentView}));
-    if (currentView === 'list') {
-      await this.dispatch(this.actions.fetchList(listSearch));
-    } else if (currentView && itemId) {
-      await this.dispatch(this.actions.fetchItem(itemId));
-    }
-  }
-
-  ```
 
 ## 错误与处理
 

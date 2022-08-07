@@ -4,15 +4,13 @@
 
 ## 派发Action
 
-先回忆一下，不管是redux还是vuex，派发`action/mutation`都类似，派发体都是形如`{type:"xxx", args:xxx}`的格式，例如：
+先回忆一下，不管是redux还是vuex，派发`action/mutation`都类似：
 
 > dispatch({type:"user.login", payload:{username:"jimmy", password:"123456"}})
 
-> commit({type:"user.updateUser", payload:{username:"jimmy", password:"123456"}})
+这种方法有个很大的弊端，就是派发体`Action`需要手写，TS又不能很好的验证与提示，很容易写错。比如type写成了user.updat`a`User，也验证不到，更容易出错的是参数部分，如果参数是一个复杂的结构体，盲写很容易写错。
 
-这种方法有个很大的弊端，就是`派发体`需要手写，TS又不能很好的验证与提示，很容易写错。比如type写成了user.updat**a**User，也验证不到，更容易出错的是参数部分，如果参数是一个复杂的结构体，盲写很容易写错。
-
-Elux中改进了这种原始写法，自动生成派发体，并且配合TS类型提示，再也不用担心写错type和参数：
+Elux中改进了这种原始写法，自动生成派发体`Action`，并且配合TS类型提示，再也不用担心写错type和参数：
 
 ```ts
 //自动生成{type:"xxx",args:xxx}
