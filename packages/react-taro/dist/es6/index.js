@@ -311,7 +311,7 @@ const Link = ({
   onClick,
   disabled,
   overflowRedirect,
-  target,
+  target = 'page',
   refresh,
   ...props
 }) => {

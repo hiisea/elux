@@ -24,9 +24,9 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
    */
   action: Exclude<RouteAction, 'init'>;
   /**
-   * 指定要操作的历史栈
+   * 指定要操作的历史栈，默认`page`
    */
-  target: RouteTarget;
+  target?: RouteTarget;
   /**
    * 指定路由窗口的class
    */
@@ -57,7 +57,7 @@ export interface LinkProps extends HTMLAttributes<HTMLDivElement> {
  *
  * @public
  */
-export const Link: FC<LinkProps> = ({to, cname, action, onClick, disabled, overflowRedirect, target, refresh, ...props}) => {
+export const Link: FC<LinkProps> = ({to, cname, action, onClick, disabled, overflowRedirect, target = 'page', refresh, ...props}) => {
   const router = coreConfig.UseRouter!();
   const {firstArg, url, href} = useMemo(() => {
     let firstArg: any, url: string, href: string;

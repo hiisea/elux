@@ -108,6 +108,10 @@ export default defineUserConfig({
                 text: '@elux/vue-taro',
                 link: '/api/vue-taro.md',
               },
+              {
+                text: '@elux/model',
+                link: '/api/model.md',
+              },
             ],
           },
         ],

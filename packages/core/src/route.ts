@@ -587,14 +587,9 @@ export class Router implements IRouter {
     const prevStore = this.getActivePage().store;
     const location = record.location;
     const title = record.title;
-    const NotifyNativeRouter: boolean[] = [];
-    if (index[0]) {
-      NotifyNativeRouter[0] = coreConfig.NotifyNativeRouter.window;
-    }
-    if (index[1]) {
-      NotifyNativeRouter[1] = coreConfig.NotifyNativeRouter.page;
-    }
-    if (!_nativeCaller && NotifyNativeRouter.length) {
+    const NotifyNativeRouter = (index[0] && coreConfig.NotifyNativeRouter.window) || (index[1] && coreConfig.NotifyNativeRouter.page);
+
+    if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location, index);
     }
     try {
@@ -624,7 +619,7 @@ export class Router implements IRouter {
       pageStack.replaceStore(newStore);
     }
     await this.mountStore(prevStore, newStore);
-    if (!_nativeCaller && NotifyNativeRouter.length) {
+    if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, record.key, index);
     }
     this.setDocumentHead(`<title>${title}</title>`);

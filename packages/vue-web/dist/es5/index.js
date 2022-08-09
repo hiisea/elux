@@ -473,7 +473,8 @@ var Link = defineComponent({
       var to = props.to,
           action = props.action,
           cname = props.cname,
-          target = props.target;
+          _props$target = props.target,
+          target = _props$target === void 0 ? 'page' : _props$target;
 
       if (action === 'back') {
         firstArg = to;

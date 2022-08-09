@@ -24,9 +24,9 @@ export interface LinkProps extends HTMLAttributes {
    */
   action: Exclude<RouteAction, 'init'>;
   /**
-   * 指定要操作的历史栈
+   * 指定要操作的历史栈，默认`page`
    */
-  target: RouteTarget;
+  target?: RouteTarget;
   /**
    * 指定路由窗口的class
    */
@@ -66,7 +66,7 @@ export const Link: FunctionalComponent<LinkProps> = defineComponent({
     const router = coreConfig.UseRouter!();
     const route = computed(() => {
       let firstArg: any, url: string, href: string;
-      const {to, action, cname, target} = props;
+      const {to, action, cname, target = 'page'} = props;
       if (action === 'back') {
         firstArg = to;
         url = `#${to.toString()}`;

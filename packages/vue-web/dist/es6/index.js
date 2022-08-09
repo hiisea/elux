@@ -451,7 +451,7 @@ const Link = defineComponent({
         to,
         action,
         cname,
-        target
+        target = 'page'
       } = props;
 
       if (action === 'back') {
