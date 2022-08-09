@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.2](https://github.com/hiisea/elux/compare/v2.6.1...v2.6.2) (2022-08-09)
+
+
+### Bug Fixes
+
+* 小程序中switchTab相同的页面不触发 ([b7cc9c1](https://github.com/hiisea/elux/commit/b7cc9c1c5c82b047e7a727687ad237a1d00f6d29))
+
+
+
+
+
 ## [2.6.1](https://github.com/hiisea/elux/compare/v2.6.0...v2.6.1) (2022-08-09)
 
 

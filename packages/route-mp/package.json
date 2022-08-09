@@ -1,6 +1,6 @@
 {
   "name": "@elux/route-mp",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "description": "Using @elux/route in mini-program",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/route-mp",
   "author": "hiisea <hiisea@qq.com>",
