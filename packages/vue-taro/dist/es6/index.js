@@ -96,6 +96,10 @@ class MPNativeRouter extends BaseNativeRouter {
 
   relaunch(location, key) {
     if (this.history.isTabPage(location.pathname)) {
+      if (this.history.getLocation().pathname === location.pathname) {
+        return false;
+      }
+
       this.history.switchTab({
         url: location.url
       });
