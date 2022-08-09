@@ -1,6 +1,6 @@
 {
   "name": "@elux/model",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "The practice of elux on model",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/model",
   "author": "hiisea <hiisea@qq.com>",
@@ -32,8 +32,8 @@
     "@elux/core": true
   },
   "dependencies": {
-    "@elux/app": "^2.6.0",
-    "@elux/core": "^2.6.0"
+    "@elux/app": "^2.6.1",
+    "@elux/core": "^2.6.1"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }
