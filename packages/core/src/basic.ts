@@ -397,7 +397,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
     stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean),
     target?: RouteTarget,
     refresh?: boolean,
-    overflowRedirect?: string | null
+    overflowRedirect?: string
   ): void | Promise<void>;
 }
 

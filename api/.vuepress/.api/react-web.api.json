@@ -4612,7 +4612,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "string | null"
+                  "text": "string"
                 },
                 {
                   "kind": "Content",

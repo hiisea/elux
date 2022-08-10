@@ -399,7 +399,7 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      * @param refresh - 是否强制刷新，默认: false
      * @param overflowRedirect - 如果回退溢出，跳往哪个路由
      */
-    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, refresh?: boolean, overflowRedirect?: string | null): void | Promise<void>;
+    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, refresh?: boolean, overflowRedirect?: string): void | Promise<void>;
 }
 /**
  * Model的基础定义
