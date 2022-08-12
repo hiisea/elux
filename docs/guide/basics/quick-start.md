@@ -22,9 +22,9 @@ dispatch(action);
 
 并且Elux中也没有`commit`这个方法，统一使用`dispatch`来派发，减小了心智负担。
 
-## 创建一个新Module
+## 新建一个微模块
 
-> 假设我们想创建一个新Module：**article**
+> 假设我们想创建一个新Module:`article`
 
 1. 在`src/modules/`下面新建一个文件夹`article`
 2. 在`src/modules/article`下面新建一个文件`model.ts`

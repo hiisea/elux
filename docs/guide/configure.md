@@ -4,6 +4,8 @@ next: /guide/basics/concepts.html
 
 # 项目配置
 
+如果你使用自己的脚手架，本篇可直接跳过！
+
 ## web项目配置
 
 web项目使用的基于webpack5封装的脚手架，配置文件为`elux.config.js`，目前支持以下选项：

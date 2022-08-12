@@ -61,7 +61,7 @@
         <ul>
           <li>CSR: 基于浏览器渲染的Web应用</li>
           <li>SSR: 基于服务器渲染 + 浏览器渲染的同构应用</li>
-          <li>Micro: 基于Webpack5的微前端 + 微模块方案</li>
+          <li>Micro: 基于ModuleFederation的“微前端”方案</li>
           <li>Model: 基于模型驱动，React与Vue跨项目共用Model</li>
           <li>Taro: 基于Taro的跨平台应用（各类小程序）</li>
           <li>RN: 基于ReactNative的原生APP</li>
