@@ -5,6 +5,8 @@
 - **ModuleState**: 本模块的状态
 - **ActionHandler**: 维护本模块`ModuleState`的方法，可分为`reducer/effect`（类似vuex的mutation/action）
 
+参见：[基本概念](/guide/basics/concepts.html)
+
 ::: tip 复用公共逻辑
 
 Model形式上就是一个JS类，因此可以通过“**继承**”来复用一些公共逻辑。

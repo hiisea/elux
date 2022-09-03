@@ -1,13 +1,15 @@
 # Router与路由
 
-Elux抹平了各平台、各UI库中路由的千差万别，实现了统一的带`二维历史栈`的虚拟路由。设计思想参见[路由与历史](/designed/route-history.html)，用直观的映像来描述Elux中的虚拟路由：`相当于在单页中虚拟了一个浏览器`
+Elux抹平了各平台、各UI库中路由的千差万别，实现了统一的带`二维历史栈`的虚拟路由。设计思想参见[路由与历史](/designed/route-history.html)，用直观的映像来描述Elux中的虚拟路由：
+
+~~敲黑板：**相当于在单页中虚拟了一个浏览器，并将Tab窗口叠起来...**
 
 ![elux虚拟路由示意图1](/images/router-browser.svg)
 
 从图中可以看出，Elux虚拟路由的历史栈有2种：
 
-- PageHistoryStack：相当于我们平时接触到的`window.history`，用来保存页面跳转的历史记录
-- WindowHistoryStack：相当于浏览器内部的`tab.history`，用来保存Tab窗口跳转的历史记录
+- PageHistoryStack：相当于我们平时接触到的`window.history`，用来保存页面跳转的历史记录，每条历史记录可以想象成就是一条Url。
+- WindowHistoryStack：相当于浏览器内部的`tab.history`，用来保存Tab窗口切换的历史记录，每条历史记录是一个虚拟Window（包括PageHistoryStack、View、Store）的历史快照。
 
 路由的时候，我们可以选择在原Tab窗口中打开，或者新开一个Tab窗口打开：
 
@@ -18,12 +20,12 @@ Elux抹平了各平台、各UI库中路由的千差万别，实现了统一的�
 
 - 这里的`Window`并非浏览器对象，而是Elux中的**虚拟Window**（也可以想象成浏览器的Tab窗口），它包含了一条`PageHistoryStack`和`CurrentPage`的历史快照(Store和View)。
 - 这里的`Page`仅包含路由信息(Url)，每次发生路由跳转我们就认为打开了一个新**Page**，将其Url记录在`PageHistoryStack`。
-- Window中保存了PageHistoryStack、Store和View，属于"重资产"，我们限制`WindowHistoryStack`的条数最多为`10`条
-- Page其实只是一条Url，属于"轻资产"，我们限制`PageHistoryStack`的条数最多为`20`条
+- Window中保存了PageHistoryStack、Store和View，属于"重资产"，我们在`WindowHistoryStack`中只保存`10`条`Window`记录。
+- Page其实只是一条Url，属于"轻资产"，我们在`PageHistoryStack`只保存`20`条`Url`记录。
 
 ::: tip 二维历史栈
 
-注意这里是二维历史栈，并不是2条历史栈。`WindowHistoryStack`最大为10，每个Window中包含一条`PageHistoryStack`，所以最多可能存在`11`条历史栈，总共可以记录`200`次路由跳转历史记录
+注意这里是二维历史栈，并不是2条历史栈。`WindowHistoryStack`最多保存`10`条Window记录，而每个Window中都包含一条`PageHistoryStack`，所以最多可能存在`11`条历史栈，总共可以记录`200`次路由跳转历史记录。
 
 :::
 

@@ -15,7 +15,7 @@ prev: /guide/configure.html
 - 应用由一个个业务**微模块**组成，微模块之间是平等、松散、可组合的。
 - 微模块应当`高内聚低耦合`，强调**自治**，可以独立开发、维护、部署。
 
-## 微模块内部结构
+## 微模块由Model和View组成
 
 - **model**：用来处理业务逻辑，维护ModuleState（模块状态）
   - ModuleState：用来描述微模块的当前状态。
@@ -25,8 +25,6 @@ prev: /guide/configure.html
 - **view**：用来展示数据与交互
   - Component：普通UI组件
   - View：包含具体业务的UI组件
-- **assets**：本微模块的私有资源
-- **utils**：其它辅助函数及方法等
 
 ::: tip 微模块是一种集合，也是一个文件夹
 
@@ -37,13 +35,96 @@ prev: /guide/configure.html
   
 ![elux静态结构图](/images/static-structure.svg)
 
-## 状态管理
+## View与Component
 
-Elux与Redux、Dva、Vuex、Pinia等类似，都属于Flux状态管理框架，但也有自己的特性：
+View就是一个Component，只不过我们逻辑上认为：**包含具体业务逻辑的Component称为View**。
 
-- store用来管理state。
-- 注入和修改state只能是reducer/mutation。
-- 处理副作用只能是effect/action。
+- View 用来承载具体的业务逻辑，Component 用来承载通用的交互逻辑。
+- View可以直接从Store中获取数据，Component不要直接依赖Store。
+
+## Model与状态管理
+
+Elux内置的状态管理框架与Redux、Dva、Vuex、Pinia等类似，它们各自的基本用法如下：
+
+```ts
+//基于Redux的Dva：
+{
+  state(){
+    return {curUser: null}
+  },
+  reducers: {
+    setUser(state, {payload}) {
+      return {...state, curUser: payload}
+    },
+  },
+  effects: {
+    *login({ payload: {username, password} }, { put, call }){
+      const { data } = yield call(api.login, username, password);
+      yield put({ type: 'setUser', payload: data }); //无TS类型提示
+    }
+  }
+};
+
+//Vuex：
+{
+  state(){
+    return {curUser: null}
+  },
+  mutations: {
+    setUser(state, curUser) {
+      state.curUser = curUser;
+    }
+  },
+  actions: {
+    async login({ commit }, {username, password}) {
+      const { data } = await api.login(username, password);
+      commit('setUser', data) //无TS类型提示
+    }
+  }
+}
+
+//Pinia：
+{
+ state(){
+  return {curUser: null}
+ },
+ actions: {
+   setUser(curUser) {
+    this.curUser = curUser;
+   }
+   async login(username, password) {
+      const { data } = await api.login(username, password);
+      this.setUser(data) //有TS类型提示
+   }
+ } 
+}
+
+//Elux：
+class Model{
+
+  onMount() {
+    this.dispatch(this.actions._initState({curUser: null}));
+  }
+
+  @reducer
+  setUser(curUser) {
+    this.state.curUser = curUser;
+  }
+
+  @effect()
+  async login(username, password) {
+    const { data } = await api.login(username, password);
+    this.dispatch(this.actions.setUser(data)); //有TS类型提示
+  }
+}
+```
+
+从以上对比可以看出，它们大体结构上相似，糖衣语法各自有所不同，其中Pinia与Elux都使用`this`指针来调用，语法更自然，且都具备TS类型提示...
+
+![elux-ts](/images/case/type.jpg)
+
+### Elux状态管理框架特性：
+
 - StoreState由各微模块的ModuleState组合而成。
   - 每个微模块通过`Model`来维护自己的`ModuleState`。
   - 微模块可以读取其它微模块的`ModuleState`，但不要修改。
@@ -51,10 +132,3 @@ Elux与Redux、Dva、Vuex、Pinia等类似，都属于Flux状态管理框架，�
 - `dispatch(action)`如果触发了异步的actionHandler，它将返回一个Promise，这意味着派发动作可以被await。
 
 ![elux模型驱动示意图3](/images/model3.svg)
-
-## Component与View
-
-View就是一个Component，只不过我们逻辑上认为：**包含具体业务逻辑的Component称为View**。
-
-- View 用来承载具体的业务逻辑，Component 用来承载通用的交互逻辑。
-- View可以直接从Store中获取数据，Component不要直接依赖Store。

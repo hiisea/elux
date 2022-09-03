@@ -1,27 +1,14 @@
 # Elux项目快速上手
 
-假设您已经是一名React/Vue熟手，使用过Redux/Vuex/Dva，那么上手Elux项目很快...
+假设您已经是一名React/Vue熟手，使用过Redux/Vuex/Dva，那么上手Elux项目很快：
 
-## 派发Action
-
-先回忆一下，不管是redux还是vuex，派发`action/mutation`都类似：
-
-> dispatch({type:"user.login", payload:{username:"jimmy", password:"123456"}})
-
-这种方法有个很大的弊端，就是派发体`Action`需要手写，TS又不能很好的验证与提示，很容易写错。比如type写成了user.updat`a`User，也验证不到，更容易出错的是参数部分，如果参数是一个复杂的结构体，盲写很容易写错。
-
-Elux中改进了这种原始写法，自动生成派发体`Action`，并且配合TS类型提示，再也不用担心写错type和参数：
-
-```ts
-//自动生成{type:"xxx",args:xxx}
-const action = userActions.login('jimmy','123456');
-dispatch(action);
-```
-
-![elux-ts](/images/case/type.jpg)
-
-并且Elux中也没有`commit`这个方法，统一使用`dispatch`来派发，减小了心智负担。
-
+- 划分微模块
+- 创建微模块
+  - 创建Model
+  - 创建View
+  - 导出模块
+- 引入微模块
+  
 ## 新建一个微模块
 
 > 假设我们想创建一个新Module:`article`
