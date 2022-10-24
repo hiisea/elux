@@ -137,6 +137,12 @@
     }
   }
 
+  .hero-photo{
+    max-width: none !important;
+    max-height: none !important;
+    margin: auto !important;
+  }
+
   .feats {
     h2 {
       margin-top: 6rem;

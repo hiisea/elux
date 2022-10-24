@@ -32,12 +32,12 @@ export default defineUserConfig({
   locales: {
     '/': {
       lang: 'zh-CN',
-      title: 'Elux-基于“微模块”和“模型驱动”的跨平台、跨框架『同构方案』',
+      title: 'Elux',
       description: 'Elux不只是一个JS框架，更是一种基于“微模块”和“模型驱动”的跨平台、跨框架同构方案',
     },
     '/en/': {
       lang: 'en-US',
-      title: 'Elux-基于“微模块”和“模型驱动”的跨平台、跨框架『同构方案』',
+      title: 'Elux',
       description: 'Cross platform and cross framework web solutions that based on micro-module and model-driven',
     },
   },
@@ -104,10 +104,6 @@ export default defineUserConfig({
                   link: '/designed/model-driven.html',
                 },
                 {
-                  text: '分层而治',
-                  link: '/designed/three-layered.html',
-                },
-                {
                   text: '路由与历史',
                   link: '/designed/route-history.html',
                 },
@@ -129,20 +125,24 @@ export default defineUserConfig({
                   link: '/guide/configure.html',
                 },
                 {
+                  text: '基本概念',
+                  link: '/guide/concepts.html',
+                },
+                {
+                  text: '状态管理',
+                  link: '/guide/state.html',
+                },
+                {
+                  text: '实例分析',
+                  link: '/guide/example.html',
+                },
+                {
+                  text: '快速上手',
+                  link: '/guide/quick.html',
+                },
+                {
                   text: '教程',
                   children: [
-                    {
-                      text: '基本概念',
-                      link: '/guide/basics/concepts.html',
-                    },
-                    {
-                      text: '实例分析',
-                      link: '/guide/basics/example.html',
-                    },
-                    {
-                      text: '快速上手',
-                      link: '/guide/basics/quick-start.html',
-                    },
                     {
                       text: 'Module',
                       link: '/guide/basics/module.html',

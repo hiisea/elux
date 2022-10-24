@@ -2,7 +2,7 @@
 
 <template>
   <div class="feats">
-    <h2>一站式跨平台、跨框架<span class="stress">同构</span></h2>
+    <h2 style="margin-top: 4rem">一站式跨平台、跨框架<span class="stress">同构</span></h2>
     <div class="feats-cross">
       <ul class="framework">
         <li class="react">React</li>

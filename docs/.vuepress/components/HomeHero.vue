@@ -47,12 +47,13 @@ const actions = computed(() => {
     <div class="hero-summary">
       <section>
         <h2>微模块</h2>
-        <p>将业务领域的模块化带入前端，各微模块可独立开发、灵活拆装、按需加载、版本控制，是一种更自由、更细粒度的微前端...</p>
+        <p>以业务功能的高内聚低耦合划分微模块，各微模块可独立自治、灵活拆装、按需加载、版本控制，是一种更自由、更细粒度的微前端...</p>
       </section>
       <section>
         <h2>模型驱动</h2>
-        <p>以业务逻辑的数据模型作为核心驱动，减少对运行平台、UI框架的强依赖和干挠，是DDD领域驱动在前端的白话版、简化版、落地版...</p>
+        <p>以业务逻辑的数据模型作为核心驱动，减少对运行平台、UI框架的强依赖和干挠，是领域驱动在前端开发的白话版、简化版、落地版...</p>
       </section>
     </div>
+    <div><img src="/images/hero-photo.png" alt="elux-微模块-模型驱动" width="500" class="hero-photo" /></div>
   </header>
 </template>

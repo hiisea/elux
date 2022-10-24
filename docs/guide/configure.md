@@ -1,7 +1,3 @@
----
-next: /guide/basics/concepts.html
----
-
 # 项目配置
 
 如果你使用自己的脚手架，本篇可直接跳过！

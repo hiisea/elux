@@ -1,13 +1,13 @@
 # Elux项目快速上手
 
-假设您已经是一名React/Vue熟手，使用过Redux/Vuex/Dva，那么上手Elux项目很快：
+`快速上手三步曲：`
 
-- 划分微模块
-- 创建微模块
-  - 创建Model
-  - 创建View
-  - 导出模块
-- 引入微模块
+1. 划分微模块
+2. 创建微模块
+   - 创建Model
+   - 创建View
+   - 导出模块
+3. 引入微模块
   
 ## 新建一个微模块
 
@@ -15,7 +15,7 @@
 
 1. 在`src/modules/`下面新建一个文件夹`article`
 2. 在`src/modules/article`下面新建一个文件`model.ts`
-3. 在`model.ts`中定义Model，通常格式如下：
+3. 在`model.ts`中定义业务模型Model，例如：
 
    ```ts
     //定义本模块的ModuleState
@@ -51,13 +51,6 @@
         this.dispatch(this.actions.fetchList(listSearch));
       }
 
-      //定义一个effect/action，用来执行列表查询
-      @effect()
-      public async fetchList(listSearch: ListSearch) {
-        const {list} = await api.getList(listSearch);
-        this.dispatch(this.privateActions.putList(listSearch, list));
-      }
-
       //定义一个reducer/mutation，用来更新列表
       @reducer
       protected putList(listSearch: ListSearch, list: ListItem[]) {
@@ -66,6 +59,13 @@
         this.state.list = list;
         //如果是React，需要返回一个新对象
         //return {...this.state, listSearch, list}
+      }
+
+      //定义一个effect/action，用来执行列表查询
+      @effect()
+      public async fetchList(listSearch: ListSearch) {
+        const {list} = await api.getList(listSearch);
+        this.dispatch(this.privateActions.putList(listSearch, list));
       }
     }
    ```
@@ -89,9 +89,6 @@
    export const ModuleGetter = {
       stage: () => stage, //通常stage为根模块，使用同步加载
       article: () => import('@/modules/article'),
-      shop: () => import('@/modules/shop'),
-      admin: () => import('@/modules/admin'),
-      my: () => import('@/modules/my'),
     };
    ```
 

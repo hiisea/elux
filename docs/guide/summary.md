@@ -6,9 +6,14 @@ prev: /designed/route-history.html
 
 ::: tip Learn Once, Write Anywhere...
 
-Elux不只是一个JS框架，更是一种跨平台、跨框架的**同构方案**。
+基于“微模块”和“模型驱动”的跨平台、跨框架『同构方案』
 
 :::
+
+## 一个问题
+
+- **Q:** 多大级别的应用可以使用Elux？我就一个小工程需要使用“微模块+模型驱动”吗？
+- **A:** 微模块是一种业务模块化方案，模型驱动是一种逻辑分层方案，与应用规模大小无关，它们让你的工程更有条理，并不增加额外维护成本。至于是否使用NPM管理微模块、是否使用Module Federation来实现“微前端”，这才需要根据应用级别考虑。
 
 ## 二大基石
 
@@ -46,14 +51,12 @@ Elux不只是一个JS框架，更是一种跨平台、跨框架的**同构方案
 
 ## 典型案例
 
+简单`增删改查`的H5页面（SSR服务器渲染）：
+
+- 在线预览：[http://h5-ssr.eluxjs.com](http://h5-ssr.eluxjs.com)
+
 基于`Elux+Antd`的后台管理系统：
 
+- 在线预览：[http://admin-react-antd.eluxjs.com/](http://admin-react-antd.eluxjs.com/)
 - React版本：[Github](https://github.com/hiisea/elux-react-antd-admin) ｜ [Gitee](https://gitee.com/hiisea/elux-react-antd-admin-fork)
 - Vue版本：[Github](https://github.com/hiisea/elux-vue-antd-admin) ｜ [Gitee](https://gitee.com/hiisea/elux-vue-antd-admin-fork)
-
-## 相关文章
-
-- [从"微前端"到“微模块”](https://juejin.cn/post/7106791733509226533)
-- [不想当Window的Dialog不是一个好Modal，弹窗翻身记](https://juejin.cn/post/7124177821953425422)
-- [手撸Router，还要啥Router框架？让react-router/vue-router躺一边凉快去](https://juejin.cn/post/7124959667326812196)
-- [一种比css_scoped和css_module更优雅的避免css命名冲突小妙招](https://juejin.cn/post/7129316859182710814)

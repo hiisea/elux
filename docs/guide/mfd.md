@@ -6,7 +6,7 @@ next: /guide/platform/ssr.html
 
 微前端是一种泛称，Elux项目中使用颗粒度更小的`微模块`来实现微前端，参见[微模块](/designed/micro-module.html)。
 
-在前面[《实例分析》](/guide/basics/example.html)中我们讲解了一个`单体工程`的实例，而微模块真正的魅力是可以多Team合作开发、独立上线、实现粒度更细的微前端。
+在前面[《实例分析》](/guide/example.html)中我们讲解了一个`单体工程`的实例，而微模块真正的魅力是可以多Team合作开发、独立上线、实现粒度更细的微前端。
 
 假设我们有3个Team来合作开发这个项目，他们是微模块的**生产者**：
 
@@ -186,11 +186,37 @@ export const ModuleGetter = {
 
 ## app-runtime-team工程
 
-Elux是一种将应用拆分为`微模块`的方案，而Module-Federation是一种远程加载`JS模块`的方案，将它们2者结合到一起，就创造了一种特别的“微前端”解决方案。
+我们假设app-runtime-team使用`Module-Federation`方案来使用微模块，先简单回顾一下Webpack5的Module-Federation：
 
-> 关于Module-Federation（模块联邦）的详细信息，请自行了解...
+![mfd-site.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3bbc375f321e4283ae605acb7152d124~tplv-k3u1fbpfcp-watermark.image?)
 
-我们假设`app-runtime-team`借助Module-Federation来使用微模块。其工程结构与`app-build-team`基本一致，稍有变动如下：
+简单来说Module-Federation就是提供了一种`Module跨站点实时共享`的手段，它分2个角色：**Module提供者**和**Module消费者**，如图所示：
+
+- SiteA作为模块Modulex的提供者。
+- SiteB作为模块Modulex的消费者。
+
+当SiteA更新`ModuleX`时，SiteB无需重新构建，刷新浏览器即可从SiteA拉取最新的`ModuleX`。
+
+### 同时作为提供者和消费者
+
+站点可以生产某些模块提供给其它站点使用，同时也可以使用其它站点提供的某些模块，如图：
+
+![mfd-site3.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3f89d5ac4660439495dc7ad7f1c1bf13~tplv-k3u1fbpfcp-watermark.image?)
+
+- SiteA提供了ModuleA、ModuleB，同时消费了ModuleD、ModuleE
+- SiteB提供了ModuleC、ModuleD，同时消费了ModuleA、ModuleF
+- SiteC提供了ModuleE、ModuleF，同时消费了ModuleA、ModuleB、ModuleC
+
+### 从Module-Federation到微前端
+
+SiteA、SiteB、SiteC三个站点就组合成了我们所谓的“微前端”系统，可以看出其中2个关键点：
+
+1. 如何提供和加载Module，这个就是Webpack-Module-Federation所能解决的问题。
+2. 如何划分Module，这个就是Elux中`微模块`所能解决的问题。
+
+### 工程结构
+
+app-runtime-team工程结构与`app-build-team`基本一致，稍有变动如下：
 
 1. 打开`elux.config.json`，配置ModuleFederation：
 
