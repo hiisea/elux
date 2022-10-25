@@ -1,6 +1,6 @@
 {
   "name": "@elux/react-redux",
-  "version": "2.6.1",
+  "version": "2.6.3",
   "description": "The practice of elux on react + redux",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/react-redux",
   "author": "hiisea <hiisea@qq.com>",
@@ -31,7 +31,7 @@
     "react-redux": "^7 || ^8"
   },
   "dependencies": {
-    "@elux/core": "^2.6.1"
+    "@elux/core": "^2.6.3"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

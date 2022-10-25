@@ -1,6 +1,6 @@
 {
   "name": "@elux/react-taro",
-  "version": "2.6.2",
+  "version": "2.6.3",
   "description": "The practice of react + taro",
   "repository": "https://github.com/hiisea/elux/tree/master/packages/react-taro",
   "author": "hiisea <hiisea@qq.com>",
@@ -41,12 +41,12 @@
     "react-dom": "^16.8.0 || ^17 || ^18"
   },
   "dependencies": {
-    "@elux/app": "^2.6.1",
-    "@elux/core": "^2.6.1",
-    "@elux/react-components": "^2.6.1",
-    "@elux/react-redux": "^2.6.1",
-    "@elux/route-mp": "^2.6.2",
-    "@elux/taro": "^2.6.2"
+    "@elux/app": "^2.6.3",
+    "@elux/core": "^2.6.3",
+    "@elux/react-components": "^2.6.3",
+    "@elux/react-redux": "^2.6.3",
+    "@elux/route-mp": "^2.6.3",
+    "@elux/taro": "^2.6.3"
   },
   "gitHead": "db6eb1314ef3e6abf5b7014495f441911c4cdd28"
 }

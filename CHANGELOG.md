@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.3](https://github.com/hiisea/elux/compare/v2.6.2...v2.6.3) (2022-10-25)
+
+
+### Bug Fixes
+
+* loadComponentLoader时异步组件时序有可能出现冲突 ([4f8ecba](https://github.com/hiisea/elux/commit/4f8ecbaf198e3f3db5de072cabf7e7af573035aa))
+
+
+
+
+
 ## [2.6.2](https://github.com/hiisea/elux/compare/v2.6.1...v2.6.2) (2022-08-09)
 
 
