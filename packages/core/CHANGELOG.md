@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.3](https://github.com/hiisea/elux/compare/v2.6.2...v2.6.3) (2022-10-25)
+
+**Note:** Version bump only for package @elux/core
+
+
+
+
+
+## [2.6.1](https://github.com/hiisea/elux/compare/v2.6.0...v2.6.1) (2022-08-09)
+
+
+### Bug Fixes
+
+* 小程序中路由back(1,'page')时，会通知原生路由 ([086c100](https://github.com/hiisea/elux/commit/086c100c08d78aff31a1b8b2e04076198281b0e2))
+
+
+
+
+
 # [2.6.0](https://github.com/hiisea/elux/compare/v2.6.0-alpha.4...v2.6.0) (2022-08-02)
 
 ### Features

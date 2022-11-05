@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.3](https://github.com/hiisea/elux/compare/v2.6.2...v2.6.3) (2022-10-25)
+
+**Note:** Version bump only for package @elux/taro
+
+
+
+
+
+## [2.6.2](https://github.com/hiisea/elux/compare/v2.6.1...v2.6.2) (2022-08-09)
+
+**Note:** Version bump only for package @elux/taro
+
+
+
+
+
+## [2.6.1](https://github.com/hiisea/elux/compare/v2.6.0...v2.6.1) (2022-08-09)
+
+**Note:** Version bump only for package @elux/taro
+
+
+
+
+
 # [2.6.0](https://github.com/hiisea/elux/compare/v2.6.0-alpha.4...v2.6.0) (2022-08-02)
 
 ### Features

@@ -1,4 +1,4 @@
-import { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, useMemo, Children, useCallback } from 'react';
+import { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, useCallback, useMemo, Children } from 'react';
 import { buildConfigSetter, getEntryComponent, coreConfig, env, injectComponent, isPromise, urlToNativeUrl, setCoreConfig, nativeUrlToUrl, BaseNativeRouter, SingleDispatcher, exportView, getModuleApiMap, buildProvider, getClientRouter, locationToUrl } from '@elux/core';
 export { BaseModel, EmptyModel, ErrorCodes, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isMutable, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, reducer, setLoading, urlToLocation, urlToNativeUrl } from '@elux/core';
 import { jsx, Fragment } from 'react/jsx-runtime';
@@ -198,11 +198,25 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
   var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   var OnError = options.onError || coreConfig.LoadComponentOnError;
   var Component = forwardRef(function (props, ref) {
-    var execute = function execute(curStore) {
+    var activeRef = useRef(true);
+    var viewRef = useRef(OnLoading);
+    var curStore = coreConfig.UseStore();
+
+    var _useState = useState(viewRef.current),
+        setView = _useState[1];
+
+    var update = useCallback(function (view) {
+      if (activeRef.current) {
+        viewRef.current = view;
+      }
+
+      setView(view);
+    }, []);
+    useMemo(function () {
       var SyncView = OnLoading;
 
       try {
-        var result = injectComponent(moduleName, componentName, curStore || store);
+        var result = injectComponent(moduleName, componentName, curStore);
 
         if (isPromise(result)) {
           if (env.isServer) {
@@ -210,10 +224,10 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
           }
 
           result.then(function (view) {
-            activeRef.current && setView(view || 'not found!');
+            update(view || 'not found!');
           }, function (e) {
             env.console.error(e);
-            activeRef.current && setView(e.message || "" + e || 'error');
+            update(e.message || "" + e || 'error');
           });
         } else {
           SyncView = result;
@@ -223,29 +237,14 @@ var LoadComponent = function LoadComponent(moduleName, componentName, options) {
         SyncView = e.message || "" + e || 'error';
       }
 
-      return SyncView;
-    };
-
-    var activeRef = useRef(true);
+      update(SyncView);
+    }, [curStore, update]);
     useEffect(function () {
       return function () {
         activeRef.current = false;
       };
     }, []);
-    var newStore = coreConfig.UseStore();
-
-    var _useState = useState(newStore),
-        store = _useState[0],
-        setStore = _useState[1];
-
-    var _useState2 = useState(execute),
-        View = _useState2[0],
-        setView = _useState2[1];
-
-    if (store !== newStore) {
-      setStore(newStore);
-      setView(execute(newStore));
-    }
+    var View = viewRef.current;
 
     if (typeof View === 'string') {
       return jsx(OnError, {
@@ -350,7 +349,8 @@ var Link = function Link(_ref) {
       onClick = _ref.onClick,
       disabled = _ref.disabled,
       overflowRedirect = _ref.overflowRedirect,
-      target = _ref.target,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
       refresh = _ref.refresh,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
 
@@ -550,6 +550,10 @@ var MPNativeRouter = function (_BaseNativeRouter) {
 
   _proto.relaunch = function relaunch(location, key) {
     if (this.history.isTabPage(location.pathname)) {
+      if (this.history.getLocation().pathname === location.pathname) {
+        return false;
+      }
+
       this.history.switchTab({
         url: location.url
       });

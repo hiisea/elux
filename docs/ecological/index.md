@@ -12,6 +12,7 @@
 - [从"微前端"到“微模块”](https://juejin.cn/post/7106791733509226533)
 - [不想当Window的Dialog不是一个好Modal，弹窗翻身记...](https://juejin.cn/post/7124177821953425422)
 - [手撸Router，还要啥Router框架？让react-router/vue-router躺一边凉快去](https://juejin.cn/post/7124959667326812196)
+- [一种比css_scoped和css_module更优雅的避免css命名冲突小妙招](https://juejin.cn/post/7129316859182710814)
   
 ## 学习与交流
 

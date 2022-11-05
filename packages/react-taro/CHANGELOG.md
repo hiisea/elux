@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.3](https://github.com/hiisea/elux/compare/v2.6.2...v2.6.3) (2022-10-25)
+
+
+### Bug Fixes
+
+* loadComponentLoader时异步组件时序有可能出现冲突 ([4f8ecba](https://github.com/hiisea/elux/commit/4f8ecbaf198e3f3db5de072cabf7e7af573035aa))
+
+
+
+
+
+## [2.6.2](https://github.com/hiisea/elux/compare/v2.6.1...v2.6.2) (2022-08-09)
+
+
+### Bug Fixes
+
+* 小程序中switchTab相同的页面不触发 ([b7cc9c1](https://github.com/hiisea/elux/commit/b7cc9c1c5c82b047e7a727687ad237a1d00f6d29))
+
+
+
+
+
+## [2.6.1](https://github.com/hiisea/elux/compare/v2.6.0...v2.6.1) (2022-08-09)
+
+
+### Bug Fixes
+
+* 小程序中路由back(1,'page')时，会通知原生路由 ([086c100](https://github.com/hiisea/elux/commit/086c100c08d78aff31a1b8b2e04076198281b0e2))
+
+
+
+
+
 # [2.6.0](https://github.com/hiisea/elux/compare/v2.6.0-alpha.4...v2.6.0) (2022-08-02)
 
 ### Features

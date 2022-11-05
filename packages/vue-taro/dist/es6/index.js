@@ -96,6 +96,10 @@ class MPNativeRouter extends BaseNativeRouter {
 
   relaunch(location, key) {
     if (this.history.isTabPage(location.pathname)) {
+      if (this.history.getLocation().pathname === location.pathname) {
+        return false;
+      }
+
       this.history.switchTab({
         url: location.url
       });
@@ -364,7 +368,17 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
     name: 'EluxComponentLoader',
 
     setup(props, context) {
-      const execute = () => {
+      let active = true;
+      const viewRef = shallowRef(OnLoading);
+      const store = coreConfig.UseStore();
+
+      const update = view => {
+        if (active) {
+          viewRef.value = view;
+        }
+      };
+
+      watch(() => store.sid, () => {
         let SyncView = OnLoading;
 
         try {
@@ -376,10 +390,10 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
             }
 
             result.then(view => {
-              active && (View.value = view || 'not found!');
+              update(view || 'not found!');
             }, e => {
               env.console.error(e);
-              active && (View.value = e.message || `${e}` || 'error');
+              update(e.message || `${e}` || 'error');
             });
           } else {
             SyncView = result;
@@ -389,27 +403,24 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
           SyncView = e.message || `${e}` || 'error';
         }
 
-        return SyncView;
-      };
-
-      const store = coreConfig.UseStore();
-      const View = shallowRef(execute());
-      let active = true;
+        update(SyncView);
+      }, {
+        immediate: true
+      });
       onBeforeUnmount(() => {
         active = false;
       });
-      watch(() => store.sid, execute);
       return () => {
-        const view = View.value;
+        const View = viewRef.value;
 
-        if (typeof view === 'string') {
+        if (typeof View === 'string') {
           return h(OnError, {
-            message: view
+            message: View
           });
-        } else if (view === OnLoading) {
-          return h(view);
+        } else if (View === OnLoading) {
+          return h(OnLoading);
         } else {
-          return h(view, props, context.slots);
+          return h(View, props, context.slots);
         }
       };
     }
@@ -638,7 +649,7 @@ const Link = defineComponent({
         to,
         action,
         cname,
-        target
+        target = 'page'
       } = props;
 
       if (action === 'back') {

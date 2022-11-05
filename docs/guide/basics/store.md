@@ -2,10 +2,10 @@
 
 Elux中Store的概念与Redux和Vuex基本相同，特别之处在于：
 
+- 每次路由变化都会生成一个新的Store，等待Model的挂载，参见[Router](/guide/basics/router.html)
 - 不是单例，所以不要全局保存和引用Store，而要使用useStore()
 - Store保存在Router历史栈中，Router和Store是一对多的关系
 - Model挂载在Store下面，Store和Model也是一对多的关系
-- 每次路由变化都会生成一个新的Store，等待Model的挂载，参见[Router](/guide/basics/router.html)
 
 ![store与router](/images/router-store.svg)
 

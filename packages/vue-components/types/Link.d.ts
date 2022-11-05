@@ -23,9 +23,9 @@ export interface LinkProps extends HTMLAttributes {
      */
     action: Exclude<RouteAction, 'init'>;
     /**
-     * 指定要操作的历史栈
+     * 指定要操作的历史栈，默认`page`
      */
-    target: RouteTarget;
+    target?: RouteTarget;
     /**
      * 指定路由窗口的class
      */

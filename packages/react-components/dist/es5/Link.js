@@ -11,7 +11,8 @@ export var Link = function Link(_ref) {
       onClick = _ref.onClick,
       disabled = _ref.disabled,
       overflowRedirect = _ref.overflowRedirect,
-      target = _ref.target,
+      _ref$target = _ref.target,
+      target = _ref$target === void 0 ? 'page' : _ref$target,
       refresh = _ref.refresh,
       props = _objectWithoutPropertiesLoose(_ref, _excluded);
 

@@ -1,7 +1,7 @@
 import { hydrate, render } from 'react-dom';
 import { buildConfigSetter, getEntryComponent, coreConfig, env, injectComponent, isPromise, urlToNativeUrl, setCoreConfig, BaseNativeRouter, exportView, getModuleApiMap, buildApp, buildSSR } from '@elux/core';
 export { BaseModel, EmptyModel, ErrorCodes, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getTplInSSR, injectModule, isMutable, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, reducer, setLoading, urlToLocation, urlToNativeUrl } from '@elux/core';
-import { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, useMemo, Children, useCallback } from 'react';
+import { createContext, useContext, memo, useState, useRef, useEffect, forwardRef, useCallback, useMemo, Children } from 'react';
 import { jsx, Fragment } from 'react/jsx-runtime';
 import { renderToString } from '@elux/react-web/server';
 import { connect, useStore, Provider } from 'react-redux';
@@ -178,11 +178,22 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
   const OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   const OnError = options.onError || coreConfig.LoadComponentOnError;
   const Component = forwardRef((props, ref) => {
-    const execute = curStore => {
+    const activeRef = useRef(true);
+    const viewRef = useRef(OnLoading);
+    const curStore = coreConfig.UseStore();
+    const [, setView] = useState(viewRef.current);
+    const update = useCallback(view => {
+      if (activeRef.current) {
+        viewRef.current = view;
+      }
+
+      setView(view);
+    }, []);
+    useMemo(() => {
       let SyncView = OnLoading;
 
       try {
-        const result = injectComponent(moduleName, componentName, curStore || store);
+        const result = injectComponent(moduleName, componentName, curStore);
 
         if (isPromise(result)) {
           if (env.isServer) {
@@ -190,10 +201,10 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
           }
 
           result.then(view => {
-            activeRef.current && setView(view || 'not found!');
+            update(view || 'not found!');
           }, e => {
             env.console.error(e);
-            activeRef.current && setView(e.message || `${e}` || 'error');
+            update(e.message || `${e}` || 'error');
           });
         } else {
           SyncView = result;
@@ -203,23 +214,14 @@ const LoadComponent = (moduleName, componentName, options = {}) => {
         SyncView = e.message || `${e}` || 'error';
       }
 
-      return SyncView;
-    };
-
-    const activeRef = useRef(true);
+      update(SyncView);
+    }, [curStore, update]);
     useEffect(() => {
       return () => {
         activeRef.current = false;
       };
     }, []);
-    const newStore = coreConfig.UseStore();
-    const [store, setStore] = useState(newStore);
-    const [View, setView] = useState(execute);
-
-    if (store !== newStore) {
-      setStore(newStore);
-      setView(execute(newStore));
-    }
+    const View = viewRef.current;
 
     if (typeof View === 'string') {
       return jsx(OnError, {
@@ -312,7 +314,7 @@ const Link = ({
   onClick,
   disabled,
   overflowRedirect,
-  target,
+  target = 'page',
   refresh,
   ...props
 }) => {

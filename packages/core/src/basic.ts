@@ -364,40 +364,40 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
   /**
    * 清空指定栈中的历史记录，并跳转路由
    *
-   * @param partialLocation - 路由信息
+   * @param partialLocation - 路由信息 {@link Location}
    * @param target - 指定要操作的历史栈，默认:`page`
-   * @param payload - 提交给 {@link RouteRuntime} 的数据
+   * @param refresh - 是否强制刷新，默认: false
    */
-  relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): void | Promise<void>;
+  relaunch(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
   /**
    * 在指定栈中新增一条历史记录，并跳转路由
    *
-   * @param partialLocation - 路由信息
+   * @param partialLocation - 路由信息 {@link Location}
    * @param target - 指定要操作的历史栈，默认:`page`
-   * @param payload - 提交给 {@link RouteRuntime} 的数据
+   * @param refresh - 是否强制刷新，默认: false
    */
-  push(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): void | Promise<void>;
+  push(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
   /**
    * 在指定栈中替换当前历史记录，并跳转路由
    *
-   * @param partialLocation - 路由信息
+   * @param partialLocation - 路由信息 {@link Location}
    * @param target - 指定要操作的历史栈，默认:`page`
-   * @param payload - 提交给 {@link RouteRuntime} 的数据
+   * @param refresh - 是否强制刷新，默认: false
    */
-  replace(partialLocation: Partial<Location>, target: RouteTarget, refresh?: boolean): void | Promise<void>;
+  replace(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
   /**
    * 回退指定栈中的历史记录，并跳转路由
    *
    * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数
    * @param target - 指定要操作的历史栈，默认:`page`
-   * @param payload - 提交给 {@link RouteRuntime} 的数据
+   * @param refresh - 是否强制刷新，默认: false
    * @param overflowRedirect - 如果回退溢出，跳往哪个路由
    */
   back(
     stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean),
-    target: RouteTarget,
+    target?: RouteTarget,
     refresh?: boolean,
-    overflowRedirect?: string | null
+    overflowRedirect?: string
   ): void | Promise<void>;
 }
 

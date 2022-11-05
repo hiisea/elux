@@ -1,17 +1,17 @@
 # Model
 
-这里的Model指的是抽象的业务模型，通常一个微模块都会包含一个Model，用来处理业务逻辑，它包含：
+这里的Model指的是业务逻辑的数据模型，通常一个**微模块**都会包含一个Model，用来处理业务逻辑并维护`ModuleState`，它包含二大因素：
 
-- ModuleState: `模块状态`
-- ActionHandler: `维护ModuleState` 可分为reducer/effect（类似vuex的mutation/action）
+- **ModuleState**: 本模块的状态
+- **ActionHandler**: 维护本模块`ModuleState`的方法，可分为`reducer/effect`（类似vuex的mutation/action）
 
-::: tip
+::: tip 复用公共逻辑
 
 Model形式上就是一个JS类，因此可以通过“**继承**”来复用一些公共逻辑。
 
 :::
 
-## Modle的类型定义
+## Modle的类型
 
 ```ts
 export interface CommonModel {
@@ -44,7 +44,7 @@ export interface CommonModel {
         subModule?: SubModule;//该字段用来记录当前路由下展示哪个子Module
         currentView?: CurrentView; //该字段用来记录当前路由下展示哪个自己的View
         globalLoading?: LoadingState; //该字段用来记录一个全局的loading状态
-        error?: string; //该字段用来记录启动错误，如果该字段有值，则不渲染其它UI
+        error?: string; //该字段用来记录启动错误，如果该字段有值，则显示错误
     }
 
     //定义路由中的本模块感兴趣的信息
@@ -134,17 +134,15 @@ export interface CommonModel {
         @effect(null)
         protected async ['this._error'](error: CustomError): Promise<void> {
             if (error.code === CommonErrorCode.unauthorized) {
-                this.getRouter().push({pathname: LoginUrl, searchQuery: {from: error.detail}}, 'window');
-            } else if (!error.quiet && error.code !== ErrorCodes.ROUTE_BACK_OVERFLOW) {
-                // ErrorCodes.ROUTE_BACK_OVERFLOW是路由后退溢出时抛出的错误，默认会回到首页，所以无需处理
+                //如果错误是需要登录，则跳到登录界面
+                this.getRouter().push({url: LoginUrl}, 'window');
+            } else {
                 window.alert(error.message);
             }
             throw error;
         }
     }
     ```
-
-    注意：模块应当对外隐藏细节，尽可能少的暴露public公开方法。比如以上Model中，公开对外界输出的只有effect`login(args: LoginParams)`
 
 2. 导出该Model
 
@@ -160,8 +158,6 @@ export interface CommonModel {
 ## 使用Model
 
 ### 获取State
-
-Model所维护的ModuleState放在`Store`中保存，每个ModuleState对应StoreState的一个子节点。
 
 - 在Model中获取State：
 
@@ -180,9 +176,21 @@ Model所维护的ModuleState放在`Store`中保存，每个ModuleState对应Stor
     }
     ```
 
-- 在View中获取State：即从Store中获取数据，根据UI框架的不同而不同。
-  - React：`connectRedux(mapStateToProps)(Component)`
-  - Vue：`const state = useStore().getState();`
+- 在View中获取State：
+
+  ```ts
+  function mapStateToProps(appState: APPState): StoreProps {
+    const {subModule, curView, globalLoading, error} = appState.stage!;
+    return {
+        subModule,
+        curView,
+        globalLoading,
+        error,
+    };
+  }
+
+  const storeProps = connectStore(mapStateToProps);
+  ```
 
 ### 派发Action
 
@@ -193,9 +201,9 @@ Model所维护的ModuleState放在`Store`中保存，每个ModuleState对应Stor
 
     export class Model extends BaseModel<ModuleState, APPState> {
         protected async test() {
-            //本Model中可以用this.actions
+            //派发本模块的action
             this.dispatch(this.actions.logout());
-            //非本Model中可以用Modules.article.actions
+            //派发其它模块的action
             this.dispatch(Modules.article.actions.search());
             //以上语句等于this.store.dispatch({type:'article.search'})
         }
@@ -218,10 +226,3 @@ Model所维护的ModuleState放在`Store`中保存，每个ModuleState对应Stor
         }
     }
     ```
-
-## 注意事项
-
-Model中不要修改其它模块的状态：
-
-- 虽然可以读取其它模块的ModuleState，但不要直接修改它们，仅维护自己的ModuleState
-- 如果想修改其它模块的ModuleState，应当dispatch一个其它模块的公开action

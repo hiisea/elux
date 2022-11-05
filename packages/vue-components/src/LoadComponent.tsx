@@ -13,48 +13,58 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
   const component: Elux.Component<any> = defineComponent({
     name: 'EluxComponentLoader',
     setup(props: any, context: any) {
-      const execute = () => {
-        let SyncView: Elux.Component<any> | string = OnLoading;
-        try {
-          const result = injectComponent(moduleName as string, componentName as string, store);
-          if (isPromise(result)) {
-            if (env.isServer) {
-              throw 'can not use async component in SSR';
-            }
-            result.then(
-              (view: any) => {
-                active && (View.value = view || 'not found!');
-              },
-              (e) => {
-                env.console.error(e);
-                active && (View.value = e.message || `${e}` || 'error');
-              }
-            );
-          } else {
-            SyncView = result as any;
-          }
-        } catch (e: any) {
-          env.console.error(e);
-          SyncView = e.message || `${e}` || 'error';
-        }
-        return SyncView;
-      };
-      const store = coreConfig.UseStore!();
-      const View = shallowRef<Elux.Component<any> | string>(execute());
       let active = true;
+      const viewRef = shallowRef<Elux.Component<any> | string>(OnLoading);
+      const store = coreConfig.UseStore!();
+
+      const update = (view: Elux.Component<any> | string) => {
+        if (active) {
+          viewRef.value = view;
+        }
+      };
+      watch(
+        () => store.sid,
+        () => {
+          let SyncView: Elux.Component<any> | string = OnLoading;
+          try {
+            const result = injectComponent(moduleName as string, componentName as string, store);
+            if (isPromise(result)) {
+              if (env.isServer) {
+                throw 'can not use async component in SSR';
+              }
+              result.then(
+                (view: any) => {
+                  update(view || 'not found!');
+                },
+                (e) => {
+                  env.console.error(e);
+                  update(e.message || `${e}` || 'error');
+                }
+              );
+            } else {
+              SyncView = result as any;
+            }
+          } catch (e: any) {
+            env.console.error(e);
+            SyncView = e.message || `${e}` || 'error';
+          }
+          update(SyncView);
+        },
+        {immediate: true}
+      );
+
       onBeforeUnmount(() => {
         active = false;
       });
-      watch(() => store.sid, execute);
 
       return () => {
-        const view = View.value;
-        if (typeof view === 'string') {
-          return h(OnError, {message: view});
-        } else if (view === OnLoading) {
-          return h(view);
+        const View = viewRef.value;
+        if (typeof View === 'string') {
+          return h(OnError, {message: View});
+        } else if (View === OnLoading) {
+          return h(OnLoading);
         } else {
-          return h(view, props, context.slots);
+          return h(View, props, context.slots);
         }
       };
     },

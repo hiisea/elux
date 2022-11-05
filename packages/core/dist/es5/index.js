@@ -3133,6 +3133,10 @@ var Router = function () {
   };
 
   _proto2.relaunch = function relaunch(partialLocation, target, refresh, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }
@@ -3243,6 +3247,10 @@ var Router = function () {
   }();
 
   _proto2.replace = function replace(partialLocation, target, refresh, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }
@@ -3352,6 +3360,10 @@ var Router = function () {
   }();
 
   _proto2.push = function push(partialLocation, target, refresh, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }
@@ -3473,6 +3485,10 @@ var Router = function () {
   }();
 
   _proto2.back = function back(stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller) {
+    if (target === void 0) {
+      target = 'page';
+    }
+
     if (refresh === void 0) {
       refresh = false;
     }
@@ -3553,44 +3569,36 @@ var Router = function () {
               prevStore = this.getActivePage().store;
               location = record.location;
               title = record.title;
-              NotifyNativeRouter = [];
+              NotifyNativeRouter = index[0] && coreConfig.NotifyNativeRouter.window || index[1] && coreConfig.NotifyNativeRouter.page;
 
-              if (index[0]) {
-                NotifyNativeRouter[0] = coreConfig.NotifyNativeRouter.window;
-              }
-
-              if (index[1]) {
-                NotifyNativeRouter[1] = coreConfig.NotifyNativeRouter.page;
-              }
-
-              if (!_nativeCaller && NotifyNativeRouter.length) {
+              if (!_nativeCaller && NotifyNativeRouter) {
                 this.nativeRouter.testExecute(action, location, index);
               }
 
-              _context6.prev = 18;
-              _context6.next = 21;
+              _context6.prev = 16;
+              _context6.next = 19;
               return prevStore.dispatch(testChangeAction(location, action));
 
-            case 21:
-              _context6.next = 27;
+            case 19:
+              _context6.next = 25;
               break;
 
-            case 23:
-              _context6.prev = 23;
-              _context6.t0 = _context6["catch"](18);
+            case 21:
+              _context6.prev = 21;
+              _context6.t0 = _context6["catch"](16);
 
               if (_nativeCaller) {
-                _context6.next = 27;
+                _context6.next = 25;
                 break;
               }
 
               throw _context6.t0;
 
-            case 27:
-              _context6.next = 29;
+            case 25:
+              _context6.next = 27;
               return prevStore.dispatch(beforeChangeAction(location, action));
 
-            case 29:
+            case 27:
               this.savePageTitle();
               this.location = location;
               this.action = action;
@@ -3613,21 +3621,21 @@ var Router = function () {
                 pageStack.replaceStore(newStore);
               }
 
-              _context6.next = 41;
+              _context6.next = 39;
               return this.mountStore(prevStore, newStore);
 
-            case 41:
-              if (!(!_nativeCaller && NotifyNativeRouter.length)) {
-                _context6.next = 44;
+            case 39:
+              if (!(!_nativeCaller && NotifyNativeRouter)) {
+                _context6.next = 42;
                 break;
               }
 
-              _context6.next = 44;
+              _context6.next = 42;
               return this.nativeRouter.execute(action, location, record.key, index);
 
-            case 44:
+            case 42:
               this.setDocumentHead("<title>" + title + "</title>");
-              _context6.next = 47;
+              _context6.next = 45;
               return this.dispatch({
                 location: location,
                 action: action,
@@ -3636,15 +3644,15 @@ var Router = function () {
                 windowChanged: !!index[0]
               });
 
-            case 47:
+            case 45:
               newStore.dispatch(afterChangeAction(location, action));
 
-            case 48:
+            case 46:
             case "end":
               return _context6.stop();
           }
         }
-      }, _callee6, this, [[18, 23]]);
+      }, _callee6, this, [[16, 21]]);
     }));
 
     function _back(_x16, _x17, _x18, _x19, _x20) {

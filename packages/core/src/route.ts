@@ -400,7 +400,7 @@ export class Router implements IRouter {
     return locationToUrl(partialLocation, defClassname);
   }
 
-  relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean = false, _nativeCaller = false): Promise<void> {
+  relaunch(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
     return this.addTask(this._relaunch.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -444,7 +444,7 @@ export class Router implements IRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  replace(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean = false, _nativeCaller = false): Promise<void> {
+  replace(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
     return this.addTask(this._replace.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -487,7 +487,7 @@ export class Router implements IRouter {
     newStore.dispatch(afterChangeAction(location, action));
   }
 
-  push(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean = false, _nativeCaller = false): Promise<void> {
+  push(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
     return this.addTask(this._push.bind(this, partialLocation, target, refresh, _nativeCaller));
   }
 
@@ -537,7 +537,7 @@ export class Router implements IRouter {
 
   back(
     stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean),
-    target: RouteTarget,
+    target: RouteTarget = 'page',
     refresh: boolean = false,
     overflowRedirect: string = '',
     _nativeCaller = false
@@ -587,14 +587,9 @@ export class Router implements IRouter {
     const prevStore = this.getActivePage().store;
     const location = record.location;
     const title = record.title;
-    const NotifyNativeRouter: boolean[] = [];
-    if (index[0]) {
-      NotifyNativeRouter[0] = coreConfig.NotifyNativeRouter.window;
-    }
-    if (index[1]) {
-      NotifyNativeRouter[1] = coreConfig.NotifyNativeRouter.page;
-    }
-    if (!_nativeCaller && NotifyNativeRouter.length) {
+    const NotifyNativeRouter = (index[0] && coreConfig.NotifyNativeRouter.window) || (index[1] && coreConfig.NotifyNativeRouter.page);
+
+    if (!_nativeCaller && NotifyNativeRouter) {
       this.nativeRouter.testExecute(action, location, index);
     }
     try {
@@ -624,7 +619,7 @@ export class Router implements IRouter {
       pageStack.replaceStore(newStore);
     }
     await this.mountStore(prevStore, newStore);
-    if (!_nativeCaller && NotifyNativeRouter.length) {
+    if (!_nativeCaller && NotifyNativeRouter) {
       await this.nativeRouter.execute(action, location, record.key, index);
     }
     this.setDocumentHead(`<title>${title}</title>`);

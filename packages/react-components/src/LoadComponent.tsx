@@ -1,5 +1,5 @@
-import {coreConfig, env, ILoadComponent, injectComponent, isPromise, VStore} from '@elux/core';
-import {forwardRef, useEffect, useRef, useState} from 'react';
+import {coreConfig, env, ILoadComponent, injectComponent, isPromise} from '@elux/core';
+import {forwardRef, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 export const LoadComponentOnError: Elux.Component<{message: string}> = ({message}: {message: string}) => (
   <div className="g-component-error">{message}</div>
@@ -11,21 +11,33 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
   const OnError = options.onError || coreConfig.LoadComponentOnError!;
 
   const Component = forwardRef((props, ref) => {
-    const execute = (curStore?: VStore) => {
+    const activeRef = useRef(true);
+    const viewRef = useRef<Elux.Component<any> | string>(OnLoading);
+    const curStore = coreConfig.UseStore!();
+    const [, setView] = useState<Elux.Component<any> | string>(viewRef.current);
+
+    const update = useCallback((view: Elux.Component<any> | string) => {
+      if (activeRef.current) {
+        viewRef.current = view;
+      }
+      setView(view);
+    }, []);
+
+    useMemo(() => {
       let SyncView: Elux.Component<any> | string = OnLoading;
       try {
-        const result = injectComponent(moduleName as string, componentName as string, curStore || store);
+        const result = injectComponent(moduleName as string, componentName as string, curStore);
         if (isPromise(result)) {
           if (env.isServer) {
             throw 'can not use async component in SSR';
           }
           result.then(
             (view: any) => {
-              activeRef.current && setView(view || 'not found!');
+              update(view || 'not found!');
             },
             (e) => {
               env.console.error(e);
-              activeRef.current && setView(e.message || `${e}` || 'error');
+              update(e.message || `${e}` || 'error');
             }
           );
         } else {
@@ -35,21 +47,16 @@ export const LoadComponent: ILoadComponent<any> = (moduleName, componentName, op
         env.console.error(e);
         SyncView = e.message || `${e}` || 'error';
       }
-      return SyncView;
-    };
-    const activeRef = useRef(true);
+      update(SyncView);
+    }, [curStore, update]);
+
     useEffect(() => {
       return () => {
         activeRef.current = false;
       };
     }, []);
-    const newStore = coreConfig.UseStore!();
-    const [store, setStore] = useState(newStore);
-    const [View, setView] = useState(execute);
-    if (store !== newStore) {
-      setStore(newStore);
-      setView(execute(newStore));
-    }
+
+    const View = viewRef.current;
     if (typeof View === 'string') {
       return <OnError message={View} />;
     } else if (View === OnLoading) {

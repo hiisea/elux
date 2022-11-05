@@ -1,6 +1,6 @@
 import _extends from "@babel/runtime/helpers/esm/extends";
 import { coreConfig, env, injectComponent, isPromise } from '@elux/core';
-import { forwardRef, useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { jsx as _jsx } from "react/jsx-runtime";
 export var LoadComponentOnError = function LoadComponentOnError(_ref) {
   var message = _ref.message;
@@ -23,11 +23,25 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
   var OnLoading = options.onLoading || coreConfig.LoadComponentOnLoading;
   var OnError = options.onError || coreConfig.LoadComponentOnError;
   var Component = forwardRef(function (props, ref) {
-    var execute = function execute(curStore) {
+    var activeRef = useRef(true);
+    var viewRef = useRef(OnLoading);
+    var curStore = coreConfig.UseStore();
+
+    var _useState = useState(viewRef.current),
+        setView = _useState[1];
+
+    var update = useCallback(function (view) {
+      if (activeRef.current) {
+        viewRef.current = view;
+      }
+
+      setView(view);
+    }, []);
+    useMemo(function () {
       var SyncView = OnLoading;
 
       try {
-        var result = injectComponent(moduleName, componentName, curStore || store);
+        var result = injectComponent(moduleName, componentName, curStore);
 
         if (isPromise(result)) {
           if (env.isServer) {
@@ -35,10 +49,10 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
           }
 
           result.then(function (view) {
-            activeRef.current && setView(view || 'not found!');
+            update(view || 'not found!');
           }, function (e) {
             env.console.error(e);
-            activeRef.current && setView(e.message || "" + e || 'error');
+            update(e.message || "" + e || 'error');
           });
         } else {
           SyncView = result;
@@ -48,29 +62,14 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
         SyncView = e.message || "" + e || 'error';
       }
 
-      return SyncView;
-    };
-
-    var activeRef = useRef(true);
+      update(SyncView);
+    }, [curStore, update]);
     useEffect(function () {
       return function () {
         activeRef.current = false;
       };
     }, []);
-    var newStore = coreConfig.UseStore();
-
-    var _useState = useState(newStore),
-        store = _useState[0],
-        setStore = _useState[1];
-
-    var _useState2 = useState(execute),
-        View = _useState2[0],
-        setView = _useState2[1];
-
-    if (store !== newStore) {
-      setStore(newStore);
-      setView(execute(newStore));
-    }
+    var View = viewRef.current;
 
     if (typeof View === 'string') {
       return _jsx(OnError, {

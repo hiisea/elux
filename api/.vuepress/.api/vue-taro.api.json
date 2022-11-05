@@ -4275,7 +4275,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#back:member(1)",
-              "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由\n */\n",
+              "docComment": "/**\n * 回退指定栈中的历史记录，并跳转路由\n *\n * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param refresh - 是否强制刷新，默认: false\n *\n * @param overflowRedirect - 如果回退溢出，跳往哪个路由\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4296,7 +4296,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target: "
+                  "text": ", target?: "
                 },
                 {
                   "kind": "Reference",
@@ -4317,7 +4317,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "string | null"
+                  "text": "string"
                 },
                 {
                   "kind": "Content",
@@ -4928,7 +4928,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#push:member(1)",
-              "docComment": "/**\n * 在指定栈中新增一条历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 在指定栈中新增一条历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息 {@link Location}\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param refresh - 是否强制刷新，默认: false\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -4954,7 +4954,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target: "
+                  "text": ", target?: "
                 },
                 {
                   "kind": "Reference",
@@ -5026,7 +5026,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#relaunch:member(1)",
-              "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 清空指定栈中的历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息 {@link Location}\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param refresh - 是否强制刷新，默认: false\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5052,7 +5052,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target: "
+                  "text": ", target?: "
                 },
                 {
                   "kind": "Reference",
@@ -5124,7 +5124,7 @@
             {
               "kind": "MethodSignature",
               "canonicalReference": "@elux/vue-taro!IRouter#replace:member(1)",
-              "docComment": "/**\n * 在指定栈中替换当前历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param payload - 提交给 {@link RouteRuntime} 的数据\n */\n",
+              "docComment": "/**\n * 在指定栈中替换当前历史记录，并跳转路由\n *\n * @param partialLocation - 路由信息 {@link Location}\n *\n * @param target - 指定要操作的历史栈，默认:`page`\n *\n * @param refresh - 是否强制刷新，默认: false\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -5150,7 +5150,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", target: "
+                  "text": ", target?: "
                 },
                 {
                   "kind": "Reference",
@@ -6093,11 +6093,11 @@
             {
               "kind": "PropertySignature",
               "canonicalReference": "@elux/vue-taro!LinkProps#target:member",
-              "docComment": "/**\n * 指定要操作的历史栈\n */\n",
+              "docComment": "/**\n * 指定要操作的历史栈，默认`page`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "target: "
+                  "text": "target?: "
                 },
                 {
                   "kind": "Reference",
@@ -6109,7 +6109,7 @@
                   "text": ";"
                 }
               ],
-              "isOptional": false,
+              "isOptional": true,
               "releaseTag": "Public",
               "name": "target",
               "propertyTypeTokenRange": {

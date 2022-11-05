@@ -1,26 +1,21 @@
----
-next: /guide/basics/module.html
----
-
 # Elux项目快速上手
 
-假设您已经是一名React/Vue熟手，使用过Redux/Vuex/Dva，那么上手Elux项目很快...
+`快速上手三步曲：`
 
-## 了解几个概念
+1. 划分微模块
+2. 创建微模块
+   - 创建Model
+   - 创建View
+   - 导出模块
+3. 引入微模块
+  
+## 新建一个微模块
 
-- **View**：可以理解为就是UI组件Component
-- **Model**：可以理解为维护Store的一个JS类
-- **Module**：View和Model加起来就是Module
-- **reducer**：对应Vuex中的`mutation`
-- **effect**：对应Vuex中的`action`
-
-## 创建一个新Module
-
-> 假设我们想创建一个新Module：**article**
+> 假设我们想创建一个新Module:`article`
 
 1. 在`src/modules/`下面新建一个文件夹`article`
 2. 在`src/modules/article`下面新建一个文件`model.ts`
-3. 在`model.ts`中定义Model，通常格式如下：
+3. 在`model.ts`中定义业务模型Model，例如：
 
    ```ts
     //定义本模块的ModuleState
@@ -37,7 +32,7 @@ next: /guide/basics/module.html
     export class Model extends BaseModel<ModuleState, APPState> {
 
       //尽量避免使用public方法，所以构建this.privateActions来引用私有actions
-      protected privateActions = this.getPrivateActions();
+      protected privateActions = this.getPrivateActions({putList: this.putList});
 
       //实现路由中提取信息
       protected getRouteParams(): RouteParams {
@@ -50,20 +45,13 @@ next: /guide/basics/module.html
       public onMount(): void {
         const {listSearch} = this.getRouteParams();
         //完成ModuleState初始化
-        //_initState是内置的注入初始ModuleState的reducer
+        //_initState是内置的注入初始State的reducer/mutation
         this.dispatch(this.privateActions._initState({listSearch}));
         //发起列表查询
         this.dispatch(this.actions.fetchList(listSearch));
       }
 
-      //定义一个effect，用来执行列表查询
-      @effect()
-      public async fetchList(listSearch: ListSearch) {
-        const {list} = await api.getList(listSearch);
-        this.dispatch(this.putList(listSearch, list));
-      }
-
-      //定义一个reducer，用来更新列表
+      //定义一个reducer/mutation，用来更新列表
       @reducer
       protected putList(listSearch: ListSearch, list: ListItem[]) {
         //如果是vue，可以直接修改state
@@ -71,6 +59,13 @@ next: /guide/basics/module.html
         this.state.list = list;
         //如果是React，需要返回一个新对象
         //return {...this.state, listSearch, list}
+      }
+
+      //定义一个effect/action，用来执行列表查询
+      @effect()
+      public async fetchList(listSearch: ListSearch) {
+        const {list} = await api.getList(listSearch);
+        this.dispatch(this.privateActions.putList(listSearch, list));
       }
     }
    ```
@@ -94,9 +89,6 @@ next: /guide/basics/module.html
    export const ModuleGetter = {
       stage: () => stage, //通常stage为根模块，使用同步加载
       article: () => import('@/modules/article'),
-      shop: () => import('@/modules/shop'),
-      admin: () => import('@/modules/admin'),
-      my: () => import('@/modules/my'),
     };
    ```
 

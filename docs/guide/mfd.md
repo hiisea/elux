@@ -4,274 +4,271 @@ next: /guide/platform/ssr.html
 
 # 微前端与微模块
 
-微前端是一种泛称，Elux项目中使用颗粒度更小的`微模块`来实现微前端，设计思想参见[微模块](/designed/micro-module.html)
+微前端是一种泛称，Elux项目中使用颗粒度更小的`微模块`来实现微前端，参见[微模块](/designed/micro-module.html)。
 
-假设应用有A(`根模块`),B,C,D,E,F,G模块，由4个Team独立开发：
+在前面[《实例分析》](/guide/example.html)中我们讲解了一个`单体工程`的实例，而微模块真正的魅力是可以多Team合作开发、独立上线、实现粒度更细的微前端。
 
-- TeamA 负责开发 A,B,C
-- TeamB 负责开发 D,E
-- TeamC 负责开发 F,G
-- TeamD 负责根据客户需求，挑选并集成以上模块
+假设我们有3个Team来合作开发这个项目，他们是微模块的**生产者**：
 
-## TeamA工程
+1. `basic-team` 负责开发模块：stage
+2. `article-team` 负责开发模块：article、shop
+3. `user-team` 负责开发模块：admin、my
 
-```txt
-├── env
-│    ├── local
-│    └── test
-├── dist
-├── mock
-├── public
-├── src
-│    ├── modules
-│    │      ├── A //根模块作为公共模块(基座)
-│    │      │   ├──...
-│    │      │   ├── assets //作为公共资源
-│    │      │   ├── components //作为公共组件
-│    │      │   ├── index.ts
-│    │      │   └── package.json //作为npm包
-│    │      ├── B
-│    │      │   ├──...
-│    │      │   ├── assets //私有资源
-│    │      │   ├── components //私有组件
-│    │      │   ├── index.ts
-│    │      │   └── package.json //作为npm包
-│    │      └── C
-│    │          ├──...
-│    │          ├── index.ts
-│    │          └── package.json //作为npm包
-│    ├── Global.ts
-│    ├── Project.ts
-│    └── index.ts
-├── elux.config.js
-├── lerna.json
-└── package.json
+- 每个Team都是一个独立工程，可以单独上线运行。
+- 每个Team都将开发的微模块作为`npm包`发布到公司内部私有NPM仓库中。
+
+另外还有2个Team根据业务需求来组合这些微模块，他们是微模块的**消费者**：
+
+1. `app-build-team` 采用**静态编译**(node_modules)的方式集成
+2. `app-runtime-team` 采用**动态注入**(module_federation)的方式集成
+
+## 将微模块定义成NPM包
+
+为了跨工程使用“微模块”，我们将微模块定义成NPM包。\
+方法很简单：在每个微模块下面创建一个`package.json`。
+
+```text
+src
+├── modules
+│      ├── article
+│      │     ├── ...
+│      │     └── package.json
+│      ├── shop
+│      │     ├── ...
+│      │     └── package.json
+│      ├── my
+│      │     ├── ...
+│      │     └── package.json
+│      ├── admin
+│      │     ├── ...
+│      │     └── package.json
+│      └── stage
+│            ├── ...
+│            └── package.json
 ```
 
-1. 首先，使用微前端必需`彻底的微模块化`，不能再有公共资源`src/assets`、`src/components`等文件夹了。我们可以将`根模块A`当成公共模块(基座)，将原来的公共资源都当成A的资源，将相关文件夹由`src/`移动到`src/modules/A/`
-2. 然后，因为TeamA要开发多个微模块，所以我们需要Monorepo工程模式，如使用`lerna+workspace`
+```json
+//src/modules/article/package.json
+{
+  "name": "@test-project/article",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "peerDependencies": {
+    "@test-project/stage": "*",
+    "@elux/react-web": "*",
+    "react": "*",
+    "path-to-regexp": "*"
+  }
+}
+```
 
-    ```json
-     // src/package.json
-     {
-         "workspaces": [
-           "./public",
-           "./src/modules/*"
-         ],
-         
-     }
-     ```
+## 使用Lerna+Monorepo管理
 
-     配置lerna：
+一个工程可以生产或消费多个“微模块”，我们使用`Lerna+Monorepo`工程结构来管理。各微模块开发好之后，使用Lerna来统一发布到私有NPM仓库。
 
-     ```json
-     // src/lerna.json
-    {
-        "version": "1.0.0",
-        "npmClient": "yarn",
-        "useWorkspaces": true,
-        "packages": [
-            "src/modules/*"
-        ]
-    }
-     ```
+注意，可以直接将各模块的`源码`发布，无需编译打包。
 
-3. 虽然TeamA只开发A,B,C模块，但它们有可能依赖到别的模块(`假设依赖了E,G模块`)，为了开发和调试方便，我们可以使用2种方式安装依赖：
+```json
+//lerna.json
+{
+  "version": "1.0.0",
+  "npmClient": "yarn",
+  "useWorkspaces": true,
+  "packages": [
+    "src/modules/*"
+  ]
+}
+```
 
-   - 安装真实的依赖模块。直接在package.json中添加依赖：
+## 修改Import路径
 
-     ```json
-     // src/package.json
-     {
-         "dependencies": {
-           //假设我们把所有模块都发布到@newProject作用域
-           "@newProject/E": "^1.0.0",
-           "@newProject/G": "^1.0.0"
-         }
-     }
-     ```
+因为`src/modules/`下面的微模块都将发布到npm，所以在import路径上必需注意：
 
-   - Mock假的依赖模块。修改src/Project.ts
+- 跨微模块import请使用真实的`npm包名`，不要使用`相对路径`或者`alias`；
+- 微模块内部的相互import可以使用`相对路径`。
 
-     ```ts
-     // src/Project.ts
-     import {exportModule, exportView, EmptyModel} from '@elux/react-web';
-     import A from './modules/A';
-     import B from './modules/B';
-     import C from './modules/C';
-     
-     //mock一个假的E模块
-     const MockViewE = exportView(() => <div>MockViewE</div>);
-     const MockModuleE = exportModule('E', EmptyModel, {main: MockViewE});
+```ts
+//跨微模块import使用`npm包名`，不使用`相对路径`或者`alias`
+//import {mergeDefaultParams} from '@modules/stage/utils/tools';
+import {mergeDefaultParams} from '@test-project/stage/utils/tools';
+```
 
-     //mock一个假的G模块
-     const MockViewG = exportView(() => <div>MockViewG</div>);
-     const MockModuleG = exportModule('G', EmptyModel, {main: MockViewG});
+## basic-team工程
 
-     export const ModuleGetter = {
-       A: () => A,
-       B: () => B,
-       C: () => C,
-       E: () => MockModuleE,
-       G: () => MockModuleG,
-     };
+```text
+src
+├── modules
+│      └── stage   //基座模块
+├── Project.ts  //微模块源配置
+└── index.ts    //App入口文件
+```
 
-     ```
+## article-team工程
 
-4. 将A,B,C微模块当作独立的NPM包，在其文件夹中添加package.json文件，并整理好依赖：
+```text
+src
+├── modules
+│      ├── shop    //商品模块
+│      └── article //文章模块
+├── Project.ts  //微模块源配置
+└── index.ts    //App入口文件
+```
 
-   ```json
-    // src/modules/B/package.json
-    {
-        //假设我们把所有微模块都发布到@newProject作用域
-        "name": "@newProject/B",
-        "version": "1.0.0",
-        "main": "index.ts",
-        "peerDependencies": {
-            "@newProject/A": "^1.0.0",
-            "@elux/react-web": "^2.0.0",
-        }
-    }
-   ```
+## user-team工程
 
-5. 因为`src/modules/`下面的微模块都将发布到npm，所以注意跨模块的import不要使用`相对路径`或者`alias`，请使用真实的`npm包名`；微模块内部的相互引用可以使用`相对路径`。
+```text
+src
+├── modules
+│      ├── my    //个人中心模块
+│      └── admin //鉴权模块
+├── Project.ts  //微模块源配置
+└── index.ts    //App入口文件
+```
 
-   ```ts
-   // src/modules/B/model.ts
+## 组合微模块
 
-   //import {mergeDefaultParams} from '@modules/A/utils/tools';
-   import {mergeDefaultParams} from '@newProject/A/utils/tools';
-   ```
+以上3个Team负责生产微模块（积木），下面我们来看如何消费微模块（搭积木）。
 
-   注意：本工程微模块之间的调用也属于跨模块，所以import时也要使用`npm包名`。但是typescript无法理解package.json中的`workspaces`设置，所以必须手动设置tsconfig中的别名：
+在前文[《微模块》](/designed/micro-module.html)中我们说过，微模块的使用有2种方案：
 
-   ```ts
-   // src/tsconfig.json
-    {
-        "compilerOptions": {
-            "paths": {
-                "@/Global": ["./Global"],
-                "@newProject/A": ["./modules/A"],
-                "@newProject/A/*": ["./modules/A/*"],
-                "@newProject/B": ["./modules/B"],
-                "@newProject/B/*": ["./modules/B/*"],
-                "@newProject/C": ["./modules/C"],
-                "@newProject/C/*": ["./modules/C/*"]
-            }
-        },
-    }
-   ```
+- **静态编译**：微模块作为一个NPM包被安装到工程中，通过打包工具（如webpack）正常编译打包即可。这种方式的优点是代码产物得到打包工具的各种去重和优化；缺点是当某个模块更新时，需要整体重新打包。
+- **动态注入**：利用`ModuleFederation`，将微模块作为子应用独立部署，与时下流行的微前端类似。这种方式的优点是某子应用中的微模块更新时，依赖该微模块的其它应用无需重新编译，刷新浏览器即可动态获取最新模块；缺点是没有打包工具的整体编译与优化，代码和资源容易重复加载或冲突。
 
-6. 如果需要支持`动态微模块`(webpack5的ModuleFederation)，还需设置elux.config.json
+![micro-install.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2160e004b35c4b3c967cf1b47dd49072~tplv-k3u1fbpfcp-watermark.image?)
 
-   ```ts
-   // elux.config.json
-    {
-        moduleFederation: {
-            name: 'teamA',
-            filename: 'remote.js',
-            exposes: {
-                './modules/B': './src/modules/B',
-                './modules/C': './src/modules/C',
-            },
-            shared: {
-                react: {singleton: true, eager: true, requiredVersion: '*'},
-                'react-dom': {singleton: true, eager: true, requiredVersion: '*'},
-                '@elux/react-web': {singleton: true, eager: true, requiredVersion: '*'},
-            },
-        },
-    }
-   ```
+### app-build-team工程
 
-7. 各微模块开发好之后，就可以使用Lerna来统一发布。注意，可以直接将各模块的`源码`发布，无需编译打包。
+我们假设app-build-team使用`静态编译`方案来使用微模块。
 
-## TeamB/TeamC工程
-
-TeamB/TeamC工程都是内容的提供者，与TeamA类似。
-
-> A模块作为根模块，每个工程都必需作为依赖安装。
-
-## TeamD集成
-
-假设TeamD依据客户需求，挑选了`A,B,D,G`4个微模块，他建立工程如下：
+1. 建立app-build-team工程，主要结构如下：
 
 ```txt
 ├── src
-│    ├── Global.ts
-│    ├── Project.ts
-│    └── index.ts
-├── elux.config.js
-└── package.json
+│    ├── Project.ts //微模块源配置
+│    └── index.ts   //App入口文件
+└── package.json    //写入微模块依赖
 ```
 
-1. 可以看到它已经不需要`src/modules`目录了，因为所有微模块都来自于npm包
-2. 在package.json中增加各微模块的依赖
+2. `npm install`所需的微模块：
 
-    ```json
-    // src/package.json
-    {
-        "dependencies": {
-            //可以利用npm版本号来管理需求
-            "@newProject/A": "^1.0.0",
-            "@newProject/B": "^1.2.0",
-            "@newProject/D": "^1.4.0",
-            "@newProject/G": "^1.1.0",
-        }
-    }
-    ```
+```json
+{
+    "name": "app-build-team",
+    "dependencies": {
+        ...
+        "@test-project/stage": "^1.0.0",
+        "@test-project/article": "^1.0.0",
+        "@test-project/shop": "^1.0.0",
+        "@test-project/admin": "^1.0.0",
+        "@test-project/my": "^1.0.0"
+    },
+}
+```
 
-3. 配置Project.ts
+3. 配置微模块源：
 
-     ```ts
-     // src/Project.ts
-     import A from '@newProject/A';
-     import B from '@newProject/B';
+```ts
+// src/Project.ts
 
-     export const ModuleGetter = {
-       A: () => A,
-       B: () => B,
-       D: () => import('@newProject/D'), //可以按需加载
-       G: () => import('@newProject/G'), //可以按需加载
-     };
+import stage from '@test-project/stage';
 
-     ```
+export const ModuleGetter = {
+  stage: () => stage, //通常stage为根模块，使用同步加载
+  article: () => import('@test-project/article'),
+  shop: () => import('@test-project/shop'),
+  admin: () => import('@test-project/admin'),
+  my: () => import('@test-project/my'),
+};
 
-4. 现在有2种集成方式，参见[微模块](/designed/micro-module.html)
-   - **静态编译**  
-     静态编译最简单，就是一个普通webpack工程。注意的是，如果我们的微模块是以`源码`直接发布的，那么要注意防止webpack的相关loader默认忽略node_modules中的转换。
+```
 
-   - **动态注入**  
-     场景：微模块`D,E`是TeamB负责开发和维护，假设TeamB频繁的发布小版本(也许是bug多)，客户为了使用最新的D，不得不跟随TeamB重新编译、部署、重新上线...
+4. 正常打包运行就好，跟单体工程的唯一区别就是：微模块代码来自于`node_modules`。
 
-     为了解决这种尴尬的场景，可以使用微模块的`动态注入`，其原理就是使用Webpack5的`ModuleFederation`：
-     - TeamB自己上线一个`team-b.com`，提供了微模块`D,E`的在线引用，每次发布小版本的时候，他会重新发布这个网站。
-     - 客户工程中不再`硬编译`微模块D，而是每次动态拉取`team-b.com`中提供的最新`D`，`D`更新的时候客户工程不再需要重新编译（用户刷新浏览器就会从team-b.com重新拉取）。
+## app-runtime-team工程
 
-     使用动态注入方案，需要将原`src/index.ts`改名为`bootstrap.ts`，并重新建立`src/index.ts`
+我们假设app-runtime-team使用`Module-Federation`方案来使用微模块，先简单回顾一下Webpack5的Module-Federation：
 
-     ```ts
-     // src/index.ts
-     import bootstrap from './bootstrap';
+![mfd-site.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3bbc375f321e4283ae605acb7152d124~tplv-k3u1fbpfcp-watermark.image?)
 
-     bootstrap(() => undefined);
-     ```
+简单来说Module-Federation就是提供了一种`Module跨站点实时共享`的手段，它分2个角色：**Module提供者**和**Module消费者**，如图所示：
 
-     配置`elux.config.json`，更多设置参见webpack的`Module-Federation`
+- SiteA作为模块Modulex的提供者。
+- SiteB作为模块Modulex的消费者。
 
-     ```ts
-     // elux.config.json
-     moduleFederation: {
-        name: 'dynamic-runtime',
-        modules: {
-            '@newProject/D': '@teamB/modules/D',
-        },
-        remotes: {
-            '@teamB': 'teamB@http://team-b.com/client/remote.js',
-        },
-        shared: {
-            react: {singleton: true, eager: true, requiredVersion: '*'},
-            'react-dom': {singleton: true, eager: true, requiredVersion: '*'},
-            '@elux/react-web': {singleton: true, eager: true, requiredVersion: '*'},
-        },
-     },
-     ```
+当SiteA更新`ModuleX`时，SiteB无需重新构建，刷新浏览器即可从SiteA拉取最新的`ModuleX`。
+
+### 同时作为提供者和消费者
+
+站点可以生产某些模块提供给其它站点使用，同时也可以使用其它站点提供的某些模块，如图：
+
+![mfd-site3.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3f89d5ac4660439495dc7ad7f1c1bf13~tplv-k3u1fbpfcp-watermark.image?)
+
+- SiteA提供了ModuleA、ModuleB，同时消费了ModuleD、ModuleE
+- SiteB提供了ModuleC、ModuleD，同时消费了ModuleA、ModuleF
+- SiteC提供了ModuleE、ModuleF，同时消费了ModuleA、ModuleB、ModuleC
+
+### 从Module-Federation到微前端
+
+SiteA、SiteB、SiteC三个站点就组合成了我们所谓的“微前端”系统，可以看出其中2个关键点：
+
+1. 如何提供和加载Module，这个就是Webpack-Module-Federation所能解决的问题。
+2. 如何划分Module，这个就是Elux中`微模块`所能解决的问题。
+
+### 工程结构
+
+app-runtime-team工程结构与`app-build-team`基本一致，稍有变动如下：
+
+1. 打开`elux.config.json`，配置ModuleFederation：
+
+```ts
+// elux.config.json
+{
+  moduleFederation: {
+    name: 'app-runtime',
+    modules: {
+      '@test-project/article': '@article-team/modules/article',
+      '@test-project/shop': '@article-team/modules/shop',
+      '@test-project/admin': '@user-team/modules/admin',
+      '@test-project/my': '@user-team/modules/my',
+    },
+    remotes: {
+      '@article-team': 'articleTeam@http://localhost:4001/client/remote.js',
+      '@user-team': 'userTeam@http://localhost:4002/client/remote.js',
+    },
+    shared: {
+      'react': {singleton: true, eager: true, requiredVersion: '*'},
+      'react-dom': {singleton: true, eager: true, requiredVersion: '*'},
+      '@elux/react-web': {singleton: true, eager: true, requiredVersion: '*'},
+    },
+  },
+}
+```
+
+2. 将原`src/index.ts`改名为`bootstrap.ts`，并重新建立`src/index.ts`
+
+```ts
+// src/index.ts
+import bootstrap from './bootstrap';
+
+bootstrap(() => undefined);
+```
+
+3. 同时运行article-team、user-team、app-runtime-team，可以看到各微模块的代码来自于线上`remote.js`。
+
+## 源码示例
+
+- 运行工程向导：`npm create elux@latest` 或 `yarn create elux`
+- 选择`简单示例模板`
+- 然后选择`基于Webpack5的微前端 + 微模块方案`
+
+```text
+? 请选择:平台架构 
+  CSR: 基于浏览器渲染的Web应用 
+  SSR: 基于服务器渲染 + 浏览器渲染的同构应用 
+❯ Micro: 基于Webpack5的微前端 + 微模块方案 
+  Model: 基于模型驱动，React与Vue跨项目共用Model 
+  Taro: 基于Taro的跨平台应用（各类小程序） 
+  RN: 基于ReactNative的原生APP（开发中...） 
+```
+
+> 示例为了演示方便，将各Team放在一个Monorepo工程中管理，实际中各Team是独立的工程。

@@ -1,28 +1,18 @@
 # Component与View
 
-这里的View本质上就是一个Component，只不过逻辑上做了归类。
-
-::: tip View是一类特殊的Component
-
-- View 用来承载特定的业务逻辑，Component 用来承载通用的交互逻辑。
-- Store是业务模型的载体，所以View可以从 Store 中获取数据，而Component不要这样做。
-
-:::
-
 ## 创建Component
 
-创建Component根据UI框架的不同而不同，Elux中没什么限制，也没什么特别之处。
-只是人为约定Component中不要去直接使用Store中的state。
+Component就是UI组件，Elux中没什么特殊限制。
 
 ## 创建View
 
-View就是一个Component，所以创建方法也是一样，并且View中可以直接使用Store中的State。
+View就是一个包含具体业务逻辑的Component，View中可以直接使用Store中的State。
 
-- React - Elux内置了`redux-redux`库，你可以使用`connectRedux`来连接Store。
+- React
 
     ```ts
     // src/modules/article/views/Main.tsx
-    import {connectRedux} from '@elux/react-web';
+    import {connectStore} from '@elux/react-web';
     import {APPState} from '@/Global';
 
     export interface StoreProps {
@@ -40,37 +30,35 @@ View就是一个Component，所以创建方法也是一样，并且View中可以
     }
 
     //connectRedux()方法内部自动调用了exportView()
-    export default connectRedux(mapStateToProps)(Component);
+    export default connectStore(mapStateToProps)(Component);
     ```
 
-- Vue中可以利用`computed`计算属性
+- Vue
 
     ```ts
     // src/modules/article/views/Main.tsx
-    import {APPState, useStore} from '@/Global';
-    import {ComputedStore, exportView} from '@elux/vue-web';
+    import {connectStore} from '@elux/vue-web';
+    import {APPState} from '@/Global';
 
     export interface StoreProps {
         currentView?: CurrentView;
         itemDetail?: ItemDetail;
     }
 
-    function mapStateToProps(appState: APPState): ComputedStore<StoreProps> {
-        const article = appState.article!;
-        return {
-            currentView: () => article.currentView,
-            itemDetail: () => article.itemDetail,
-        };
+    function mapStateToProps(appState: APPState): StoreProps {
+        const {currentView, itemDetail} = appState.article!;
+        return {currentView, itemDetail};
     }
 
     const Component = defineComponent({
         name: 'ArticleMain',
         setup() {
-            const store = useStore();
-            const computedStore = mapStateToProps(store.getState());
-            const currentView = computed(computedStore.currentView);
-            const itemDetail = computed(computedStore.itemDetail);
-            return () => (...);
+            const storeProps = connectStore(mapStateToProps);
+
+            return () => {
+                const {currentView, itemDetail} = storeProps;
+                ...
+            };
         },
     });
 
@@ -80,11 +68,9 @@ View就是一个Component，所以创建方法也是一样，并且View中可以
 
 ## 导出Component、View
 
-如果Component或view需要被模块导出（`只有被导出才可以使用LoadComponent()方法加载`），必需实现`EluxComponent`接口。
+如果Component或view需要被模块导出（只有被导出才可以使用`LoadComponent()`方法加载），需要使用`exportComponent()`或者`exportView()`包装一下。
 
-使用`exportComponent()`或者`exportView()`包装一下，另外`connectRedux()`方法内部已经调用了`exportView()`。
-
-在模块`./index.ts`文件中作为`exportModule()`方法的第3个参数导出：
+在模块`./index.ts`文件中导出：
 
 ```ts
 // src/modules/stage/index.ts
@@ -95,26 +81,9 @@ import main from './views/Main';
 export default exportModule('stage', Model, {main});
 ```
 
-### 分包导出
+### 导出为异步组件
 
-有时候组件很大，可以使用组件的分包导出和按需加载。前面说过，Elux中的Module本身是可以分包和按需加载的：
-
-```ts
-// src/Project.ts
-// 该文件可以看作应用的配置文件
-import stage from '@/modules/stage';
-
-// 定义模块的获取方式，同步或者异步都可以
-export const ModuleGetter = {
-    stage: () => stage,//通常stage为根模块，使用同步加载
-    article: () => import('@/modules/article'), //异步按需加载
-    my: () => import('@/modules/my'),//异步按需加载
-};
-```
-
-但每个Module的所有内容(包括所有view和model)都会打包在一起。
-
-而组件的分包导出，则是进一步拆分ModuleBundle，将同一个Module分解为多个子包：
+有时候组件很大，可以使用异步导出：
 
 ```ts
 // src/modules/stage/index.ts
@@ -125,24 +94,20 @@ import {Model} from './model';
 export default exportModule('stage', Model, {main: ()=>import('./views/Main')});
 ```
 
-## 使用Component、View
+## 使用Component
 
-前面说过，Component和View的主要区别在于使不使用Store中的数据。所以相比于使用Component，在使用View的时候，要提前执行相关Model的初始化，其过程大致如下：
+使用Component无任何特殊流程。
 
-1. 加载对应的ModuleBundle
-2. 加载对应的ComponentBundle
-3. 执行store.mount(moduleName) `//只有View需要`
+## 使用View
+
+如果`View`中使用了ModuleState，渲染View之前需要先进行`Model`的初始化，其过程大致如下：
+
+1. 按需加载View所在的`ModuleBundle`
+2. 按需加载View本身`ViewBundle`
+3. 执行`store.mount(moduleName)`，初始化`Model`
 4. 渲染Component
 
-Elux框架提供的`LoadComponent()`封装了以上所有逻辑，可以自动区分Component和View，而且支持TS类型提示：
-
-```ts
-type LoadComponent = (
-    moduleName: string, 
-    componentName: string, 
-    options?: {onError: Elux.Component<{message: string}>; onLoading: Elux.Component<{}>}
-  ) => EluxComponent
-```
+Elux框架提供的`LoadComponent()`封装了以上所有逻辑：
 
 ```ts
 // src/modules/article/views/Main.tsx
@@ -152,7 +117,15 @@ const Article = LoadComponent('article', 'main');
 const My = LoadComponent('my', 'main');
 ```
 
-可以看到该方法还可以指定`onError`和`onLoading`，如果不指定则使用默认全局设置，参见 [Elux全局设置](/api/react-web.setconfig.html)
+```ts
+type LoadComponent = (
+    moduleName: string, 
+    componentName: string, 
+    options?: {onError: Elux.Component<{message: string}>; onLoading: Elux.Component<{}>}
+  ) => EluxComponent
+```
+
+可以看到该方法还可以指定`onError`和`onLoading`，参见 [Elux全局设置](/api/react-web.setconfig.html)
 
 ### 仅获取，不渲染
 

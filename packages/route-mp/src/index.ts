@@ -88,8 +88,10 @@ export class MPNativeRouter extends BaseNativeRouter {
   }
 
   protected relaunch(location: Location, key: string): boolean {
-    //TODO 如果当前页面和路由页面一致，是否不会onchange，此时应到返回false
     if (this.history.isTabPage(location.pathname)) {
+      if (this.history.getLocation().pathname === location.pathname) {
+        return false;
+      }
       this.history.switchTab({url: location.url});
     } else {
       this.history.reLaunch({url: this.addKey(location.url, key)});

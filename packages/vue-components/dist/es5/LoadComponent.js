@@ -22,7 +22,19 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
   var component = defineComponent({
     name: 'EluxComponentLoader',
     setup: function setup(props, context) {
-      var execute = function execute() {
+      var active = true;
+      var viewRef = shallowRef(OnLoading);
+      var store = coreConfig.UseStore();
+
+      var update = function update(view) {
+        if (active) {
+          viewRef.value = view;
+        }
+      };
+
+      watch(function () {
+        return store.sid;
+      }, function () {
         var SyncView = OnLoading;
 
         try {
@@ -34,10 +46,10 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
             }
 
             result.then(function (view) {
-              active && (View.value = view || 'not found!');
+              update(view || 'not found!');
             }, function (e) {
               env.console.error(e);
-              active && (View.value = e.message || "" + e || 'error');
+              update(e.message || "" + e || 'error');
             });
           } else {
             SyncView = result;
@@ -47,29 +59,24 @@ export var LoadComponent = function LoadComponent(moduleName, componentName, opt
           SyncView = e.message || "" + e || 'error';
         }
 
-        return SyncView;
-      };
-
-      var store = coreConfig.UseStore();
-      var View = shallowRef(execute());
-      var active = true;
+        update(SyncView);
+      }, {
+        immediate: true
+      });
       onBeforeUnmount(function () {
         active = false;
       });
-      watch(function () {
-        return store.sid;
-      }, execute);
       return function () {
-        var view = View.value;
+        var View = viewRef.value;
 
-        if (typeof view === 'string') {
+        if (typeof View === 'string') {
           return h(OnError, {
-            message: view
+            message: View
           });
-        } else if (view === OnLoading) {
-          return h(view);
+        } else if (View === OnLoading) {
+          return h(OnLoading);
         } else {
-          return h(view, props, context.slots);
+          return h(View, props, context.slots);
         }
       };
     }

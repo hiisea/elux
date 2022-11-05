@@ -1,4 +1,4 @@
-# 安装与配置
+# 安装Elux
 
 Elux 项目基于 node，推荐使用较新的 node 环境（**>=14.0.0**）
 
@@ -51,24 +51,27 @@ Cli工程模版制作可能稍滞后于Git项目本身，另外对于优质的�
 模版中的Taro项目基于`Taro特定版本`制作，开箱即用，但可能版本滞后。如果想使用官方**最新版本**，也可以自己在Taro项目中安装Elux，参见[Taro小程序
 ](/guide/platform/taro.html#手动安装elux)
 
-## 使用自己的脚手架
+## 可以使用自己的脚手架吗？
 
-你也可以使用自己的脚手架，选择一个elux组合包，当作普通npm依赖安装：
+当然可以，工程模版中的Taro项目，就是用的Taro官方的脚手架。
 
-```bash
-yarn add @elux/react-web
-```
+- 选择一个`elux组合包`，当作普通npm依赖安装：
 
-根据平台和UI框架不同，目前推出5种组合包，它们基本保持一致的API：
+  ```bash
+  yarn add @elux/react-web
+  ```
 
-- [@elux/react-web](/api/react-web.html)
-- [@elux/react-taro](/api/react-taro.html)
-- [@elux/vue-web](/api/vue-web.html)
-- [@elux/vue-taro](/api/vue-taro.html)
-- @elux/react-rn //开发中...
+  根据平台和UI框架不同，目前推出5种组合包，它们基本保持一致的API：
 
-::: tip
+  - [@elux/react-web](/api/react-web.html)
+  - [@elux/react-taro](/api/react-taro.html)
+  - [@elux/vue-web](/api/vue-web.html)
+  - [@elux/vue-taro](/api/vue-taro.html)
+  - @elux/react-rn //开发中...
 
-工程模版中的Taro项目，就是用的Taro官方的脚手架
+- 注意支持`ES6装饰器`，例如Babel配置：
 
-:::
+  ```js
+  ['@babel/plugin-proposal-decorators', {legacy: false, decoratorsBeforeExport: true}],
+  ['@babel/plugin-proposal-class-properties', {loose}],
+  ```
