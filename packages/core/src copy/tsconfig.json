@@ -1,0 +1,13 @@
+{
+  "extends": "@elux/babel-preset/tsconfig.esm.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "declarationDir": "../types",
+    "emitDeclarationOnly": true,
+    "removeComments": false,
+    "declarationMap": true,
+    "types": ["../global/global"]
+  },
+  "include": ["./"],
+  "exclude": []
+}

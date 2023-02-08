@@ -1,5 +1,5 @@
 import env from './env';
-import {buildConfigSetter, deepMerge, UNListener} from './utils';
+import {deepCloneState} from './utils';
 
 /**
  * 定义Action
@@ -33,7 +33,10 @@ export type Dispatch = (action: Action) => void | Promise<void>;
  *
  * @public
  */
-export type ModuleState = {[key: string]: any};
+export type ModuleState = {
+  _error?: string;
+  [key: string]: any;
+};
 
 /**
  * 全局状态
@@ -45,140 +48,122 @@ export type ModuleState = {[key: string]: any};
  */
 export type StoreState = {[moduleName: string]: ModuleState | undefined};
 
-export interface ActionHandler {
-  // __moduleName__: string;
-  // __actionName__: string;
-  __isReducer__?: boolean;
-  __isEffect__?: boolean;
-  // __isHandler__?: boolean;
-  __decorators__?: [
-    (store: IStore, action: Action, effectPromise: Promise<unknown>) => any,
-    null | ((status: 'Rejected' | 'Resolved', beforeResult: unknown, effectResult: unknown) => void)
-  ][];
-  (...args: any[]): unknown;
-}
+/** @public */
+export type ModelAsCreators = {[actionName: string]: ActionCreator};
 
 /*** @public */
 export type ActionCreator = (...args: any[]) => Action;
 
-export type ModelAsHandlers = {[actionName: string]: ActionHandler};
+export abstract class AStore {
+  abstract dispatch: Dispatch;
+  abstract clone(brand?: boolean): AStore;
+  abstract getState(): StoreState;
+  abstract getModule(moduleName: string): IModule | Promise<IModule>;
+  abstract destroy(): void;
 
-export type ActionHandlersMap = {[actionName: string]: {[moduleName: string]: ActionHandler}};
+  private mountedModules: {[moduleName: string]: Promise<void> | true | undefined} = {};
+  private injectedModels: {[moduleName: string]: IModel} = {};
+  private active: boolean = false;
 
-/** @public */
-export type ModelAsCreators = {[actionName: string]: ActionCreator};
-
+  mount(moduleName: string, env: 'init' | 'route' | 'update'): void | Promise<void> {
+    if (!coreConfig.ModuleGetter[moduleName]) {
+      return;
+    }
+    const mountedModules = this.mountedModules;
+    if (!mountedModules[moduleName]) {
+      mountedModules[moduleName] = this.execMount(moduleName);
+    }
+    const result = mountedModules[moduleName];
+    return result === true ? undefined : result;
+  }
+  private async execMount(moduleName: string): Promise<void> {
+    let model: IModel, initState: ModuleState, initError: any;
+    try {
+      const module = await this.getModule(moduleName);
+      model = new module.ModelClass(moduleName, this);
+      initState = await model.onInit();
+    } catch (e: any) {
+      initError = e;
+    }
+    if (initError) {
+      this.dispatch(initStateAction(moduleName, {_error: initError + ''}));
+      this.mountedModules[moduleName] = undefined;
+      throw initError;
+    }
+    this.dispatch(initStateAction(moduleName, initState!));
+    this.mountedModules[moduleName] = true;
+    this.injectedModels[moduleName] = model!;
+    if (this.active) {
+      model!.onActive();
+    }
+    model!.onBuild();
+  }
+}
 /**
- * 获取全局状态
- *
- * @param moduleName - 如果指明moduleName则返回该模块的ModuleState，否则返回全局StoreState
+ * Model的基础定义
  *
  * @public
  */
-export interface GetState<TStoreState extends StoreState = StoreState> {
-  (): TStoreState;
-  <N extends string>(moduleName: N): TStoreState[N];
+export interface IModel {
+  /**
+   * 模块名称
+   */
+  readonly moduleName: string;
+  /**
+   * 模块状态
+   */
+  readonly state: ModuleState;
+  /**
+   * model被挂载到store时触发，在一个store中一个model只会被挂载一次
+   */
+  onInit(): ModuleState | Promise<ModuleState>;
+  onBuild(): void | Promise<void>;
+  /**
+   * 当前page被激活时触发
+   */
+  onActive(): void;
+  /**
+   * 当前page被变为历史快照时触发
+   */
+  onInactive(): void;
 }
 
 /**
- * Store实例
+ * Model的构造类
  *
  * @public
  */
-export interface IStore<TStoreState extends StoreState = StoreState> {
-  /**
-   * ForkID
-   */
-  uid: number;
-  /**
-   * 实例ID
-   */
-  sid: number;
-  /**
-   * 当前是否是激活状态
-   *
-   * @remarks
-   * 同一时刻只会有一个store被激活
-   */
-  active: boolean;
-  /**
-   * 所属router
-   *
-   * @remarks
-   * router和store是一对多的关系
-   */
-  router: IRouter<TStoreState>;
-  /**
-   * 派发action
-   */
-  dispatch: Dispatch;
-  /**
-   * 获取store的状态
-   *
-   * @remarks
-   * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
-   */
-  getState: GetState<TStoreState>;
-  /**
-   * 当前的Store状态
-   */
-  state: TStoreState;
-  /**
-   * 获取暂时未提交到store的状态
-   *
-   * @remarks
-   * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
-   */
-  getUncommittedState(): TStoreState;
-  /**
-   * 在该store中挂载指定的model
-   *
-   * @remarks
-   * 该方法会触发model.onMount(env)钩子
-   */
-  mount(moduleName: keyof TStoreState, env: 'init' | 'route' | 'update'): void | Promise<void>;
-  /**
-   * 销毁（框架会自动调用）
-   */
-  destroy(): void;
+export interface ModelClass<H = IModel> {
+  new (moduleName: string, store: AStore): H;
 }
 
 /**
- * Store实例(用于View中)
+ * EluxComponent定义
+ *
+ * @remarks
+ * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
  *
  * @public
  */
-export interface VStore<TStoreState extends StoreState = StoreState> {
-  /**
-   * ForkID
-   */
-  uid: number;
-  /**
-   * 实例ID
-   */
-  sid: number;
-  /**
-   * 派发action
-   */
-  dispatch: Dispatch;
-  /**
-   * 当前的Store状态
-   */
-  state: TStoreState;
-  /**
-   * 在该store中挂载指定的model
-   *
-   * @remarks
-   * 该方法会触发model.onMount(env)钩子
-   */
-  mount(moduleName: keyof TStoreState, env: 'init' | 'route' | 'update'): void | Promise<void>;
+export interface EluxComponent {
+  __elux_component__: 'view' | 'component';
 }
+
 /**
- * 路由动作类别
+ * Module的基础定义
  *
  * @public
  */
-export type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
+export interface IModule<TModuleName extends string = string> {
+  moduleName: TModuleName;
+  ModelClass: ModelClass;
+  components: {[componentName: string]: EluxComponent};
+  state: ModuleState;
+  actions: ModelAsCreators;
+  data?: any;
+}
+
+export type ModuleGetter = {[moduleName: string]: () => IModule | Promise<{default: IModule}>};
 
 /**
  * 路由历史栈类别
@@ -186,6 +171,13 @@ export type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
  * @public
  */
 export type RouteTarget = 'window' | 'page';
+
+/**
+ * 路由动作类别
+ *
+ * @public
+ */
+export type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
 
 /**
  * 路由信息
@@ -203,15 +195,56 @@ export interface Location {
   state: any;
 }
 
-/**
- * 内置的错误描述接口
- *
- * @public
- */
-export interface ActionError {
-  code: string;
-  message: string;
-  detail?: any;
+export interface ANativeRouter {
+  getInitUrl(): Promise<string>;
+  testExecute(method: RouteAction, location: Location, backIndex?: number[]): any;
+  execute(method: RouteAction, location: Location, key: string, backIndex?: number[]): void | Promise<void>;
+  exit(): void;
+}
+
+export function testChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_testRouteChange`,
+    payload: [location, routeAction],
+  };
+}
+export function beforeChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_beforeRouteChange`,
+    payload: [location, routeAction],
+  };
+}
+export function afterChangeAction(location: Location, routeAction: RouteAction): Action {
+  return {
+    type: `${coreConfig.StageModuleName}${coreConfig.NSP}_afterRouteChange`,
+    payload: [location, routeAction],
+  };
+}
+export function initStateAction(moduleName: string, initState: ModuleState): Action {
+  return {
+    type: `${moduleName}${coreConfig.NSP}_initState`,
+    payload: [initState],
+  };
+}
+interface IWindowStack {
+  num: number;
+  getCurrentItem(): IPageStack;
+  getRecords(): IRouteRecord[];
+  relaunch(record: IPageStack): void;
+  push(record: IPageStack): void;
+  backTest(stepOrKey: number | string, rootOnly: boolean): {record: RouteRecord; overflow: boolean; index: [number, number]};
+  back(delta: number): void;
+}
+interface IPageStack {
+  num: number;
+  readonly key: string;
+  readonly windowStack: IWindowStack;
+  getCurrentItem(): IRouteRecord;
+  getItems(): IRouteRecord[];
+  push(record: IRouteRecord): void;
+  relaunch(record: IRouteRecord): void;
+  replace(record: IRouteRecord): void;
+  back(delta: number): void;
 }
 
 /**
@@ -226,51 +259,31 @@ export interface IRouteRecord {
   /**
    * 唯一的key
    */
-  key: string;
+  readonly key: string;
   /**
    * 路由描述
    */
-  location: Location;
+  readonly location: Location;
   /**
    * 页面标题
    */
-  title: string;
+  readonly title: string;
+  readonly store: AStore;
 }
 
-/**
- * 本次路由前后的某些信息
- *
- * @remarks
- * 可以通过 {@link IRouter.runtime} 获得
- *
- * @public
- */
-export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
-  /**
-   * 路由发生的时间戳
-   */
-  timestamp: number;
-  /**
-   * 路由跳转前的store状态
-   */
-  prevState: TStoreState;
-  /**
-   * 路由跳转是否已经完成
-   */
-  completed: boolean;
-}
+export class RouteRecord implements IRouteRecord {
+  public readonly key: string;
+  private _title: string = '';
 
-/**
- * 路由初始化时参数
- *
- * @remarks
- * 可以通过 {@link IRouter.initOptions} 获得，通常用于SSR时传递原生的Request和Response对象
- *
- * @public
- */
-export interface RouterInitOptions {
-  url: string;
-  [key: string]: any;
+  constructor(public readonly location: Location, public readonly pageStack: IPageStack, public readonly store: AStore) {
+    this.key = [pageStack.key, pageStack.num++].join('_');
+  }
+  public get title(): string {
+    return this._title;
+  }
+  public saveTitle(val: string): void {
+    this._title = val;
+  }
 }
 
 /**
@@ -284,289 +297,20 @@ export interface RouterInitOptions {
 export interface RouteEvent {
   location: Location;
   action: RouteAction;
-  prevStore: IStore;
-  newStore: IStore;
+  prevStore: AStore;
+  newStore: AStore;
   windowChanged: boolean;
 }
 
 /**
- * 路由器的定义
- *
- * @remarks
- * - 在 CSR 中全局只有一个 Router
- *
- * - 在 SSR 中每个客户请求都会生成一个Router
+ * 内置的错误描述接口
  *
  * @public
  */
-export interface IRouter<TStoreState extends StoreState = StoreState> {
-  init(initOptions: RouterInitOptions, prevState: TStoreState): Promise<void>;
-  /**
-   * 监听路由事件
-   */
-  addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
-  /**
-   * 路由初始化时的参数，通常用于SSR时传递原生的Request和Response对象
-   */
-  initOptions: RouterInitOptions;
-  /**
-   * 当前路由动作
-   */
-  action: RouteAction;
-  /**
-   * 当前路由信息
-   */
-  location: Location;
-  /**
-   * 当前路由的唯一ID
-   */
-  routeKey: string;
-  /**
-   * 当前路由的相关运行信息
-   */
-  runtime: RouteRuntime<TStoreState>;
-  /**
-   * 获取当前页面的DocumentHead
-   */
-  getDocumentHead(): string;
-  /**
-   * 设置当前页面的DocumentHead
-   */
-  setDocumentHead(html: string): void;
-  /**
-   * 获取当前被激活显示的页面
-   */
-  getActivePage(): {store: IStore; location: Location};
-  /**
-   * 获取当前所有CurrentPage(PageHistoryStack中的第一条)
-   */
-  getCurrentPages(): {store: IStore; location: Location}[];
-  /**
-   * 获取指定历史栈的长度
-   */
-  getHistoryLength(target: RouteTarget): number;
-  /**
-   * 获取指定历史栈中的记录
-   */
-  getHistory(target: RouteTarget): IRouteRecord[];
-  /**
-   * 用`唯一key`来查找历史记录，如果没找到则返回 `{overflow: true}`
-   */
-  findRecordByKey(key: string): {record: IRouteRecord; overflow: boolean; index: [number, number]};
-  /**
-   * 用`回退步数`来查找历史记录，如果步数溢出则返回 `{overflow: true}`
-   */
-  findRecordByStep(delta: number, rootOnly: boolean): {record: IRouteRecord; overflow: boolean; index: [number, number]};
-  /**
-   * 根据部分信息计算完整Url
-   */
-  computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
-  /**
-   * 清空指定栈中的历史记录，并跳转路由
-   *
-   * @param partialLocation - 路由信息 {@link Location}
-   * @param target - 指定要操作的历史栈，默认:`page`
-   * @param refresh - 是否强制刷新，默认: false
-   */
-  relaunch(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
-  /**
-   * 在指定栈中新增一条历史记录，并跳转路由
-   *
-   * @param partialLocation - 路由信息 {@link Location}
-   * @param target - 指定要操作的历史栈，默认:`page`
-   * @param refresh - 是否强制刷新，默认: false
-   */
-  push(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
-  /**
-   * 在指定栈中替换当前历史记录，并跳转路由
-   *
-   * @param partialLocation - 路由信息 {@link Location}
-   * @param target - 指定要操作的历史栈，默认:`page`
-   * @param refresh - 是否强制刷新，默认: false
-   */
-  replace(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
-  /**
-   * 回退指定栈中的历史记录，并跳转路由
-   *
-   * @param stepOrKeyOrCallback - 需要回退的步数/历史记录ID/回调函数
-   * @param target - 指定要操作的历史栈，默认:`page`
-   * @param refresh - 是否强制刷新，默认: false
-   * @param overflowRedirect - 如果回退溢出，跳往哪个路由
-   */
-  back(
-    stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean),
-    target?: RouteTarget,
-    refresh?: boolean,
-    overflowRedirect?: string
-  ): void | Promise<void>;
-}
-
-/**
- * Model的基础定义
- *
- * @public
- */
-export interface CommonModel {
-  /**
-   * 模块名称
-   */
-  readonly moduleName: string;
-  /**
-   * 模块状态
-   */
-  readonly state: ModuleState;
-  /**
-   * model被挂载到store时触发，在一个store中一个model只会被挂载一次
-   */
-  onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
-  /**
-   * 当前page被激活时触发
-   */
-  onActive(): void;
-  /**
-   * 当前page被变为历史快照时触发
-   */
-  onInactive(): void;
-}
-
-/**
- * Model的构造类
- *
- * @public
- */
-export interface CommonModelClass<H = CommonModel> {
-  new (moduleName: string, store: IStore): H;
-}
-
-/**
- * EluxComponent定义
- *
- * @remarks
- * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
- *
- * @public
- */
-export interface EluxComponent {
-  __elux_component__: 'view' | 'component';
-}
-
-/**
- * 异步EluxComponent定义
- *
- * @remarks
- * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
- *
- * @public
- */
-export type AsyncEluxComponent = () => Promise<{
-  default: EluxComponent;
-}>;
-
-export function isEluxComponent(data: any): data is EluxComponent {
-  return data['__elux_component__'];
-}
-
-/**
- * Module的基础定义
- *
- * @public
- */
-export interface CommonModule<TModuleName extends string = string> {
-  moduleName: TModuleName;
-  ModelClass: CommonModelClass;
-  components: {[componentName: string]: EluxComponent};
-  state: ModuleState;
-  actions: ModelAsCreators;
-  data?: any;
-}
-
-/**
- * 配置模块的获取方式
- *
- * @remarks
- * 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`
- *
- * @example
- * ```js
- * import stage from '@/modules/stage';
- *
- * export const moduleGetter = {
- *   stage: () => stage,
- *   article: () => import('@/modules/article'),
- *   my: () => import('@/modules/my'),
- * };
- * ```
- *
- * @public
- */
-export type ModuleGetter = {[moduleName: string]: () => CommonModule | Promise<{default: CommonModule}>};
-
-export type ModuleApiMap = Record<string, {name: string; actions: ModelAsCreators; actionNames: Record<string, string>}>;
-
-export const MetaData: {
-  moduleApiMap: ModuleApiMap;
-  moduleCaches: {[moduleName: string]: undefined | CommonModule | Promise<CommonModule>};
-  componentCaches: {[moduleNameAndComponentName: string]: undefined | EluxComponent | Promise<EluxComponent>};
-  reducersMap: ActionHandlersMap;
-  effectsMap: ActionHandlersMap;
-  clientRouter?: IRouter;
-} = {
-  moduleApiMap: null as any,
-  moduleCaches: {},
-  componentCaches: {},
-  reducersMap: {},
-  effectsMap: {},
-  clientRouter: undefined,
-};
-
-/**
- * Store的中间件
- *
- * @remarks
- * 类似于 Redux 的 Middleware
- *
- * @public
- */
-export type StoreMiddleware = (api: {getStore: () => IStore; dispatch: Dispatch}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
-
-/**
- * 派发Action的日志信息
- *
- * @public
- */
-export type StoreLoggerInfo = {
-  id: number;
-  isActive: boolean;
-  actionName: string;
-  payload: any[];
-  priority: string[];
-  handers: string[];
-  state: any;
-  effect: boolean;
-};
-
-/**
- * Store的日志记录器
- *
- * @remarks
- * Store派发Action都会调用该回调方法
- *
- * @public
- */
-export type StoreLogger = (info: StoreLoggerInfo) => void;
-
-export interface EluxContext {
-  router: IRouter;
-}
-
-export interface EluxStoreContext {
-  store: VStore;
-}
-
-export interface IAppRender {
-  toDocument(id: string, eluxContext: EluxContext, fromSSR: boolean, app: any): void;
-  toString(id: string, eluxContext: EluxContext, app: {}): Promise<string>;
-  toProvider(eluxContext: EluxContext, app: any): Elux.Component<{children: any}>;
+export interface ActionError {
+  code: string;
+  message: string;
+  detail?: any;
 }
 
 /**
@@ -589,113 +333,499 @@ export const ErrorCodes = {
   ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW',
 };
 
-export const coreConfig: {
-  NSP: string;
-  MSP: string;
-  MutableData: boolean;
-  DepthTimeOnLoading: number;
-  StageModuleName: string;
-  StageViewName: string;
-  SSRDataKey: string;
-  SSRTPL: string;
-  ModuleGetter: ModuleGetter;
-  StoreInitState: () => {};
-  StoreMiddlewares: StoreMiddleware[];
-  StoreLogger: StoreLogger;
-  SetPageTitle: (title: string) => void;
-  Platform: 'taro' | '';
-  StoreProvider?: Elux.Component<{store: IStore; children: JSX.Element}>;
-  LoadComponent?: (
-    moduleName: string,
-    componentName: string,
-    options: {onError: Elux.Component<{message: string}>; onLoading: Elux.Component<{}>}
-  ) => EluxComponent | Promise<EluxComponent>;
-  LoadComponentOnError?: Elux.Component<{message: string}>;
-  LoadComponentOnLoading?: Elux.Component<{}>;
-  UseRouter?: () => IRouter;
-  UseStore?: () => VStore;
-  AppRender?: IAppRender;
-  NotifyNativeRouter: {
-    window: boolean;
-    page: boolean;
-  };
-  QueryString: {
-    parse(str: string): {[key: string]: any};
-    stringify(query: {[key: string]: any}): string;
-  };
-  NativePathnameMapping: {
-    in(nativePathname: string): string;
-    out(internalPathname: string): string;
-  };
-} = {
-  NSP: '.',
-  MSP: ',',
-  MutableData: false,
-  DepthTimeOnLoading: 1,
-  StageModuleName: 'stage',
-  StageViewName: 'main',
-  SSRDataKey: 'eluxSSRData',
-  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
-  ModuleGetter: {},
-  StoreInitState: () => ({}),
-  StoreMiddlewares: [],
-  StoreLogger: () => undefined,
-  SetPageTitle: (title: string) => {
-    if (env.document) {
-      env.document.title = title;
-    }
-  },
-  Platform: '',
-  StoreProvider: undefined,
-  LoadComponent: undefined,
-  LoadComponentOnError: undefined,
-  LoadComponentOnLoading: undefined,
-  UseRouter: undefined,
-  UseStore: undefined,
-  AppRender: undefined,
-  /**
-   * 实际上只支持三种组合：[false,false],[true,true],[true,false]
-   * 否则back时可以出错
-   */
-  NotifyNativeRouter: {
-    window: true,
-    page: false,
-  },
-  QueryString: {
-    parse: (str: string) => ({}),
-    stringify: () => '',
-  },
-  NativePathnameMapping: {
-    in: (pathname: string) => pathname,
-    out: (pathname: string) => pathname,
-  },
-};
-
-export const setCoreConfig = buildConfigSetter(coreConfig);
-
-export function deepMergeState(target: any = {}, ...args: any[]): any {
-  if (coreConfig.MutableData) {
-    return deepMerge(target, ...args);
-  }
-  return deepMerge({}, target, ...args);
-}
-
-export function mergeState(target: any = {}, ...args: any[]): any {
-  if (coreConfig.MutableData) {
-    return Object.assign(target, ...args);
-  }
-  return Object.assign({}, target, ...args);
-}
-
-export function getClientRouter(): IRouter {
-  return MetaData.clientRouter!;
-}
+export const errorProcessed = '__eluxProcessed__';
 
 /**
- * 当前State模式是否为Mutable
+ * 创建一个特殊的ErrorAction
+ *
+ * @param error - 错误体
  *
  * @public
  */
-export function isMutable(): boolean {
-  return coreConfig.MutableData;
+export function errorAction(error: any): Action {
+  if (typeof error !== 'object') {
+    error = {message: error};
+  }
+  const processed = !!error[errorProcessed];
+  const {code = '', message = 'unkown error', detail} = error;
+  const actionError: ActionError = {code, message, detail};
+  Object.defineProperty(actionError, errorProcessed, {value: processed, enumerable: false, writable: true});
+  //env.console.error(error);
+  return {
+    type: coreConfig.StageModuleName + coreConfig.NSP + '_error',
+    payload: [actionError],
+  };
 }
+
+type Execute = () => Promise<void>;
+type Resolved = () => void;
+type Rejected = (reason?: any) => void;
+type RouteTask = [Execute, Resolved, Rejected];
+
+export abstract class ARouter {
+  protected abstract dispatch(data: RouteEvent): void | Promise<void>;
+  protected abstract needToNotifyNativeRouter(action: RouteAction, target: RouteTarget): boolean;
+  protected abstract computeLocation(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): Location;
+  protected abstract WindowStackClass: {new (location: Location, store: AStore): IWindowStack};
+  private declare PageStackClass: {new (windowStack: IWindowStack, location: Location, store: AStore): IPageStack};
+  protected abstract StoreClass: {new (sid: number, uid: number, router: ARouter): AStore};
+  protected abstract getDocumentTitle(): string;
+  protected abstract setDocumentHead(title: string): void;
+  protected abstract nativeUrlToLocation(nativeUrl: string): Location;
+  private declare windowStack: IWindowStack;
+  private nativeRouter: ANativeRouter;
+  private taskList: RouteTask[] = [];
+  private curTask?: RouteTask;
+  private curTaskError?: any;
+  private curLoopTaskCallback?: [Resolved, Rejected];
+
+  private onTaskComplete = () => {
+    const task = this.taskList.shift();
+    if (task) {
+      this.curTask = task;
+      this.curTaskError = undefined;
+      const onTaskComplete = this.onTaskComplete;
+      const [exec, resolve, reject] = task;
+      env.setTimeout(
+        () =>
+          exec()
+            .then(onTaskComplete, (reason) => {
+              this.curTaskError = reason;
+              onTaskComplete();
+              throw reason;
+            })
+            .then(resolve, reject),
+        0
+      );
+    } else {
+      this.curTask = undefined;
+      if (this.curLoopTaskCallback) {
+        const [resolve, reject] = this.curLoopTaskCallback;
+        if (this.curTaskError) {
+          reject(this.curTaskError);
+        } else {
+          resolve();
+        }
+      }
+    }
+  };
+
+  private addTask(exec: () => Promise<void>): Promise<void> {
+    return new Promise((resolve, reject) => {
+      //TODO 是否需要？
+      //const task: RouteTask = [() => setLoading(exec(), this.getActivePage().store), resolve, reject];
+      const task: RouteTask = [exec, resolve, reject];
+      if (this.curTask) {
+        this.taskList.push(task);
+      } else {
+        this.curTask = task;
+        this.curTaskError = undefined;
+        const onTaskComplete = this.onTaskComplete;
+        const [exec, resolve, reject] = task;
+        exec()
+          .then(onTaskComplete, (reason) => {
+            this.curTaskError = reason;
+            onTaskComplete();
+            throw reason;
+          })
+          .then(resolve, reject);
+      }
+    });
+  }
+
+  constructor(nativeRouter: ANativeRouter, prevState: StoreState) {
+    this.nativeRouter = nativeRouter;
+  }
+
+  initialize(): Promise<void> {
+    return this.nativeRouter.getInitUrl().then((nativeUrl) => {
+      const location = this.nativeUrlToLocation(nativeUrl);
+      this.windowStack = new this.WindowStackClass(location, new this.StoreClass(0, 0, this));
+      const task: RouteTask = [this._init.bind(this), () => undefined, () => undefined];
+      this.curTask = task;
+      return new Promise((resolve, reject) => {
+        this.curLoopTaskCallback = [resolve, reject];
+        task[0]().finally(this.onTaskComplete);
+      });
+    });
+  }
+
+  private async _init() {
+    //TODO 是否需要？
+    //const {action, location, routeKey} = this;
+    //await this.nativeRouter.execute(action, location, routeKey);
+    const store = this.getCurrentPage().store;
+    try {
+      await store.mount(coreConfig.StageModuleName, 'init');
+    } catch (err: any) {
+      env.console.error(err);
+    }
+    //TODO 是否需要？
+    //this.dispatch({location, action, prevStore: store, newStore: store, windowChanged: true});
+  }
+
+  getCurrentPage(): IRouteRecord {
+    return this.windowStack.getCurrentItem().getCurrentItem();
+  }
+
+  getHistory(target: RouteTarget): IRouteRecord[] {
+    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
+  }
+
+  private mountStore(prevStore: AStore, newStore: AStore) {
+    const prevState = prevStore.getState();
+    this.prevState = coreConfig.MutableData ? deepCloneState(prevState) : prevState;
+    //TODO 是否需要？
+    // this.runtime = {
+    //   prevState: coreConfig.MutableData ? deepCloneState(prevState) : prevState,
+    // };
+    return newStore.mount(coreConfig.StageModuleName, 'route');
+  }
+
+  private backError(stepOrKey: number | string, redirect: string) {
+    const curStore = this.getCurrentPage().store;
+    const backOverflow: ActionError = {
+      code: ErrorCodes.ROUTE_BACK_OVERFLOW,
+      message: 'Overflowed on route backward.',
+      detail: {stepOrKey, redirect},
+    };
+    return curStore.dispatch(errorAction(backOverflow));
+  }
+
+  ssr(html: string): Promise<void> {
+    return this.addTask(this._ssr.bind(this, html));
+  }
+
+  async _ssr(html: string): Promise<void> {
+    const err: ActionError = {code: ErrorCodes.ROUTE_RETURN, message: 'Route cutting out', detail: html};
+    throw err;
+  }
+
+  relaunch(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
+    return this.addTask(this._relaunch.bind(this, partialLocation, target, refresh, _nativeCaller));
+  }
+
+  private async _relaunch(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean, nativeCaller: boolean) {
+    const action: RouteAction = 'relaunch';
+    //TODO 是否需要？
+    // const url = this.computeUrl(partialLocation, action, target);
+    // this.redirectOnServer(url);
+    const location = this.computeLocation(partialLocation, action, target);
+    const needToNotifyNativeRouter = this.needToNotifyNativeRouter(action, target);
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      const reject = this.nativeRouter.testExecute(action, location);
+      if (reject) {
+        throw reject;
+      }
+    }
+    const curPage = this.getCurrentPage() as RouteRecord;
+    try {
+      await curPage.store.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!nativeCaller) {
+        throw err;
+      }
+    }
+    await curPage.store.dispatch(beforeChangeAction(location, action));
+    curPage.saveTitle(this.getDocumentTitle());
+    //this.location = location;
+    //this.action = action;
+    const newStore = curPage.store.clone(refresh);
+    const curPageStack = this.windowStack.getCurrentItem();
+    const newRecord = new RouteRecord(location, curPageStack, newStore);
+    //this.routeKey = newRecord.key;
+    if (target === 'window') {
+      curPageStack.relaunch(newRecord);
+      this.windowStack.relaunch(curPageStack);
+    } else {
+      curPageStack.relaunch(newRecord);
+    }
+    try {
+      await this.mountStore(curPage.store, newStore);
+    } catch (err) {
+      env.console.error(err);
+    }
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      await this.nativeRouter.execute(action, location, newRecord.key);
+    }
+    await this.dispatch({location, action, prevStore: curPage.store, newStore, windowChanged: target === 'window'});
+    newStore.dispatch(afterChangeAction(location, action));
+  }
+
+  replace(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
+    return this.addTask(this._replace.bind(this, partialLocation, target, refresh, _nativeCaller));
+  }
+
+  private async _replace(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean, nativeCaller: boolean) {
+    const action: RouteAction = 'replace';
+    // const url = this.computeUrl(partialLocation, action, target);
+    // this.redirectOnServer(url);
+    const location = this.computeLocation(partialLocation, action, target);
+    const needToNotifyNativeRouter = this.needToNotifyNativeRouter(action, target);
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      const reject = this.nativeRouter.testExecute(action, location);
+      if (reject) {
+        throw reject;
+      }
+    }
+    const curPage = this.getCurrentPage() as RouteRecord;
+    try {
+      await curPage.store.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!nativeCaller) {
+        throw err;
+      }
+    }
+    await curPage.store.dispatch(beforeChangeAction(location, action));
+    curPage.saveTitle(this.getDocumentTitle());
+    //this.location = location;
+    //this.action = action;
+    const newStore = curPage.store.clone(refresh);
+    const curPageStack = this.windowStack.getCurrentItem();
+    const newRecord = new RouteRecord(location, curPageStack, newStore);
+    //this.routeKey = newRecord.key;
+    if (target === 'window') {
+      curPageStack.relaunch(newRecord);
+    } else {
+      curPageStack.replace(newRecord);
+    }
+    try {
+      await this.mountStore(curPage.store, newStore);
+    } catch (err) {
+      env.console.error(err);
+    }
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      await this.nativeRouter.execute(action, location, newRecord.key);
+    }
+    await this.dispatch({location, action, prevStore: curPage.store, newStore, windowChanged: target === 'window'});
+    newStore.dispatch(afterChangeAction(location, action));
+  }
+
+  push(partialLocation: Partial<Location>, target: RouteTarget = 'page', refresh: boolean = false, _nativeCaller = false): Promise<void> {
+    return this.addTask(this._push.bind(this, partialLocation, target, refresh, _nativeCaller));
+  }
+
+  async _push(partialLocation: Partial<Location>, target: RouteTarget, refresh: boolean, nativeCaller: boolean): Promise<void> {
+    const action: RouteAction = 'push';
+    const location = this.computeLocation(partialLocation, action, target);
+    const needToNotifyNativeRouter = this.needToNotifyNativeRouter(action, target);
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      const reject = this.nativeRouter.testExecute(action, location);
+      if (reject) {
+        throw reject;
+      }
+    }
+    const curPage = this.getCurrentPage() as RouteRecord;
+    try {
+      await curPage.store.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!nativeCaller) {
+        throw err;
+      }
+    }
+    await curPage.store.dispatch(beforeChangeAction(location, action));
+    curPage.saveTitle(this.getDocumentTitle());
+    const newStore = curPage.store.clone(target === 'window' || refresh);
+    const curPageStack = this.windowStack.getCurrentItem();
+    let newRecord: IRouteRecord;
+    if (target === 'window') {
+      const newPageStack = new this.PageStackClass(this.windowStack, location, newStore);
+      newRecord = newPageStack.getCurrentItem();
+      this.windowStack.push(newPageStack);
+    } else {
+      newRecord = new RouteRecord(location, curPageStack, newStore);
+      curPageStack.push(newRecord);
+    }
+    try {
+      await this.mountStore(curPage.store, newStore);
+    } catch (err) {
+      env.console.error(err);
+    }
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      await this.nativeRouter.execute(action, location, newRecord.key);
+    }
+    await this.dispatch({location, action, prevStore: curPage.store, newStore, windowChanged: target === 'window'});
+    newStore.dispatch(afterChangeAction(location, action));
+  }
+
+  back(
+    stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean),
+    target: RouteTarget = 'page',
+    overflowRedirect: string = '',
+    _nativeCaller = false
+  ): Promise<void> {
+    if (typeof stepOrKeyOrCallback === 'string') {
+      stepOrKeyOrCallback = stepOrKeyOrCallback.trim();
+    }
+    if (stepOrKeyOrCallback === '') {
+      this.nativeRouter.exit();
+      return Promise.resolve();
+    }
+    if (!stepOrKeyOrCallback) {
+      return this.replace(this.getCurrentPage().location, 'page');
+    }
+    return this.addTask((this._back as any).bind(this, stepOrKeyOrCallback, target, overflowRedirect, _nativeCaller));
+  }
+
+  private async _back(
+    stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean),
+    target: RouteTarget,
+    overflowRedirect: string,
+    nativeCaller: boolean
+  ) {
+    const action = 'back';
+    let stepOrKey: number | string = '';
+    if (typeof stepOrKeyOrCallback === 'function') {
+      const items = this.getHistory(target);
+      const i = items.findIndex(stepOrKeyOrCallback);
+      if (i > -1) {
+        stepOrKey = items[i].key;
+      }
+    } else {
+      stepOrKey = stepOrKeyOrCallback;
+    }
+    if (!stepOrKey) {
+      return this.backError(stepOrKey, overflowRedirect);
+    }
+    const {record, overflow, index} = this.windowStack.backTest(stepOrKey, target === 'window');
+    if (overflow) {
+      return this.backError(stepOrKey, overflowRedirect);
+    }
+    if (!index[0] && !index[1]) {
+      return;
+    }
+    const location = record.location;
+    const title = record.title;
+    const needToNotifyNativeRouter =
+      Boolean(index[0] && this.needToNotifyNativeRouter(action, 'window')) || Boolean(index[1] && this.needToNotifyNativeRouter(action, 'page'));
+
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      const reject = this.nativeRouter.testExecute(action, location, index);
+      if (reject) {
+        throw reject;
+      }
+    }
+    const curPage = this.getCurrentPage() as RouteRecord;
+    try {
+      await curPage.store.dispatch(testChangeAction(location, action));
+    } catch (err) {
+      if (!nativeCaller) {
+        throw err;
+      }
+    }
+    await curPage.store.dispatch(beforeChangeAction(location, action));
+    curPage.saveTitle(this.getDocumentTitle());
+    //this.location = location;
+    //this.action = action;
+    //this.routeKey = record.key;
+    if (index[0]) {
+      this.windowStack.back(index[0]);
+    }
+    if (index[1]) {
+      this.windowStack.getCurrentItem().back(index[1]);
+    }
+    const historyStore = this.getCurrentPage().store;
+    try {
+      await this.mountStore(curPage.store, historyStore);
+    } catch (err) {
+      env.console.error(err);
+    }
+    if (!nativeCaller && needToNotifyNativeRouter) {
+      await this.nativeRouter.execute(action, location, record.key, index);
+    }
+    this.setDocumentHead(title);
+    await this.dispatch({location, action, prevStore: curPage.store, newStore: historyStore, windowChanged: !!index[0]});
+    historyStore.dispatch(afterChangeAction(location, action));
+  }
+}
+
+export interface RenderOptions {
+  /**
+   * 挂载应用Dom的id
+   *
+   * @defaultValue `root`
+   *
+   * @remarks
+   * 默认: `root`
+   */
+  id?: string;
+}
+/**
+ * @public
+ */
+export type EluxApp = {
+  render(options?: RenderOptions): Promise<void>;
+};
+
+// const webApp = new WebApp();
+
+// export function createApp(appConfig: AppConfig) {
+//   return webApp.boot();
+// }
+export abstract class WebApp<INS = {}> {
+  private cientSingleton?: INS & {
+    render(options?: RenderOptions): Promise<void>;
+  };
+  protected abstract NativeRouterClass: {new (): ANativeRouter};
+  protected abstract RouterClass: {new (nativeRouter: ANativeRouter, prevState: StoreState): ARouter};
+  protected abstract createUI: () => any;
+  protected abstract toDocument: (domId: string, router: ARouter) => void;
+
+  boot(): INS & {
+    render(options?: RenderOptions): Promise<void>;
+  } {
+    if (this.cientSingleton) {
+      return this.cientSingleton;
+    }
+    const ssrData = env[coreConfig.SSRDataKey];
+    const nativeRouter = new this.NativeRouterClass();
+    const router = new this.RouterClass(nativeRouter, ssrData);
+    const ui = this.createUI();
+    this.cientSingleton = Object.assign(ui, {
+      render() {
+        return Promise.resolve();
+      },
+    });
+    const toDocument = this.toDocument;
+    return Object.assign(ui, {
+      render({id = 'root'}: RenderOptions = {}) {
+        return router.initialize().then(() => {
+          toDocument(id, {router}, !!ssrData, ins);
+        });
+      },
+    });
+  }
+}
+
+export abstract class SsrApp {
+  protected abstract NativeRouterClass: {new (): ANativeRouter};
+  protected abstract RouterClass: {new (nativeRouter: ANativeRouter, prevState: StoreState): ARouter};
+  protected abstract createUI: () => any;
+  protected abstract toString: (domId: string, router: ARouter) => void;
+
+  boot(): {render(options?: RenderOptions): Promise<void>} {
+    const nativeRouter = new this.NativeRouterClass();
+    const router = new this.RouterClass(nativeRouter, {});
+    const ui = this.createUI();
+
+    const toString = this.toString;
+    return Object.assign(ui, {
+      render({id = 'root'}: RenderOptions = {}) {
+        return router.initialize().then(() => {
+          const store = router.getCurrentPage().store;
+          store.destroy();
+          toString(id, {router}, !!ssrData, ins);
+        });
+      },
+    });
+  }
+}
+
+export const coreConfig: {NSP: string; MSP: string; StageModuleName: string; MutableData: boolean; SSRDataKey: string; ModuleGetter: ModuleGetter} = {
+  NSP: '.',
+  MSP: ',',
+  MutableData: false,
+  StageModuleName: 'stage',
+  SSRDataKey: 'eluxSSRData',
+  ModuleGetter: {},
+};
