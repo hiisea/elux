@@ -1,6 +1,6 @@
 import env from './env';
 import {compose, isPromise, Listener, promiseCaseCallback, TaskCounter, UNListener} from './utils';
-import {getActionData, isErrorAction, isInitAction, loadingAction, setProcessedErrorAction} from './action';
+import {actionConfig, getActionData, isErrorAction, isInitAction, loadingAction, setProcessedErrorAction} from './action';
 import {Action, AStore, baseConfig, Dispatch, GetState, IModel, IRouter, IStore, mergeState, ModuleState, StoreState} from './basic';
 import {devLogger, StoreLogger, StoreLoggerInfo} from './devTools';
 /**
@@ -24,8 +24,8 @@ export const preMiddleware: StoreMiddleware =
       }
       action = processedErrorAction;
     }
-    const [moduleName, actionName] = action.type.split(baseConfig.NSP);
-    if (!moduleName || !actionName || !baseConfig.ModuleGetter[moduleName]) {
+    const [moduleName, actionName] = action.type.split(actionConfig.NSP);
+    if (!moduleName || !actionName || !baseConfig.ModuleGetter![moduleName]) {
       return undefined;
     }
     const store = getStore();
@@ -36,6 +36,23 @@ export const preMiddleware: StoreMiddleware =
     }
     return next(action);
   };
+
+/**
+ * 申明reducer
+ *
+ * @public
+ */
+export function reducer(target: any, key: string, descriptor: PropertyDescriptor): any {
+  if (!key && !descriptor) {
+    key = target.key;
+    descriptor = target.descriptor;
+  }
+  const fun = descriptor.value as ActionHandler;
+  // fun.__actionName__ = key;
+  fun.__isReducer__ = true;
+  descriptor.enumerable = true;
+  return target.descriptor === descriptor ? target : descriptor;
+}
 
 /**
  * 申明effect
@@ -141,9 +158,9 @@ export class Store extends AStore {
   }
   setLoading<T extends Promise<any>>(item: T, groupName: string, moduleName?: string): T {
     if (!moduleName) {
-      moduleName = baseConfig.StageModuleName;
+      moduleName = actionConfig.StageModuleName;
     }
-    const key = moduleName + baseConfig.NSP + groupName;
+    const key = moduleName + actionConfig.NSP + groupName;
     const loadings = this.loadingGroups;
     if (!loadings[key]) {
       loadings[key] = new TaskCounter();
@@ -207,13 +224,13 @@ export class Store extends AStore {
   //   }
   // }
   protected respondHandler(action: Action, isReducer: boolean): void | Promise<void> {
-    const handlersMap = isReducer ? storeConfig.reducersMap : storeConfig.effectsMap;
+    const handlersMap = isReducer ? storeConfig.ReducersMap : storeConfig.EffectsMap;
     const actionType = action.type;
     const actionPriority = action.priority || [];
     const actionData = getActionData(action);
-    const [actionModuleName] = actionType.split(baseConfig.NSP);
+    const [actionModuleName] = actionType.split(actionConfig.NSP);
     const commonHandlers = handlersMap[action.type];
-    const universalActionType = actionType.replace(new RegExp(`[^${baseConfig.NSP}]+`), '*');
+    const universalActionType = actionType.replace(new RegExp(`[^${actionConfig.NSP}]+`), '*');
     const universalHandlers = handlersMap[universalActionType];
     const handlers = {...commonHandlers, ...universalHandlers};
     const handlerModuleNames = Object.keys(handlers);
@@ -280,7 +297,7 @@ export class Store extends AStore {
             if (loadingKey) {
               let [loadingForModuleName, loadingForGroupName] = loadingKey.split('.');
               if (!loadingForGroupName) {
-                loadingForModuleName = baseConfig.StageModuleName;
+                loadingForModuleName = actionConfig.StageModuleName;
                 loadingForGroupName = loadingForModuleName;
               }
               if (loadingForModuleName === 'this') {
@@ -312,12 +329,12 @@ export const storeConfig: {
   StoreInitState: () => {};
   StoreMiddlewares: StoreMiddleware[];
   StoreLogger: StoreLogger;
-  reducersMap: ActionHandlersMap;
-  effectsMap: ActionHandlersMap;
+  ReducersMap: ActionHandlersMap;
+  EffectsMap: ActionHandlersMap;
 } = {
   StoreInitState: () => ({}),
   StoreMiddlewares: [],
   StoreLogger: () => undefined,
-  reducersMap: {},
-  effectsMap: {},
+  ReducersMap: {},
+  EffectsMap: {},
 };

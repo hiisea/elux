@@ -1,89 +1,60 @@
-import { Action, AsyncEluxComponent, CommonModel, CommonModelClass, CommonModule, EluxComponent, IStore, ModuleState } from './basic';
-/**
- * 向外导出UI组件
- *
- * @returns
- * 返回实现 EluxComponent 接口的UI组件
- *
- * @public
- */
-export declare function exportComponent<T>(component: T): T & EluxComponent;
-/**
- * 向外导出业务视图
- *
- * @returns
- * 返回实现 EluxComponent 接口的业务视图
- *
- * @public
- */
-export declare function exportView<T>(component: T): T & EluxComponent;
-/**
- * 空Model常用于mock假数据
- *
- * @public
- */
-export declare class EmptyModel implements CommonModel {
-    readonly moduleName: string;
-    protected readonly store: IStore;
-    get state(): ModuleState;
-    constructor(moduleName: string, store: IStore);
-    onMount(): void;
-    onActive(): void;
-    onInactive(): void;
-    protected _initState(state: ModuleState): ModuleState;
-}
-export declare function exportModuleFacade(moduleName: string, ModelClass: CommonModelClass, components: {
+import { AsyncEluxComponent, EluxComponent, IModel, IModelClass, IModule, IStore, ModelAsCreators } from './basic';
+export declare function exportModuleFacade(moduleName: string, ModelClass: IModelClass, components: {
     [componentName: string]: EluxComponent | AsyncEluxComponent;
-}, data?: any): CommonModule;
+}, data?: any): IModule;
+export declare type ModuleApiMap = {
+    [moduleName: string]: {
+        name: string;
+        actions: ModelAsCreators;
+        actionNames: {
+            [key: string]: string;
+        };
+    };
+};
 /**
- * 将{@link LoadingState | LoadingState}注入指定ModuleState
- *
- * @param item - 要跟踪的异步任务，必须是一个Promise
- * @param store - 指明注入哪一个Store中
- *
- * @returns
- * 返回跟踪的异步任务
- *
- * @public
- */
-export declare function setLoading<T extends Promise<any>>(item: T, store: IStore, _moduleName?: string, _groupName?: string): T;
-/**
- * 跟踪effect执行的钩子
+ * 模块是否存在
  *
  * @remarks
- * 用于在以下 effect 中注入 before 和 after 的钩子，常用来跟踪effect执行情况
- *
- * @param before - 该 effect 执行前自动调用
- * @param after - 该 effect 执行后自动调用（无论成功与否）
- *
- * @returns
- * 返回ES6装饰器
+ * 即ModuleGetter中是否有配置该模块的获取方式
  *
  * @public
  */
-export declare function effectLogger(before: (store: IStore, action: Action, effectResult: unknown) => void, after: null | ((status: 'Rejected' | 'Resolved', beforeResult: unknown, effectResult: unknown) => void)): (target: any, key: string, descriptor: PropertyDescriptor) => void;
+export declare function moduleExists(moduleName: string): boolean;
+export declare function getModule(moduleName: string): Promise<IModule> | IModule | undefined;
+export declare function getComponent(moduleName: string, componentName: string): Promise<EluxComponent> | EluxComponent | undefined;
+export declare function getEntryComponent(): EluxComponent;
+export declare function getModuleApiMap(data?: {
+    [moduleName: string]: string[];
+}): ModuleApiMap;
 /**
- * 申明reducer
+ * 动态注册Module
+ *
+ * @remarks
+ * 常于小程序分包加载
  *
  * @public
  */
-export declare function reducer(target: any, key: string, descriptor: PropertyDescriptor): any;
+export declare function injectModule(module: IModule): void;
 /**
- * 申明effect
+ * 动态注册module
  *
- * @example
- * - `@effect('this.searchTableLoading')` 将该 effect 执行状态注入本模块的 `searchTableLoading` 状态中
- *
- * - `@effect()` 等于 `@effect('stage.globalLoading')`
- *
- * - `@effect(null)` 不跟踪其执行状态
- *
- * @param loadingKey - 将该 effect 执行状态作为 {@link LoadingState | LoadingState} 注入指定的 ModuleState 中。
- *
- * @returns
- * 返回ES6装饰器
+ * @remarks
+ * 常于小程序分包加载
  *
  * @public
  */
-export declare function effect(loadingKey?: string | null): Function;
+export declare function injectModule(moduleName: string, moduleGetter: () => IModule | Promise<{
+    default: IModule;
+}>): void;
+export declare function loadComponent(moduleName: string, componentName: string, store: IStore): Promise<EluxComponent> | EluxComponent | undefined;
+export declare function injectActions(model: IModel, hmr?: boolean): void;
+export declare const moduleConfig: {
+    ModuleCaches: {
+        [moduleName: string]: undefined | IModule | Promise<IModule>;
+    };
+    ComponentCaches: {
+        [moduleNameAndComponentName: string]: undefined | EluxComponent | Promise<EluxComponent>;
+    };
+    ModuleApiMap: ModuleApiMap;
+};
 //# sourceMappingURL=module.d.ts.map

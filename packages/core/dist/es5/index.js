@@ -49,12 +49,8 @@ function _inheritsLoose(subClass, superClass) {
 function isPromise(data) {
   return typeof data === 'object' && typeof data.then === 'function';
 }
-function toPromise(resultOrPromise) {
-  if (isPromise(resultOrPromise)) {
-    return resultOrPromise;
-  }
-
-  return Promise.resolve(resultOrPromise);
+function deepCloneState(state) {
+  return JSON.parse(JSON.stringify(state));
 }
 function promiseCaseCallback(resultOrPromise, callback) {
   if (isPromise(resultOrPromise)) {
@@ -65,82 +61,26 @@ function promiseCaseCallback(resultOrPromise, callback) {
 
   return callback(resultOrPromise);
 }
-function buildConfigSetter(data) {
-  return function (config) {
-    return Object.keys(data).forEach(function (key) {
-      config[key] !== undefined && (data[key] = config[key]);
-    });
-  };
-}
-function deepClone(data) {
-  return JSON.parse(JSON.stringify(data));
-}
-
-function isObject(obj) {
-  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
-}
-
-function __deepMerge(optimize, target, inject) {
-  Object.keys(inject).forEach(function (key) {
-    var src = target[key];
-    var val = inject[key];
-
-    if (isObject(val)) {
-      if (isObject(src)) {
-        target[key] = __deepMerge(optimize, src, val);
-      } else {
-        target[key] = optimize ? val : __deepMerge(optimize, {}, val);
-      }
-    } else {
-      target[key] = val;
-    }
-  });
-  return target;
-}
-
-function deepMerge(target) {
-  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    args[_key - 1] = arguments[_key];
+function compose() {
+  for (var _len = arguments.length, funcs = new Array(_len), _key = 0; _key < _len; _key++) {
+    funcs[_key] = arguments[_key];
   }
 
-  args = args.filter(function (item) {
-    return isObject(item) && Object.keys(item).length;
-  });
-
-  if (args.length === 0) {
-    return target;
+  if (funcs.length === 0) {
+    return function (arg) {
+      return arg;
+    };
   }
 
-  if (!isObject(target)) {
-    target = {};
+  if (funcs.length === 1) {
+    return funcs[0];
   }
 
-  args.forEach(function (inject, index) {
-    var lastArg = false;
-    var last2Arg = null;
-
-    if (index === args.length - 1) {
-      lastArg = true;
-    } else if (index === args.length - 2) {
-      last2Arg = args[index + 1];
-    }
-
-    Object.keys(inject).forEach(function (key) {
-      var src = target[key];
-      var val = inject[key];
-
-      if (isObject(val)) {
-        if (isObject(src)) {
-          target[key] = __deepMerge(lastArg, src, val);
-        } else {
-          target[key] = lastArg || last2Arg && !last2Arg[key] ? val : __deepMerge(lastArg, {}, val);
-        }
-      } else {
-        target[key] = val;
-      }
-    });
+  return funcs.reduce(function (a, b) {
+    return function () {
+      return a(b.apply(void 0, arguments));
+    };
   });
-  return target;
 }
 var SingleDispatcher = function () {
   function SingleDispatcher() {
@@ -174,6 +114,10 @@ var TaskCounter = function (_SingleDispatcher) {
 
   function TaskCounter(deferSecond) {
     var _this;
+
+    if (deferSecond === void 0) {
+      deferSecond = 1;
+    }
 
     _this = _SingleDispatcher.call(this) || this;
     _this.list = [];
@@ -240,125 +184,71 @@ var TaskCounter = function (_SingleDispatcher) {
 
   return TaskCounter;
 }(SingleDispatcher);
-function compose() {
-  for (var _len2 = arguments.length, funcs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-    funcs[_key2] = arguments[_key2];
-  }
-
-  if (funcs.length === 0) {
-    return function (arg) {
-      return arg;
-    };
-  }
-
-  if (funcs.length === 1) {
-    return funcs[0];
-  }
-
-  return funcs.reduce(function (a, b) {
-    return function () {
-      return a(b.apply(void 0, arguments));
-    };
-  });
+function deepClone(data) {
+  return JSON.parse(JSON.stringify(data));
 }
 function isServer() {
   return env.isServer;
 }
-
-function isEluxComponent(data) {
-  return data['__elux_component__'];
-}
-var MetaData = {
-  moduleApiMap: null,
-  moduleCaches: {},
-  componentCaches: {},
-  reducersMap: {},
-  effectsMap: {},
-  clientRouter: undefined
-};
-var ErrorCodes = {
-  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
-  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
-  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
-};
-var coreConfig = {
-  NSP: '.',
-  MSP: ',',
-  MutableData: false,
-  DepthTimeOnLoading: 1,
-  StageModuleName: 'stage',
-  StageViewName: 'main',
-  SSRDataKey: 'eluxSSRData',
-  SSRTPL: env.isServer ? env.decodeBas64('process.env.ELUX_ENV_SSRTPL') : '',
-  ModuleGetter: {},
-  StoreInitState: function StoreInitState() {
-    return {};
-  },
-  StoreMiddlewares: [],
-  StoreLogger: function StoreLogger() {
-    return undefined;
-  },
-  SetPageTitle: function SetPageTitle(title) {
-    if (env.document) {
-      env.document.title = title;
-    }
-  },
-  Platform: '',
-  StoreProvider: undefined,
-  LoadComponent: undefined,
-  LoadComponentOnError: undefined,
-  LoadComponentOnLoading: undefined,
-  UseRouter: undefined,
-  UseStore: undefined,
-  AppRender: undefined,
-  NotifyNativeRouter: {
-    window: true,
-    page: false
-  },
-  QueryString: {
-    parse: function parse(str) {
-      return {};
-    },
-    stringify: function stringify() {
-      return '';
-    }
-  },
-  NativePathnameMapping: {
-    in: function _in(pathname) {
-      return pathname;
-    },
-    out: function out(pathname) {
-      return pathname;
-    }
-  }
-};
-var setCoreConfig = buildConfigSetter(coreConfig);
-function mergeState(target) {
-  if (target === void 0) {
-    target = {};
+function toPromise(resultOrPromise) {
+  if (isPromise(resultOrPromise)) {
+    return resultOrPromise;
   }
 
-  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    args[_key2 - 1] = arguments[_key2];
-  }
-
-  if (coreConfig.MutableData) {
-    return Object.assign.apply(Object, [target].concat(args));
-  }
-
-  return Object.assign.apply(Object, [{}, target].concat(args));
-}
-function getClientRouter() {
-  return MetaData.clientRouter;
-}
-function isMutable() {
-  return coreConfig.MutableData;
+  return Promise.resolve(resultOrPromise);
 }
 
+function getActionData(action) {
+  return Array.isArray(action.payload) ? action.payload : [];
+}
+function testRouteChangeAction(location, routeAction) {
+  return {
+    type: "" + actionConfig.StageModuleName + actionConfig.NSP + "_testRouteChange",
+    payload: [location, routeAction]
+  };
+}
+function beforeRouteChangeAction(location, routeAction) {
+  return {
+    type: "" + actionConfig.StageModuleName + actionConfig.NSP + "_beforeRouteChange",
+    payload: [location, routeAction]
+  };
+}
+function afterRouteChangeAction(location, routeAction) {
+  return {
+    type: "" + actionConfig.StageModuleName + actionConfig.NSP + "_afterRouteChange",
+    payload: [location, routeAction]
+  };
+}
+function initModuleSuccessAction(moduleName, initState) {
+  return {
+    type: "" + moduleName + actionConfig.NSP + "_initState",
+    payload: [initState]
+  };
+}
+function initModuleErrorAction(moduleName, error) {
+  var initState = {
+    _error: error + ''
+  };
+  return {
+    type: "" + moduleName + actionConfig.NSP + "_initState",
+    payload: [initState]
+  };
+}
+function isInitAction(action) {
+  var _action$type$split = action.type.split(actionConfig.NSP),
+      actionName = _action$type$split[1];
+
+  return actionName === '_initState';
+}
+function loadingAction(moduleName, groupName, loadingState) {
+  var _ref;
+
+  return {
+    type: "" + moduleName + actionConfig.NSP + "_loading",
+    payload: [(_ref = {}, _ref[groupName] = loadingState, _ref)]
+  };
+}
 var errorProcessed = '__eluxProcessed__';
-function isProcessedError(error) {
-  return error && !!error[errorProcessed];
-}
 function setProcessedError(error, processed) {
   if (typeof error !== 'object') {
     error = {
@@ -373,11 +263,8 @@ function setProcessedError(error, processed) {
   });
   return error;
 }
-function moduleLoadingAction(moduleName, loadingState) {
-  return {
-    type: "" + moduleName + coreConfig.NSP + "_loadingState",
-    payload: [loadingState]
-  };
+function isProcessedError(error) {
+  return error && !!error[errorProcessed];
 }
 function errorAction(error) {
   if (typeof error !== 'object') {
@@ -404,1103 +291,27 @@ function errorAction(error) {
     writable: true
   });
   return {
-    type: getErrorActionType(),
+    type: "" + actionConfig.StageModuleName + actionConfig.NSP + "_error",
     payload: [actionError]
   };
 }
-function getErrorActionType() {
-  return coreConfig.StageModuleName + coreConfig.NSP + '_error';
-}
-function getInitActionType(moduleName) {
-  return moduleName + coreConfig.NSP + '_initState';
-}
-function testChangeAction(location, routeAction) {
-  return {
-    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_testRouteChange",
-    payload: [location, routeAction]
-  };
-}
-function beforeChangeAction(location, routeAction) {
-  return {
-    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_beforeRouteChange",
-    payload: [location, routeAction]
-  };
-}
-function afterChangeAction(location, routeAction) {
-  return {
-    type: "" + coreConfig.StageModuleName + coreConfig.NSP + "_afterRouteChange",
-    payload: [location, routeAction]
-  };
-}
+function setProcessedErrorAction(errorAction) {
+  var actionData = getActionData(errorAction);
 
-function moduleExists(moduleName) {
-  return !!coreConfig.ModuleGetter[moduleName];
-}
-function getModule(moduleName) {
-  if (MetaData.moduleCaches[moduleName]) {
-    return MetaData.moduleCaches[moduleName];
-  }
-
-  var moduleOrPromise = coreConfig.ModuleGetter[moduleName]();
-
-  if (isPromise(moduleOrPromise)) {
-    var promiseModule = moduleOrPromise.then(function (_ref) {
-      var module = _ref.default;
-      injectActions(new module.ModelClass(moduleName, null));
-      MetaData.moduleCaches[moduleName] = module;
-      return module;
-    }, function (reason) {
-      MetaData.moduleCaches[moduleName] = undefined;
-      throw reason;
-    });
-    MetaData.moduleCaches[moduleName] = promiseModule;
-    return promiseModule;
-  }
-
-  injectActions(new moduleOrPromise.ModelClass(moduleName, null));
-  MetaData.moduleCaches[moduleName] = moduleOrPromise;
-  return moduleOrPromise;
-}
-function getComponent(moduleName, componentName) {
-  var key = [moduleName, componentName].join(coreConfig.NSP);
-
-  if (MetaData.componentCaches[key]) {
-    return MetaData.componentCaches[key];
-  }
-
-  var moduleCallback = function moduleCallback(module) {
-    var componentOrFun = module.components[componentName];
-
-    if (isEluxComponent(componentOrFun)) {
-      MetaData.componentCaches[key] = componentOrFun;
-      return componentOrFun;
-    }
-
-    var promiseComponent = componentOrFun().then(function (_ref2) {
-      var component = _ref2.default;
-      MetaData.componentCaches[key] = component;
-      return component;
-    }, function (reason) {
-      MetaData.componentCaches[key] = undefined;
-      throw reason;
-    });
-    MetaData.componentCaches[key] = promiseComponent;
-    return promiseComponent;
-  };
-
-  var moduleOrPromise = getModule(moduleName);
-
-  if (isPromise(moduleOrPromise)) {
-    return moduleOrPromise.then(moduleCallback);
-  }
-
-  return moduleCallback(moduleOrPromise);
-}
-function getEntryComponent() {
-  return getComponent(coreConfig.StageModuleName, coreConfig.StageViewName);
-}
-function getModuleApiMap(data) {
-  if (!MetaData.moduleApiMap) {
-    if (data) {
-      MetaData.moduleApiMap = Object.keys(data).reduce(function (prev, moduleName) {
-        var arr = data[moduleName];
-        var actions = {};
-        var actionNames = {};
-        arr.forEach(function (actionName) {
-          actions[actionName] = function () {
-            for (var _len = arguments.length, payload = new Array(_len), _key = 0; _key < _len; _key++) {
-              payload[_key] = arguments[_key];
-            }
-
-            return {
-              type: moduleName + coreConfig.NSP + actionName,
-              payload: payload
-            };
-          };
-
-          actionNames[actionName] = moduleName + coreConfig.NSP + actionName;
-        });
-        var moduleFacade = {
-          name: moduleName,
-          actions: actions,
-          actionNames: actionNames
-        };
-        prev[moduleName] = moduleFacade;
-        return prev;
-      }, {});
-    } else {
-      var cacheData = {};
-      MetaData.moduleApiMap = new Proxy({}, {
-        set: function set(target, moduleName, val, receiver) {
-          return Reflect.set(target, moduleName, val, receiver);
-        },
-        get: function get(target, moduleName, receiver) {
-          var val = Reflect.get(target, moduleName, receiver);
-
-          if (val !== undefined) {
-            return val;
-          }
-
-          if (!cacheData[moduleName]) {
-            cacheData[moduleName] = {
-              name: moduleName,
-              actionNames: new Proxy({}, {
-                get: function get(__, actionName) {
-                  return moduleName + coreConfig.NSP + actionName;
-                }
-              }),
-              actions: new Proxy({}, {
-                get: function get(__, actionName) {
-                  return function () {
-                    for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                      payload[_key2] = arguments[_key2];
-                    }
-
-                    return {
-                      type: moduleName + coreConfig.NSP + actionName,
-                      payload: payload
-                    };
-                  };
-                }
-              })
-            };
-          }
-
-          return cacheData[moduleName];
-        }
-      });
-    }
-  }
-
-  return MetaData.moduleApiMap;
-}
-function injectModule(moduleOrName, moduleGetter) {
-  if (typeof moduleOrName === 'string') {
-    coreConfig.ModuleGetter[moduleOrName] = moduleGetter;
-  } else {
-    coreConfig.ModuleGetter[moduleOrName.moduleName] = function () {
-      return moduleOrName;
-    };
-  }
-}
-function injectComponent(moduleName, componentName, store) {
-  return promiseCaseCallback(getComponent(moduleName, componentName), function (component) {
-    if (component.__elux_component__ === 'view' && !env.isServer) {
-      return promiseCaseCallback(store.mount(moduleName, 'update'), function () {
-        return component;
-      });
-    }
-
-    return component;
-  });
-}
-function injectActions(model, hmr) {
-  var moduleName = model.moduleName;
-  var handlers = model;
-
-  for (var actionNames in handlers) {
-    if (typeof handlers[actionNames] === 'function') {
-      (function () {
-        var handler = handlers[actionNames];
-
-        if (handler.__isReducer__ || handler.__isEffect__) {
-          actionNames.split(coreConfig.MSP).forEach(function (actionName) {
-            actionName = actionName.trim();
-
-            if (actionName) {
-              actionName = actionName.replace(new RegExp("^this[" + coreConfig.NSP + "]"), "" + moduleName + coreConfig.NSP);
-              var arr = actionName.split(coreConfig.NSP);
-
-              if (arr[1]) {
-                transformAction(actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-              } else {
-                transformAction(moduleName + coreConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? MetaData.effectsMap : MetaData.reducersMap, hmr);
-              }
-            }
-          });
-        }
-      })();
-    }
-  }
-}
-
-function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
-  if (!actionHandlerMap[actionName]) {
-    actionHandlerMap[actionName] = {};
-  }
-
-  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
-    env.console.warn("Action duplicate : " + actionName + ".");
-  }
-
-  actionHandlerMap[actionName][listenerModule] = handler;
-}
-
-function _defineProperties(target, props) {
-  for (var i = 0; i < props.length; i++) {
-    var descriptor = props[i];
-    descriptor.enumerable = descriptor.enumerable || false;
-    descriptor.configurable = true;
-    if ("value" in descriptor) descriptor.writable = true;
-    Object.defineProperty(target, descriptor.key, descriptor);
-  }
-}
-
-function _createClass(Constructor, protoProps, staticProps) {
-  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-  if (staticProps) _defineProperties(Constructor, staticProps);
-  return Constructor;
-}
-
-function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
-  var desc = {};
-  Object.keys(descriptor).forEach(function (key) {
-    desc[key] = descriptor[key];
-  });
-  desc.enumerable = !!desc.enumerable;
-  desc.configurable = !!desc.configurable;
-
-  if ('value' in desc || desc.initializer) {
-    desc.writable = true;
-  }
-
-  desc = decorators.slice().reverse().reduce(function (desc, decorator) {
-    return decorator(target, property, desc) || desc;
-  }, desc);
-
-  if (context && desc.initializer !== void 0) {
-    desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
-    desc.initializer = undefined;
-  }
-
-  if (desc.initializer === void 0) {
-    Object.defineProperty(target, property, desc);
-    desc = null;
-  }
-
-  return desc;
-}
-
-var _class$1;
-function exportComponent(component) {
-  var eluxComponent = component;
-  eluxComponent.__elux_component__ = 'component';
-  return eluxComponent;
-}
-function exportView(component) {
-  var eluxComponent = component;
-  eluxComponent.__elux_component__ = 'view';
-  return eluxComponent;
-}
-var EmptyModel = (_class$1 = function () {
-  function EmptyModel(moduleName, store) {
-    this.moduleName = moduleName;
-    this.store = store;
-  }
-
-  var _proto = EmptyModel.prototype;
-
-  _proto.onMount = function onMount() {
-    var actions = MetaData.moduleApiMap[this.moduleName].actions;
-    this.store.dispatch(actions._initState({}));
-  };
-
-  _proto.onActive = function onActive() {
-    return;
-  };
-
-  _proto.onInactive = function onInactive() {
-    return;
-  };
-
-  _proto._initState = function _initState(state) {
-    return state;
-  };
-
-  _createClass(EmptyModel, [{
-    key: "state",
-    get: function get() {
-      return this.store.getState(this.moduleName);
-    }
-  }]);
-
-  return EmptyModel;
-}(), (_applyDecoratedDescriptor(_class$1.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class$1.prototype, "_initState"), _class$1.prototype)), _class$1);
-function exportModuleFacade(moduleName, ModelClass, components, data) {
-  Object.keys(components).forEach(function (key) {
-    var component = components[key];
-
-    if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
-      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
-    }
-  });
-  return {
-    moduleName: moduleName,
-    ModelClass: ModelClass,
-    components: components,
-    data: data,
-    state: {},
-    actions: {}
-  };
-}
-function setLoading(item, store, _moduleName, _groupName) {
-  var moduleName = _moduleName || coreConfig.StageModuleName;
-  var groupName = _groupName || 'globalLoading';
-  var key = moduleName + coreConfig.NSP + groupName;
-  var loadings = store.loadingGroups;
-
-  if (!loadings[key]) {
-    loadings[key] = new TaskCounter(coreConfig.DepthTimeOnLoading);
-    loadings[key].addListener(function (loadingState) {
-      var _moduleLoadingAction;
-
-      var action = moduleLoadingAction(moduleName, (_moduleLoadingAction = {}, _moduleLoadingAction[groupName] = loadingState, _moduleLoadingAction));
-      store.dispatch(action);
-    });
-  }
-
-  loadings[key].addItem(item);
-  return item;
-}
-function effectLogger(before, after) {
-  return function (target, key, descriptor) {
-    if (!key && !descriptor) {
-      key = target.key;
-      descriptor = target.descriptor;
-    }
-
-    var fun = descriptor.value;
-
-    if (!fun.__decorators__) {
-      fun.__decorators__ = [];
-    }
-
-    fun.__decorators__.push([before, after]);
-  };
-}
-function reducer(target, key, descriptor) {
-  if (!key && !descriptor) {
-    key = target.key;
-    descriptor = target.descriptor;
-  }
-
-  var fun = descriptor.value;
-  fun.__isReducer__ = true;
-  descriptor.enumerable = true;
-  return target.descriptor === descriptor ? target : descriptor;
-}
-function effect(loadingKey) {
-  return function (target, key, descriptor) {
-    if (!key && !descriptor) {
-      key = target.key;
-      descriptor = target.descriptor;
-    }
-
-    var fun = descriptor.value;
-    fun.__isEffect__ = true;
-    descriptor.enumerable = true;
-
-    if (loadingKey !== null && !env.isServer) {
-      var injectLoading = function injectLoading(store, curAction, effectPromise) {
-        var loadingForModuleName;
-        var loadingForGroupName;
-
-        if (loadingKey === undefined) {
-          loadingForModuleName = coreConfig.StageModuleName;
-          loadingForGroupName = 'globalLoading';
-        } else {
-          var _loadingKey$split = loadingKey.split('.');
-
-          loadingForModuleName = _loadingKey$split[0];
-          loadingForGroupName = _loadingKey$split[1];
-        }
-
-        if (loadingForModuleName === 'this') {
-          loadingForModuleName = this.moduleName;
-        }
-
-        setLoading(effectPromise, store, loadingForModuleName, loadingForGroupName);
-      };
-
-      var decorators = fun.__decorators__ || [];
-      fun.__decorators__ = decorators;
-      decorators.push([injectLoading, null]);
-    }
-
-    return target.descriptor === descriptor ? target : descriptor;
-  };
-}
-
-function _extends() {
-  _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends.apply(this, arguments);
-}
-
-var reduxDevTools;
-
-if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
-  reduxDevTools = env.__REDUX_DEVTOOLS_EXTENSION__.connect({
-    features: {}
-  });
-  reduxDevTools.init({});
-  reduxDevTools.subscribe(function (_ref) {
-    var type = _ref.type,
-        payload = _ref.payload;
-
-    if (type === 'DISPATCH' && payload.type === 'COMMIT') {
-      reduxDevTools.init({});
-    }
-  });
-}
-
-var effects = [];
-var devLogger = function devLogger(_ref2) {
-  var id = _ref2.id,
-      isActive = _ref2.isActive,
-      actionName = _ref2.actionName,
-      payload = _ref2.payload,
-      priority = _ref2.priority,
-      handers = _ref2.handers,
-      state = _ref2.state,
-      effect = _ref2.effect;
-
-  if (reduxDevTools) {
-    var type = ["" + id + (isActive ? '' : '*') + "|", actionName, "(" + handers.length + ")"].join('');
-    var _logItem = {
-      type: type,
-      payload: payload,
-      priority: priority,
-      handers: handers
-    };
-
-    if (effect) {
-      effects.push(_logItem);
-    } else {
-      _logItem.effects = [].concat(effects);
-      effects.length = 0;
-      reduxDevTools.send(_logItem, state);
-    }
-  }
-};
-
-function getActionData(action) {
-  return Array.isArray(action.payload) ? action.payload : [];
-}
-var preMiddleware = function preMiddleware(_ref) {
-  var getStore = _ref.getStore;
-  return function (next) {
-    return function (action) {
-      if (action.type === getErrorActionType()) {
-        var actionData = getActionData(action);
-
-        if (isProcessedError(actionData[0])) {
-          return undefined;
-        }
-
-        actionData[0] = setProcessedError(actionData[0], true);
-      }
-
-      var _action$type$split = action.type.split(coreConfig.NSP),
-          moduleName = _action$type$split[0],
-          actionName = _action$type$split[1];
-
-      if (!moduleName || !actionName || !coreConfig.ModuleGetter[moduleName]) {
-        return undefined;
-      }
-
-      var store = getStore();
-      var state = store.getState();
-
-      if (!state[moduleName] && action.type !== getInitActionType(moduleName)) {
-        return promiseCaseCallback(store.mount(moduleName, 'update'), function () {
-          return next(action);
-        });
-      }
-
-      return next(action);
-    };
-  };
-};
-
-function applyEffect(effectResult, store, model, action, dispatch, decorators) {
-  if (decorators === void 0) {
-    decorators = [];
-  }
-
-  var decoratorBeforeResults = [];
-  decorators.forEach(function (decorator, index) {
-    decoratorBeforeResults[index] = decorator[0].call(model, store, action, effectResult);
-  });
-  return effectResult.then(function (reslove) {
-    decorators.forEach(function (decorator, index) {
-      if (decorator[1]) {
-        decorator[1].call(model, 'Resolved', decoratorBeforeResults[index], reslove);
-      }
-    });
-    return reslove;
-  }, function (error) {
-    decorators.forEach(function (decorator, index) {
-      if (decorator[1]) {
-        decorator[1].call(model, 'Rejected', decoratorBeforeResults[index], error);
-      }
-    });
-
-    if (isProcessedError(error)) {
-      throw error;
-    } else {
-      return dispatch(errorAction(setProcessedError(error, false)));
-    }
-  });
-}
-
-var Store = function () {
-  function Store(sid, uid, router) {
-    var _this = this;
-
-    this.state = coreConfig.StoreInitState();
-    this.injectedModels = {};
-    this.mountedModules = {};
-    this.currentListeners = [];
-    this.nextListeners = [];
-    this.currentAction = void 0;
-    this.uncommittedState = {};
-    this.active = false;
-
-    this.dispatch = function (action) {
-      throw 'Dispatching action while constructing your middleware is not allowed.';
-    };
-
-    this.loadingGroups = {};
-    this.sid = sid;
-    this.uid = uid;
-    this.router = router;
-    var middlewareAPI = {
-      getStore: function getStore() {
-        return _this;
-      },
-      dispatch: function dispatch(action) {
-        return _this.dispatch(action);
-      }
-    };
-
-    var _dispatch = function _dispatch(action) {
-      _this.respondHandler(action, true);
-
-      return _this.respondHandler(action, false);
-    };
-
-    var chain = [preMiddleware].concat(coreConfig.StoreMiddlewares).map(function (middleware) {
-      return middleware(middlewareAPI);
-    });
-    this.dispatch = compose.apply(void 0, chain)(_dispatch);
-  }
-
-  var _proto = Store.prototype;
-
-  _proto.clone = function clone(brand) {
-    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
-  };
-
-  _proto.hotReplaceModel = function hotReplaceModel(moduleName, ModelClass) {
-    var orignModel = this.injectedModels[moduleName];
-
-    if (orignModel) {
-      var model = new ModelClass(moduleName, this);
-      this.injectedModels[moduleName] = model;
-
-      if (this.active) {
-        orignModel.onInactive();
-        model.onActive();
-      }
-    }
-  };
-
-  _proto.getCurrentAction = function getCurrentAction() {
-    return this.currentAction;
-  };
-
-  _proto.mount = function mount(moduleName, env) {
-    var _this2 = this;
-
-    if (!coreConfig.ModuleGetter[moduleName]) {
-      return;
-    }
-
-    var mountedModules = this.mountedModules;
-    var injectedModels = this.injectedModels;
-
-    var errorCallback = function errorCallback(err) {
-      if (!_this2.state[moduleName]) {
-        delete mountedModules[moduleName];
-        delete injectedModels[moduleName];
-      }
-
-      throw err;
-    };
-
-    var getModuleCallback = function getModuleCallback(module) {
-      var model = new module.ModelClass(moduleName, _this2);
-      _this2.injectedModels[moduleName] = model;
-      return model.onMount(env);
-    };
-
-    if (!mountedModules[moduleName]) {
-      var _result;
-
-      try {
-        var moduleOrPromise = getModule(moduleName);
-        _result = promiseCaseCallback(moduleOrPromise, getModuleCallback);
-      } catch (err) {
-        errorCallback(err);
-      }
-
-      if (isPromise(_result)) {
-        mountedModules[moduleName] = _result.then(function () {
-          mountedModules[moduleName] = true;
-
-          if (_this2.active) {
-            injectedModels[moduleName].onActive();
-          }
-        }, errorCallback);
-      } else {
-        mountedModules[moduleName] = true;
-
-        if (this.active) {
-          injectedModels[moduleName].onActive();
-        }
-      }
-    }
-
-    var result = mountedModules[moduleName];
-    return result === true ? undefined : result;
-  };
-
-  _proto.setActive = function setActive() {
-    var _this3 = this;
-
-    if (!this.active) {
-      this.active = true;
-      Object.keys(this.injectedModels).forEach(function (moduleName) {
-        var model = _this3.injectedModels[moduleName];
-        model.onActive();
-      });
-    }
-  };
-
-  _proto.setInactive = function setInactive() {
-    var _this4 = this;
-
-    if (this.active) {
-      this.active = false;
-      Object.keys(this.injectedModels).forEach(function (moduleName) {
-        var model = _this4.injectedModels[moduleName];
-        model.onInactive();
-      });
-    }
-  };
-
-  _proto.ensureCanMutateNextListeners = function ensureCanMutateNextListeners() {
-    if (this.nextListeners === this.currentListeners) {
-      this.nextListeners = this.currentListeners.slice();
-    }
-  };
-
-  _proto.destroy = function destroy() {
-    this.setInactive();
-
-    this.dispatch = function () {};
-
-    this.mount = function () {};
-  };
-
-  _proto.update = function update(newState) {
-    this.state = mergeState(this.state, newState);
-    var listeners = this.currentListeners = this.nextListeners;
-
-    for (var i = 0; i < listeners.length; i++) {
-      var listener = listeners[i];
-      listener();
-    }
-  };
-
-  _proto.getState = function getState(moduleName) {
-    return moduleName ? this.state[moduleName] : this.state;
-  };
-
-  _proto.getUncommittedState = function getUncommittedState() {
-    return this.uncommittedState;
-  };
-
-  _proto.subscribe = function subscribe(listener) {
-    var _this5 = this;
-
-    if (typeof listener !== 'function') {
-      throw new Error('Expected the listener to be a function.');
-    }
-
-    var isSubscribed = true;
-    this.ensureCanMutateNextListeners();
-    this.nextListeners.push(listener);
-    return function () {
-      if (!isSubscribed) {
-        return;
-      }
-
-      isSubscribed = false;
-
-      _this5.ensureCanMutateNextListeners();
-
-      var index = _this5.nextListeners.indexOf(listener);
-
-      _this5.nextListeners.splice(index, 1);
-
-      _this5.currentListeners = [];
-    };
-  };
-
-  _proto.respondHandler = function respondHandler(action, isReducer) {
-    var _this6 = this;
-
-    var handlersMap = isReducer ? MetaData.reducersMap : MetaData.effectsMap;
-    var actionName = action.type;
-    var actionPriority = action.priority || [];
-    var actionData = getActionData(action);
-
-    var _actionName$split = actionName.split(coreConfig.NSP),
-        actionModuleName = _actionName$split[0];
-
-    var commonHandlers = handlersMap[action.type];
-    var universalActionType = actionName.replace(new RegExp("[^" + coreConfig.NSP + "]+"), '*');
-    var universalHandlers = handlersMap[universalActionType];
-
-    var handlers = _extends({}, commonHandlers, universalHandlers);
-
-    var handlerModuleNames = Object.keys(handlers);
-    var prevState = this.getState();
-    var logs = {
-      id: this.sid,
-      isActive: this.active,
-      actionName: actionName,
-      payload: actionData,
-      priority: actionPriority,
-      handers: [],
-      state: 'No Change',
-      effect: !isReducer
-    };
-    var storeLogger = coreConfig.StoreLogger;
-
-    if (handlerModuleNames.length > 0) {
-      var _orderList;
-
-      var orderList = [];
-      handlerModuleNames.forEach(function (moduleName) {
-        if (moduleName === actionModuleName) {
-          orderList.unshift(moduleName);
-        } else {
-          orderList.push(moduleName);
-        }
-      });
-
-      (_orderList = orderList).unshift.apply(_orderList, actionPriority);
-
-      var injectedModels = this.injectedModels;
-      var implemented = {};
-      orderList = orderList.filter(function (moduleName) {
-        if (implemented[moduleName] || !handlers[moduleName]) {
-          return false;
-        }
-
-        implemented[moduleName] = true;
-        return injectedModels[moduleName];
-      });
-      logs.handers = orderList;
-
-      if (isReducer) {
-        var newState = {};
-
-        var uncommittedState = this.uncommittedState = _extends({}, prevState);
-
-        orderList.forEach(function (moduleName) {
-          var model = injectedModels[moduleName];
-          var handler = handlers[moduleName];
-          var result = handler.apply(model, actionData);
-
-          if (result) {
-            newState[moduleName] = result;
-            uncommittedState[moduleName] = result;
-          }
-        });
-        logs.state = uncommittedState;
-        devLogger(logs);
-        storeLogger(logs);
-        this.update(newState);
-      } else {
-        devLogger(logs);
-        storeLogger(logs);
-        var effectHandlers = [];
-        orderList.forEach(function (moduleName) {
-          var model = injectedModels[moduleName];
-          var handler = handlers[moduleName];
-          _this6.currentAction = action;
-          var result = handler.apply(model, actionData);
-          effectHandlers.push(applyEffect(toPromise(result), _this6, model, action, _this6.dispatch, handler.__decorators__));
-        });
-        var task = effectHandlers.length === 1 ? effectHandlers[0] : Promise.all(effectHandlers);
-        return task;
-      }
-    } else {
-      if (isReducer) {
-        devLogger(logs);
-        storeLogger(logs);
-      } else {
-        if (actionName === getErrorActionType()) {
-          return Promise.reject(actionData);
-        }
-      }
-    }
-
+  if (isProcessedError(actionData[0])) {
     return undefined;
-  };
-
-  return Store;
-}();
-function modelHotReplacement(moduleName, ModelClass) {
-  var moduleCache = MetaData.moduleCaches[moduleName];
-
-  if (moduleCache) {
-    promiseCaseCallback(moduleCache, function (module) {
-      module.ModelClass = ModelClass;
-      var newModel = new ModelClass(moduleName, null);
-      injectActions(newModel, true);
-      var page = MetaData.clientRouter.getActivePage();
-      page.store.hotReplaceModel(moduleName, ModelClass);
-    });
   }
 
-  env.console.log("[HMR] @Elux Updated model: " + moduleName);
+  actionData[0] = setProcessedError(actionData[0], true);
+  return errorAction;
 }
-
-var _class;
-function exportModule(moduleName, ModelClass, components, data) {
-  return exportModuleFacade(moduleName, ModelClass, components, data);
+function isErrorAction(action) {
+  return action.type === "" + actionConfig.StageModuleName + actionConfig.NSP + "_error";
 }
-function getApi(demoteForProductionOnly, injectActions) {
-  var modules = getModuleApiMap(demoteForProductionOnly && process.env.NODE_ENV !== 'production' ? undefined : injectActions);
-
-  var GetComponent = function GetComponent(moduleName, componentName) {
-    var result = getComponent(moduleName, componentName);
-
-    if (isPromise(result)) {
-      return result;
-    } else {
-      return Promise.resolve(result);
-    }
-  };
-
-  var GetData = function GetData(moduleName) {
-    var result = getModule(moduleName);
-
-    if (isPromise(result)) {
-      return result.then(function (mod) {
-        return mod.data;
-      });
-    } else {
-      return Promise.resolve(result.data);
-    }
-  };
-
-  return {
-    GetActions: function GetActions() {
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      return args.reduce(function (prev, moduleName) {
-        prev[moduleName] = modules[moduleName].actions;
-        return prev;
-      }, {});
-    },
-    GetClientRouter: function GetClientRouter() {
-      if (env.isServer) {
-        throw 'Cannot use GetClientRouter() in the server side, please use useRouter() instead';
-      }
-
-      return MetaData.clientRouter;
-    },
-    LoadComponent: coreConfig.LoadComponent,
-    GetComponent: GetComponent,
-    GetData: GetData,
-    Modules: modules,
-    useRouter: coreConfig.UseRouter,
-    useStore: coreConfig.UseStore
-  };
-}
-var BaseModel = (_class = function () {
-  function BaseModel(moduleName, store) {
-    this.store = void 0;
-    this.moduleName = moduleName;
-    this.store = store;
-  }
-
-  var _proto = BaseModel.prototype;
-
-  _proto.onActive = function onActive() {
-    return;
-  };
-
-  _proto.onInactive = function onInactive() {
-    return;
-  };
-
-  _proto.getRouter = function getRouter() {
-    return this.store.router;
-  };
-
-  _proto.getPrevState = function getPrevState() {
-    var runtime = this.store.router.runtime;
-    return runtime.prevState[this.moduleName];
-  };
-
-  _proto.getRootState = function getRootState(type) {
-    var runtime = this.store.router.runtime;
-    var state;
-
-    if (type === 'previous') {
-      state = runtime.prevState;
-    } else if (type === 'uncommitted') {
-      state = this.store.getUncommittedState();
-    } else {
-      state = this.store.getState();
-    }
-
-    return state;
-  };
-
-  _proto.getPrivateActions = function getPrivateActions(actionsMap) {
-    var moduleName = this.moduleName;
-    var privateActions = Object.keys(actionsMap);
-    privateActions.push('_initState', '_updateState', '_loadingState');
-    return privateActions.reduce(function (map, actionName) {
-      map[actionName] = function () {
-        for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          payload[_key2] = arguments[_key2];
-        }
-
-        return {
-          type: moduleName + coreConfig.NSP + actionName,
-          payload: payload
-        };
-      };
-
-      return map;
-    }, {});
-  };
-
-  _proto.getCurrentAction = function getCurrentAction() {
-    var store = this.store;
-    return store.getCurrentAction();
-  };
-
-  _proto.dispatch = function dispatch(action) {
-    return this.store.dispatch(action);
-  };
-
-  _proto._initState = function _initState(state) {
-    return state;
-  };
-
-  _proto._updateState = function _updateState(subject, state) {
-    return mergeState(this.state, state);
-  };
-
-  _proto._loadingState = function _loadingState(loadingState) {
-    return mergeState(this.state, loadingState);
-  };
-
-  _createClass(BaseModel, [{
-    key: "state",
-    get: function get() {
-      return this.store.getState(this.moduleName);
-    }
-  }, {
-    key: "actions",
-    get: function get() {
-      return MetaData.moduleApiMap[this.moduleName].actions;
-    }
-  }]);
-
-  return BaseModel;
-}(), (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
-
-function buildApp(ins, router, routerOptions) {
-  var ssrData = env[coreConfig.SSRDataKey];
-  var AppRender = coreConfig.AppRender;
-  return Object.assign(ins, {
-    render: function render(_temp) {
-      var _ref = _temp === void 0 ? {} : _temp,
-          _ref$id = _ref.id,
-          id = _ref$id === void 0 ? 'root' : _ref$id;
-
-      return router.init(routerOptions, ssrData || {}).then(function () {
-        AppRender.toDocument(id, {
-          router: router
-        }, !!ssrData, ins);
-      });
-    }
-  });
-}
-function buildProvider(ins, router) {
-  var AppRender = coreConfig.AppRender;
-  return AppRender.toProvider({
-    router: router
-  }, ins);
-}
-function buildSSR(ins, router, routerOptions) {
-  var AppRender = coreConfig.AppRender;
-  return Object.assign(ins, {
-    render: function render(_temp2) {
-      var _ref2 = _temp2 === void 0 ? {} : _temp2,
-          _ref2$id = _ref2.id,
-          id = _ref2$id === void 0 ? 'root' : _ref2$id;
-
-      return router.init(routerOptions, {}).then(function () {
-        var store = router.getActivePage().store;
-        store.destroy();
-        var eluxContext = {
-          router: router
-        };
-        return AppRender.toString(id, eluxContext, ins).then(function (html) {
-          var SSRTPL = coreConfig.SSRTPL,
-              SSRDataKey = coreConfig.SSRDataKey;
-          var match = SSRTPL.match(new RegExp("<[^<>]+id=['\"]" + id + "['\"][^<>]*>", 'm'));
-
-          if (match) {
-            var state = store.getState();
-            return SSRTPL.replace('</head>', "\r\n" + router.getDocumentHead() + "\r\n<script>window." + SSRDataKey + " = " + JSON.stringify(state) + ";</script>\r\n</head>").replace(match[0], match[0] + html);
-          }
-
-          return html;
-        });
-      });
-    }
-  });
-}
-function getTplInSSR() {
-  return coreConfig.SSRTPL;
-}
+var actionConfig = {
+  NSP: '.',
+  StageModuleName: 'stage'
+};
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -1536,6 +347,22 @@ function _asyncToGenerator(fn) {
       _next(undefined);
     });
   };
+}
+
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
 }
 
 function createCommonjsModule(fn) {
@@ -2271,6 +1098,530 @@ try {
 
 var regenerator = runtime_1;
 
+function isEluxComponent(data) {
+  return data['__elux_component__'];
+}
+function exportComponent(component) {
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'component';
+  return eluxComponent;
+}
+function exportView(component) {
+  var eluxComponent = component;
+  eluxComponent.__elux_component__ = 'view';
+  return eluxComponent;
+}
+var RouteRecord = function () {
+  function RouteRecord(location, pageStack, store) {
+    this.key = void 0;
+    this._title = '';
+    this.location = location;
+    this.pageStack = pageStack;
+    this.store = store;
+    this.key = [pageStack.key, pageStack.num++].join('_');
+  }
+
+  var _proto = RouteRecord.prototype;
+
+  _proto.destroy = function destroy() {
+    this.store.destroy();
+  };
+
+  _proto.active = function active() {
+    this.store.setActive(true);
+  };
+
+  _proto.inactive = function inactive() {
+    this.store.setActive(false);
+  };
+
+  _proto.saveTitle = function saveTitle(val) {
+    this._title = val;
+  };
+
+  _createClass(RouteRecord, [{
+    key: "title",
+    get: function get() {
+      return this._title;
+    }
+  }]);
+
+  return RouteRecord;
+}();
+var ErrorCodes = {
+  ROUTE_RETURN: 'ELIX.ROUTE_RETURN',
+  ROUTE_REDIRECT: 'ELIX.ROUTE_REDIRECT',
+  ROUTE_BACK_OVERFLOW: 'ELUX.ROUTE_BACK_OVERFLOW'
+};
+var AStore = function () {
+  function AStore(sid, uid, router) {
+    this.dispatch = void 0;
+    this.getState = void 0;
+    this.mountedModules = {};
+    this.injectedModels = {};
+    this._active = false;
+    this.sid = sid;
+    this.uid = uid;
+    this.router = router;
+  }
+
+  var _proto2 = AStore.prototype;
+
+  _proto2.mount = function mount(moduleName, env) {
+    if (!baseConfig.ModuleGetter[moduleName]) {
+      return;
+    }
+
+    var mountedModules = this.mountedModules;
+
+    if (!mountedModules[moduleName]) {
+      mountedModules[moduleName] = this.execMount(moduleName);
+    }
+
+    var result = mountedModules[moduleName];
+    return result === true ? undefined : result;
+  };
+
+  _proto2.execMount = function () {
+    var _execMount = _asyncToGenerator(regenerator.mark(function _callee(moduleName) {
+      var model, initState, initError, module;
+      return regenerator.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.prev = 0;
+              _context.next = 3;
+              return baseConfig.GetModule(moduleName);
+
+            case 3:
+              module = _context.sent;
+              model = new module.ModelClass(moduleName, this);
+              _context.next = 7;
+              return model.onInit();
+
+            case 7:
+              initState = _context.sent;
+              _context.next = 13;
+              break;
+
+            case 10:
+              _context.prev = 10;
+              _context.t0 = _context["catch"](0);
+              initError = _context.t0;
+
+            case 13:
+              if (!initError) {
+                _context.next = 17;
+                break;
+              }
+
+              this.dispatch(initModuleErrorAction(moduleName, initError));
+              this.mountedModules[moduleName] = undefined;
+              throw initError;
+
+            case 17:
+              this.dispatch(initModuleSuccessAction(moduleName, initState));
+              this.mountedModules[moduleName] = true;
+              this.injectedModels[moduleName] = model;
+
+              if (this.active) {
+                model.onActive();
+              }
+
+              model.onBuild();
+
+            case 22:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this, [[0, 10]]);
+    }));
+
+    function execMount(_x) {
+      return _execMount.apply(this, arguments);
+    }
+
+    return execMount;
+  }();
+
+  _createClass(AStore, [{
+    key: "active",
+    get: function get() {
+      return this._active;
+    }
+  }]);
+
+  return AStore;
+}();
+var clientDocumentHeadTimer = 0;
+var ARouter = function () {
+  function ARouter(nativeRouter) {
+    var _this = this;
+
+    this.WindowStackClass = void 0;
+    this.PageStackClass = void 0;
+    this.StoreClass = void 0;
+    this.action = 'init';
+    this.prevState = {};
+    this.context = {};
+    this.nativeRouter = void 0;
+    this.taskList = [];
+    this.curTask = void 0;
+    this.curTaskError = void 0;
+    this.curLoopTaskCallback = void 0;
+    this.documentHead = '';
+
+    this.onTaskComplete = function () {
+      var task = _this.taskList.shift();
+
+      if (task) {
+        _this.curTask = task;
+        _this.curTaskError = undefined;
+        var onTaskComplete = _this.onTaskComplete;
+        var exec = task[0],
+            resolve = task[1],
+            reject = task[2];
+        env.setTimeout(function () {
+          return exec().then(onTaskComplete, function (reason) {
+            _this.curTaskError = reason;
+            onTaskComplete();
+            throw reason;
+          }).then(resolve, reject);
+        }, 0);
+      } else {
+        _this.curTask = undefined;
+
+        if (_this.curLoopTaskCallback) {
+          var _this$curLoopTaskCall = _this.curLoopTaskCallback,
+              _resolve = _this$curLoopTaskCall[0],
+              _reject = _this$curLoopTaskCall[1];
+
+          if (_this.curTaskError) {
+            _reject(_this.curTaskError);
+          } else {
+            _resolve();
+          }
+        }
+      }
+    };
+
+    this.nativeRouter = nativeRouter;
+    baseConfig.ClientRouter = this;
+  }
+
+  var _proto3 = ARouter.prototype;
+
+  _proto3.addTask = function addTask(exec) {
+    var _this2 = this;
+
+    return new Promise(function (resolve, reject) {
+      var task = [exec, resolve, reject];
+
+      if (_this2.curTask) {
+        _this2.taskList.push(task);
+      } else {
+        _this2.curTask = task;
+        _this2.curTaskError = undefined;
+        var onTaskComplete = _this2.onTaskComplete;
+        var _exec = task[0],
+            _resolve2 = task[1],
+            _reject2 = task[2];
+
+        _exec().then(onTaskComplete, function (reason) {
+          _this2.curTaskError = reason;
+          onTaskComplete();
+          throw reason;
+        }).then(_resolve2, _reject2);
+      }
+    });
+  };
+
+  _proto3.getHistoryLength = function getHistoryLength(target) {
+    return target === 'window' ? this.windowStack.getLength() - 1 : this.windowStack.getCurrentItem().getLength() - 1;
+  };
+
+  _proto3.findRecordByKey = function findRecordByKey(recordKey) {
+    return this.windowStack.findRecordByKey(recordKey);
+  };
+
+  _proto3.findRecordByStep = function findRecordByStep(delta, rootOnly) {
+    return this.windowStack.backTest(delta, !!rootOnly);
+  };
+
+  _proto3.getWindowPages = function getWindowPages() {
+    return this.windowStack.getRecords();
+  };
+
+  _proto3.getCurrentPage = function getCurrentPage() {
+    return this.windowStack.getCurrentItem().getCurrentItem();
+  };
+
+  _proto3.getHistory = function getHistory(target) {
+    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
+  };
+
+  _proto3.getDocumentTitle = function getDocumentTitle() {
+    var arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
+    return arr[1] || '';
+  };
+
+  _proto3.getDocumentHead = function getDocumentHead() {
+    return this.documentHead;
+  };
+
+  _proto3.setDocumentHead = function setDocumentHead(html) {
+    var _this3 = this;
+
+    this.documentHead = html;
+
+    if (!env.isServer && !clientDocumentHeadTimer) {
+      clientDocumentHeadTimer = env.setTimeout(function () {
+        clientDocumentHeadTimer = 0;
+        var arr = _this3.documentHead.match(/<title>(.*?)<\/title>/) || [];
+
+        if (arr[1]) {
+          _this3.nativeRouter.setPageTitle(arr[1]);
+        }
+      }, 0);
+    }
+  };
+
+  _proto3.getLocation = function getLocation() {
+    return this.getCurrentPage().location;
+  };
+
+  _proto3.computeUrl = function computeUrl(partialLocation, action, target) {
+    var curClassname = this.getLocation().classname;
+    var defClassname = curClassname;
+
+    if (action === 'relaunch') {
+      defClassname = target === 'window' ? '' : curClassname;
+    }
+
+    return this.locationToUrl(partialLocation, defClassname);
+  };
+
+  _proto3.mountStore = function mountStore(prevStore, newStore) {
+    var prevState = prevStore.getState();
+    this.prevState = baseConfig.MutableData ? deepCloneState(prevState) : prevState;
+    return newStore.mount(actionConfig.StageModuleName, 'route');
+  };
+
+  _proto3.initialize = function initialize() {
+    var _this4 = this;
+
+    return this.nativeRouter.getInitData().then(function (_ref) {
+      var nativeUrl = _ref.url,
+          state = _ref.state,
+          context = _ref.context;
+      _this4.context = context;
+      _this4.prevState = state;
+
+      var url = _this4.nativeUrlToUrl(nativeUrl);
+
+      var location = _this4.urlToLocation(url);
+
+      _this4.windowStack = new _this4.WindowStackClass(location, new _this4.StoreClass(0, 0, _this4));
+      var task = [_this4._init.bind(_this4), function () {
+        return undefined;
+      }, function () {
+        return undefined;
+      }];
+      _this4.curTask = task;
+      return new Promise(function (resolve, reject) {
+        _this4.curLoopTaskCallback = [resolve, reject];
+        task[0]().finally(_this4.onTaskComplete);
+      });
+    });
+  };
+
+  _proto3._init = function () {
+    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2() {
+      var store;
+      return regenerator.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              store = this.getCurrentPage().store;
+              _context2.prev = 1;
+              _context2.next = 4;
+              return store.mount(actionConfig.StageModuleName, 'init');
+
+            case 4:
+              _context2.next = 9;
+              break;
+
+            case 6:
+              _context2.prev = 6;
+              _context2.t0 = _context2["catch"](1);
+              env.console.error(_context2.t0);
+
+            case 9:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this, [[1, 6]]);
+    }));
+
+    function _init() {
+      return _init2.apply(this, arguments);
+    }
+
+    return _init;
+  }();
+
+  _proto3.ssr = function ssr(html) {
+    return this.addTask(this._ssr.bind(this, html));
+  };
+
+  _proto3._ssr = function () {
+    var _ssr2 = _asyncToGenerator(regenerator.mark(function _callee3(html) {
+      var err;
+      return regenerator.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              err = {
+                code: ErrorCodes.ROUTE_RETURN,
+                message: 'Route cutting out',
+                detail: html
+              };
+              throw err;
+
+            case 2:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3);
+    }));
+
+    function _ssr(_x2) {
+      return _ssr2.apply(this, arguments);
+    }
+
+    return _ssr;
+  }();
+
+  return ARouter;
+}();
+var WebApp = function () {
+  function WebApp() {
+    this.cientSingleton = void 0;
+    this.NativeRouterClass = void 0;
+    this.RouterClass = void 0;
+    this.createUI = void 0;
+    this.toDocument = void 0;
+  }
+
+  var _proto4 = WebApp.prototype;
+
+  _proto4.boot = function boot() {
+    if (this.cientSingleton) {
+      return this.cientSingleton;
+    }
+
+    var ssrData = env[baseConfig.SSRDataKey];
+    var nativeRouter = new this.NativeRouterClass();
+    var router = new this.RouterClass(nativeRouter, ssrData);
+    var ui = this.createUI();
+    this.cientSingleton = Object.assign(ui, {
+      render: function render() {
+        return Promise.resolve();
+      }
+    });
+    var toDocument = this.toDocument;
+    return Object.assign(ui, {
+      render: function render(_temp) {
+        var _ref2 = _temp === void 0 ? {} : _temp,
+            _ref2$id = _ref2.id,
+            id = _ref2$id === void 0 ? 'root' : _ref2$id;
+
+        return router.initialize().then(function () {
+          toDocument(id, router, !!ssrData, ui);
+        });
+      }
+    });
+  };
+
+  return WebApp;
+}();
+var SsrApp = function () {
+  function SsrApp() {
+    this.NativeRouterClass = void 0;
+    this.RouterClass = void 0;
+    this.createUI = void 0;
+    this.toString = void 0;
+  }
+
+  var _proto5 = SsrApp.prototype;
+
+  _proto5.boot = function boot() {
+    var nativeRouter = new this.NativeRouterClass();
+    var router = new this.RouterClass(nativeRouter, {});
+    var ui = this.createUI();
+    var toString = this.toString;
+    return Object.assign(ui, {
+      render: function render(_temp2) {
+        var _ref3 = _temp2 === void 0 ? {} : _temp2,
+            _ref3$id = _ref3.id,
+            id = _ref3$id === void 0 ? 'root' : _ref3$id;
+
+        return router.initialize().then(function () {
+          var store = router.getCurrentPage().store;
+          store.destroy();
+          toString(id, router, ui);
+        });
+      }
+    });
+  };
+
+  return SsrApp;
+}();
+function mergeState(target) {
+  if (target === void 0) {
+    target = {};
+  }
+
+  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+
+  if (baseConfig.MutableData) {
+    return Object.assign.apply(Object, [target].concat(args));
+  }
+
+  return Object.assign.apply(Object, [{}, target].concat(args));
+}
+var baseConfig = {
+  MutableData: false,
+  StageViewName: 'main',
+  SSRDataKey: 'eluxSSRData',
+  ClientRouter: undefined,
+  GetModule: undefined,
+  ModuleGetter: undefined
+};
+
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
 function _assertThisInitialized(self) {
   if (self === void 0) {
     throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -2279,8 +1630,380 @@ function _assertThisInitialized(self) {
   return self;
 }
 
+var reduxDevTools;
+
+if (process.env.NODE_ENV === 'development' && env.__REDUX_DEVTOOLS_EXTENSION__) {
+  reduxDevTools = env.__REDUX_DEVTOOLS_EXTENSION__.connect({
+    features: {}
+  });
+  reduxDevTools.init({});
+  reduxDevTools.subscribe(function (_ref) {
+    var type = _ref.type,
+        payload = _ref.payload;
+
+    if (type === 'DISPATCH' && payload.type === 'COMMIT') {
+      reduxDevTools.init({});
+    }
+  });
+}
+
+var effects = [];
+var devLogger = function devLogger(_ref2) {
+  var id = _ref2.id,
+      isActive = _ref2.isActive,
+      actionName = _ref2.actionName,
+      payload = _ref2.payload,
+      priority = _ref2.priority,
+      handers = _ref2.handers,
+      state = _ref2.state,
+      effect = _ref2.effect;
+
+  if (reduxDevTools) {
+    var type = ["" + id + (isActive ? '' : '*') + "|", actionName, "(" + handers.length + ")"].join('');
+    var _logItem = {
+      type: type,
+      payload: payload,
+      priority: priority,
+      handers: handers
+    };
+
+    if (effect) {
+      effects.push(_logItem);
+    } else {
+      _logItem.effects = [].concat(effects);
+      effects.length = 0;
+      reduxDevTools.send(_logItem, state);
+    }
+  }
+};
+
+var preMiddleware = function preMiddleware(_ref) {
+  var getStore = _ref.getStore;
+  return function (next) {
+    return function (action) {
+      if (isErrorAction(action)) {
+        var processedErrorAction = setProcessedErrorAction(action);
+
+        if (!processedErrorAction) {
+          return undefined;
+        }
+
+        action = processedErrorAction;
+      }
+
+      var _action$type$split = action.type.split(actionConfig.NSP),
+          moduleName = _action$type$split[0],
+          actionName = _action$type$split[1];
+
+      if (!moduleName || !actionName || !baseConfig.ModuleGetter[moduleName]) {
+        return undefined;
+      }
+
+      var store = getStore();
+      var moduleState = store.getState(moduleName);
+
+      if ((!moduleState || moduleState._error) && !isInitAction(action)) {
+        return promiseCaseCallback(store.mount(moduleName, 'update'), function () {
+          return next(action);
+        });
+      }
+
+      return next(action);
+    };
+  };
+};
+function reducer(target, key, descriptor) {
+  if (!key && !descriptor) {
+    key = target.key;
+    descriptor = target.descriptor;
+  }
+
+  var fun = descriptor.value;
+  fun.__isReducer__ = true;
+  descriptor.enumerable = true;
+  return target.descriptor === descriptor ? target : descriptor;
+}
+function effect(loadingKey) {
+  return function (target, key, descriptor) {
+    if (!key && !descriptor) {
+      key = target.key;
+      descriptor = target.descriptor;
+    }
+
+    var fun = descriptor.value;
+    fun.__isEffect__ = true;
+    descriptor.enumerable = true;
+
+    if (!env.isServer) {
+      fun.__loadingKey__ = loadingKey;
+    }
+
+    return target.descriptor === descriptor ? target : descriptor;
+  };
+}
+var Store = function (_AStore) {
+  _inheritsLoose(Store, _AStore);
+
+  function Store(sid, uid, router) {
+    var _this;
+
+    _this = _AStore.call(this, sid, uid, router) || this;
+    _this.state = storeConfig.StoreInitState();
+    _this.uncommittedState = {};
+    _this.loadingGroups = {};
+    _this.listenerId = 0;
+    _this.listenerMap = {};
+    _this.currentAction = void 0;
+    _this.listeners = [];
+
+    _this.dispatch = function (action) {
+      throw 'Dispatching action while constructing your middleware is not allowed.';
+    };
+
+    _this.getState = function (moduleName) {
+      return moduleName ? _this.state[moduleName] : _this.state;
+    };
+
+    var middlewareAPI = {
+      getStore: function getStore() {
+        return _assertThisInitialized(_this);
+      },
+      dispatch: function dispatch(action) {
+        return _this.dispatch(action);
+      }
+    };
+
+    var _dispatch = function _dispatch(action) {
+      _this.respondHandler(action, true);
+
+      return _this.respondHandler(action, false);
+    };
+
+    var chain = [preMiddleware].concat(storeConfig.StoreMiddlewares).map(function (middleware) {
+      return middleware(middlewareAPI);
+    });
+    _this.dispatch = compose.apply(void 0, chain)(_dispatch);
+    return _this;
+  }
+
+  var _proto = Store.prototype;
+
+  _proto.getUncommittedState = function getUncommittedState() {
+    return this.uncommittedState;
+  };
+
+  _proto.clone = function clone(brand) {
+    return new Store(this.sid + 1, brand ? this.uid + 1 : this.uid, this.router);
+  };
+
+  _proto.getCurrentAction = function getCurrentAction() {
+    return this.currentAction;
+  };
+
+  _proto.setActive = function setActive(active) {
+    var _this2 = this;
+
+    if (this._active !== active) {
+      this._active = active;
+      Object.keys(this.injectedModels).forEach(function (moduleName) {
+        var model = _this2.injectedModels[moduleName];
+        active ? model.onActive() : model.onInactive();
+      });
+    }
+  };
+
+  _proto.destroy = function destroy() {
+    this.setActive(false);
+
+    this.dispatch = function () {};
+
+    this.mount = function () {};
+  };
+
+  _proto.setLoading = function setLoading(item, groupName, moduleName) {
+    var _this3 = this;
+
+    if (!moduleName) {
+      moduleName = actionConfig.StageModuleName;
+    }
+
+    var key = moduleName + actionConfig.NSP + groupName;
+    var loadings = this.loadingGroups;
+
+    if (!loadings[key]) {
+      loadings[key] = new TaskCounter();
+      loadings[key].addListener(function (loadingState) {
+        var action = loadingAction(moduleName, groupName, loadingState);
+
+        _this3.dispatch(action);
+      });
+    }
+
+    loadings[key].addItem(item);
+    return item;
+  };
+
+  _proto.subscribe = function subscribe(listener) {
+    this.listenerId++;
+    var id = "" + this.listenerId;
+    var listenerMap = this.listenerMap;
+    listenerMap[id] = listener;
+    return function () {
+      delete listenerMap[id];
+    };
+  };
+
+  _proto.update = function update(newState) {
+    this.state = mergeState(this.state, newState);
+    var listenerMap = this.listenerMap;
+    Object.keys(listenerMap).forEach(function (id) {
+      if (listenerMap[id]) {
+        listenerMap[id]();
+      }
+    });
+  };
+
+  _proto.respondHandler = function respondHandler(action, isReducer) {
+    var _this4 = this;
+
+    var handlersMap = isReducer ? storeConfig.ReducersMap : storeConfig.EffectsMap;
+    var actionType = action.type;
+    var actionPriority = action.priority || [];
+    var actionData = getActionData(action);
+
+    var _actionType$split = actionType.split(actionConfig.NSP),
+        actionModuleName = _actionType$split[0];
+
+    var commonHandlers = handlersMap[action.type];
+    var universalActionType = actionType.replace(new RegExp("[^" + actionConfig.NSP + "]+"), '*');
+    var universalHandlers = handlersMap[universalActionType];
+
+    var handlers = _extends({}, commonHandlers, universalHandlers);
+
+    var handlerModuleNames = Object.keys(handlers);
+    var logs = {
+      id: this.sid,
+      isActive: this.active,
+      actionName: actionType,
+      payload: actionData,
+      priority: actionPriority,
+      handers: [],
+      state: 'No Change',
+      effect: !isReducer
+    };
+
+    if (handlerModuleNames.length > 0) {
+      var _orderList;
+
+      var orderList = [];
+      handlerModuleNames.forEach(function (moduleName) {
+        if (moduleName === actionModuleName) {
+          orderList.unshift(moduleName);
+        } else {
+          orderList.push(moduleName);
+        }
+      });
+
+      (_orderList = orderList).unshift.apply(_orderList, actionPriority);
+
+      var injectedModels = this.injectedModels;
+      var implemented = {};
+      orderList = orderList.filter(function (moduleName) {
+        if (implemented[moduleName] || !handlers[moduleName]) {
+          return false;
+        }
+
+        implemented[moduleName] = true;
+        return injectedModels[moduleName];
+      });
+      logs.handers = orderList;
+
+      if (isReducer) {
+        var prevState = this.getState();
+        var newState = {};
+
+        var uncommittedState = this.uncommittedState = _extends({}, prevState);
+
+        orderList.forEach(function (moduleName) {
+          var model = injectedModels[moduleName];
+          var handler = handlers[moduleName];
+          var result = handler.apply(model, actionData);
+
+          if (result) {
+            newState[moduleName] = result;
+            uncommittedState[moduleName] = result;
+          }
+        });
+        logs.state = uncommittedState;
+        devLogger(logs);
+        this.update(newState);
+      } else {
+        devLogger(logs);
+        var effectPromises = [];
+        orderList.forEach(function (moduleName) {
+          var model = injectedModels[moduleName];
+          var handler = handlers[moduleName];
+          _this4.currentAction = action;
+          var result = handler.apply(model, actionData);
+          var loadingKey = handler.__loadingKey__;
+
+          if (isPromise(result)) {
+            if (loadingKey) {
+              var _loadingKey$split = loadingKey.split('.'),
+                  loadingForModuleName = _loadingKey$split[0],
+                  loadingForGroupName = _loadingKey$split[1];
+
+              if (!loadingForGroupName) {
+                loadingForModuleName = actionConfig.StageModuleName;
+                loadingForGroupName = loadingForModuleName;
+              }
+
+              if (loadingForModuleName === 'this') {
+                loadingForModuleName = moduleName;
+              }
+
+              _this4.setLoading(result, loadingForGroupName, loadingForModuleName);
+            }
+
+            effectPromises.push(result);
+          }
+        });
+
+        if (effectPromises.length === 0) {
+          return;
+        }
+
+        return effectPromises.length === 1 ? effectPromises[0] : Promise.all(effectPromises);
+      }
+    } else {
+      if (isReducer) {
+        devLogger(logs);
+      } else if (isErrorAction(action)) {
+        return Promise.reject(actionData);
+      }
+    }
+  };
+
+  return Store;
+}(AStore);
+var storeConfig = {
+  StoreInitState: function StoreInitState() {
+    return {};
+  },
+  StoreMiddlewares: [],
+  StoreLogger: function StoreLogger() {
+    return undefined;
+  },
+  ReducersMap: {},
+  EffectsMap: {}
+};
+
 var HistoryStack = function () {
   function HistoryStack(limit) {
+    if (limit === void 0) {
+      limit = 10;
+    }
+
     this.currentRecord = undefined;
     this.records = [];
     this.limit = limit;
@@ -2291,14 +2014,14 @@ var HistoryStack = function () {
   _proto.init = function init(record) {
     this.records = [record];
     this.currentRecord = record;
-    record.setActive();
+    record.active();
   };
 
   _proto.onChanged = function onChanged() {
     if (this.currentRecord !== this.records[0]) {
-      this.currentRecord.setInactive();
+      this.currentRecord.inactive();
       this.currentRecord = this.records[0];
-      this.currentRecord.setActive();
+      this.currentRecord.active();
     }
   };
 
@@ -2370,63 +2093,26 @@ var HistoryStack = function () {
 
   return HistoryStack;
 }();
-var RouteRecord = function () {
-  function RouteRecord(location, pageStack) {
-    this.key = void 0;
-    this.title = void 0;
-    this.location = location;
-    this.pageStack = pageStack;
-    this.key = [pageStack.key, pageStack.id++].join('_');
-    this.title = '';
-  }
-
-  var _proto2 = RouteRecord.prototype;
-
-  _proto2.setActive = function setActive() {
-    return;
-  };
-
-  _proto2.setInactive = function setInactive() {
-    return;
-  };
-
-  _proto2.destroy = function destroy() {
-    return;
-  };
-
-  return RouteRecord;
-}();
 var PageStack = function (_HistoryStack) {
   _inheritsLoose(PageStack, _HistoryStack);
 
   function PageStack(windowStack, location, store) {
     var _this;
 
-    _this = _HistoryStack.call(this, 20) || this;
-    _this.id = 0;
+    _this = _HistoryStack.call(this) || this;
+    _this.num = 0;
     _this.key = void 0;
-    _this._store = void 0;
     _this.windowStack = windowStack;
-    _this._store = store;
-    _this.key = '' + windowStack.id++;
+    _this.key = '' + windowStack.num++;
 
-    _this.init(new RouteRecord(location, _assertThisInitialized(_this)));
+    _this.init(new RouteRecord(location, _assertThisInitialized(_this), store));
 
     return _this;
   }
 
-  var _proto3 = PageStack.prototype;
+  var _proto2 = PageStack.prototype;
 
-  _proto3.replaceStore = function replaceStore(store) {
-    if (this._store !== store) {
-      this._store.destroy();
-
-      this._store = store;
-      store.setActive();
-    }
-  };
-
-  _proto3.findRecordByKey = function findRecordByKey(key) {
+  _proto2.findRecordByKey = function findRecordByKey(key) {
     for (var i = 0, k = this.records.length; i < k; i++) {
       var item = this.records[i];
 
@@ -2438,24 +2124,19 @@ var PageStack = function (_HistoryStack) {
     return undefined;
   };
 
-  _proto3.setActive = function setActive() {
-    this.store.setActive();
+  _proto2.active = function active() {
+    this.getCurrentItem().active();
   };
 
-  _proto3.setInactive = function setInactive() {
-    this.store.setInactive();
+  _proto2.inactive = function inactive() {
+    this.getCurrentItem().inactive();
   };
 
-  _proto3.destroy = function destroy() {
-    this.store.destroy();
+  _proto2.destroy = function destroy() {
+    this.records.forEach(function (item) {
+      item.destroy();
+    });
   };
-
-  _createClass(PageStack, [{
-    key: "store",
-    get: function get() {
-      return this._store;
-    }
-  }]);
 
   return PageStack;
 }(HistoryStack);
@@ -2465,54 +2146,29 @@ var WindowStack = function (_HistoryStack2) {
   function WindowStack(location, store) {
     var _this2;
 
-    _this2 = _HistoryStack2.call(this, 10) || this;
-    _this2.id = 0;
+    _this2 = _HistoryStack2.call(this) || this;
+    _this2.num = 0;
 
     _this2.init(new PageStack(_assertThisInitialized(_this2), location, store));
 
     return _this2;
   }
 
-  var _proto4 = WindowStack.prototype;
+  var _proto3 = WindowStack.prototype;
 
-  _proto4.getRecords = function getRecords() {
+  _proto3.getRecords = function getRecords() {
     return this.records.map(function (item) {
       return item.getCurrentItem();
     });
   };
 
-  _proto4.getCurrentWindowPage = function getCurrentWindowPage() {
-    var item = this.getCurrentItem();
-    var store = item.store;
-    var record = item.getCurrentItem();
-    var location = record.location;
-    return {
-      store: store,
-      location: location
-    };
-  };
-
-  _proto4.getCurrentPages = function getCurrentPages() {
-    return this.records.map(function (item) {
-      var store = item.store;
-      var record = item.getCurrentItem();
-      var location = record.location;
-      return {
-        store: store,
-        location: location
-      };
-    });
-  };
-
-  _proto4.countBack = function countBack(delta) {
+  _proto3.countBack = function countBack(delta) {
     var historyStacks = this.records;
     var backSteps = [0, 0];
 
     for (var i = 0, k = historyStacks.length; i < k; i++) {
-      var _pageStack = historyStacks[i];
-
-      var recordNum = _pageStack.getLength();
-
+      var pageStack = historyStacks[i];
+      var recordNum = pageStack.getLength();
       delta = delta - recordNum;
 
       if (delta > 0) {
@@ -2529,7 +2185,7 @@ var WindowStack = function (_HistoryStack2) {
     return backSteps;
   };
 
-  _proto4.testBack = function testBack(stepOrKey, rootOnly) {
+  _proto3.backTest = function backTest(stepOrKey, rootOnly) {
     if (typeof stepOrKey === 'string') {
       return this.findRecordByKey(stepOrKey);
     }
@@ -2537,9 +2193,10 @@ var WindowStack = function (_HistoryStack2) {
     var delta = stepOrKey;
 
     if (delta === 0) {
-      var record = this.getCurrentItem().getCurrentItem();
+      var _record = this.getCurrentItem().getCurrentItem();
+
       return {
-        record: record,
+        record: _record,
         overflow: false,
         index: [0, 0]
       };
@@ -2547,18 +2204,18 @@ var WindowStack = function (_HistoryStack2) {
 
     if (rootOnly) {
       if (delta < 0 || delta >= this.records.length) {
-        var _record = this.getEarliestItem().getCurrentItem();
+        var _record2 = this.getEarliestItem().getCurrentItem();
 
         return {
-          record: _record,
+          record: _record2,
           overflow: !(delta < 0),
           index: [this.records.length - 1, 0]
         };
       } else {
-        var _record2 = this.getItemAt(delta).getCurrentItem();
+        var _record3 = this.getItemAt(delta).getCurrentItem();
 
         return {
-          record: _record2,
+          record: _record3,
           overflow: false,
           index: [delta, 0]
         };
@@ -2566,14 +2223,14 @@ var WindowStack = function (_HistoryStack2) {
     }
 
     if (delta < 0) {
-      var _pageStack2 = this.getEarliestItem();
+      var pageStack = this.getEarliestItem();
 
-      var _record3 = _pageStack2.getEarliestItem();
+      var _record4 = pageStack.getEarliestItem();
 
       return {
-        record: _record3,
+        record: _record4,
         overflow: false,
-        index: [this.records.length - 1, _pageStack2.getLength() - 1]
+        index: [this.records.length - 1, pageStack.getLength() - 1]
       };
     }
 
@@ -2582,35 +2239,35 @@ var WindowStack = function (_HistoryStack2) {
         recordDelta = _this$countBack[1];
 
     if (rootDelta < this.records.length) {
-      var _record4 = this.getItemAt(rootDelta).getItemAt(recordDelta);
+      var _record5 = this.getItemAt(rootDelta).getItemAt(recordDelta);
 
       return {
-        record: _record4,
+        record: _record5,
         overflow: false,
         index: [rootDelta, recordDelta]
       };
     } else {
-      var _pageStack3 = this.getEarliestItem();
+      var _pageStack = this.getEarliestItem();
 
-      var _record5 = _pageStack3.getEarliestItem();
+      var _record6 = _pageStack.getEarliestItem();
 
       return {
-        record: _record5,
+        record: _record6,
         overflow: true,
-        index: [this.records.length - 1, _pageStack3.getLength() - 1]
+        index: [this.records.length - 1, _pageStack.getLength() - 1]
       };
     }
   };
 
-  _proto4.findRecordByKey = function findRecordByKey(key) {
+  _proto3.findRecordByKey = function findRecordByKey(key) {
     var arr = key.split('_');
 
     if (arr[0] && arr[1]) {
       for (var i = 0, k = this.records.length; i < k; i++) {
-        var _pageStack4 = this.records[i];
+        var pageStack = this.records[i];
 
-        if (_pageStack4.key === arr[0]) {
-          var item = _pageStack4.findRecordByKey(key);
+        if (pageStack.key === arr[0]) {
+          var item = pageStack.findRecordByKey(key);
 
           if (item) {
             return {
@@ -2632,8 +2289,24 @@ var WindowStack = function (_HistoryStack2) {
 
   return WindowStack;
 }(HistoryStack);
+function locationToNativeLocation(location) {
+  var pathname = routerConfig.NativePathnameMapping.out(location.pathname);
+  var url = location.url.replace(location.pathname, pathname);
+  return _extends({}, location, {
+    pathname: pathname,
+    url: url
+  });
+}
+function nativeLocationToLocation(location) {
+  var pathname = routerConfig.NativePathnameMapping.in(location.pathname);
+  var url = location.url.replace(location.pathname, pathname);
+  return _extends({}, location, {
+    pathname: pathname,
+    url: url
+  });
+}
 
-function nativeUrlToUrl(nativeUrl) {
+function _nativeUrlToUrl(nativeUrl) {
   var _nativeUrl$split = nativeUrl.split(/[?#]/),
       _nativeUrl$split$ = _nativeUrl$split[0],
       path = _nativeUrl$split$ === void 0 ? '' : _nativeUrl$split$,
@@ -2642,7 +2315,7 @@ function nativeUrlToUrl(nativeUrl) {
       _nativeUrl$split$3 = _nativeUrl$split[2],
       hash = _nativeUrl$split$3 === void 0 ? '' : _nativeUrl$split$3;
 
-  var pathname = coreConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
+  var pathname = routerConfig.NativePathnameMapping.in('/' + path.replace(/^\/|\/$/g, ''));
   return "" + pathname + (search ? "?" + search : '') + (hash ? "#" + hash : '');
 }
 function urlToNativeUrl(eluxUrl) {
@@ -2654,10 +2327,11 @@ function urlToNativeUrl(eluxUrl) {
       _eluxUrl$split$3 = _eluxUrl$split[2],
       hash = _eluxUrl$split$3 === void 0 ? '' : _eluxUrl$split$3;
 
-  var pathname = coreConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
+  var pathname = routerConfig.NativePathnameMapping.out('/' + path.replace(/^\/|\/$/g, ''));
   return "" + pathname + (search ? "?" + search : '') + (hash ? "#" + hash : '');
 }
-function urlToLocation(url, state) {
+
+function _urlToLocation(url, state) {
   var _url$split = url.split(/[?#]/),
       _url$split$ = _url$split[0],
       path = _url$split$ === void 0 ? '' : _url$split$,
@@ -2668,9 +2342,9 @@ function urlToLocation(url, state) {
 
   var arr = ("?" + query).match(/[?&]__c=([^&]*)/) || ['', ''];
   var classname = arr[1];
-  var search = ("?" + query).replace(/[?&]__c=[^&]*/g, '').substr(1);
+  var search = ("?" + query).replace(/[?&]__c=[^&]*/g, '').substring(1);
   var pathname = '/' + path.replace(/^\/|\/$/g, '');
-  var parse = coreConfig.QueryString.parse;
+  var parse = routerConfig.QueryString.parse;
   var searchQuery = parse(search);
   var hashQuery = parse(hash);
 
@@ -2689,7 +2363,8 @@ function urlToLocation(url, state) {
     state: state
   };
 }
-function locationToUrl(_ref, defClassname) {
+
+function _locationToUrl(_ref, defClassname) {
   var url = _ref.url,
       pathname = _ref.pathname,
       search = _ref.search,
@@ -2707,7 +2382,7 @@ function locationToUrl(_ref, defClassname) {
   }
 
   pathname = '/' + (pathname || '').replace(/^\/|\/$/g, '');
-  var stringify = coreConfig.QueryString.stringify;
+  var stringify = routerConfig.QueryString.stringify;
   search = search ? search.replace('?', '') : searchQuery ? stringify(searchQuery) : '';
   hash = hash ? hash.replace('#', '') : hashQuery ? stringify(hashQuery) : '';
 
@@ -2716,7 +2391,7 @@ function locationToUrl(_ref, defClassname) {
   }
 
   if (typeof classname === 'string') {
-    search = ("?" + search).replace(/[?&]__c=[^&]*/g, '').substr(1);
+    search = ("?" + search).replace(/[?&]__c=[^&]*/g, '').substring(1);
 
     if (classname) {
       search = search ? search + "&__c=" + classname : "__c=" + classname;
@@ -2726,33 +2401,15 @@ function locationToUrl(_ref, defClassname) {
   url = "" + pathname + (search ? "?" + search : '') + (hash ? "#" + hash : '');
   return url;
 }
-function locationToNativeLocation(location) {
-  var pathname = coreConfig.NativePathnameMapping.out(location.pathname);
-  var url = location.url.replace(location.pathname, pathname);
-  return _extends({}, location, {
-    pathname: pathname,
-    url: url
-  });
-}
-function nativeLocationToLocation(location) {
-  var pathname = coreConfig.NativePathnameMapping.in(location.pathname);
-  var url = location.url.replace(location.pathname, pathname);
-  return _extends({}, location, {
-    pathname: pathname,
-    url: url
-  });
-}
 var BaseNativeRouter = function () {
   function BaseNativeRouter() {
-    this.router = void 0;
     this.routeKey = '';
     this.curTask = void 0;
-    this.router = new Router(this);
   }
 
-  var _proto = BaseNativeRouter.prototype;
+  var _proto4 = BaseNativeRouter.prototype;
 
-  _proto.onSuccess = function onSuccess() {
+  _proto4.onSuccess = function onSuccess() {
     if (this.curTask) {
       var _this$curTask = this.curTask,
           resolve = _this$curTask.resolve,
@@ -2764,13 +2421,16 @@ var BaseNativeRouter = function () {
     }
   };
 
-  _proto.testExecute = function testExecute(method, location, backIndex) {
+  _proto4.testExecute = function testExecute(method, location, backIndex) {
     var testMethod = '_' + method;
-    this[testMethod] && this[testMethod](locationToNativeLocation(location), backIndex);
+
+    if (this[testMethod]) {
+      return this[testMethod](locationToNativeLocation(location), backIndex);
+    }
   };
 
-  _proto.execute = function execute(method, location, key, backIndex) {
-    var _this = this;
+  _proto4.execute = function execute(method, location, key, backIndex) {
+    var _this3 = this;
 
     var nativeLocation = locationToNativeLocation(location);
     var result = this[method](nativeLocation, key, backIndex);
@@ -2781,9 +2441,9 @@ var BaseNativeRouter = function () {
         var timeout = env.setTimeout(function () {
           env.console.error('Native router timeout: ' + nativeLocation.url);
 
-          _this.onSuccess();
+          _this3.onSuccess();
         }, 2000);
-        _this.curTask = {
+        _this3.curTask = {
           resolve: resolve,
           timeout: timeout
         };
@@ -2793,54 +2453,28 @@ var BaseNativeRouter = function () {
 
   return BaseNativeRouter;
 }();
-var clientDocumentHeadTimer = 0;
-var Router = function () {
-  function Router(nativeRouter) {
-    var _this2 = this;
+var Router = function (_ARouter) {
+  _inheritsLoose(Router, _ARouter);
 
-    this.curTask = void 0;
-    this.taskList = [];
-    this.windowStack = void 0;
-    this.documentHead = '';
-    this.action = 'init';
-    this.routeKey = '';
-    this.listenerId = 0;
-    this.listenerMap = {};
+  function Router() {
+    var _this4;
 
-    this.onTaskComplete = function () {
-      var task = _this2.taskList.shift();
-
-      if (task) {
-        _this2.curTask = task;
-        var onTaskComplete = _this2.onTaskComplete;
-        env.setTimeout(function () {
-          return task[0]().finally(onTaskComplete).then(task[1], task[2]);
-        }, 0);
-      } else {
-        _this2.curTask = undefined;
-      }
-    };
-
-    this.nativeRouter = nativeRouter;
-
-    if (!MetaData.clientRouter) {
-      MetaData.clientRouter = this;
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
+
+    _this4 = _ARouter.call.apply(_ARouter, [this].concat(args)) || this;
+    _this4.WindowStackClass = WindowStack;
+    _this4.PageStackClass = PageStack;
+    _this4.StoreClass = Store;
+    _this4.listenerId = 0;
+    _this4.listenerMap = {};
+    return _this4;
   }
 
-  var _proto2 = Router.prototype;
+  var _proto5 = Router.prototype;
 
-  _proto2.addListener = function addListener(callback) {
-    this.listenerId++;
-    var id = "" + this.listenerId;
-    var listenerMap = this.listenerMap;
-    listenerMap[id] = callback;
-    return function () {
-      delete listenerMap[id];
-    };
-  };
-
-  _proto2.dispatch = function dispatch(data) {
+  _proto5.dispatch = function dispatch(data) {
     var listenerMap = this.listenerMap;
     var promiseResults = [];
     Object.keys(listenerMap).forEach(function (id) {
@@ -2862,277 +2496,33 @@ var Router = function () {
     }
   };
 
-  _proto2.addTask = function addTask(execute) {
-    var _this3 = this;
-
-    return new Promise(function (resolve, reject) {
-      var task = [function () {
-        return setLoading(execute(), _this3.getActivePage().store);
-      }, resolve, reject];
-
-      if (_this3.curTask) {
-        _this3.taskList.push(task);
-      } else {
-        _this3.curTask = task;
-        task[0]().finally(_this3.onTaskComplete).then(task[1], task[2]);
-      }
-    });
+  _proto5.nativeUrlToUrl = function nativeUrlToUrl(nativeUrl) {
+    return _nativeUrlToUrl(nativeUrl);
   };
 
-  _proto2.getDocumentHead = function getDocumentHead() {
-    return this.documentHead;
+  _proto5.urlToLocation = function urlToLocation(url, state) {
+    return _urlToLocation(url, state);
   };
 
-  _proto2.setDocumentHead = function setDocumentHead(html) {
-    var _this4 = this;
-
-    this.documentHead = html;
-
-    if (!env.isServer && !clientDocumentHeadTimer) {
-      clientDocumentHeadTimer = env.setTimeout(function () {
-        clientDocumentHeadTimer = 0;
-        var arr = _this4.documentHead.match(/<title>(.*?)<\/title>/) || [];
-
-        if (arr[1]) {
-          coreConfig.SetPageTitle(arr[1]);
-        }
-      }, 0);
-    }
+  _proto5.locationToUrl = function locationToUrl(location, defClassname) {
+    return _locationToUrl(location, defClassname);
   };
 
-  _proto2.savePageTitle = function savePageTitle() {
-    var arr = this.documentHead.match(/<title>(.*?)<\/title>/) || [];
-    var title = arr[1] || '';
-    this.windowStack.getCurrentItem().getCurrentItem().title = title;
+  _proto5.needToNotifyNativeRouter = function needToNotifyNativeRouter(action, target) {
+    return routerConfig.NeedToNotifyNativeRouter(action, target);
   };
 
-  _proto2.nativeInitiated = function nativeInitiated() {
-    return !this.nativeRouter.routeKey;
-  };
-
-  _proto2.getHistoryLength = function getHistoryLength(target) {
-    return target === 'window' ? this.windowStack.getLength() - 1 : this.windowStack.getCurrentItem().getLength() - 1;
-  };
-
-  _proto2.getHistory = function getHistory(target) {
-    return target === 'window' ? this.windowStack.getRecords().slice(1) : this.windowStack.getCurrentItem().getItems().slice(1);
-  };
-
-  _proto2.findRecordByKey = function findRecordByKey(recordKey) {
-    var _this$windowStack$fin = this.windowStack.findRecordByKey(recordKey),
-        _this$windowStack$fin2 = _this$windowStack$fin.record,
-        key = _this$windowStack$fin2.key,
-        location = _this$windowStack$fin2.location,
-        title = _this$windowStack$fin2.title,
-        overflow = _this$windowStack$fin.overflow,
-        index = _this$windowStack$fin.index;
-
-    return {
-      overflow: overflow,
-      index: index,
-      record: {
-        key: key,
-        location: location,
-        title: title
-      }
+  _proto5.addListener = function addListener(callback) {
+    this.listenerId++;
+    var id = this.listenerId + '';
+    var listenerMap = this.listenerMap;
+    listenerMap[id] = callback;
+    return function () {
+      delete listenerMap[id];
     };
   };
 
-  _proto2.findRecordByStep = function findRecordByStep(delta, rootOnly) {
-    var _this$windowStack$tes = this.windowStack.testBack(delta, !!rootOnly),
-        _this$windowStack$tes2 = _this$windowStack$tes.record,
-        key = _this$windowStack$tes2.key,
-        location = _this$windowStack$tes2.location,
-        title = _this$windowStack$tes2.title,
-        overflow = _this$windowStack$tes.overflow,
-        index = _this$windowStack$tes.index;
-
-    return {
-      overflow: overflow,
-      index: index,
-      record: {
-        key: key,
-        location: location,
-        title: title
-      }
-    };
-  };
-
-  _proto2.getActivePage = function getActivePage() {
-    return this.windowStack.getCurrentWindowPage();
-  };
-
-  _proto2.getCurrentPages = function getCurrentPages() {
-    return this.windowStack.getCurrentPages();
-  };
-
-  _proto2.mountStore = function () {
-    var _mountStore = _asyncToGenerator(regenerator.mark(function _callee(prevStore, newStore, historyStore) {
-      var prevState;
-      return regenerator.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              prevState = prevStore.getState();
-              this.runtime = {
-                timestamp: Date.now(),
-                prevState: coreConfig.MutableData ? deepClone(prevState) : prevState,
-                completed: false
-              };
-
-              if (!(newStore === historyStore)) {
-                _context.next = 5;
-                break;
-              }
-
-              this.runtime.completed = true;
-              return _context.abrupt("return");
-
-            case 5:
-              _context.prev = 5;
-              _context.next = 8;
-              return newStore.mount(coreConfig.StageModuleName, 'route');
-
-            case 8:
-              _context.next = 13;
-              break;
-
-            case 10:
-              _context.prev = 10;
-              _context.t0 = _context["catch"](5);
-              env.console.error(_context.t0);
-
-            case 13:
-              this.runtime.completed = true;
-
-            case 14:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, this, [[5, 10]]);
-    }));
-
-    function mountStore(_x, _x2, _x3) {
-      return _mountStore.apply(this, arguments);
-    }
-
-    return mountStore;
-  }();
-
-  _proto2.redirectOnServer = function redirectOnServer(url) {
-    if (env.isServer) {
-      var nativeUrl = urlToNativeUrl(url);
-      var err = {
-        code: ErrorCodes.ROUTE_REDIRECT,
-        message: 'Route change in server is not allowed.',
-        detail: nativeUrl
-      };
-      throw err;
-    }
-  };
-
-  _proto2.init = function init(routerInitOptions, prevState) {
-    this.init = function () {
-      return Promise.resolve();
-    };
-
-    this.initOptions = routerInitOptions;
-    this.location = urlToLocation(nativeUrlToUrl(routerInitOptions.url), undefined);
-    this.action = 'init';
-    this.windowStack = new WindowStack(this.location, new Store(0, 0, this));
-    this.routeKey = this.findRecordByStep(0).record.key;
-    this.runtime = {
-      timestamp: Date.now(),
-      prevState: prevState,
-      completed: false
-    };
-    var task = [this._init.bind(this), function () {
-      return undefined;
-    }, function () {
-      return undefined;
-    }];
-    this.curTask = task;
-    return task[0]().finally(this.onTaskComplete);
-  };
-
-  _proto2._init = function () {
-    var _init2 = _asyncToGenerator(regenerator.mark(function _callee2() {
-      var action, location, routeKey, store;
-      return regenerator.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              action = this.action, location = this.location, routeKey = this.routeKey;
-              _context2.next = 3;
-              return this.nativeRouter.execute(action, location, routeKey);
-
-            case 3:
-              store = this.getActivePage().store;
-              _context2.prev = 4;
-              _context2.next = 7;
-              return store.mount(coreConfig.StageModuleName, 'init');
-
-            case 7:
-              _context2.next = 9;
-              return store.dispatch(testChangeAction(this.location, this.action));
-
-            case 9:
-              _context2.next = 17;
-              break;
-
-            case 11:
-              _context2.prev = 11;
-              _context2.t0 = _context2["catch"](4);
-
-              if (!(_context2.t0.code === ErrorCodes.ROUTE_RETURN || _context2.t0.code === ErrorCodes.ROUTE_REDIRECT)) {
-                _context2.next = 16;
-                break;
-              }
-
-              this.taskList = [];
-              throw _context2.t0;
-
-            case 16:
-              env.console.error(_context2.t0);
-
-            case 17:
-              this.runtime.completed = true;
-              this.dispatch({
-                location: location,
-                action: action,
-                prevStore: store,
-                newStore: store,
-                windowChanged: true
-              });
-
-            case 19:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2, this, [[4, 11]]);
-    }));
-
-    function _init() {
-      return _init2.apply(this, arguments);
-    }
-
-    return _init;
-  }();
-
-  _proto2.computeUrl = function computeUrl(partialLocation, action, target) {
-    var curClassname = this.location.classname;
-    var defClassname = curClassname;
-
-    if (action === 'relaunch') {
-      defClassname = target === 'window' ? '' : curClassname;
-    }
-
-    return locationToUrl(partialLocation, defClassname);
-  };
-
-  _proto2.relaunch = function relaunch(partialLocation, target, refresh, _nativeCaller) {
+  _proto5.relaunch = function relaunch(partialLocation, target, refresh, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -3148,105 +2538,122 @@ var Router = function () {
     return this.addTask(this._relaunch.bind(this, partialLocation, target, refresh, _nativeCaller));
   };
 
-  _proto2._relaunch = function () {
-    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee3(partialLocation, target, refresh, _nativeCaller) {
-      var action, url, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
-      return regenerator.wrap(function _callee3$(_context3) {
+  _proto5._relaunch = function () {
+    var _relaunch2 = _asyncToGenerator(regenerator.mark(function _callee(partialLocation, target, refresh, nativeCaller) {
+      var action, url, location, needToNotifyNativeRouter, reject, curPage, newStore, curPageStack, newRecord;
+      return regenerator.wrap(function _callee$(_context) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context.prev = _context.next) {
             case 0:
               action = 'relaunch';
               url = this.computeUrl(partialLocation, action, target);
-              this.redirectOnServer(url);
-              location = urlToLocation(url, partialLocation.state);
-              NotifyNativeRouter = coreConfig.NotifyNativeRouter[target];
+              location = this.urlToLocation(url, partialLocation.state);
+              needToNotifyNativeRouter = this.needToNotifyNativeRouter(action, target);
 
-              if (!_nativeCaller && NotifyNativeRouter) {
-                this.nativeRouter.testExecute(action, location);
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context.next = 8;
+                break;
               }
 
-              prevStore = this.getActivePage().store;
-              _context3.prev = 7;
-              _context3.next = 10;
-              return prevStore.dispatch(testChangeAction(location, action));
+              reject = this.nativeRouter.testExecute(action, location);
 
-            case 10:
-              _context3.next = 16;
-              break;
+              if (!reject) {
+                _context.next = 8;
+                break;
+              }
+
+              throw reject;
+
+            case 8:
+              curPage = this.getCurrentPage();
+              _context.prev = 9;
+              _context.next = 12;
+              return curPage.store.dispatch(testRouteChangeAction(location, action));
 
             case 12:
-              _context3.prev = 12;
-              _context3.t0 = _context3["catch"](7);
+              _context.next = 18;
+              break;
 
-              if (_nativeCaller) {
-                _context3.next = 16;
+            case 14:
+              _context.prev = 14;
+              _context.t0 = _context["catch"](9);
+
+              if (nativeCaller) {
+                _context.next = 18;
                 break;
               }
 
-              throw _context3.t0;
-
-            case 16:
-              _context3.next = 18;
-              return prevStore.dispatch(beforeChangeAction(location, action));
+              throw _context.t0;
 
             case 18:
-              this.savePageTitle();
-              this.location = location;
+              _context.next = 20;
+              return curPage.store.dispatch(beforeRouteChangeAction(location, action));
+
+            case 20:
+              curPage.saveTitle(this.getDocumentTitle());
               this.action = action;
-              newStore = prevStore.clone(refresh);
-              pageStack = this.windowStack.getCurrentItem();
-              newRecord = new RouteRecord(location, pageStack);
-              this.routeKey = newRecord.key;
+              newStore = curPage.store.clone(refresh);
+              curPageStack = this.windowStack.getCurrentItem();
+              newRecord = new RouteRecord(location, curPageStack, newStore);
 
               if (target === 'window') {
-                pageStack.relaunch(newRecord);
-                this.windowStack.relaunch(pageStack);
+                curPageStack.relaunch(newRecord);
+                this.windowStack.relaunch(curPageStack);
               } else {
-                pageStack.relaunch(newRecord);
+                curPageStack.relaunch(newRecord);
               }
 
-              pageStack.replaceStore(newStore);
-              _context3.next = 29;
-              return this.mountStore(prevStore, newStore);
+              _context.prev = 26;
+              _context.next = 29;
+              return this.mountStore(curPage.store, newStore);
 
             case 29:
-              if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context3.next = 32;
+              _context.next = 34;
+              break;
+
+            case 31:
+              _context.prev = 31;
+              _context.t1 = _context["catch"](26);
+              env.console.error(_context.t1);
+
+            case 34:
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context.next = 37;
                 break;
               }
 
-              _context3.next = 32;
+              _context.next = 37;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 32:
-              _context3.next = 34;
+            case 37:
+              _context.next = 39;
               return this.dispatch({
                 location: location,
                 action: action,
-                prevStore: prevStore,
+                prevStore: curPage.store,
                 newStore: newStore,
                 windowChanged: target === 'window'
               });
 
-            case 34:
-              newStore.dispatch(afterChangeAction(location, action));
+            case 39:
+              newStore.dispatch(afterRouteChangeAction(location, action));
 
-            case 35:
+            case 40:
             case "end":
-              return _context3.stop();
+              return _context.stop();
           }
         }
-      }, _callee3, this, [[7, 12]]);
+      }, _callee, this, [[9, 14], [26, 31]]);
     }));
 
-    function _relaunch(_x4, _x5, _x6, _x7) {
+    function _relaunch(_x, _x2, _x3, _x4) {
       return _relaunch2.apply(this, arguments);
     }
 
     return _relaunch;
   }();
 
-  _proto2.replace = function replace(partialLocation, target, refresh, _nativeCaller) {
+  _proto5.replace = function replace(partialLocation, target, refresh, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -3262,104 +2669,121 @@ var Router = function () {
     return this.addTask(this._replace.bind(this, partialLocation, target, refresh, _nativeCaller));
   };
 
-  _proto2._replace = function () {
-    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee4(partialLocation, target, refresh, _nativeCaller) {
-      var action, url, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord;
-      return regenerator.wrap(function _callee4$(_context4) {
+  _proto5._replace = function () {
+    var _replace2 = _asyncToGenerator(regenerator.mark(function _callee2(partialLocation, target, refresh, nativeCaller) {
+      var action, url, location, needToNotifyNativeRouter, reject, curPage, newStore, curPageStack, newRecord;
+      return regenerator.wrap(function _callee2$(_context2) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
               action = 'replace';
               url = this.computeUrl(partialLocation, action, target);
-              this.redirectOnServer(url);
-              location = urlToLocation(url, partialLocation.state);
-              NotifyNativeRouter = coreConfig.NotifyNativeRouter[target];
+              location = this.urlToLocation(url, partialLocation.state);
+              needToNotifyNativeRouter = this.needToNotifyNativeRouter(action, target);
 
-              if (!_nativeCaller && NotifyNativeRouter) {
-                this.nativeRouter.testExecute(action, location);
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context2.next = 8;
+                break;
               }
 
-              prevStore = this.getActivePage().store;
-              _context4.prev = 7;
-              _context4.next = 10;
-              return prevStore.dispatch(testChangeAction(location, action));
+              reject = this.nativeRouter.testExecute(action, location);
 
-            case 10:
-              _context4.next = 16;
-              break;
+              if (!reject) {
+                _context2.next = 8;
+                break;
+              }
+
+              throw reject;
+
+            case 8:
+              curPage = this.getCurrentPage();
+              _context2.prev = 9;
+              _context2.next = 12;
+              return curPage.store.dispatch(testRouteChangeAction(location, action));
 
             case 12:
-              _context4.prev = 12;
-              _context4.t0 = _context4["catch"](7);
+              _context2.next = 18;
+              break;
 
-              if (_nativeCaller) {
-                _context4.next = 16;
+            case 14:
+              _context2.prev = 14;
+              _context2.t0 = _context2["catch"](9);
+
+              if (nativeCaller) {
+                _context2.next = 18;
                 break;
               }
 
-              throw _context4.t0;
-
-            case 16:
-              _context4.next = 18;
-              return prevStore.dispatch(beforeChangeAction(location, action));
+              throw _context2.t0;
 
             case 18:
-              this.savePageTitle();
-              this.location = location;
+              _context2.next = 20;
+              return curPage.store.dispatch(beforeRouteChangeAction(location, action));
+
+            case 20:
+              curPage.saveTitle(this.getDocumentTitle());
               this.action = action;
-              newStore = prevStore.clone(refresh);
-              pageStack = this.windowStack.getCurrentItem();
-              newRecord = new RouteRecord(location, pageStack);
-              this.routeKey = newRecord.key;
+              newStore = curPage.store.clone(refresh);
+              curPageStack = this.windowStack.getCurrentItem();
+              newRecord = new RouteRecord(location, curPageStack, newStore);
 
               if (target === 'window') {
-                pageStack.relaunch(newRecord);
+                curPageStack.relaunch(newRecord);
               } else {
-                pageStack.replace(newRecord);
+                curPageStack.replace(newRecord);
               }
 
-              pageStack.replaceStore(newStore);
-              _context4.next = 29;
-              return this.mountStore(prevStore, newStore);
+              _context2.prev = 26;
+              _context2.next = 29;
+              return this.mountStore(curPage.store, newStore);
 
             case 29:
-              if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context4.next = 32;
+              _context2.next = 34;
+              break;
+
+            case 31:
+              _context2.prev = 31;
+              _context2.t1 = _context2["catch"](26);
+              env.console.error(_context2.t1);
+
+            case 34:
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context2.next = 37;
                 break;
               }
 
-              _context4.next = 32;
+              _context2.next = 37;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 32:
-              _context4.next = 34;
+            case 37:
+              _context2.next = 39;
               return this.dispatch({
                 location: location,
                 action: action,
-                prevStore: prevStore,
+                prevStore: curPage.store,
                 newStore: newStore,
                 windowChanged: target === 'window'
               });
 
-            case 34:
-              newStore.dispatch(afterChangeAction(location, action));
+            case 39:
+              newStore.dispatch(afterRouteChangeAction(location, action));
 
-            case 35:
+            case 40:
             case "end":
-              return _context4.stop();
+              return _context2.stop();
           }
         }
-      }, _callee4, this, [[7, 12]]);
+      }, _callee2, this, [[9, 14], [26, 31]]);
     }));
 
-    function _replace(_x8, _x9, _x10, _x11) {
+    function _replace(_x5, _x6, _x7, _x8) {
       return _replace2.apply(this, arguments);
     }
 
     return _replace;
   }();
 
-  _proto2.push = function push(partialLocation, target, refresh, _nativeCaller) {
+  _proto5.push = function push(partialLocation, target, refresh, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
     }
@@ -3375,122 +2799,125 @@ var Router = function () {
     return this.addTask(this._push.bind(this, partialLocation, target, refresh, _nativeCaller));
   };
 
-  _proto2._push = function () {
-    var _push2 = _asyncToGenerator(regenerator.mark(function _callee5(partialLocation, target, refresh, _nativeCaller) {
-      var action, url, location, NotifyNativeRouter, prevStore, newStore, pageStack, newRecord, newPageStack;
-      return regenerator.wrap(function _callee5$(_context5) {
+  _proto5._push = function () {
+    var _push2 = _asyncToGenerator(regenerator.mark(function _callee3(partialLocation, target, refresh, nativeCaller) {
+      var action, url, location, needToNotifyNativeRouter, reject, curPage, newStore, curPageStack, newRecord, newPageStack;
+      return regenerator.wrap(function _callee3$(_context3) {
         while (1) {
-          switch (_context5.prev = _context5.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               action = 'push';
               url = this.computeUrl(partialLocation, action, target);
-              this.redirectOnServer(url);
-              location = urlToLocation(url, partialLocation.state);
-              NotifyNativeRouter = coreConfig.NotifyNativeRouter[target];
+              location = this.urlToLocation(url, partialLocation.state);
+              needToNotifyNativeRouter = this.needToNotifyNativeRouter(action, target);
 
-              if (!_nativeCaller && NotifyNativeRouter) {
-                this.nativeRouter.testExecute(action, location);
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context3.next = 8;
+                break;
               }
 
-              prevStore = this.getActivePage().store;
-              _context5.prev = 7;
-              _context5.next = 10;
-              return prevStore.dispatch(testChangeAction(location, action));
+              reject = this.nativeRouter.testExecute(action, location);
 
-            case 10:
-              _context5.next = 16;
-              break;
+              if (!reject) {
+                _context3.next = 8;
+                break;
+              }
+
+              throw reject;
+
+            case 8:
+              curPage = this.getCurrentPage();
+              _context3.prev = 9;
+              _context3.next = 12;
+              return curPage.store.dispatch(testRouteChangeAction(location, action));
 
             case 12:
-              _context5.prev = 12;
-              _context5.t0 = _context5["catch"](7);
-
-              if (_nativeCaller) {
-                _context5.next = 16;
-                break;
-              }
-
-              throw _context5.t0;
-
-            case 16:
-              _context5.next = 18;
-              return prevStore.dispatch(beforeChangeAction(location, action));
-
-            case 18:
-              this.savePageTitle();
-              this.location = location;
-              this.action = action;
-              newStore = prevStore.clone(target === 'window' || refresh);
-              pageStack = this.windowStack.getCurrentItem();
-
-              if (!(target === 'window')) {
-                _context5.next = 32;
-                break;
-              }
-
-              newPageStack = new PageStack(this.windowStack, location, newStore);
-              newRecord = newPageStack.getCurrentItem();
-              this.routeKey = newRecord.key;
-              this.windowStack.push(newPageStack);
-              _context5.next = 30;
-              return this.mountStore(prevStore, newStore);
-
-            case 30:
-              _context5.next = 38;
+              _context3.next = 18;
               break;
 
-            case 32:
-              newRecord = new RouteRecord(location, pageStack);
-              this.routeKey = newRecord.key;
-              pageStack.push(newRecord);
-              pageStack.replaceStore(newStore);
-              _context5.next = 38;
-              return this.mountStore(prevStore, newStore);
+            case 14:
+              _context3.prev = 14;
+              _context3.t0 = _context3["catch"](9);
 
-            case 38:
-              if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context5.next = 41;
+              if (nativeCaller) {
+                _context3.next = 18;
                 break;
               }
 
-              _context5.next = 41;
+              throw _context3.t0;
+
+            case 18:
+              _context3.next = 20;
+              return curPage.store.dispatch(beforeRouteChangeAction(location, action));
+
+            case 20:
+              curPage.saveTitle(this.getDocumentTitle());
+              this.action = action;
+              newStore = curPage.store.clone(target === 'window' || refresh);
+              curPageStack = this.windowStack.getCurrentItem();
+
+              if (target === 'window') {
+                newPageStack = new this.PageStackClass(this.windowStack, location, newStore);
+                newRecord = newPageStack.getCurrentItem();
+                this.windowStack.push(newPageStack);
+              } else {
+                newRecord = new RouteRecord(location, curPageStack, newStore);
+                curPageStack.push(newRecord);
+              }
+
+              _context3.prev = 25;
+              _context3.next = 28;
+              return this.mountStore(curPage.store, newStore);
+
+            case 28:
+              _context3.next = 33;
+              break;
+
+            case 30:
+              _context3.prev = 30;
+              _context3.t1 = _context3["catch"](25);
+              env.console.error(_context3.t1);
+
+            case 33:
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context3.next = 36;
+                break;
+              }
+
+              _context3.next = 36;
               return this.nativeRouter.execute(action, location, newRecord.key);
 
-            case 41:
-              _context5.next = 43;
+            case 36:
+              _context3.next = 38;
               return this.dispatch({
                 location: location,
                 action: action,
-                prevStore: prevStore,
+                prevStore: curPage.store,
                 newStore: newStore,
                 windowChanged: target === 'window'
               });
 
-            case 43:
-              newStore.dispatch(afterChangeAction(location, action));
+            case 38:
+              newStore.dispatch(afterRouteChangeAction(location, action));
 
-            case 44:
+            case 39:
             case "end":
-              return _context5.stop();
+              return _context3.stop();
           }
         }
-      }, _callee5, this, [[7, 12]]);
+      }, _callee3, this, [[9, 14], [25, 30]]);
     }));
 
-    function _push(_x12, _x13, _x14, _x15) {
+    function _push(_x9, _x10, _x11, _x12) {
       return _push2.apply(this, arguments);
     }
 
     return _push;
   }();
 
-  _proto2.back = function back(stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller) {
+  _proto5.back = function back(stepOrKeyOrCallback, target, overflowRedirect, _nativeCaller) {
     if (target === void 0) {
       target = 'page';
-    }
-
-    if (refresh === void 0) {
-      refresh = false;
     }
 
     if (overflowRedirect === void 0) {
@@ -3511,22 +2938,21 @@ var Router = function () {
     }
 
     if (!stepOrKeyOrCallback) {
-      return this.replace(this.location, 'page', refresh);
+      return this.replace(this.getCurrentPage().location, 'page');
     }
 
-    return this.addTask(this._back.bind(this, stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller));
+    return this.addTask(this._back.bind(this, stepOrKeyOrCallback, target, overflowRedirect, _nativeCaller));
   };
 
-  _proto2._back = function () {
-    var _back2 = _asyncToGenerator(regenerator.mark(function _callee6(stepOrKeyOrCallback, target, refresh, overflowRedirect, _nativeCaller) {
-      var action, stepOrKey, items, i, _this$windowStack$tes3, record, overflow, index, prevStore, location, title, NotifyNativeRouter, pageStack, historyStore, newStore;
+  _proto5._back = function () {
+    var _back2 = _asyncToGenerator(regenerator.mark(function _callee4(stepOrKeyOrCallback, target, overflowRedirect, nativeCaller) {
+      var action, stepOrKey, items, i, _this$windowStack$bac, record, overflow, index, location, title, needToNotifyNativeRouter, reject, curPage, historyStore;
 
-      return regenerator.wrap(function _callee6$(_context6) {
+      return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
-          switch (_context6.prev = _context6.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
               action = 'back';
-              this.redirectOnServer(overflowRedirect || '/');
               stepOrKey = '';
 
               if (typeof stepOrKeyOrCallback === 'function') {
@@ -3541,68 +2967,77 @@ var Router = function () {
               }
 
               if (stepOrKey) {
-                _context6.next = 6;
+                _context4.next = 5;
                 break;
               }
 
-              return _context6.abrupt("return", this.backError(stepOrKey, overflowRedirect));
+              return _context4.abrupt("return", this.backError(stepOrKey, overflowRedirect));
 
-            case 6:
-              _this$windowStack$tes3 = this.windowStack.testBack(stepOrKey, target === 'window'), record = _this$windowStack$tes3.record, overflow = _this$windowStack$tes3.overflow, index = _this$windowStack$tes3.index;
+            case 5:
+              _this$windowStack$bac = this.windowStack.backTest(stepOrKey, target === 'window'), record = _this$windowStack$bac.record, overflow = _this$windowStack$bac.overflow, index = _this$windowStack$bac.index;
 
               if (!overflow) {
-                _context6.next = 9;
+                _context4.next = 8;
                 break;
               }
 
-              return _context6.abrupt("return", this.backError(stepOrKey, overflowRedirect));
+              return _context4.abrupt("return", this.backError(stepOrKey, overflowRedirect));
 
-            case 9:
+            case 8:
               if (!(!index[0] && !index[1])) {
-                _context6.next = 11;
+                _context4.next = 10;
                 break;
               }
 
-              return _context6.abrupt("return");
+              return _context4.abrupt("return");
 
-            case 11:
-              prevStore = this.getActivePage().store;
+            case 10:
               location = record.location;
               title = record.title;
-              NotifyNativeRouter = index[0] && coreConfig.NotifyNativeRouter.window || index[1] && coreConfig.NotifyNativeRouter.page;
+              needToNotifyNativeRouter = Boolean(index[0] && this.needToNotifyNativeRouter(action, 'window')) || Boolean(index[1] && this.needToNotifyNativeRouter(action, 'page'));
 
-              if (!_nativeCaller && NotifyNativeRouter) {
-                this.nativeRouter.testExecute(action, location, index);
-              }
-
-              _context6.prev = 16;
-              _context6.next = 19;
-              return prevStore.dispatch(testChangeAction(location, action));
-
-            case 19:
-              _context6.next = 25;
-              break;
-
-            case 21:
-              _context6.prev = 21;
-              _context6.t0 = _context6["catch"](16);
-
-              if (_nativeCaller) {
-                _context6.next = 25;
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context4.next = 17;
                 break;
               }
 
-              throw _context6.t0;
+              reject = this.nativeRouter.testExecute(action, location, index);
 
-            case 25:
-              _context6.next = 27;
-              return prevStore.dispatch(beforeChangeAction(location, action));
+              if (!reject) {
+                _context4.next = 17;
+                break;
+              }
+
+              throw reject;
+
+            case 17:
+              curPage = this.getCurrentPage();
+              _context4.prev = 18;
+              _context4.next = 21;
+              return curPage.store.dispatch(testRouteChangeAction(location, action));
+
+            case 21:
+              _context4.next = 27;
+              break;
+
+            case 23:
+              _context4.prev = 23;
+              _context4.t0 = _context4["catch"](18);
+
+              if (nativeCaller) {
+                _context4.next = 27;
+                break;
+              }
+
+              throw _context4.t0;
 
             case 27:
-              this.savePageTitle();
-              this.location = location;
+              _context4.next = 29;
+              return curPage.store.dispatch(beforeRouteChangeAction(location, action));
+
+            case 29:
+              curPage.saveTitle(this.getDocumentTitle());
               this.action = action;
-              this.routeKey = record.key;
 
               if (index[0]) {
                 this.windowStack.back(index[0]);
@@ -3612,58 +3047,60 @@ var Router = function () {
                 this.windowStack.getCurrentItem().back(index[1]);
               }
 
-              pageStack = this.windowStack.getCurrentItem();
-              historyStore = pageStack.store;
-              newStore = historyStore;
+              historyStore = this.getCurrentPage().store;
+              _context4.prev = 34;
+              _context4.next = 37;
+              return this.mountStore(curPage.store, historyStore);
 
-              if (index[1] !== 0) {
-                newStore = prevStore.clone(refresh);
-                pageStack.replaceStore(newStore);
-              }
-
-              _context6.next = 39;
-              return this.mountStore(prevStore, newStore);
+            case 37:
+              _context4.next = 42;
+              break;
 
             case 39:
-              if (!(!_nativeCaller && NotifyNativeRouter)) {
-                _context6.next = 42;
+              _context4.prev = 39;
+              _context4.t1 = _context4["catch"](34);
+              env.console.error(_context4.t1);
+
+            case 42:
+              if (!(!nativeCaller && needToNotifyNativeRouter)) {
+                _context4.next = 45;
                 break;
               }
 
-              _context6.next = 42;
+              _context4.next = 45;
               return this.nativeRouter.execute(action, location, record.key, index);
 
-            case 42:
-              this.setDocumentHead("<title>" + title + "</title>");
-              _context6.next = 45;
+            case 45:
+              this.setDocumentHead(title);
+              _context4.next = 48;
               return this.dispatch({
                 location: location,
                 action: action,
-                prevStore: prevStore,
-                newStore: newStore,
+                prevStore: curPage.store,
+                newStore: historyStore,
                 windowChanged: !!index[0]
               });
 
-            case 45:
-              newStore.dispatch(afterChangeAction(location, action));
+            case 48:
+              historyStore.dispatch(afterRouteChangeAction(location, action));
 
-            case 46:
+            case 49:
             case "end":
-              return _context6.stop();
+              return _context4.stop();
           }
         }
-      }, _callee6, this, [[16, 21]]);
+      }, _callee4, this, [[18, 23], [34, 39]]);
     }));
 
-    function _back(_x16, _x17, _x18, _x19, _x20) {
+    function _back(_x13, _x14, _x15, _x16) {
       return _back2.apply(this, arguments);
     }
 
     return _back;
   }();
 
-  _proto2.backError = function backError(stepOrKey, redirect) {
-    var prevStore = this.getActivePage().store;
+  _proto5.backError = function backError(stepOrKey, redirect) {
+    var curStore = this.getCurrentPage().store;
     var backOverflow = {
       code: ErrorCodes.ROUTE_BACK_OVERFLOW,
       message: 'Overflowed on route backward.',
@@ -3672,10 +3109,425 @@ var Router = function () {
         redirect: redirect
       }
     };
-    return prevStore.dispatch(errorAction(backOverflow));
+    return curStore.dispatch(errorAction(backOverflow));
   };
 
   return Router;
-}();
+}(ARouter);
+var routerConfig = {
+  QueryString: {
+    parse: function parse(str) {
+      return {};
+    },
+    stringify: function stringify() {
+      return '';
+    }
+  },
+  NativePathnameMapping: {
+    in: function _in(pathname) {
+      return pathname;
+    },
+    out: function out(pathname) {
+      return pathname;
+    }
+  },
+  NeedToNotifyNativeRouter: function NeedToNotifyNativeRouter() {
+    return false;
+  }
+};
 
-export { BaseModel, BaseNativeRouter, EmptyModel, ErrorCodes, Router, SingleDispatcher, Store, buildApp, buildConfigSetter, buildProvider, buildSSR, coreConfig, deepClone, deepMerge, effect, effectLogger, env, errorAction, exportComponent, exportModule, exportView, getApi, getClientRouter, getComponent, getEntryComponent, getModule, getModuleApiMap, getTplInSSR, injectComponent, injectModule, isMutable, isPromise, isServer, locationToNativeLocation, locationToUrl, modelHotReplacement, moduleExists, nativeLocationToLocation, nativeUrlToUrl, reducer, setCoreConfig, setLoading, setProcessedError, toPromise, urlToLocation, urlToNativeUrl };
+function exportModuleFacade(moduleName, ModelClass, components, data) {
+  Object.keys(components).forEach(function (key) {
+    var component = components[key];
+
+    if (!isEluxComponent(component) && (typeof component !== 'function' || component.length > 0 || !/(import|require)\s*\(/.test(component.toString()))) {
+      env.console.warn("The exported component must implement interface EluxComponent: " + moduleName + "." + key);
+    }
+  });
+  return {
+    moduleName: moduleName,
+    ModelClass: ModelClass,
+    components: components,
+    data: data,
+    state: {},
+    actions: {}
+  };
+}
+function moduleExists(moduleName) {
+  return !!baseConfig.ModuleGetter[moduleName];
+}
+function getModule(moduleName) {
+  var request = baseConfig.ModuleGetter[moduleName];
+
+  if (!request) {
+    return undefined;
+  }
+
+  if (moduleConfig.ModuleCaches[moduleName]) {
+    return moduleConfig.ModuleCaches[moduleName];
+  }
+
+  var moduleOrPromise = request();
+
+  if (isPromise(moduleOrPromise)) {
+    var promiseModule = moduleOrPromise.then(function (_ref) {
+      var module = _ref.default;
+      injectActions(new module.ModelClass(moduleName, null));
+      moduleConfig.ModuleCaches[moduleName] = module;
+      return module;
+    }, function (reason) {
+      moduleConfig.ModuleCaches[moduleName] = undefined;
+      throw reason;
+    });
+    moduleConfig.ModuleCaches[moduleName] = promiseModule;
+    return promiseModule;
+  }
+
+  injectActions(new moduleOrPromise.ModelClass(moduleName, null));
+  moduleConfig.ModuleCaches[moduleName] = moduleOrPromise;
+  return moduleOrPromise;
+}
+function getComponent(moduleName, componentName) {
+  var key = [moduleName, componentName].join('.');
+
+  if (moduleConfig.ComponentCaches[key]) {
+    return moduleConfig.ComponentCaches[key];
+  }
+
+  var moduleCallback = function moduleCallback(module) {
+    var componentOrFun = module.components[componentName];
+
+    if (!componentOrFun) {
+      return undefined;
+    }
+
+    if (isEluxComponent(componentOrFun)) {
+      moduleConfig.ComponentCaches[key] = componentOrFun;
+      return componentOrFun;
+    }
+
+    var promiseComponent = componentOrFun().then(function (_ref2) {
+      var component = _ref2.default;
+      moduleConfig.ComponentCaches[key] = component;
+      return component;
+    }, function (reason) {
+      moduleConfig.ComponentCaches[key] = undefined;
+      throw reason;
+    });
+    moduleConfig.ComponentCaches[key] = promiseComponent;
+    return promiseComponent;
+  };
+
+  var moduleOrPromise = getModule(moduleName);
+
+  if (!moduleOrPromise) {
+    return undefined;
+  }
+
+  if (isPromise(moduleOrPromise)) {
+    return moduleOrPromise.then(function (module) {
+      var component = moduleCallback(module);
+
+      if (component) {
+        return component;
+      }
+
+      throw "Not found " + key;
+    });
+  }
+
+  return moduleCallback(moduleOrPromise);
+}
+function getEntryComponent() {
+  return getComponent(actionConfig.StageModuleName, baseConfig.StageViewName);
+}
+function getModuleApiMap(data) {
+  if (!moduleConfig.ModuleApiMap) {
+    if (data) {
+      moduleConfig.ModuleApiMap = Object.keys(data).reduce(function (prev, moduleName) {
+        var arr = data[moduleName];
+        var actions = {};
+        var actionNames = {};
+        arr.forEach(function (actionName) {
+          actions[actionName] = function () {
+            for (var _len = arguments.length, payload = new Array(_len), _key = 0; _key < _len; _key++) {
+              payload[_key] = arguments[_key];
+            }
+
+            return {
+              type: moduleName + actionConfig.NSP + actionName,
+              payload: payload
+            };
+          };
+
+          actionNames[actionName] = moduleName + actionConfig.NSP + actionName;
+        });
+        var moduleFacade = {
+          name: moduleName,
+          actions: actions,
+          actionNames: actionNames
+        };
+        prev[moduleName] = moduleFacade;
+        return prev;
+      }, {});
+    } else {
+      var cacheData = {};
+      moduleConfig.ModuleApiMap = new Proxy({}, {
+        set: function set(target, moduleName, val, receiver) {
+          return Reflect.set(target, moduleName, val, receiver);
+        },
+        get: function get(target, moduleName, receiver) {
+          var val = Reflect.get(target, moduleName, receiver);
+
+          if (val !== undefined) {
+            return val;
+          }
+
+          if (!cacheData[moduleName]) {
+            cacheData[moduleName] = {
+              name: moduleName,
+              actionNames: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return moduleName + actionConfig.NSP + actionName;
+                }
+              }),
+              actions: new Proxy({}, {
+                get: function get(__, actionName) {
+                  return function () {
+                    for (var _len2 = arguments.length, payload = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                      payload[_key2] = arguments[_key2];
+                    }
+
+                    return {
+                      type: moduleName + actionConfig.NSP + actionName,
+                      payload: payload
+                    };
+                  };
+                }
+              })
+            };
+          }
+
+          return cacheData[moduleName];
+        }
+      });
+    }
+  }
+
+  return moduleConfig.ModuleApiMap;
+}
+function injectModule(moduleOrName, moduleGetter) {
+  if (typeof moduleOrName === 'string') {
+    baseConfig.ModuleGetter[moduleOrName] = moduleGetter;
+  } else {
+    baseConfig.ModuleGetter[moduleOrName.moduleName] = function () {
+      return moduleOrName;
+    };
+  }
+}
+function injectActions(model, hmr) {
+  var moduleName = model.moduleName;
+  var handlers = model;
+
+  for (var actionNames in handlers) {
+    if (typeof handlers[actionNames] === 'function') {
+      (function () {
+        var handler = handlers[actionNames];
+
+        if (handler.__isReducer__ || handler.__isEffect__) {
+          actionNames.split(',').forEach(function (actionName) {
+            actionName = actionName.trim();
+
+            if (actionName) {
+              actionName = actionName.replace(new RegExp("^this[" + actionConfig.NSP + "]"), "" + moduleName + actionConfig.NSP);
+              var arr = actionName.split(actionConfig.NSP);
+
+              if (arr[1]) {
+                transformAction(actionName, handler, moduleName, handler.__isEffect__ ? storeConfig.EffectsMap : storeConfig.ReducersMap, hmr);
+              } else {
+                transformAction(moduleName + actionConfig.NSP + actionName, handler, moduleName, handler.__isEffect__ ? storeConfig.EffectsMap : storeConfig.ReducersMap, hmr);
+              }
+            }
+          });
+        }
+      })();
+    }
+  }
+}
+
+function transformAction(actionName, handler, listenerModule, actionHandlerMap, hmr) {
+  if (!actionHandlerMap[actionName]) {
+    actionHandlerMap[actionName] = {};
+  }
+
+  if (!hmr && actionHandlerMap[actionName][listenerModule]) {
+    env.console.warn("Action duplicate : " + actionName + ".");
+  }
+
+  actionHandlerMap[actionName][listenerModule] = handler;
+}
+
+baseConfig.GetModule = getModule;
+var moduleConfig = {
+  ModuleCaches: {},
+  ComponentCaches: {},
+  ModuleApiMap: null
+};
+
+function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+  var desc = {};
+  Object.keys(descriptor).forEach(function (key) {
+    desc[key] = descriptor[key];
+  });
+  desc.enumerable = !!desc.enumerable;
+  desc.configurable = !!desc.configurable;
+
+  if ('value' in desc || desc.initializer) {
+    desc.writable = true;
+  }
+
+  desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+    return decorator(target, property, desc) || desc;
+  }, desc);
+
+  if (context && desc.initializer !== void 0) {
+    desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+    desc.initializer = undefined;
+  }
+
+  if (desc.initializer === void 0) {
+    Object.defineProperty(target, property, desc);
+    desc = null;
+  }
+
+  return desc;
+}
+
+var _class;
+function exportModule(moduleName, ModelClass, components, data) {
+  return exportModuleFacade(moduleName, ModelClass, components, data);
+}
+function getApi() {
+  var modules = getModuleApiMap();
+
+  var GetComponent = function GetComponent(moduleName, componentName) {
+    var result = getComponent(moduleName, componentName);
+
+    if (isPromise(result)) {
+      return result;
+    } else {
+      return Promise.resolve(result);
+    }
+  };
+
+  var GetData = function GetData(moduleName) {
+    var result = getModule(moduleName);
+
+    if (isPromise(result)) {
+      return result.then(function (mod) {
+        return mod.data;
+      });
+    } else {
+      return Promise.resolve(result.data);
+    }
+  };
+
+  return {
+    GetActions: function GetActions() {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      return args.reduce(function (prev, moduleName) {
+        prev[moduleName] = modules[moduleName].actions;
+        return prev;
+      }, {});
+    },
+    GetClientRouter: function GetClientRouter() {
+      if (env.isServer) {
+        throw 'Cannot use GetClientRouter() in the server side, please use useRouter() instead';
+      }
+
+      return baseConfig.ClientRouter;
+    },
+    LoadComponent: facadeConfig.LoadComponent,
+    GetComponent: GetComponent,
+    GetData: GetData,
+    Modules: modules,
+    useRouter: facadeConfig.UseRouter,
+    useStore: facadeConfig.UseStore
+  };
+}
+var BaseModel = (_class = function () {
+  function BaseModel(moduleName, store) {
+    this.store = void 0;
+    this.moduleName = moduleName;
+    this.store = store;
+  }
+
+  var _proto = BaseModel.prototype;
+
+  _proto.onBuild = function onBuild() {
+    return;
+  };
+
+  _proto.onActive = function onActive() {
+    return;
+  };
+
+  _proto.onInactive = function onInactive() {
+    return;
+  };
+
+  _proto.getPrevState = function getPrevState() {
+    return this.store.router.prevState[this.moduleName];
+  };
+
+  _proto.getStoreState = function getStoreState(type) {
+    if (type === 'previous') {
+      return this.store.router.prevState;
+    } else if (type === 'uncommitted') {
+      return this.store.getUncommittedState();
+    } else {
+      return this.store.getState();
+    }
+  };
+
+  _proto.dispatch = function dispatch(action) {
+    return this.store.dispatch(action);
+  };
+
+  _proto._initState = function _initState(state) {
+    return state;
+  };
+
+  _proto._updateState = function _updateState(subject, state) {
+    return mergeState(this.state, state);
+  };
+
+  _proto._loadingState = function _loadingState(loadingState) {
+    return mergeState(this.state, loadingState);
+  };
+
+  _createClass(BaseModel, [{
+    key: "state",
+    get: function get() {
+      return this.store.getState(this.moduleName);
+    }
+  }, {
+    key: "router",
+    get: function get() {
+      return this.store.router;
+    }
+  }, {
+    key: "actions",
+    get: function get() {
+      return moduleConfig.ModuleApiMap[this.moduleName].actions;
+    }
+  }]);
+
+  return BaseModel;
+}(), (_applyDecoratedDescriptor(_class.prototype, "_initState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_initState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_updateState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_updateState"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "_loadingState", [reducer], Object.getOwnPropertyDescriptor(_class.prototype, "_loadingState"), _class.prototype)), _class);
+var facadeConfig = {};
+
+export { BaseModel, BaseNativeRouter, ErrorCodes, Router, SingleDispatcher, SsrApp, Store, WebApp, actionConfig, baseConfig, deepClone, effect, env, errorAction, exportComponent, exportModule, exportView, getApi, getComponent, getEntryComponent, getModule, getModuleApiMap, injectModule, isPromise, isServer, loadingAction, locationToNativeLocation, _locationToUrl as locationToUrl, moduleExists, nativeLocationToLocation, _nativeUrlToUrl as nativeUrlToUrl, reducer, setProcessedError, toPromise, _urlToLocation as urlToLocation, urlToNativeUrl };

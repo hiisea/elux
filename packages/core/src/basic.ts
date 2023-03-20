@@ -1,6 +1,6 @@
 import env from './env';
 import {deepCloneState, Listener, LoadingState, UNListener} from './utils';
-import {initModuleErrorAction, initModuleSuccessAction} from './action';
+import {actionConfig, initModuleErrorAction, initModuleSuccessAction} from './action';
 /**
  * 定义Action
  *
@@ -72,20 +72,20 @@ export interface GetState<S extends StoreState = StoreState> {
  *
  * @public
  */
-export interface IModel {
+export interface IModel<S extends ModuleState = ModuleState> {
   /**
    * 模块名称
    */
   readonly moduleName: string;
-  /**
-   * 模块状态
-   */
-  readonly state: ModuleState;
+  // /**
+  //  * 模块状态
+  //  */
+  // readonly state: ModuleState;
   /**
    * model被挂载到store时触发，在一个store中一个model只会被挂载一次
    */
-  onInit(): ModuleState | Promise<ModuleState>;
-  onBuild(): void | Promise<void>;
+  onInit(): S | Promise<S>;
+  onBuild(): any;
   /**
    * 当前page被激活时触发
    */
@@ -101,8 +101,8 @@ export interface IModel {
  *
  * @public
  */
-export interface ModelClass<H = IModel> {
-  new (moduleName: string, store: AStore): H;
+export interface IModelClass<H = IModel> {
+  new (moduleName: string, store: IStore): H;
 }
 
 /**
@@ -117,6 +117,52 @@ export interface EluxComponent {
   __elux_component__: 'view' | 'component';
 }
 
+export function isEluxView(view: EluxComponent): boolean {
+  return view['__elux_component__'] === 'view';
+}
+export function isEluxComponent(data: any): data is EluxComponent {
+  return data['__elux_component__'];
+}
+
+/**
+ * 向外导出UI组件
+ *
+ * @returns
+ * 返回实现 EluxComponent 接口的UI组件
+ *
+ * @public
+ */
+export function exportComponent<T>(component: T): T & EluxComponent {
+  const eluxComponent: EluxComponent & T = component as any;
+  eluxComponent.__elux_component__ = 'component';
+  return eluxComponent;
+}
+
+/**
+ * 向外导出业务视图
+ *
+ * @returns
+ * 返回实现 EluxComponent 接口的业务视图
+ *
+ * @public
+ */
+export function exportView<T>(component: T): T & EluxComponent {
+  const eluxComponent: EluxComponent & T = component as any;
+  eluxComponent.__elux_component__ = 'view';
+  return eluxComponent;
+}
+/**
+ * 异步EluxComponent定义
+ *
+ * @remarks
+ * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
+ *
+ * @public
+ */
+export type AsyncEluxComponent = () => Promise<{
+  default: EluxComponent;
+}>;
+
 /**
  * Module的基础定义
  *
@@ -124,8 +170,8 @@ export interface EluxComponent {
  */
 export interface IModule<TModuleName extends string = string> {
   moduleName: TModuleName;
-  ModelClass: ModelClass;
-  components: {[componentName: string]: EluxComponent};
+  ModelClass: IModelClass;
+  components: {[componentName: string]: EluxComponent | AsyncEluxComponent};
   state: ModuleState;
   actions: ModelAsCreators;
   data?: any;
@@ -377,7 +423,7 @@ export abstract class AStore implements IStore {
   constructor(public readonly sid: number, public readonly uid: number, public readonly router: IRouter) {}
 
   public mount(moduleName: string, env: 'init' | 'route' | 'update'): void | Promise<void> {
-    if (!baseConfig.ModuleGetter[moduleName]) {
+    if (!baseConfig.ModuleGetter![moduleName]) {
       return;
     }
     const mountedModules = this.mountedModules;
@@ -391,7 +437,7 @@ export abstract class AStore implements IStore {
   protected async execMount(moduleName: string): Promise<void> {
     let model: IModel, initState: ModuleState, initError: any;
     try {
-      const module = await baseConfig.getModule(moduleName);
+      const module = await baseConfig.GetModule(moduleName);
       model = new module!.ModelClass(moduleName, this);
       initState = await model.onInit();
     } catch (e: any) {
@@ -408,6 +454,7 @@ export abstract class AStore implements IStore {
     if (this.active) {
       model!.onActive();
     }
+    //TODO 是否需要return 等待?
     model!.onBuild();
   }
 }
@@ -566,6 +613,7 @@ export abstract class ARouter implements IRouter {
 
   constructor(nativeRouter: ANativeRouter) {
     this.nativeRouter = nativeRouter;
+    baseConfig.ClientRouter = this;
   }
 
   protected addTask(exec: () => Promise<void>): Promise<void> {
@@ -656,7 +704,7 @@ export abstract class ARouter implements IRouter {
     // this.runtime = {
     //   prevState: baseConfig.MutableData ? deepCloneState(prevState) : prevState,
     // };
-    return newStore.mount(baseConfig.StageModuleName, 'route');
+    return newStore.mount(actionConfig.StageModuleName, 'route');
   }
 
   public initialize(): Promise<void> {
@@ -681,7 +729,7 @@ export abstract class ARouter implements IRouter {
     //await this.nativeRouter.execute(action, location, routeKey);
     const store = this.getCurrentPage().store;
     try {
-      await store.mount(baseConfig.StageModuleName, 'init');
+      await store.mount(actionConfig.StageModuleName, 'init');
     } catch (err: any) {
       env.console.error(err);
     }
@@ -729,7 +777,7 @@ export abstract class WebApp<INS = {}> {
   protected abstract NativeRouterClass: {new (): ANativeRouter};
   protected abstract RouterClass: {new (nativeRouter: ANativeRouter, prevState: StoreState): ARouter};
   protected abstract createUI: () => any;
-  protected abstract toDocument: (domId: string, router: ARouter) => void;
+  protected abstract toDocument: (domId: string, router: ARouter, ssrData: any, ui: any) => void;
 
   boot(): INS & {
     render(options?: RenderOptions): Promise<void>;
@@ -750,7 +798,7 @@ export abstract class WebApp<INS = {}> {
     return Object.assign(ui, {
       render({id = 'root'}: RenderOptions = {}) {
         return router.initialize().then(() => {
-          toDocument(id, {router}, !!ssrData, ins);
+          toDocument(id, router, !!ssrData, ui);
         });
       },
     });
@@ -761,7 +809,7 @@ export abstract class SsrApp {
   protected abstract NativeRouterClass: {new (): ANativeRouter};
   protected abstract RouterClass: {new (nativeRouter: ANativeRouter, prevState: StoreState): ARouter};
   protected abstract createUI: () => any;
-  protected abstract toString: (domId: string, router: ARouter) => void;
+  protected abstract toString: (domId: string, router: ARouter, ui: any) => void;
 
   boot(): {render(options?: RenderOptions): Promise<void>} {
     const nativeRouter = new this.NativeRouterClass();
@@ -774,7 +822,7 @@ export abstract class SsrApp {
         return router.initialize().then(() => {
           const store = router.getCurrentPage().store;
           store.destroy();
-          toString(id, {router}, !!ssrData, ins);
+          toString(id, router, ui);
         });
       },
     });
@@ -789,17 +837,17 @@ export function mergeState(target: any = {}, ...args: any[]): any {
 }
 
 export const baseConfig: {
-  NSP: string;
-  StageModuleName: string;
+  StageViewName: string;
   MutableData: boolean;
   SSRDataKey: string;
-  ModuleGetter: ModuleGetter;
-  getModule: (moduleName: string) => IModule | Promise<IModule> | undefined;
+  ClientRouter: IRouter;
+  GetModule: (moduleName: string) => IModule | Promise<IModule> | undefined;
+  ModuleGetter?: ModuleGetter;
 } = {
-  NSP: '.',
   MutableData: false,
-  StageModuleName: 'stage',
+  StageViewName: 'main',
   SSRDataKey: 'eluxSSRData',
-  ModuleGetter: {},
-  getModule: () => undefined,
+  ClientRouter: undefined as any,
+  GetModule: undefined as any,
+  ModuleGetter: undefined,
 };

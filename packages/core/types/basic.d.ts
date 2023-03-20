@@ -1,4 +1,4 @@
-import { UNListener } from './utils';
+import { Listener, LoadingState, UNListener } from './utils';
 /**
  * 定义Action
  *
@@ -30,6 +30,10 @@ export declare type Dispatch = (action: Action) => void | Promise<void>;
  * @public
  */
 export declare type ModuleState = {
+    _error?: string;
+    _loading?: {
+        [group: string]: LoadingState;
+    };
     [key: string]: any;
 };
 /**
@@ -43,29 +47,12 @@ export declare type ModuleState = {
 export declare type StoreState = {
     [moduleName: string]: ModuleState | undefined;
 };
-export interface ActionHandler {
-    __isReducer__?: boolean;
-    __isEffect__?: boolean;
-    __decorators__?: [
-        (store: IStore, action: Action, effectPromise: Promise<unknown>) => any,
-        null | ((status: 'Rejected' | 'Resolved', beforeResult: unknown, effectResult: unknown) => void)
-    ][];
-    (...args: any[]): unknown;
-}
-/*** @public */
-export declare type ActionCreator = (...args: any[]) => Action;
-export declare type ModelAsHandlers = {
-    [actionName: string]: ActionHandler;
-};
-export declare type ActionHandlersMap = {
-    [actionName: string]: {
-        [moduleName: string]: ActionHandler;
-    };
-};
 /** @public */
 export declare type ModelAsCreators = {
     [actionName: string]: ActionCreator;
 };
+/*** @public */
+export declare type ActionCreator = (...args: any[]) => Action;
 /**
  * 获取全局状态
  *
@@ -73,114 +60,116 @@ export declare type ModelAsCreators = {
  *
  * @public
  */
-export interface GetState<TStoreState extends StoreState = StoreState> {
-    (): TStoreState;
-    <N extends string>(moduleName: N): TStoreState[N];
+export interface GetState<S extends StoreState = StoreState> {
+    (): S;
+    <N extends string>(moduleName: N): S[N];
 }
 /**
- * Store实例
+ * Model的基础定义
  *
  * @public
  */
-export interface IStore<TStoreState extends StoreState = StoreState> {
+export interface IModel<S extends ModuleState = ModuleState> {
     /**
-     * ForkID
+     * 模块名称
      */
-    uid: number;
+    readonly moduleName: string;
     /**
-     * 实例ID
+     * model被挂载到store时触发，在一个store中一个model只会被挂载一次
      */
-    sid: number;
+    onInit(): S | Promise<S>;
+    onBuild(): any;
     /**
-     * 当前是否是激活状态
-     *
-     * @remarks
-     * 同一时刻只会有一个store被激活
+     * 当前page被激活时触发
      */
-    active: boolean;
+    onActive(): void;
     /**
-     * 所属router
-     *
-     * @remarks
-     * router和store是一对多的关系
+     * 当前page被变为历史快照时触发
      */
-    router: IRouter<TStoreState>;
-    /**
-     * 派发action
-     */
-    dispatch: Dispatch;
-    /**
-     * 获取store的状态
-     *
-     * @remarks
-     * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
-     */
-    getState: GetState<TStoreState>;
-    /**
-     * 当前的Store状态
-     */
-    state: TStoreState;
-    /**
-     * 获取暂时未提交到store的状态
-     *
-     * @remarks
-     * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
-     */
-    getUncommittedState(): TStoreState;
-    /**
-     * 在该store中挂载指定的model
-     *
-     * @remarks
-     * 该方法会触发model.onMount(env)钩子
-     */
-    mount(moduleName: keyof TStoreState, env: 'init' | 'route' | 'update'): void | Promise<void>;
-    /**
-     * 销毁（框架会自动调用）
-     */
-    destroy(): void;
+    onInactive(): void;
 }
 /**
- * Store实例(用于View中)
+ * Model的构造类
  *
  * @public
  */
-export interface VStore<TStoreState extends StoreState = StoreState> {
-    /**
-     * ForkID
-     */
-    uid: number;
-    /**
-     * 实例ID
-     */
-    sid: number;
-    /**
-     * 派发action
-     */
-    dispatch: Dispatch;
-    /**
-     * 当前的Store状态
-     */
-    state: TStoreState;
-    /**
-     * 在该store中挂载指定的model
-     *
-     * @remarks
-     * 该方法会触发model.onMount(env)钩子
-     */
-    mount(moduleName: keyof TStoreState, env: 'init' | 'route' | 'update'): void | Promise<void>;
+export interface IModelClass<H = IModel> {
+    new (moduleName: string, store: IStore): H;
 }
 /**
- * 路由动作类别
+ * EluxComponent定义
+ *
+ * @remarks
+ * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
  *
  * @public
  */
-export declare type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
+export interface EluxComponent {
+    __elux_component__: 'view' | 'component';
+}
+export declare function isEluxView(view: EluxComponent): boolean;
+export declare function isEluxComponent(data: any): data is EluxComponent;
+/**
+ * 向外导出UI组件
+ *
+ * @returns
+ * 返回实现 EluxComponent 接口的UI组件
+ *
+ * @public
+ */
+export declare function exportComponent<T>(component: T): T & EluxComponent;
+/**
+ * 向外导出业务视图
+ *
+ * @returns
+ * 返回实现 EluxComponent 接口的业务视图
+ *
+ * @public
+ */
+export declare function exportView<T>(component: T): T & EluxComponent;
+/**
+ * 异步EluxComponent定义
+ *
+ * @remarks
+ * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
+ *
+ * @public
+ */
+export declare type AsyncEluxComponent = () => Promise<{
+    default: EluxComponent;
+}>;
+/**
+ * Module的基础定义
+ *
+ * @public
+ */
+export interface IModule<TModuleName extends string = string> {
+    moduleName: TModuleName;
+    ModelClass: IModelClass;
+    components: {
+        [componentName: string]: EluxComponent | AsyncEluxComponent;
+    };
+    state: ModuleState;
+    actions: ModelAsCreators;
+    data?: any;
+}
+export declare type ModuleGetter = {
+    [moduleName: string]: () => IModule | Promise<{
+        default: IModule;
+    }>;
+};
 /**
  * 路由历史栈类别
  *
  * @public
  */
 export declare type RouteTarget = 'window' | 'page';
+/**
+ * 路由动作类别
+ *
+ * @public
+ */
+export declare type RouteAction = 'init' | 'relaunch' | 'push' | 'replace' | 'back';
 /**
  * 路由信息
  *
@@ -200,15 +189,52 @@ export interface Location {
     };
     state: any;
 }
-/**
- * 内置的错误描述接口
- *
- * @public
- */
-export interface ActionError {
-    code: string;
-    message: string;
-    detail?: any;
+export interface ANativeRouter {
+    getInitData(): Promise<{
+        url: string;
+        state: StoreState;
+        context: any;
+    }>;
+    testExecute(method: RouteAction, location: Location, backIndex?: number[]): string | void;
+    execute(method: RouteAction, location: Location, key: string, backIndex?: number[]): void | Promise<void>;
+    setPageTitle(title: string): void;
+    exit(): void;
+}
+export interface IWindowStack {
+    num: number;
+    getCurrentItem(): IPageStack;
+    getRecords(): IRouteRecord[];
+    getLength(): number;
+    findRecordByKey(key: string): {
+        record: RouteRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    relaunch(record: IPageStack): void;
+    push(record: IPageStack): void;
+    backTest(stepOrKey: number | string, rootOnly: boolean): {
+        record: RouteRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    back(delta: number): void;
+}
+export interface IPageStack {
+    num: number;
+    readonly key: string;
+    readonly windowStack: IWindowStack;
+    getCurrentItem(): IRouteRecord;
+    getItems(): IRouteRecord[];
+    getLength(): number;
+    push(record: IRouteRecord): void;
+    relaunch(record: IRouteRecord): void;
+    replace(record: IRouteRecord): void;
+    back(delta: number): void;
+}
+export interface IRecord {
+    destroy: () => void;
+    active: () => void;
+    inactive: () => void;
 }
 /**
  * 路由历史记录
@@ -222,49 +248,29 @@ export interface IRouteRecord {
     /**
      * 唯一的key
      */
-    key: string;
+    readonly key: string;
     /**
      * 路由描述
      */
-    location: Location;
+    readonly location: Location;
     /**
      * 页面标题
      */
-    title: string;
+    readonly title: string;
+    readonly store: AStore;
 }
-/**
- * 本次路由前后的某些信息
- *
- * @remarks
- * 可以通过 {@link IRouter.runtime} 获得
- *
- * @public
- */
-export interface RouteRuntime<TStoreState extends StoreState = StoreState> {
-    /**
-     * 路由发生的时间戳
-     */
-    timestamp: number;
-    /**
-     * 路由跳转前的store状态
-     */
-    prevState: TStoreState;
-    /**
-     * 路由跳转是否已经完成
-     */
-    completed: boolean;
-}
-/**
- * 路由初始化时参数
- *
- * @remarks
- * 可以通过 {@link IRouter.initOptions} 获得，通常用于SSR时传递原生的Request和Response对象
- *
- * @public
- */
-export interface RouterInitOptions {
-    url: string;
-    [key: string]: any;
+export declare class RouteRecord implements IRouteRecord, IRecord {
+    readonly location: Location;
+    readonly pageStack: IPageStack;
+    readonly store: AStore;
+    readonly key: string;
+    protected _title: string;
+    constructor(location: Location, pageStack: IPageStack, store: AStore);
+    destroy(): void;
+    active(): void;
+    inactive(): void;
+    get title(): string;
+    saveTitle(val: string): void;
 }
 /**
  * 路由事件
@@ -277,46 +283,144 @@ export interface RouterInitOptions {
 export interface RouteEvent {
     location: Location;
     action: RouteAction;
-    prevStore: IStore;
-    newStore: IStore;
+    prevStore: AStore;
+    newStore: AStore;
     windowChanged: boolean;
 }
 /**
- * 路由器的定义
- *
- * @remarks
- * - 在 CSR 中全局只有一个 Router
- *
- * - 在 SSR 中每个客户请求都会生成一个Router
+ * 内置的错误描述接口
  *
  * @public
  */
-export interface IRouter<TStoreState extends StoreState = StoreState> {
-    init(initOptions: RouterInitOptions, prevState: TStoreState): Promise<void>;
+export interface ActionError {
+    code: string;
+    message: string;
+    detail?: any;
+}
+/**
+ * 内置ErrorCode
+ *
+ * @public
+ */
+export declare const ErrorCodes: {
+    /**
+     * 在路由被强制中断并返回时抛出该错误
+     */
+    ROUTE_RETURN: string;
+    /**
+     * 在SSR服务器渲染时，操作路由跳转会抛出该错误
+     */
+    ROUTE_REDIRECT: string;
+    /**
+     * 在路由后退时，如果步数溢出则抛出该错误
+     */
+    ROUTE_BACK_OVERFLOW: string;
+};
+declare type Execute = () => Promise<void>;
+declare type Resolved = () => void;
+declare type Rejected = (reason?: any) => void;
+declare type RouteTask = [Execute, Resolved, Rejected];
+/**
+ * Store实例
+ *
+ * @public
+ */
+export interface IStore<S extends StoreState = StoreState> {
+    /**
+     * ForkID
+     */
+    readonly uid: number;
+    /**
+     * 实例ID
+     */
+    readonly sid: number;
+    /**
+     * 当前是否是激活状态
+     *
+     * @remarks
+     * 同一时刻只会有一个store被激活
+     */
+    readonly active: boolean;
+    /**
+     * 所属router
+     *
+     * @remarks
+     * router和store是一对多的关系
+     */
+    readonly router: IRouter<S>;
+    /**
+     * 派发action
+     */
+    dispatch: Dispatch;
+    /**
+     * 获取store的状态
+     *
+     * @remarks
+     * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
+     */
+    getState: GetState<S>;
+    /**
+     * 获取暂时未提交到store的状态
+     *
+     * @remarks
+     * storeState由多个moduleState组成，更新时必须等所有moduleState全部更新完成后，后会才一次性commit到store中
+     */
+    getUncommittedState(): S;
+    /**
+     * 在该store中挂载指定的model
+     *
+     * @remarks
+     * 该方法会触发model.onMount(env)钩子
+     */
+    mount(moduleName: keyof S, env: 'init' | 'route' | 'update'): void | Promise<void>;
+    getCurrentAction(): Action;
+    setLoading<T extends Promise<any>>(item: T, groupName: string, moduleName?: string): T;
+    subscribe(listener: Listener): UNListener;
+}
+export declare abstract class AStore implements IStore {
+    readonly sid: number;
+    readonly uid: number;
+    readonly router: IRouter;
+    abstract dispatch: Dispatch;
+    abstract getState: GetState;
+    abstract getUncommittedState(): StoreState;
+    abstract setActive(active: boolean): void;
+    abstract destroy(): void;
+    abstract clone(brand?: boolean): AStore;
+    abstract subscribe(listener: Listener): UNListener;
+    abstract getCurrentAction(): Action;
+    abstract setLoading<T extends Promise<any>>(item: T, loadingKey: string): T;
+    get active(): boolean;
+    protected mountedModules: {
+        [moduleName: string]: Promise<void> | true | undefined;
+    };
+    protected injectedModels: {
+        [moduleName: string]: IModel;
+    };
+    protected _active: boolean;
+    constructor(sid: number, uid: number, router: IRouter);
+    mount(moduleName: string, env: 'init' | 'route' | 'update'): void | Promise<void>;
+    protected execMount(moduleName: string): Promise<void>;
+}
+export interface IRouter<S extends StoreState = StoreState> {
+    /**
+     * 路由初始化时的参数，通常用于SSR时传递原生的Request和Response对象
+     */
+    readonly context: any;
+    readonly prevState: S;
+    /**
+     * 当前路由动作
+     */
+    readonly action: RouteAction;
+    initialize(): Promise<void>;
     /**
      * 监听路由事件
      */
     addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
     /**
-     * 路由初始化时的参数，通常用于SSR时传递原生的Request和Response对象
-     */
-    initOptions: RouterInitOptions;
-    /**
-     * 当前路由动作
-     */
-    action: RouteAction;
-    /**
      * 当前路由信息
      */
-    location: Location;
-    /**
-     * 当前路由的唯一ID
-     */
-    routeKey: string;
-    /**
-     * 当前路由的相关运行信息
-     */
-    runtime: RouteRuntime<TStoreState>;
+    getLocation(): Location;
     /**
      * 获取当前页面的DocumentHead
      */
@@ -328,17 +432,11 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
     /**
      * 获取当前被激活显示的页面
      */
-    getActivePage(): {
-        store: IStore;
-        location: Location;
-    };
+    getCurrentPage(): IRouteRecord;
     /**
-     * 获取当前所有CurrentPage(PageHistoryStack中的第一条)
+     * 获取当前所有虚拟Window中的Page
      */
-    getCurrentPages(): {
-        store: IStore;
-        location: Location;
-    }[];
+    getWindowPages(): IRouteRecord[];
     /**
      * 获取指定历史栈的长度
      */
@@ -399,295 +497,118 @@ export interface IRouter<TStoreState extends StoreState = StoreState> {
      * @param refresh - 是否强制刷新，默认: false
      * @param overflowRedirect - 如果回退溢出，跳往哪个路由
      */
-    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, refresh?: boolean, overflowRedirect?: string): void | Promise<void>;
+    back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, overflowRedirect?: string): void | Promise<void>;
 }
-/**
- * Model的基础定义
- *
- * @public
- */
-export interface CommonModel {
-    /**
-     * 模块名称
-     */
-    readonly moduleName: string;
-    /**
-     * 模块状态
-     */
-    readonly state: ModuleState;
-    /**
-     * model被挂载到store时触发，在一个store中一个model只会被挂载一次
-     */
-    onMount(env: 'init' | 'route' | 'update'): void | Promise<void>;
-    /**
-     * 当前page被激活时触发
-     */
-    onActive(): void;
-    /**
-     * 当前page被变为历史快照时触发
-     */
-    onInactive(): void;
-}
-/**
- * Model的构造类
- *
- * @public
- */
-export interface CommonModelClass<H = CommonModel> {
-    new (moduleName: string, store: IStore): H;
-}
-/**
- * EluxComponent定义
- *
- * @remarks
- * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
- *
- * @public
- */
-export interface EluxComponent {
-    __elux_component__: 'view' | 'component';
-}
-/**
- * 异步EluxComponent定义
- *
- * @remarks
- * EluxComponent通过 {@link exportComponent} 导出，可使用 {@link ILoadComponent} 加载
- *
- * @public
- */
-export declare type AsyncEluxComponent = () => Promise<{
-    default: EluxComponent;
-}>;
-export declare function isEluxComponent(data: any): data is EluxComponent;
-/**
- * Module的基础定义
- *
- * @public
- */
-export interface CommonModule<TModuleName extends string = string> {
-    moduleName: TModuleName;
-    ModelClass: CommonModelClass;
-    components: {
-        [componentName: string]: EluxComponent;
+export declare abstract class ARouter implements IRouter {
+    abstract addListener(callback: (data: RouteEvent) => void | Promise<void>): UNListener;
+    protected abstract WindowStackClass: {
+        new (location: Location, store: AStore): IWindowStack;
     };
-    state: ModuleState;
-    actions: ModelAsCreators;
-    data?: any;
+    protected abstract PageStackClass: {
+        new (windowStack: IWindowStack, location: Location, store: AStore): IPageStack;
+    };
+    protected abstract StoreClass: {
+        new (sid: number, uid: number, router: ARouter): AStore;
+    };
+    protected abstract nativeUrlToUrl(nativeUrl: string): string;
+    protected abstract urlToLocation(url: string, state?: any): Location;
+    protected abstract locationToUrl(location: Partial<Location>, defClassname?: string): string;
+    abstract relaunch(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
+    abstract push(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
+    abstract replace(partialLocation: Partial<Location>, target?: RouteTarget, refresh?: boolean): void | Promise<void>;
+    abstract back(stepOrKeyOrCallback: number | string | ((record: IRouteRecord) => boolean), target?: RouteTarget, overflowRedirect?: string): void | Promise<void>;
+    action: RouteAction;
+    prevState: StoreState;
+    context: {};
+    protected windowStack: IWindowStack;
+    protected nativeRouter: ANativeRouter;
+    protected taskList: RouteTask[];
+    protected curTask?: RouteTask;
+    protected curTaskError?: any;
+    protected curLoopTaskCallback?: [Resolved, Rejected];
+    protected documentHead: string;
+    protected onTaskComplete: () => void;
+    constructor(nativeRouter: ANativeRouter);
+    protected addTask(exec: () => Promise<void>): Promise<void>;
+    getHistoryLength(target: RouteTarget): number;
+    findRecordByKey(recordKey: string): {
+        record: IRouteRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    findRecordByStep(delta: number, rootOnly?: boolean): {
+        record: IRouteRecord;
+        overflow: boolean;
+        index: [number, number];
+    };
+    getWindowPages(): IRouteRecord[];
+    getCurrentPage(): IRouteRecord;
+    getHistory(target: RouteTarget): IRouteRecord[];
+    getDocumentTitle(): string;
+    getDocumentHead(): string;
+    setDocumentHead(html: string): void;
+    getLocation(): Location;
+    computeUrl(partialLocation: Partial<Location>, action: RouteAction, target: RouteTarget): string;
+    protected mountStore(prevStore: AStore, newStore: AStore): void | Promise<void>;
+    initialize(): Promise<void>;
+    protected _init(): Promise<void>;
+    ssr(html: string): Promise<void>;
+    protected _ssr(html: string): Promise<void>;
+}
+export interface RenderOptions {
+    /**
+     * 挂载应用Dom的id
+     *
+     * @defaultValue `root`
+     *
+     * @remarks
+     * 默认: `root`
+     */
+    id?: string;
 }
 /**
- * 配置模块的获取方式
- *
- * @remarks
- * 模块获取可以使用同步或异步，定义成异步方式可以做到`按需加载`
- *
- * @example
- * ```js
- * import stage from '@/modules/stage';
- *
- * export const moduleGetter = {
- *   stage: () => stage,
- *   article: () => import('@/modules/article'),
- *   my: () => import('@/modules/my'),
- * };
- * ```
- *
  * @public
  */
-export declare type ModuleGetter = {
-    [moduleName: string]: () => CommonModule | Promise<{
-        default: CommonModule;
-    }>;
+export declare type EluxApp = {
+    render(options?: RenderOptions): Promise<void>;
 };
-export declare type ModuleApiMap = Record<string, {
-    name: string;
-    actions: ModelAsCreators;
-    actionNames: Record<string, string>;
-}>;
-export declare const MetaData: {
-    moduleApiMap: ModuleApiMap;
-    moduleCaches: {
-        [moduleName: string]: undefined | CommonModule | Promise<CommonModule>;
+export declare abstract class WebApp<INS = {}> {
+    protected cientSingleton?: INS & {
+        render(options?: RenderOptions): Promise<void>;
     };
-    componentCaches: {
-        [moduleNameAndComponentName: string]: undefined | EluxComponent | Promise<EluxComponent>;
+    protected abstract NativeRouterClass: {
+        new (): ANativeRouter;
     };
-    reducersMap: ActionHandlersMap;
-    effectsMap: ActionHandlersMap;
-    clientRouter?: IRouter;
-};
-/**
- * Store的中间件
- *
- * @remarks
- * 类似于 Redux 的 Middleware
- *
- * @public
- */
-export declare type StoreMiddleware = (api: {
-    getStore: () => IStore;
-    dispatch: Dispatch;
-}) => (next: Dispatch) => (action: Action) => void | Promise<void>;
-/**
- * 派发Action的日志信息
- *
- * @public
- */
-export declare type StoreLoggerInfo = {
-    id: number;
-    isActive: boolean;
-    actionName: string;
-    payload: any[];
-    priority: string[];
-    handers: string[];
-    state: any;
-    effect: boolean;
-};
-/**
- * Store的日志记录器
- *
- * @remarks
- * Store派发Action都会调用该回调方法
- *
- * @public
- */
-export declare type StoreLogger = (info: StoreLoggerInfo) => void;
-export interface EluxContext {
-    router: IRouter;
+    protected abstract RouterClass: {
+        new (nativeRouter: ANativeRouter, prevState: StoreState): ARouter;
+    };
+    protected abstract createUI: () => any;
+    protected abstract toDocument: (domId: string, router: ARouter, ssrData: any, ui: any) => void;
+    boot(): INS & {
+        render(options?: RenderOptions): Promise<void>;
+    };
 }
-export interface EluxStoreContext {
-    store: VStore;
+export declare abstract class SsrApp {
+    protected abstract NativeRouterClass: {
+        new (): ANativeRouter;
+    };
+    protected abstract RouterClass: {
+        new (nativeRouter: ANativeRouter, prevState: StoreState): ARouter;
+    };
+    protected abstract createUI: () => any;
+    protected abstract toString: (domId: string, router: ARouter, ui: any) => void;
+    boot(): {
+        render(options?: RenderOptions): Promise<void>;
+    };
 }
-export interface IAppRender {
-    toDocument(id: string, eluxContext: EluxContext, fromSSR: boolean, app: any): void;
-    toString(id: string, eluxContext: EluxContext, app: {}): Promise<string>;
-    toProvider(eluxContext: EluxContext, app: any): Elux.Component<{
-        children: any;
-    }>;
-}
-/**
- * 内置ErrorCode
- *
- * @public
- */
-export declare const ErrorCodes: {
-    /**
-     * 在路由被强制中断并返回时抛出该错误
-     */
-    ROUTE_RETURN: string;
-    /**
-     * 在SSR服务器渲染时，操作路由跳转会抛出该错误
-     */
-    ROUTE_REDIRECT: string;
-    /**
-     * 在路由后退时，如果步数溢出则抛出该错误
-     */
-    ROUTE_BACK_OVERFLOW: string;
-};
-export declare const coreConfig: {
-    NSP: string;
-    MSP: string;
-    MutableData: boolean;
-    DepthTimeOnLoading: number;
-    StageModuleName: string;
-    StageViewName: string;
-    SSRDataKey: string;
-    SSRTPL: string;
-    ModuleGetter: ModuleGetter;
-    StoreInitState: () => {};
-    StoreMiddlewares: StoreMiddleware[];
-    StoreLogger: StoreLogger;
-    SetPageTitle: (title: string) => void;
-    Platform: 'taro' | '';
-    StoreProvider?: Elux.Component<{
-        store: IStore;
-        children: JSX.Element;
-    }>;
-    LoadComponent?: (moduleName: string, componentName: string, options: {
-        onError: Elux.Component<{
-            message: string;
-        }>;
-        onLoading: Elux.Component<{}>;
-    }) => EluxComponent | Promise<EluxComponent>;
-    LoadComponentOnError?: Elux.Component<{
-        message: string;
-    }>;
-    LoadComponentOnLoading?: Elux.Component<{}>;
-    UseRouter?: () => IRouter;
-    UseStore?: () => VStore;
-    AppRender?: IAppRender;
-    NotifyNativeRouter: {
-        window: boolean;
-        page: boolean;
-    };
-    QueryString: {
-        parse(str: string): {
-            [key: string]: any;
-        };
-        stringify(query: {
-            [key: string]: any;
-        }): string;
-    };
-    NativePathnameMapping: {
-        in(nativePathname: string): string;
-        out(internalPathname: string): string;
-    };
-};
-export declare const setCoreConfig: (config: Partial<{
-    NSP: string;
-    MSP: string;
-    MutableData: boolean;
-    DepthTimeOnLoading: number;
-    StageModuleName: string;
-    StageViewName: string;
-    SSRDataKey: string;
-    SSRTPL: string;
-    ModuleGetter: ModuleGetter;
-    StoreInitState: () => {};
-    StoreMiddlewares: StoreMiddleware[];
-    StoreLogger: StoreLogger;
-    SetPageTitle: (title: string) => void;
-    Platform: 'taro' | '';
-    StoreProvider?: Elux.Component<{
-        store: IStore;
-        children: JSX.Element;
-    }> | undefined;
-    LoadComponent?: ((moduleName: string, componentName: string, options: {
-        onError: Elux.Component<{
-            message: string;
-        }>;
-        onLoading: Elux.Component<{}>;
-    }) => EluxComponent | Promise<EluxComponent>) | undefined;
-    LoadComponentOnError?: Elux.Component<{
-        message: string;
-    }> | undefined;
-    LoadComponentOnLoading?: Elux.Component<{}> | undefined;
-    UseRouter?: (() => IRouter) | undefined;
-    UseStore?: (() => VStore) | undefined;
-    AppRender?: IAppRender | undefined;
-    NotifyNativeRouter: {
-        window: boolean;
-        page: boolean;
-    };
-    QueryString: {
-        parse(str: string): {
-            [key: string]: any;
-        };
-        stringify(query: {
-            [key: string]: any;
-        }): string;
-    };
-    NativePathnameMapping: {
-        in(nativePathname: string): string;
-        out(internalPathname: string): string;
-    };
-}>) => void;
-export declare function deepMergeState(target?: any, ...args: any[]): any;
 export declare function mergeState(target?: any, ...args: any[]): any;
-export declare function getClientRouter(): IRouter;
-/**
- * 当前State模式是否为Mutable
- *
- * @public
- */
-export declare function isMutable(): boolean;
+export declare const baseConfig: {
+    StageViewName: string;
+    MutableData: boolean;
+    SSRDataKey: string;
+    ClientRouter: IRouter;
+    GetModule: (moduleName: string) => IModule | Promise<IModule> | undefined;
+    ModuleGetter?: ModuleGetter;
+};
+export {};
 //# sourceMappingURL=basic.d.ts.map
